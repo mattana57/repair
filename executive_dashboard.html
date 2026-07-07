@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Dashboard - Smart Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Prompt', sans-serif; margin: 0; padding: 0; }
+        .tab-content { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="flex h-screen w-full overflow-hidden bg-slate-50">
+
+        <aside class="w-64 bg-indigo-900 text-indigo-100 flex flex-col shrink-0 shadow-xl">
+            <div class="h-20 flex items-center justify-center border-b border-indigo-800">
+                <h1 class="text-xl font-bold text-white tracking-wide"><i class="fas fa-chart-line text-indigo-400 mr-2"></i>ExecView</h1>
+            </div>
+            <nav class="flex-1 px-4 py-8 space-y-3 overflow-y-auto">
+                <button type="button" data-target="page-overview" class="menu-btn w-full text-left px-4 py-3 rounded-xl bg-indigo-600 text-white shadow-md font-medium transition-all active-btn"><i class="fas fa-tachometer-alt w-6 text-center"></i> สถิติภาพรวม</button>
+                <button type="button" data-target="page-budget" class="menu-btn w-full text-left px-4 py-3 hover:bg-indigo-800 rounded-xl transition-all"><i class="fas fa-search-dollar w-6 text-center"></i> วิเคราะห์งบประมาณ</button>
+                <button type="button" data-target="page-ai" class="menu-btn w-full text-left px-4 py-3 hover:bg-indigo-800 rounded-xl transition-all"><i class="fas fa-brain w-6 text-center"></i> AI คาดการณ์ปัญหา</button>
+                <button type="button" data-target="page-location" class="menu-btn w-full text-left px-4 py-3 hover:bg-indigo-800 rounded-xl transition-all"><i class="fas fa-building w-6 text-center"></i> สถิติตามอาคาร</button>
+            </nav>
+            <div class="p-4 border-t border-indigo-800 text-sm text-indigo-300 text-center">
+                Smart Maintenance System
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-y-auto relative bg-slate-50">
+            <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 sticky top-0 z-10 shrink-0">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800" id="headerTitle">รายงานสถิติเชิงบริหาร (Overview)</h2>
+                    <p class="text-sm text-gray-500">ข้อมูลอัปเดตล่าสุด: วันนี้ 08:30 น.</p>
+                </div>
+                <div class="flex items-center space-x-4 bg-gray-100 px-4 py-2 rounded-full border border-gray-200">
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">EX</div>
+                    <span class="text-sm font-semibold text-gray-700">ผู้บริหารระบบ</span>
+                </div>
+            </header>
+
+            <div class="p-8">
+                
+                <div id="page-overview" class="tab-content space-y-8" style="display: block;">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                            <div class="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mr-4"><i class="fas fa-tools"></i></div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">คำร้องแจ้งซ่อม (เดือนนี้)</p>
+                                <p class="text-3xl font-bold text-gray-800">128 <span class="text-sm text-red-500 font-normal ml-2"><i class="fas fa-arrow-up"></i> 12%</span></p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                            <div class="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl mr-4"><i class="fas fa-money-bill-wave"></i></div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">งบซ่อมบำรุงที่ใช้ไป (ปีนี้)</p>
+                                <p class="text-3xl font-bold text-gray-800">฿45,200 <span class="text-sm text-green-500 font-normal ml-2"><i class="fas fa-arrow-down"></i> 5%</span></p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                            <div class="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-2xl mr-4"><i class="fas fa-clock"></i></div>
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">เวลาซ่อมเฉลี่ยต่อเคส</p>
+                                <p class="text-3xl font-bold text-gray-800">4.5 ชม. <span class="text-sm text-green-500 font-normal ml-2">ดีเยี่ยม</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-6">แนวโน้มการแจ้งซ่อม และ ค่าใช้จ่าย</h3>
+                            <div class="relative h-72 w-full"><canvas id="trendChart"></canvas></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-chart-pie text-blue-500 mr-2"></i>สัดส่วนอุปกรณ์ที่ชำรุด</h3>
+                            <div class="relative h-64 w-full"><canvas id="typeChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-budget" class="tab-content" style="display: none;">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6"><i class="fas fa-file-invoice-dollar text-green-500 mr-2"></i> สรุปการใช้งบประมาณซ่อมบำรุงรายเดือน</h3>
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 text-slate-600">
+                                <tr>
+                                    <th class="px-6 py-4 border-b font-medium">เดือน</th>
+                                    <th class="px-6 py-4 border-b font-medium">จำนวนเคส</th>
+                                    <th class="px-6 py-4 border-b font-medium">ค่าอะไหล่ (บาท)</th>
+                                    <th class="px-6 py-4 border-b font-medium">ค่าแรงช่าง (บาท)</th>
+                                    <th class="px-6 py-4 border-b font-medium">รวมทั้งสิ้น (บาท)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b hover:bg-slate-50">
+                                    <td class="px-6 py-4 font-medium">มิถุนายน 2569</td>
+                                    <td class="px-6 py-4">65</td>
+                                    <td class="px-6 py-4">12,500</td>
+                                    <td class="px-6 py-4">1,700</td>
+                                    <td class="px-6 py-4 font-bold text-red-600">14,200</td>
+                                </tr>
+                                <tr class="border-b hover:bg-slate-50">
+                                    <td class="px-6 py-4 font-medium">พฤษภาคม 2569</td>
+                                    <td class="px-6 py-4">55</td>
+                                    <td class="px-6 py-4">8,500</td>
+                                    <td class="px-6 py-4">1,600</td>
+                                    <td class="px-6 py-4 font-bold text-gray-700">10,100</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="page-ai" class="tab-content" style="display: none;">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-gradient-to-br from-indigo-900 to-indigo-700 p-8 rounded-2xl shadow-lg text-white">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-xl font-bold"><i class="fas fa-robot text-indigo-300 mr-2"></i> ความเสี่ยงอุปกรณ์ชำรุดล่วงหน้า</h3>
+                            </div>
+                            <p class="text-indigo-100 mb-6">ระบบคำนวณจากอายุการใช้งานและประวัติการซ่อม เพื่อวางแผน Maintenance ล่วงหน้า</p>
+                            <div class="space-y-4">
+                                <div class="bg-white/10 p-4 rounded-xl border border-white/20">
+                                    <div class="flex justify-between items-end mb-2">
+                                        <div>
+                                            <p class="font-bold text-lg">แอร์ Daikin-12 (อาคาร A)</p>
+                                        </div>
+                                        <p class="text-red-300 font-bold text-2xl">92%</p>
+                                    </div>
+                                    <div class="w-full bg-indigo-900 rounded-full h-2">
+                                        <div class="bg-red-400 h-2 rounded-full" style="width: 92%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-location" class="tab-content" style="display: none;">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                        <h3 class="text-xl font-bold text-red-600 mb-6"><i class="fas fa-exclamation-triangle mr-2"></i> พื้นที่พบปัญหาบ่อย</h3>
+                        <div class="flex items-center p-4 bg-red-50 rounded-xl border border-red-100 mb-4">
+                            <div class="w-12 h-12 rounded-full bg-red-200 text-red-700 font-bold flex items-center justify-center text-xl mr-4">1</div>
+                            <div class="flex-1"><p class="font-bold text-gray-800 text-lg">อาคาร A - ห้อง 301</p><p class="text-sm text-gray-600">ปัญหาหลัก: แอร์ไม่เย็น</p></div>
+                            <div class="text-right"><p class="font-bold text-red-600 text-xl">15 ครั้ง</p></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        (function initDashboard() {
+            // 1. ระบบจัดการปุ่มเมนู
+            const btns = document.querySelectorAll('.menu-btn');
+            const tabs = document.querySelectorAll('.tab-content');
+            const headerTitle = document.getElementById('headerTitle');
+
+            const titleMap = {
+                'page-overview': 'รายงานสถิติเชิงบริหาร (Overview)',
+                'page-budget': 'วิเคราะห์งบประมาณ (Budget Analysis)',
+                'page-ai': 'คาดการณ์การชำรุดด้วยระบบอัจฉริยะ (Predictive Maintenance)',
+                'page-location': 'รายงานปัญหาแบ่งตามพื้นที่ (Location Stats)'
+            };
+
+            btns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('data-target');
+
+                    // ซ่อนทุกหน้า
+                    tabs.forEach(tab => {
+                        tab.style.display = 'none';
+                    });
+                    
+                    // แสดงหน้าที่เลือก
+                    const targetContent = document.getElementById(targetId);
+                    if(targetContent) {
+                        targetContent.style.display = 'block';
+                    }
+
+                    // ปรับสีปุ่ม
+                    btns.forEach(b => {
+                        b.classList.remove('bg-indigo-600', 'shadow-md', 'text-white', 'active-btn');
+                        b.classList.add('hover:bg-indigo-800');
+                    });
+                    this.classList.remove('hover:bg-indigo-800');
+                    this.classList.add('bg-indigo-600', 'shadow-md', 'text-white', 'active-btn');
+
+                    // เปลี่ยนหัวข้อ
+                    if(headerTitle && titleMap[targetId]) {
+                        headerTitle.innerText = titleMap[targetId];
+                    }
+                });
+            });
+
+            // 2. ระบบวาดกราฟ (วาดทันทีแบบไม่ต้องรอ Event)
+            try {
+                const ctxTrend = document.getElementById('trendChart');
+                if (ctxTrend) {
+                    new Chart(ctxTrend.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.'],
+                            datasets: [
+                                { type: 'line', label: 'ค่าใช้จ่าย (พันบาท)', data: [8.5, 12.2, 9.0, 15.5, 10.1, 14.2], borderColor: '#ef4444', backgroundColor: '#ef4444', borderWidth: 2, tension: 0.3, yAxisID: 'y1' },
+                                { type: 'bar', label: 'จำนวนเคสแจ้งซ่อม', data: [45, 62, 50, 78, 55, 65], backgroundColor: '#4f46e5', borderRadius: 4, yAxisID: 'y' }
+                            ]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { type: 'linear', position: 'left' }, y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } } } }
+                    });
+                }
+
+                const ctxType = document.getElementById('typeChart');
+                if (ctxType) {
+                    new Chart(ctxType.getContext('2d'), {
+                        type: 'doughnut',
+                        data: { labels: ['แอร์', 'คอมพิวเตอร์', 'ไฟฟ้า', 'ประปา'], datasets: [{ data: [40, 30, 20, 10], backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'], borderWidth: 0 }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                    });
+                }
+            } catch (err) {
+                console.log("รอ Chart.js โหลดสักครู่", err);
+            }
+        })();
+    </script>
+</body>
+</html>

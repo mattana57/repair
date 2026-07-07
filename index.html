@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>เข้าสู่ระบบ - ระบบแจ้งซ่อม</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap');
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
+</head>
+<body class="bg-indigo-50 flex items-center justify-center h-screen">
+
+    <div class="bg-white p-10 rounded-3xl shadow-2xl w-96 border border-indigo-100">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-indigo-900">ยินดีต้อนรับ</h2>
+            <p class="text-gray-500 mt-2">กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
+        </div>
+
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Username</label>
+                <input type="text" id="username" class="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="admin หรือ executive" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="password" class="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="••••••••" required>
+            </div>
+            <p id="errorMsg" class="text-red-500 text-sm hidden">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</p>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition transform hover:scale-[1.02]">เข้าสู่ระบบ</button>
+        </form>
+
+        <div class="mt-6 text-center text-sm text-gray-500">
+            ยังไม่มีบัญชี? <a href="#" class="text-indigo-600 font-bold hover:underline">ลงทะเบียนที่นี่</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            
+            // จำลองการตรวจสอบ Login
+            if(user === 'admin' && pass === '1234') {
+                window.location.href = 'dashboard.html'; // ลิงก์ยิงไปไฟล์ Admin
+            } else if(user === 'exec' && pass === '1234') {
+                window.location.href = 'executive_dashboard.html'; // ลิงก์ยิงไปไฟล์ Executive
+            } else {
+                document.getElementById('errorMsg').classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

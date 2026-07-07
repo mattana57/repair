@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แจ้งซ่อมออนไลน์ - MBS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
+        body { font-family: 'Prompt', sans-serif; background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="flex justify-center min-h-screen">
+
+    <div class="w-full max-w-md bg-white shadow-xl min-h-screen flex flex-col">
+        
+        <div class="bg-blue-600 text-white p-6 rounded-b-3xl shadow-md">
+            <h1 class="text-2xl font-bold"><i class="fas fa-tools mr-2"></i> แจ้งซ่อมออนไลน์</h1>
+            <p class="text-blue-100 text-sm mt-1">คณะการบัญชีและการจัดการ (MBS)</p>
+        </div>
+
+        <div class="p-6 flex-1">
+            <form action="save_repair.php" method="POST" enctype="multipart/form-data" class="space-y-5">
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">หมวดหมู่งานซ่อม <span class="text-red-500">*</span></label>
+                    <select name="equipment_type" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                        <option value="">-- กรุณาเลือกหมวดหมู่ --</option>
+                        <option value="it">คอมพิวเตอร์ / ปริ้นเตอร์ (IT)</option>
+                        <option value="software">ระบบอินเทอร์เน็ต / ซอฟต์แวร์</option>
+                        <option value="air">เครื่องปรับอากาศ (แม่บ้าน/อาคาร)</option>
+                        <option value="electric">ไฟฟ้า / หลอดไฟ (แม่บ้าน/อาคาร)</option>
+                        <option value="other">อื่นๆ</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">สถานที่ / ห้อง <span class="text-red-500">*</span></label>
+                    <input type="text" name="location" placeholder="เช่น อาคาร A ห้อง 301" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">รายละเอียดปัญหา / อาการเสีย <span class="text-red-500">*</span></label>
+                    <textarea name="problem_desc" rows="3" placeholder="อธิบายอาการเสียให้ช่างเข้าใจเบื้องต้น..." class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">ภาพถ่ายประกอบ (ถ้ามี)</label>
+                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <i class="fas fa-camera text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-500">แตะเพื่อถ่ายรูป หรืออัปโหลด</p>
+                        </div>
+                        <input type="file" name="image_before" class="hidden" accept="image/*" capture="environment">
+                    </label>
+                </div>
+
+                <div class="pt-4 pb-8">
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold text-lg py-4 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-[1.02] transition-all">
+                        <i class="fas fa-paper-plane mr-2"></i> ยืนยันการแจ้งซ่อม
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
