@@ -21,44 +21,61 @@
         </div>
 
         <div class="p-6 flex-1">
+            
+            <div class="bg-blue-50 rounded-xl p-4 mb-6 flex items-center border border-blue-100">
+                <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden mr-4">
+                    <i class="fas fa-user text-gray-400 text-xl"></i>
+                    </div>
+                <div>
+                    <p class="text-xs text-gray-500">ผู้แจ้งซ่อม (ดึงจาก LINE)</p>
+                    <p class="text-sm font-bold text-blue-800" id="profileName">กำลังโหลดข้อมูล...</p>
+                </div>
+            </div>
+
             <form action="save_repair.php" method="POST" enctype="multipart/form-data" class="space-y-5">
                 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">หมวดหมู่งานซ่อม <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">สิ่งที่ต้องการแจ้งซ่อม <span class="text-red-500">*</span></label>
                     <select name="equipment_type" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
-                        <option value="">-- กรุณาเลือกหมวดหมู่ --</option>
-                        <option value="it">คอมพิวเตอร์ / ปริ้นเตอร์ (IT)</option>
-                        <option value="software">ระบบอินเทอร์เน็ต / ซอฟต์แวร์</option>
-                        <option value="air">เครื่องปรับอากาศ (แม่บ้าน/อาคาร)</option>
-                        <option value="electric">ไฟฟ้า / หลอดไฟ (แม่บ้าน/อาคาร)</option>
-                        <option value="other">อื่นๆ</option>
+                        <option value="">-- เลือกสิ่งที่ชำรุด --</option>
+                        <option value="แอร์/เครื่องปรับอากาศ">แอร์ / เครื่องปรับอากาศ</option>
+                        <option value="คอมพิวเตอร์/ปริ้นเตอร์">คอมพิวเตอร์ / ปริ้นเตอร์</option>
+                        <option value="อินเทอร์เน็ต/เว็บไซต์">อินเทอร์เน็ต / เว็บไซต์</option>
+                        <option value="ไฟฟ้า/หลอดไฟ">ไฟฟ้า / หลอดไฟ / ปลั๊ก</option>
+                        <option value="ประปา/ห้องน้ำ">ประปา / ห้องน้ำ</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">สถานที่ / ห้อง <span class="text-red-500">*</span></label>
-                    <input type="text" name="location" placeholder="เช่น อาคาร A ห้อง 301" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">สถานที่ / อาคาร / ห้อง <span class="text-red-500">*</span></label>
+                    <select name="location" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                        <option value="">-- เลือกสถานที่ --</option>
+                        <optgroup label="อาคาร A">
+                            <option value="อาคาร A - ห้อง 301">ห้อง 301</option>
+                            <option value="อาคาร A - ห้อง 302">ห้อง 302</option>
+                            <option value="อาคาร A - ห้องสมุด">ห้องสมุด</option>
+                        </optgroup>
+                        <optgroup label="อาคาร B">
+                            <option value="อาคาร B - ห้อง IT">ห้อง IT (คอมพิวเตอร์)</option>
+                            <option value="อาคาร B - สำนักงาน">สำนักงานคณะฯ</option>
+                        </optgroup>
+                    </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">รายละเอียดปัญหา / อาการเสีย <span class="text-red-500">*</span></label>
-                    <textarea name="problem_desc" rows="3" placeholder="อธิบายอาการเสียให้ช่างเข้าใจเบื้องต้น..." class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required></textarea>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">เบอร์โทรศัพท์ติดต่อกลับ <span class="text-red-500">*</span></label>
+                    <input type="tel" name="phone_number" placeholder="เช่น 0812345678" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">ภาพถ่ายประกอบ (ถ้ามี)</label>
-                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                            <i class="fas fa-camera text-3xl text-gray-400 mb-2"></i>
-                            <p class="text-sm text-gray-500">แตะเพื่อถ่ายรูป หรืออัปโหลด</p>
-                        </div>
-                        <input type="file" name="image_before" class="hidden" accept="image/*" capture="environment">
-                    </label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">อาการเสียเบื้องต้น <span class="text-red-500">*</span></label>
+                    <textarea name="problem_desc" rows="3" placeholder="เช่น แอร์น้ำหยด, เปิดคอมไม่ติด..." class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required></textarea>
                 </div>
 
-                <div class="pt-4 pb-8">
+                <div class="pt-2 pb-8">
                     <button type="submit" class="w-full bg-blue-600 text-white font-bold text-lg py-4 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-[1.02] transition-all">
-                        <i class="fas fa-paper-plane mr-2"></i> ยืนยันการแจ้งซ่อม
+                        <i class="fas fa-paper-plane mr-2"></i> ส่งข้อมูลแจ้งซ่อม
                     </button>
                 </div>
 
