@@ -36,7 +36,7 @@
                 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">สิ่งที่ต้องการแจ้งซ่อม <span class="text-red-500">*</span></label>
-                    <select name="equipment_type" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                    <select name="equipment_type" id="equipment_type" onchange="toggleOtherEquipment()" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
                         <option value="">-- เลือกสิ่งที่ชำรุด --</option>
                         <option value="แอร์/เครื่องปรับอากาศ">แอร์ / เครื่องปรับอากาศ</option>
                         <option value="คอมพิวเตอร์/ปริ้นเตอร์">คอมพิวเตอร์ / ปริ้นเตอร์</option>
@@ -45,20 +45,29 @@
                         <option value="ประปา/ห้องน้ำ">ประปา / ห้องน้ำ</option>
                         <option value="อื่นๆ">อื่นๆ</option>
                     </select>
+                    
+                    <div id="other_equipment_div" class="hidden mt-3">
+                        <input type="text" name="other_equipment" id="other_equipment_input" placeholder="โปรดระบุสิ่งที่ต้องการแจ้งซ่อม..." class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                    </div>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">สถานที่ / อาคาร / ห้อง <span class="text-red-500">*</span></label>
                     <select name="location" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
                         <option value="">-- เลือกสถานที่ --</option>
-                        <optgroup label="อาคาร A">
-                            <option value="อาคาร A - ห้อง 301">ห้อง 301</option>
-                            <option value="อาคาร A - ห้อง 302">ห้อง 302</option>
-                            <option value="อาคาร A - ห้องสมุด">ห้องสมุด</option>
+                        <optgroup label="อาคารบริหารธุรกิจสิรินธร (ตึก SBB)">
+                            <option value="ตึก SBB - ชั้น 1 (สำนักงาน/หอเกียรติยศ)">ชั้น 1 (สำนักงาน/หอเกียรติยศ)</option>
+                            <option value="ตึก SBB - ชั้น 2 (สำนักงานคณบดี)">ชั้น 2 (สำนักงานคณบดี)</option>
+                            <option value="ตึก SBB - ชั้น 5-10 (ห้องเรียน)">ชั้น 5-10 (ห้องเรียน SBB 501-1007)</option>
+                            <option value="ตึก SBB - ชั้น 11 (ห้องอเนกประสงค์)">ชั้น 11 (ห้องอเนกประสงค์)</option>
                         </optgroup>
-                        <optgroup label="อาคาร B">
-                            <option value="อาคาร B - ห้อง IT">ห้อง IT (คอมพิวเตอร์)</option>
-                            <option value="อาคาร B - สำนักงาน">สำนักงานคณะฯ</option>
+                        <optgroup label="อาคาร ACC.BIZ">
+                            <option value="ตึก ACC.BIZ - ห้องปฏิบัติการคอมพิวเตอร์">ห้องปฏิบัติการคอมพิวเตอร์</option>
+                            <option value="ตึก ACC.BIZ - ห้องเรียนทั่วไป">ห้องเรียนทั่วไป</option>
+                            <option value="ตึก ACC.BIZ - พื้นที่ใต้อาคาร">พื้นที่ใต้อาคาร / ทำงาน</option>
+                        </optgroup>
+                        <optgroup label="วิทยาเขตในเมือง">
+                            <option value="อาคาร ACC - วิทยาเขตในเมือง">อาคารบริหารธุรกิจ (วิทยาเขตในเมือง)</option>
                         </optgroup>
                     </select>
                 </div>
@@ -83,5 +92,21 @@
         </div>
     </div>
 
+    <script>
+        function toggleOtherEquipment() {
+            const eqSelect = document.getElementById("equipment_type");
+            const otherDiv = document.getElementById("other_equipment_div");
+            const otherInput = document.getElementById("other_equipment_input");
+            
+            if (eqSelect.value === "อื่นๆ") {
+                otherDiv.classList.remove("hidden");
+                otherInput.required = true;
+            } else {
+                otherDiv.classList.add("hidden");
+                otherInput.required = false;
+                otherInput.value = "";
+            }
+        }
+    </script>
 </body>
 </html>
