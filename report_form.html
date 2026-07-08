@@ -24,8 +24,9 @@
             
             <div class="bg-blue-50 rounded-xl p-4 mb-6 flex items-center border border-blue-100">
                 <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden mr-4">
-                    <i class="fas fa-user text-gray-400 text-xl"></i>
-                    </div>
+                    <i class="fas fa-user text-gray-400 text-xl" id="defaultIcon"></i>
+                    <img src="" alt="Profile" id="profileImage" class="w-full h-full object-cover hidden">
+                </div>
                 <div>
                     <p class="text-xs text-gray-500">ผู้แจ้งซ่อม (ดึงจาก LINE)</p>
                     <p class="text-sm font-bold text-blue-800" id="profileName">กำลังโหลดข้อมูล...</p>
@@ -54,20 +55,30 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">สถานที่ / อาคาร / ห้อง <span class="text-red-500">*</span></label>
                     <select name="location" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
-                        <option value="">-- เลือกสถานที่ --</option>
+                        <option value="">-- เลือกห้องที่ต้องการแจ้งซ่อม --</option>
                         <optgroup label="อาคารบริหารธุรกิจสิรินธร (ตึก SBB)">
-                            <option value="ตึก SBB - ชั้น 1 (สำนักงาน/หอเกียรติยศ)">ชั้น 1 (สำนักงาน/หอเกียรติยศ)</option>
-                            <option value="ตึก SBB - ชั้น 2 (สำนักงานคณบดี)">ชั้น 2 (สำนักงานคณบดี)</option>
-                            <option value="ตึก SBB - ชั้น 5-10 (ห้องเรียน)">ชั้น 5-10 (ห้องเรียน SBB 501-1007)</option>
-                            <option value="ตึก SBB - ชั้น 11 (ห้องอเนกประสงค์)">ชั้น 11 (ห้องอเนกประสงค์)</option>
+                            <option value="SBB 101">SBB 101 (ห้องสมุด/ลานพักผ่อน)</option>
+                            <option value="SBB 201">SBB 201 (สำนักงานคณบดี/หน่วยงาน)</option>
+                            <option value="SBB 401">SBB 401</option>
+                            <option value="SBB 402">SBB 402</option>
+                            <option value="SBB 501">SBB 501</option>
+                            <option value="SBB 502">SBB 502</option>
+                            <option value="SBB 601">SBB 601</option>
+                            <option value="SBB 701">SBB 701</option>
+                            <option value="SBB 801">SBB 801</option>
+                            <option value="SBB 901">SBB 901</option>
+                            <option value="SBB 1001">SBB 1001</option>
+                            <option value="SBB 1007">SBB 1007</option>
+                            <option value="SBB 1101">SBB 1101 (ห้องอเนกประสงค์)</option>
                         </optgroup>
                         <optgroup label="อาคาร ACC.BIZ">
-                            <option value="ตึก ACC.BIZ - ห้องปฏิบัติการคอมพิวเตอร์">ห้องปฏิบัติการคอมพิวเตอร์</option>
-                            <option value="ตึก ACC.BIZ - ห้องเรียนทั่วไป">ห้องเรียนทั่วไป</option>
-                            <option value="ตึก ACC.BIZ - พื้นที่ใต้อาคาร">พื้นที่ใต้อาคาร / ทำงาน</option>
-                        </optgroup>
-                        <optgroup label="วิทยาเขตในเมือง">
-                            <option value="อาคาร ACC - วิทยาเขตในเมือง">อาคารบริหารธุรกิจ (วิทยาเขตในเมือง)</option>
+                            <option value="ACC.BIZ 101">ACC.BIZ 101 (พื้นที่ใต้อาคาร)</option>
+                            <option value="ACC.BIZ 201">ACC.BIZ 201</option>
+                            <option value="ACC.BIZ 202">ACC.BIZ 202</option>
+                            <option value="ACC.BIZ 301">ACC.BIZ 301</option>
+                            <option value="ACC.BIZ 302">ACC.BIZ 302</option>
+                            <option value="ACC.BIZ 401">ACC.BIZ 401 (ห้องปฏิบัติการคอมพิวเตอร์)</option>
+                            <option value="ACC.BIZ 402">ACC.BIZ 402 (ห้องปฏิบัติการคอมพิวเตอร์)</option>
                         </optgroup>
                     </select>
                 </div>
