@@ -22,6 +22,7 @@
 
         <div class="p-6 flex-1">
             
+            <!-- ส่วนแสดงโปรไฟล์ผู้แจ้ง (เตรียมไว้เชื่อม LIFF) -->
             <div class="bg-blue-50 rounded-xl p-4 mb-6 flex items-center border border-blue-100">
                 <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden mr-4">
                     <i class="fas fa-user text-gray-400 text-xl" id="defaultIcon"></i>
@@ -35,6 +36,7 @@
 
             <form action="save_repair.php" method="POST" enctype="multipart/form-data" class="space-y-5">
                 
+                <!-- 1. สิ่งที่ต้องการแจ้งซ่อม -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">สิ่งที่ต้องการแจ้งซ่อม <span class="text-red-500">*</span></label>
                     <select name="equipment_type" id="equipment_type" onchange="toggleOtherEquipment()" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
@@ -52,6 +54,7 @@
                     </div>
                 </div>
 
+                <!-- 2. สถานที่ / ห้อง -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">สถานที่ / ห้อง <span class="text-red-500">*</span></label>
                     <select name="location" id="location" onchange="toggleOtherLocation()" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
@@ -119,18 +122,6 @@
                             <option value="ACC.LAB.308">ACC.LAB.308</option>
                         </optgroup>
                         
-                        <optgroup label="อาคาร/ห้องอื่นๆ">
-                            <option value="B-415">B-415</option>
-                            <option value="EN306">EN306</option>
-                            <option value="P200">P200</option>
-                            <option value="RN1-207">RN1-207</option>
-                            <option value="RN1-604">RN1-604</option>
-                            <option value="RN1-607">RN1-607</option>
-                            <option value="RN1-803">RN1-803</option>
-                            <option value="RN1-804">RN1-804</option>
-                            <option value="SC2-107">SC2-107</option>
-                        </optgroup>
-                        
                         <option value="อื่นๆ">-- อื่นๆ (ระบุสถานที่เอง) --</option>
                     </select>
 
@@ -139,11 +130,13 @@
                     </div>
                 </div>
 
+                <!-- 3. เบอร์โทรศัพท์ -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">เบอร์โทรศัพท์ติดต่อกลับ <span class="text-red-500">*</span></label>
                     <input type="tel" name="phone_number" placeholder="เช่น 0812345678" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
                 </div>
 
+                <!-- 4. อาการเสีย -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">อาการเสียเบื้องต้น <span class="text-red-500">*</span></label>
                     <textarea name="problem_desc" rows="3" placeholder="เช่น แอร์น้ำหยด, เปิดคอมไม่ติด..." class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required></textarea>
@@ -159,6 +152,7 @@
         </div>
     </div>
 
+    <!-- Script ควบคุมการแสดงผลช่อง "อื่นๆ" -->
     <script>
         function toggleOtherEquipment() {
             const eqSelect = document.getElementById("equipment_type");
