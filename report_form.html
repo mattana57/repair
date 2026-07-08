@@ -53,34 +53,90 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">สถานที่ / อาคาร / ห้อง <span class="text-red-500">*</span></label>
-                    <select name="location" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">สถานที่ / ห้อง <span class="text-red-500">*</span></label>
+                    <select name="location" id="location" onchange="toggleOtherLocation()" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" required>
                         <option value="">-- เลือกห้องที่ต้องการแจ้งซ่อม --</option>
-                        <optgroup label="อาคารบริหารธุรกิจสิรินธร (ตึก SBB)">
-                            <option value="SBB 101">SBB 101 (ห้องสมุด/ลานพักผ่อน)</option>
-                            <option value="SBB 201">SBB 201 (สำนักงานคณบดี/หน่วยงาน)</option>
-                            <option value="SBB 401">SBB 401</option>
-                            <option value="SBB 402">SBB 402</option>
-                            <option value="SBB 501">SBB 501</option>
-                            <option value="SBB 502">SBB 502</option>
-                            <option value="SBB 601">SBB 601</option>
-                            <option value="SBB 701">SBB 701</option>
-                            <option value="SBB 801">SBB 801</option>
-                            <option value="SBB 901">SBB 901</option>
-                            <option value="SBB 1001">SBB 1001</option>
-                            <option value="SBB 1007">SBB 1007</option>
-                            <option value="SBB 1101">SBB 1101 (ห้องอเนกประสงค์)</option>
+                        
+                        <optgroup label="สำหรับอาจารย์ / บุคลากร">
+                            <option value="ห้องพักอาจารย์">-- ห้องพักอาจารย์ (ระบุห้องเอง) --</option>
+                            <option value="สำนักงานคณะ">-- สำนักงาน / สายสนับสนุน (ระบุเอง) --</option>
                         </optgroup>
-                        <optgroup label="อาคาร ACC.BIZ">
-                            <option value="ACC.BIZ 101">ACC.BIZ 101 (พื้นที่ใต้อาคาร)</option>
-                            <option value="ACC.BIZ 201">ACC.BIZ 201</option>
-                            <option value="ACC.BIZ 202">ACC.BIZ 202</option>
-                            <option value="ACC.BIZ 301">ACC.BIZ 301</option>
-                            <option value="ACC.BIZ 302">ACC.BIZ 302</option>
-                            <option value="ACC.BIZ 401">ACC.BIZ 401 (ห้องปฏิบัติการคอมพิวเตอร์)</option>
-                            <option value="ACC.BIZ 402">ACC.BIZ 402 (ห้องปฏิบัติการคอมพิวเตอร์)</option>
+
+                        <optgroup label="ห้องประชุม / ห้องพิเศษ">
+                            <option value="1.ห้องประชุมสำเภาฟ้า ชั้น 2">1.ห้องประชุมสำเภาฟ้า ชั้น 2</option>
+                            <option value="2.ห้องประชุม SBB-314">2.ห้องประชุม SBB-314</option>
+                            <option value="3.ห้องประชุม SBB-414">3.ห้องประชุม SBB-414</option>
+                            <option value="SBB-Hall">SBB-Hall</option>
                         </optgroup>
+                        
+                        <optgroup label="อาคาร SBB (ห้องเรียน)">
+                            <option value="SBB-301">SBB-301</option>
+                            <option value="SBB-401">SBB-401</option>
+                            <option value="SBB-501">SBB-501</option>
+                            <option value="SBB-502">SBB-502</option>
+                            <option value="SBB-503">SBB-503</option>
+                            <option value="SBB-504">SBB-504</option>
+                            <option value="SBB-505">SBB-505</option>
+                            <option value="SBB-506">SBB-506</option>
+                            <option value="SBB-507">SBB-507</option>
+                            <option value="SBB-601">SBB-601</option>
+                            <option value="SBB-602">SBB-602</option>
+                            <option value="SBB-603">SBB-603</option>
+                            <option value="SBB-604">SBB-604</option>
+                            <option value="SBB-605">SBB-605</option>
+                            <option value="SBB-606">SBB-606</option>
+                            <option value="SBB-607">SBB-607</option>
+                            <option value="SBB-701">SBB-701</option>
+                            <option value="SBB-702">SBB-702</option>
+                            <option value="SBB-703">SBB-703</option>
+                            <option value="SBB-704">SBB-704</option>
+                            <option value="SBB-705">SBB-705</option>
+                            <option value="SBB-706">SBB-706</option>
+                            <option value="SBB-707">SBB-707</option>
+                            <option value="SBB-801">SBB-801</option>
+                            <option value="SBB-803">SBB-803</option>
+                            <option value="SBB-805">SBB-805</option>
+                            <option value="SBB-901">SBB-901</option>
+                            <option value="SBB-903">SBB-903</option>
+                            <option value="SBB-905">SBB-905</option>
+                            <option value="SBB-1001">SBB-1001</option>
+                            <option value="SBB-1003">SBB-1003</option>
+                            <option value="SBB-1005">SBB-1005</option>
+                            <option value="SBB-1101">SBB-1101</option>
+                            <option value="SBB-1102">SBB-1102</option>
+                            <option value="SBB-1103">SBB-1103</option>
+                        </optgroup>
+                        
+                        <optgroup label="อาคาร ACC.BIZ / ACC.LAB">
+                            <option value="ACC.BIZ.205">ACC.BIZ.205</option>
+                            <option value="ACC.BIZ.405">ACC.BIZ.405</option>
+                            <option value="ACC.BIZ.406">ACC.BIZ.406</option>
+                            <option value="ACC.LAB.301">ACC.LAB.301</option>
+                            <option value="ACC.LAB.302">ACC.LAB.302</option>
+                            <option value="ACC.LAB.303">ACC.LAB.303</option>
+                            <option value="ACC.LAB.304">ACC.LAB.304</option>
+                            <option value="ACC.LAB.306">ACC.LAB.306</option>
+                            <option value="ACC.LAB.308">ACC.LAB.308</option>
+                        </optgroup>
+                        
+                        <optgroup label="อาคาร/ห้องอื่นๆ">
+                            <option value="B-415">B-415</option>
+                            <option value="EN306">EN306</option>
+                            <option value="P200">P200</option>
+                            <option value="RN1-207">RN1-207</option>
+                            <option value="RN1-604">RN1-604</option>
+                            <option value="RN1-607">RN1-607</option>
+                            <option value="RN1-803">RN1-803</option>
+                            <option value="RN1-804">RN1-804</option>
+                            <option value="SC2-107">SC2-107</option>
+                        </optgroup>
+                        
+                        <option value="อื่นๆ">-- อื่นๆ (ระบุสถานที่เอง) --</option>
                     </select>
+
+                    <div id="other_location_div" class="hidden mt-3">
+                        <input type="text" name="other_location" id="other_location_input" placeholder="โปรดระบุห้อง หรือสถานที่..." class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                    </div>
                 </div>
 
                 <div>
@@ -116,6 +172,29 @@
                 otherDiv.classList.add("hidden");
                 otherInput.required = false;
                 otherInput.value = "";
+            }
+        }
+
+        function toggleOtherLocation() {
+            const locSelect = document.getElementById("location");
+            const otherLocDiv = document.getElementById("other_location_div");
+            const otherLocInput = document.getElementById("other_location_input");
+            
+            if (locSelect.value === "ห้องพักอาจารย์" || locSelect.value === "สำนักงานคณะ" || locSelect.value === "อื่นๆ") {
+                otherLocDiv.classList.remove("hidden");
+                otherLocInput.required = true;
+                
+                if(locSelect.value === "ห้องพักอาจารย์") {
+                    otherLocInput.placeholder = "โปรดระบุเลขห้องพักอาจารย์...";
+                } else if(locSelect.value === "สำนักงานคณะ") {
+                    otherLocInput.placeholder = "โปรดระบุชื่อฝ่าย/ส่วนงาน...";
+                } else {
+                    otherLocInput.placeholder = "โปรดระบุสถานที่...";
+                }
+            } else {
+                otherLocDiv.classList.add("hidden");
+                otherLocInput.required = false;
+                otherLocInput.value = "";
             }
         }
     </script>
