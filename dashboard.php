@@ -19,7 +19,6 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
     <meta charset="UTF-8">
     <title>Smart Maintenance Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
@@ -33,98 +32,57 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
             <div class="h-16 flex items-center justify-center border-b border-slate-700">
                 <h1 class="text-lg font-bold text-white"><i class="fas fa-tools text-blue-400 mr-2"></i>RepairSystem</h1>
             </div>
-            
-            <nav class="flex-1 px-4 py-6 flex flex-col justify-between" id="sidebarMenu">
+            <nav class="flex-1 px-4 py-6 flex flex-col justify-between">
                 <div class="space-y-2">
-                    <button type="button" onclick="switchPage('page-dashboard', this)" class="w-full text-left px-4 py-2 rounded-lg menu-btn menu-active transition-colors"><i class="fas fa-chart-line w-6 text-center"></i> ภาพรวม (Dashboard)</button>
+                    <button type="button" onclick="switchPage('page-dashboard', this)" class="w-full text-left px-4 py-2 rounded-lg menu-btn menu-active transition-colors"><i class="fas fa-chart-line w-6 text-center"></i> ภาพรวม</button>
                     <button type="button" onclick="switchPage('page-repairs', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-clipboard-list w-6 text-center"></i> รายการแจ้งซ่อม</button>
                     <button type="button" onclick="switchPage('page-assign', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-user-cog w-6 text-center"></i> มอบหมายงานช่าง</button>
                     <button type="button" onclick="switchPage('page-assets', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-desktop w-6 text-center"></i> จัดการครุภัณฑ์</button>
                     <button type="button" onclick="switchPage('page-users', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-users w-6 text-center"></i> จัดการผู้ใช้งาน</button>
-                    <button type="button" onclick="switchPage('page-reports', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-file-export w-6 text-center"></i> ออกรายงาน (Export)</button>
+                    <button type="button" onclick="switchPage('page-reports', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-file-export w-6 text-center"></i> ออกรายงาน</button>
                 </div>
-
                 <div class="mt-auto">
-                    <a href="logout.php" class="flex items-center px-4 py-2 bg-red-900/30 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition-all duration-200">
-                        <i class="fas fa-sign-out-alt w-6 text-center"></i> ออกจากระบบ
-                    </a>
+                    <a href="logout.php" class="flex items-center px-4 py-2 bg-red-900/30 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition-all"><i class="fas fa-sign-out-alt w-6 text-center"></i> ออกจากระบบ</a>
                 </div>
             </nav>
         </aside>
 
         <main class="flex-1 flex flex-col overflow-y-auto">
-            <header class="h-16 bg-white shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
-                <h2 class="text-xl font-semibold text-gray-800" id="headerTitle">ภาพรวม (Dashboard)</h2>
-            </header>
+            <header class="h-16 bg-white shadow-sm flex items-center px-6 sticky top-0 z-10"><h2 class="text-xl font-semibold text-gray-800" id="headerTitle">ภาพรวม (Dashboard)</h2></header>
 
             <div class="p-6">
                 <div id="page-dashboard" class="page-section space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-                            <p class="text-gray-500">จำนวนงานทั้งหมด</p><p class="text-3xl font-bold"><?php echo $total_jobs; ?></p>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500">
-                            <p class="text-gray-500">รอรับเรื่อง</p><p class="text-3xl font-bold"><?php echo $pending_jobs; ?></p>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500">
-                            <p class="text-gray-500">กำลังดำเนินการ</p><p class="text-3xl font-bold"><?php echo $progress_jobs; ?></p>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-                            <p class="text-gray-500">ซ่อมเสร็จแล้ว</p><p class="text-3xl font-bold"><?php echo $done_jobs; ?></p>
-                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-gray-500">ทั้งหมด</p><p class="text-3xl font-bold"><?php echo $total_jobs; ?></p></div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500"><p class="text-gray-500">รอรับเรื่อง</p><p class="text-3xl font-bold"><?php echo $pending_jobs; ?></p></div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500"><p class="text-gray-500">กำลังซ่อม</p><p class="text-3xl font-bold"><?php echo $progress_jobs; ?></p></div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500"><p class="text-gray-500">เสร็จแล้ว</p><p class="text-3xl font-bold"><?php echo $done_jobs; ?></p></div>
                     </div>
                 </div>
 
                 <div id="page-repairs" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
-                    <h3 class="font-bold text-lg mb-4">รายการแจ้งซ่อมทั้งหมด</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="p-3">เลขที่</th>
-                                    <th class="p-3">อุปกรณ์</th>
-                                    <th class="p-3">สถานที่</th>
-                                    <th class="p-3">อาการเสีย</th>
-                                    <th class="p-3">เบอร์โทร</th>
-                                    <th class="p-3">สถานะ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while($row = $result_repairs->fetch_assoc()) { ?>
-                                <tr class="border-b">
-                                    <td class="p-3"><?php echo $row['ticket_no']; ?></td>
-                                    <td class="p-3"><?php echo $row['equipment_type']; ?></td>
-                                    <td class="p-3"><?php echo $row['location']; ?></td>
-                                    <td class="p-3 truncate max-w-xs"><?php echo $row['problem_desc']; ?></td>
-                                    <td class="p-3"><?php echo $row['phone_number']; ?></td>
-                                    <td class="p-3">
-                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
-                                            <?php echo $row['status']; ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                                <?php } ?>
-                            </tbody>
-                        </table>
-                    </div>
+                    <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-lg">รายการแจ้งซ่อมทั้งหมด</h3></div>
+                    <table class="w-full text-left text-sm">
+                        <tr class="bg-gray-100"><th class="p-3">เลขที่</th><th class="p-3">อุปกรณ์</th><th class="p-3">สถานะ</th><th class="p-3">จัดการ</th></tr>
+                        <?php while($row = $result_repairs->fetch_assoc()) { ?>
+                        <tr class="border-b">
+                            <td class="p-3"><?php echo $row['ticket_no']; ?></td><td class="p-3"><?php echo $row['equipment_type']; ?></td>
+                            <td class="p-3"><span class="px-2 py-1 bg-blue-100 rounded-full"><?php echo $row['status']; ?></span></td>
+                            <td class="p-3"><button class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                        <?php } ?>
+                    </table>
                 </div>
 
-                <div id="page-assign" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
-                    <h3 class="font-bold text-lg mb-4">มอบหมายงานช่าง</h3>
-                    <p class="text-gray-600">จัดการมอบหมายงานและติดตามการทำงานของช่างในระบบ</p>
+                <?php foreach(['page-assign'=>'มอบหมายงานช่าง','page-assets'=>'จัดการครุภัณฑ์','page-users'=>'จัดการผู้ใช้งาน'] as $id => $title) { ?>
+                <div id="<?php echo $id; ?>" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-lg"><?php echo $title; ?></h3>
+                        <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i>เพิ่มข้อมูล</button>
+                    </div>
+                    <p class="text-gray-500">ตารางข้อมูลสำหรับ<?php echo $title; ?>จะแสดงที่นี่...</p>
                 </div>
-                <div id="page-assets" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
-                    <h3 class="font-bold text-lg mb-4">จัดการครุภัณฑ์</h3>
-                    <p class="text-gray-600">บันทึกและจัดการข้อมูลครุภัณฑ์ภายในหน่วยงาน</p>
-                </div>
-                <div id="page-users" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
-                    <h3 class="font-bold text-lg mb-4">จัดการผู้ใช้งาน</h3>
-                    <p class="text-gray-600">กำหนดสิทธิ์และจัดการบัญชีผู้ใช้งานในระบบ</p>
-                </div>
-                <div id="page-reports" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
-                    <h3 class="font-bold text-lg mb-4">ออกรายงาน (Export)</h3>
-                    <p class="text-gray-600">สรุปผลการดำเนินงานและส่งออกข้อมูลเป็นไฟล์รายงาน</p>
-                </div>
+                <?php } ?>
             </div>
         </main>
     </div>
@@ -135,8 +93,8 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
             document.getElementById(pageId).classList.remove('hidden');
             document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('menu-active'));
             if(btn) btn.classList.add('menu-active');
-            const titleMap = {'page-dashboard':'ภาพรวม (Dashboard)','page-repairs':'รายการแจ้งซ่อม','page-assign':'มอบหมายงานช่าง','page-assets':'จัดการครุภัณฑ์','page-users':'จัดการผู้ใช้งาน','page-reports':'ออกรายงาน'};
-            document.getElementById('headerTitle').innerText = titleMap[pageId];
+            const titles = {'page-dashboard':'ภาพรวม','page-repairs':'รายการแจ้งซ่อม','page-assign':'มอบหมายงานช่าง','page-assets':'จัดการครุภัณฑ์','page-users':'จัดการผู้ใช้งาน','page-reports':'ออกรายงาน'};
+            document.getElementById('headerTitle').innerText = titles[pageId];
         }
     </script>
 </body>
