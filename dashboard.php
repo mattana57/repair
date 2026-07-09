@@ -28,6 +28,7 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen w-full overflow-hidden">
+        <!-- Sidebar -->
         <aside class="w-64 bg-slate-800 text-slate-300 flex flex-col hidden md:flex">
             <div class="h-16 flex items-center justify-center border-b border-slate-700">
                 <h1 class="text-lg font-bold text-white"><i class="fas fa-tools text-blue-400 mr-2"></i>RepairSystem</h1>
@@ -47,10 +48,12 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
             </nav>
         </aside>
 
+        <!-- Main Content -->
         <main class="flex-1 flex flex-col overflow-y-auto">
-            <header class="h-16 bg-white shadow-sm flex items-center px-6 sticky top-0 z-10"><h2 class="text-xl font-semibold text-gray-800" id="headerTitle">ภาพรวม (Dashboard)</h2></header>
+            <header class="h-16 bg-white shadow-sm flex items-center px-6 sticky top-0 z-10"><h2 class="text-xl font-semibold text-gray-800" id="headerTitle">ภาพรวม</h2></header>
 
             <div class="p-6">
+                <!-- Dashboard -->
                 <div id="page-dashboard" class="page-section space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-gray-500">ทั้งหมด</p><p class="text-3xl font-bold"><?php echo $total_jobs; ?></p></div>
@@ -60,6 +63,7 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
                     </div>
                 </div>
 
+                <!-- Repairs List -->
                 <div id="page-repairs" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
                     <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-lg">รายการแจ้งซ่อมทั้งหมด</h3></div>
                     <table class="w-full text-left text-sm">
@@ -74,15 +78,23 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
                     </table>
                 </div>
 
-                <?php foreach(['page-assign'=>'มอบหมายงานช่าง','page-assets'=>'จัดการครุภัณฑ์','page-users'=>'จัดการผู้ใช้งาน'] as $id => $title) { ?>
-                <div id="<?php echo $id; ?>" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-lg"><?php echo $title; ?></h3>
-                        <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i>เพิ่มข้อมูล</button>
-                    </div>
-                    <p class="text-gray-500">ตารางข้อมูลสำหรับ<?php echo $title; ?>จะแสดงที่นี่...</p>
+                <!-- Management Pages -->
+                <div id="page-assign" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-6">มอบหมายงานช่าง</h3>
+                    <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i>เพิ่มข้อมูล</button>
                 </div>
-                <?php } ?>
+                <div id="page-assets" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-6">จัดการครุภัณฑ์</h3>
+                    <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i>เพิ่มข้อมูล</button>
+                </div>
+                <div id="page-users" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-6">จัดการผู้ใช้งาน</h3>
+                    <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i>เพิ่มข้อมูล</button>
+                </div>
+                <div id="page-reports" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-6">ออกรายงาน</h3>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fas fa-download mr-2"></i>ดาวน์โหลดรายงาน</button>
+                </div>
             </div>
         </main>
     </div>
