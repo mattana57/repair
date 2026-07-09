@@ -109,10 +109,22 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
                     </div>
                 </div>
 
-                <div id="page-assign" class="page-section hidden"><div class="bg-white p-6 rounded-xl">เนื้อหาสำหรับมอบหมายงานช่าง</div></div>
-                <div id="page-assets" class="page-section hidden"><div class="bg-white p-6 rounded-xl">เนื้อหาสำหรับจัดการครุภัณฑ์</div></div>
-                <div id="page-users" class="page-section hidden"><div class="bg-white p-6 rounded-xl">เนื้อหาสำหรับจัดการผู้ใช้งาน</div></div>
-                <div id="page-reports" class="page-section hidden"><div class="bg-white p-6 rounded-xl">เนื้อหาสำหรับออกรายงาน</div></div>
+                <div id="page-assign" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-4">มอบหมายงานช่าง</h3>
+                    <p class="text-gray-600">จัดการมอบหมายงานและติดตามการทำงานของช่างในระบบ</p>
+                </div>
+                <div id="page-assets" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-4">จัดการครุภัณฑ์</h3>
+                    <p class="text-gray-600">บันทึกและจัดการข้อมูลครุภัณฑ์ภายในหน่วยงาน</p>
+                </div>
+                <div id="page-users" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-4">จัดการผู้ใช้งาน</h3>
+                    <p class="text-gray-600">กำหนดสิทธิ์และจัดการบัญชีผู้ใช้งานในระบบ</p>
+                </div>
+                <div id="page-reports" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-4">ออกรายงาน (Export)</h3>
+                    <p class="text-gray-600">สรุปผลการดำเนินงานและส่งออกข้อมูลเป็นไฟล์รายงาน</p>
+                </div>
             </div>
         </main>
     </div>
