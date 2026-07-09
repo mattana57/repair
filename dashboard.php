@@ -33,14 +33,22 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
             <div class="h-16 flex items-center justify-center border-b border-slate-700">
                 <h1 class="text-lg font-bold text-white"><i class="fas fa-tools text-blue-400 mr-2"></i>RepairSystem</h1>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-2">
-                <button type="button" onclick="switchPage('page-dashboard', this)" class="w-full text-left px-4 py-2 rounded-lg menu-btn menu-active"><i class="fas fa-chart-line w-6 text-center"></i> ภาพรวม (Dashboard)</button>
-                <button type="button" onclick="switchPage('page-repairs', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn"><i class="fas fa-clipboard-list w-6 text-center"></i> รายการแจ้งซ่อม</button>
-                <button type="button" onclick="switchPage('page-assign', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn"><i class="fas fa-user-cog w-6 text-center"></i> มอบหมายงานช่าง</button>
-                <button type="button" onclick="switchPage('page-assets', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn"><i class="fas fa-desktop w-6 text-center"></i> จัดการครุภัณฑ์</button>
-                <button type="button" onclick="switchPage('page-users', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn"><i class="fas fa-users w-6 text-center"></i> จัดการผู้ใช้งาน</button>
-                <button type="button" onclick="switchPage('page-reports', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn"><i class="fas fa-file-export w-6 text-center"></i> ออกรายงาน (Export)</button>
-                <a href="logout.php" class="w-full text-left px-4 py-2 mt-4 hover:bg-red-900 text-red-400 rounded-lg"><i class="fas fa-sign-out-alt w-6 text-center"></i> ออกจากระบบ</a>
+            
+            <nav class="flex-1 px-4 py-6 flex flex-col justify-between" id="sidebarMenu">
+                <div class="space-y-2">
+                    <button type="button" onclick="switchPage('page-dashboard', this)" class="w-full text-left px-4 py-2 rounded-lg menu-btn menu-active transition-colors"><i class="fas fa-chart-line w-6 text-center"></i> ภาพรวม (Dashboard)</button>
+                    <button type="button" onclick="switchPage('page-repairs', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-clipboard-list w-6 text-center"></i> รายการแจ้งซ่อม</button>
+                    <button type="button" onclick="switchPage('page-assign', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-user-cog w-6 text-center"></i> มอบหมายงานช่าง</button>
+                    <button type="button" onclick="switchPage('page-assets', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-desktop w-6 text-center"></i> จัดการครุภัณฑ์</button>
+                    <button type="button" onclick="switchPage('page-users', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-users w-6 text-center"></i> จัดการผู้ใช้งาน</button>
+                    <button type="button" onclick="switchPage('page-reports', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-file-export w-6 text-center"></i> ออกรายงาน (Export)</button>
+                </div>
+
+                <div class="mt-auto">
+                    <a href="logout.php" class="flex items-center px-4 py-2 bg-red-900/30 text-red-400 hover:bg-red-600 hover:text-white rounded-lg transition-all duration-200">
+                        <i class="fas fa-sign-out-alt w-6 text-center"></i> ออกจากระบบ
+                    </a>
+                </div>
             </nav>
         </aside>
 
@@ -50,7 +58,6 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
             </header>
 
             <div class="p-6">
-                <!-- หน้าภาพรวม -->
                 <div id="page-dashboard" class="page-section space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
@@ -68,7 +75,6 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
                     </div>
                 </div>
 
-                <!-- หน้ารายการแจ้งซ่อม -->
                 <div id="page-repairs" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
                     <h3 class="font-bold text-lg mb-4">รายการแจ้งซ่อมทั้งหมด</h3>
                     <table class="w-full text-left">
@@ -81,7 +87,6 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
                     </table>
                 </div>
 
-                <!-- หน้าอื่นๆ -->
                 <div id="page-assign" class="page-section hidden"><div class="bg-white p-6 rounded-xl">เนื้อหาสำหรับมอบหมายงานช่าง</div></div>
                 <div id="page-assets" class="page-section hidden"><div class="bg-white p-6 rounded-xl">เนื้อหาสำหรับจัดการครุภัณฑ์</div></div>
                 <div id="page-users" class="page-section hidden"><div class="bg-white p-6 rounded-xl">เนื้อหาสำหรับจัดการผู้ใช้งาน</div></div>
