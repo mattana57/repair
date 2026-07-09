@@ -77,14 +77,36 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
 
                 <div id="page-repairs" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
                     <h3 class="font-bold text-lg mb-4">รายการแจ้งซ่อมทั้งหมด</h3>
-                    <table class="w-full text-left">
-                        <thead><tr class="bg-gray-100"><th class="p-3">เลขที่</th><th class="p-3">อุปกรณ์</th><th class="p-3">สถานะ</th></tr></thead>
-                        <tbody>
-                            <?php while($row = $result_repairs->fetch_assoc()) { ?>
-                            <tr class="border-b"><td class="p-3"><?php echo $row['ticket_no']; ?></td><td class="p-3"><?php echo $row['equipment_type']; ?></td><td class="p-3"><?php echo $row['status']; ?></td></tr>
-                            <?php } ?>
-                        </tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="p-3">เลขที่</th>
+                                    <th class="p-3">อุปกรณ์</th>
+                                    <th class="p-3">สถานที่</th>
+                                    <th class="p-3">อาการเสีย</th>
+                                    <th class="p-3">เบอร์โทร</th>
+                                    <th class="p-3">สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php while($row = $result_repairs->fetch_assoc()) { ?>
+                                <tr class="border-b">
+                                    <td class="p-3"><?php echo $row['ticket_no']; ?></td>
+                                    <td class="p-3"><?php echo $row['equipment_type']; ?></td>
+                                    <td class="p-3"><?php echo $row['location']; ?></td>
+                                    <td class="p-3 truncate max-w-xs"><?php echo $row['problem_desc']; ?></td>
+                                    <td class="p-3"><?php echo $row['phone_number']; ?></td>
+                                    <td class="p-3">
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+                                            <?php echo $row['status']; ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div id="page-assign" class="page-section hidden"><div class="bg-white p-6 rounded-xl">เนื้อหาสำหรับมอบหมายงานช่าง</div></div>
