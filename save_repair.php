@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($stmt->execute()) {
         // 2. ส่งข้อความเข้า LINE (Messaging API แบบ Push Message)
         $accessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU='; 
-        $userId = 'Ud9f90291e0350b3be55d002fb1aa7665';
+        $userId = 'Ub6fddb83458d09ae70b3a4c7ad430b28';
 
         $message = [
             'to' => $userId,
