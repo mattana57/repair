@@ -137,9 +137,21 @@ $result_techs = $conn->query("SELECT * FROM technicians ORDER BY id DESC");
             document.getElementById(pageId).classList.remove('hidden');
             document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('menu-active'));
             if(btn) btn.classList.add('menu-active');
-            const titles = {'page-dashboard':'ภาพรวม','page-repairs':'รายการแจ้งซ่อม','page-technicians':'จัดการข้อมูลช่าง','page-assign':'มอบหมายงานช่าง','page-assets':'จัดการครุภัณฑ์','page-users':'จัดการผู้ใช้งาน','page-reports':'ออกรายงาน'};
-            document.getElementById('headerTitle').innerText = titles[pageId];
+            const titles = {
+                'page-dashboard':'ภาพรวม',
+                'page-repairs':'รายการแจ้งซ่อม',
+                'page-technicians':'จัดการข้อมูลช่าง',
+                'page-assign':'มอบหมายงานช่าง',
+                'page-assets':'จัดการครุภัณฑ์',
+                'page-users':'จัดการผู้ใช้งาน',
+                'page-reports':'ออกรายงาน'
+            };
+            document.getElementById('headerTitle').innerText = titles[pageId] || 'ภาพรวม';
         }
+        // ค่าเริ่มต้น
+        window.onload = function() {
+            switchPage('page-dashboard', document.querySelector('.menu-btn'));
+        };
     </script>
 </body>
 </html>
