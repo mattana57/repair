@@ -2,7 +2,7 @@
 require_once 'db_connect.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // 1. เก็บข้อมูลลง Database
+    // 1. บันทึกลงฐานข้อมูลเหมือนเดิม
     $ticket_no = 'MR-' . date('Ymd-His');
     $equipment = $_POST['equipment_type'];
     $location = $_POST['location'];
@@ -11,32 +11,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, phone_number, problem_desc, status) VALUES (?, ?, ?, ?, ?, 'รอรับเรื่อง')");
     $stmt->bind_param("sssss", $ticket_no, $equipment, $location, $phone, $desc);
-
+    
     if ($stmt->execute()) {
-        // 2. ส่งข้อความเข้า LINE Notify หลังจากบันทึก DB สำเร็จ
-        $token = "ใส่_LINE_NOTIFY_TOKEN_ของคุณที่นี่"; // <--- ใส่ Token ตรงนี้ครับ
-        $message = "\n🔔 มีรายการแจ้งซ่อมใหม่!\n" .
-                   "เลขที่: $ticket_no\n" .
-                   "อุปกรณ์: $equipment\n" .
-                   "สถานที่: $location\n" .
-                   "เบอร์โทร: $phone\n" .
-                   "อาการ: $desc";
+        // 2. ส่งข้อความเข้า LINE (Messaging API แบบ Push Message)
+        $accessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU='; 
+        $userId = 'Ud9f90291e0350b3be55d002fb1aa7665';
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://notify-api.line.me/api/notify");
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, "message=" . $message);
-        $headers = array('Content-type: application/x-www-form-urlencoded', 'Authorization: Bearer ' . $token . '');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $message = [
+            'to' => $userId,
+            'messages' => [
+                [
+                    'type' => 'text', 
+                    'text' => "🔔 มีรายการแจ้งซ่อมใหม่!\nเลขที่: $ticket_no\nอุปกรณ์: $equipment\nสถานที่: $location\nเบอร์โทร: $phone\nอาการ: $desc"
+                ]
+            ]
+        ];
+
+        $ch = curl_init("https://api.line.me/v2/bot/message/push");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($message));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type:application/json', 'Authorization: Bearer ' . $accessToken]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_exec($ch);
         curl_close($ch);
 
-        echo "<script>alert('แจ้งซ่อมสำเร็จและส่ง LINE แล้ว!'); window.location='report_form.html';</script>";
-    } else {
-        echo "เกิดข้อผิดพลาดในการบันทึก: " . $conn->error;
+        echo "<script>alert('ส่งแจ้งเตือนเข้า LINE เรียบร้อยแล้ว!'); window.location='report_form.html';</script>";
     }
 }
 ?>
