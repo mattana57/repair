@@ -21,6 +21,6 @@ if (isset($_GET['ticket_no']) && isset($_GET['status'])) {
     curl_exec($ch);
     curl_close($ch);
 
-    echo "<script>alert('อัปเดตสถานะเรียบร้อย!'); window.location='admin_dashboard.php';</script>";
+    echo "<script>alert('อัปเดตสถานะเรียบร้อย!'); window.location='dashboard.php';</script>";
 }
 ?>
