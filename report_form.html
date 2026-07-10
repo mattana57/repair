@@ -30,13 +30,24 @@
         </div>
 
         <div class="p-6">
-            <form action="save_repair.php" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form action="save_repair.php" method="POST" class="space-y-6">
                 
+                <!-- ช่องกรอกชื่อที่จำค่าได้ -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                        <i class="fas fa-user text-indigo-500 mr-1.5"></i> ชื่อ-นามสกุล ผู้แจ้ง <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="reporter_name" id="reporter_name" placeholder="ระบุชื่อของคุณ..." 
+                           class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200" 
+                           required onblur="saveName()">
+                </div>
+
+                <!-- สิ่งที่ต้องการแจ้งซ่อม -->
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">
                         <i class="fas fa-wrench text-indigo-500 mr-1.5"></i> สิ่งที่ต้องการแจ้งซ่อม <span class="text-red-500">*</span>
                     </label>
-                    <select name="equipment_type" id="equipment_type" onchange="toggleOtherEquipment()" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200" required>
+                    <select name="equipment_type" id="equipment_type" onchange="toggleOtherEquipment()" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200" required>
                         <option value="">-- เลือกสิ่งที่ชำรุด --</option>
                         <option value="แอร์/เครื่องปรับอากาศ">❄️ แอร์ / เครื่องปรับอากาศ</option>
                         <option value="คอมพิวเตอร์/ปริ้นเตอร์">💻 คอมพิวเตอร์ / ปริ้นเตอร์</option>
@@ -44,116 +55,106 @@
                         <option value="ไฟฟ้า/หลอดไฟ">💡 ไฟฟ้า / หลอดไฟ / ปลั๊ก</option>
                         <option value="อื่นๆ">➕ อื่นๆ</option>
                     </select>
-                    
                     <div id="other_equipment_div" class="hidden mt-3">
-                        <input type="text" name="other_equipment" id="other_equipment_input" placeholder="โปรดระบุอุปกรณ์ที่ต้องการแจ้งซ่อม..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200">
+                        <input type="text" name="other_equipment" id="other_equipment_input" placeholder="โปรดระบุอุปกรณ์ที่ต้องการแจ้งซ่อม..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50">
                     </div>
                 </div>
 
+                <!-- สถานที่ -->
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">
-                        <i class="fas fa-map-marker-alt text-indigo-500 mr-1.5 ml-0.5"></i> สถานที่ / ห้อง <span class="text-red-500">*</span>
+                        <i class="fas fa-map-marker-alt text-indigo-500 mr-1.5"></i> สถานที่ / ห้อง <span class="text-red-500">*</span>
                     </label>
-                    <select name="location" id="location" onchange="toggleOtherLocation()" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200" required>
-                        <option value="">-- เลือกสถานที่ / ห้อง --</option>
-                        
-                        <optgroup label="ตึก ACC.BIZ">
-                            <option value="ACC.901A">ACC.901A</option><option value="ACC.901B">ACC.901B</option>
-                            <option value="ACC.BIZ103">ACC.BIZ103</option><option value="ACC.BIZ205">ACC.BIZ205</option>
-                            <option value="ACC.BIZ301">ACC.BIZ301</option><option value="ACC.BIZ302">ACC.BIZ302</option>
-                            <option value="ACC.BIZ303">ACC.BIZ303</option><option value="ACC.BIZ304">ACC.BIZ304</option>
-                            <option value="ACC.BIZ305">ACC.BIZ305</option><option value="ACC.BIZ306">ACC.BIZ306</option>
-                            <option value="ACC.BIZ308">ACC.BIZ308</option><option value="ACC.BIZ309">ACC.BIZ309</option>
-                            <option value="ACC.BIZ310">ACC.BIZ310</option><option value="ACC.BIZ405">ACC.BIZ405</option>
-                            <option value="ACC.BIZ406">ACC.BIZ406</option><option value="ACC.BIZ407">ACC.BIZ407</option>
-                            <option value="ACC.BIZ409">ACC.BIZ409</option><option value="ACC.BIZ410">ACC.BIZ410</option>
-                            <option value="ACC.BIZ411">ACC.BIZ411</option><option value="ACC.BIZ412">ACC.BIZ412</option>
-                            <option value="ACC.BIZ507">ACC.BIZ507</option><option value="ACC.BIZ508">ACC.BIZ508</option>
-                            <option value="ACC.BIZ509">ACC.BIZ509</option><option value="ACC.BIZ510">ACC.BIZ510</option>
-                            <option value="ACC.BIZ511">ACC.BIZ511</option><option value="ACC.BIZ512">ACC.BIZ512</option>
-                            <option value="ACC.BIZ513">ACC.BIZ513</option><option value="ACC.BIZ607">ACC.BIZ607</option>
-                            <option value="ACC.BIZ608">ACC.BIZ608</option><option value="ACC.BIZ609">ACC.BIZ609</option>
-                            <option value="ACC.BIZ610">ACC.BIZ610</option>
-                        </optgroup>
+                    <select name="location" id="location" onchange="toggleOtherLocation()" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200" required>
+    <option value="">-- เลือกสถานที่ / ห้อง --</option>
+    
+    <optgroup label="ตึก ACC.BIZ">
+        <option value="ACC.901A">ACC.901A</option><option value="ACC.901B">ACC.901B</option>
+        <option value="ACC.BIZ103">ACC.BIZ103</option><option value="ACC.BIZ205">ACC.BIZ205</option>
+        <option value="ACC.BIZ301">ACC.BIZ301</option><option value="ACC.BIZ302">ACC.BIZ302</option>
+        <option value="ACC.BIZ303">ACC.BIZ303</option><option value="ACC.BIZ304">ACC.BIZ304</option>
+        <option value="ACC.BIZ305">ACC.BIZ305</option><option value="ACC.BIZ306">ACC.BIZ306</option>
+        <option value="ACC.BIZ308">ACC.BIZ308</option><option value="ACC.BIZ309">ACC.BIZ309</option>
+        <option value="ACC.BIZ310">ACC.BIZ310</option><option value="ACC.BIZ405">ACC.BIZ405</option>
+        <option value="ACC.BIZ406">ACC.BIZ406</option><option value="ACC.BIZ407">ACC.BIZ407</option>
+        <option value="ACC.BIZ409">ACC.BIZ409</option><option value="ACC.BIZ410">ACC.BIZ410</option>
+        <option value="ACC.BIZ411">ACC.BIZ411</option><option value="ACC.BIZ412">ACC.BIZ412</option>
+        <option value="ACC.BIZ507">ACC.BIZ507</option><option value="ACC.BIZ508">ACC.BIZ508</option>
+        <option value="ACC.BIZ509">ACC.BIZ509</option><option value="ACC.BIZ510">ACC.BIZ510</option>
+        <option value="ACC.BIZ511">ACC.BIZ511</option><option value="ACC.BIZ512">ACC.BIZ512</option>
+        <option value="ACC.BIZ513">ACC.BIZ513</option><option value="ACC.BIZ607">ACC.BIZ607</option>
+        <option value="ACC.BIZ608">ACC.BIZ608</option><option value="ACC.BIZ609">ACC.BIZ609</option>
+        <option value="ACC.BIZ610">ACC.BIZ610</option>
+    </optgroup>
 
-                        <optgroup label="ตึก SBB">
-                            <option value="SBB-1003">SBB-1003</option><option value="SBB-1005">SBB-1005</option>
-                            <option value="SBB-1006">SBB-1006</option><option value="SBB-1007">SBB-1007</option>
-                            <option value="SBB-1101">SBB-1101</option><option value="SBB-1102">SBB-1102</option>
-                            <option value="SBB-1103">SBB-1103</option><option value="SBB-301">SBB-301</option>
-                            <option value="SBB-314">SBB-314</option><option value="SBB-401">SBB-401</option>
-                            <option value="SBB-414">SBB-414</option><option value="SBB-501">SBB-501</option>
-                            <option value="SBB-502">SBB-502</option><option value="SBB-503">SBB-503</option>
-                            <option value="SBB-504">SBB-504</option><option value="SBB-505">SBB-505</option>
-                            <option value="SBB-602">SBB-602</option><option value="SBB-603">SBB-603</option>
-                            <option value="SBB-604">SBB-604</option><option value="SBB-605">SBB-605</option>
-                            <option value="SBB-606">SBB-606</option><option value="SBB-607">SBB-607</option>
-                            <option value="SBB-701">SBB-701</option><option value="SBB-702">SBB-702</option>
-                            <option value="SBB-703">SBB-703</option><option value="SBB-704">SBB-704</option>
-                            <option value="SBB-705">SBB-705</option><option value="SBB-706">SBB-706</option>
-                            <option value="SBB-707">SBB-707</option><option value="SBB-801">SBB-801</option>
-                            <option value="SBB-803">SBB-803</option><option value="SBB-805">SBB-805</option>
-                        </optgroup>
-                        
-                        <option value="อื่นๆ">-- อื่นๆ (ระบุสถานที่เอง) --</option>
-                    </select>
-
+    <optgroup label="ตึก SBB">
+        <option value="SBB-1003">SBB-1003</option><option value="SBB-1005">SBB-1005</option>
+        <option value="SBB-1006">SBB-1006</option><option value="SBB-1007">SBB-1007</option>
+        <option value="SBB-1101">SBB-1101</option><option value="SBB-1102">SBB-1102</option>
+        <option value="SBB-1103">SBB-1103</option><option value="SBB-301">SBB-301</option>
+        <option value="SBB-314">SBB-314</option><option value="SBB-401">SBB-401</option>
+        <option value="SBB-414">SBB-414</option><option value="SBB-501">SBB-501</option>
+        <option value="SBB-502">SBB-502</option><option value="SBB-503">SBB-503</option>
+        <option value="SBB-504">SBB-504</option><option value="SBB-505">SBB-505</option>
+        <option value="SBB-602">SBB-602</option><option value="SBB-603">SBB-603</option>
+        <option value="SBB-604">SBB-604</option><option value="SBB-605">SBB-605</option>
+        <option value="SBB-606">SBB-606</option><option value="SBB-607">SBB-607</option>
+        <option value="SBB-701">SBB-701</option><option value="SBB-702">SBB-702</option>
+        <option value="SBB-703">SBB-703</option><option value="SBB-704">SBB-704</option>
+        <option value="SBB-705">SBB-705</option><option value="SBB-706">SBB-706</option>
+        <option value="SBB-707">SBB-707</option><option value="SBB-801">SBB-801</option>
+        <option value="SBB-803">SBB-803</option><option value="SBB-805">SBB-805</option>
+    </optgroup>
+    
+    <option value="อื่นๆ">-- อื่นๆ (ระบุสถานที่เอง) --</option>
+</select>
                     <div id="other_location_div" class="hidden mt-3">
-                        <input type="text" name="other_location" id="other_location_input" placeholder="โปรดระบุสถานที่..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200">
+                        <input type="text" name="other_location" id="other_location_input" placeholder="โปรดระบุสถานที่..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50">
                     </div>
                 </div>
 
+                <!-- เบอร์โทรศัพท์ -->
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">
                         <i class="fas fa-phone-alt text-indigo-500 mr-1.5"></i> เบอร์โทรศัพท์ติดต่อกลับ <span class="text-red-500">*</span>
                     </label>
-                    <input type="tel" name="phone_number" placeholder="เช่น 0812345678" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200" required>
+                    <input type="tel" name="phone_number" placeholder="เช่น 0812345678" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200" required>
                 </div>
 
+                <!-- อาการเสีย -->
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">
                         <i class="fas fa-comment-dots text-indigo-500 mr-1.5"></i> อาการเสียเบื้องต้น <span class="text-red-500">*</span>
                     </label>
-                    <textarea name="problem_desc" rows="3" placeholder="อธิบายอาการเสียให้ช่างเข้าใจเบื้องต้น..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 text-slate-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200" required></textarea>
+                    <textarea name="problem_desc" rows="3" placeholder="อธิบายอาการเสียให้ช่างเข้าใจเบื้องต้น..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200" required></textarea>
                 </div>
 
-                <div class="pt-4 pb-2">
-                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-lg py-3.5 rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/30 transform hover:-translate-y-0.5 transition-all duration-200">
-                        <i class="fas fa-paper-plane mr-2"></i> ยืนยันการแจ้งซ่อม
-                    </button>
-                </div>
-
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-lg py-3.5 rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200">
+                    <i class="fas fa-paper-plane mr-2"></i> ยืนยันการแจ้งซ่อม
+                </button>
             </form>
         </div>
     </div>
 
     <script>
-        function toggleOtherEquipment() {
-            const eqSelect = document.getElementById("equipment_type");
-            const otherDiv = document.getElementById("other_equipment_div");
-            const otherInput = document.getElementById("other_equipment_input");
-            if (eqSelect.value === "อื่นๆ") {
-                otherDiv.classList.remove("hidden");
-                otherInput.required = true;
-            } else {
-                otherDiv.classList.add("hidden");
-                otherInput.required = false;
-                otherInput.value = "";
+        // ระบบจำชื่อผู้แจ้ง
+        window.onload = function() {
+            if(localStorage.getItem("reporterName")) {
+                document.getElementById("reporter_name").value = localStorage.getItem("reporterName");
             }
+        };
+        function saveName() {
+            localStorage.setItem("reporterName", document.getElementById("reporter_name").value);
         }
 
+        // ระบบเลือกอื่นๆ
+        function toggleOtherEquipment() {
+            const eq = document.getElementById("equipment_type").value;
+            document.getElementById("other_equipment_div").classList.toggle("hidden", eq !== "อื่นๆ");
+        }
         function toggleOtherLocation() {
-            const locSelect = document.getElementById("location");
-            const otherLocDiv = document.getElementById("other_location_div");
-            const otherLocInput = document.getElementById("other_location_input");
-            if (locSelect.value === "อื่นๆ") {
-                otherLocDiv.classList.remove("hidden");
-                otherLocInput.required = true;
-            } else {
-                otherLocDiv.classList.add("hidden");
-                otherLocInput.required = false;
-                otherLocInput.value = "";
-            }
+            const loc = document.getElementById("location").value;
+            document.getElementById("other_location_div").classList.toggle("hidden", loc !== "อื่นๆ");
         }
     </script>
 </body>
