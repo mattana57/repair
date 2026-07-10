@@ -11,7 +11,10 @@ $total_jobs = $conn->query("SELECT COUNT(*) as count FROM repairs")->fetch_assoc
 $pending_jobs = $conn->query("SELECT COUNT(*) as count FROM repairs WHERE status='รอรับเรื่อง'")->fetch_assoc()['count'];
 $progress_jobs = $conn->query("SELECT COUNT(*) as count FROM repairs WHERE status='กำลังดำเนินการ'")->fetch_assoc()['count'];
 $done_jobs = $conn->query("SELECT COUNT(*) as count FROM repairs WHERE status IN ('ซ่อมเสร็จแล้ว', 'ปิดงาน')")->fetch_assoc()['count'];
+
+// ดึงข้อมูลรายการทั้งหมด
 $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC");
+$result_techs = $conn->query("SELECT * FROM technicians ORDER BY id DESC");
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -37,6 +40,7 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
                 <div class="space-y-2">
                     <button type="button" onclick="switchPage('page-dashboard', this)" class="w-full text-left px-4 py-2 rounded-lg menu-btn menu-active transition-colors"><i class="fas fa-chart-line w-6 text-center"></i> ภาพรวม</button>
                     <button type="button" onclick="switchPage('page-repairs', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-clipboard-list w-6 text-center"></i> รายการแจ้งซ่อม</button>
+                    <button type="button" onclick="switchPage('page-technicians', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-user-tie w-6 text-center"></i> จัดการช่าง</button>
                     <button type="button" onclick="switchPage('page-assign', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-user-cog w-6 text-center"></i> มอบหมายงานช่าง</button>
                     <button type="button" onclick="switchPage('page-assets', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-desktop w-6 text-center"></i> จัดการครุภัณฑ์</button>
                     <button type="button" onclick="switchPage('page-users', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-users w-6 text-center"></i> จัดการผู้ใช้งาน</button>
@@ -48,6 +52,7 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
             </nav>
         </aside>
 
+        <!-- Main Content -->
         <main class="flex-1 flex flex-col overflow-y-auto">
             <header class="h-16 bg-white shadow-sm flex items-center px-6 sticky top-0 z-10"><h2 class="text-xl font-semibold text-gray-800" id="headerTitle">ภาพรวม</h2></header>
 
@@ -62,11 +67,11 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
                     </div>
                 </div>
 
-                <!-- Repairs List (อัปเดตปุ่มจัดการสถานะตรงนี้ครับ) -->
+                <!-- Repairs List -->
                 <div id="page-repairs" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
                     <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-lg">รายการแจ้งซ่อมทั้งหมด</h3></div>
                     <table class="w-full text-left text-sm">
-                        <tr class="bg-gray-100"><th class="p-3">เลขที่</th><th class="p-3">อุปกรณ์</th><th class="p-3">สถานะ</th><th class="p-3">ดำเนินการ</th></tr>
+                        <tr class="bg-gray-100"><th class="p-3">เลขที่</th><th class="p-3">อุปกรณ์</th><th class="p-3">สถานะ</th><th class="p-3">จัดการ</th></tr>
                         <?php 
                         $result_repairs->data_seek(0);
                         while($row = $result_repairs->fetch_assoc()) { 
@@ -88,7 +93,28 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
                     </table>
                 </div>
 
-                <!-- Management Pages (คงเดิมเหมือนต้นฉบับครับ) -->
+                <!-- จัดการช่าง -->
+                <div id="page-technicians" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-lg">จัดการข้อมูลช่าง</h3>
+                        <a href="add_technician.php" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i>เพิ่มช่าง</a>
+                    </div>
+                    <table class="w-full text-left text-sm">
+                        <tr class="bg-gray-100"><th class="p-3">ชื่อ-นามสกุล</th><th class="p-3">เบอร์โทร</th><th class="p-3">จัดการ</th></tr>
+                        <?php while($t = $result_techs->fetch_assoc()) { ?>
+                        <tr class="border-b">
+                            <td class="p-3"><?php echo $t['name']; ?></td>
+                            <td class="p-3"><?php echo $t['phone']; ?></td>
+                            <td class="p-3">
+                                <a href="edit_technician.php?id=<?php echo $t['id']; ?>" class="text-blue-600 mr-3"><i class="fas fa-edit"></i></a>
+                                <a href="delete_technician.php?id=<?php echo $t['id']; ?>" class="text-red-600" onclick="return confirm('ยืนยันลบข้อมูล?')"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        <?php } ?>
+                    </table>
+                </div>
+
+                <!-- Management Pages -->
                 <div id="page-assign" class="page-section hidden bg-white p-6 rounded-xl shadow-sm">
                     <h3 class="font-bold text-lg mb-6">มอบหมายงานช่าง</h3>
                 </div>
@@ -111,7 +137,7 @@ $result_repairs = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC")
             document.getElementById(pageId).classList.remove('hidden');
             document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('menu-active'));
             if(btn) btn.classList.add('menu-active');
-            const titles = {'page-dashboard':'ภาพรวม','page-repairs':'รายการแจ้งซ่อม','page-assign':'มอบหมายงานช่าง','page-assets':'จัดการครุภัณฑ์','page-users':'จัดการผู้ใช้งาน','page-reports':'ออกรายงาน'};
+            const titles = {'page-dashboard':'ภาพรวม','page-repairs':'รายการแจ้งซ่อม','page-technicians':'จัดการข้อมูลช่าง','page-assign':'มอบหมายงานช่าง','page-assets':'จัดการครุภัณฑ์','page-users':'จัดการผู้ใช้งาน','page-reports':'ออกรายงาน'};
             document.getElementById('headerTitle').innerText = titles[pageId];
         }
     </script>
