@@ -144,5 +144,33 @@ $result_techs = $conn->query("SELECT * FROM technicians ORDER BY id DESC");
             switchPage('page-dashboard', firstBtn);
         });
     </script>
+    <script>
+    // เลือกปุ่มทั้งหมดที่มี class menu-btn
+    document.querySelectorAll('.menu-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // ซ่อนทุกหน้า (ต้องมี class page-section ใน div เนื้อหา)
+            document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
+            
+            // แสดงหน้าที่ต้องการ (ต้องตั้งชื่อ data-page="page-id")
+            const pageId = this.getAttribute('data-page');
+            const target = document.getElementById(pageId);
+            if(target) {
+                target.classList.remove('hidden');
+            }
+            
+            // ปรับสีปุ่ม
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('menu-active'));
+            this.classList.add('menu-active');
+            
+            // เปลี่ยนหัวข้อ
+            const titles = {
+                'page-dashboard': 'ภาพรวม',
+                'page-repairs': 'รายการแจ้งซ่อม',
+                'page-technicians': 'จัดการช่าง'
+            };
+            document.getElementById('headerTitle').innerText = titles[pageId] || 'เมนู';
+        });
+    });
+</script>
 </body>
 </html>
