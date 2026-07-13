@@ -94,5 +94,33 @@
         input.classList.toggle('hidden', select.value !== 'other');
     }
 </script>
+<!-- วางไว้ก่อนปิด tag </body> ใน index.php -->
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('status')) {
+        const status = urlParams.get('status');
+        if (status === 'success') {
+            Swal.fire({
+                icon: 'success',
+                title: 'แจ้งซ่อมสำเร็จ!',
+                text: 'เลขที่ใบงาน: ' + urlParams.get('ticket'),
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#0284c7'
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: urlParams.get('msg'),
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#ef4444'
+            });
+        }
+        // ลบ Query String ออกจาก URL หลังจากแสดงป๊อบอัพเสร็จ
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+</script>
 </body>
 </html>
