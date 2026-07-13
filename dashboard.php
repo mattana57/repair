@@ -1,4 +1,36 @@
-<?php include 'db_connect.php'; ?>
+<?php 
+include 'db_connect.php'; 
+
+// ตรวจสอบและสร้างตาราง assets อัตโนมัติถ้ายังไม่มี
+$conn->query("CREATE TABLE IF NOT EXISTS assets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    asset_code VARCHAR(50) NOT NULL,
+    asset_name VARCHAR(100) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    status VARCHAR(20) DEFAULT 'ใช้งานปกติ',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// จัดการเมื่อมีการกดปุ่มเพิ่มอุปกรณ์จาก Modal
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_asset'])) {
+    $asset_code = $_POST['asset_code'];
+    $asset_name = $_POST['asset_name'];
+    $category = $_POST['category'];
+    $status = $_POST['status'];
+
+    $stmt = $conn->prepare("INSERT INTO assets (asset_code, asset_name, category, status) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $asset_code, $asset_name, $category, $status);
+    
+    if ($stmt->execute()) {
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({ icon: 'success', title: 'เพิ่มอุปกรณ์สำเร็จ!', confirmButtonColor: '#0284c7' })
+                .then(() => { show('assets'); });
+            });
+        </script>";
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -8,28 +40,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         
-        /* สไตล์การ์ดที่ดูนุ่มนวลและมีมิติขึ้น */
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .modern-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -2px rgba(0, 0, 0, 0.06); }
         
-        /* CSS ปกติสำหรับเมนู เพื่อป้องกันปัญหา CDN ไม่ทำงาน */
         .nav-btn { width: 100%; display: flex; align-items: center; padding: 0.875rem 1.25rem; margin-bottom: 0.25rem; border-radius: 0.75rem; color: #64748b; font-weight: 500; transition: all 0.2s; border: 1px solid transparent; }
         .nav-btn i { width: 1.5rem; text-align: center; font-size: 1.25rem; margin-right: 0.75rem; color: #94a3b8; transition: all 0.2s; }
         .nav-btn:hover { background-color: #f8fafc; color: #0284c7; }
         .nav-btn:hover i { color: #0ea5e9; transform: scale(1.1); }
         
-        /* สถานะเมนูที่ถูกเลือก (โทนสีฟ้าเด่นๆ) */
         .active-btn { background-color: #f0f9ff; color: #0369a1; border-color: #bae6fd; font-weight: 600; box-shadow: 0 2px 10px rgba(14, 165, 233, 0.1); }
         .active-btn i { color: #0284c7; }
 
-        /* Scrollbar แบบมินิมอล */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* สไตล์สำหรับ Modal Popup */
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-sky-200">
@@ -61,7 +94,6 @@
 
     <!-- Main Content -->
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <!-- พื้นหลังตกแต่ง (วงกลมเบลอๆ ซ่อนอยู่ข้างหลัง) -->
         <div class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-sky-100/50 to-transparent -z-10"></div>
         
         <!-- Top Navigation -->
@@ -125,9 +157,6 @@
                             <h2 class="text-xl font-bold text-slate-800">รายการแจ้งซ่อมทั้งหมด</h2>
                             <p class="text-sm text-slate-500 mt-1">ข้อมูลล่าสุดจากระบบฐานข้อมูล</p>
                         </div>
-                        <button class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-sky-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm flex items-center">
-                            <i class="fas fa-filter mr-2"></i> ตัวกรองข้อมูล
-                        </button>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -183,7 +212,6 @@
                                             </td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <!-- แก้ไขปุ่มให้เป็นลิงก์สำหรับส่งไปอัปเดตสถานะ -->
                                                     <a href='update_repair.php?id={$row['id']}' class='w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center border border-emerald-100 shadow-sm' title='อัปเดตสถานะ'>
                                                         <i class='fas fa-clipboard-check'></i>
                                                     </a>
@@ -203,15 +231,136 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Asset Management Section (ระบบจัดการอุปกรณ์ใหม่) -->
+            <div id="assets" class="section hidden space-y-6">
+                <div class="modern-card overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">ฐานข้อมูลอุปกรณ์และครุภัณฑ์</h2>
+                            <p class="text-sm text-slate-500 mt-1">จัดการข้อมูลครุภัณฑ์ภายในคณะสำหรับการแจ้งซ่อม</p>
+                        </div>
+                        <button onclick="toggleModal('assetModal')" class="bg-sky-600 hover:bg-sky-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(2,132,199,0.39)] hover:shadow-[0_6px_20px_rgba(2,132,199,0.23)] hover:-translate-y-0.5 flex items-center">
+                            <i class="fas fa-plus mr-2"></i> เพิ่มอุปกรณ์ใหม่
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                <tr>
+                                    <th class="px-6 py-4">รหัสครุภัณฑ์</th>
+                                    <th class="px-6 py-4">ชื่ออุปกรณ์ / รายละเอียด</th>
+                                    <th class="px-6 py-4">หมวดหมู่</th>
+                                    <th class="px-6 py-4 text-center">สถานะ</th>
+                                    <th class="px-6 py-4 text-right">การจัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <?php
+                                $asset_res = $conn->query("SELECT * FROM assets ORDER BY created_at DESC");
+                                if($asset_res->num_rows > 0){
+                                    while($a = $asset_res->fetch_assoc()) {
+                                        $a_statusClass = ($a['status'] == 'ใช้งานปกติ') ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200';
+                                        echo "
+                                        <tr class='hover:bg-slate-50/80 transition-colors'>
+                                            <td class='px-6 py-4 font-bold text-sky-600'>{$a['asset_code']}</td>
+                                            <td class='px-6 py-4 text-slate-800 font-semibold'>{$a['asset_name']}</td>
+                                            <td class='px-6 py-4 text-slate-600'>
+                                                <span class='bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200'>{$a['category']}</span>
+                                            </td>
+                                            <td class='px-6 py-4 text-center'>
+                                                <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$a_statusClass}'>
+                                                    <span class='w-1.5 h-1.5 rounded-full bg-current mr-2'></span>{$a['status']}
+                                                </span>
+                                            </td>
+                                            <td class='px-6 py-4 text-right'>
+                                                <div class='flex items-center justify-end space-x-2'>
+                                                    <button class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'>
+                                                        <i class='fas fa-edit'></i>
+                                                    </button>
+                                                    <button class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'>
+                                                        <i class='fas fa-trash-alt'></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>";
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='5' class='px-6 py-16 text-center text-slate-400'>
+                                        <div class='w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-slate-100'>
+                                            <i class='fas fa-desktop text-2xl text-slate-300'></i>
+                                        </div>
+                                        <p class='font-medium text-slate-500'>ยังไม่มีข้อมูลครุภัณฑ์ในระบบ</p>
+                                    </td></tr>";
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             
             <!-- Sections สำหรับเมนูอื่นๆ -->
             <div id="assign" class="section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">ระบบรับงานและมอบหมายช่าง</h2><div class="modern-card p-10 text-center text-slate-500">กำลังพัฒนาส่วนนี้...</div></div>
-            <div id="assets" class="section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">ฐานข้อมูลอุปกรณ์และครุภัณฑ์</h2><div class="modern-card p-10 text-center text-slate-500">กำลังพัฒนาส่วนนี้...</div></div>
             <div id="users" class="section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">จัดการสิทธิ์และผู้ใช้งาน</h2><div class="modern-card p-10 text-center text-slate-500">กำลังพัฒนาส่วนนี้...</div></div>
             <div id="reports" class="section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">รายงานสรุปผลการปฏิบัติงาน</h2><div class="modern-card p-10 text-center text-slate-500">กำลังพัฒนาส่วนนี้...</div></div>
 
         </div>
     </main>
+
+    <!-- Modal เพิ่มอุปกรณ์ใหม่ -->
+    <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
+        
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform transition-all">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                <p class="text-lg font-bold text-slate-800"><i class="fas fa-plus-circle text-sky-500 mr-2"></i> เพิ่มอุปกรณ์ใหม่</p>
+                <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-red-500 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <form action="" method="POST" class="p-6">
+                <input type="hidden" name="add_asset" value="1">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสครุภัณฑ์ <span class="text-red-500">*</span></label>
+                        <input type="text" name="asset_code" required placeholder="เช่น COM-001" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่ออุปกรณ์ <span class="text-red-500">*</span></label>
+                        <input type="text" name="asset_name" required placeholder="เช่น คอมพิวเตอร์ Dell Optiplex" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">หมวดหมู่ <span class="text-red-500">*</span></label>
+                        <select name="category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all">
+                            <option value="IT Support">IT Support (คอม/ปริ้นเตอร์)</option>
+                            <option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option>
+                            <option value="อาคารสถานที่">อาคารสถานที่</option>
+                            <option value="อื่นๆ">อื่นๆ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">สถานะ</label>
+                        <select name="status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all">
+                            <option value="ใช้งานปกติ">ใช้งานปกติ</option>
+                            <option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option>
+                            <option value="แทงจำหน่าย">แทงจำหน่าย</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Modal Footer -->
+                <div class="mt-8 flex justify-end gap-3">
+                    <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2.5 bg-sky-600 text-white rounded-xl text-sm font-bold hover:bg-sky-500 transition-colors shadow-md">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         const pageTitles = {
@@ -228,9 +377,17 @@
             document.getElementById(id).classList.remove('hidden');
             
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
-            event.currentTarget.classList.add('active-btn');
+            const activeBtn = document.querySelector(`button[onclick="show('${id}')"]`);
+            if(activeBtn) activeBtn.classList.add('active-btn');
             
-            document.getElementById('headerTitle').innerText = pageTitles[id];
+            document.getElementById('headerTitle').innerText = pageTitles[id] || 'ระบบจัดการ';
+        }
+
+        // Script สำหรับเปิด-ปิด Modal
+        function toggleModal(modalID) {
+            document.getElementById(modalID).classList.toggle('opacity-0');
+            document.getElementById(modalID).classList.toggle('pointer-events-none');
+            document.body.classList.toggle('modal-active');
         }
     </script>
 </body>
