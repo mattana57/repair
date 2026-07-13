@@ -12,8 +12,8 @@
         body { font-family: 'Kanit', sans-serif; background: #0f172a; color: #f8fafc; }
         
         /* สไตล์ Glassmorphism ที่นุ่มนวลและดูพรีเมียมขึ้น */
-        .glass-panel { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .glass-header { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass-panel { background: rgba(214, 225, 244, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass-header { background: rgba(245, 246, 249, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         
         /* เมนู Sidebar แบบสากล */
         .nav-btn { @apply w-full flex items-center px-5 py-3.5 rounded-xl text-slate-400 font-medium transition-all duration-200 hover:bg-slate-800 hover:text-white; }
