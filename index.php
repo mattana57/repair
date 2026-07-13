@@ -12,6 +12,7 @@
         .input-dark { background: rgba(0, 0, 0, 0.2) !important; border: 1px solid #334155 !important; color: white !important; }
         .input-dark:focus { border-color: #38bdf8 !important; outline: none; box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="p-4 md:p-8">
 

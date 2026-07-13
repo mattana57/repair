@@ -20,19 +20,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         move_uploaded_file($_FILES["image_before"]["tmp_name"], $target_dir . $image_name);
     }
 
-    // บันทึกลงฐานข้อมูล (ปรับ SQL ให้ตรงกับชื่อคอลัมน์ในตารางเดิมของคุณ)
-    // หมายเหตุ: หากตารางของคุณยังไม่มีคอลัมน์ reporter_name, building, room_no 
-    // คุณอาจต้องเพิ่มคอลัมน์เหล่านั้นใน phpMyAdmin ก่อนครับ
+    // บันทึกลงฐานข้อมูล
     $sql = "INSERT INTO repairs (ticket_no, reporter_name, equipment_type, location, phone_number, problem_desc, image_before, status, building, room_no) 
             VALUES (?, ?, ?, ?, ?, ?, ?, 'รอรับเรื่อง', ?, ?)";
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("sssssssss", $ticket_no, $reporter_name, $equipment, $location, $phone_number, $problem_desc, $image_name, $_POST['building'], $_POST['room_no']);
 
+    echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>";
+
     if ($stmt->execute()) {
-        echo "<script>alert('แจ้งซ่อมสำเร็จ! เลขที่ใบงาน: $ticket_no'); window.location='index.php';</script>";
+        // ป๊อบอัพสวยๆ เมื่อสำเร็จ
+        echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'แจ้งซ่อมสำเร็จ!',
+                text: 'เลขที่ใบงานของคุณคือ: $ticket_no',
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#0284c7',
+                confirmButtonText: 'ตกลง'
+            }).then(() => {
+                window.location='index.php';
+            });
+        </script>";
     } else {
-        echo "เกิดข้อผิดพลาด: " . $stmt->error;
+        // ป๊อบอัพเมื่อเกิดข้อผิดพลาด
+        echo "<script>
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถบันทึกข้อมูลได้: " . addslashes($stmt->error) . "',
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#ef4444'
+            });
+        </script>";
     }
     
     $stmt->close();
