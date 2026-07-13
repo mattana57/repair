@@ -1,101 +1,85 @@
-<?php 
-// 1. เชื่อมต่อฐานข้อมูล
-include 'db_connect.php'; 
-?>
+<?php include 'db_connect.php'; ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Smart Maintenance Dashboard</title>
+    <title>MSU Smart Maintenance Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
-        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; } /* พื้นหลังสว่างขึ้น */
-        .menu-active { background-color: #2563eb !important; color: white !important; }
+        body { font-family: 'Kanit', sans-serif; background: #0f172a; color: #f1f5f9; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .nav-btn { @apply w-full text-left px-4 py-3 rounded-xl transition-all hover:bg-sky-600/20 hover:text-sky-400; }
+        .active-btn { @apply bg-sky-600/30 text-sky-400 border-l-4 border-sky-500; }
     </style>
 </head>
-<body>
-    <div class="flex h-screen w-full overflow-hidden">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0">
-            <div class="h-16 flex items-center justify-center border-b border-slate-700">
-                <h1 class="text-lg font-bold text-white"><i class="fas fa-tools text-blue-400 mr-2"></i>RepairSystem</h1>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar: จัดการเมนูครบวงจร -->
+    <aside class="w-64 glass flex flex-col p-4 space-y-2">
+        <h1 class="text-xl font-bold p-4 text-white"><i class="fas fa-tools text-sky-500 mr-2"></i>MSU MAINT</h1>
+        <nav class="flex-1 space-y-1">
+            <button onclick="show('dash')" class="nav-btn active-btn"><i class="fas fa-th-large w-8"></i> ภาพรวมระบบ</button>
+            <button onclick="show('repairs')" class="nav-btn"><i class="fas fa-clipboard-list w-8"></i> ตรวจสอบงานแจ้งซ่อม</button>
+            <button onclick="show('assign')" class="nav-btn"><i class="fas fa-user-check w-8"></i> รับงาน/มอบหมาย</button>
+            <button onclick="show('assets')" class="nav-btn"><i class="fas fa-desktop w-8"></i> จัดการอุปกรณ์</button>
+            <button onclick="show('users')" class="nav-btn"><i class="fas fa-users w-8"></i> จัดการผู้ใช้</button>
+            <button onclick="show('reports')" class="nav-btn"><i class="fas fa-chart-pie w-8"></i> รายงานสรุป</button>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-8">
+        <!-- Dashboard Stats -->
+        <div id="dash" class="section space-y-6">
+            <div class="grid grid-cols-4 gap-6">
+                <?php 
+                $stats = ["ทั้งหมด" => "repairs", "รอรับเรื่อง" => "status='รอรับเรื่อง'", "กำลังทำ" => "status='กำลังดำเนินการ'", "เสร็จแล้ว" => "status='ซ่อมเสร็จแล้ว'"];
+                foreach($stats as $title => $query) {
+                    $c = $conn->query("SELECT count(*) as c FROM repairs ".($query != "repairs" ? "WHERE $query" : ""))->fetch_assoc()['c'];
+                    echo "<div class='glass p-6 rounded-2xl'>
+                            <p class='text-slate-400 text-sm'>$title</p>
+                            <p class='text-4xl font-bold text-white'>$c</p>
+                          </div>";
+                }
+                ?>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-2">
-                <button onclick="switchPage('page-dashboard', this)" class="w-full text-left px-4 py-2 rounded-lg menu-btn menu-active transition-colors"><i class="fas fa-chart-line w-6 text-center"></i> ภาพรวม</button>
-                <button onclick="switchPage('page-repairs', this)" class="w-full text-left px-4 py-2 hover:bg-slate-700 rounded-lg menu-btn transition-colors"><i class="fas fa-clipboard-list w-6 text-center"></i> รายการแจ้งซ่อม</button>
-            </nav>
-        </aside>
+        </div>
 
-        <main class="flex-1 flex flex-col overflow-y-auto">
-            <header class="h-16 bg-white shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
-                <h2 class="text-xl font-semibold text-gray-800" id="headerTitle">ภาพรวม (Dashboard)</h2>
-            </header>
-
-            <div class="p-6">
-                <!-- Dashboard Content -->
-                <div id="page-dashboard" class="page-section block space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <?php 
-                        // ตัวอย่างการดึงสถิติจาก DB
-                        $total = $conn->query("SELECT count(*) as c FROM repairs")->fetch_assoc()['c'];
-                        ?>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-                            <p class="text-sm text-gray-500">งานทั้งหมด</p>
-                            <p class="text-3xl font-bold text-gray-800 mt-2"><?php echo $total; ?></p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Repairs Table Page -->
-                <div id="page-repairs" class="page-section hidden">
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden p-6">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-gray-600 text-sm">
-                                <tr>
-                                    <th class="px-6 py-3 border-b">เลขที่ใบงาน</th>
-                                    <th class="px-6 py-3 border-b">ผู้แจ้ง</th>
-                                    <th class="px-6 py-3 border-b">อุปกรณ์</th>
-                                    <th class="px-6 py-3 border-b">วันที่แจ้ง</th>
-                                    <th class="px-6 py-3 border-b">สถานะ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                // เชื่อมข้อมูลจริงจากฐานข้อมูล
-                                $sql = "SELECT * FROM repairs ORDER BY created_at DESC";
-                                $result = $conn->query($sql);
-                                while($row = $result->fetch_assoc()) {
-                                    $date = date("d/m/Y H:i", strtotime($row['created_at'])); // เชื่อมเวลาแจ้งซ่อม
-                                    echo "<tr class='border-b hover:bg-gray-50 text-sm'>
-                                            <td class='px-6 py-4 font-bold text-blue-600'>{$row['ticket_no']}</td>
-                                            <td class='px-6 py-4'>{$row['reporter_name']}</td>
-                                            <td class='px-6 py-4'>{$row['equipment_type']}</td>
-                                            <td class='px-6 py-4'>{$date}</td>
-                                            <td class='px-6 py-4'>
-                                                <span class='bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs'>{$row['status']}</span>
-                                            </td>
-                                          </tr>";
-                                }
-                                ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+        <!-- Repairs List Table -->
+        <div id="repairs" class="section hidden glass p-6 rounded-2xl">
+            <h2 class="text-xl font-bold mb-4">รายการแจ้งซ่อมทั้งหมด</h2>
+            <table class="w-full text-left">
+                <thead class="text-slate-400 text-sm border-b border-white/10">
+                    <tr><th class="py-3">ใบงาน</th><th class="py-3">อุปกรณ์</th><th class="py-3">สถานะ</th><th class="py-3">การจัดการ</th></tr>
+                </thead>
+                <tbody class="text-sm">
+                    <?php
+                    $res = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC");
+                    while($row = $res->fetch_assoc()) {
+                        echo "<tr class='border-b border-white/5 hover:bg-white/5'>
+                                <td class='py-4 font-bold text-sky-400'>{$row['ticket_no']}</td>
+                                <td class='py-4'>{$row['equipment_type']}</td>
+                                <td class='py-4'><span class='px-3 py-1 rounded-full bg-blue-500/20 text-blue-300'>{$row['status']}</span></td>
+                                <td class='py-4 space-x-2'>
+                                    <button class='text-emerald-400 hover:text-white'><i class='fas fa-check'></i> รับงาน</button>
+                                    <button class='text-amber-400 hover:text-white'><i class='fas fa-edit'></i> อัปเดต</button>
+                                </td>
+                              </tr>";
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+    </main>
 
     <script>
-        function switchPage(pageId, btn) {
-            document.querySelectorAll('.page-section').forEach(p => p.classList.add('hidden'));
-            document.getElementById(pageId).classList.remove('hidden');
-            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('menu-active'));
-            btn.classList.add('menu-active');
-            const titles = {'page-dashboard':'ภาพรวม', 'page-repairs':'รายการแจ้งซ่อม'};
-            document.getElementById('headerTitle').innerText = titles[pageId];
+        function show(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
+            event.currentTarget.classList.add('active-btn');
         }
     </script>
 </body>
