@@ -116,6 +116,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
         <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 shrink-0 z-10 sticky top-0">
             <h2 class="text-2xl font-bold text-slate-800 tracking-wide" id="headerTitle">ภาพรวมระบบ (Dashboard)</h2>
             <div class="flex items-center space-x-6">
+                <div class="relative hidden md:block">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" placeholder="ค้นหาเลขที่ใบงาน..." class="bg-white border border-slate-200 text-sm rounded-full pl-11 pr-5 py-2.5 text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all w-72 shadow-sm">
+                </div>
                 <div class="flex items-center space-x-3 cursor-pointer p-1.5 pr-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm">
                     <div class="w-9 h-9 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold">
                         <i class="fas fa-user text-sm"></i>
@@ -142,6 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                         ["title" => "ซ่อมเสร็จแล้ว", "query" => "status='ซ่อมเสร็จแล้ว'", "icon" => "fa-check-circle", "color" => "text-emerald-500", "bg" => "bg-emerald-100", "border" => "border-emerald-200"]
                     ];
                     
+                    // เช็คว่ามีตาราง repairs ก่อนไหม ป้องกัน Error
                     $check_repairs = $conn->query("SHOW TABLES LIKE 'repairs'");
                     if($check_repairs->num_rows > 0) {
                         foreach($stats as $s) {
@@ -164,13 +169,96 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                 </div>
             </div>
 
-            <!-- Repairs List -->
+            <!-- Repairs List Section -->
             <div id="repairs" class="section hidden space-y-6">
-                <!-- ตารางแจ้งซ่อมเดิม ... -->
-                <div class="modern-card p-6 text-center text-slate-500">ส่วนรายการแจ้งซ่อม (ตามโค้ดเดิมของคุณน้ำฝน)</div>
+                <div class="modern-card overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">รายการแจ้งซ่อมทั้งหมด</h2>
+                            <p class="text-sm text-slate-500 mt-1">ข้อมูลล่าสุดจากระบบฐานข้อมูล</p>
+                        </div>
+                        <button class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-sky-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm flex items-center">
+                            <i class="fas fa-filter mr-2"></i> ตัวกรองข้อมูล
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                <tr>
+                                    <th class="px-6 py-4">วัน/เวลาที่แจ้ง</th>
+                                    <th class="px-6 py-4">เลขที่ใบงาน</th>
+                                    <th class="px-6 py-4">ข้อมูลผู้แจ้ง</th>
+                                    <th class="px-6 py-4">สถานที่</th>
+                                    <th class="px-6 py-4">อุปกรณ์ / อาการเสีย</th>
+                                    <th class="px-6 py-4">ภาพประกอบ</th>
+                                    <th class="px-6 py-4 text-center">สถานะ</th>
+                                    <th class="px-6 py-4 text-right">การจัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <?php
+                                $check_repairs = $conn->query("SHOW TABLES LIKE 'repairs'");
+                                if($check_repairs->num_rows > 0) {
+                                    $res = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC");
+                                    if($res->num_rows > 0){
+                                        while($row = $res->fetch_assoc()) {
+                                            $date = !empty($row['created_at']) ? date("d/m/Y H:i", strtotime($row['created_at'])) : "-";
+                                            
+                                            $statusClass = "bg-slate-100 text-slate-600 border-slate-200"; 
+                                            if($row['status'] == 'รอรับเรื่อง') $statusClass = "bg-amber-50 text-amber-600 border-amber-200";
+                                            elseif($row['status'] == 'กำลังดำเนินการ') $statusClass = "bg-sky-50 text-sky-600 border-sky-200";
+                                            elseif($row['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
+
+                                            $imageHtml = !empty($row['image_before']) 
+                                                ? "<a href='uploads/{$row['image_before']}' target='_blank' class='inline-flex items-center text-xs text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 px-3 py-1.5 rounded-lg font-medium transition-colors border border-sky-100'><i class='fas fa-image mr-1.5'></i> ดูรูปภาพ</a>" 
+                                                : "<span class='text-slate-400 text-xs bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100'>ไม่มีรูป</span>";
+
+                                            echo "
+                                            <tr class='hover:bg-slate-50/80 transition-colors'>
+                                                <td class='px-6 py-4 text-slate-500'>{$date}</td>
+                                                <td class='px-6 py-4 font-bold text-sky-600'>{$row['ticket_no']}</td>
+                                                <td class='px-6 py-4'>
+                                                    <div class='text-slate-800 font-semibold'>{$row['reporter_name']}</div>
+                                                    <div class='text-slate-500 text-xs mt-1'><i class='fas fa-phone-alt mr-1 text-slate-400'></i> {$row['phone_number']}</div>
+                                                </td>
+                                                <td class='px-6 py-4 text-slate-600 font-medium'>
+                                                    <div class='flex items-center'><i class='fas fa-map-marker-alt text-slate-400 mr-2'></i> {$row['location']}</div>
+                                                </td>
+                                                <td class='px-6 py-4'>
+                                                    <div class='text-slate-800 font-semibold'>{$row['equipment_type']}</div>
+                                                    <div class='text-slate-500 text-xs mt-1 max-w-[200px] truncate' title='{$row['problem_desc']}'>{$row['problem_desc']}</div>
+                                                </td>
+                                                <td class='px-6 py-4'>{$imageHtml}</td>
+                                                <td class='px-6 py-4 text-center'>
+                                                    <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$statusClass}'>
+                                                        <span class='w-1.5 h-1.5 rounded-full bg-current mr-2'></span>{$row['status']}
+                                                    </span>
+                                                </td>
+                                                <td class='px-6 py-4 text-right'>
+                                                    <div class='flex items-center justify-end space-x-2'>
+                                                        <a href='update_repair.php?id={$row['id']}' class='w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center border border-emerald-100 shadow-sm' title='อัปเดตสถานะ'>
+                                                            <i class='fas fa-clipboard-check'></i>
+                                                        </a>
+                                                        <a href='view_repair.php?id={$row['id']}' class='w-9 h-9 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-800 hover:text-white transition-all flex items-center justify-center border border-slate-200 shadow-sm' title='ดูรายละเอียดเต็ม'>
+                                                            <i class='fas fa-eye'></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>";
+                                        }
+                                    } else {
+                                        echo "<tr><td colspan='8' class='px-6 py-16 text-center text-slate-400 font-medium'>ยังไม่มีข้อมูลการแจ้งซ่อมในระบบ</td></tr>";
+                                    }
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
-            <!-- Asset Management Section (จัดการอุปกรณ์) -->
+            <!-- Asset Management Section -->
             <div id="assets" class="section hidden space-y-6">
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
@@ -201,7 +289,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                                     while($a = $asset_res->fetch_assoc()) {
                                         $a_statusClass = ($a['status'] == 'ใช้งานปกติ') ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200';
                                         
-                                        // แปลงค่าเพื่อส่งเข้า JavaScript
                                         $js_id = $a['id'];
                                         $js_code = htmlspecialchars($a['asset_code'], ENT_QUOTES);
                                         $js_name = htmlspecialchars($a['asset_name'], ENT_QUOTES);
@@ -222,11 +309,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                                             </td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <!-- ปุ่มแก้ไข -->
                                                     <button onclick=\"openEditModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'>
                                                         <i class='fas fa-edit'></i>
                                                     </button>
-                                                    <!-- ปุ่มลบ -->
                                                     <button onclick=\"confirmDelete({$a['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'>
                                                         <i class='fas fa-trash-alt'></i>
                                                     </button>
