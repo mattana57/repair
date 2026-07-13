@@ -50,11 +50,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
     }
 }
 
-// ================= จัดการข้อมูลผู้ใช้งาน (Users) =================
+// ================= จัดการข้อมูลผู้ใช้งานและช่าง (Users & Technicians) =================
 if (isset($_GET['delete_user'])) {
     $del_id = intval($_GET['delete_user']);
+    // ค้นหาก่อนว่าเป็นช่างหรือผู้ใช้ เพื่อให้เด้งกลับถูกแท็บ
+    $role_res = $conn->query("SELECT role FROM users WHERE id = $del_id");
+    $tab_redirect = 'users';
+    if($role_res->num_rows > 0) {
+        $r = $role_res->fetch_assoc();
+        if($r['role'] == 'Technician') $tab_redirect = 'technicians';
+    }
+
     $conn->query("DELETE FROM users WHERE id = $del_id");
-    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบผู้ใช้สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
+    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบข้อมูลสำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { window.location.href='dashboard.php?tab=$tab_redirect'; }); });</script>";
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
@@ -63,19 +71,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $full_name = $_POST['full_name'];
     $department = $_POST['department'];
     $role = $_POST['role'];
+    
+    $tab_redirect = ($role == 'Technician') ? 'technicians' : 'users';
 
     if (empty($user_id)) {
         $stmt = $conn->prepare("INSERT INTO users (username, full_name, department, role) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssss", $username, $full_name, $department, $role);
-        $msg = 'เพิ่มผู้ใช้งานสำเร็จ!';
+        $msg = 'บันทึกข้อมูลสำเร็จ!';
     } else {
         $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, department=?, role=? WHERE id=?");
         $stmt->bind_param("ssssi", $username, $full_name, $department, $role, $user_id);
-        $msg = 'อัปเดตข้อมูลผู้ใช้สำเร็จ!';
+        $msg = 'อัปเดตข้อมูลสำเร็จ!';
     }
     
     if ($stmt->execute()) {
-        echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#0284c7' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
+        echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#0284c7' }).then(() => { window.location.href='dashboard.php?tab=$tab_redirect'; }); });</script>";
     }
 }
 ?>
@@ -125,11 +135,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             <p class="px-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">ระบบจัดการหลัก</p>
             <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> ภาพรวมระบบ</button>
             <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-layer-group"></i> รายการแจ้งซ่อม</button>
-            <button onclick="show('assign')" class="nav-btn" id="btn-assign"><i class="fas fa-user-shield"></i> มอบหมายงานช่าง</button>
+            <button onclick="show('technicians')" class="nav-btn" id="btn-technicians"><i class="fas fa-hard-hat"></i> ข้อมูลและประวัติช่าง</button>
             
             <p class="px-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 mt-8">การตั้งค่าและรายงาน</p>
             <button onclick="show('assets')" class="nav-btn" id="btn-assets"><i class="fas fa-server"></i> จัดการอุปกรณ์</button>
-            <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-users-cog"></i> จัดการผู้ใช้</button>
+            <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-users-cog"></i> จัดการบุคลากร</button>
             <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-invoice"></i> รายงานสรุป</button>
         </nav>
     </aside>
@@ -144,7 +154,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             <div class="flex items-center space-x-6">
                 <div class="relative hidden md:block">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" placeholder="ค้นหาเลขที่ใบงาน..." class="bg-white border border-slate-200 text-sm rounded-full pl-11 pr-5 py-2.5 text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all w-72 shadow-sm">
+                    <input type="text" placeholder="ค้นหาข้อมูล..." class="bg-white border border-slate-200 text-sm rounded-full pl-11 pr-5 py-2.5 text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all w-72 shadow-sm">
                 </div>
                 <div class="flex items-center space-x-3 cursor-pointer p-1.5 pr-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm">
                     <div class="w-9 h-9 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold">
@@ -273,6 +283,78 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 </div>
             </div>
 
+            <!-- Technician Management Section (แยกเป็นหน้าประวัติช่างโดยเฉพาะ) -->
+            <div id="technicians" class="section hidden space-y-6">
+                <div class="modern-card overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">ฐานข้อมูลและประวัติช่างซ่อม</h2>
+                            <p class="text-sm text-slate-500 mt-1">รายชื่อช่างซ่อมทั้งหมด และความเชี่ยวชาญแต่ละแผนก</p>
+                        </div>
+                        <button onclick="openTechModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(2,132,199,0.39)] hover:shadow-[0_6px_20px_rgba(2,132,199,0.23)] hover:-translate-y-0.5 flex items-center">
+                            <i class="fas fa-user-plus mr-2"></i> เพิ่มรายชื่อช่าง
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                <tr>
+                                    <th class="px-6 py-4 w-48">รหัสช่าง / Username</th>
+                                    <th class="px-6 py-4">ชื่อ-นามสกุล</th>
+                                    <th class="px-6 py-4">ความเชี่ยวชาญ / แผนก</th>
+                                    <th class="px-6 py-4 text-center">สถานะ</th>
+                                    <th class="px-6 py-4 text-right">การจัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <?php
+                                $tech_res = $conn->query("SELECT * FROM users WHERE role = 'Technician' ORDER BY created_at DESC");
+                                if($tech_res->num_rows > 0){
+                                    while($t = $tech_res->fetch_assoc()) {
+                                        $js_uid = $t['id'];
+                                        $js_uname = htmlspecialchars($t['username'], ENT_QUOTES);
+                                        $js_fname = htmlspecialchars($t['full_name'], ENT_QUOTES);
+                                        $js_dept = htmlspecialchars($t['department'], ENT_QUOTES);
+
+                                        echo "
+                                        <tr class='hover:bg-slate-50/80 transition-colors'>
+                                            <td class='px-6 py-4 font-bold text-sky-600'>{$t['username']}</td>
+                                            <td class='px-6 py-4 text-slate-800 font-semibold'>
+                                                <div class='flex items-center'>
+                                                    <div class='w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 mr-3'><i class='fas fa-hard-hat text-xs'></i></div>
+                                                    {$t['full_name']}
+                                                </div>
+                                            </td>
+                                            <td class='px-6 py-4 text-slate-600'>
+                                                <span class='bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200'>{$t['department']}</span>
+                                            </td>
+                                            <td class='px-6 py-4 text-center'>
+                                                <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-600 border-emerald-200'>พร้อมรับงาน</span>
+                                            </td>
+                                            <td class='px-6 py-4 text-right'>
+                                                <div class='flex items-center justify-end space-x-2'>
+                                                    <button onclick=\"openTechModal('$js_uid', '$js_uname', '$js_fname', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"confirmDelete('user', {$t['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>";
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>
+                                        <div class='w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-slate-100'>
+                                            <i class='fas fa-tools text-2xl text-slate-300'></i>
+                                        </div>
+                                        <p class='font-medium text-slate-500'>ยังไม่มีข้อมูลช่างซ่อมในระบบ</p>
+                                    </td></tr>";
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Asset Management Section -->
             <div id="assets" class="section hidden space-y-6">
                 <div class="modern-card overflow-hidden flex flex-col">
@@ -281,7 +363,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                             <h2 class="text-xl font-bold text-slate-800">ฐานข้อมูลอุปกรณ์และครุภัณฑ์</h2>
                             <p class="text-sm text-slate-500 mt-1">จัดการข้อมูลครุภัณฑ์ภายในคณะ</p>
                         </div>
-                        <button onclick="openAddAssetModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(2,132,199,0.39)] flex items-center">
+                        <button onclick="openAddAssetModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] flex items-center">
                             <i class="fas fa-plus mr-2"></i> เพิ่มอุปกรณ์ใหม่
                         </button>
                     </div>
@@ -312,7 +394,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
 
                                         echo "
                                         <tr class='hover:bg-slate-50/80 transition-colors'>
-                                            <td class='px-6 py-4 font-bold text-sky-600'>{$a['asset_code']}</td>
+                                            <td class='px-6 py-4 font-bold text-indigo-600'>{$a['asset_code']}</td>
                                             <td class='px-6 py-4 text-slate-800 font-semibold'>{$a['asset_name']}</td>
                                             <td class='px-6 py-4 text-slate-600'>
                                                 <span class='bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200'>{$a['category']}</span>
@@ -324,12 +406,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                                             </td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'>
-                                                        <i class='fas fa-edit'></i>
-                                                    </button>
-                                                    <button onclick=\"confirmDelete('asset', {$a['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'>
-                                                        <i class='fas fa-trash-alt'></i>
-                                                    </button>
+                                                    <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"confirmDelete('asset', {$a['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
                                         </tr>";
@@ -344,140 +422,77 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 </div>
             </div>
 
-            <!-- User Management Section (แยกตารางแล้ว) -->
-            <div id="users" class="section hidden space-y-8">
-                <!-- Header ของจัดการผู้ใช้งาน -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent mb-2">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-800">จัดการสิทธิ์และผู้ใช้งาน</h2>
-                        <p class="text-sm text-slate-500 mt-1">กำหนดระดับการเข้าถึงข้อมูลของบุคลากรภายในระบบ</p>
-                    </div>
-                    <button onclick="openAddUserModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] flex items-center">
-                        <i class="fas fa-user-plus mr-2"></i> เพิ่มผู้ใช้งานใหม่
-                    </button>
-                </div>
-
-                <!-- ตารางที่ 1: ทีมงานระบบ (Admin & Technician) -->
-                <div>
-                    <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center"><i class="fas fa-user-shield text-indigo-500 mr-2 text-xl"></i> ทีมงานระบบ (แอดมิน & ช่างซ่อม)</h3>
-                    <div class="modern-card overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left whitespace-nowrap">
-                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
-                                    <tr>
-                                        <th class="px-6 py-4 w-48">รหัส / Username</th>
-                                        <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                        <th class="px-6 py-4">แผนก/ฝ่าย</th>
-                                        <th class="px-6 py-4 text-center">ระดับสิทธิ์ (Role)</th>
-                                        <th class="px-6 py-4 text-right">การจัดการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
-                                    <?php
-                                    $staff_res = $conn->query("SELECT * FROM users WHERE role IN ('Admin', 'Technician') ORDER BY created_at DESC");
-                                    if($staff_res->num_rows > 0){
-                                        while($u = $staff_res->fetch_assoc()) {
-                                            $roleClass = ($u['role'] == 'Admin') ? "bg-purple-50 text-purple-600 border-purple-200" : "bg-sky-50 text-sky-600 border-sky-200";
-                                            $iconClass = ($u['role'] == 'Admin') ? "fa-user-shield" : "fa-tools";
-                                            
-                                            $js_uid = $u['id'];
-                                            $js_uname = htmlspecialchars($u['username'], ENT_QUOTES);
-                                            $js_fname = htmlspecialchars($u['full_name'], ENT_QUOTES);
-                                            $js_dept = htmlspecialchars($u['department'], ENT_QUOTES);
-                                            $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
-
-                                            echo "
-                                            <tr class='hover:bg-slate-50/80 transition-colors'>
-                                                <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
-                                                <td class='px-6 py-4 text-slate-800 font-semibold'>
-                                                    <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3'><i class='fas {$iconClass} text-xs'></i></div>
-                                                        {$u['full_name']}
-                                                    </div>
-                                                </td>
-                                                <td class='px-6 py-4 text-slate-600'>{$u['department']}</td>
-                                                <td class='px-6 py-4 text-center'>
-                                                    <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$roleClass}'>{$u['role']}</span>
-                                                </td>
-                                                <td class='px-6 py-4 text-right'>
-                                                    <div class='flex items-center justify-end space-x-2'>
-                                                        <button onclick=\"openEditUserModal('$js_uid', '$js_uname', '$js_fname', '$js_dept', '$js_role')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
-                                                        <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
-                                                    </div>
-                                                </td>
-                                            </tr>";
-                                        }
-                                    } else {
-                                        echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>ไม่มีข้อมูลทีมงานระบบ</td></tr>";
-                                    }
-                                    ?>
-                                </tbody>
-                            </table>
+            <!-- User Management Section (บุคลากรทั่วไป และ แอดมิน) -->
+            <div id="users" class="section hidden space-y-6">
+                <div class="modern-card overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">จัดการบุคลากร / ผู้ดูแลระบบ</h2>
+                            <p class="text-sm text-slate-500 mt-1">กำหนดระดับการเข้าถึงข้อมูลของบุคลากรภายในระบบ (ยกเว้นช่าง)</p>
                         </div>
+                        <button onclick="openUserModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] flex items-center">
+                            <i class="fas fa-user-plus mr-2"></i> เพิ่มบุคลากรใหม่
+                        </button>
                     </div>
-                </div>
 
-                <!-- ตารางที่ 2: ผู้ใช้งานทั่วไป (User) -->
-                <div>
-                    <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center"><i class="fas fa-users text-sky-500 mr-2 text-xl"></i> บุคลากรทั่วไป (ผู้ใช้งาน/แจ้งซ่อม)</h3>
-                    <div class="modern-card overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left whitespace-nowrap">
-                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
-                                    <tr>
-                                        <th class="px-6 py-4 w-48">รหัส / Username</th>
-                                        <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                        <th class="px-6 py-4">แผนก/ฝ่าย</th>
-                                        <th class="px-6 py-4 text-center">ระดับสิทธิ์ (Role)</th>
-                                        <th class="px-6 py-4 text-right">การจัดการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
-                                    <?php
-                                    $user_res = $conn->query("SELECT * FROM users WHERE role = 'User' ORDER BY created_at DESC");
-                                    if($user_res->num_rows > 0){
-                                        while($u = $user_res->fetch_assoc()) {
-                                            $js_uid = $u['id'];
-                                            $js_uname = htmlspecialchars($u['username'], ENT_QUOTES);
-                                            $js_fname = htmlspecialchars($u['full_name'], ENT_QUOTES);
-                                            $js_dept = htmlspecialchars($u['department'], ENT_QUOTES);
-                                            $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                <tr>
+                                    <th class="px-6 py-4 w-48">Username / รหัส</th>
+                                    <th class="px-6 py-4">ชื่อ-นามสกุล</th>
+                                    <th class="px-6 py-4">แผนก/ฝ่าย</th>
+                                    <th class="px-6 py-4 text-center">ระดับสิทธิ์ (Role)</th>
+                                    <th class="px-6 py-4 text-right">การจัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <?php
+                                $user_res = $conn->query("SELECT * FROM users WHERE role != 'Technician' ORDER BY created_at DESC");
+                                if($user_res->num_rows > 0){
+                                    while($u = $user_res->fetch_assoc()) {
+                                        $roleClass = ($u['role'] == 'Admin') ? "bg-purple-50 text-purple-600 border-purple-200" : "bg-slate-100 text-slate-600 border-slate-200";
+                                        $iconClass = ($u['role'] == 'Admin') ? "fa-user-shield text-purple-600" : "fa-user text-slate-500";
+                                        
+                                        $js_uid = $u['id'];
+                                        $js_uname = htmlspecialchars($u['username'], ENT_QUOTES);
+                                        $js_fname = htmlspecialchars($u['full_name'], ENT_QUOTES);
+                                        $js_dept = htmlspecialchars($u['department'], ENT_QUOTES);
+                                        $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
 
-                                            echo "
-                                            <tr class='hover:bg-slate-50/80 transition-colors'>
-                                                <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
-                                                <td class='px-6 py-4 text-slate-800 font-semibold'>
-                                                    <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3'><i class='fas fa-user text-xs'></i></div>
-                                                        {$u['full_name']}
-                                                    </div>
-                                                </td>
-                                                <td class='px-6 py-4 text-slate-600'>{$u['department']}</td>
-                                                <td class='px-6 py-4 text-center'>
-                                                    <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-slate-100 text-slate-600 border-slate-200'>{$u['role']}</span>
-                                                </td>
-                                                <td class='px-6 py-4 text-right'>
-                                                    <div class='flex items-center justify-end space-x-2'>
-                                                        <button onclick=\"openEditUserModal('$js_uid', '$js_uname', '$js_fname', '$js_dept', '$js_role')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
-                                                        <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
-                                                    </div>
-                                                </td>
-                                            </tr>";
-                                        }
-                                    } else {
-                                        echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>ไม่มีข้อมูลบุคลากรทั่วไป</td></tr>";
+                                        echo "
+                                        <tr class='hover:bg-slate-50/80 transition-colors'>
+                                            <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
+                                            <td class='px-6 py-4 text-slate-800 font-semibold'>
+                                                <div class='flex items-center'>
+                                                    <div class='w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center mr-3 border border-slate-100'><i class='fas {$iconClass} text-xs'></i></div>
+                                                    {$u['full_name']}
+                                                </div>
+                                            </td>
+                                            <td class='px-6 py-4 text-slate-600'>{$u['department']}</td>
+                                            <td class='px-6 py-4 text-center'>
+                                                <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$roleClass}'>{$u['role']}</span>
+                                            </td>
+                                            <td class='px-6 py-4 text-right'>
+                                                <div class='flex items-center justify-end space-x-2'>
+                                                    <button onclick=\"openUserModal('$js_uid', '$js_uname', '$js_fname', '$js_dept', '$js_role')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>";
                                     }
-                                    ?>
-                                </tbody>
-                            </table>
-                        </div>
+                                } else {
+                                    echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีข้อมูลผู้ใช้งานและแอดมิน</td></tr>";
+                                }
+                                ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
             <!-- Sections อื่นๆ ซ่อนไว้ -->
-            <div id="assign" class="section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">ระบบรับงานและมอบหมายช่าง</h2></div>
-            <div id="reports" class="section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">รายงานสรุปผลการปฏิบัติงาน</h2></div>
+            <div id="reports" class="section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">รายงานสรุปผลการปฏิบัติงาน</h2><div class="modern-card p-10 text-center text-slate-500">กำลังพัฒนาส่วนนี้...</div></div>
 
         </div>
     </main>
@@ -496,15 +511,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสครุภัณฑ์ <span class="text-red-500">*</span></label>
-                        <input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่ออุปกรณ์ <span class="text-red-500">*</span></label>
-                        <input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">หมวดหมู่ <span class="text-red-500">*</span></label>
-                        <select name="category" id="asset_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <select name="category" id="asset_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
                             <option value="IT Support">IT Support (คอม/ปริ้นเตอร์)</option>
                             <option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option>
                             <option value="อาคารสถานที่">อาคารสถานที่</option>
@@ -513,7 +528,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">สถานะ</label>
-                        <select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
                             <option value="ใช้งานปกติ">ใช้งานปกติ</option>
                             <option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option>
                             <option value="แทงจำหน่าย">แทงจำหน่าย</option>
@@ -521,19 +536,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end gap-3">
-                    <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button>
-                    <button type="submit" class="px-5 py-2.5 bg-sky-600 text-white rounded-xl text-sm font-bold hover:bg-sky-500 transition-colors shadow-md">บันทึกข้อมูล</button>
+                    <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 shadow-md">บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal เพิ่ม/แก้ไข ผู้ใช้งาน -->
+    <!-- Modal เพิ่ม/แก้ไข ช่างซ่อม -->
+    <div id="techModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techModal')"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform transition-all">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                <p class="text-lg font-bold text-slate-800" id="techModalTitle"><i class="fas fa-hard-hat text-sky-500 mr-2"></i> เพิ่มช่างซ่อม</p>
+                <button onclick="toggleModal('techModal')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form action="" method="POST" class="p-6">
+                <input type="hidden" name="save_user" value="1">
+                <input type="hidden" name="user_id" id="tech_id" value="">
+                <!-- บังคับ Role เป็น Technician เสมอสำหรับฟอร์มนี้ -->
+                <input type="hidden" name="role" value="Technician">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสช่าง / Username <span class="text-red-500">*</span></label>
+                        <input type="text" name="username" id="tech_username" required placeholder="เช่น TECH01" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
+                        <input type="text" name="full_name" id="tech_fullname" required placeholder="เช่น สมหมาย ใจดี" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ความเชี่ยวชาญ / แผนก <span class="text-red-500">*</span></label>
+                        <input type="text" name="department" id="tech_department" required placeholder="เช่น ช่างไฟฟ้า, IT Support" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end gap-3">
+                    <button type="button" onclick="toggleModal('techModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2.5 bg-sky-600 text-white rounded-xl text-sm font-bold hover:bg-sky-500 shadow-md">บันทึกช่างซ่อม</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal เพิ่ม/แก้ไข ผู้ใช้และแอดมิน -->
     <div id="userModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('userModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform transition-all">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
-                <p class="text-lg font-bold text-slate-800" id="userModalTitle">เพิ่มผู้ใช้งาน</p>
+                <p class="text-lg font-bold text-slate-800" id="userModalTitle"><i class="fas fa-user-plus text-indigo-500 mr-2"></i> เพิ่มบุคลากร</p>
                 <button onclick="toggleModal('userModal')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
             <form action="" method="POST" class="p-6">
@@ -541,12 +592,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 <input type="hidden" name="user_id" id="user_id" value="">
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">Username / รหัสประจำตัว <span class="text-red-500">*</span></label>
-                        <input type="text" name="username" id="user_username" required placeholder="เช่น msu_admin01" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสประจำตัว / Username <span class="text-red-500">*</span></label>
+                        <input type="text" name="username" id="user_username" required placeholder="เช่น msu_user01" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
-                        <input type="text" name="full_name" id="user_fullname" required placeholder="เช่น สมชาย ใจดี" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <input type="text" name="full_name" id="user_fullname" required placeholder="เช่น สมศรี ดีใจ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">แผนก/ฝ่าย <span class="text-red-500">*</span></label>
@@ -556,14 +607,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                         <label class="block text-sm font-semibold text-slate-700 mb-1">ระดับสิทธิ์ (Role)</label>
                         <select name="role" id="user_role" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
                             <option value="User">ผู้ใช้งานทั่วไป (User)</option>
-                            <option value="Technician">ช่างซ่อม (Technician)</option>
                             <option value="Admin">ผู้ดูแลระบบ (Admin)</option>
                         </select>
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end gap-3">
-                    <button type="button" onclick="toggleModal('userModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button>
-                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 transition-colors shadow-md">บันทึกข้อมูล</button>
+                    <button type="button" onclick="toggleModal('userModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 shadow-md">บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
@@ -573,9 +623,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         const pageTitles = {
             'dash': 'ภาพรวมระบบ (Dashboard)',
             'repairs': 'ตรวจสอบงานแจ้งซ่อมทั้งหมด',
-            'assign': 'ระบบรับงานและมอบหมายช่าง',
+            'technicians': 'ฐานข้อมูลและประวัติช่างซ่อม',
             'assets': 'ฐานข้อมูลอุปกรณ์และครุภัณฑ์',
-            'users': 'จัดการสิทธิ์และผู้ใช้งาน',
+            'users': 'จัดการบุคลากร / ผู้ดูแลระบบ',
             'reports': 'รายงานสรุปผลการปฏิบัติงาน'
         };
 
@@ -625,24 +675,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             toggleModal('assetModal');
         }
 
-        // ================= Script สำหรับ User =================
-        function openAddUserModal() {
-            document.getElementById('userModalTitle').innerHTML = '<i class="fas fa-user-plus text-indigo-500 mr-2"></i> เพิ่มผู้ใช้งาน';
-            document.getElementById('user_id').value = '';
-            document.getElementById('user_username').value = '';
-            document.getElementById('user_fullname').value = '';
-            document.getElementById('user_department').value = '';
-            document.getElementById('user_role').value = 'User';
-            toggleModal('userModal');
+        // ================= Script สำหรับ Technician =================
+        function openTechModal(id='', uname='', fname='', dept='') {
+            if(id === '') {
+                document.getElementById('techModalTitle').innerHTML = '<i class="fas fa-hard-hat text-sky-500 mr-2"></i> เพิ่มช่างซ่อม';
+                document.getElementById('tech_id').value = '';
+                document.getElementById('tech_username').value = '';
+                document.getElementById('tech_fullname').value = '';
+                document.getElementById('tech_department').value = '';
+            } else {
+                document.getElementById('techModalTitle').innerHTML = '<i class="fas fa-edit text-amber-500 mr-2"></i> แก้ไขประวัติช่าง';
+                document.getElementById('tech_id').value = id;
+                document.getElementById('tech_username').value = uname;
+                document.getElementById('tech_fullname').value = fname;
+                document.getElementById('tech_department').value = dept;
+            }
+            toggleModal('techModal');
         }
 
-        function openEditUserModal(id, uname, fname, dept, role) {
-            document.getElementById('userModalTitle').innerHTML = '<i class="fas fa-user-edit text-amber-500 mr-2"></i> แก้ไขข้อมูลผู้ใช้';
-            document.getElementById('user_id').value = id;
-            document.getElementById('user_username').value = uname;
-            document.getElementById('user_fullname').value = fname;
-            document.getElementById('user_department').value = dept;
-            document.getElementById('user_role').value = role;
+        // ================= Script สำหรับ User/Admin =================
+        function openUserModal(id='', uname='', fname='', dept='', role='User') {
+            if(id === '') {
+                document.getElementById('userModalTitle').innerHTML = '<i class="fas fa-user-plus text-indigo-500 mr-2"></i> เพิ่มบุคลากร';
+                document.getElementById('user_id').value = '';
+                document.getElementById('user_username').value = '';
+                document.getElementById('user_fullname').value = '';
+                document.getElementById('user_department').value = '';
+                document.getElementById('user_role').value = 'User';
+            } else {
+                document.getElementById('userModalTitle').innerHTML = '<i class="fas fa-user-edit text-amber-500 mr-2"></i> แก้ไขข้อมูลบุคลากร';
+                document.getElementById('user_id').value = id;
+                document.getElementById('user_username').value = uname;
+                document.getElementById('user_fullname').value = fname;
+                document.getElementById('user_department').value = dept;
+                document.getElementById('user_role').value = role;
+            }
             toggleModal('userModal');
         }
 
