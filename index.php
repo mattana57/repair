@@ -2,59 +2,86 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>MBS Smart Maintenance | คณะการบัญชีและการจัดการ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบแจ้งซ่อม - คณะการบัญชีและการจัดการ MSU</title>
+    <!-- ใช้ Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- ใช้ Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap');
-        body { font-family: 'Prompt', sans-serif; }
+        body { background-color: #f8f9fa; font-family: 'Kanit', sans-serif; }
+        .card { border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     </style>
 </head>
-<body class="bg-slate-50">
+<body class="p-4">
+    <div class="container max-w-lg mx-auto">
+        <div class="card p-4">
+            <h2 class="text-2xl font-bold text-center text-blue-800 mb-4">แจ้งซ่อมอุปกรณ์</h2>
+            <form action="submit_repair.php" method="POST" enctype="multipart/form-data">
+                <!-- ข้อมูลผู้แจ้ง (ดึงจาก LIFF) -->
+                <div class="mb-3">
+                    <label class="form-label">ชื่อ-นามสกุล (ผู้แจ้ง)</label>
+                    <input type="text" name="reporter_name" class="form-control" required placeholder="ระบุชื่อจริง">
+                </div>
 
-    <!-- Navbar -->
-    <nav class="bg-white shadow-sm py-4 px-6 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <i class="fas fa-tools text-white text-sm"></i>
-            </div>
-            <span class="font-bold text-slate-800 tracking-tight">MBS Maintenance</span>
+                <!-- เลือกประเภทอุปกรณ์ -->
+                <div class="mb-3">
+                    <label class="form-label">ประเภทอุปกรณ์</label>
+                    <select name="equipment_type" class="form-select" id="equipSelect" onchange="checkOther()">
+                        <option value="แอร์">แอร์</option>
+                        <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
+                        <option value="จอภาพ/ทีวี">จอภาพ/ทีวี</option>
+                        <option value="เครื่องปริ้น">เครื่องปริ้น</option>
+                        <option value="ไมค์">ไมค์</option>
+                        <option value="other">อื่นๆ (ระบุ...)</option>
+                    </select>
+                    <input type="text" name="other_equip" id="otherInput" class="form-control mt-2 hidden" placeholder="ระบุชื่ออุปกรณ์">
+                </div>
+
+                <!-- เลือกตึกและระบุห้อง -->
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="form-label">ตึก</label>
+                        <select name="building" class="form-select">
+                            <option value="SBB">SBB</option>
+                            <option value="ACC.BIZ">ACC.BIZ</option>
+                        </select>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="form-label">เลขห้อง</label>
+                        <input type="text" name="room_no" class="form-control" placeholder="เช่น 303" required>
+                    </div>
+                </div>
+
+                <!-- เบอร์ติดต่อ -->
+                <div class="mb-3">
+                    <label class="form-label">เบอร์ติดต่อกลับ</label>
+                    <input type="tel" name="phone_number" class="form-control" required>
+                </div>
+
+                <!-- อาการเสีย -->
+                <div class="mb-3">
+                    <label class="form-label">อาการเสีย</label>
+                    <textarea name="problem_desc" class="form-control" rows="3" required></textarea>
+                </div>
+
+                <!-- แนบภาพ -->
+                <div class="mb-3">
+                    <label class="form-label">แนบภาพประกอบ (ถ้ามี)</label>
+                    <input type="file" name="image_before" class="form-control" accept="image/*">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 mt-3">ส่งรายการแจ้งซ่อม</button>
+            </form>
         </div>
-        <a href="login.php" class="text-sm text-slate-600 hover:text-blue-600 font-medium">เข้าสู่ระบบ (Admin)</a>
-    </nav>
+    </div>
 
-    <!-- Hero Section -->
-    <header class="bg-white py-16 px-6 text-center">
-        <h1 class="text-4xl md:text-5xl font-bold text-slate-800 mb-4">ระบบแจ้งซ่อมออนไลน์</h1>
-        <p class="text-slate-500 text-lg mb-8 max-w-xl mx-auto">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม พร้อมให้บริการดูแลความเรียบร้อยของอุปกรณ์และอาคารสถานที่</p>
-        <a href="report_form.html" class="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition transform hover:-translate-y-1">
-            <i class="fas fa-plus mr-2"></i> แจ้งซ่อมทันที
-        </a>
-    </header>
-
-    <!-- Features Section -->
-    <section class="max-w-4xl mx-auto py-12 px-6 grid md:grid-cols-3 gap-6 text-center">
-        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <i class="fas fa-bolt text-2xl text-blue-500 mb-4"></i>
-            <h3 class="font-bold mb-2">รวดเร็ว</h3>
-            <p class="text-sm text-slate-500">แจ้งปัญหาผ่านมือถือได้ทันที ไม่ต้องเดินไปแจ้งด้วยตัวเอง</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <i class="fas fa-chart-line text-2xl text-blue-500 mb-4"></i>
-            <h3 class="font-bold mb-2">ตรวจสอบได้</h3>
-            <p class="text-sm text-slate-500">ติดตามสถานะงานซ่อมผ่านระบบออนไลน์ได้อย่างแม่นยำ</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <i class="fas fa-shield-alt text-2xl text-blue-500 mb-4"></i>
-            <h3 class="font-bold mb-2">มาตรฐาน</h3>
-            <p class="text-sm text-slate-500">จัดการข้อมูลด้วยระบบฐานข้อมูลที่มีความปลอดภัยสูง</p>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="py-8 text-center text-slate-400 text-sm">
-        <p>© 2026 คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
-    </footer>
-
+    <script>
+        function checkOther() {
+            const select = document.getElementById('equipSelect');
+            const input = document.getElementById('otherInput');
+            input.classList.toggle('hidden', select.value !== 'other');
+        }
+    </script>
 </body>
 </html>
