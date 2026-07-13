@@ -1,7 +1,7 @@
 <?php 
 include 'db_connect.php'; 
 
-// ตรวจสอบและสร้างตาราง assets อัตโนมัติถ้ายังไม่มี
+// 1. สร้างตาราง assets อัตโนมัติถ้ายังไม่มี
 $conn->query("CREATE TABLE IF NOT EXISTS assets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     asset_code VARCHAR(50) NOT NULL,
@@ -11,19 +11,23 @@ $conn->query("CREATE TABLE IF NOT EXISTS assets (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
-// จัดการเมื่อมีการ ลบ อุปกรณ์
+// 2. สร้างตาราง users อัตโนมัติถ้ายังไม่มี
+$conn->query("CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    role VARCHAR(20) DEFAULT 'User',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// ================= จัดการข้อมูลอุปกรณ์ (Assets) =================
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
     $conn->query("DELETE FROM assets WHERE id = $del_id");
-    echo "<script>
-        document.addEventListener('DOMContentLoaded', function() {
-            Swal.fire({ icon: 'success', title: 'ลบข้อมูลสำเร็จ!', showConfirmButton: false, timer: 1500 })
-            .then(() => { window.location.href='dashboard.php?tab=assets'; });
-        });
-    </script>";
+    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบข้อมูลสำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { window.location.href='dashboard.php?tab=assets'; }); });</script>";
 }
 
-// จัดการเมื่อมีการกดปุ่ม บันทึก (เพิ่ม หรือ แก้ไข)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
     $asset_id = $_POST['asset_id'];
     $asset_code = $_POST['asset_code'];
@@ -32,24 +36,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
     $status = $_POST['status'];
 
     if (empty($asset_id)) {
-        // เพิ่มข้อมูลใหม่
         $stmt = $conn->prepare("INSERT INTO assets (asset_code, asset_name, category, status) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssss", $asset_code, $asset_name, $category, $status);
         $msg = 'เพิ่มอุปกรณ์สำเร็จ!';
     } else {
-        // อัปเดตข้อมูลเดิม
         $stmt = $conn->prepare("UPDATE assets SET asset_code=?, asset_name=?, category=?, status=? WHERE id=?");
         $stmt->bind_param("ssssi", $asset_code, $asset_name, $category, $status, $asset_id);
         $msg = 'อัปเดตข้อมูลสำเร็จ!';
     }
     
     if ($stmt->execute()) {
-        echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#0284c7' })
-                .then(() => { window.location.href='dashboard.php?tab=assets'; });
-            });
-        </script>";
+        echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#0284c7' }).then(() => { window.location.href='dashboard.php?tab=assets'; }); });</script>";
+    }
+}
+
+// ================= จัดการข้อมูลผู้ใช้งาน (Users) =================
+if (isset($_GET['delete_user'])) {
+    $del_id = intval($_GET['delete_user']);
+    $conn->query("DELETE FROM users WHERE id = $del_id");
+    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบผู้ใช้สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
+    $user_id = $_POST['user_id'];
+    $username = $_POST['username'];
+    $full_name = $_POST['full_name'];
+    $department = $_POST['department'];
+    $role = $_POST['role'];
+
+    if (empty($user_id)) {
+        $stmt = $conn->prepare("INSERT INTO users (username, full_name, department, role) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $username, $full_name, $department, $role);
+        $msg = 'เพิ่มผู้ใช้งานสำเร็จ!';
+    } else {
+        $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, department=?, role=? WHERE id=?");
+        $stmt->bind_param("ssssi", $username, $full_name, $department, $role, $user_id);
+        $msg = 'อัปเดตข้อมูลผู้ใช้สำเร็จ!';
+    }
+    
+    if ($stmt->execute()) {
+        echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#0284c7' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
     }
 }
 ?>
@@ -116,10 +142,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
         <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 shrink-0 z-10 sticky top-0">
             <h2 class="text-2xl font-bold text-slate-800 tracking-wide" id="headerTitle">ภาพรวมระบบ (Dashboard)</h2>
             <div class="flex items-center space-x-6">
-                <div class="relative hidden md:block">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" placeholder="ค้นหาเลขที่ใบงาน..." class="bg-white border border-slate-200 text-sm rounded-full pl-11 pr-5 py-2.5 text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all w-72 shadow-sm">
-                </div>
                 <div class="flex items-center space-x-3 cursor-pointer p-1.5 pr-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm">
                     <div class="w-9 h-9 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold">
                         <i class="fas fa-user text-sm"></i>
@@ -146,7 +168,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                         ["title" => "ซ่อมเสร็จแล้ว", "query" => "status='ซ่อมเสร็จแล้ว'", "icon" => "fa-check-circle", "color" => "text-emerald-500", "bg" => "bg-emerald-100", "border" => "border-emerald-200"]
                     ];
                     
-                    // เช็คว่ามีตาราง repairs ก่อนไหม ป้องกัน Error
                     $check_repairs = $conn->query("SHOW TABLES LIKE 'repairs'");
                     if($check_repairs->num_rows > 0) {
                         foreach($stats as $s) {
@@ -191,7 +212,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                                     <th class="px-6 py-4">ข้อมูลผู้แจ้ง</th>
                                     <th class="px-6 py-4">สถานที่</th>
                                     <th class="px-6 py-4">อุปกรณ์ / อาการเสีย</th>
-                                    <th class="px-6 py-4">ภาพประกอบ</th>
                                     <th class="px-6 py-4 text-center">สถานะ</th>
                                     <th class="px-6 py-4 text-right">การจัดการ</th>
                                 </tr>
@@ -204,15 +224,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                                     if($res->num_rows > 0){
                                         while($row = $res->fetch_assoc()) {
                                             $date = !empty($row['created_at']) ? date("d/m/Y H:i", strtotime($row['created_at'])) : "-";
-                                            
                                             $statusClass = "bg-slate-100 text-slate-600 border-slate-200"; 
                                             if($row['status'] == 'รอรับเรื่อง') $statusClass = "bg-amber-50 text-amber-600 border-amber-200";
                                             elseif($row['status'] == 'กำลังดำเนินการ') $statusClass = "bg-sky-50 text-sky-600 border-sky-200";
                                             elseif($row['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
-
-                                            $imageHtml = !empty($row['image_before']) 
-                                                ? "<a href='uploads/{$row['image_before']}' target='_blank' class='inline-flex items-center text-xs text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 px-3 py-1.5 rounded-lg font-medium transition-colors border border-sky-100'><i class='fas fa-image mr-1.5'></i> ดูรูปภาพ</a>" 
-                                                : "<span class='text-slate-400 text-xs bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100'>ไม่มีรูป</span>";
 
                                             echo "
                                             <tr class='hover:bg-slate-50/80 transition-colors'>
@@ -222,14 +237,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                                                     <div class='text-slate-800 font-semibold'>{$row['reporter_name']}</div>
                                                     <div class='text-slate-500 text-xs mt-1'><i class='fas fa-phone-alt mr-1 text-slate-400'></i> {$row['phone_number']}</div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600 font-medium'>
-                                                    <div class='flex items-center'><i class='fas fa-map-marker-alt text-slate-400 mr-2'></i> {$row['location']}</div>
-                                                </td>
+                                                <td class='px-6 py-4 text-slate-600 font-medium'>{$row['location']}</td>
                                                 <td class='px-6 py-4'>
                                                     <div class='text-slate-800 font-semibold'>{$row['equipment_type']}</div>
                                                     <div class='text-slate-500 text-xs mt-1 max-w-[200px] truncate' title='{$row['problem_desc']}'>{$row['problem_desc']}</div>
                                                 </td>
-                                                <td class='px-6 py-4'>{$imageHtml}</td>
                                                 <td class='px-6 py-4 text-center'>
                                                     <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$statusClass}'>
                                                         <span class='w-1.5 h-1.5 rounded-full bg-current mr-2'></span>{$row['status']}
@@ -248,7 +260,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                                             </tr>";
                                         }
                                     } else {
-                                        echo "<tr><td colspan='8' class='px-6 py-16 text-center text-slate-400 font-medium'>ยังไม่มีข้อมูลการแจ้งซ่อมในระบบ</td></tr>";
+                                        echo "<tr><td colspan='7' class='px-6 py-16 text-center text-slate-400 font-medium'>ยังไม่มีข้อมูลการแจ้งซ่อมในระบบ</td></tr>";
                                     }
                                 }
                                 ?>
@@ -264,9 +276,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                     <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
                         <div>
                             <h2 class="text-xl font-bold text-slate-800">ฐานข้อมูลอุปกรณ์และครุภัณฑ์</h2>
-                            <p class="text-sm text-slate-500 mt-1">จัดการข้อมูลครุภัณฑ์ภายในคณะสำหรับการแจ้งซ่อม</p>
+                            <p class="text-sm text-slate-500 mt-1">จัดการข้อมูลครุภัณฑ์ภายในคณะ</p>
                         </div>
-                        <button onclick="openAddModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(2,132,199,0.39)] hover:shadow-[0_6px_20px_rgba(2,132,199,0.23)] hover:-translate-y-0.5 flex items-center">
+                        <button onclick="openAddAssetModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(2,132,199,0.39)] flex items-center">
                             <i class="fas fa-plus mr-2"></i> เพิ่มอุปกรณ์ใหม่
                         </button>
                     </div>
@@ -276,7 +288,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                             <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
                                 <tr>
                                     <th class="px-6 py-4">รหัสครุภัณฑ์</th>
-                                    <th class="px-6 py-4">ชื่ออุปกรณ์ / รายละเอียด</th>
+                                    <th class="px-6 py-4">ชื่ออุปกรณ์</th>
                                     <th class="px-6 py-4">หมวดหมู่</th>
                                     <th class="px-6 py-4 text-center">สถานะ</th>
                                     <th class="px-6 py-4 text-right">การจัดการ</th>
@@ -309,10 +321,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                                             </td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"openEditModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'>
+                                                    <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'>
                                                         <i class='fas fa-edit'></i>
                                                     </button>
-                                                    <button onclick=\"confirmDelete({$a['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'>
+                                                    <button onclick=\"confirmDelete('asset', {$a['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'>
                                                         <i class='fas fa-trash-alt'></i>
                                                     </button>
                                                 </div>
@@ -320,12 +332,86 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                                         </tr>";
                                     }
                                 } else {
-                                    echo "<tr><td colspan='5' class='px-6 py-16 text-center text-slate-400'>
-                                        <div class='w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-slate-100'>
-                                            <i class='fas fa-desktop text-2xl text-slate-300'></i>
-                                        </div>
-                                        <p class='font-medium text-slate-500'>ยังไม่มีข้อมูลครุภัณฑ์ในระบบ</p>
-                                    </td></tr>";
+                                    echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีข้อมูลครุภัณฑ์</td></tr>";
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management Section (ระบบจัดการผู้ใช้ใหม่) -->
+            <div id="users" class="section hidden space-y-6">
+                <div class="modern-card overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">จัดการสิทธิ์และผู้ใช้งาน</h2>
+                            <p class="text-sm text-slate-500 mt-1">กำหนดสิทธิ์ Admin, ช่างซ่อม, และบุคลากร</p>
+                        </div>
+                        <button onclick="openAddUserModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] flex items-center">
+                            <i class="fas fa-user-plus mr-2"></i> เพิ่มผู้ใช้งาน
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                <tr>
+                                    <th class="px-6 py-4">รหัส / Username</th>
+                                    <th class="px-6 py-4">ชื่อ-นามสกุล</th>
+                                    <th class="px-6 py-4">แผนก/ฝ่าย</th>
+                                    <th class="px-6 py-4 text-center">ระดับสิทธิ์ (Role)</th>
+                                    <th class="px-6 py-4 text-right">การจัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <?php
+                                $user_res = $conn->query("SELECT * FROM users ORDER BY created_at DESC");
+                                if($user_res->num_rows > 0){
+                                    while($u = $user_res->fetch_assoc()) {
+                                        // จัดการสีของ Role
+                                        $roleClass = "bg-slate-100 text-slate-600 border-slate-200";
+                                        if($u['role'] == 'Admin') $roleClass = "bg-purple-50 text-purple-600 border-purple-200";
+                                        elseif($u['role'] == 'Technician') $roleClass = "bg-sky-50 text-sky-600 border-sky-200";
+                                        
+                                        $js_uid = $u['id'];
+                                        $js_uname = htmlspecialchars($u['username'], ENT_QUOTES);
+                                        $js_fname = htmlspecialchars($u['full_name'], ENT_QUOTES);
+                                        $js_dept = htmlspecialchars($u['department'], ENT_QUOTES);
+                                        $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
+
+                                        echo "
+                                        <tr class='hover:bg-slate-50/80 transition-colors'>
+                                            <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
+                                            <td class='px-6 py-4 text-slate-800 font-semibold'>
+                                                <div class='flex items-center'>
+                                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3'>
+                                                        <i class='fas fa-user text-xs'></i>
+                                                    </div>
+                                                    {$u['full_name']}
+                                                </div>
+                                            </td>
+                                            <td class='px-6 py-4 text-slate-600'>{$u['department']}</td>
+                                            <td class='px-6 py-4 text-center'>
+                                                <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$roleClass}'>
+                                                    {$u['role']}
+                                                </span>
+                                            </td>
+                                            <td class='px-6 py-4 text-right'>
+                                                <div class='flex items-center justify-end space-x-2'>
+                                                    <button onclick=\"openEditUserModal('$js_uid', '$js_uname', '$js_fname', '$js_dept', '$js_role')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'>
+                                                        <i class='fas fa-edit'></i>
+                                                    </button>
+                                                    <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'>
+                                                        <i class='fas fa-trash-alt'></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>";
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีข้อมูลผู้ใช้งาน</td></tr>";
                                 }
                                 ?>
                             </tbody>
@@ -336,7 +422,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
 
             <!-- Sections อื่นๆ ซ่อนไว้ -->
             <div id="assign" class="section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">ระบบรับงานและมอบหมายช่าง</h2></div>
-            <div id="users" class="section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">จัดการสิทธิ์และผู้ใช้งาน</h2></div>
             <div id="reports" class="section hidden"><h2 class="text-2xl font-bold text-slate-800 mb-6">รายงานสรุปผลการปฏิบัติงาน</h2></div>
 
         </div>
@@ -345,33 +430,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
     <!-- Modal เพิ่ม/แก้ไข อุปกรณ์ -->
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
-        
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform transition-all">
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
-                <p class="text-lg font-bold text-slate-800" id="modalTitle"><i class="fas fa-plus-circle text-sky-500 mr-2"></i> เพิ่มอุปกรณ์ใหม่</p>
-                <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-red-500 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
+                <p class="text-lg font-bold text-slate-800" id="assetModalTitle">เพิ่มอุปกรณ์ใหม่</p>
+                <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
-            
             <form action="" method="POST" class="p-6">
-                <!-- ใช้เช็คว่าเป็นบันทึกฟอร์ม -->
                 <input type="hidden" name="save_asset" value="1">
-                <!-- เก็บ ID กรณีเป็นการแก้ไข -->
                 <input type="hidden" name="asset_id" id="asset_id" value="">
-                
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสครุภัณฑ์ <span class="text-red-500">*</span></label>
-                        <input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all">
+                        <input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่ออุปกรณ์ <span class="text-red-500">*</span></label>
-                        <input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all">
+                        <input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">หมวดหมู่ <span class="text-red-500">*</span></label>
-                        <select name="category" id="category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all">
+                        <select name="category" id="asset_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
                             <option value="IT Support">IT Support (คอม/ปริ้นเตอร์)</option>
                             <option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option>
                             <option value="อาคารสถานที่">อาคารสถานที่</option>
@@ -380,17 +458,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">สถานะ</label>
-                        <select name="status" id="status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all">
+                        <select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
                             <option value="ใช้งานปกติ">ใช้งานปกติ</option>
                             <option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option>
                             <option value="แทงจำหน่าย">แทงจำหน่าย</option>
                         </select>
                     </div>
                 </div>
-                
                 <div class="mt-8 flex justify-end gap-3">
-                    <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button>
-                    <button type="submit" class="px-5 py-2.5 bg-sky-600 text-white rounded-xl text-sm font-bold hover:bg-sky-500 transition-colors shadow-md">บันทึกข้อมูล</button>
+                    <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2.5 bg-sky-600 text-white rounded-xl text-sm font-bold hover:bg-sky-500">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal เพิ่ม/แก้ไข ผู้ใช้ -->
+    <div id="userModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('userModal')"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                <p class="text-lg font-bold text-slate-800" id="userModalTitle">เพิ่มผู้ใช้งาน</p>
+                <button onclick="toggleModal('userModal')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form action="" method="POST" class="p-6">
+                <input type="hidden" name="save_user" value="1">
+                <input type="hidden" name="user_id" id="user_id" value="">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Username / รหัสประจำตัว <span class="text-red-500">*</span></label>
+                        <input type="text" name="username" id="user_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
+                        <input type="text" name="full_name" id="user_fullname" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">แผนก/ฝ่าย <span class="text-red-500">*</span></label>
+                        <input type="text" name="department" id="user_department" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ระดับสิทธิ์ (Role)</label>
+                        <select name="role" id="user_role" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm">
+                            <option value="User">ผู้ใช้งานทั่วไป (User)</option>
+                            <option value="Technician">ช่างซ่อม (Technician)</option>
+                            <option value="Admin">ผู้ดูแลระบบ (Admin)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end gap-3">
+                    <button type="button" onclick="toggleModal('userModal')" class="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500">บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
@@ -417,48 +535,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'ระบบจัดการ';
         }
 
-        // เช็คว่าโหลดหน้ามาแล้วให้ไปเปิดแท็บไหน (ระบบจำหน้า)
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
-            if(tab) {
-                show(tab);
-            } else {
-                show('dash');
-            }
+            if(tab) { show(tab); } else { show('dash'); }
         });
 
-        // เปิด-ปิด Modal ปกติ
         function toggleModal(modalID) {
             document.getElementById(modalID).classList.toggle('opacity-0');
             document.getElementById(modalID).classList.toggle('pointer-events-none');
             document.body.classList.toggle('modal-active');
         }
 
-        // จัดการฟอร์มสำหรับ เพิ่มข้อมูล
-        function openAddModal() {
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle text-sky-500 mr-2"></i> เพิ่มอุปกรณ์ใหม่';
+        // ================= Script สำหรับ Asset =================
+        function openAddAssetModal() {
+            document.getElementById('assetModalTitle').innerHTML = '<i class="fas fa-plus-circle text-sky-500 mr-2"></i> เพิ่มอุปกรณ์ใหม่';
             document.getElementById('asset_id').value = '';
             document.getElementById('asset_code').value = '';
             document.getElementById('asset_name').value = '';
-            document.getElementById('category').value = 'IT Support';
-            document.getElementById('status').value = 'ใช้งานปกติ';
+            document.getElementById('asset_category').value = 'IT Support';
+            document.getElementById('asset_status').value = 'ใช้งานปกติ';
             toggleModal('assetModal');
         }
 
-        // จัดการฟอร์มสำหรับ แก้ไขข้อมูล
-        function openEditModal(id, code, name, cat, status) {
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit text-amber-500 mr-2"></i> แก้ไขข้อมูลอุปกรณ์';
+        function openEditAssetModal(id, code, name, cat, status) {
+            document.getElementById('assetModalTitle').innerHTML = '<i class="fas fa-edit text-amber-500 mr-2"></i> แก้ไขข้อมูลอุปกรณ์';
             document.getElementById('asset_id').value = id;
             document.getElementById('asset_code').value = code;
             document.getElementById('asset_name').value = name;
-            document.getElementById('category').value = cat;
-            document.getElementById('status').value = status;
+            document.getElementById('asset_category').value = cat;
+            document.getElementById('asset_status').value = status;
             toggleModal('assetModal');
         }
 
-        // แจ้งเตือนก่อนลบ
-        function confirmDelete(id) {
+        // ================= Script สำหรับ User =================
+        function openAddUserModal() {
+            document.getElementById('userModalTitle').innerHTML = '<i class="fas fa-user-plus text-indigo-500 mr-2"></i> เพิ่มผู้ใช้งาน';
+            document.getElementById('user_id').value = '';
+            document.getElementById('user_username').value = '';
+            document.getElementById('user_fullname').value = '';
+            document.getElementById('user_department').value = '';
+            document.getElementById('user_role').value = 'User';
+            toggleModal('userModal');
+        }
+
+        function openEditUserModal(id, uname, fname, dept, role) {
+            document.getElementById('userModalTitle').innerHTML = '<i class="fas fa-user-edit text-amber-500 mr-2"></i> แก้ไขข้อมูลผู้ใช้';
+            document.getElementById('user_id').value = id;
+            document.getElementById('user_username').value = uname;
+            document.getElementById('user_fullname').value = fname;
+            document.getElementById('user_department').value = dept;
+            document.getElementById('user_role').value = role;
+            toggleModal('userModal');
+        }
+
+        // ================= Script ลบข้อมูลร่วมกัน =================
+        function confirmDelete(type, id) {
+            const redirectUrl = type === 'asset' ? 'dashboard.php?delete_asset=' + id : 'dashboard.php?delete_user=' + id;
             Swal.fire({
                 title: 'ยืนยันการลบ?',
                 text: "ข้อมูลนี้จะถูกลบออกจากระบบถาวร ไม่สามารถกู้คืนได้!",
@@ -468,15 +601,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
                 cancelButtonColor: '#64748b',
                 confirmButtonText: 'ใช่, ลบเลย!',
                 cancelButtonText: 'ยกเลิก',
-                customClass: {
-                    popup: 'rounded-2xl',
-                    confirmButton: 'rounded-xl font-bold px-5',
-                    cancelButton: 'rounded-xl font-bold px-5'
-                }
+                customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl font-bold px-5', cancelButton: 'rounded-xl font-bold px-5' }
             }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = 'dashboard.php?delete_asset=' + id;
-                }
+                if (result.isConfirmed) { window.location.href = redirectUrl; }
             });
         }
     </script>
