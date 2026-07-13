@@ -50,18 +50,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
     }
 }
 
-// ================= จัดการข้อมูลผู้ใช้งานและช่าง (Users & Technicians) =================
+// ================= จัดการข้อมูลผู้ใช้งาน (Admin & Technician) =================
 if (isset($_GET['delete_user'])) {
     $del_id = intval($_GET['delete_user']);
-    $role_res = $conn->query("SELECT role FROM users WHERE id = $del_id");
-    $tab_redirect = 'users';
-    if($role_res->num_rows > 0) {
-        $r = $role_res->fetch_assoc();
-        if($r['role'] == 'Technician') $tab_redirect = 'technicians';
-    }
-
     $conn->query("DELETE FROM users WHERE id = $del_id");
-    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบข้อมูลสำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { window.location.href='dashboard.php?tab=$tab_redirect'; }); });</script>";
+    // กลับไปที่หน้า technicians เสมอ เพราะ Admin และ Tech อยู่หน้านี้
+    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบข้อมูลสำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
@@ -69,9 +63,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $username = $_POST['username'];
     $full_name = $_POST['full_name'];
     $department = $_POST['department'];
-    $role = $_POST['role']; // รับค่าว่าเป็น Admin หรือ Technician
+    $role = $_POST['role']; 
     
-    $tab_redirect = ($role == 'Technician') ? 'technicians' : 'users';
+    // กลับไปที่หน้า technicians เสมอ
+    $tab_redirect = 'technicians';
 
     if (empty($user_id)) {
         $stmt = $conn->prepare("INSERT INTO users (username, full_name, department, role) VALUES (?, ?, ?, ?)");
@@ -134,11 +129,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             <p class="px-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">ระบบจัดการหลัก</p>
             <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> ภาพรวมระบบ</button>
             <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-layer-group"></i> รายการแจ้งซ่อม</button>
-            <button onclick="show('technicians')" class="nav-btn" id="btn-technicians"><i class="fas fa-hard-hat"></i> ข้อมูลและประวัติช่าง</button>
+            <button onclick="show('technicians')" class="nav-btn" id="btn-technicians"><i class="fas fa-user-shield"></i> ทีมงานระบบ</button>
             
             <p class="px-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 mt-8">การตั้งค่าและรายงาน</p>
             <button onclick="show('assets')" class="nav-btn" id="btn-assets"><i class="fas fa-server"></i> จัดการอุปกรณ์</button>
-            <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-users-cog"></i> จัดการบุคลากร</button>
+            <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-users"></i> ประวัติผู้แจ้งซ่อม</button>
             <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-invoice"></i> รายงานสรุป</button>
         </nav>
     </aside>
@@ -283,69 +278,133 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 </div>
             </div>
 
-            <!-- Technician Management Section -->
-            <div id="technicians" class="section hidden space-y-6">
-                <div class="modern-card overflow-hidden flex flex-col">
-                    <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-800">ฐานข้อมูลและประวัติช่างซ่อม</h2>
-                            <p class="text-sm text-slate-500 mt-1">รายชื่อช่างซ่อมทั้งหมด และความเชี่ยวชาญแต่ละแผนก</p>
-                        </div>
-                        <button onclick="openTechModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(2,132,199,0.39)] hover:shadow-[0_6px_20px_rgba(2,132,199,0.23)] hover:-translate-y-0.5 flex items-center">
-                            <i class="fas fa-user-plus mr-2"></i> เพิ่มรายชื่อช่าง
+            <!-- Technician & Admin Management Section (ทีมงานระบบ) -->
+            <div id="technicians" class="section hidden space-y-8">
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent mb-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">ทีมงานระบบ (แอดมิน & ช่างซ่อม)</h2>
+                        <p class="text-sm text-slate-500 mt-1">จัดการรายชื่อผู้ดูแลระบบและช่างซ่อมประจำคณะ</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openAdminModal()" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(147,51,234,0.39)] flex items-center">
+                            <i class="fas fa-user-shield mr-2"></i> เพิ่มแอดมิน
+                        </button>
+                        <button onclick="openTechModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(2,132,199,0.39)] hover:-translate-y-0.5 flex items-center">
+                            <i class="fas fa-hard-hat mr-2"></i> เพิ่มช่างซ่อม
                         </button>
                     </div>
+                </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left whitespace-nowrap">
-                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
-                                <tr>
-                                    <th class="px-6 py-4 w-48">รหัสช่าง / Username</th>
-                                    <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                    <th class="px-6 py-4">ความเชี่ยวชาญ / แผนก</th>
-                                    <th class="px-6 py-4 text-center">สถานะ</th>
-                                    <th class="px-6 py-4 text-right">การจัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
-                                <?php
-                                $tech_res = $conn->query("SELECT * FROM users WHERE role = 'Technician' ORDER BY created_at DESC");
-                                if($tech_res->num_rows > 0){
-                                    while($t = $tech_res->fetch_assoc()) {
-                                        $js_uid = $t['id'];
-                                        $js_uname = htmlspecialchars($t['username'], ENT_QUOTES);
-                                        $js_fname = htmlspecialchars($t['full_name'], ENT_QUOTES);
-                                        $js_dept = htmlspecialchars($t['department'], ENT_QUOTES);
+                <!-- ตารางที่ 1: แอดมิน (Admin) -->
+                <div>
+                    <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center"><i class="fas fa-user-shield text-purple-500 mr-2 text-xl"></i> ผู้ดูแลระบบ (Admin)</h3>
+                    <div class="modern-card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                    <tr>
+                                        <th class="px-6 py-4 w-48">Username</th>
+                                        <th class="px-6 py-4">ชื่อ-นามสกุล</th>
+                                        <th class="px-6 py-4">แผนก/ฝ่าย</th>
+                                        <th class="px-6 py-4 text-center">ระดับสิทธิ์</th>
+                                        <th class="px-6 py-4 text-right">การจัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                    <?php
+                                    $admin_res = $conn->query("SELECT * FROM users WHERE role = 'Admin' ORDER BY created_at DESC");
+                                    if($admin_res && $admin_res->num_rows > 0){
+                                        while($u = $admin_res->fetch_assoc()) {
+                                            $js_uid = $u['id'];
+                                            $js_uname = htmlspecialchars($u['username'], ENT_QUOTES);
+                                            $js_fname = htmlspecialchars($u['full_name'], ENT_QUOTES);
+                                            $js_dept = htmlspecialchars($u['department'], ENT_QUOTES);
 
-                                        echo "
-                                        <tr class='hover:bg-slate-50/80 transition-colors'>
-                                            <td class='px-6 py-4 font-bold text-sky-600'>{$t['username']}</td>
-                                            <td class='px-6 py-4 text-slate-800 font-semibold'>
-                                                <div class='flex items-center'>
-                                                    <div class='w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 mr-3'><i class='fas fa-hard-hat text-xs'></i></div>
-                                                    {$t['full_name']}
-                                                </div>
-                                            </td>
-                                            <td class='px-6 py-4 text-slate-600'>
-                                                <span class='bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200'>{$t['department']}</span>
-                                            </td>
-                                            <td class='px-6 py-4 text-center'>
-                                                <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-600 border-emerald-200'>พร้อมรับงาน</span>
-                                            </td>
-                                            <td class='px-6 py-4 text-right'>
-                                                <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"openTechModal('$js_uid', '$js_uname', '$js_fname', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
-                                                    <button onclick=\"confirmDelete('user', {$t['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
-                                                </div>
-                                            </td>
-                                        </tr>";
+                                            echo "
+                                            <tr class='hover:bg-slate-50/80 transition-colors'>
+                                                <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
+                                                <td class='px-6 py-4 text-slate-800 font-semibold'>
+                                                    <div class='flex items-center'>
+                                                        <div class='w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mr-3 border border-purple-100'><i class='fas fa-user-shield text-xs'></i></div>
+                                                        {$u['full_name']}
+                                                    </div>
+                                                </td>
+                                                <td class='px-6 py-4 text-slate-600'>{$u['department']}</td>
+                                                <td class='px-6 py-4 text-center'>
+                                                    <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-purple-50 text-purple-600 border-purple-200'>Admin</span>
+                                                </td>
+                                                <td class='px-6 py-4 text-right'>
+                                                    <div class='flex items-center justify-end space-x-2'>
+                                                        <button onclick=\"openAdminModal('$js_uid', '$js_uname', '$js_fname', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
+                                                    </div>
+                                                </td>
+                                            </tr>";
+                                        }
+                                    } else {
+                                        echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลผู้ดูแลระบบ</td></tr>";
                                     }
-                                } else {
-                                    echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีข้อมูลช่างซ่อมในระบบ</td></tr>";
-                                }
-                                ?>
-                            </tbody>
-                        </table>
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางที่ 2: ช่างซ่อม (Technician) -->
+                <div>
+                    <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center"><i class="fas fa-hard-hat text-sky-500 mr-2 text-xl"></i> ช่างซ่อม (Technician)</h3>
+                    <div class="modern-card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                    <tr>
+                                        <th class="px-6 py-4 w-48">รหัสช่าง / Username</th>
+                                        <th class="px-6 py-4">ชื่อ-นามสกุล</th>
+                                        <th class="px-6 py-4">ความเชี่ยวชาญ / แผนก</th>
+                                        <th class="px-6 py-4 text-center">ระดับสิทธิ์</th>
+                                        <th class="px-6 py-4 text-right">การจัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                    <?php
+                                    $tech_res = $conn->query("SELECT * FROM users WHERE role = 'Technician' ORDER BY created_at DESC");
+                                    if($tech_res->num_rows > 0){
+                                        while($t = $tech_res->fetch_assoc()) {
+                                            $js_uid = $t['id'];
+                                            $js_uname = htmlspecialchars($t['username'], ENT_QUOTES);
+                                            $js_fname = htmlspecialchars($t['full_name'], ENT_QUOTES);
+                                            $js_dept = htmlspecialchars($t['department'], ENT_QUOTES);
+
+                                            echo "
+                                            <tr class='hover:bg-slate-50/80 transition-colors'>
+                                                <td class='px-6 py-4 font-bold text-sky-600'>{$t['username']}</td>
+                                                <td class='px-6 py-4 text-slate-800 font-semibold'>
+                                                    <div class='flex items-center'>
+                                                        <div class='w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 mr-3'><i class='fas fa-hard-hat text-xs'></i></div>
+                                                        {$t['full_name']}
+                                                    </div>
+                                                </td>
+                                                <td class='px-6 py-4 text-slate-600'>{$t['department']}</td>
+                                                <td class='px-6 py-4 text-center'>
+                                                    <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-sky-50 text-sky-600 border-sky-200'>Technician</span>
+                                                </td>
+                                                <td class='px-6 py-4 text-right'>
+                                                    <div class='flex items-center justify-end space-x-2'>
+                                                        <button onclick=\"openTechModal('$js_uid', '$js_uname', '$js_fname', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"confirmDelete('user', {$t['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
+                                                    </div>
+                                                </td>
+                                            </tr>";
+                                        }
+                                    } else {
+                                        echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลช่างซ่อมในระบบ</td></tr>";
+                                    }
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -417,123 +476,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 </div>
             </div>
 
-            <!-- User Management Section (บุคลากรทั่วไปดึงออโต้ & แอดมิน) -->
-            <div id="users" class="section hidden space-y-8">
-                <!-- Header ของจัดการผู้ใช้งาน -->
+            <!-- Users Section (แสดงเฉพาะประวัติผู้แจ้งซ่อม) -->
+            <div id="users" class="section hidden space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent mb-2">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-800">จัดการบุคลากร / ผู้ดูแลระบบ</h2>
-                        <p class="text-sm text-slate-500 mt-1">ข้อมูลบุคลากรที่เคยแจ้งซ่อม และจัดการเพิ่มสิทธิ์ผู้ดูแลระบบ</p>
+                        <h2 class="text-2xl font-bold text-slate-800">ประวัติผู้แจ้งซ่อม</h2>
+                        <p class="text-sm text-slate-500 mt-1">ข้อมูลบุคลากรที่เคยแจ้งซ่อม (ดึงอัตโนมัติจากระบบ)</p>
                     </div>
-                    <button onclick="openAdminModal()" class="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(147,51,234,0.39)] flex items-center">
-                        <i class="fas fa-user-shield mr-2"></i> เพิ่มผู้ดูแลระบบ (Admin)
-                    </button>
                 </div>
 
-                <!-- ตารางที่ 1: แอดมิน (Admin) -->
-                <div>
-                    <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center"><i class="fas fa-user-shield text-purple-500 mr-2 text-xl"></i> ผู้ดูแลระบบ (Admin)</h3>
-                    <div class="modern-card overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left whitespace-nowrap">
-                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
-                                    <tr>
-                                        <th class="px-6 py-4 w-48">Username</th>
-                                        <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                        <th class="px-6 py-4">แผนก/ฝ่าย</th>
-                                        <th class="px-6 py-4 text-center">ระดับสิทธิ์</th>
-                                        <th class="px-6 py-4 text-right">การจัดการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
-                                    <?php
-                                    $admin_res = $conn->query("SELECT * FROM users WHERE role = 'Admin' ORDER BY created_at DESC");
-                                    if($admin_res && $admin_res->num_rows > 0){
-                                        while($u = $admin_res->fetch_assoc()) {
-                                            $js_uid = $u['id'];
-                                            $js_uname = htmlspecialchars($u['username'], ENT_QUOTES);
-                                            $js_fname = htmlspecialchars($u['full_name'], ENT_QUOTES);
-                                            $js_dept = htmlspecialchars($u['department'], ENT_QUOTES);
-
+                <div class="modern-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                <tr>
+                                    <th class="px-6 py-4">ชื่อ-นามสกุล (ผู้แจ้ง)</th>
+                                    <th class="px-6 py-4">เบอร์โทรศัพท์</th>
+                                    <th class="px-6 py-4 text-center">จำนวนครั้งที่แจ้งซ่อม</th>
+                                    <th class="px-6 py-4">แจ้งซ่อมล่าสุดเมื่อ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <?php
+                                if($check_repairs->num_rows > 0) {
+                                    // ใช้ GROUP BY เพื่อรวมชื่อคนที่ซ้ำกัน และนับจำนวนครั้งที่แจ้งซ่อม
+                                    $reporter_res = $conn->query("SELECT reporter_name, phone_number, COUNT(id) as total_repairs, MAX(created_at) as last_date FROM repairs GROUP BY reporter_name, phone_number ORDER BY last_date DESC");
+                                    
+                                    if($reporter_res && $reporter_res->num_rows > 0){
+                                        while($r = $reporter_res->fetch_assoc()) {
+                                            $last_date = !empty($r['last_date']) ? date("d/m/Y H:i", strtotime($r['last_date'])) : "-";
                                             echo "
                                             <tr class='hover:bg-slate-50/80 transition-colors'>
-                                                <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
                                                 <td class='px-6 py-4 text-slate-800 font-semibold'>
                                                     <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mr-3 border border-purple-100'><i class='fas fa-user-shield text-xs'></i></div>
-                                                        {$u['full_name']}
+                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 border border-slate-200'><i class='fas fa-user text-xs'></i></div>
+                                                        {$r['reporter_name']}
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600'>{$u['department']}</td>
+                                                <td class='px-6 py-4 text-slate-600'><i class='fas fa-phone-alt text-slate-400 mr-2'></i> {$r['phone_number']}</td>
                                                 <td class='px-6 py-4 text-center'>
-                                                    <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-purple-50 text-purple-600 border-purple-200'>Admin</span>
+                                                    <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-sky-50 text-sky-600 border-sky-200'>{$r['total_repairs']} งาน</span>
                                                 </td>
-                                                <td class='px-6 py-4 text-right'>
-                                                    <div class='flex items-center justify-end space-x-2'>
-                                                        <button onclick=\"openAdminModal('$js_uid', '$js_uname', '$js_fname', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
-                                                        <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
-                                                    </div>
-                                                </td>
+                                                <td class='px-6 py-4 text-slate-500'>{$last_date}</td>
                                             </tr>";
-                                        }
-                                    } else {
-                                        echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลผู้ดูแลระบบ</td></tr>";
-                                    }
-                                    ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ตารางที่ 2: บุคลากรที่เคยแจ้งซ่อม (ดึงอัตโนมัติจาก repairs) -->
-                <div>
-                    <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center"><i class="fas fa-users text-sky-500 mr-2 text-xl"></i> ประวัติผู้แจ้งซ่อม (ดึงอัตโนมัติจากระบบแจ้งซ่อม)</h3>
-                    <div class="modern-card overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left whitespace-nowrap">
-                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
-                                    <tr>
-                                        <th class="px-6 py-4">ชื่อ-นามสกุล (ผู้แจ้ง)</th>
-                                        <th class="px-6 py-4">เบอร์โทรศัพท์</th>
-                                        <th class="px-6 py-4 text-center">จำนวนครั้งที่แจ้งซ่อม</th>
-                                        <th class="px-6 py-4">แจ้งซ่อมล่าสุดเมื่อ</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
-                                    <?php
-                                    if($check_repairs->num_rows > 0) {
-                                        // ใช้ GROUP BY เพื่อรวมชื่อคนที่ซ้ำกัน และนับจำนวนครั้งที่แจ้งซ่อม
-                                        $reporter_res = $conn->query("SELECT reporter_name, phone_number, COUNT(id) as total_repairs, MAX(created_at) as last_date FROM repairs GROUP BY reporter_name, phone_number ORDER BY last_date DESC");
-                                        
-                                        if($reporter_res && $reporter_res->num_rows > 0){
-                                            while($r = $reporter_res->fetch_assoc()) {
-                                                $last_date = !empty($r['last_date']) ? date("d/m/Y H:i", strtotime($r['last_date'])) : "-";
-                                                echo "
-                                                <tr class='hover:bg-slate-50/80 transition-colors'>
-                                                    <td class='px-6 py-4 text-slate-800 font-semibold'>
-                                                        <div class='flex items-center'>
-                                                            <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 border border-slate-200'><i class='fas fa-user text-xs'></i></div>
-                                                            {$r['reporter_name']}
-                                                        </div>
-                                                    </td>
-                                                    <td class='px-6 py-4 text-slate-600'><i class='fas fa-phone-alt text-slate-400 mr-2'></i> {$r['phone_number']}</td>
-                                                    <td class='px-6 py-4 text-center'>
-                                                        <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-sky-50 text-sky-600 border-sky-200'>{$r['total_repairs']} งาน</span>
-                                                    </td>
-                                                    <td class='px-6 py-4 text-slate-500'>{$last_date}</td>
-                                                </tr>";
-                                            }
-                                        } else {
-                                            echo "<tr><td colspan='4' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีประวัติการแจ้งซ่อม</td></tr>";
                                         }
                                     } else {
                                         echo "<tr><td colspan='4' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีประวัติการแจ้งซ่อม</td></tr>";
                                     }
-                                    ?>
-                                </tbody>
-                            </table>
-                        </div>
+                                } else {
+                                    echo "<tr><td colspan='4' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีประวัติการแจ้งซ่อม</td></tr>";
+                                }
+                                ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -626,7 +621,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         </div>
     </div>
 
-    <!-- Modal เพิ่ม/แก้ไข แอดมิน (เปลี่ยนจาก userModal เดิม) -->
+    <!-- Modal เพิ่ม/แก้ไข แอดมิน -->
     <div id="adminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('adminModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform transition-all">
@@ -666,9 +661,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         const pageTitles = {
             'dash': 'ภาพรวมระบบ (Dashboard)',
             'repairs': 'ตรวจสอบงานแจ้งซ่อมทั้งหมด',
-            'technicians': 'ฐานข้อมูลและประวัติช่างซ่อม',
+            'technicians': 'ทีมงานระบบ (แอดมิน & ช่าง)',
             'assets': 'ฐานข้อมูลอุปกรณ์และครุภัณฑ์',
-            'users': 'จัดการบุคลากร / ผู้ดูแลระบบ',
+            'users': 'ประวัติผู้แจ้งซ่อม',
             'reports': 'รายงานสรุปผลการปฏิบัติงาน'
         };
 
