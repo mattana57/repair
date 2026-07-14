@@ -443,15 +443,13 @@ if($check_repairs->num_rows > 0) {
             </div>
 
             <!-- Users Section (ประวัติผู้แจ้งซ่อม ที่จัดการได้) -->
+            <!-- Users Section (ประวัติผู้แจ้งซ่อม) -->
             <div id="users" class="section hidden space-y-6 no-print">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent mb-2">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                     <div>
                         <h2 class="text-2xl font-bold text-slate-800">ประวัติผู้แจ้งซ่อม</h2>
-                        <p class="text-sm text-slate-500 mt-1">รายชื่อบุคลากรและประวัติการแจ้งซ่อมทั้งหมด</p>
+                        <p class="text-sm text-slate-500 mt-1">ข้อมูลบุคลากรที่เคยแจ้งซ่อม (ดึงอัตโนมัติจากระบบ)</p>
                     </div>
-                    <button onclick="openReporterModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] flex items-center">
-                        <i class="fas fa-user-plus mr-2"></i> เพิ่มผู้แจ้งซ่อม
-                    </button>
                 </div>
 
                 <div class="modern-card overflow-hidden">
@@ -460,43 +458,34 @@ if($check_repairs->num_rows > 0) {
                             <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
                                 <tr>
                                     <th class="px-6 py-4">ชื่อ-นามสกุล (ผู้แจ้ง)</th>
-                                    <th class="px-6 py-4">เบอร์โทรศัพท์ / แผนก</th>
-                                    <th class="px-6 py-4 text-center">จำนวนที่แจ้งซ่อม</th>
-                                    <th class="px-6 py-4 text-right">การจัดการ</th>
+                                    <th class="px-6 py-4">เบอร์โทรศัพท์</th>
+                                    <th class="px-6 py-4 text-center">จำนวนครั้งที่แจ้งซ่อม</th>
+                                    <th class="px-6 py-4">แจ้งซ่อมล่าสุดเมื่อ</th>
+                                    <th class="px-6 py-4 text-right">ประวัติ</th>
                                 </tr>
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                $reporter_res = $conn->query("SELECT u.*, COUNT(r.id) as total_repairs, MAX(r.created_at) as last_date FROM users u LEFT JOIN repairs r ON u.full_name = r.reporter_name WHERE u.role = 'User' GROUP BY u.id ORDER BY u.created_at DESC");
-                                
-                                if($reporter_res && $reporter_res->num_rows > 0){
-                                    while($r = $reporter_res->fetch_assoc()) {
-                                        $js_uid = $r['id']; $js_uname = htmlspecialchars($r['username'], ENT_QUOTES); $js_fname = htmlspecialchars($r['full_name'], ENT_QUOTES); $js_phone = htmlspecialchars($r['phone'], ENT_QUOTES); $js_dept = htmlspecialchars($r['department'], ENT_QUOTES);
-                                        
-                                        echo "<tr class='hover:bg-slate-50/80 transition-colors'>
-                                            <td class='px-6 py-4 text-slate-800 font-semibold'>
-                                                <div class='flex items-center'>
-                                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 border border-slate-200'><i class='fas fa-user text-xs'></i></div>
-                                                    {$r['full_name']}
-                                                </div>
-                                            </td>
-                                            <td class='px-6 py-4'>
-                                                <div class='text-slate-700 font-medium'><i class='fas fa-phone-alt text-slate-400 mr-1.5'></i> ".($r['phone'] ? $r['phone'] : '-')."</div>
-                                                <div class='text-slate-500 text-xs mt-0.5'>แผนก: {$r['department']}</div>
-                                            </td>
-                                            <td class='px-6 py-4 text-center'>
-                                                <span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-sky-50 text-sky-600 border-sky-200'>{$r['total_repairs']} งาน</span>
-                                            </td>
-                                            <td class='px-6 py-4 text-right'>
-                                                <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"viewHistory('{$js_fname}')\" class='w-8 h-8 rounded-lg bg-sky-50 text-sky-600 hover:bg-sky-500 hover:text-white transition-all flex items-center justify-center border border-sky-100 shadow-sm' title='ดูประวัติการซ่อม'><i class='fas fa-eye'></i></button>
-                                                    <button onclick=\"openReporterModal('$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm' title='แก้ไขข้อมูล'><i class='fas fa-edit'></i></button>
-                                                    <button onclick=\"confirmDelete('user', {$r['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm' title='ลบข้อมูล'><i class='fas fa-trash-alt'></i></button>
-                                                </div>
-                                            </td>
-                                        </tr>";
-                                    }
-                                } else { echo "<tr><td colspan='4' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีข้อมูลผู้แจ้งซ่อม</td></tr>"; }
+                                if($check_repairs->num_rows > 0) {
+                                    $reporter_res = $conn->query("SELECT reporter_name, phone_number, COUNT(id) as total_repairs, MAX(created_at) as last_date FROM repairs WHERE reporter_name IS NOT NULL AND reporter_name != '' GROUP BY reporter_name, phone_number ORDER BY last_date DESC");
+                                    if($reporter_res && $reporter_res->num_rows > 0){
+                                        while($r = $reporter_res->fetch_assoc()) {
+                                            $last_date = !empty($r['last_date']) ? date("d/m/Y H:i", strtotime($r['last_date'])) : "-";
+                                            $js_old_name = htmlspecialchars($r['reporter_name'], ENT_QUOTES);
+                                            echo "<tr class='hover:bg-slate-50/80 transition-colors'>
+                                                <td class='px-6 py-4 text-slate-800 font-semibold'>
+                                                    <div class='flex items-center'><div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3'><i class='fas fa-user text-xs'></i></div>{$r['reporter_name']}</div>
+                                                </td>
+                                                <td class='px-6 py-4 text-slate-600'><i class='fas fa-phone-alt text-slate-400 mr-2'></i> {$r['phone_number']}</td>
+                                                <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-sky-50 text-sky-600 border-sky-200'>{$r['total_repairs']} งาน</span></td>
+                                                <td class='px-6 py-4 text-slate-500'>{$last_date}</td>
+                                                <td class='px-6 py-4 text-right'>
+                                                    <button onclick=\"viewHistory('{$js_old_name}')\" class='bg-white border border-slate-200 text-slate-600 hover:text-sky-600 hover:bg-sky-50 px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm'><i class='fas fa-eye mr-1'></i> ดูประวัติ</button>
+                                                </td>
+                                            </tr>";
+                                        }
+                                    } else { echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีประวัติการแจ้งซ่อม</td></tr>"; }
+                                }
                                 ?>
                             </tbody>
                         </table>
