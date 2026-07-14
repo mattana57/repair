@@ -857,7 +857,7 @@ if($check_repairs->num_rows > 0) {
                 type: 'bar',
                 data: {
                     labels: equipLabels,
-                    datasets: [{ label: 'จำนวนครั้งที่แจ้งซ่อม', data: equipCounts, backgroundColor: '#6366f1', borderRadius: 6 }]
+                    datasets: [{ label: 'จำนวนครั้งที่แจ้งซ่อม ', data: equipCounts, backgroundColor: '#6366f1', borderRadius: 6 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Kanit', sans-serif" } }, grid: { borderDash: [4, 4] } }, x: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false } } } }
             });
