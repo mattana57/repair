@@ -233,7 +233,8 @@ if($check_repairs->num_rows > 0) {
             <div class="flex items-center space-x-6">
                 <div class="relative hidden md:block">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" placeholder="ค้นหาข้อมูล..." class="bg-white border border-slate-200 text-sm rounded-full pl-11 pr-5 py-2.5 text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all w-72 shadow-sm">
+                    <!-- เพิ่ม id="searchInput" สำหรับการค้นหา -->
+                    <input type="text" id="searchInput" placeholder="ค้นหาข้อมูลในตาราง..." class="bg-white border border-slate-200 text-sm rounded-full pl-11 pr-5 py-2.5 text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all w-72 shadow-sm">
                 </div>
                 <div class="flex items-center space-x-3 cursor-pointer p-1.5 pr-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm">
                     <div class="w-9 h-9 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold"><i class="fas fa-user text-sm"></i></div>
@@ -319,7 +320,7 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Technician & Admin Section (ทีมงานระบบ) -->
+            <!-- Technician & Admin Section -->
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                     <div>
@@ -353,19 +354,23 @@ if($check_repairs->num_rows > 0) {
                                     $admin_res = $conn->query("SELECT * FROM users WHERE role IN ('Admin', 'admin', 'executive') ORDER BY created_at DESC");
                                     if($admin_res && $admin_res->num_rows > 0){
                                         while($u = $admin_res->fetch_assoc()) {
+                                            $roleDisplay = 'Admin';
+                                            $roleClass = "bg-purple-50 text-purple-600 border-purple-200";
+                                            $iconClass = "fa-user-shield text-purple-600 bg-purple-50 border-purple-100";
+                                            
                                             $js_uid = $u['id']; $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); $js_fname = htmlspecialchars($u['full_name'] ?? '', ENT_QUOTES); $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES);
 
                                             echo "<tr class='hover:bg-slate-50/80 transition-colors'>
                                                 <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
                                                 <td class='px-6 py-4 text-slate-800 font-semibold'>
                                                     <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full flex items-center justify-center mr-3 border bg-purple-50 text-purple-600 border-purple-100'><i class='fas fa-user-shield text-xs'></i></div>
+                                                        <div class='w-8 h-8 rounded-full flex items-center justify-center mr-3 border {$iconClass}'><i class='fas fa-user-shield text-xs'></i></div>
                                                         ".($u['full_name'] ?: 'ไม่ระบุ')."
                                                     </div>
                                                 </td>
                                                 <td class='px-6 py-4 text-slate-600'>".($u['phone'] ?: '-')."</td>
                                                 <td class='px-6 py-4 text-slate-600'>".($u['department'] ?: '-')."</td>
-                                                <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-purple-50 text-purple-600 border-purple-200'>Admin</span></td>
+                                                <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
                                                         <button onclick=\"openTechAdminModal('Admin', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
@@ -472,7 +477,7 @@ if($check_repairs->num_rows > 0) {
                                             </td>
                                         </tr>";
                                     }
-                                }
+                                } else { echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีข้อมูลครุภัณฑ์</td></tr>"; }
                                 ?>
                             </tbody>
                         </table>
@@ -716,6 +721,16 @@ if($check_repairs->num_rows > 0) {
             if(activeBtn) activeBtn.classList.add('active-btn');
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'ระบบจัดการ';
             
+            // เคลียร์ค่าช่องค้นหาเมื่อเปลี่ยนหน้า
+            let searchInput = document.getElementById('searchInput');
+            if(searchInput) {
+                searchInput.value = '';
+                let activeSection = document.getElementById(id);
+                if(activeSection) {
+                    activeSection.querySelectorAll('table tbody tr').forEach(row => row.style.display = '');
+                }
+            }
+            
             if(id === 'reports' && !window.chartsRendered) {
                 renderCharts();
                 window.chartsRendered = true;
@@ -727,6 +742,22 @@ if($check_repairs->num_rows > 0) {
             const tab = urlParams.get('tab');
             if(tab) { show(tab); } else { show('dash'); }
             window.chartsRendered = false;
+
+            // ระบบค้นหาเรียลไทม์
+            document.getElementById('searchInput').addEventListener('input', function() {
+                let filter = this.value.toLowerCase();
+                let activeSection = document.querySelector('.section:not(.hidden)');
+                if (!activeSection) return;
+                
+                let rows = activeSection.querySelectorAll('table tbody tr');
+                rows.forEach(row => {
+                    if (row.innerText.toLowerCase().includes(filter)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
         });
 
         function toggleModal(m) { 
@@ -813,7 +844,7 @@ if($check_repairs->num_rows > 0) {
             const userRepairs = allRepairs.filter(r => r.reporter_name === fullName);
             
             if(userRepairs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">ไม่พบประวัติการแจ้งซ่อมในระบบ</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">ไม่พบประวัติการแจ้งซ่อม</td></tr>';
             } else {
                 userRepairs.forEach(r => {
                     let statusClass = 'bg-slate-100 text-slate-600';
@@ -824,7 +855,7 @@ if($check_repairs->num_rows > 0) {
                     tbody.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                         <td class="px-4 py-3 font-bold text-sky-600">${r.ticket_no}</td>
                         <td class="px-4 py-3 text-slate-700 font-medium">${r.equipment_type}</td>
-                        <td class="px-4 py-3 text-center"><span class="px-3 py-1 rounded-full text-[10px] font-bold ${statusClass}">${r.status}</span></td>
+                        <td class="px-4 py-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${statusClass}">${r.status}</span></td>
                         <td class="px-4 py-3 text-slate-500">${r.created_at_fmt}</td>
                     </tr>`;
                 });
@@ -857,7 +888,7 @@ if($check_repairs->num_rows > 0) {
                 type: 'bar',
                 data: {
                     labels: equipLabels,
-                    datasets: [{ label: 'จำนวนครั้งที่แจ้งซ่อม ', data: equipCounts, backgroundColor: '#6366f1', borderRadius: 6 }]
+                    datasets: [{ label: 'จำนวนครั้งที่แจ้งซ่อม', data: equipCounts, backgroundColor: '#6366f1', borderRadius: 6 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Kanit', sans-serif" } }, grid: { borderDash: [4, 4] } }, x: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false } } } }
             });
