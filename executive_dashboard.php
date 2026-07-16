@@ -131,7 +131,7 @@ if($check_repairs->num_rows > 0) {
                 <i class="fas fa-chart-line text-white text-xl"></i>
             </div>
             <div class="overflow-hidden flex-1">
-                <h1 class="text-xl font-bold text-slate-800 leading-tight tracking-tight">MSU REPAIR</h1>
+                <h1 class="text-xl font-bold text-slate-800 leading-tight tracking-tight">MBS REPAIR</h1>
                 <p class="text-xs text-purple-600 font-semibold tracking-widest uppercase mt-0.5">Executive View</p>
             </div>
         </div>

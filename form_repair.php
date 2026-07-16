@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>MSU Smart Maintenance | คณะการบัญชีฯ</title>
+    <title>MBS Smart Maintenance | คณะการบัญชีฯ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -19,7 +19,7 @@
 <div class="max-w-xl mx-auto">
     <!-- Header -->
     <div class="mb-8 text-center">
-        <h1 class="text-3xl font-bold bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent">MSU MAINTENANCE</h1>
+        <h1 class="text-3xl font-bold bg-gradient-to-r from-sky-400 to-blue-600 bg-clip-text text-transparent">MBS MAINTENANCE</h1>
         <p class="text-slate-400">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
     </div>
 
