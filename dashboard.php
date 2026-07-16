@@ -233,7 +233,6 @@ if($check_repairs->num_rows > 0) {
             <div class="flex items-center space-x-6">
                 <div class="relative hidden md:block">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <!-- เพิ่ม id="searchInput" สำหรับการค้นหา -->
                     <input type="text" id="searchInput" placeholder="ค้นหาข้อมูลในตาราง..." class="bg-white border border-slate-200 text-sm rounded-full pl-11 pr-5 py-2.5 text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all w-72 shadow-sm">
                 </div>
                 <div class="flex items-center space-x-3 cursor-pointer p-1.5 pr-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm">
@@ -246,7 +245,7 @@ if($check_repairs->num_rows > 0) {
         <div class="flex-1 overflow-y-auto p-10 print:p-0">
             
             <!-- Dashboard Stats -->
-            <div id="dash" class="section space-y-8 animate-fade-in no-print">
+            <div id="dash" class="section space-y-6 animate-fade-in no-print">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <?php 
                     if($check_repairs->num_rows > 0) {
@@ -262,6 +261,75 @@ if($check_repairs->num_rows > 0) {
                         }
                     }
                     ?>
+                </div>
+
+                <!-- เพิ่มเนื้อหาในหน้า Dashboard ให้ดูสมบูรณ์ขึ้น -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    <!-- งานแจ้งซ่อมล่าสุด -->
+                    <div class="lg:col-span-2 modern-card bg-white overflow-hidden flex flex-col">
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h3 class="font-bold text-slate-800"><i class="fas fa-bolt text-amber-500 mr-2"></i> งานแจ้งซ่อมล่าสุด</h3>
+                            <button onclick="show('repairs')" class="text-xs font-bold text-sky-600 hover:text-sky-800 bg-sky-100 px-3 py-1.5 rounded-lg transition-colors">ดูทั้งหมด</button>
+                        </div>
+                        <div class="overflow-x-auto flex-1">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <tbody class="text-sm divide-y divide-slate-100">
+                                    <?php
+                                    if($check_repairs->num_rows > 0) {
+                                        $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
+                                        if($recent_dash->num_rows > 0){
+                                            while($rd = $recent_dash->fetch_assoc()) {
+                                                $time_ago = date("d/m H:i", strtotime($rd['created_at']));
+                                                $stColor = ($rd['status'] == 'รอรับเรื่อง') ? 'text-amber-500 bg-amber-50 border-amber-100' : (($rd['status'] == 'กำลังดำเนินการ') ? 'text-sky-500 bg-sky-50 border-sky-100' : 'text-emerald-500 bg-emerald-50 border-emerald-100');
+                                                echo "<tr class='hover:bg-slate-50 transition-colors'>
+                                                    <td class='px-5 py-4 font-semibold text-slate-800'>{$rd['equipment_type']}</td>
+                                                    <td class='px-5 py-4 text-slate-500 text-xs'><i class='fas fa-map-marker-alt text-slate-300 mr-1'></i> {$rd['location']}</td>
+                                                    <td class='px-5 py-4 text-right'><span class='px-2.5 py-1 rounded-full text-[11px] font-bold border {$stColor}'>{$rd['status']}</span></td>
+                                                    <td class='px-5 py-4 text-right text-slate-400 text-xs'>{$time_ago}</td>
+                                                </tr>";
+                                            }
+                                        } else {
+                                            echo "<tr><td colspan='4' class='px-5 py-8 text-center text-slate-400'>ไม่มีงานแจ้งซ่อม</td></tr>";
+                                        }
+                                    }
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- แจ้งเตือนอุปกรณ์ชำรุด -->
+                    <div class="modern-card bg-white overflow-hidden flex flex-col">
+                        <div class="p-5 border-b border-slate-100 bg-red-50/30">
+                            <h3 class="font-bold text-slate-800"><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i> อุปกรณ์ที่ชำรุด (ต้องซ่อม)</h3>
+                        </div>
+                        <div class="p-5 flex-1 overflow-y-auto">
+                            <div class="space-y-3">
+                                <?php
+                                $check_assets = $conn->query("SHOW TABLES LIKE 'assets'");
+                                if($check_assets->num_rows > 0) {
+                                    $broken_assets = $conn->query("SELECT * FROM assets WHERE status = 'ชำรุด/ส่งซ่อม' LIMIT 4");
+                                    if($broken_assets->num_rows > 0){
+                                        while($ba = $broken_assets->fetch_assoc()) {
+                                            echo "<div class='flex items-center justify-between p-3 rounded-xl border border-red-100 bg-white shadow-sm hover:shadow-md transition-shadow'>
+                                                <div>
+                                                    <p class='text-sm font-bold text-slate-800'>{$ba['asset_name']}</p>
+                                                    <p class='text-[11px] text-slate-500'>{$ba['asset_code']}</p>
+                                                </div>
+                                                <span class='text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1 rounded-lg border border-red-100'>รอซ่อม</span>
+                                            </div>";
+                                        }
+                                    } else {
+                                        echo "<div class='text-center py-8 text-slate-400'>
+                                                <i class='fas fa-check-circle text-4xl text-emerald-200 mb-3 block'></i> 
+                                                <p class='text-sm font-medium'>ไม่มีอุปกรณ์ชำรุดในระบบ</p>
+                                              </div>";
+                                    }
+                                }
+                                ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -646,7 +714,7 @@ if($check_repairs->num_rows > 0) {
         </div>
     </div>
 
-    <!-- Modal แก้ไขข้อมูลผู้แจ้งซ่อม (เฉพาะอัปเดตชื่อใน repairs) -->
+    <!-- Modal แก้ไขข้อมูลผู้แจ้งซ่อม -->
     <div id="editReporterModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('editReporterModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform transition-all">
@@ -721,7 +789,6 @@ if($check_repairs->num_rows > 0) {
             if(activeBtn) activeBtn.classList.add('active-btn');
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'ระบบจัดการ';
             
-            // เคลียร์ค่าช่องค้นหาเมื่อเปลี่ยนหน้า
             let searchInput = document.getElementById('searchInput');
             if(searchInput) {
                 searchInput.value = '';
@@ -743,7 +810,6 @@ if($check_repairs->num_rows > 0) {
             if(tab) { show(tab); } else { show('dash'); }
             window.chartsRendered = false;
 
-            // ระบบค้นหาเรียลไทม์
             document.getElementById('searchInput').addEventListener('input', function() {
                 let filter = this.value.toLowerCase();
                 let activeSection = document.querySelector('.section:not(.hidden)');
