@@ -51,6 +51,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
+
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
             curl_exec($ch);
             curl_close($ch);
         }
