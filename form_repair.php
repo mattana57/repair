@@ -307,7 +307,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     async function initializeLiff() {
         try {
             // 🚨 นำ LIFF ID มาใส่ตรงนี้
-            await liff.init({ liffId: "ใส่_LIFF_ID_ของคุณตรงนี้" });
+            await liff.init({ liffId: "2010615776-jmvGJZSx" });
             
             if (liff.isLoggedIn()) {
                 const profile = await liff.getProfile();
