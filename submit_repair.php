@@ -3,6 +3,8 @@ include 'db_connect.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $reporter_name = $_POST['reporter_name'];
+    $line_user_id = isset($_POST['line_user_id']) ? $_POST['line_user_id'] : null; // รับค่า LINE ID
+    
     $equipment = ($_POST['equipment_type'] == 'other') ? $_POST['other_equip'] : $_POST['equipment_type'];
     $location = $_POST['building'] . " ห้อง " . $_POST['room_no'];
     $phone_number = $_POST['phone_number'];
@@ -16,16 +18,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         move_uploaded_file($_FILES["image_before"]["tmp_name"], $target_dir . $image_name);
     }
 
-    $sql = "INSERT INTO repairs (ticket_no, reporter_name, equipment_type, location, phone_number, problem_desc, image_before, status, building, room_no) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'รอรับเรื่อง', ?, ?)";
+    // อัปเดต SQL ให้บันทึก line_user_id ด้วย
+    $sql = "INSERT INTO repairs (ticket_no, reporter_name, line_user_id, equipment_type, location, phone_number, problem_desc, image_before, status, building, room_no) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'รอรับเรื่อง', ?, ?)";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssss", $ticket_no, $reporter_name, $equipment, $location, $phone_number, $problem_desc, $image_name, $_POST['building'], $_POST['room_no']);
+    $stmt->bind_param("ssssssssss", $ticket_no, $reporter_name, $line_user_id, $equipment, $location, $phone_number, $problem_desc, $image_name, $_POST['building'], $_POST['room_no']);
 
     if ($stmt->execute()) {
-        header("Location: index.php?status=success&ticket=" . urlencode($ticket_no));
+        
+        // ==========================================
+        // ส่งข้อความแจ้งเตือนกลับหา "ผู้แจ้งซ่อม" แบบส่วนตัว
+        // ==========================================
+        if(!empty($line_user_id)) {
+            $channelAccessToken = 'ใส่_CHANNEL_ACCESS_TOKEN_ของคุณตรงนี้';
+            
+            $messageText = "✅ ได้รับเรื่องแจ้งซ่อมเรียบร้อยแล้วค่ะ\n\n" .
+                           "📋 เลขที่ใบงาน: " . $ticket_no . "\n" .
+                           "💻 อุปกรณ์: " . $equipment . "\n" .
+                           "⚠️ อาการ: " . $problem_desc . "\n\n" .
+                           "📌 สถานะ: รอรับเรื่อง\n" .
+                           "👨‍🔧 ช่างผู้ดูแล: - ยังไม่ระบุ -\n\n" .
+                           "ระบบจะแจ้งเตือนความคืบหน้าให้ทราบที่นี่ค่ะ";
+
+            $postData = [
+                'to' => $line_user_id, // ส่งกลับไปหาคนที่แจ้งเท่านั้น
+                'messages' => [['type' => 'text', 'text' => $messageText]]
+            ];
+
+            $ch = curl_init('https://api.line.me/v2/bot/message/push');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
+            curl_exec($ch);
+            curl_close($ch);
+        }
+
+        header("Location: form_repair.php?status=success&ticket=" . urlencode($ticket_no)); // เปลี่ยนชื่อไฟล์ให้ตรงกับหน้าฟอร์มของคุณ
     } else {
-        header("Location: index.php?status=error&msg=" . urlencode($stmt->error));
+        header("Location: form_repair.php?status=error&msg=" . urlencode($stmt->error));
     }
     $stmt->close();
     exit();

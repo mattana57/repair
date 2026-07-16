@@ -10,7 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     $search_keyword = trim($_POST['search_query']);
     $search_param = "%" . $search_keyword . "%";
 
-    // ค้นหาจาก "เลขที่ใบงาน" หรือ "ชื่อผู้แจ้ง"
+    // ค้นหาจาก "เลขที่ใบงาน" หรือ "ชื่อผู้แจ้ง"[cite: 6]
     $stmt = $conn->prepare("SELECT ticket_no, equipment_type, status, created_at, technician_name, repair_note, reporter_name 
                             FROM repairs 
                             WHERE ticket_no = ? OR reporter_name LIKE ? 
@@ -74,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         <form action="submit_repair.php" method="POST" enctype="multipart/form-data">
             
             <div class="mb-5">
-                <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อ(ผู้แจ้ง) <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อ-นามสกุล (ผู้แจ้ง) <span class="text-red-500">*</span></label>
                 <input type="text" name="reporter_name" class="w-full p-3.5 rounded-xl input-light" required placeholder="ระบุชื่อจริงของคุณ">
             </div>
 
@@ -121,6 +121,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <label class="block text-sm font-bold text-slate-700 mb-2">แนบภาพประกอบ <span class="text-slate-400 font-normal">(ถ้ามี)</span></label>
                 <input type="file" name="image_before" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-sky-100 file:text-sky-700 hover:file:bg-sky-200 cursor-pointer" accept="image/*">
             </div>
+
+            <!-- ซ่อนช่องรับค่า LINE User ID ไว้ในฟอร์ม -->
+            <input type="hidden" name="line_user_id" id="line_user_id" value="">
 
             <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white p-4 rounded-xl font-bold text-lg shadow-lg shadow-sky-500/30 transition-all transform hover:-translate-y-1 flex justify-center items-center">
                 ส่งรายการแจ้งซ่อม <i class="fas fa-paper-plane ml-2"></i>
@@ -282,6 +285,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     });
 </script>
 <?php endif; ?>
+
+<!-- โหลด LINE LIFF SDK -->
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+    async function initializeLiff() {
+        try {
+            // 1. นำ LIFF ID มาใส่ตรงนี้
+            await liff.init({ liffId: "2010615776-jmvGJZSx" });
+            
+            if (liff.isLoggedIn()) {
+                const profile = await liff.getProfile();
+                
+                // แอบดึง User ID มาใส่ในช่องที่ซ่อนไว้
+                document.getElementById('line_user_id').value = profile.userId;
+                
+                // ดึงชื่อมาใส่ช่องชื่อผู้แจ้งอัตโนมัติ (ถ้ายังว่างอยู่)
+                const nameInput = document.querySelector('input[name="reporter_name"]');
+                if(nameInput && nameInput.value === '') {
+                    nameInput.value = profile.displayName; 
+                }
+            } else {
+                liff.login();
+            }
+        } catch (err) {
+            console.error('LIFF Initialization failed', err);
+        }
+    }
+    document.addEventListener("DOMContentLoaded", initializeLiff);
+</script>
 
 </body>
 </html>
