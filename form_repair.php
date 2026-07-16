@@ -75,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             
             <div class="mb-5">
                 <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อ(ผู้แจ้ง) <span class="text-red-500">*</span></label>
-                <input type="text" name="reporter_name" class="w-full p-3.5 rounded-xl input-light" required placeholder="ระบุชื่อจริงของคุณ">
+                <input type="text" name="reporter_name" class="w-full p-3.5 rounded-xl input-light" required placeholder="กำลังดึงข้อมูลจาก LINE...">
             </div>
 
             <div class="mb-5">
@@ -289,22 +289,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 <!-- โหลด LINE LIFF SDK และฟังก์ชันจดจำข้อมูล -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-    // ฟังก์ชันจัดการระบบจำข้อมูลที่กรอก (Local Storage)
+    // ฟังก์ชันจัดการระบบจำข้อมูลที่กรอก (Local Storage) - จำเฉพาะเบอร์โทร
     function handleFormMemory() {
-        const nameInput = document.querySelector('input[name="reporter_name"]');
         const phoneInput = document.querySelector('input[name="phone_number"]');
 
-        // โหลดข้อมูลเก่า (ชื่อ และ เบอร์โทร) มาใส่ให้อัตโนมัติ (ถ้ามี)
-        if (localStorage.getItem('mbs_saved_name')) {
-            nameInput.value = localStorage.getItem('mbs_saved_name');
-        }
         if (localStorage.getItem('mbs_saved_phone')) {
             phoneInput.value = localStorage.getItem('mbs_saved_phone');
         }
 
-        // เมื่อกดปุ่มส่งข้อมูล ให้บันทึกทั้งชื่อและเบอร์โทรศัพท์ไว้ในเครื่อง
+        // บันทึกเฉพาะเบอร์โทรตอนกดส่งฟอร์ม
         document.querySelector('form').addEventListener('submit', function() {
-            localStorage.setItem('mbs_saved_name', nameInput.value);
             localStorage.setItem('mbs_saved_phone', phoneInput.value);
         });
     }
@@ -321,10 +315,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 // แอบดึง User ID มาใส่ในช่องที่ซ่อนไว้
                 document.getElementById('line_user_id').value = profile.userId;
                 
-                // ดึงชื่อ LINE มาใส่ช่องชื่อผู้แจ้งอัตโนมัติ 
-                // ** เฉพาะในกรณีที่ระบบจำข้อมูล (Local Storage) ยังไม่มีการจำชื่อไว้ **
+                // ดึงชื่อ LINE มาใส่ในช่องเสมอ
                 const nameInput = document.querySelector('input[name="reporter_name"]');
-                if(nameInput && nameInput.value === '') {
+                if(nameInput) {
                     nameInput.value = profile.displayName; 
                 }
             } else {
@@ -335,10 +328,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         }
     }
 
-    // สั่งให้สคริปต์ทำงานทันทีที่โหลดหน้าเว็บเสร็จ
     document.addEventListener("DOMContentLoaded", function() {
-        handleFormMemory(); // เรียกใช้งานระบบจำข้อมูลก่อน (ให้ความสำคัญกับชื่อที่พิมพ์เอง)
-        initializeLiff();   // แล้วค่อยเรียก LIFF มาเสริมข้อมูลที่ขาด
+        handleFormMemory(); 
+        initializeLiff();   
     });
 </script>
 
