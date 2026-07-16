@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // ส่ง LINE แจ้งเตือนผู้ใช้เมื่อมีการอัปเดตสถานะ
         // ==========================================
         if(!empty($repair['line_user_id'])) {
-            $channelAccessToken = 'ใส่_CHANNEL_ACCESS_TOKEN_ของคุณตรงนี้';
+            $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
             
             $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
             $note_display = !empty($repair_note) ? $repair_note : "-";

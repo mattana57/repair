@@ -35,6 +35,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $messageText = "✅ ได้รับเรื่องแจ้งซ่อมเรียบร้อยแล้วค่ะ\n\n" .
                            "📋 เลขที่ใบงาน: " . $ticket_no . "\n" .
+                           "👤 ผู้แจ้ง: " . $reporter_name . "\n" .
+                           "📞 เบอร์ติดต่อ: " . $phone_number . "\n" .
                            "💻 อุปกรณ์: " . $equipment . "\n" .
                            "⚠️ อาการ: " . $problem_desc . "\n\n" .
                            "📌 สถานะ: รอรับเรื่อง\n" .
