@@ -74,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         <form action="submit_repair.php" method="POST" enctype="multipart/form-data">
             
             <div class="mb-5">
-                <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อ-นามสกุล (ผู้แจ้ง) <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อ(ผู้แจ้ง) <span class="text-red-500">*</span></label>
                 <input type="text" name="reporter_name" class="w-full p-3.5 rounded-xl input-light" required placeholder="ระบุชื่อจริงของคุณ">
             </div>
 
