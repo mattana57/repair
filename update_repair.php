@@ -13,16 +13,27 @@ if (isset($_GET['id'])) {
     $repair = $result->fetch_assoc();
 }
 
+// ดึงรายชื่อช่างทั้งหมดจากตาราง users มาไว้ให้เลือกใน Dropdown
+$techs = [];
+$tech_res = $conn->query("SELECT full_name FROM users WHERE LOWER(role) = 'technician' ORDER BY full_name ASC");
+if($tech_res && $tech_res->num_rows > 0){
+    while($t = $tech_res->fetch_assoc()) {
+        $techs[] = $t['full_name'];
+    }
+}
+
 // จัดการเมื่อมีการกดปุ่มบันทึก
 $show_alert = false;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $status = $_POST['status'];
     $repair_note = $_POST['repair_note'];
+    $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
     $update_id = $_POST['id'];
 
-    $update_sql = "UPDATE repairs SET status = ?, repair_note = ? WHERE id = ?";
+    // อัปเดตข้อมูลรวมถึงชื่อช่าง
+    $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, technician_name = ? WHERE id = ?";
     $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("ssi", $status, $repair_note, $update_id);
+    $update_stmt->bind_param("sssi", $status, $repair_note, $technician_name, $update_id);
     
     if ($update_stmt->execute()) {
         $show_alert = true;
@@ -86,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                         <div>
                             <p class="text-slate-400 text-xs uppercase tracking-wide">สถานที่</p>
-                            <p class="font-medium text-slate-700 mt-0.5"><i class="fas fa-map-marker-alt text-slate-400 mr-1"></i> <?php echo $repair['location']; ?></p>
+                            <p class="font-medium text-slate-700 mt-0.5"><i class="fas fa-map-marker-alt text-rose-400 mr-1"></i> <?php echo $repair['location']; ?></p>
                         </div>
                         <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
                             <p class="text-slate-400 text-xs uppercase tracking-wide mb-1">อุปกรณ์และอาการเสีย</p>
@@ -117,13 +128,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <form action="" method="POST" class="space-y-6">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
                         
+                        <!-- เลือกช่างรับผิดชอบ (เพิ่มใหม่) -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
+                            <select name="technician_name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
+                                <option value="">-- ยังไม่ระบุผู้รับผิดชอบ --</option>
+                                <?php foreach($techs as $t): ?>
+                                    <option value="<?php echo htmlspecialchars($t); ?>" <?php echo (isset($repair['technician_name']) && $repair['technician_name'] == $t) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($t); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
                         <!-- เลือกสถานะ -->
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">อัปเดตสถานะงาน <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-tasks text-sky-500 mr-2"></i> อัปเดตสถานะงาน <span class="text-red-500">*</span></label>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <!-- Option 1 -->
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="status" value="รอรับเรื่อง" class="peer sr-only" <?php echo ($repair['status'] == 'รอรับเรื่อง') ? 'checked' : ''; ?>>
+                                    <input type="radio" name="status" value="รอรับเรื่อง" class="peer sr-only" <?php echo ($repair['status'] == 'รอรับเรื่อง') ? 'checked' : ''; ?> required>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-amber-50 peer-checked:border-amber-300 peer-checked:text-amber-700 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-clock mb-1 text-lg"></i>
                                         <div class="text-sm font-medium">รอรับเรื่อง</div>
@@ -150,12 +174,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <!-- บันทึกผลการซ่อม -->
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">บันทึกผลการดำเนินการ / หมายเหตุช่าง</label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-edit text-sky-500 mr-2"></i> บันทึกผลการดำเนินการ / หมายเหตุช่าง</label>
                             <textarea name="repair_note" rows="5" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
                         </div>
 
                         <div class="pt-4 border-t border-slate-100 flex justify-end">
-                            <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-medium transition-colors shadow-lg shadow-sky-600/20 flex items-center">
+                            <button type="submit" class="bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex items-center">
                                 <i class="fas fa-save mr-2"></i> บันทึกข้อมูล
                             </button>
                         </div>

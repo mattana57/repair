@@ -39,7 +39,7 @@ if($check_tech_name->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN technician_name VARCHAR(100) NULL AFTER status");
 }
 
-// ระบบ Auto-Sync คนแจ้งซ่อม
+// ระบบ Auto-Sync
 $check_repairs = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs->num_rows > 0) {
     $conn->query("INSERT INTO users (username, full_name, phone, department, role) 
@@ -142,7 +142,6 @@ $equip_labels_json = "[]";
 $equip_counts_json = "[]";
 
 if($check_repairs->num_rows > 0) {
-    // เพิ่มการดึงฟิลด์ technician_name มาด้วย
     $rep_res = $conn->query("SELECT ticket_no, equipment_type, status, DATE_FORMAT(created_at, '%d/%m/%Y %H:%i') as created_at_fmt, reporter_name, technician_name FROM repairs ORDER BY created_at DESC");
     $reps = [];
     while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
@@ -399,12 +398,12 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Technician & Admin Section -->
+            <!-- Technician & Admin Section (ทีมงานระบบ) -->
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                     <div>
                         <h2 class="text-2xl font-bold text-slate-800">ทีมงานระบบ</h2>
-                        <p class="text-sm text-slate-500 mt-1">จัดการรายชื่อผู้ดูแลระบบและประวัติรับงานของช่างซ่อม</p>
+                        <p class="text-sm text-slate-500 mt-1">จัดการรายชื่อผู้ดูแลระบบและช่างซ่อม</p>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="openTechAdminModal('Admin')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center"><i class="fas fa-user-shield mr-2"></i> เพิ่มแอดมิน</button>
@@ -430,7 +429,8 @@ if($check_repairs->num_rows > 0) {
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                     <?php
-                                    $admin_res = $conn->query("SELECT * FROM users WHERE role IN ('Admin', 'admin', 'executive') ORDER BY created_at DESC");
+                                    // แก้ไขให้ดึงข้อมูล Admin ได้ถูกต้องตามฐานข้อมูล (รวม admin เล็ก)
+                                    $admin_res = $conn->query("SELECT * FROM users WHERE LOWER(role) IN ('admin', 'executive') ORDER BY created_at DESC");
                                     if($admin_res && $admin_res->num_rows > 0){
                                         while($u = $admin_res->fetch_assoc()) {
                                             $roleDisplay = 'Admin';
@@ -444,11 +444,11 @@ if($check_repairs->num_rows > 0) {
                                                 <td class='px-6 py-4 text-slate-800 font-semibold'>
                                                     <div class='flex items-center'>
                                                         <div class='w-8 h-8 rounded-full flex items-center justify-center mr-3 border {$iconClass}'><i class='fas fa-user-shield text-xs'></i></div>
-                                                        ".($u['full_name'] ?: 'ไม่ระบุ')."
+                                                        ".(!empty($u['full_name']) ? $u['full_name'] : '- ไม่ระบุ -')."
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600'>".($u['phone'] ?: '-')."</td>
-                                                <td class='px-6 py-4 text-slate-600'>".($u['department'] ?: '-')."</td>
+                                                <td class='px-6 py-4 text-slate-600'>".(!empty($u['phone']) ? $u['phone'] : '-')."</td>
+                                                <td class='px-6 py-4 text-slate-600'>".(!empty($u['department']) ? $u['department'] : '-')."</td>
                                                 <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
@@ -458,7 +458,7 @@ if($check_repairs->num_rows > 0) {
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลแอดมิน</td></tr>"; }
+                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลผู้ดูแลระบบ</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -483,7 +483,8 @@ if($check_repairs->num_rows > 0) {
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                     <?php
-                                    $tech_res = $conn->query("SELECT u.*, (SELECT COUNT(id) FROM repairs WHERE technician_name = u.full_name) as total_jobs FROM users u WHERE u.role = 'Technician' ORDER BY u.created_at DESC");
+                                    // แก้ไขให้ดึงข้อมูล Technician ได้ถูกต้องตามฐานข้อมูล
+                                    $tech_res = $conn->query("SELECT u.*, (SELECT COUNT(id) FROM repairs WHERE technician_name = u.full_name) as total_jobs FROM users u WHERE LOWER(u.role) = 'technician' ORDER BY u.created_at DESC");
                                     if($tech_res && $tech_res->num_rows > 0){
                                         while($t = $tech_res->fetch_assoc()) {
                                             $js_uid = $t['id']; 
@@ -497,10 +498,10 @@ if($check_repairs->num_rows > 0) {
                                                 <td class='px-6 py-4 text-slate-800 font-semibold'>
                                                     <div class='flex items-center'>
                                                         <div class='w-8 h-8 rounded-full flex items-center justify-center mr-3 border bg-sky-50 text-sky-600 border-sky-100'><i class='fas fa-hard-hat text-xs'></i></div>
-                                                        ".($t['full_name'] ?: 'ไม่ระบุ')."
+                                                        ".(!empty($t['full_name']) ? $t['full_name'] : '- ไม่ระบุ -')."
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600'>".($t['department'] ?: '-')."</td>
+                                                <td class='px-6 py-4 text-slate-600'>".(!empty($t['department']) ? $t['department'] : '-')."</td>
                                                 <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border bg-indigo-50 text-indigo-600 border-indigo-200'>{$t['total_jobs']} งาน</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
@@ -520,18 +521,24 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Asset Management -->
+            <!-- Asset Management Section -->
             <div id="assets" class="section hidden space-y-6 no-print">
-                <div class="modern-card overflow-hidden">
-                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
-                        <h2 class="text-xl font-bold text-slate-800">ฐานข้อมูลอุปกรณ์</h2>
-                        <button onclick="openAddAssetModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center"><i class="fas fa-plus mr-2"></i> เพิ่มอุปกรณ์ใหม่</button>
+                <div class="modern-card overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">ฐานข้อมูลอุปกรณ์และครุภัณฑ์</h2>
+                            <p class="text-sm text-slate-500 mt-1">จัดการข้อมูลครุภัณฑ์ภายในคณะ</p>
+                        </div>
+                        <button onclick="openAddAssetModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] flex items-center">
+                            <i class="fas fa-plus mr-2"></i> เพิ่มอุปกรณ์ใหม่
+                        </button>
                     </div>
+
                     <div class="overflow-x-auto">
                         <table class="w-full text-left whitespace-nowrap">
                             <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
                                 <tr>
-                                    <th class="px-6 py-4">รหัส</th>
+                                    <th class="px-6 py-4">รหัสครุภัณฑ์</th>
                                     <th class="px-6 py-4">ชื่ออุปกรณ์</th>
                                     <th class="px-6 py-4">หมวดหมู่</th>
                                     <th class="px-6 py-4 text-center">สถานะ</th>
@@ -544,7 +551,12 @@ if($check_repairs->num_rows > 0) {
                                 if($asset_res->num_rows > 0){
                                     while($a = $asset_res->fetch_assoc()) {
                                         $a_statusClass = ($a['status'] == 'ใช้งานปกติ') ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200';
-                                        $js_id = $a['id']; $js_code = htmlspecialchars($a['asset_code'], ENT_QUOTES); $js_name = htmlspecialchars($a['asset_name'], ENT_QUOTES); $js_cat = htmlspecialchars($a['category'], ENT_QUOTES); $js_status = htmlspecialchars($a['status'], ENT_QUOTES);
+                                        
+                                        $js_id = $a['id'];
+                                        $js_code = htmlspecialchars($a['asset_code'], ENT_QUOTES);
+                                        $js_name = htmlspecialchars($a['asset_name'], ENT_QUOTES);
+                                        $js_cat = htmlspecialchars($a['category'], ENT_QUOTES);
+                                        $js_status = htmlspecialchars($a['status'], ENT_QUOTES);
 
                                         echo "<tr class='hover:bg-slate-50/80 transition-colors'>
                                             <td class='px-6 py-4 font-bold text-indigo-600'>{$a['asset_code']}</td>
@@ -628,6 +640,7 @@ if($check_repairs->num_rows > 0) {
 
             <!-- Report Summary Section (รายงานสรุปแบบสากล) -->
             <div id="reports" class="section hidden space-y-6">
+                <!-- Header สำหรับการ Print -->
                 <div class="hidden print-header print:flex items-center gap-4 mb-8 pb-6 border-b border-slate-200">
                     <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg">
                         <i class="fas fa-tools text-white text-3xl"></i>
@@ -649,7 +662,7 @@ if($check_repairs->num_rows > 0) {
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 print:grid-cols-2 print:gap-8">
-                    <!-- กราฟที่ 1 -->
+                    <!-- กราฟที่ 1: สถานะการแจ้งซ่อม (Doughnut Chart) -->
                     <div class="modern-card p-6 bg-white flex flex-col h-[400px] print:h-[400px] print:shadow-none print:border">
                         <h3 class="font-bold text-slate-800 mb-2 flex items-center"><i class="fas fa-chart-pie text-sky-500 mr-2"></i> สัดส่วนสถานะงานซ่อม</h3>
                         <p class="text-xs text-slate-500 mb-4">แสดงเปอร์เซ็นต์ของงานที่รอรับเรื่อง, กำลังดำเนินการ, และเสร็จสิ้น</p>
@@ -658,7 +671,7 @@ if($check_repairs->num_rows > 0) {
                         </div>
                     </div>
 
-                    <!-- กราฟที่ 2 -->
+                    <!-- กราฟที่ 2: อุปกรณ์ที่เสียบ่อยสุด (Bar Chart) -->
                     <div class="modern-card p-6 bg-white flex flex-col h-[400px] print:h-[400px] print:shadow-none print:border">
                         <h3 class="font-bold text-slate-800 mb-2 flex items-center"><i class="fas fa-chart-bar text-indigo-500 mr-2"></i> อุปกรณ์ที่พบปัญหามากที่สุด (Top 5)</h3>
                         <p class="text-xs text-slate-500 mb-4">แสดงประเภทครุภัณฑ์หรืออุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด</p>
@@ -706,7 +719,7 @@ if($check_repairs->num_rows > 0) {
             <form action="" method="POST" class="p-6">
                 <input type="hidden" name="save_user" value="1"><input type="hidden" name="user_id" id="techAdmin_id" value=""><input type="hidden" name="role" id="techAdmin_role" value="">
                 <div class="space-y-4">
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">Username / รหัสประจำตัว <span class="text-red-500">*</span></label><input type="text" name="username" id="techAdmin_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">Username <span class="text-red-500">*</span></label><input type="text" name="username" id="techAdmin_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label><input type="text" name="full_name" id="techAdmin_fullname" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์</label><input type="text" name="phone" id="techAdmin_phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
                     <div>
@@ -727,7 +740,7 @@ if($check_repairs->num_rows > 0) {
         </div>
     </div>
 
-    <!-- Modal แก้ไขข้อมูลผู้แจ้งซ่อม -->
+    <!-- Modal แก้ไขข้อมูลผู้แจ้งซ่อม (เฉพาะอัปเดตชื่อใน repairs) -->
     <div id="editReporterModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('editReporterModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform transition-all">
@@ -922,7 +935,6 @@ if($check_repairs->num_rows > 0) {
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
             
-            // กรองข้อมูล: ถ้าเป็น reporter ให้หาช่อง reporter_name, ถ้าเป็น tech หาช่อง technician_name
             const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
             
             if(userRepairs.length === 0) {
