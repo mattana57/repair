@@ -1,7 +1,7 @@
 <?php 
 include 'db_connect.php'; 
 
-// ================= 1. ปรับปรุงฐานข้อมูลอัตโนมัติ (Auto-Fix DB) =================
+// ================= ปรับปรุงฐานข้อมูลอัตโนมัติ (Auto-Fix DB) =================
 $conn->query("CREATE TABLE IF NOT EXISTS assets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     asset_code VARCHAR(50) NOT NULL,
@@ -20,7 +20,6 @@ $conn->query("CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
-// ปรับปรุงคอลัมน์ในตาราง users ให้ปลอดภัย
 $conn->query("ALTER TABLE users MODIFY COLUMN role VARCHAR(50) DEFAULT 'User'");
 $check_fullname = $conn->query("SHOW COLUMNS FROM users LIKE 'full_name'");
 if($check_fullname->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN full_name VARCHAR(100) NULL AFTER username");
@@ -34,13 +33,11 @@ if($check_dept->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN depart
 $check_created = $conn->query("SHOW COLUMNS FROM users LIKE 'created_at'");
 if($check_created->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
 
-// เพิ่มคอลัมน์เก็บชื่อช่างในตาราง repairs
 $check_tech_name = $conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'");
 if($check_tech_name->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN technician_name VARCHAR(100) NULL");
 }
 
-// ระบบ Auto-Sync คนแจ้งซ่อม
 $check_repairs = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs->num_rows > 0) {
     $conn->query("INSERT INTO users (username, full_name, phone, department, role) 
@@ -50,7 +47,7 @@ if($check_repairs->num_rows > 0) {
                   GROUP BY reporter_name, phone_number");
 }
 
-// ================= 2. จัดการข้อมูลอุปกรณ์ (Assets) =================
+// ================= จัดการข้อมูล =================
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
     $conn->query("DELETE FROM assets WHERE id = $del_id");
@@ -75,7 +72,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
     echo "<script>window.location.href='dashboard.php?tab=assets';</script>";
 }
 
-// ================= 3. จัดการทีมงานระบบ (Admin & Tech) =================
 if (isset($_GET['delete_user'])) {
     $del_id = intval($_GET['delete_user']);
     $conn->query("DELETE FROM users WHERE id = $del_id");
@@ -136,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลผู้แจ้งสำเร็จ!', confirmButtonColor: '#0284c7' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
 }
 
-// ================= 4. เตรียมข้อมูลประวัติและกราฟ =================
+// ================= เตรียมข้อมูลประวัติและกราฟ =================
 $all_repairs_json = "[]";
 $status_data_json = json_encode(['รอรับเรื่อง'=>0, 'กำลังดำเนินการ'=>0, 'ซ่อมเสร็จแล้ว'=>0]);
 $equip_labels_json = "[]";
@@ -181,13 +177,17 @@ if($check_repairs->num_rows > 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSU Smart Maintenance Hub</title>
+    <!-- ล็อกไม่ให้เบราว์เซอร์มือถือบังคับเปิดโหมดมืด (Dark Mode) เพื่อแก้ปัญหาสีเพี้ยน/จอดำ -->
+    <meta name="color-scheme" content="light">
+    <title>MBS Smart Maintenance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* ล็อกสีให้เป็น Light Mode */
+        :root { color-scheme: light; }
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .nav-btn { width: 100%; display: flex; align-items: center; padding: 0.875rem 1.25rem; margin-bottom: 0.25rem; border-radius: 0.75rem; color: #64748b; font-weight: 500; transition: all 0.2s; }
@@ -220,14 +220,15 @@ if($check_repairs->num_rows > 0) {
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar (ปรับให้เลื่อนเข้าออกได้บนมือถือ) -->
-    <aside id="sidebar" class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] no-print">
-        <div class="h-20 md:h-24 flex items-center justify-between px-6 md:px-8 border-b border-slate-100">
+    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] no-print">
+        <div class="h-20 md:h-24 flex items-center justify-between px-5 md:px-8 border-b border-slate-100">
             <div class="flex items-center">
-                <div class="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 flex items-center justify-center shadow-lg shadow-sky-500/30 mr-3 md:mr-4 shrink-0">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 flex items-center justify-center shadow-lg shadow-sky-500/30 mr-3 shrink-0">
                     <i class="fas fa-tools text-white text-lg md:text-xl"></i>
                 </div>
                 <div class="overflow-hidden flex-1">
-                    <h1 class="text-lg md:text-xl font-bold text-slate-800 leading-tight tracking-tight">MSU REPAIR</h1>
+                    <!-- เปลี่ยนเป็น MBS -->
+                    <h1 class="text-lg md:text-xl font-bold text-slate-800 leading-tight tracking-tight">MBS REPAIR</h1>
                     <p class="text-[10px] md:text-xs text-sky-500 font-semibold tracking-widest uppercase mt-0.5">Admin Portal</p>
                 </div>
             </div>
@@ -250,20 +251,20 @@ if($check_repairs->num_rows > 0) {
         </nav>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <div class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-sky-100/50 to-transparent -z-10 no-print"></div>
         
         <!-- Header (เพิ่มปุ่มแฮมเบอร์เกอร์บนมือถือ) -->
         <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-10 shrink-0 z-10 sticky top-0 no-print">
-            <div class="flex items-center">
-                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-sky-600 focus:outline-none">
+            <div class="flex items-center overflow-hidden">
+                <!-- ปุ่มเมนู Hamburger สำหรับมือถือ -->
+                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-sky-600 focus:outline-none shrink-0">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
                 <h2 class="text-xl md:text-2xl font-bold text-slate-800 tracking-wide truncate" id="headerTitle">ภาพรวมระบบ (Dashboard)</h2>
             </div>
             
-            <div class="flex items-center space-x-3 md:space-x-6">
+            <div class="flex items-center space-x-3 md:space-x-6 shrink-0">
                 <div class="relative hidden lg:block">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                     <input type="text" id="searchInput" placeholder="ค้นหาข้อมูลในตาราง..." class="bg-white border border-slate-200 text-sm rounded-full pl-11 pr-5 py-2.5 text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all w-72 shadow-sm">
@@ -372,11 +373,13 @@ if($check_repairs->num_rows > 0) {
                 <div class="modern-card overflow-hidden">
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-white gap-3">
                         <h2 class="text-lg md:text-xl font-bold text-slate-800">รายการแจ้งซ่อมทั้งหมด</h2>
+                        <!-- ช่องค้นหาบนหน้าจอมือถือ -->
                         <div class="w-full md:w-auto relative lg:hidden">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                             <input type="text" id="searchInputMobile" placeholder="ค้นหาใบงาน..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-sky-400">
                         </div>
                     </div>
+                    <!-- ตารางแบบเลื่อนแนวนอนได้บนมือถือ -->
                     <div class="overflow-x-auto w-full">
                         <table class="w-full text-left whitespace-nowrap min-w-[800px]">
                             <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
@@ -678,7 +681,7 @@ if($check_repairs->num_rows > 0) {
                     </div>
                     <div>
                         <h1 class="text-3xl font-extrabold text-slate-800">รายงานสรุปผลการปฏิบัติงาน</h1>
-                        <p class="text-slate-500 font-medium">MSU Smart Maintenance Hub • พิมพ์เมื่อ: <?php echo date('d/m/Y H:i'); ?></p>
+                        <p class="text-slate-500 font-medium">MBS Smart Maintenance Hub • พิมพ์เมื่อ: <?php echo date('d/m/Y H:i'); ?></p>
                     </div>
                 </div>
 
@@ -771,7 +774,7 @@ if($check_repairs->num_rows > 0) {
         </div>
     </div>
 
-    <!-- Modal แก้ไขข้อมูลผู้แจ้งซ่อม -->
+    <!-- Modal แก้ไขข้อมูลผู้แจ้งซ่อม (เฉพาะอัปเดตชื่อใน repairs) -->
     <div id="editReporterModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('editReporterModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform transition-all">
