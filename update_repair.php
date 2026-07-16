@@ -36,13 +36,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($update_stmt->execute()) {
         $show_alert = true;
         
-        // ดึงข้อมูลล่าสุดมารวมถึง line_user_id เพื่อส่งแจ้งเตือน
         $stmt->execute();
         $repair = $stmt->get_result()->fetch_assoc();
 
-        // ==========================================
-        // ส่ง LINE แจ้งเตือนผู้ใช้เมื่อมีการอัปเดตสถานะ
-        // ==========================================
         if(!empty($repair['line_user_id'])) {
             // 🚨 นำ Channel Access Token ของคุณน้ำฝนมาใส่ตรงนี้
             $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
@@ -58,10 +54,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if($status == 'กำลังดำเนินการ') $icon = "🛠️";
             if($status == 'ซ่อมเสร็จแล้ว') $icon = "🎉";
 
+            // เพิ่ม "อาการเสีย" เข้าไปในข้อความแจ้งเตือนแล้วค่ะ
             $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
                            "📋 เลขที่ใบงาน: " . $repair['ticket_no'] . "\n" .
                            "🕒 เวลาอัปเดต: " . $current_time . "\n" .
-                           "💻 อุปกรณ์: " . $repair['equipment_type'] . "\n\n" .
+                           "💻 อุปกรณ์: " . $repair['equipment_type'] . "\n" .
+                           "⚠️ อาการ: " . $repair['problem_desc'] . "\n\n" .
                            "📌 สถานะใหม่: " . $status . "\n" .
                            "👨‍🔧 ช่างผู้ดูแล: " . $tech_display . "\n" .
                            "📝 หมายเหตุ: " . $note_display;
@@ -76,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // <--- คำสั่งข้ามการตรวจสอบ SSL
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
             curl_exec($ch);
             curl_close($ch);
         }
@@ -114,7 +112,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php if($repair): ?>
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
             
-            <!-- ฝั่งซ้าย: ข้อมูลใบงาน -->
             <div class="lg:col-span-2 space-y-6">
                 <div class="modern-card p-6 border-t-4 border-sky-500">
                     <div class="flex justify-between items-start mb-4">
@@ -131,24 +128,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                         <div>
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide">ผู้แจ้ง</p>
-                            <p class="font-medium text-slate-700 mt-0.5"><i class="far fa-user text-slate-400 mr-1"></i> <?php echo $repair['reporter_name']; ?></p>
-                            <p class="text-slate-500 mt-0.5"><i class="fas fa-phone-alt text-slate-400 mr-1"></i> <?php echo $repair['phone_number']; ?></p>
+                            <p class="font-medium text-slate-700 mt-0.5"><i class="far fa-user text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair['reporter_name']); ?></p>
+                            <p class="text-slate-500 mt-0.5"><i class="fas fa-phone-alt text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair['phone_number']); ?></p>
                         </div>
                         <div>
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide">สถานที่</p>
-                            <p class="font-medium text-slate-700 mt-0.5"><i class="fas fa-map-marker-alt text-rose-400 mr-1"></i> <?php echo $repair['location']; ?></p>
+                            <p class="font-medium text-slate-700 mt-0.5"><i class="fas fa-map-marker-alt text-rose-400 mr-1"></i> <?php echo htmlspecialchars($repair['location']); ?></p>
                         </div>
                         <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-1">อุปกรณ์และอาการเสีย</p>
-                            <p class="font-bold text-sky-700"><?php echo $repair['equipment_type']; ?></p>
-                            <p class="text-slate-600 mt-1"><?php echo $repair['problem_desc']; ?></p>
+                            <p class="font-bold text-sky-700"><?php echo htmlspecialchars($repair['equipment_type']); ?></p>
+                            <p class="text-slate-600 mt-1"><?php echo htmlspecialchars($repair['problem_desc']); ?></p>
                         </div>
                         
                         <?php if(!empty($repair['image_before'])): ?>
                         <div>
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-2">ภาพประกอบ</p>
-                            <a href="uploads/<?php echo $repair['image_before']; ?>" target="_blank" class="block w-full h-32 rounded-xl border border-slate-200 overflow-hidden group relative">
-                                <img src="uploads/<?php echo $repair['image_before']; ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <a href="uploads/<?php echo htmlspecialchars($repair['image_before']); ?>" target="_blank" class="block w-full h-32 rounded-xl border border-slate-200 overflow-hidden group relative">
+                                <img src="uploads/<?php echo htmlspecialchars($repair['image_before']); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <span class="text-white font-medium text-sm"><i class="fas fa-expand mr-1"></i> ดูรูปภาพเต็ม</span>
                                 </div>
@@ -159,7 +156,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
             </div>
 
-            <!-- ฝั่งขวา: ฟอร์มอัปเดต -->
             <div class="lg:col-span-3">
                 <div class="modern-card p-6 md:p-8 h-full">
                     <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-6">บันทึกการปฏิบัติงาน</h2>
@@ -167,7 +163,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <form action="" method="POST" class="space-y-6">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
                         
-                        <!-- มอบหมายช่าง -->
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
                             <select name="technician_name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
@@ -180,7 +175,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </select>
                         </div>
 
-                        <!-- เลือกสถานะ -->
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-tasks text-sky-500 mr-2"></i> อัปเดตสถานะงาน <span class="text-red-500">*</span></label>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -208,7 +202,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                         </div>
 
-                        <!-- บันทึกหมายเหตุ -->
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-edit text-sky-500 mr-2"></i> บันทึกผลการดำเนินการ / หมายเหตุช่าง</label>
                             <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
