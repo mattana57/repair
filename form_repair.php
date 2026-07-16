@@ -10,7 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     $search_keyword = trim($_POST['search_query']);
     $search_param = "%" . $search_keyword . "%";
 
-    // ค้นหาจาก "เลขที่ใบงาน" หรือ "ชื่อผู้แจ้ง"[cite: 6]
+    // ค้นหาจาก "เลขที่ใบงาน" หรือ "ชื่อผู้แจ้ง"
     $stmt = $conn->prepare("SELECT ticket_no, equipment_type, status, created_at, technician_name, repair_note, reporter_name 
                             FROM repairs 
                             WHERE ticket_no = ? OR reporter_name LIKE ? 
@@ -286,13 +286,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 </script>
 <?php endif; ?>
 
-<!-- โหลด LINE LIFF SDK -->
+<!-- โหลด LINE LIFF SDK และฟังก์ชันจดจำข้อมูล -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
+    // ฟังก์ชันจัดการระบบจำข้อมูลที่กรอก (Local Storage)
+    function handleFormMemory() {
+        const phoneInput = document.querySelector('input[name="phone_number"]');
+
+        // โหลดเฉพาะเบอร์โทรศัพท์เก่ามาใส่ให้อัตโนมัติ (ถ้ามี)
+        if (localStorage.getItem('mbs_saved_phone')) {
+            phoneInput.value = localStorage.getItem('mbs_saved_phone');
+        }
+
+        // เมื่อกดปุ่มส่งข้อมูล ให้บันทึกเฉพาะเบอร์โทรศัพท์ไว้ในเครื่อง
+        document.querySelector('form').addEventListener('submit', function() {
+            localStorage.setItem('mbs_saved_phone', phoneInput.value);
+        });
+    }
+
+    // ฟังก์ชันเริ่มการทำงานของระบบ LINE LIFF
     async function initializeLiff() {
         try {
-            // 1. นำ LIFF ID มาใส่ตรงนี้
-            await liff.init({ liffId: "2010615776-jmvGJZSx" });
+            // 🚨 นำ LIFF ID มาใส่ตรงนี้
+            await liff.init({ liffId: "ใส่_LIFF_ID_ของคุณตรงนี้" });
             
             if (liff.isLoggedIn()) {
                 const profile = await liff.getProfile();
@@ -312,7 +328,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             console.error('LIFF Initialization failed', err);
         }
     }
-    document.addEventListener("DOMContentLoaded", initializeLiff);
+
+    // สั่งให้สคริปต์ทำงานทันทีที่โหลดหน้าเว็บเสร็จ
+    document.addEventListener("DOMContentLoaded", function() {
+        initializeLiff();
+        handleFormMemory(); // เรียกใช้งานระบบจำข้อมูล
+    });
 </script>
 
 </body>
