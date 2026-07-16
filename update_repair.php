@@ -1,4 +1,6 @@
 <?php
+// ตั้งค่าโซนเวลาเป็นประเทศไทย
+date_default_timezone_set('Asia/Bangkok');
 include 'db_connect.php';
 
 $repair = null;
@@ -42,10 +44,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // ส่ง LINE แจ้งเตือนผู้ใช้เมื่อมีการอัปเดตสถานะ
         // ==========================================
         if(!empty($repair['line_user_id'])) {
+            // 🚨 นำ Channel Access Token ของคุณน้ำฝนมาใส่ตรงนี้
             $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
             
             $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
             $note_display = !empty($repair_note) ? $repair_note : "-";
+            
+            // ดึงเวลาปัจจุบันที่ช่างกดอัปเดต
+            $current_time = date("d/m/Y H:i น.");
 
             // สัญลักษณ์ตามสถานะ
             $icon = "🔔";
@@ -54,6 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
                            "📋 เลขที่ใบงาน: " . $repair['ticket_no'] . "\n" .
+                           "🕒 เวลาอัปเดต: " . $current_time . "\n" .
                            "💻 อุปกรณ์: " . $repair['equipment_type'] . "\n\n" .
                            "📌 สถานะใหม่: " . $status . "\n" .
                            "👨‍🔧 ช่างผู้ดูแล: " . $tech_display . "\n" .
@@ -69,6 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // <--- คำสั่งข้ามการตรวจสอบ SSL
             curl_exec($ch);
             curl_close($ch);
         }

@@ -1,4 +1,6 @@
 <?php
+// ตั้งค่าโซนเวลาเป็นประเทศไทย
+date_default_timezone_set('Asia/Bangkok');
 include 'db_connect.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -10,6 +12,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $phone_number = $_POST['phone_number'];
     $problem_desc = $_POST['problem_desc'];
     $ticket_no = "MR-" . date("Ymd-His");
+
+    // ดึงเวลาปัจจุบันเพื่อแสดงใน LINE
+    $current_time = date("d/m/Y H:i น.");
 
     $target_dir = "uploads/";
     $image_name = null;
@@ -35,6 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             $messageText = "✅ ได้รับเรื่องแจ้งซ่อมเรียบร้อยแล้วค่ะ\n\n" .
                            "📋 เลขที่ใบงาน: " . $ticket_no . "\n" .
+                           "🕒 เวลาที่แจ้ง: " . $current_time . "\n" .
                            "👤 ผู้แจ้ง: " . $reporter_name . "\n" .
                            "📞 เบอร์ติดต่อ: " . $phone_number . "\n" .
                            "💻 อุปกรณ์: " . $equipment . "\n" .
