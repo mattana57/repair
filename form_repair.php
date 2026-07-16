@@ -291,15 +291,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 <script>
     // ฟังก์ชันจัดการระบบจำข้อมูลที่กรอก (Local Storage)
     function handleFormMemory() {
+        const nameInput = document.querySelector('input[name="reporter_name"]');
         const phoneInput = document.querySelector('input[name="phone_number"]');
 
-        // โหลดเฉพาะเบอร์โทรศัพท์เก่ามาใส่ให้อัตโนมัติ (ถ้ามี)
+        // โหลดข้อมูลเก่า (ชื่อ และ เบอร์โทร) มาใส่ให้อัตโนมัติ (ถ้ามี)
+        if (localStorage.getItem('mbs_saved_name')) {
+            nameInput.value = localStorage.getItem('mbs_saved_name');
+        }
         if (localStorage.getItem('mbs_saved_phone')) {
             phoneInput.value = localStorage.getItem('mbs_saved_phone');
         }
 
-        // เมื่อกดปุ่มส่งข้อมูล ให้บันทึกเฉพาะเบอร์โทรศัพท์ไว้ในเครื่อง
+        // เมื่อกดปุ่มส่งข้อมูล ให้บันทึกทั้งชื่อและเบอร์โทรศัพท์ไว้ในเครื่อง
         document.querySelector('form').addEventListener('submit', function() {
+            localStorage.setItem('mbs_saved_name', nameInput.value);
             localStorage.setItem('mbs_saved_phone', phoneInput.value);
         });
     }
@@ -316,7 +321,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 // แอบดึง User ID มาใส่ในช่องที่ซ่อนไว้
                 document.getElementById('line_user_id').value = profile.userId;
                 
-                // ดึงชื่อมาใส่ช่องชื่อผู้แจ้งอัตโนมัติ (ถ้ายังว่างอยู่)
+                // ดึงชื่อ LINE มาใส่ช่องชื่อผู้แจ้งอัตโนมัติ 
+                // ** เฉพาะในกรณีที่ระบบจำข้อมูล (Local Storage) ยังไม่มีการจำชื่อไว้ **
                 const nameInput = document.querySelector('input[name="reporter_name"]');
                 if(nameInput && nameInput.value === '') {
                     nameInput.value = profile.displayName; 
@@ -331,8 +337,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
     // สั่งให้สคริปต์ทำงานทันทีที่โหลดหน้าเว็บเสร็จ
     document.addEventListener("DOMContentLoaded", function() {
-        initializeLiff();
-        handleFormMemory(); // เรียกใช้งานระบบจำข้อมูล
+        handleFormMemory(); // เรียกใช้งานระบบจำข้อมูลก่อน (ให้ความสำคัญกับชื่อที่พิมพ์เอง)
+        initializeLiff();   // แล้วค่อยเรียก LIFF มาเสริมข้อมูลที่ขาด
     });
 </script>
 
