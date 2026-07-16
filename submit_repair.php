@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // ส่งข้อความแจ้งเตือนกลับหา "ผู้แจ้งซ่อม" แบบส่วนตัว
         // ==========================================
         if(!empty($line_user_id)) {
-            $channelAccessToken = 'ใส่_CHANNEL_ACCESS_TOKEN_ของคุณตรงนี้';
+            $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
             
             $messageText = "✅ ได้รับเรื่องแจ้งซ่อมเรียบร้อยแล้วค่ะ\n\n" .
                            "📋 เลขที่ใบงาน: " . $ticket_no . "\n" .
