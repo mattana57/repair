@@ -3,11 +3,13 @@ session_start();
 include 'db_connect.php';
 
 $error_msg = "";
+$status_result = null;
+$search_keyword = "";
 
-// จัดการเมื่อมีการกดเข้าสู่ระบบ
+// ================= 1. จัดการการเข้าสู่ระบบ (Login) =================
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
     $username = $conn->real_escape_string($_POST['username']);
-    $password = $_POST['password']; // ในระบบจริงควรเข้ารหัสผ่าน (Hash) แต่จากฐานข้อมูลเดิมใช้รหัสผ่านตรงๆ
+    $password = $_POST['password']; 
 
     $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
     $stmt->bind_param("ss", $username, $password);
@@ -17,23 +19,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         
-        // เก็บข้อมูลลง Session
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['full_name'] = $user['full_name'];
         $_SESSION['role'] = $user['role'];
 
-        // ตรวจสอบสิทธิ์และแยกหน้าที่จะไป
         $role = strtolower($user['role']);
         if ($role === 'executive') {
             header("Location: executive_dashboard.php");
         } else {
-            // สำหรับ admin และ technician
             header("Location: dashboard.php");
         }
         exit();
     } else {
         $error_msg = "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง!";
+    }
+}
+
+// ================= 2. จัดการการค้นหาสถานะ (Check Status) =================
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
+    $search_keyword = trim($_POST['search_query']);
+    $search_param = "%" . $search_keyword . "%";
+
+    // ค้นหาจาก "เลขที่ใบงาน" หรือ "ชื่อผู้แจ้ง"
+    $stmt = $conn->prepare("SELECT ticket_no, equipment_type, status, created_at, technician_name, repair_note, reporter_name 
+                            FROM repairs 
+                            WHERE ticket_no = ? OR reporter_name LIKE ? 
+                            ORDER BY created_at DESC LIMIT 10");
+    $stmt->bind_param("ss", $search_keyword, $search_param);
+    $stmt->execute();
+    $res = $stmt->get_result();
+
+    if ($res && $res->num_rows > 0) {
+        $status_result = [];
+        while($row = $res->fetch_assoc()) {
+            $status_result[] = $row;
+        }
+    } else {
+        $status_result = 'not_found';
     }
 }
 ?>
@@ -107,13 +130,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
                 </p>
                 
                 <div class="flex flex-wrap items-center gap-4 pt-4">
-                    <!-- เปลี่ยน href ด้านล่างให้เป็นชื่อไฟล์ฟอร์มแจ้งซ่อมที่คุณน้ำฝนทำไว้ (เช่น form_repair.php) -->
                     <a href="form_repair.php" class="bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-sky-500/30 transition-all transform hover:-translate-y-1 flex items-center group">
                         <i class="fas fa-plus-circle mr-3 text-xl group-hover:rotate-90 transition-transform"></i> แจ้งซ่อมอุปกรณ์
                     </a>
                     
-                    <button onclick="toggleModal('loginModal')" class="bg-white border-2 border-slate-200 text-slate-700 hover:border-sky-300 hover:bg-sky-50 px-8 py-4 rounded-2xl font-bold text-lg shadow-sm transition-all flex items-center">
-                        <i class="fas fa-tasks mr-3 text-slate-400"></i> ตรวจสอบสถานะ
+                    <button onclick="toggleModal('searchModal')" class="bg-white border-2 border-slate-200 text-slate-700 hover:border-sky-300 hover:text-sky-600 hover:bg-sky-50 px-8 py-4 rounded-2xl font-bold text-lg shadow-sm transition-all flex items-center">
+                        <i class="fas fa-search mr-3 text-slate-400"></i> ตรวจสอบสถานะ
                     </button>
                 </div>
 
@@ -133,16 +155,114 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
                 </div>
             </div>
 
-            <!-- Illustration / Image -->
+            <!-- Illustration / Image (เปลี่ยนรูปที่โหลดเสถียรแน่นอน) -->
             <div class="hidden lg:flex justify-center relative">
                 <div class="absolute inset-0 bg-gradient-to-tr from-sky-200/40 to-purple-200/40 rounded-full blur-3xl -z-10 scale-90"></div>
-                <!-- คุณน้ำฝนสามารถเปลี่ยนรูปภาพด้านล่างเป็นภาพของคณะ หรือภาพเวกเตอร์อื่นๆ ได้ค่ะ -->
-                <img src="https://cdni.iconscout.com/illustration/premium/thumb/technical-support-illustration-download-in-svg-png-gif-file-formats--call-center-service-concept-assistance-customer-pack-business-illustrations-3310034.png?f=webp" alt="Support Illustration" class="w-full max-w-lg object-contain drop-shadow-2xl animate-[bounce_3s_infinite_alternate]">
+                <!-- ใช้ Icon เกรดพรีเมียมจาก Flaticon ที่โหลดได้ตลอด -->
+                <img src="https://cdn-icons-png.flaticon.com/512/8133/8133370.png" alt="Support Illustration" class="w-full max-w-md object-contain drop-shadow-2xl animate-[bounce_3s_infinite_alternate]">
             </div>
         </div>
     </main>
 
-    <!-- Modal เข้าสู่ระบบ (Login) -->
+    <!-- ================== MODALS ================== -->
+
+    <!-- Modal 1: ค้นหาสถานะ (Search) -->
+    <div id="searchModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('searchModal')"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all">
+            
+            <div class="p-6 text-center border-b border-slate-100 relative">
+                <button onclick="toggleModal('searchModal')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="w-14 h-14 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-2xl mx-auto mb-3">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">ตรวจสอบสถานะแจ้งซ่อม</h2>
+                <p class="text-sm text-slate-500 mt-1">กรอกเลขที่ใบงาน หรือ ชื่อ-นามสกุล ผู้แจ้ง</p>
+            </div>
+
+            <form action="" method="POST" class="p-8 bg-slate-50">
+                <input type="hidden" name="check_status" value="1">
+                
+                <div class="mb-6">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fas fa-clipboard-list text-slate-400"></i>
+                        </div>
+                        <input type="text" name="search_query" required placeholder="เช่น MR-2026... หรือ ชื่อผู้แจ้ง" class="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all font-medium text-lg shadow-sm">
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-3.5 rounded-xl font-bold text-lg transition-all shadow-lg shadow-sky-600/30 flex items-center justify-center">
+                    ค้นหาข้อมูล <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: แสดงผลการค้นหาสถานะ (Results) -->
+    <div id="resultModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col max-h-[85vh]">
+            
+            <div class="p-6 flex justify-between items-center bg-slate-50 border-b border-slate-100 shrink-0">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-list-alt text-sky-500 mr-2"></i> ผลการค้นหา</h2>
+                    <p class="text-sm text-slate-500">คำค้นหา: <span class="font-bold text-sky-600">"<?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?>"</span></p>
+                </div>
+                <button onclick="toggleModal('resultModal')" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-50/50 space-y-4">
+                <?php if (is_array($status_result)): ?>
+                    <?php foreach($status_result as $res): 
+                        $statusClass = "bg-slate-100 text-slate-600 border-slate-200"; 
+                        if($res['status'] == 'รอรับเรื่อง') $statusClass = "bg-amber-50 text-amber-600 border-amber-200";
+                        elseif($res['status'] == 'กำลังดำเนินการ') $statusClass = "bg-sky-50 text-sky-600 border-sky-200";
+                        elseif($res['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
+                    ?>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                            <!-- แถบสีด้านซ้าย -->
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 <?php echo str_replace(['bg-', 'text-', 'border-'], ['bg-', 'bg-', 'bg-'], explode(' ', $statusClass)[1]); ?>"></div>
+                            
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3 pl-2">
+                                <div>
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">เลขที่ใบงาน</span>
+                                    <h3 class="text-lg font-bold text-sky-700"><?php echo $res['ticket_no']; ?></h3>
+                                </div>
+                                <div class="text-left md:text-right">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border <?php echo $statusClass; ?>">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-current mr-2"></span><?php echo $res['status']; ?>
+                                    </span>
+                                    <p class="text-xs text-slate-400 mt-1"><i class="far fa-clock"></i> <?php echo date("d/m/Y H:i", strtotime($res['created_at'])); ?></p>
+                                </div>
+                            </div>
+
+                            <div class="pl-2 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-slate-500 mb-0.5"><i class="fas fa-desktop text-slate-400 w-4 text-center mr-1"></i> <b>อุปกรณ์:</b> <?php echo $res['equipment_type']; ?></p>
+                                    <p class="text-slate-500"><i class="fas fa-user text-slate-400 w-4 text-center mr-1"></i> <b>ผู้แจ้ง:</b> <?php echo $res['reporter_name']; ?></p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-500 mb-0.5"><i class="fas fa-hard-hat text-slate-400 w-4 text-center mr-1"></i> <b>ช่างผู้ดูแล:</b> <span class="<?php echo $res['technician_name'] ? 'text-indigo-600 font-semibold' : ''; ?>"><?php echo $res['technician_name'] ?: '- ยังไม่ระบุ -'; ?></span></p>
+                                    <p class="text-slate-500"><i class="fas fa-comment-dots text-slate-400 w-4 text-center mr-1"></i> <b>หมายเหตุ:</b> <?php echo $res['repair_note'] ?: '-'; ?></p>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+
+            <div class="p-6 bg-white border-t border-slate-100 shrink-0 flex justify-center">
+                <button onclick="toggleModal('resultModal')" class="bg-slate-800 hover:bg-slate-700 text-white px-8 py-2.5 rounded-xl font-bold transition-colors shadow-md">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: เข้าสู่ระบบ (Login) -->
     <div id="loginModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all">
@@ -190,7 +310,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
         </div>
     </div>
 
-    <!-- Script สำหรับแจ้งเตือน (กรณี Login ผิดพลาด) -->
+    <!-- Script สำหรับควบคุม Modal และ Alert -->
+    <script>
+        function toggleModal(m) { 
+            document.getElementById(m).classList.toggle('opacity-0'); 
+            document.getElementById(m).classList.toggle('pointer-events-none'); 
+            document.body.classList.toggle('modal-active'); 
+        }
+    </script>
+
     <?php if(!empty($error_msg)): ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -201,19 +329,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
                 confirmButtonColor: '#0f172a',
                 confirmButtonText: 'ลองใหม่อีกครั้ง'
             }).then(() => {
-                // เปิด Modal ใหม่อัตโนมัติถ้ากรอกผิด
                 toggleModal('loginModal');
             });
         });
     </script>
     <?php endif; ?>
 
+    <?php if($status_result === 'not_found'): ?>
     <script>
-        function toggleModal(m) { 
-            document.getElementById(m).classList.toggle('opacity-0'); 
-            document.getElementById(m).classList.toggle('pointer-events-none'); 
-            document.body.classList.toggle('modal-active'); 
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'warning',
+                title: 'ไม่พบข้อมูล',
+                text: 'ไม่พบประวัติการแจ้งซ่อมจาก "<?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?>" กรุณาตรวจสอบเลขที่ใบงานหรือชื่อผู้แจ้งอีกครั้งค่ะ',
+                confirmButtonColor: '#0ea5e9'
+            }).then(() => {
+                toggleModal('searchModal');
+            });
+        });
     </script>
+    <?php elseif(is_array($status_result)): ?>
+    <script>
+        // เปิดหน้าต่างผลลัพธ์อัตโนมัติถ้าค้นหาเจอ
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleModal('resultModal');
+        });
+    </script>
+    <?php endif; ?>
+
 </body>
 </html>
