@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSU Smart Maintenance Hub - ระบบแจ้งซ่อมออนไลน์</title>
+    <title>ระบบแจ้งซ่อม คณะการบัญชีและการจัดการ มมส.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -96,8 +96,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     <i class="fas fa-tools text-white text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-slate-800 leading-tight tracking-tight">MSU REPAIR</h1>
-                    <p class="text-[11px] text-sky-500 font-semibold tracking-widest uppercase mt-0.5">Smart Maintenance Hub</p>
+                    <h1 class="text-xl font-bold text-slate-800 leading-tight tracking-tight">MBS REPAIR</h1>
+                    <p class="text-[11px] text-sky-500 font-semibold tracking-widest uppercase mt-0.5">คณะการบัญชีและการจัดการ</p>
                 </div>
             </div>
             <div>
@@ -115,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         <div class="max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-12">
             
             <!-- Text & CTA -->
-            <div class="space-y-8 animate-fade-in-up relative z-20">
+            <div class="space-y-8 relative z-20">
                 <div class="inline-block px-4 py-1.5 rounded-full bg-sky-100 text-sky-700 font-semibold text-sm border border-sky-200">
                     <i class="fas fa-bolt text-amber-500 mr-2"></i> ระบบให้บริการแจ้งซ่อมออนไลน์
                 </div>
@@ -126,7 +126,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </h2>
                 
                 <p class="text-lg text-slate-600 leading-relaxed max-w-lg">
-                    ระบบแจ้งซ่อมอุปกรณ์ คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ สำหรับบุคลากรและนิสิต มหาวิทยาลัยมหาสารคาม
+                    ระบบแจ้งซ่อมอุปกรณ์ คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ สำหรับบุคลากรและนิสิต <b>คณะการบัญชีและการจัดการ</b> มหาวิทยาลัยมหาสารคาม
                 </p>
                 
                 <div class="flex flex-wrap items-center gap-4 pt-4">
@@ -155,11 +155,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </div>
             </div>
 
-            <!-- Illustration / Image (เปลี่ยนรูปที่โหลดเสถียรแน่นอน) -->
+            <!-- Illustration / Image (เปลี่ยนรูปและเอา animation ออก) -->
             <div class="hidden lg:flex justify-center relative">
                 <div class="absolute inset-0 bg-gradient-to-tr from-sky-200/40 to-purple-200/40 rounded-full blur-3xl -z-10 scale-90"></div>
-                <!-- ใช้ Icon เกรดพรีเมียมจาก Flaticon ที่โหลดได้ตลอด -->
-                <img src="https://cdn-icons-png.flaticon.com/512/8133/8133370.png" alt="Support Illustration" class="w-full max-w-md object-contain drop-shadow-2xl animate-[bounce_3s_infinite_alternate]">
+                <!-- รูปภาพช่างซ่อม/IT Support นิ่งๆ -->
+                <img src="https://cdn-icons-png.flaticon.com/512/4144/4144883.png" alt="Maintenance Illustration" class="w-full max-w-md object-contain drop-shadow-xl opacity-90">
             </div>
         </div>
     </main>
@@ -247,8 +247,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                                     <p class="text-slate-500"><i class="fas fa-user text-slate-400 w-4 text-center mr-1"></i> <b>ผู้แจ้ง:</b> <?php echo $res['reporter_name']; ?></p>
                                 </div>
                                 <div>
-                                    <p class="text-slate-500 mb-0.5"><i class="fas fa-hard-hat text-slate-400 w-4 text-center mr-1"></i> <b>ช่างผู้ดูแล:</b> <span class="<?php echo $res['technician_name'] ? 'text-indigo-600 font-semibold' : ''; ?>"><?php echo $res['technician_name'] ?: '- ยังไม่ระบุ -'; ?></span></p>
-                                    <p class="text-slate-500"><i class="fas fa-comment-dots text-slate-400 w-4 text-center mr-1"></i> <b>หมายเหตุ:</b> <?php echo $res['repair_note'] ?: '-'; ?></p>
+                                    <p class="text-slate-500 mb-0.5"><i class="fas fa-hard-hat text-slate-400 w-4 text-center mr-1"></i> <b>ช่างผู้ดูแล:</b> <span class="<?php echo !empty($res['technician_name']) ? 'text-indigo-600 font-semibold' : ''; ?>"><?php echo !empty($res['technician_name']) ? $res['technician_name'] : '- ยังไม่ระบุ -'; ?></span></p>
+                                    <p class="text-slate-500"><i class="fas fa-comment-dots text-slate-400 w-4 text-center mr-1"></i> <b>หมายเหตุ:</b> <?php echo !empty($res['repair_note']) ? $res['repair_note'] : '-'; ?></p>
                                 </div>
                             </div>
                         </div>
