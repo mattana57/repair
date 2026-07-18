@@ -91,6 +91,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     }
 
     $role = $_POST['role']; 
+    
+    // ดักจับกรณีเป็น Admin/Executive เพื่อเซฟสิทธิ์ให้ถูกต้อง
+    if (isset($_POST['admin_level']) && ($role === 'Admin' || $role === 'Executive')) {
+        $role = $_POST['admin_level'];
+    }
+
     $tab_redirect = ($role == 'User') ? 'users' : 'technicians';
 
     if (empty($user_id)) {
@@ -177,7 +183,6 @@ if($check_repairs->num_rows > 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- ล็อกไม่ให้เบราว์เซอร์มือถือบังคับเปิดโหมดมืด (Dark Mode) เพื่อแก้ปัญหาสีเพี้ยน/จอดำ -->
     <meta name="color-scheme" content="light">
     <title>MBS Smart Maintenance</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -186,7 +191,6 @@ if($check_repairs->num_rows > 0) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ล็อกสีให้เป็น Light Mode */
         :root { color-scheme: light; }
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); transition: transform 0.2s ease, box-shadow 0.2s ease; }
@@ -216,10 +220,8 @@ if($check_repairs->num_rows > 0) {
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-sky-200">
 
-    <!-- Overlay สำหรับมือถือเวลาเปิดเมนู -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
 
-    <!-- Sidebar (ปรับให้เลื่อนเข้าออกได้บนมือถือ) -->
     <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] no-print">
         <div class="h-20 md:h-24 flex items-center justify-between px-5 md:px-8 border-b border-slate-100">
             <div class="flex items-center">
@@ -227,12 +229,10 @@ if($check_repairs->num_rows > 0) {
                     <i class="fas fa-tools text-white text-lg md:text-xl"></i>
                 </div>
                 <div class="overflow-hidden flex-1">
-                    <!-- เปลี่ยนเป็น MBS -->
                     <h1 class="text-lg md:text-xl font-bold text-slate-800 leading-tight tracking-tight">MBS REPAIR</h1>
                     <p class="text-[10px] md:text-xs text-sky-500 font-semibold tracking-widest uppercase mt-0.5">Admin Portal</p>
                 </div>
             </div>
-            <!-- ปุ่มปิด Sidebar มือถือ -->
             <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-red-500 focus:outline-none">
                 <i class="fas fa-times text-xl"></i>
             </button>
@@ -254,10 +254,8 @@ if($check_repairs->num_rows > 0) {
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <div class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-sky-100/50 to-transparent -z-10 no-print"></div>
         
-        <!-- Header (เพิ่มปุ่มแฮมเบอร์เกอร์บนมือถือ) -->
         <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-10 shrink-0 z-10 sticky top-0 no-print">
             <div class="flex items-center overflow-hidden">
-                <!-- ปุ่มเมนู Hamburger สำหรับมือถือ -->
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-sky-600 focus:outline-none shrink-0">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
@@ -276,10 +274,8 @@ if($check_repairs->num_rows > 0) {
             </div>
         </header>
 
-        <!-- Container สำหรับเนื้อหา (ปรับ Padding สำหรับมือถือ) -->
         <div class="flex-1 overflow-y-auto p-4 md:p-10 print:p-0">
             
-            <!-- Dashboard Stats -->
             <div id="dash" class="section space-y-6 animate-fade-in no-print">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     <?php 
@@ -300,7 +296,6 @@ if($check_repairs->num_rows > 0) {
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                    <!-- งานแจ้งซ่อมล่าสุด -->
                     <div class="lg:col-span-2 modern-card bg-white overflow-hidden flex flex-col">
                         <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <h3 class="font-bold text-slate-800 text-sm md:text-base"><i class="fas fa-bolt text-amber-500 mr-2"></i> งานแจ้งซ่อมล่าสุด</h3>
@@ -333,7 +328,6 @@ if($check_repairs->num_rows > 0) {
                         </div>
                     </div>
 
-                    <!-- แจ้งเตือนอุปกรณ์ชำรุด -->
                     <div class="modern-card bg-white overflow-hidden flex flex-col">
                         <div class="p-4 md:p-5 border-b border-slate-100 bg-red-50/30">
                             <h3 class="font-bold text-slate-800 text-sm md:text-base"><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i> อุปกรณ์ชำรุด (รอซ่อม)</h3>
@@ -368,18 +362,15 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Repairs List -->
             <div id="repairs" class="section hidden space-y-4 md:space-y-6 no-print">
                 <div class="modern-card overflow-hidden">
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-white gap-3">
                         <h2 class="text-lg md:text-xl font-bold text-slate-800">รายการแจ้งซ่อมทั้งหมด</h2>
-                        <!-- ช่องค้นหาบนหน้าจอมือถือ -->
                         <div class="w-full md:w-auto relative lg:hidden">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                             <input type="text" id="searchInputMobile" placeholder="ค้นหาใบงาน..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-sky-400">
                         </div>
                     </div>
-                    <!-- ตารางแบบเลื่อนแนวนอนได้บนมือถือ -->
                     <div class="overflow-x-auto w-full">
                         <table class="w-full text-left whitespace-nowrap min-w-[800px]">
                             <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
@@ -437,7 +428,6 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Technician & Admin Section -->
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
@@ -445,14 +435,15 @@ if($check_repairs->num_rows > 0) {
                         <p class="text-sm text-slate-500 mt-1">จัดการรายชื่อผู้ดูแลและช่างซ่อม</p>
                     </div>
                     <div class="flex w-full md:w-auto gap-2">
-                        <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> เพิ่มแอดมิน</button>
+                        <!-- ปุ่มเปิด Modal ของฝั่งแอดมิน -->
+                        <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> เพิ่มผู้ดูแล/ผู้บริหาร</button>
                         <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-hard-hat mr-2"></i> เพิ่มช่างซ่อม</button>
                     </div>
                 </div>
 
-                <!-- ตาราง Admin -->
+                <!-- ตาราง Admin & Executive -->
                 <div>
-                    <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-user-shield text-purple-500 mr-2 text-xl"></i> ผู้ดูแลระบบ (Admin)</h3>
+                    <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-user-shield text-purple-500 mr-2 text-xl"></i> ผู้ดูแลระบบ และ ผู้บริหาร</h3>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
@@ -471,17 +462,24 @@ if($check_repairs->num_rows > 0) {
                                     $admin_res = $conn->query("SELECT * FROM users WHERE LOWER(role) IN ('admin', 'executive') ORDER BY id DESC");
                                     if($admin_res && $admin_res->num_rows > 0){
                                         while($u = $admin_res->fetch_assoc()) {
-                                            $roleDisplay = 'Admin';
-                                            $roleClass = "bg-purple-50 text-purple-600 border-purple-200";
-                                            $iconClass = "fa-user-shield text-purple-600 bg-purple-50 border-purple-100";
+                                            $r_lower = strtolower($u['role']);
+                                            $roleDisplay = ($r_lower == 'executive') ? 'ผู้บริหาร' : 'Admin';
+                                            $roleClass = ($r_lower == 'executive') ? "bg-pink-50 text-pink-600 border-pink-200" : "bg-purple-50 text-purple-600 border-purple-200";
+                                            $iconClass = ($r_lower == 'executive') ? "fa-user-tie text-pink-600 bg-pink-50 border-pink-100" : "fa-user-shield text-purple-600 bg-purple-50 border-purple-100";
+                                            $icon = ($r_lower == 'executive') ? "fa-user-tie" : "fa-user-shield";
                                             
-                                            $js_uid = $u['id']; $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); $js_fname = htmlspecialchars($u['full_name'] ?? '', ENT_QUOTES); $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES);
+                                            $js_uid = $u['id']; 
+                                            $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); 
+                                            $js_fname = htmlspecialchars($u['full_name'] ?? '', ENT_QUOTES); 
+                                            $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); 
+                                            $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES);
+                                            $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
 
                                             echo "<tr class='hover:bg-slate-50/80 transition-colors'>
                                                 <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
                                                 <td class='px-6 py-4 text-slate-800 font-semibold'>
                                                     <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full flex items-center justify-center mr-3 border {$iconClass}'><i class='fas fa-user-shield text-xs'></i></div>
+                                                        <div class='w-8 h-8 rounded-full flex items-center justify-center mr-3 border {$iconClass}'><i class='fas {$icon} text-xs'></i></div>
                                                         ".(!empty($u['full_name']) ? $u['full_name'] : '- ไม่ระบุ -')."
                                                     </div>
                                                 </td>
@@ -490,13 +488,13 @@ if($check_repairs->num_rows > 0) {
                                                 <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <button onclick=\"openTechAdminModal('Admin', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลแอดมิน</td></tr>"; }
+                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลผู้ดูแลระบบและผู้บริหาร</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -530,6 +528,7 @@ if($check_repairs->num_rows > 0) {
                                             $js_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES); 
                                             $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); 
                                             $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES);
+                                            $js_role = htmlspecialchars($t['role'], ENT_QUOTES);
                                             
                                             $total_jobs = 0;
                                             if(!empty($t['full_name'])) {
@@ -551,7 +550,7 @@ if($check_repairs->num_rows > 0) {
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
                                                         <button onclick=\"viewHistory('{$js_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-sky-600 hover:bg-sky-50 px-2 md:px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>ดูผลงาน</span></button>
-                                                        <button onclick=\"openTechAdminModal('Technician', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$t['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
@@ -674,7 +673,6 @@ if($check_repairs->num_rows > 0) {
 
             <!-- Report Summary Section (รายงานสรุปแบบสากล) -->
             <div id="reports" class="section hidden space-y-6">
-                <!-- Header สำหรับการ Print -->
                 <div class="hidden print-header print:flex items-center gap-4 mb-8 pb-6 border-b border-slate-200">
                     <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg">
                         <i class="fas fa-tools text-white text-3xl"></i>
@@ -751,9 +749,22 @@ if($check_repairs->num_rows > 0) {
                 <button onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
             <form action="" method="POST" class="p-5 md:p-6">
-                <input type="hidden" name="save_user" value="1"><input type="hidden" name="user_id" id="techAdmin_id" value=""><input type="hidden" name="role" id="techAdmin_role" value="">
+                <input type="hidden" name="save_user" value="1">
+                <input type="hidden" name="user_id" id="techAdmin_id" value="">
+                <input type="hidden" name="role" id="techAdmin_role" value="">
+                
                 <div class="space-y-4">
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">Username / รหัสประจำตัว <span class="text-red-500">*</span></label><input type="text" name="username" id="techAdmin_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
+                    
+                    <!-- ส่วนเลือกระดับสิทธิ์ (ซ่อนไว้สำหรับช่างซ่อม) -->
+                    <div id="adminLevelDiv" class="hidden">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ระดับสิทธิ์ (Role) <span class="text-red-500">*</span></label>
+                        <select name="admin_level" id="techAdmin_level" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                            <option value="Admin">ผู้ดูแลระบบ (Admin)</option>
+                            <option value="Executive">ผู้บริหาร (Executive)</option>
+                        </select>
+                    </div>
+
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label><input type="text" name="full_name" id="techAdmin_fullname" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์</label><input type="text" name="phone" id="techAdmin_phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
                     <div>
@@ -851,13 +862,11 @@ if($check_repairs->num_rows > 0) {
             if(activeBtn) activeBtn.classList.add('active-btn');
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'ระบบจัดการ';
             
-            // ปิด Sidebar บนมือถือเมื่อกดเมนู
             if (window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
                 document.getElementById('sidebarOverlay').classList.add('hidden');
             }
 
-            // ระบบค้นหาในตาราง
             let searchInputs = [document.getElementById('searchInput'), document.getElementById('searchInputMobile')];
             searchInputs.forEach(input => {
                 if(input) {
@@ -869,14 +878,12 @@ if($check_repairs->num_rows > 0) {
                 }
             });
             
-            // เรนเดอร์กราฟเมื่อเปิดหน้ารายงาน
             if(id === 'reports' && !window.chartsRendered) {
                 renderCharts();
                 window.chartsRendered = true;
             }
         }
 
-        // ฟังก์ชันเปิด-ปิด Sidebar บนมือถือ
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebarOverlay').classList.toggle('hidden');
@@ -888,7 +895,6 @@ if($check_repairs->num_rows > 0) {
             if(tab) { show(tab); } else { show('dash'); }
             window.chartsRendered = false;
 
-            // ผูก Event ค้นหาให้กับทั้ง 2 ช่อง (Desktop และ Mobile)
             ['searchInput', 'searchInputMobile'].forEach(id => {
                 const inputElement = document.getElementById(id);
                 if(inputElement) {
@@ -964,11 +970,24 @@ if($check_repairs->num_rows > 0) {
         }
 
         function openTechAdminModal(role, id='', u='', f='', p='', d='') { 
-            let title = role === 'Admin' ? '<i class="fas fa-user-shield text-purple-500 mr-2"></i> เพิ่มผู้ดูแลระบบ' : '<i class="fas fa-hard-hat text-sky-500 mr-2"></i> เพิ่มช่างซ่อม';
-            if(id !== '') title = role === 'Admin' ? '<i class="fas fa-edit text-amber-500 mr-2"></i> แก้ไขแอดมิน' : '<i class="fas fa-edit text-amber-500 mr-2"></i> แก้ไขช่างซ่อม';
+            // เช็คว่าเป็นสิทธิ์สายจัดการ (Admin/Executive) หรือ สายปฏิบัติการ (Technician)
+            let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
+            let baseRole = isManagement ? 'Admin' : 'Technician';
+            let title = isManagement ? '<i class="fas fa-user-shield text-purple-500 mr-2"></i> จัดการผู้ดูแล/ผู้บริหาร' : '<i class="fas fa-hard-hat text-sky-500 mr-2"></i> จัดการช่างซ่อม';
             
             document.getElementById('techAdminModalTitle').innerHTML = title; 
-            document.getElementById('techAdmin_role').value = role;
+            document.getElementById('techAdmin_role').value = baseRole; 
+            
+            // เปิด/ปิด ช่องเลือกระดับสิทธิ์สำหรับแอดมินและผู้บริหาร
+            const adminLevelDiv = document.getElementById('adminLevelDiv');
+            if(isManagement) {
+                adminLevelDiv.classList.remove('hidden');
+                let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin';
+                document.getElementById('techAdmin_level').value = exactRole;
+            } else {
+                adminLevelDiv.classList.add('hidden');
+            }
+
             document.getElementById('techAdmin_id').value = id; 
             document.getElementById('techAdmin_username').value = u; 
             document.getElementById('techAdmin_fullname').value = f; 

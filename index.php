@@ -25,6 +25,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
         $_SESSION['role'] = $user['role'];
 
         $role = strtolower($user['role']);
+        
+        // แยก Redirect ตามสิทธิ์การใช้งาน
         if ($role === 'executive') {
             header("Location: executive_dashboard.php");
         } else {
@@ -41,7 +43,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     $search_keyword = trim($_POST['search_query']);
     $search_param = "%" . $search_keyword . "%";
 
-    // ค้นหาจาก "เลขที่ใบงาน" หรือ "ชื่อผู้แจ้ง"
     $stmt = $conn->prepare("SELECT ticket_no, equipment_type, status, created_at, technician_name, repair_note, reporter_name 
                             FROM repairs 
                             WHERE ticket_no = ? OR reporter_name LIKE ? 
@@ -88,7 +89,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 </head>
 <body class="bg-pattern min-h-screen flex flex-col selection:bg-sky-200 relative">
 
-    <!-- Navbar -->
     <header class="w-full glass-card fixed top-0 z-40 border-b border-slate-200/50">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-4">
@@ -108,13 +108,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-1 flex items-center justify-center pt-20 relative z-10">
         <div class="absolute inset-0 bg-gradient-to-b from-sky-50/50 to-transparent -z-10"></div>
         
         <div class="max-w-7xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-12">
             
-            <!-- Text & CTA -->
             <div class="space-y-8 relative z-20">
                 <div class="inline-block px-4 py-1.5 rounded-full bg-sky-100 text-sky-700 font-semibold text-sm border border-sky-200">
                     <i class="fas fa-bolt text-amber-500 mr-2"></i> ระบบให้บริการแจ้งซ่อมออนไลน์
@@ -155,16 +153,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </div>
             </div>
 
-            <!-- Illustration / Image (เปลี่ยนรูปและเอา animation ออก) -->
             <div class="hidden lg:flex justify-center relative">
                 <div class="absolute inset-0 bg-gradient-to-tr from-sky-200/40 to-purple-200/40 rounded-full blur-3xl -z-10 scale-90"></div>
-                <!-- รูปภาพช่างซ่อม/IT Support นิ่งๆ -->
                 <img src="https://cdn-icons-png.flaticon.com/512/4144/4144883.png" alt="Maintenance Illustration" class="w-full max-w-md object-contain drop-shadow-xl opacity-90">
             </div>
         </div>
     </main>
-
-    <!-- ================== MODALS ================== -->
 
     <!-- Modal 1: ค้นหาสถานะ (Search) -->
     <div id="searchModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
@@ -350,7 +344,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     </script>
     <?php elseif(is_array($status_result)): ?>
     <script>
-        // เปิดหน้าต่างผลลัพธ์อัตโนมัติถ้าค้นหาเจอ
         document.addEventListener('DOMContentLoaded', function() {
             toggleModal('resultModal');
         });
