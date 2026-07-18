@@ -75,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             
             <div class="mb-5">
                 <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อ(ผู้แจ้ง) <span class="text-red-500">*</span></label>
-                <input type="text" name="reporter_name" class="w-full p-3.5 rounded-xl input-light" required placeholder="กำลังดึงข้อมูลจาก LINE...">
+                <input type="text" name="reporter_name" class="w-full p-3.5 rounded-xl input-light" required placeholder="ระบุชื่อจริงของคุณ">
             </div>
 
             <div class="mb-5">
@@ -310,18 +310,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             await liff.init({ liffId: "2010615776-jmvGJZSx" });
             
             if (liff.isLoggedIn()) {
+                // ถ้าล็อกอินแล้ว (หรือเปิดจากในแอป LINE) ให้ดึงข้อมูลมาใส่
                 const profile = await liff.getProfile();
                 
-                // แอบดึง User ID มาใส่ในช่องที่ซ่อนไว้
                 document.getElementById('line_user_id').value = profile.userId;
                 
-                // ดึงชื่อ LINE มาใส่ในช่องเสมอ
                 const nameInput = document.querySelector('input[name="reporter_name"]');
                 if(nameInput) {
                     nameInput.value = profile.displayName; 
                 }
             } else {
-                liff.login();
+                // ถ้าไม่ได้ล็อกอิน ให้เช็คว่าเปิดอยู่ในแอป LINE หรือไม่
+                if (liff.isInClient()) {
+                    // ถ้าเปิดผ่าน LINE Chat ให้บังคับล็อกอินเพื่อดึงชื่อ
+                    liff.login();
+                }
+                // *** ถ้าไม่ใช่ในแอป LINE (เปิดผ่าน Chrome/Safari ทั่วไป) จะข้ามการล็อกอินไปเลย ผู้ใช้พิมพ์ชื่อเองได้ปกติ ***
             }
         } catch (err) {
             console.error('LIFF Initialization failed', err);
