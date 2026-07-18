@@ -261,6 +261,11 @@ if($check_repairs->num_rows > 0) {
             <button onclick="show('assets')" class="nav-btn" id="btn-assets"><i class="fas fa-server"></i> จัดการอุปกรณ์</button>
             <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-users"></i> ประวัติผู้แจ้งซ่อม</button>
             <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-invoice"></i> รายงานสรุป</button>
+            
+            <!-- เพิ่มปุ่ม Logout -->
+            <div class="mt-auto pt-4 border-t border-slate-100">
+                <a href="index.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
+            </div>
         </nav>
     </aside>
 

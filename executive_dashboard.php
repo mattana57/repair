@@ -158,7 +158,9 @@ if($check_repairs->num_rows > 0) {
         <nav class="flex-1 px-4 md:px-5 py-6 md:py-8 flex flex-col overflow-y-auto">
             <p class="px-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">สำหรับผู้บริหาร</p>
             <button class="nav-btn active-btn"><i class="fas fa-tachometer-alt"></i> ภาพรวมและสถิติ (KPIs)</button>
-            <a href="dashboard.php" class="nav-btn"><i class="fas fa-desktop"></i> กลับสู่หน้า Admin ปกติ</a>
+            <div class="mt-auto pt-4 border-t border-slate-100">
+                <a href="index.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
+            </div>
         </nav>
     </aside>
 
@@ -310,7 +312,6 @@ if($check_repairs->num_rows > 0) {
     </main>
 
     <script>
-        // ฟังก์ชันเปิด-ปิด Sidebar บนมือถือ
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebarOverlay').classList.toggle('hidden');
