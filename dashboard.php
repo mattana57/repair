@@ -89,16 +89,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $user_id = $_POST['user_id'];
     $username = $_POST['username'];
     $password = $_POST['password']; // รับค่ารหัสผ่านจากฟอร์ม
-    $full_name = $_POST['full_name'];
-    $phone = $_POST['phone'] ?? '-';
+    
+    // แปลงให้เป็น NULL หากเว้นว่างไว้
+    $full_name = !empty($_POST['full_name']) ? $_POST['full_name'] : NULL;
+    $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
     $role = $_POST['role']; 
     
     // ดักจับกรณีเป็น Admin/Executive เพื่อเซฟสิทธิ์ให้ถูกต้อง
     if (isset($_POST['admin_level']) && ($role === 'Admin' || $role === 'Executive')) {
         $role = $_POST['admin_level'];
-        $department = '-'; // ผู้บริหารและแอดมินไม่ต้องมีแผนก
+        $department = NULL; // ผู้บริหารและแอดมินไม่ต้องมีแผนก
     } else {
-        $department = isset($_POST['department_select']) ? $_POST['department_select'] : '-';
+        $department = isset($_POST['department_select']) ? $_POST['department_select'] : NULL;
         if ($department === 'อื่นๆ' && !empty($_POST['department_custom'])) {
             $department = $_POST['department_custom'];
         }
@@ -746,7 +748,7 @@ if($check_repairs->num_rows > 0) {
         </div>
     </div>
 
-    <!-- Modal เพิ่ม/แก้ไข ทีมงาน (Admin & Tech) พร้อมการจัดการ Password -->
+    <!-- Modal เพิ่ม/แก้ไข ทีมงาน (Admin & Tech) พร้อมฟังก์ชัน Toggle รหัสผ่านและเว้นชื่อได้ -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
@@ -767,7 +769,12 @@ if($check_repairs->num_rows > 0) {
                     
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสผ่าน (Password) <span class="text-slate-400 font-normal text-xs" id="pwdHint"></span></label>
-                        <input type="password" name="password" id="techAdmin_password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700" placeholder="ตั้งรหัสผ่าน">
+                        <div class="relative">
+                            <input type="password" name="password" id="techAdmin_password" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2 text-sm text-slate-700" placeholder="ตั้งรหัสผ่าน">
+                            <button type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-sky-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
+                                <i id="eyeIcon" class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div id="adminLevelDiv" class="hidden">
@@ -779,8 +786,8 @@ if($check_repairs->num_rows > 0) {
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
-                        <input type="text" name="full_name" id="techAdmin_fullname" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล</label>
+                        <input type="text" name="full_name" id="techAdmin_fullname" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์</label>
@@ -789,7 +796,7 @@ if($check_repairs->num_rows > 0) {
                     
                     <div id="deptDiv">
                         <label class="block text-sm font-semibold text-slate-700 mb-1">แผนก / ความเชี่ยวชาญ <span class="text-red-500">*</span></label>
-                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomDept(this, 'techAdmin_department_custom')" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 mb-2">
+                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomDept(this, 'techAdmin_department_custom')" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 mb-2">
                             <option value="" disabled selected>-- เลือกแผนก --</option>
                             <option value="แผนกช่าง">แผนกช่าง</option>
                             <option value="แผนกไฟฟ้า">แผนกไฟฟ้า</option>
@@ -942,6 +949,21 @@ if($check_repairs->num_rows > 0) {
             document.body.classList.toggle('modal-active'); 
         }
 
+        // ฟังก์ชันสำหรับเปิด-ปิดตารหัสผ่าน
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
         function toggleCustomDept(selectElement, customInputId) {
             const customInput = document.getElementById(customInputId);
             if(selectElement.value === 'อื่นๆ') {
@@ -1018,10 +1040,17 @@ if($check_repairs->num_rows > 0) {
             document.getElementById('techAdmin_fullname').value = f; 
             document.getElementById('techAdmin_phone').value = p; 
             
-            // จัดการช่องรหัสผ่าน
+            // จัดการช่องรหัสผ่านและคืนค่าดวงตาให้เป็นแบบซ่อน (Password)
             const pwdInput = document.getElementById('techAdmin_password');
             const pwdHint = document.getElementById('pwdHint');
-            pwdInput.value = ''; // เคลียร์ช่องทุกครั้งที่เปิด
+            const eyeIcon = document.getElementById('eyeIcon');
+            pwdInput.value = ''; 
+            pwdInput.type = 'password'; 
+            if(eyeIcon) {
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+
             if(id === '') {
                 pwdInput.required = true;
                 pwdHint.innerText = "(บังคับกรอก)";
