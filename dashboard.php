@@ -30,6 +30,12 @@ if($check_phone->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN phone
 $check_dept = $conn->query("SHOW COLUMNS FROM users LIKE 'department'");
 if($check_dept->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN department VARCHAR(100) NULL AFTER phone");
 
+// ตรวจสอบและเพิ่มคอลัมน์ password ถ้ายังไม่มี
+$check_pwd = $conn->query("SHOW COLUMNS FROM users LIKE 'password'");
+if($check_pwd->num_rows == 0) {
+    $conn->query("ALTER TABLE users ADD COLUMN password VARCHAR(255) NULL AFTER username");
+}
+
 $check_created = $conn->query("SHOW COLUMNS FROM users LIKE 'created_at'");
 if($check_created->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
 
@@ -78,42 +84,47 @@ if (isset($_GET['delete_user'])) {
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
 
+// จัดการการบันทึกข้อมูลผู้ใช้งานและรหัสผ่าน
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $user_id = $_POST['user_id'];
     $username = $_POST['username'];
-    $password = "1234";
+    $password = $_POST['password']; // รับค่ารหัสผ่านจากฟอร์ม
     $full_name = $_POST['full_name'];
     $phone = $_POST['phone'] ?? '-';
-    
-    $department = $_POST['department'];
-    if ($department === 'อื่นๆ' && !empty($_POST['department_custom'])) {
-        $department = $_POST['department_custom'];
-    }
-
     $role = $_POST['role']; 
     
     // ดักจับกรณีเป็น Admin/Executive เพื่อเซฟสิทธิ์ให้ถูกต้อง
     if (isset($_POST['admin_level']) && ($role === 'Admin' || $role === 'Executive')) {
         $role = $_POST['admin_level'];
+        $department = '-'; // ผู้บริหารและแอดมินไม่ต้องมีแผนก
+    } else {
+        $department = isset($_POST['department_select']) ? $_POST['department_select'] : '-';
+        if ($department === 'อื่นๆ' && !empty($_POST['department_custom'])) {
+            $department = $_POST['department_custom'];
+        }
     }
 
     $tab_redirect = ($role == 'User') ? 'users' : 'technicians';
 
     if (empty($user_id)) {
-        $check_pwd = $conn->query("SHOW COLUMNS FROM users LIKE 'password'");
-        if($check_pwd->num_rows > 0) {
-            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, phone, department, role) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssss", $username, $password, $full_name, $phone, $department, $role);
-        } else {
-            $stmt = $conn->prepare("INSERT INTO users (username, full_name, phone, department, role) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("sssss", $username, $full_name, $phone, $department, $role);
-        }
+        // เพิ่มใหม่ (บังคับมีรหัสผ่าน)
+        $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, phone, department, role) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $username, $password, $full_name, $phone, $department, $role);
         $msg = 'บันทึกข้อมูลสำเร็จ!';
     } else {
-        $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
-        $stmt->bind_param("sssssi", $username, $full_name, $phone, $department, $role, $user_id);
+        // แก้ไขอัปเดตข้อมูล
+        if (!empty($password)) {
+            // ถ้ามีการพิมพ์รหัสผ่านใหม่มา ให้เปลี่ยนรหัสผ่านด้วย
+            $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
+            $stmt->bind_param("ssssssi", $username, $password, $full_name, $phone, $department, $role, $user_id);
+        } else {
+            // ถ้าเว้นว่างรหัสผ่านไว้ อัปเดตแค่ข้อมูลอื่นๆ
+            $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
+            $stmt->bind_param("sssssi", $username, $full_name, $phone, $department, $role, $user_id);
+        }
         $msg = 'อัปเดตข้อมูลสำเร็จ!';
     }
+    
     if ($stmt->execute()) {
         echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#0284c7' }).then(() => { window.location.href='dashboard.php?tab=$tab_redirect'; }); });</script>";
     }
@@ -435,7 +446,6 @@ if($check_repairs->num_rows > 0) {
                         <p class="text-sm text-slate-500 mt-1">จัดการรายชื่อผู้ดูแลและช่างซ่อม</p>
                     </div>
                     <div class="flex w-full md:w-auto gap-2">
-                        <!-- ปุ่มเปิด Modal ของฝั่งแอดมิน -->
                         <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> เพิ่มผู้ดูแล/ผู้บริหาร</button>
                         <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-hard-hat mr-2"></i> เพิ่มช่างซ่อม</button>
                     </div>
@@ -452,7 +462,6 @@ if($check_repairs->num_rows > 0) {
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">ชื่อ-นามสกุล</th>
                                         <th class="px-6 py-4">เบอร์โทรศัพท์</th>
-                                        <th class="px-6 py-4">แผนก</th>
                                         <th class="px-6 py-4 text-center">สิทธิ์</th>
                                         <th class="px-6 py-4 text-right">จัดการ</th>
                                     </tr>
@@ -484,7 +493,6 @@ if($check_repairs->num_rows > 0) {
                                                     </div>
                                                 </td>
                                                 <td class='px-6 py-4 text-slate-600'>".(!empty($u['phone']) ? $u['phone'] : '-')."</td>
-                                                <td class='px-6 py-4 text-slate-600'>".(!empty($u['department']) ? $u['department'] : '-')."</td>
                                                 <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
@@ -494,7 +502,7 @@ if($check_repairs->num_rows > 0) {
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลผู้ดูแลระบบและผู้บริหาร</td></tr>"; }
+                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลผู้ดูแลระบบและผู้บริหาร</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -694,7 +702,6 @@ if($check_repairs->num_rows > 0) {
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 print:grid-cols-2 print:gap-8">
-                    <!-- กราฟที่ 1: สถานะการแจ้งซ่อม (Doughnut Chart) -->
                     <div class="modern-card p-4 md:p-6 bg-white flex flex-col h-[350px] md:h-[400px] print:h-[400px] print:shadow-none print:border">
                         <h3 class="font-bold text-slate-800 mb-2 flex items-center text-sm md:text-base"><i class="fas fa-chart-pie text-sky-500 mr-2"></i> สัดส่วนสถานะงานซ่อม</h3>
                         <p class="text-xs text-slate-500 mb-4 hidden md:block">แสดงเปอร์เซ็นต์ของงานที่รอรับเรื่อง, กำลังดำเนินการ, และเสร็จสิ้น</p>
@@ -703,7 +710,6 @@ if($check_repairs->num_rows > 0) {
                         </div>
                     </div>
 
-                    <!-- กราฟที่ 2: อุปกรณ์ที่เสียบ่อยสุด (Bar Chart) -->
                     <div class="modern-card p-4 md:p-6 bg-white flex flex-col h-[350px] md:h-[400px] print:h-[400px] print:shadow-none print:border">
                         <h3 class="font-bold text-slate-800 mb-2 flex items-center text-sm md:text-base"><i class="fas fa-chart-bar text-indigo-500 mr-2"></i> อุปกรณ์ที่พบปัญหามากที่สุด</h3>
                         <p class="text-xs text-slate-500 mb-4 hidden md:block">แสดงประเภทครุภัณฑ์หรืออุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด</p>
@@ -740,7 +746,7 @@ if($check_repairs->num_rows > 0) {
         </div>
     </div>
 
-    <!-- Modal เพิ่ม/แก้ไข ทีมงาน (Admin & Tech) -->
+    <!-- Modal เพิ่ม/แก้ไข ทีมงาน (Admin & Tech) พร้อมการจัดการ Password -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
@@ -754,9 +760,16 @@ if($check_repairs->num_rows > 0) {
                 <input type="hidden" name="role" id="techAdmin_role" value="">
                 
                 <div class="space-y-4">
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">Username / รหัสประจำตัว <span class="text-red-500">*</span></label><input type="text" name="username" id="techAdmin_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Username / รหัสประจำตัว <span class="text-red-500">*</span></label>
+                        <input type="text" name="username" id="techAdmin_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                    </div>
                     
-                    <!-- ส่วนเลือกระดับสิทธิ์ (ซ่อนไว้สำหรับช่างซ่อม) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสผ่าน (Password) <span class="text-slate-400 font-normal text-xs" id="pwdHint"></span></label>
+                        <input type="password" name="password" id="techAdmin_password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700" placeholder="ตั้งรหัสผ่าน">
+                    </div>
+
                     <div id="adminLevelDiv" class="hidden">
                         <label class="block text-sm font-semibold text-slate-700 mb-1">ระดับสิทธิ์ (Role) <span class="text-red-500">*</span></label>
                         <select name="admin_level" id="techAdmin_level" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
@@ -765,9 +778,16 @@ if($check_repairs->num_rows > 0) {
                         </select>
                     </div>
 
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label><input type="text" name="full_name" id="techAdmin_fullname" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์</label><input type="text" name="phone" id="techAdmin_phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
                     <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
+                        <input type="text" name="full_name" id="techAdmin_fullname" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์</label>
+                        <input type="text" name="phone" id="techAdmin_phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                    </div>
+                    
+                    <div id="deptDiv">
                         <label class="block text-sm font-semibold text-slate-700 mb-1">แผนก / ความเชี่ยวชาญ <span class="text-red-500">*</span></label>
                         <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomDept(this, 'techAdmin_department_custom')" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 mb-2">
                             <option value="" disabled selected>-- เลือกแผนก --</option>
@@ -970,7 +990,6 @@ if($check_repairs->num_rows > 0) {
         }
 
         function openTechAdminModal(role, id='', u='', f='', p='', d='') { 
-            // เช็คว่าเป็นสิทธิ์สายจัดการ (Admin/Executive) หรือ สายปฏิบัติการ (Technician)
             let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
             let baseRole = isManagement ? 'Admin' : 'Technician';
             let title = isManagement ? '<i class="fas fa-user-shield text-purple-500 mr-2"></i> จัดการผู้ดูแล/ผู้บริหาร' : '<i class="fas fa-hard-hat text-sky-500 mr-2"></i> จัดการช่างซ่อม';
@@ -978,14 +997,20 @@ if($check_repairs->num_rows > 0) {
             document.getElementById('techAdminModalTitle').innerHTML = title; 
             document.getElementById('techAdmin_role').value = baseRole; 
             
-            // เปิด/ปิด ช่องเลือกระดับสิทธิ์สำหรับแอดมินและผู้บริหาร
             const adminLevelDiv = document.getElementById('adminLevelDiv');
+            const deptDiv = document.getElementById('deptDiv');
+            
+            // เปิด/ปิด แผนกตามตำแหน่ง
             if(isManagement) {
                 adminLevelDiv.classList.remove('hidden');
+                deptDiv.classList.add('hidden');
+                document.getElementById('techAdmin_department_select').required = false;
                 let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin';
                 document.getElementById('techAdmin_level').value = exactRole;
             } else {
                 adminLevelDiv.classList.add('hidden');
+                deptDiv.classList.remove('hidden');
+                document.getElementById('techAdmin_department_select').required = true;
             }
 
             document.getElementById('techAdmin_id').value = id; 
@@ -993,7 +1018,19 @@ if($check_repairs->num_rows > 0) {
             document.getElementById('techAdmin_fullname').value = f; 
             document.getElementById('techAdmin_phone').value = p; 
             
-            document.getElementById('techAdmin_department_select').name = "department";
+            // จัดการช่องรหัสผ่าน
+            const pwdInput = document.getElementById('techAdmin_password');
+            const pwdHint = document.getElementById('pwdHint');
+            pwdInput.value = ''; // เคลียร์ช่องทุกครั้งที่เปิด
+            if(id === '') {
+                pwdInput.required = true;
+                pwdHint.innerText = "(บังคับกรอก)";
+            } else {
+                pwdInput.required = false;
+                pwdHint.innerText = "(ปล่อยว่างได้ถ้าไม่ต้องการเปลี่ยน)";
+            }
+            
+            document.getElementById('techAdmin_department_select').name = "department_select";
             document.getElementById('techAdmin_department_custom').name = "department_custom";
             setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
             
