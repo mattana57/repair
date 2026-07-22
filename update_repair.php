@@ -39,22 +39,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute();
         $repair = $stmt->get_result()->fetch_assoc();
 
-        if(!empty($repair['line_user_id'])) {
-            // 🚨 นำ Channel Access Token ของคุณน้ำฝนมาใส่ตรงนี้
-            $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
-            
-            $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
-            $note_display = !empty($repair_note) ? $repair_note : "-";
-            
-            // ดึงเวลาปัจจุบันที่ช่างกดอัปเดต
-            $current_time = date("d/m/Y H:i น.");
+        // 🚨 นำ Channel Access Token ของคุณน้ำฝนมาใส่ตรงนี้
+        $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
+        
+        $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
+        $note_display = !empty($repair_note) ? $repair_note : "-";
+        
+        // ดึงเวลาปัจจุบันที่ช่างกดอัปเดต
+        $current_time = date("d/m/Y H:i น.");
 
-            // สัญลักษณ์ตามสถานะ
+        // ==========================================
+        // 1. ส่งแจ้งเตือนหา "ผู้แจ้งซ่อม" แบบส่วนตัว
+        // ==========================================
+        if(!empty($repair['line_user_id'])) {
             $icon = "🔔";
             if($status == 'กำลังดำเนินการ') $icon = "🛠️";
             if($status == 'ซ่อมเสร็จแล้ว') $icon = "🎉";
 
-            // เพิ่ม "อาการเสีย" เข้าไปในข้อความแจ้งเตือนแล้วค่ะ
             $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
                            "📋 เลขที่ใบงาน: " . $repair['ticket_no'] . "\n" .
                            "🕒 เวลาอัปเดต: " . $current_time . "\n" .
@@ -65,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                            "📝 หมายเหตุ: " . $note_display;
 
             $postData = [
-                'to' => $repair['line_user_id'], // ส่งหาผู้แจ้ง
+                'to' => $repair['line_user_id'],
                 'messages' => [['type' => 'text', 'text' => $messageText]]
             ];
 
@@ -77,6 +78,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
             curl_exec($ch);
             curl_close($ch);
+        }
+
+        // ==========================================
+        // 2. ประกาศความคืบหน้าเข้า "กลุ่มช่าง" 
+        // ==========================================
+        // 🚨 Group ID ของกลุ่มช่าง
+        $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
+        
+        if(!empty($line_group_id)) {
+            // ปรับข้อความประกาศให้กระชับ เพื่อให้ช่างคนอื่นรู้ว่างานนี้มีคนดูแลแล้ว
+            $groupIcon = "📢";
+            if($status == 'ซ่อมเสร็จแล้ว') $groupIcon = "✅";
+            
+            $groupMessage = $groupIcon . " อัปเดตงาน: " . $repair['ticket_no'] . "\n\n" .
+                            "👨‍🔧 ผู้รับผิดชอบ: " . $tech_display . "\n" .
+                            "📌 สถานะ: " . $status . "\n" .
+                            "💻 อุปกรณ์: " . $repair['equipment_type'] . " (" . $repair['location'] . ")\n" .
+                            "📝 หมายเหตุ: " . $note_display;
+
+            $postDataGroup = [
+                'to' => $line_group_id,
+                'messages' => [['type' => 'text', 'text' => $groupMessage]]
+            ];
+
+            $ch2 = curl_init('https://api.line.me/v2/bot/message/push');
+            curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch2, CURLOPT_POST, true);
+            curl_setopt($ch2, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
+            curl_setopt($ch2, CURLOPT_POSTFIELDS, json_encode($postDataGroup));
+            curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false); 
+            curl_exec($ch2);
+            curl_close($ch2);
         }
     }
 }
@@ -209,7 +242,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <div class="pt-4 border-t border-slate-100">
                             <button type="submit" class="w-full md:w-auto md:float-right bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
-                                <i class="fas fa-save mr-2"></i> บันทึกข้อมูลและแจ้งเตือนผู้ใช้
+                                <i class="fas fa-save mr-2"></i> บันทึกข้อมูลและแจ้งเตือน
                             </button>
                             <div class="clear-both"></div>
                         </div>
@@ -234,12 +267,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         Swal.fire({
             icon: 'success',
             title: 'บันทึกสำเร็จ!',
-            text: 'อัปเดตสถานะและส่ง LINE แจ้งเตือนผู้ใช้เรียบร้อยแล้ว',
+            text: 'อัปเดตสถานะและส่งแจ้งเตือนเรียบร้อยแล้ว',
             confirmButtonColor: '#0284c7',
             confirmButtonText: 'ตกลง'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = 'dashboard.php';
+                // เด้งกลับไปที่แท็บรายการแจ้งซ่อม
+                window.location.href = 'dashboard.php?tab=repairs';
             }
         });
     </script>
