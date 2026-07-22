@@ -26,6 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
 
         $role = strtolower($user['role']);
         
+        // แยก Redirect ตามสิทธิ์การใช้งาน
         if ($role === 'executive') {
             header("Location: executive_dashboard.php");
         } else {
@@ -114,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </header>
 
-    <!-- Hero Section (แบบรูปเรฟเฟอเรนซ์) -->
+    <!-- Hero Section -->
     <main class="hero-section pt-28 pb-32 md:pt-40 md:pb-48 relative z-10 px-4 md:px-8 border-b border-slate-200">
         <div class="max-w-7xl mx-auto flex flex-col items-start relative z-20">
             
@@ -137,29 +138,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             
         </div>
 
-        <!-- Floating Search Bar (ยกเลิก Modal ค้นหา แล้วเอามาวางตรงนี้เลย) -->
-        <div class="absolute -bottom-8 md:-bottom-10 left-0 right-0 mx-auto w-[92%] max-w-4xl bg-white rounded-2xl md:rounded-full shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] z-30">
-            <form action="" method="POST" class="flex flex-col md:flex-row items-center p-2 md:p-3">
+        <!-- Floating Search Bar (ช่องค้นหาแบบยาวช่องเดียว พิมพ์ได้ชัวร์ 100%) -->
+        <div class="absolute -bottom-8 md:-bottom-10 left-0 right-0 mx-auto w-[92%] max-w-3xl bg-white rounded-2xl md:rounded-full shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] z-30">
+            <form action="" method="POST" class="flex flex-col md:flex-row items-center p-2">
                 <input type="hidden" name="check_status" value="1">
                 
-                <div class="flex-1 w-full flex items-center px-4 py-3 md:py-0 border-b md:border-b-0 md:border-r border-slate-100">
-                    <i class="fas fa-hashtag text-blue-500 text-xl w-8 text-center mr-2"></i>
+                <div class="flex-1 w-full flex items-center px-4 py-4 md:px-6 md:py-2 cursor-text" onclick="document.getElementById('searchInput').focus();">
+                    <i class="fas fa-search text-blue-500 text-xl md:text-2xl mr-4"></i>
                     <div class="w-full">
-                        <p class="text-xs font-bold text-slate-800 mb-0.5">เลขที่ใบงาน</p>
-                        <input type="text" name="search_query" required placeholder="เช่น MR-2026..." class="w-full text-sm focus:outline-none text-slate-500 placeholder-slate-300">
+                        <p class="text-xs font-bold text-slate-800 mb-1">ตรวจสอบสถานะแจ้งซ่อม</p>
+                        <input type="text" id="searchInput" name="search_query" required placeholder="พิมพ์เลขที่ใบงาน (เช่น MR-...) หรือ ชื่อผู้แจ้ง" class="w-full text-sm md:text-base focus:outline-none text-slate-700 placeholder-slate-400 bg-transparent">
                     </div>
                 </div>
 
-                <div class="flex-1 w-full flex items-center px-4 py-3 md:py-0">
-                    <i class="fas fa-user-tag text-blue-500 text-xl w-8 text-center mr-2"></i>
-                    <div class="w-full">
-                        <p class="text-xs font-bold text-slate-800 mb-0.5">หรือ ชื่อผู้แจ้ง</p>
-                        <p class="text-sm text-slate-400">ค้นหาด้วยชื่อที่ใช้แจ้งซ่อม</p>
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full md:w-auto mt-2 md:mt-0 bg-blue-600 hover:bg-blue-700 text-white p-3 md:px-8 md:py-4 rounded-xl md:rounded-full font-bold transition-all shadow-md flex items-center justify-center h-full">
-                    <i class="fas fa-search md:mr-2"></i> <span class="md:hidden ml-2">ค้นหา</span>
+                <button type="submit" class="w-full md:w-auto mt-2 md:mt-0 bg-blue-600 hover:bg-blue-700 text-white p-3 md:px-10 md:py-4 rounded-xl md:rounded-full font-bold transition-all shadow-md flex items-center justify-center mr-1">
+                    <i class="fas fa-search md:mr-2"></i> <span class="md:hidden ml-2">ค้นหาข้อมูล</span><span class="hidden md:inline">ค้นหาเลย</span>
                 </button>
             </form>
         </div>
