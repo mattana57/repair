@@ -22,13 +22,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         $role_lower = strtolower($user['role']);
         
-        // แยกหน้าตามสิทธิ์
+        // ==========================================
+        // ตรวจสอบว่าระบบมีการฝากจำ URL ไว้ก่อนล็อกอินหรือไม่
+        // ==========================================
+        if (isset($_SESSION['redirect_url']) && !empty($_SESSION['redirect_url'])) {
+            $redirect = $_SESSION['redirect_url'];
+            unset($_SESSION['redirect_url']); // ล้างค่าทิ้งเพื่อไม่ให้จำซ้ำค้างไว้
+            
+            // พุ่งตรงไปยัง URL ที่จำไว้ (เช่น เด้งไปหน้ารายการซ่อม)
+            header("Location: " . $redirect);
+            exit();
+        }
+
+        // ==========================================
+        // กรณีเข้าผ่านหน้าเว็บตรงๆ (ไม่ได้คลิกผ่าน LINE)
+        // ==========================================
         if ($role_lower === 'technician') {
-            // ถ้าเป็นช่าง ให้เด้งไปหน้า "รายการแจ้งซ่อม" เลย
             header("Location: dashboard.php?tab=repairs");
             exit();
         } elseif ($role_lower === 'admin') {
-            // ถ้าเป็น Admin เข้าหน้าภาพรวมปกติ
             header("Location: dashboard.php");
             exit();
         } elseif ($role_lower === 'executive') {

@@ -1,8 +1,10 @@
 <?php 
 session_start();
 
-// 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? ถ้ายังให้เด้งไปหน้า login
+// 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? 
 if (!isset($_SESSION['user_id'])) {
+    // ให้ระบบจำ URL ปัจจุบันเอาไว้ (รวมถึง ?tab=repairs ด้วย)
+    $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
     header("Location: login.php");
     exit();
 }
