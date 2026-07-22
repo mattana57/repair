@@ -79,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             "📍 สถานที่: " . $location . "\n" .
                             "⚠️ อาการ: " . $problem_desc . "\n\n" .
                             "👇 ช่างคนไหนว่าง กดลิงก์เข้าระบบไปรับงานได้เลยค่ะ!\n" .
-                            "http://103.99.11.147/repair/dashboard.php";
+                            "http://103.99.11.147/repair/dashboard.php?tab=repairs"; // 👈 เติม ?tab=repairs เพื่อให้วิ่งไปหน้ารายการแจ้งซ่อมทันที
 
             $postDataGroup = [
                 'to' => $line_group_id,
