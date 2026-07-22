@@ -1,4 +1,18 @@
 <?php 
+session_start();
+
+// 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? ถ้ายังให้เด้งกลับไปหน้าแรก
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+
+// 2. ป้องกันผู้บริหาร (Executive) แอบเข้ามาดูหน้าจัดการช่าง
+if (strtolower($_SESSION['role']) === 'executive') {
+    header("Location: executive_dashboard.php");
+    exit();
+}
+
 include 'db_connect.php'; 
 
 // ================= ปรับปรุงฐานข้อมูลอัตโนมัติ (Auto-Fix DB) =================
@@ -264,7 +278,7 @@ if($check_repairs->num_rows > 0) {
             
             <!-- เพิ่มปุ่ม Logout -->
             <div class="mt-auto pt-4 border-t border-slate-100">
-                <a href="index.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
+                <a href="logout.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
             </div>
         </nav>
     </aside>
@@ -287,7 +301,12 @@ if($check_repairs->num_rows > 0) {
                 </div>
                 <div class="flex items-center space-x-3 cursor-pointer p-1.5 md:pr-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm">
                     <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold"><i class="fas fa-user text-sm"></i></div>
-                    <div class="hidden sm:block text-left"><span class="block text-sm font-semibold text-slate-700 leading-none mb-1">Administrator</span><span class="block text-[11px] text-slate-500 uppercase tracking-wide leading-none">ผู้ดูแลระบบ</span></div>
+                    <div class="hidden sm:block text-left">
+                        <span class="block text-sm font-semibold text-slate-700 leading-none mb-1">
+                            <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Administrator'); ?>
+                        </span>
+                        <span class="block text-[11px] text-slate-500 uppercase tracking-wide leading-none">ผู้ดูแลระบบ</span>
+                    </div>
                 </div>
             </div>
         </header>

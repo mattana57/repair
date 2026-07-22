@@ -1,4 +1,18 @@
 <?php 
+session_start();
+
+// 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? ถ้ายังให้เด้งกลับไปหน้าแรก
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+
+// 2. ป้องกันช่างซ่อม (Technician) แอบเข้ามาดูหน้าผู้บริหาร (ให้เข้าได้เฉพาะ Admin กับ Executive)
+if (strtolower($_SESSION['role']) === 'technician') {
+    header("Location: dashboard.php");
+    exit();
+}
+
 include 'db_connect.php'; 
 
 // ตรวจสอบข้อมูลการแจ้งซ่อมเพื่อนำมาคำนวณสถิติ
@@ -101,7 +115,6 @@ if($check_repairs->num_rows > 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- บังคับแสดงผลเป็น Light Mode แก้ปัญหาสีเพี้ยนในจอมือถือ -->
     <meta name="color-scheme" content="light">
     <title>Executive Dashboard - MBS Smart Maintenance</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -137,7 +150,7 @@ if($check_repairs->num_rows > 0) {
     <!-- Overlay สำหรับมือถือเวลาเปิดเมนู -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
 
-    <!-- Sidebar (ปรับให้รองรับมือถือ เลื่อนซ่อนได้) -->
+    <!-- Sidebar -->
     <aside id="sidebar" class="w-64 md:w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] no-print">
         <div class="h-20 md:h-24 flex items-center justify-between px-5 md:px-8 border-b border-slate-100">
             <div class="flex items-center">
@@ -159,7 +172,7 @@ if($check_repairs->num_rows > 0) {
             <p class="px-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">สำหรับผู้บริหาร</p>
             <button class="nav-btn active-btn"><i class="fas fa-tachometer-alt"></i> ภาพรวมและสถิติ (KPIs)</button>
             <div class="mt-auto pt-4 border-t border-slate-100">
-                <a href="index.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
+                <a href="logout.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
             </div>
         </nav>
     </aside>
@@ -183,7 +196,12 @@ if($check_repairs->num_rows > 0) {
                 </button>
                 <div class="flex items-center space-x-3 cursor-pointer p-1.5 md:pr-4 rounded-full border border-slate-200 bg-white shadow-sm">
                     <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold"><i class="fas fa-user-tie text-sm"></i></div>
-                    <div class="hidden sm:block text-left"><span class="block text-sm font-semibold text-slate-700 leading-none mb-1">Executive Board</span><span class="block text-[11px] text-slate-500 uppercase tracking-wide leading-none">ผู้บริหารระบบ</span></div>
+                    <div class="hidden sm:block text-left">
+                        <span class="block text-sm font-semibold text-slate-700 leading-none mb-1">
+                            <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Executive Board'); ?>
+                        </span>
+                        <span class="block text-[11px] text-slate-500 uppercase tracking-wide leading-none">ผู้บริหารระบบ</span>
+                    </div>
                 </div>
             </div>
         </header>
