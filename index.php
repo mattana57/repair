@@ -80,7 +80,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
-        /* จำลองภาพพื้นหลังแนวออฟฟิศ/มหาวิทยาลัยที่ดูคลีนๆ แบบรูปเรฟ */
         .hero-section {
             background-image: linear-gradient(to right, rgba(241, 245, 249, 0.95) 0%, rgba(241, 245, 249, 0.7) 50%, rgba(241, 245, 249, 0.2) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop');
             background-size: cover;
@@ -138,7 +137,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             
         </div>
 
-        <!-- Floating Search Bar (ช่องค้นหาแบบยาวช่องเดียว พิมพ์ได้ชัวร์ 100%) -->
+        <!-- Floating Search Bar -->
         <div class="absolute -bottom-8 md:-bottom-10 left-0 right-0 mx-auto w-[92%] max-w-3xl bg-white rounded-2xl md:rounded-full shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] z-30">
             <form action="" method="POST" class="flex flex-col md:flex-row items-center p-2">
                 <input type="hidden" name="check_status" value="1">
@@ -158,7 +157,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </main>
 
-    <!-- Explore by Category Section (หมวดหมู่บริการ) -->
+    <!-- Explore by Category Section -->
     <section id="categories" class="max-w-7xl mx-auto px-4 md:px-8 pt-20 md:pt-28 pb-16 w-full">
         <h3 class="text-xl font-bold text-slate-800 mb-6">หมวดหมู่การให้บริการ (Explore by Category)</h3>
         
@@ -202,6 +201,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             </div>
         </div>
     </section>
+
+    <!-- ================= ส่วน Footer ที่เพิ่มใหม่ ================= -->
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- ข้อมูลองค์กร -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
+                            <i class="fas fa-tools text-lg"></i>
+                        </div>
+                        <h2 class="text-xl font-extrabold text-slate-800 tracking-wide uppercase">MBS Repair</h2>
+                    </div>
+                    <p class="text-sm text-slate-500 leading-relaxed">
+                        ระบบให้บริการแจ้งซ่อมออนไลน์ สำหรับบุคลากรและนิสิต<br>
+                        คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม
+                    </p>
+                </div>
+
+                <!-- ลิงก์ด่วน -->
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-4 text-lg">ลิงก์ที่เกี่ยวข้อง</h3>
+                    <ul class="space-y-3 text-sm text-slate-500">
+                        <li><a href="https://www.msu.ac.th/" target="_blank" class="hover:text-blue-600 transition-colors flex items-center"><i class="fas fa-angle-right mr-2 text-blue-500"></i> มหาวิทยาลัยมหาสารคาม</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition-colors flex items-center"><i class="fas fa-angle-right mr-2 text-blue-500"></i> ติดต่อคณะ (MBS)</a></li>
+                        <li><a href="#" onclick="toggleModal('loginModal'); return false;" class="hover:text-blue-600 transition-colors flex items-center"><i class="fas fa-angle-right mr-2 text-blue-500"></i> เข้าสู่ระบบเจ้าหน้าที่</a></li>
+                    </ul>
+                </div>
+
+                <!-- ติดต่อเรา -->
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-4 text-lg">ติดต่อผู้ดูแลระบบ</h3>
+                    <ul class="space-y-3 text-sm text-slate-500">
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-map-marker-alt mt-1 text-blue-500 text-lg"></i>
+                            <span>คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม<br>ต.ขามเรียง อ.กันทรวิชัย จ.มหาสารคาม 44150</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ส่วนลิขสิทธิ์และเครดิตผู้จัดทำ -->
+            <div class="mt-10 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 text-xs md:text-sm text-slate-400">
+                <p>&copy; <?php echo date('Y'); ?> MBS Repair System. All rights reserved.</p>
+                <p class="font-medium">Developed with <i class="fas fa-heart text-red-500 mx-1"></i> by มัทนา รัตนแสง (น้ำฝน)</p>
+            </div>
+        </div>
+    </footer>
 
     <!-- Modal 2: แสดงผลการค้นหาสถานะ (Results) -->
     <div id="resultModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
