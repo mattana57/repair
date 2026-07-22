@@ -1,9 +1,9 @@
 <?php 
 session_start();
 
-// 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? ถ้ายังให้เด้งกลับไปหน้าแรก
+// 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? ถ้ายังให้เด้งไปหน้า login
 if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
+    header("Location: login.php");
     exit();
 }
 
@@ -13,7 +13,7 @@ if (strtolower($_SESSION['role']) === 'executive') {
     exit();
 }
 
-include 'db_connect.php'; 
+include 'db_connect.php';
 
 // ================= ปรับปรุงฐานข้อมูลอัตโนมัติ (Auto-Fix DB) =================
 $conn->query("CREATE TABLE IF NOT EXISTS assets (

@@ -1,13 +1,13 @@
 <?php 
 session_start();
 
-// 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? ถ้ายังให้เด้งกลับไปหน้าแรก
+// 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? ถ้ายังให้เด้งไปหน้า login
 if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php");
+    header("Location: login.php");
     exit();
 }
 
-// 2. ป้องกันช่างซ่อม (Technician) แอบเข้ามาดูหน้าผู้บริหาร (ให้เข้าได้เฉพาะ Admin กับ Executive)
+// 2. ป้องกันช่างซ่อม (Technician) แอบเข้ามาดูหน้าผู้บริหาร
 if (strtolower($_SESSION['role']) === 'technician') {
     header("Location: dashboard.php");
     exit();
