@@ -196,15 +196,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </section>
 
-    <!-- ================= ส่วน Footer โปรเจกต์จบ (ปรับให้สมดุลแบบ 2 คอลัมน์) ================= -->
+    <!-- ================= ส่วน Footer โปรเจกต์จบ (ปรับสมดุลให้อยู่ตรงกลาง) ================= -->
     <footer class="bg-white border-t border-slate-200 mt-auto">
-        <!-- ปรับ max-w-5xl เพื่อบีบให้ 2 คอลัมน์ขยับเข้าหากันตรงกลาง ดูสมดุลและสวยงามขึ้น -->
-        <div class="max-w-5xl mx-auto px-4 md:px-8 py-10 md:py-12">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-12">
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+            <!-- ใช้ Flexbox จัดให้อยู่ตรงกลางจอ และมีระยะห่างที่พอดี (gap-10 ถึง gap-24) -->
+            <div class="flex flex-col md:flex-row justify-center items-start gap-10 md:gap-24 lg:gap-40">
                 
                 <!-- 1. ข้อมูลองค์กร (ด้านซ้าย) -->
-                <div class="space-y-4">
+                <div class="w-full md:w-auto max-w-sm space-y-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
                             <i class="fas fa-tools text-lg"></i>
@@ -218,15 +218,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </div>
 
                 <!-- 2. คณะผู้จัดทำโปรเจกต์จบ (ด้านขวา) -->
-                <div>
+                <div class="w-full md:w-auto max-w-sm">
                     <h3 class="font-bold text-slate-800 mb-4 text-lg">คณะผู้จัดทำ (โปรเจกต์จบ)</h3>
                     <ul class="space-y-2 text-sm text-slate-500">
                         <li class="flex items-center gap-2"><i class="fas fa-user-graduate text-blue-500"></i> นางสาวภัทรวดี ขามประโคน</li>
                         <li class="flex items-center gap-2"><i class="fas fa-user-graduate text-blue-500"></i> นางสาวมัทนา รัตนแสง</li>
-                        <li class="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400 leading-relaxed">
-                            นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ<br>คณะการบัญชีและการจัดการ
-                        </li>
                     </ul>
+                    <div class="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400 leading-relaxed">
+                        นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ<br>คณะการบัญชีและการจัดการ
+                    </div>
                 </div>
 
             </div>
