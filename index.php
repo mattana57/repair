@@ -102,7 +102,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             </div>
             
             <div class="flex items-center gap-6">
-                <!-- เมนูซ่อนในมือถือ -->
                 <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
                     <a href="#" class="hover:text-blue-600 transition-colors">หน้าแรก</a>
                     <a href="#categories" class="hover:text-blue-600 transition-colors">บริการของเรา</a>
@@ -197,11 +196,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </section>
 
-    <!-- ================= ส่วน Footer โปรเจกต์จบ ================= -->
+    <!-- ================= ส่วน Footer โปรเจกต์จบ (ปรับเป็น 4 คอลัมน์) ================= -->
     <footer class="bg-white border-t border-slate-200 mt-auto">
         <div class="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-12">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- ข้อมูลองค์กร -->
+            <!-- เปลี่ยนเป็น grid 4 คอลัมน์ บนจอใหญ่ -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                
+                <!-- 1. ข้อมูลองค์กร -->
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
@@ -215,7 +216,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     </p>
                 </div>
 
-                <!-- ลิงก์ด่วน -->
+                <!-- 2. ลิงก์ด่วน -->
                 <div>
                     <h3 class="font-bold text-slate-800 mb-4 text-lg">ลิงก์ที่เกี่ยวข้อง</h3>
                     <ul class="space-y-3 text-sm text-slate-500">
@@ -225,7 +226,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     </ul>
                 </div>
 
-                <!-- ติดต่อเรา -->
+                <!-- 3. ติดต่อเรา -->
                 <div>
                     <h3 class="font-bold text-slate-800 mb-4 text-lg">ศูนย์ช่วยเหลือ</h3>
                     <ul class="space-y-3 text-sm text-slate-500">
@@ -235,23 +236,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         </li>
                     </ul>
                 </div>
+
+                <!-- 4. คณะผู้จัดทำโปรเจกต์จบ -->
+                <div>
+                    <h3 class="font-bold text-slate-800 mb-4 text-lg">คณะผู้จัดทำ (โปรเจกต์จบ)</h3>
+                    <ul class="space-y-2 text-sm text-slate-500">
+                        <li class="flex items-center gap-2"><i class="fas fa-user-graduate text-blue-500"></i> นางสาวมัทนา รัตนแสง</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-user-graduate text-blue-500"></i> นางสาวภัทรวดี ขามประโคน</li>
+                        <li class="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400 leading-relaxed">
+                            นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ<br>คณะการบัญชีและการจัดการ
+                        </li>
+                    </ul>
+                </div>
+
             </div>
             
-            <!-- ส่วนเครดิตโปรเจกต์จบ (จัดให้อยู่กึ่งกลาง สวยงาม) -->
-            <div class="mt-12 pt-8 border-t border-slate-100 flex flex-col items-center justify-center text-center gap-3">
-                <div class="bg-blue-50 text-blue-700 px-5 py-2 rounded-full text-xs font-bold tracking-widest uppercase mb-1">
-                    Graduation Project
-                </div>
-                <p class="text-sm md:text-base font-bold text-slate-700">
-                    โปรเจกต์จบการศึกษา คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม
-                </p>
-                <p class="text-xs md:text-sm text-slate-500 leading-relaxed max-w-2xl">
-                    <span class="font-semibold text-slate-600">จัดทำโดย:</span> นางสาวมัทนา รัตนแสง และ นางสาวภัทรวดี ขามประโคน<br>
-                    นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ
-                </p>
-                <p class="text-xs text-slate-400 mt-4">
-                    &copy; <?php echo date('Y'); ?> MBS Repair System. All rights reserved.
-                </p>
+            <!-- ส่วนลิขสิทธิ์ด้านล่างสุด -->
+            <div class="mt-10 pt-6 border-t border-slate-100 text-center text-xs md:text-sm text-slate-400">
+                <p>&copy; <?php echo date('Y'); ?> MBS Repair System. All rights reserved.</p>
             </div>
         </div>
     </footer>
