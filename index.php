@@ -216,33 +216,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     </p>
                 </div>
 
-                <!-- 2. ลิงก์ด่วน -->
-                <div>
-                    <h3 class="font-bold text-slate-800 mb-4 text-lg">ลิงก์ที่เกี่ยวข้อง</h3>
-                    <ul class="space-y-3 text-sm text-slate-500">
-                        <li><a href="https://www.msu.ac.th/" target="_blank" class="hover:text-blue-600 transition-colors flex items-center"><i class="fas fa-angle-right mr-2 text-blue-500"></i> มหาวิทยาลัยมหาสารคาม</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition-colors flex items-center"><i class="fas fa-angle-right mr-2 text-blue-500"></i> ติดต่อคณะ (MBS)</a></li>
-                        <li><a href="#" onclick="toggleModal('loginModal'); return false;" class="hover:text-blue-600 transition-colors flex items-center"><i class="fas fa-angle-right mr-2 text-blue-500"></i> เข้าสู่ระบบเจ้าหน้าที่</a></li>
-                    </ul>
-                </div>
-
-                <!-- 3. ติดต่อเรา -->
-                <div>
-                    <h3 class="font-bold text-slate-800 mb-4 text-lg">ศูนย์ช่วยเหลือ</h3>
-                    <ul class="space-y-3 text-sm text-slate-500">
-                        <li class="flex items-start gap-3">
-                            <i class="fas fa-map-marker-alt mt-1 text-blue-500 text-lg"></i>
-                            <span>คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม<br>ต.ขามเรียง อ.กันทรวิชัย จ.มหาสารคาม 44150</span>
-                        </li>
-                    </ul>
-                </div>
+                
 
                 <!-- 4. คณะผู้จัดทำโปรเจกต์จบ -->
                 <div>
                     <h3 class="font-bold text-slate-800 mb-4 text-lg">คณะผู้จัดทำ (โปรเจกต์จบ)</h3>
                     <ul class="space-y-2 text-sm text-slate-500">
-                        <li class="flex items-center gap-2"><i class="fas fa-user-graduate text-blue-500"></i> นางสาวมัทนา รัตนแสง</li>
                         <li class="flex items-center gap-2"><i class="fas fa-user-graduate text-blue-500"></i> นางสาวภัทรวดี ขามประโคน</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-user-graduate text-blue-500"></i> นางสาวมัทนา รัตนแสง</li>
                         <li class="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400 leading-relaxed">
                             นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ<br>คณะการบัญชีและการจัดการ
                         </li>
