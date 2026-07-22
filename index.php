@@ -162,35 +162,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         <h3 class="text-xl font-bold text-slate-800 mb-6">หมวดหมู่การให้บริการ (Explore by Category)</h3>
         
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
-            <!-- Item 1 -->
             <div class="bg-white border border-slate-100 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-default group">
                 <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
                     <i class="fas fa-desktop"></i>
                 </div>
                 <p class="text-sm font-bold text-slate-700">คอมพิวเตอร์</p>
             </div>
-            <!-- Item 2 -->
             <div class="bg-white border border-slate-100 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-default group">
                 <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
                     <i class="fas fa-wifi"></i>
                 </div>
                 <p class="text-sm font-bold text-slate-700">ระบบเครือข่าย</p>
             </div>
-            <!-- Item 3 -->
             <div class="bg-white border border-slate-100 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-default group">
                 <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
                     <i class="fas fa-bolt"></i>
                 </div>
                 <p class="text-sm font-bold text-slate-700">ระบบไฟฟ้า</p>
             </div>
-            <!-- Item 4 -->
             <div class="bg-white border border-slate-100 p-5 rounded-2xl flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-default group">
                 <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
                     <i class="fas fa-building"></i>
                 </div>
                 <p class="text-sm font-bold text-slate-700">อาคารสถานที่</p>
             </div>
-            <!-- Promo Card -->
             <div class="col-span-2 md:col-span-1 bg-gradient-to-br from-blue-600 to-sky-500 p-5 rounded-2xl flex flex-col justify-center shadow-md relative overflow-hidden text-white">
                 <i class="fas fa-headset absolute -bottom-4 -right-4 text-6xl opacity-20"></i>
                 <div class="relative z-10">
@@ -202,7 +197,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </section>
 
-    <!-- ================= ส่วน Footer ที่เพิ่มใหม่ ================= -->
+    <!-- ================= ส่วน Footer โปรเจกต์จบ ================= -->
     <footer class="bg-white border-t border-slate-200 mt-auto">
         <div class="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-12">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -232,7 +227,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
                 <!-- ติดต่อเรา -->
                 <div>
-                    <h3 class="font-bold text-slate-800 mb-4 text-lg">ติดต่อผู้ดูแลระบบ</h3>
+                    <h3 class="font-bold text-slate-800 mb-4 text-lg">ศูนย์ช่วยเหลือ</h3>
                     <ul class="space-y-3 text-sm text-slate-500">
                         <li class="flex items-start gap-3">
                             <i class="fas fa-map-marker-alt mt-1 text-blue-500 text-lg"></i>
@@ -242,10 +237,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </div>
             </div>
             
-            <!-- ส่วนลิขสิทธิ์และเครดิตผู้จัดทำ -->
-            <div class="mt-10 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 text-xs md:text-sm text-slate-400">
-                <p>&copy; <?php echo date('Y'); ?> MBS Repair System. All rights reserved.</p>
-                <p class="font-medium">Developed with <i class="fas fa-heart text-red-500 mx-1"></i> by มัทนา รัตนแสง (น้ำฝน)</p>
+            <!-- ส่วนเครดิตโปรเจกต์จบ (จัดให้อยู่กึ่งกลาง สวยงาม) -->
+            <div class="mt-12 pt-8 border-t border-slate-100 flex flex-col items-center justify-center text-center gap-3">
+                <div class="bg-blue-50 text-blue-700 px-5 py-2 rounded-full text-xs font-bold tracking-widest uppercase mb-1">
+                    Graduation Project
+                </div>
+                <p class="text-sm md:text-base font-bold text-slate-700">
+                    โปรเจกต์จบการศึกษา คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม
+                </p>
+                <p class="text-xs md:text-sm text-slate-500 leading-relaxed max-w-2xl">
+                    <span class="font-semibold text-slate-600">จัดทำโดย:</span> นางสาวมัทนา รัตนแสง และ นางสาวภัทรวดี ขามประโคน<br>
+                    นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ
+                </p>
+                <p class="text-xs text-slate-400 mt-4">
+                    &copy; <?php echo date('Y'); ?> MBS Repair System. All rights reserved.
+                </p>
             </div>
         </div>
     </footer>
