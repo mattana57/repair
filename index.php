@@ -196,13 +196,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </section>
 
-    <!-- ================= ส่วน Footer โปรเจกต์จบ (ปรับเป็น 4 คอลัมน์) ================= -->
+    <!-- ================= ส่วน Footer โปรเจกต์จบ (ปรับให้สมดุลแบบ 2 คอลัมน์) ================= -->
     <footer class="bg-white border-t border-slate-200 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-12">
-            <!-- เปลี่ยนเป็น grid 4 คอลัมน์ บนจอใหญ่ -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- ปรับ max-w-5xl เพื่อบีบให้ 2 คอลัมน์ขยับเข้าหากันตรงกลาง ดูสมดุลและสวยงามขึ้น -->
+        <div class="max-w-5xl mx-auto px-4 md:px-8 py-10 md:py-12">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
                 
-                <!-- 1. ข้อมูลองค์กร -->
+                <!-- 1. ข้อมูลองค์กร (ด้านซ้าย) -->
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
@@ -216,9 +217,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     </p>
                 </div>
 
-                
-
-                <!-- 4. คณะผู้จัดทำโปรเจกต์จบ -->
+                <!-- 2. คณะผู้จัดทำโปรเจกต์จบ (ด้านขวา) -->
                 <div>
                     <h3 class="font-bold text-slate-800 mb-4 text-lg">คณะผู้จัดทำ (โปรเจกต์จบ)</h3>
                     <ul class="space-y-2 text-sm text-slate-500">
@@ -236,6 +235,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             <div class="mt-10 pt-6 border-t border-slate-100 text-center text-xs md:text-sm text-slate-400">
                 <p>&copy; <?php echo date('Y'); ?> MBS Repair System. All rights reserved.</p>
             </div>
+            
         </div>
     </footer>
 
