@@ -127,7 +127,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     ระบบแจ้งซ่อมอุปกรณ์ คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ สำหรับบุคลากรและนิสิต <b>คณะการบัญชีและการจัดการ</b> มหาวิทยาลัยมหาสารคาม
                 </p>
                 
-                <!-- กลุ่มปุ่มใช้งาน -->
+                <!-- กลุ่มปุ่มใช้งาน (เอาปุ่ม LINE ออกจากตรงนี้แล้ว) -->
                 <div class="flex flex-wrap items-center gap-4 pt-4">
                     <a href="form_repair.php" class="bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-sky-500/30 transition-all transform hover:-translate-y-1 flex items-center group">
                         <i class="fas fa-plus-circle mr-3 text-xl group-hover:rotate-90 transition-transform"></i> แจ้งซ่อมอุปกรณ์
@@ -136,11 +136,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     <button onclick="toggleModal('searchModal')" class="bg-white border-2 border-slate-200 text-slate-700 hover:border-sky-300 hover:text-sky-600 hover:bg-sky-50 px-8 py-4 rounded-2xl font-bold text-lg shadow-sm transition-all flex items-center">
                         <i class="fas fa-search mr-3 text-slate-400"></i> ตรวจสอบสถานะ
                     </button>
-                    
-                    <!-- ปุ่มเพิ่มเพื่อน LINE -->
-                    <a href="https://line.me/R/ti/p/@941kflsc" target="_blank" class="bg-[#00B900] hover:bg-[#009900] text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-green-500/30 transition-all transform hover:-translate-y-1 flex items-center group">
-                        <i class="fab fa-line mr-3 text-2xl group-hover:scale-110 transition-transform"></i> เพิ่มเพื่อน LINE
-                    </a>
                 </div>
 
                 <div class="grid grid-cols-3 gap-6 pt-8 border-t border-slate-200/60 max-w-lg">
@@ -309,6 +304,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             </form>
         </div>
     </div>
+
+    <!-- ปุ่ม Floating LINE มุมขวาล่าง -->
+    <a href="https://line.me/R/ti/p/@941kflsc" target="_blank" class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 bg-[#00B900] hover:bg-[#009900] text-white px-5 py-3.5 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/40 transition-all transform hover:-translate-y-2 flex items-center group">
+        <i class="fab fa-line text-2xl md:text-3xl mr-2 group-hover:scale-110 transition-transform"></i> 
+        <span>เพิ่มเพื่อน LINE</span>
+    </a>
 
     <!-- Script สำหรับควบคุม Modal และ Alert -->
     <script>
