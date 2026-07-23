@@ -79,10 +79,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         body.modal-active { overflow: hidden; }
         .font-serif-num { font-family: 'Playfair Display', serif; }
         
-        /* Clean Corporate Colors */
-        .text-mbs-dark { color: #0b1f4a; }
-        .bg-mbs-dark { background-color: #0b1f4a; }
+        /* Corporate Colors */
+        .text-mbs-dark { color: #0f172a; }
+        .bg-mbs-dark { background-color: #0f172a; }
         
+        /* Hero Banner Style from Reference */
+        .hero-banner {
+            background-image: linear-gradient(90deg, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.8) 40%, rgba(15,23,42,0.2) 100%), url('uploads/mbs_bg.jpg?v=5');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
         /* Subtle Fade In */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(15px); }
@@ -96,7 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 <body class="min-h-screen flex flex-col selection:bg-blue-200">
 
     <!-- Header (Clean & Solid) -->
-    <header class="w-full bg-white/95 backdrop-blur-sm border-b border-slate-200 fixed top-0 z-40">
+    <header class="w-full bg-white border-b border-slate-200 fixed top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 md:px-8 h-[76px] flex items-center justify-between">
             <!-- Logo -->
             <div class="flex items-center gap-3">
@@ -122,17 +130,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </header>
 
-    <!-- Hero Section (Clean Split Layout) -->
+    <!-- Hero Section (Wide Banner Style) -->
     <main class="pt-[100px] md:pt-[120px] relative z-10 w-full px-4 md:px-6 lg:px-8 mb-16 fade-in">
-        <div class="max-w-[1280px] mx-auto bg-mbs-dark rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row min-h-[480px] md:min-h-[550px] relative">
+        <div class="max-w-[1280px] mx-auto hero-banner rounded-3xl shadow-2xl overflow-hidden flex flex-col min-h-[480px] md:min-h-[550px] relative justify-center p-8 md:p-16 lg:p-20">
             
-            <!-- Text Content (Left) -->
-            <div class="w-full md:w-[55%] lg:w-[50%] p-8 md:p-16 relative z-10 flex flex-col justify-center bg-mbs-dark">
-                <div class="inline-block px-3 py-1 mb-6 rounded-full bg-blue-900/50 border border-blue-800 text-blue-300 text-[10px] font-bold tracking-[0.2em] uppercase w-max">
-                    <i class="fas fa-bolt text-yellow-400 mr-1"></i> IT Service Management
+            <!-- Text Content -->
+            <div class="relative z-10 max-w-2xl">
+                <div class="inline-block px-4 py-1.5 mb-6 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold tracking-[0.2em] uppercase shadow-sm">
+                    <i class="fas fa-bolt text-yellow-400 mr-1.5"></i> IT Service Management
                 </div>
                 
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.15] mb-4 tracking-tight">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.15] mb-5 tracking-tight">
                     ระบบแจ้งซ่อม<br>
                     <span class="text-blue-400">ออนไลน์อัจฉริยะ</span>
                 </h1>
@@ -147,7 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     </a>
                 </div>
 
-                <div class="flex items-center gap-8 mt-12 pt-6 border-t border-white/10">
+                <div class="flex items-center gap-10 mt-12 pt-8 border-t border-white/10">
                     <div>
                         <div class="text-2xl font-serif-num font-bold text-white">24<span class="text-sm text-blue-400">/7</span></div>
                         <div class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Available</div>
@@ -159,18 +167,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </div>
             </div>
 
-            <!-- Image (Right) -->
-            <div class="absolute inset-0 md:static md:w-[45%] lg:w-[50%] h-full opacity-20 md:opacity-100">
-                <!-- ใช้รูปคณะแบบเต็มกรอบขวา พร้อม Fade ไล่สีให้กลืนกับกรอบซ้าย -->
-                <div class="w-full h-full bg-cover bg-center" style="background-image: url('uploads/mbs_bg.jpg?v=4');"></div>
-                <div class="hidden md:block absolute inset-0 bg-gradient-to-r from-mbs-dark via-mbs-dark/60 to-transparent w-[30%]"></div>
+            <!-- Optional: Floating Card on right (like reference) -->
+            <div class="hidden lg:flex absolute right-16 top-1/2 transform -translate-y-1/2 bg-mbs-dark/80 backdrop-blur-lg border border-white/10 p-6 rounded-2xl shadow-2xl flex-col gap-4 w-64">
+                <div class="flex items-center justify-between">
+                    <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center"><i class="fas fa-check"></i></div>
+                    <span class="text-[10px] text-slate-400 tracking-widest uppercase">Just Now</span>
+                </div>
+                <div class="h-2 bg-slate-700 rounded-full w-full"></div>
+                <div class="h-2 bg-slate-700 rounded-full w-2/3 mb-2"></div>
+                <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-full bg-blue-400"></div>
+                    <span class="text-xs font-bold text-white">Job Completed</span>
+                </div>
             </div>
 
         </div>
 
-        <!-- Search Bar (Solid White - HIGH VISIBILITY) -->
-        <div class="relative w-[92%] md:w-[75%] max-w-3xl mx-auto -mt-12 md:-mt-10 z-20 fade-in delay-100">
-            <div class="bg-white rounded-2xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] border border-slate-200 p-2">
+        <!-- Search Bar (Solid White - Overlapping) -->
+        <div class="relative w-[92%] md:w-[75%] max-w-3xl mx-auto -mt-12 z-20 fade-in delay-100">
+            <div class="bg-white rounded-2xl shadow-xl shadow-mbs-dark/10 border border-slate-200 p-2">
                 <form action="" method="POST" class="flex flex-col md:flex-row items-stretch gap-2">
                     <input type="hidden" name="check_status" value="1">
                     
@@ -178,7 +193,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         <i class="fas fa-search text-slate-400 text-lg mr-3"></i>
                         <div class="w-full">
                             <p class="text-[10px] font-bold tracking-widest text-slate-500 mb-0.5 uppercase">ตรวจสอบสถานะ (Check Status)</p>
-                            <!-- เปลี่ยน placeholder ให้สีเข้มขึ้น (slate-500) และตัวอักษรพิมพ์สีเข้ม (slate-800) -->
                             <input type="text" id="searchInput" name="search_query" required placeholder="พิมพ์เลขใบงาน หรือ ชื่อผู้แจ้ง" class="w-full text-base focus:outline-none text-slate-800 placeholder-slate-400 bg-transparent font-medium">
                         </div>
                     </div>
@@ -191,7 +205,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </main>
 
-    <!-- Categories Section (Clean Grid) -->
+    <!-- Categories Section (Modern Refined Grid) -->
     <section id="categories" class="max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-24 w-full fade-in delay-200">
         <div class="text-center mb-12">
             <h3 class="text-blue-600 font-bold tracking-[0.2em] text-[11px] uppercase mb-2">Our Services</h3>
@@ -200,44 +214,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Card 1 -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow-lg transition-all flex flex-col items-center text-center group cursor-default">
-                <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+            <div class="bg-gradient-to-b from-slate-50 to-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all flex flex-col group cursor-default">
+                <div class="w-14 h-14 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fas fa-desktop"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800 mb-1">คอมพิวเตอร์</h3>
-                <p class="text-xs text-slate-500">ซ่อมแซมและแก้ไขปัญหาซอฟต์แวร์</p>
+                <h3 class="text-lg font-bold text-slate-800 mb-2">คอมพิวเตอร์</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">บริการซ่อมแซม อัปเกรด และแก้ไขปัญหาซอฟต์แวร์คอมพิวเตอร์</p>
             </div>
             
             <!-- Card 2 -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow-lg transition-all flex flex-col items-center text-center group cursor-default">
-                <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+            <div class="bg-gradient-to-b from-slate-50 to-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all flex flex-col group cursor-default">
+                <div class="w-14 h-14 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fas fa-wifi"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800 mb-1">ระบบเครือข่าย</h3>
-                <p class="text-xs text-slate-500">แก้ไขปัญหาอินเทอร์เน็ตและ Wi-Fi</p>
+                <h3 class="text-lg font-bold text-slate-800 mb-2">ระบบเครือข่าย</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">แก้ไขปัญหาอินเทอร์เน็ต, สาย LAN และสัญญาณ Wi-Fi</p>
             </div>
 
             <!-- Card 3 -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow-lg transition-all flex flex-col items-center text-center group cursor-default">
-                <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+            <div class="bg-gradient-to-b from-slate-50 to-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all flex flex-col group cursor-default">
+                <div class="w-14 h-14 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fas fa-bolt"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800 mb-1">ระบบไฟฟ้า</h3>
-                <p class="text-xs text-slate-500">หลอดไฟ ปลั๊กไฟ แอร์ อุปกรณ์ไฟฟ้า</p>
+                <h3 class="text-lg font-bold text-slate-800 mb-2">ระบบไฟฟ้า</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">ซ่อมแซมหลอดไฟ ปลั๊กไฟ เครื่องปรับอากาศ และอุปกรณ์ไฟฟ้าต่างๆ</p>
             </div>
 
             <!-- Card 4 -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow-lg transition-all flex flex-col items-center text-center group cursor-default">
-                <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+            <div class="bg-gradient-to-b from-slate-50 to-white rounded-2xl p-8 shadow-sm border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all flex flex-col group cursor-default">
+                <div class="w-14 h-14 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fas fa-building"></i>
                 </div>
-                <h3 class="text-lg font-bold text-slate-800 mb-1">อาคารสถานที่</h3>
-                <p class="text-xs text-slate-500">ซ่อมแซมประปา โต๊ะ เก้าอี้ ฯลฯ</p>
+                <h3 class="text-lg font-bold text-slate-800 mb-2">อาคารสถานที่</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">ให้บริการซ่อมแซมประปา ประตู หน้าต่าง โต๊ะ เก้าอี้ และสภาพแวดล้อม</p>
             </div>
         </div>
     </section>
 
-    <!-- Footer (Clean & Professional) -->
+    <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 mt-auto">
         <div class="max-w-7xl mx-auto px-4 md:px-8 py-16">
             <div class="flex flex-col md:flex-row justify-between items-start gap-12 md:gap-8">
@@ -289,7 +303,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </footer>
 
-    <!-- Result Modal (Clean UI) -->
+    <!-- Result Modal -->
     <div id="resultModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/50 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
         <div class="modal-container bg-white w-full md:max-w-2xl mx-auto shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col max-h-[85vh] rounded-2xl">
@@ -388,7 +402,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </div>
 
-    <!-- Login Modal (Clean Form) -->
+    <!-- Login Modal -->
     <div id="loginModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/50 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
         <div class="modal-container bg-white w-full max-w-sm mx-auto shadow-2xl z-50 overflow-hidden transform transition-all rounded-2xl">
