@@ -85,11 +85,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         .border-corporate-dark { border-color: #0b1f4a; }
         
         /* ================================================================= */
-        /* 🚨 ใช้ Path แบบเต็ม (Absolute Path) เพื่อให้หาไฟล์เจอชัวร์ 100% 🚨 */
+        /* 🚨 แก้ไข Path เรียกรูปจากโฟลเดอร์ uploads ที่อยู่ระดับเดียวกัน 🚨 */
         /* ================================================================= */
         .bg-tech-image {
             background-image: linear-gradient(to right, rgba(11, 31, 74, 1) 0%, rgba(11, 31, 74, 0.4) 50%, rgba(11, 31, 74, 0.1) 100%), 
-                              url('/repair/uploads/mbs_bg.jpg?v=1'); /* <--- บังคับชี้ไปที่ /repair/uploads/ และเติม ?v=1 กัน Cache ค่ะ */
+                              url('uploads/mbs_bg.jpg?v=2'); /* <--- แก้ตรงนี้ค่ะ (เอา slash ข้างหน้าออก) */
             background-color: #0b1f4a; 
             background-size: cover;
             background-position: center;
