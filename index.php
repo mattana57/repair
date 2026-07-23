@@ -89,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         /* ================================================================= */
         .bg-tech-image {
             background-image: linear-gradient(to right, rgba(11, 31, 74, 1) 0%, rgba(11, 31, 74, 0.4) 50%, rgba(11, 31, 74, 0.1) 100%), 
-                              url('ใส่ชื่อไฟล์รูปคณะบัญชี_มมส_ตรงนี้.jpg'); /* <--- แก้ไขชื่อไฟล์รูปตรงนี้ค่ะ */
+                              url('mbs_bg.jpg'); /* <--- แก้ไขชื่อไฟล์รูปตรงนี้ค่ะ */
             background-color: #0b1f4a; /* สีพื้นหลังสำรองระหว่างรอรูปโหลด */
             background-size: cover;
             background-position: center;
