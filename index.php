@@ -484,7 +484,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     <!-- Floating LINE Button -->
     <a href="https://line.me/R/ti/p/@941kflsc" target="_blank" class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 bg-[#00B900] hover:bg-[#009900] text-white brutal-border px-5 py-3 font-bold text-sm brutal-shadow-lg brutal-hover brutal-active transition-all flex items-center justify-center">
         <i class="fab fa-line text-2xl md:mr-2"></i> 
-        <span class="hidden md:inline uppercase tracking-widest text-[10px]">Support</span>
+        <span class="hidden md:inline uppercase tracking-widest text-[10px]">Chat Bot</span>
     </a>
 
     <!-- Script -->
