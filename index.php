@@ -69,127 +69,145 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     <title>ระบบแจ้งซ่อม คณะการบัญชีและการจัดการ มมส.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- เพิ่มฟอนต์ Serif สำหรับตัวเลขตกแต่งสไตล์ PPT -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f4f5f7; color: #334155; overflow-x: hidden; }
-        .modal { transition: opacity 0.25s ease; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; color: #334155; overflow-x: hidden; }
+        .modal { transition: opacity 0.3s ease; }
         body.modal-active { overflow: hidden; }
         .font-serif-num { font-family: 'Playfair Display', serif; }
         
-        /* Corporate Style Colors & BG */
+        /* Corporate Style Colors */
         .bg-corporate-dark { background-color: #0b1f4a; }
         .text-corporate-dark { color: #0b1f4a; }
-        .border-corporate-dark { border-color: #0b1f4a; }
         
-        /* ================================================================= */
-        /* 🚨 แก้ไข Path เรียกรูปจากโฟลเดอร์ uploads ที่อยู่ระดับเดียวกัน 🚨 */
-        /* ================================================================= */
+        /* Glassmorphism Header */
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+        }
+
+        /* Image with Smooth Gradient */
         .bg-tech-image {
-            background-image: linear-gradient(to right, rgba(11, 31, 74, 1) 0%, rgba(11, 31, 74, 0.4) 50%, rgba(11, 31, 74, 0.1) 100%), 
-                              url('uploads/mbs_bg.jpg?v=2'); /* <--- แก้ตรงนี้ค่ะ (เอา slash ข้างหน้าออก) */
+            background-image: linear-gradient(to right, rgba(11, 31, 74, 1) 0%, rgba(11, 31, 74, 0.6) 40%, rgba(11, 31, 74, 0) 100%), 
+                              url('uploads/mbs_bg.jpg?v=2');
             background-color: #0b1f4a; 
             background-size: cover;
             background-position: center;
         }
+
+        /* Animations for Smoothness */
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+        .delay-100 { animation-delay: 150ms; }
+        .delay-200 { animation-delay: 300ms; }
+        .delay-300 { animation-delay: 450ms; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-blue-200 relative">
 
-    <!-- Header (Clean & Sharp) -->
-    <header class="w-full bg-white border-b-2 border-corporate-dark fixed top-0 z-40 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 md:px-8 h-[72px] flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-corporate-dark flex items-center justify-center text-white">
+    <!-- Header (Glassmorphism & Smooth) -->
+    <header class="w-full glass-header fixed top-0 z-40 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4 group cursor-pointer">
+                <div class="w-11 h-11 rounded-xl bg-corporate-dark flex items-center justify-center text-white shadow-lg shadow-blue-900/20 group-hover:scale-105 transition-transform duration-300">
                     <i class="fas fa-tools text-lg"></i>
                 </div>
                 <div class="flex flex-col">
-                    <h1 class="text-lg md:text-xl font-extrabold text-corporate-dark tracking-wider uppercase leading-none">MBS Repair</h1>
-                    <span class="text-[10px] text-slate-500 tracking-widest uppercase mt-1">Smart Innovation</span>
+                    <h1 class="text-xl font-extrabold text-corporate-dark tracking-wide uppercase leading-tight">MBS Repair</h1>
+                    <span class="text-[10px] text-blue-600 font-semibold tracking-widest uppercase">Smart Innovation</span>
                 </div>
             </div>
             
             <div class="flex items-center gap-8">
                 <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-                    <a href="#" class="hover:text-blue-700 transition-colors uppercase tracking-wider">Home</a>
-                    <a href="#categories" class="hover:text-blue-700 transition-colors uppercase tracking-wider">Services</a>
+                    <a href="#" class="hover:text-blue-600 transition-colors uppercase tracking-wider">Home</a>
+                    <a href="#categories" class="hover:text-blue-600 transition-colors uppercase tracking-wider">Services</a>
                 </nav>
-                <button onclick="toggleModal('loginModal')" class="flex items-center bg-corporate-dark text-white px-5 py-2 hover:bg-blue-800 font-semibold text-sm transition-colors uppercase tracking-wider">
+                <button onclick="toggleModal('loginModal')" class="flex items-center bg-corporate-dark hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 uppercase tracking-wider">
                     <i class="fas fa-sign-in-alt mr-2"></i> <span class="hidden sm:inline">Login</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Hero Section (Corporate PPT Style) -->
-    <main class="pt-[72px] relative z-10 w-full max-w-7xl mx-auto md:mt-10 px-4 md:px-8">
-        <div class="flex flex-col md:flex-row w-full bg-white shadow-2xl relative overflow-hidden">
+    <!-- Hero Section (Smooth Rounded Corners & Animated) -->
+    <main class="pt-[96px] relative z-10 w-full max-w-7xl mx-auto md:mt-8 px-4 md:px-8">
+        <!-- ใส่ rounded-3xl ให้กรอบดูนุ่มนวลขึ้น -->
+        <div class="flex flex-col md:flex-row w-full bg-corporate-dark rounded-3xl shadow-[0_20px_50px_-12px_rgba(11,31,74,0.3)] relative overflow-hidden animate-fade-up">
             
             <!-- Left Side: Deep Blue Block -->
-            <div class="w-full md:w-3/5 bg-corporate-dark text-white p-8 md:p-14 lg:p-20 relative z-10 flex flex-col justify-center">
+            <div class="w-full md:w-[55%] p-8 md:p-14 lg:p-20 relative z-10 flex flex-col justify-center">
                 
-                <!-- Gimmick Number -->
                 <div class="flex items-start gap-4 mb-8">
-                    <span class="text-6xl md:text-7xl font-serif-num font-bold text-blue-200 leading-none">01</span>
+                    <span class="text-6xl md:text-7xl font-serif-num font-bold text-blue-300/40 leading-none">01</span>
                     <div class="pt-2">
-                        <h2 class="text-xs font-bold tracking-[0.2em] text-blue-300 uppercase mb-1">Service Management</h2>
-                        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-wide">ระบบแจ้งซ่อมออนไลน์</h1>
+                        <h2 class="text-xs font-bold tracking-[0.2em] text-blue-400 uppercase mb-1">Service Management</h2>
+                        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-wide text-white">ระบบแจ้งซ่อมออนไลน์</h1>
                     </div>
                 </div>
 
-                <!-- Simulating PPT Stats -->
-                <div class="flex gap-6 md:gap-12 mb-8 border-t border-blue-800/50 pt-8">
+                <div class="flex gap-6 md:gap-12 mb-8 border-t border-white/10 pt-8 text-white">
                     <div>
-                        <div class="text-2xl md:text-3xl font-serif-num font-bold">100<span class="text-base font-sans">%</span></div>
-                        <div class="text-xs text-blue-300 mt-1 tracking-wider">ติดตามผลได้ตลอด</div>
+                        <div class="text-2xl md:text-3xl font-serif-num font-bold">100<span class="text-base font-sans text-blue-300">%</span></div>
+                        <div class="text-xs text-blue-200/80 mt-1 tracking-wider">ติดตามผลได้ตลอด</div>
                     </div>
                     <div>
-                        <div class="text-2xl md:text-3xl font-serif-num font-bold">24<span class="text-base font-sans">/7</span></div>
-                        <div class="text-xs text-blue-300 mt-1 tracking-wider">ให้บริการทุกวัน</div>
+                        <div class="text-2xl md:text-3xl font-serif-num font-bold">24<span class="text-base font-sans text-blue-300">/7</span></div>
+                        <div class="text-xs text-blue-200/80 mt-1 tracking-wider">ให้บริการทุกวัน</div>
                     </div>
                     <div class="hidden sm:block">
                         <div class="text-2xl md:text-3xl font-serif-num font-bold">FAST</div>
-                        <div class="text-xs text-blue-300 mt-1 tracking-wider">ดำเนินการรวดเร็ว</div>
+                        <div class="text-xs text-blue-200/80 mt-1 tracking-wider">ดำเนินการรวดเร็ว</div>
                     </div>
                 </div>
                 
-                <p class="text-sm md:text-base text-blue-100/80 mb-10 max-w-md font-light leading-relaxed">
+                <p class="text-sm md:text-base text-slate-300 mb-10 max-w-md font-light leading-relaxed">
                     ระบบแจ้งซ่อมอุปกรณ์ คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ สำหรับบุคลากรและนิสิต คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม
                 </p>
                 
                 <div>
-                    <a href="form_repair.php" class="inline-flex bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 font-bold tracking-wider transition-all items-center border border-blue-500 hover:border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.3)] group">
+                    <!-- ปรับปุ่มให้มีความโค้งมน และสมูทเวลา Hover -->
+                    <a href="form_repair.php" class="inline-flex bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-xl font-bold tracking-wider transition-all duration-300 items-center shadow-lg hover:shadow-blue-500/40 hover:-translate-y-1 group">
                         แจ้งซ่อมอุปกรณ์ <i class="fas fa-arrow-right ml-3 group-hover:translate-x-1 transition-transform"></i>
                     </a>
                 </div>
             </div>
 
-            <!-- Right Side: Faculty Image -->
-            <div class="hidden md:block w-2/5 relative bg-tech-image">
-                <!-- Overlay elements -->
-                <div class="absolute bottom-8 right-8 text-white/70 text-[10px] tracking-[0.3em] uppercase flex items-center gap-2 shadow-sm">
+            <!-- Right Side: Faculty Image with smooth fade -->
+            <div class="hidden md:block w-[45%] relative bg-tech-image">
+                <div class="absolute bottom-8 right-8 text-white/80 text-xs tracking-[0.2em] font-medium flex items-center gap-2 bg-black/20 backdrop-blur-md px-4 py-2 rounded-full">
                     MBS MSU <i class="fas fa-university"></i>
                 </div>
             </div>
 
         </div>
 
-        <!-- Structure Floating Search Bar -->
-        <div class="relative w-[95%] mx-auto md:mx-0 md:w-3/4 bg-white shadow-xl border-t-4 border-blue-600 -mt-6 md:-mt-12 z-20">
+        <!-- Floating Search Bar (Soft Rounded & Floating Effect) -->
+        <div class="relative w-[92%] mx-auto md:w-[80%] bg-white rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.1)] -mt-8 md:-mt-10 z-20 overflow-hidden animate-fade-up delay-100 border border-slate-100">
             <form action="" method="POST" class="flex flex-col md:flex-row items-stretch">
                 <input type="hidden" name="check_status" value="1">
                 
-                <div class="flex-1 w-full flex items-center px-6 py-5 cursor-text" onclick="document.getElementById('searchInput').focus();">
-                    <i class="fas fa-search text-slate-300 text-2xl mr-4"></i>
+                <div class="flex-1 w-full flex items-center px-6 py-5 cursor-text transition-colors hover:bg-slate-50/50" onclick="document.getElementById('searchInput').focus();">
+                    <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mr-4">
+                        <i class="fas fa-search text-lg"></i>
+                    </div>
                     <div class="w-full">
-                        <p class="text-[10px] font-bold tracking-widest text-corporate-dark mb-1 uppercase">Check Status</p>
+                        <p class="text-[11px] font-extrabold tracking-widest text-corporate-dark mb-0.5 uppercase">Check Status</p>
                         <input type="text" id="searchInput" name="search_query" required placeholder="ตรวจสอบสถานะ: พิมพ์เลขใบงาน หรือ ชื่อผู้แจ้ง" class="w-full text-sm md:text-base focus:outline-none text-slate-700 placeholder-slate-400 bg-transparent font-medium">
                     </div>
                 </div>
 
-                <button type="submit" class="bg-corporate-dark hover:bg-blue-900 text-white px-8 py-4 font-bold transition-all flex items-center justify-center uppercase tracking-wider text-sm border-l border-white/10">
+                <button type="submit" class="bg-corporate-dark hover:bg-blue-800 text-white px-10 py-4 font-bold transition-all duration-300 flex items-center justify-center uppercase tracking-wider text-sm">
                     <i class="fas fa-search md:hidden mr-2"></i> ค้นหา
                 </button>
             </form>
@@ -197,9 +215,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     </main>
 
     <!-- Explore by Category Section -->
-    <section id="categories" class="max-w-7xl mx-auto px-4 md:px-8 pt-24 pb-20 w-full">
+    <section id="categories" class="max-w-7xl mx-auto px-4 md:px-8 pt-24 pb-20 w-full animate-fade-up delay-200">
         <div class="flex items-start gap-4 mb-10">
-            <span class="text-5xl font-serif-num font-bold text-slate-300 leading-none">02</span>
+            <span class="text-5xl font-serif-num font-bold text-slate-200 leading-none">02</span>
             <div class="pt-1">
                 <h3 class="text-[10px] font-bold tracking-[0.2em] text-blue-600 uppercase mb-1">Categories</h3>
                 <h2 class="text-2xl font-bold text-corporate-dark">หมวดหมู่การให้บริการ</h2>
@@ -207,82 +225,77 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
         
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <!-- Item 1 -->
-            <div class="bg-white border border-slate-200 p-6 flex flex-col shadow-sm hover:shadow-lg hover:border-corporate-dark transition-all cursor-default group relative overflow-hidden">
-                <div class="w-1 absolute left-0 top-0 bottom-0 bg-blue-600 transform scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom"></div>
-                <div class="text-3xl text-slate-300 group-hover:text-corporate-dark transition-colors mb-6">
+            <!-- Items (Soft hover effects & rounded borders) -->
+            <div class="bg-white border border-slate-100 rounded-2xl p-6 flex flex-col shadow-sm hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-300 cursor-default group">
+                <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center text-xl transition-colors mb-5">
                     <i class="fas fa-desktop"></i>
                 </div>
                 <p class="text-[10px] uppercase tracking-widest text-slate-400 mb-1">Service Type</p>
-                <p class="text-lg font-bold text-slate-800">คอมพิวเตอร์</p>
+                <p class="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors">คอมพิวเตอร์</p>
             </div>
-            <!-- Item 2 -->
-            <div class="bg-white border border-slate-200 p-6 flex flex-col shadow-sm hover:shadow-lg hover:border-corporate-dark transition-all cursor-default group relative overflow-hidden">
-                <div class="w-1 absolute left-0 top-0 bottom-0 bg-blue-600 transform scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom"></div>
-                <div class="text-3xl text-slate-300 group-hover:text-corporate-dark transition-colors mb-6">
+            
+            <div class="bg-white border border-slate-100 rounded-2xl p-6 flex flex-col shadow-sm hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-300 cursor-default group">
+                <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center text-xl transition-colors mb-5">
                     <i class="fas fa-wifi"></i>
                 </div>
                 <p class="text-[10px] uppercase tracking-widest text-slate-400 mb-1">Service Type</p>
-                <p class="text-lg font-bold text-slate-800">ระบบเครือข่าย</p>
+                <p class="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors">ระบบเครือข่าย</p>
             </div>
-            <!-- Item 3 -->
-            <div class="bg-white border border-slate-200 p-6 flex flex-col shadow-sm hover:shadow-lg hover:border-corporate-dark transition-all cursor-default group relative overflow-hidden">
-                <div class="w-1 absolute left-0 top-0 bottom-0 bg-blue-600 transform scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom"></div>
-                <div class="text-3xl text-slate-300 group-hover:text-corporate-dark transition-colors mb-6">
+            
+            <div class="bg-white border border-slate-100 rounded-2xl p-6 flex flex-col shadow-sm hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-300 cursor-default group">
+                <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center text-xl transition-colors mb-5">
                     <i class="fas fa-bolt"></i>
                 </div>
                 <p class="text-[10px] uppercase tracking-widest text-slate-400 mb-1">Service Type</p>
-                <p class="text-lg font-bold text-slate-800">ระบบไฟฟ้า</p>
+                <p class="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors">ระบบไฟฟ้า</p>
             </div>
-            <!-- Item 4 -->
-            <div class="bg-white border border-slate-200 p-6 flex flex-col shadow-sm hover:shadow-lg hover:border-corporate-dark transition-all cursor-default group relative overflow-hidden">
-                <div class="w-1 absolute left-0 top-0 bottom-0 bg-blue-600 transform scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom"></div>
-                <div class="text-3xl text-slate-300 group-hover:text-corporate-dark transition-colors mb-6">
+            
+            <div class="bg-white border border-slate-100 rounded-2xl p-6 flex flex-col shadow-sm hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-300 cursor-default group">
+                <div class="w-12 h-12 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center text-xl transition-colors mb-5">
                     <i class="fas fa-building"></i>
                 </div>
                 <p class="text-[10px] uppercase tracking-widest text-slate-400 mb-1">Service Type</p>
-                <p class="text-lg font-bold text-slate-800">อาคารสถานที่</p>
+                <p class="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors">อาคารสถานที่</p>
             </div>
         </div>
     </section>
 
     <!-- ================= ส่วน Footer โปรเจกต์จบ ================= -->
-    <footer class="bg-white border-t border-slate-200 mt-auto">
+    <footer class="bg-white border-t border-slate-200 mt-auto animate-fade-up delay-300">
         <div class="max-w-5xl mx-auto px-4 md:px-8 py-12 md:py-16">
             
             <div class="flex flex-col md:flex-row justify-center items-start gap-12 md:gap-24 lg:gap-40">
                 
-                <!-- 1. ข้อมูลองค์กร (ด้านซ้าย) -->
+                <!-- 1. ข้อมูลองค์กร -->
                 <div class="w-full md:w-auto max-w-sm space-y-5">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 bg-corporate-dark flex items-center justify-center text-white">
-                            <i class="fas fa-tools text-lg"></i>
+                        <div class="w-12 h-12 rounded-xl bg-corporate-dark flex items-center justify-center text-white shadow-md">
+                            <i class="fas fa-tools text-xl"></i>
                         </div>
                         <h2 class="text-xl font-extrabold text-corporate-dark tracking-widest uppercase">MBS Repair</h2>
                     </div>
-                    <div class="w-8 border-b-2 border-blue-600"></div>
-                    <p class="text-sm text-slate-500 leading-relaxed font-light">
+                    <div class="w-10 border-b-2 border-blue-500 rounded-full"></div>
+                    <p class="text-sm text-slate-500 leading-relaxed">
                         ระบบให้บริการแจ้งซ่อมออนไลน์ สำหรับบุคลากรและนิสิต<br>
                         คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม
                     </p>
                 </div>
 
-                <!-- 2. คณะผู้จัดทำโปรเจกต์จบ (ด้านขวา) -->
+                <!-- 2. คณะผู้จัดทำโปรเจกต์จบ -->
                 <div class="w-full md:w-auto max-w-sm space-y-5">
                     <h3 class="font-bold text-corporate-dark text-lg uppercase tracking-wider">คณะผู้จัดทำ (โปรเจกต์จบ)</h3>
-                    <div class="w-8 border-b-2 border-blue-600"></div>
+                    <div class="w-10 border-b-2 border-blue-500 rounded-full"></div>
                     <ul class="space-y-3 text-sm text-slate-600 font-medium">
-                        <li class="flex items-center gap-3"><i class="fas fa-square text-[8px] text-blue-600"></i> นางสาวภัทรวดี ขามประโคน</li>
-                        <li class="flex items-center gap-3"><i class="fas fa-square text-[8px] text-blue-600"></i> นางสาวมัทนา รัตนแสง</li>
+                        <li class="flex items-center gap-3"><i class="fas fa-check-circle text-blue-500"></i> นางสาวภัทรวดี ขามประโคน</li>
+                        <li class="flex items-center gap-3"><i class="fas fa-check-circle text-blue-500"></i> นางสาวมัทนา รัตนแสง</li>
                     </ul>
-                    <div class="mt-4 pt-4 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed uppercase tracking-widest">
+                    <div class="mt-4 pt-4 border-t border-slate-100 text-[11px] text-slate-400 leading-relaxed uppercase tracking-widest bg-slate-50 p-3 rounded-lg inline-block">
                         นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ<br>คณะการบัญชีและการจัดการ
                     </div>
                 </div>
 
             </div>
             
-            <!-- ส่วนลิขสิทธิ์ด้านล่างสุด -->
             <div class="mt-12 pt-6 border-t border-slate-100 text-center text-xs text-slate-400 uppercase tracking-widest">
                 <p>&copy; <?php echo date('Y'); ?> MBS Repair System. All rights reserved.</p>
             </div>
@@ -292,15 +305,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
     <!-- Modal 2: แสดงผลการค้นหาสถานะ (Results) -->
     <div id="resultModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
-        <div class="modal-overlay absolute w-full h-full bg-corporate-dark/80 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
-        <div class="modal-container bg-white w-full md:max-w-2xl mx-auto shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col max-h-[85vh] rounded-none border-t-4 border-blue-600">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/50 backdrop-blur-sm transition-opacity" onclick="toggleModal('resultModal')"></div>
+        <div class="modal-container bg-white w-full md:max-w-2xl mx-auto shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col max-h-[85vh] rounded-2xl">
             
-            <div class="p-6 flex justify-between items-center bg-slate-50 border-b border-slate-200 shrink-0">
+            <div class="p-6 flex justify-between items-center bg-slate-50 border-b border-slate-100 shrink-0">
                 <div>
                     <h2 class="text-xl font-bold text-corporate-dark uppercase tracking-wider"><i class="fas fa-list-alt text-blue-600 mr-2"></i> ผลการค้นหา</h2>
                     <p class="text-xs text-slate-500 mt-1 uppercase tracking-widest">Keyword: <span class="font-bold text-blue-600">"<?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?>"</span></p>
                 </div>
-                <button onclick="toggleModal('resultModal')" class="w-8 h-8 bg-white border border-slate-300 text-slate-400 hover:text-white hover:bg-red-500 hover:border-red-500 flex items-center justify-center transition-colors">
+                <button onclick="toggleModal('resultModal')" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-white hover:bg-red-500 hover:border-red-500 flex items-center justify-center transition-colors shadow-sm">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -313,8 +326,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         elseif($res['status'] == 'กำลังดำเนินการ') $statusClass = "bg-blue-50 text-blue-700 border-blue-200";
                         elseif($res['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
                     ?>
-                        <div class="bg-white p-5 border border-slate-200 shadow-sm relative overflow-hidden">
-                            <!-- แถบสีด้านซ้าย -->
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden transition-all hover:shadow-md">
                             <div class="absolute left-0 top-0 bottom-0 w-1.5 <?php echo str_replace(['bg-', 'text-', 'border-'], ['bg-', 'bg-', 'bg-'], explode(' ', $statusClass)[1]); ?>"></div>
                             
                             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3 pl-3">
@@ -323,14 +335,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                                     <h3 class="text-lg font-bold text-corporate-dark"><?php echo $res['ticket_no']; ?></h3>
                                 </div>
                                 <div class="text-left md:text-right">
-                                    <span class="inline-flex items-center px-3 py-1 text-xs font-bold border <?php echo $statusClass; ?>">
-                                        <span class="w-1.5 h-1.5 bg-current mr-2"></span><?php echo $res['status']; ?>
+                                    <span class="inline-flex items-center px-3 py-1 text-xs font-bold rounded-full border <?php echo $statusClass; ?>">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-current mr-2"></span><?php echo $res['status']; ?>
                                     </span>
                                     <p class="text-xs text-slate-400 mt-2 font-mono"><i class="far fa-clock"></i> <?php echo date("d/m/Y H:i", strtotime($res['created_at'])); ?></p>
                                 </div>
                             </div>
 
-                            <div class="pl-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mt-4 pt-4 border-t border-slate-100">
+                            <div class="pl-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mt-4 pt-4 border-t border-slate-50">
                                 <div>
                                     <p class="text-slate-500 mb-1"><i class="fas fa-desktop text-slate-300 w-5 text-center mr-1"></i> <span class="text-xs uppercase tracking-widest font-bold">อุปกรณ์:</span> <span class="text-corporate-dark font-medium"><?php echo $res['equipment_type']; ?></span></p>
                                     <p class="text-slate-500"><i class="fas fa-user text-slate-300 w-5 text-center mr-1"></i> <span class="text-xs uppercase tracking-widest font-bold">ผู้แจ้ง:</span> <span class="text-corporate-dark font-medium"><?php echo $res['reporter_name']; ?></span></p>
@@ -345,22 +357,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <?php endif; ?>
             </div>
 
-            <div class="p-6 bg-white border-t border-slate-200 shrink-0 flex justify-center">
-                <button onclick="toggleModal('resultModal')" class="bg-corporate-dark hover:bg-slate-800 text-white px-10 py-3 font-bold uppercase tracking-wider text-sm transition-colors shadow-md">Close</button>
+            <div class="p-6 bg-white border-t border-slate-100 shrink-0 flex justify-center">
+                <button onclick="toggleModal('resultModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-8 py-2.5 rounded-xl font-bold uppercase tracking-wider text-sm transition-colors">Close</button>
             </div>
         </div>
     </div>
 
     <!-- Modal 3: เข้าสู่ระบบ (Login) -->
     <div id="loginModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
-        <div class="modal-overlay absolute w-full h-full bg-corporate-dark/80 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
-        <div class="modal-container bg-white w-full max-w-md mx-auto shadow-2xl z-50 overflow-hidden transform transition-all rounded-none border-t-4 border-blue-600">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/50 backdrop-blur-sm transition-opacity" onclick="toggleModal('loginModal')"></div>
+        <div class="modal-container bg-white w-full max-w-md mx-auto shadow-2xl z-50 overflow-hidden transform transition-all rounded-3xl">
             
-            <div class="p-8 text-center bg-slate-50 border-b border-slate-200 relative">
-                <button onclick="toggleModal('loginModal')" class="absolute top-4 right-4 w-8 h-8 bg-white border border-slate-300 text-slate-400 hover:text-white hover:bg-red-500 hover:border-red-500 shadow-sm flex items-center justify-center transition-colors">
+            <div class="p-8 text-center bg-slate-50 border-b border-slate-100 relative">
+                <button onclick="toggleModal('loginModal')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-white hover:bg-red-500 hover:border-red-500 shadow-sm flex items-center justify-center transition-colors">
                     <i class="fas fa-times"></i>
                 </button>
-                <div class="w-14 h-14 bg-corporate-dark text-white flex items-center justify-center text-2xl mx-auto mb-4 shadow-lg shadow-blue-900/20">
+                <div class="w-16 h-16 rounded-2xl bg-corporate-dark text-white flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-blue-900/20">
                     <i class="fas fa-user-lock"></i>
                 </div>
                 <h2 class="text-2xl font-bold text-corporate-dark uppercase tracking-wider">Staff Login</h2>
@@ -377,7 +389,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fas fa-user text-slate-300"></i>
                             </div>
-                            <input type="text" name="username" required placeholder="Enter username" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-corporate-dark focus:ring-1 focus:ring-corporate-dark transition-all font-medium rounded-none">
+                            <input type="text" name="username" required placeholder="Enter username" class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-medium">
                         </div>
                     </div>
                     
@@ -387,12 +399,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fas fa-lock text-slate-300"></i>
                             </div>
-                            <input type="password" name="password" required placeholder="Enter password" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-300 text-slate-800 focus:outline-none focus:border-corporate-dark focus:ring-1 focus:ring-corporate-dark transition-all font-medium rounded-none">
+                            <input type="password" name="password" required placeholder="Enter password" class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-medium">
                         </div>
                     </div>
                 </div>
                 
-                <button type="submit" class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white py-4 font-bold text-sm uppercase tracking-widest transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center">
+                <button type="submit" class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-widest transition-all shadow-lg hover:shadow-xl shadow-blue-600/30 hover:-translate-y-0.5 flex items-center justify-center">
                     Login <i class="fas fa-arrow-right ml-3"></i>
                 </button>
             </form>
@@ -400,8 +412,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     </div>
 
     <!-- ปุ่ม Floating LINE มุมขวาล่าง -->
-    <a href="https://line.me/R/ti/p/@941kflsc" target="_blank" class="fixed bottom-6 right-6 z-40 bg-[#00B900] hover:bg-[#009900] text-white w-14 h-14 md:w-auto md:h-auto md:px-5 md:py-3.5 rounded-full md:rounded-none font-bold text-sm md:text-base shadow-xl shadow-green-500/40 transition-all transform hover:-translate-y-1 flex items-center justify-center group">
-        <i class="fab fa-line text-3xl md:mr-2 group-hover:scale-110 transition-transform"></i> 
+    <a href="https://line.me/R/ti/p/@941kflsc" target="_blank" class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 bg-[#00B900] hover:bg-[#009900] text-white w-14 h-14 md:w-auto md:h-auto md:px-5 md:py-3.5 rounded-full font-bold text-sm md:text-base shadow-xl shadow-green-500/40 transition-all transform hover:-translate-y-1 flex items-center justify-center group">
+        <i class="fab fa-line text-3xl md:text-2xl md:mr-2 group-hover:scale-110 transition-transform"></i> 
         <span class="hidden md:inline uppercase tracking-wider text-xs">Add Line</span>
     </a>
 
