@@ -85,12 +85,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         .border-corporate-dark { border-color: #0b1f4a; }
         
         /* ================================================================= */
-        /* 🚨 ชี้ path ไปที่โฟลเดอร์ uploads ตามที่คุณน้ำฝนเก็บรูปไว้ค่ะ 🚨 */
+        /* 🚨 ใช้ Path แบบเต็ม (Absolute Path) เพื่อให้หาไฟล์เจอชัวร์ 100% 🚨 */
         /* ================================================================= */
         .bg-tech-image {
             background-image: linear-gradient(to right, rgba(11, 31, 74, 1) 0%, rgba(11, 31, 74, 0.4) 50%, rgba(11, 31, 74, 0.1) 100%), 
-                              url('uploads/mbs_bg.jpg'); /* <--- เพิ่ม uploads/ ตรงนี้ค่ะ */
-            background-color: #0b1f4a; /* สีพื้นหลังสำรองระหว่างรอรูปโหลด */
+                              url('/repair/uploads/mbs_bg.jpg?v=1'); /* <--- บังคับชี้ไปที่ /repair/uploads/ และเติม ?v=1 กัน Cache ค่ะ */
+            background-color: #0b1f4a; 
             background-size: cover;
             background-position: center;
         }
