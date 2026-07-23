@@ -85,11 +85,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         .border-corporate-dark { border-color: #0b1f4a; }
         
         /* ================================================================= */
-        /* 🚨 เปลี่ยนรูปภาพพื้นหลังเป็นรูปคณะ MBS มมส. ได้ที่บรรทัดด้านล่างนี้ 🚨 */
+        /* 🚨 ชี้ path ไปที่โฟลเดอร์ uploads ตามที่คุณน้ำฝนเก็บรูปไว้ค่ะ 🚨 */
         /* ================================================================= */
         .bg-tech-image {
             background-image: linear-gradient(to right, rgba(11, 31, 74, 1) 0%, rgba(11, 31, 74, 0.4) 50%, rgba(11, 31, 74, 0.1) 100%), 
-                              url('mbs_bg.jpg'); /* <--- แก้ไขชื่อไฟล์รูปตรงนี้ค่ะ */
+                              url('uploads/mbs_bg.jpg'); /* <--- เพิ่ม uploads/ ตรงนี้ค่ะ */
             background-color: #0b1f4a; /* สีพื้นหลังสำรองระหว่างรอรูปโหลด */
             background-size: cover;
             background-position: center;
@@ -169,7 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             <!-- Right Side: Faculty Image -->
             <div class="hidden md:block w-2/5 relative bg-tech-image">
                 <!-- Overlay elements -->
-                <div class="absolute bottom-8 right-8 text-white/70 text-[10px] tracking-[0.3em] uppercase flex items-center gap-2">
+                <div class="absolute bottom-8 right-8 text-white/70 text-[10px] tracking-[0.3em] uppercase flex items-center gap-2 shadow-sm">
                     MBS MSU <i class="fas fa-university"></i>
                 </div>
             </div>
