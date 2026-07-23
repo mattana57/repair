@@ -210,7 +210,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         <!-- Minimal Tag -->
                         <div class="absolute top-4 left-4 bg-white brutal-border px-3 py-1 font-mono text-[10px] font-bold text-slate-900 flex items-center gap-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                            IMG_01: MBS_BLDG
+                            MBS
                         </div>
                     </div>
                 </div>
