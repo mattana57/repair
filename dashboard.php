@@ -202,9 +202,9 @@ if($check_repairs->num_rows > 0) {
     }
 }
 
-// ดึงรายชื่อช่างทั้งหมดสำหรับ Dropdown
+// 🟢 [แก้ไข 1] ดึงรายชื่อช่างสำหรับ Dropdown (ดึงเฉพาะ role 'Technician' เท่านั้น)
 $tech_options = [];
-$tech_list_res = $conn->query("SELECT DISTINCT full_name FROM users WHERE role IN ('Technician', 'Admin') AND full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
+$tech_list_res = $conn->query("SELECT DISTINCT full_name FROM users WHERE LOWER(role) = 'technician' AND full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
 if($tech_list_res){
     while($t = $tech_list_res->fetch_assoc()){
         $tech_options[] = $t['full_name'];
@@ -247,21 +247,16 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
 
         body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; color: #334155; }
         
-        /* การ์ดและธีมสีคณะบัญชี มมส (Navy Blue & Yellow/Gold) */
         .modern-card { background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04); border: 1px solid #f1f5f9; }
+        .gradient-card-1 { background: linear-gradient(135deg, #1e3a8a, #2563eb); } 
+        .gradient-card-2 { background: linear-gradient(135deg, #d97706, #f59e0b); } 
+        .gradient-card-3 { background: linear-gradient(135deg, #0284c7, #38bdf8); } 
+        .gradient-card-4 { background: linear-gradient(135deg, #059669, #10b981); } 
         
-        .gradient-card-1 { background: linear-gradient(135deg, #1e3a8a, #2563eb); } /* Navy Blue */
-        .gradient-card-2 { background: linear-gradient(135deg, #d97706, #f59e0b); } /* Yellow/Gold (MSU) */
-        .gradient-card-3 { background: linear-gradient(135deg, #0284c7, #38bdf8); } /* Light Blue */
-        .gradient-card-4 { background: linear-gradient(135deg, #059669, #10b981); } /* Emerald Green */
-        
-        /* สไตล์ Sidebar Menu */
         .nav-btn { width: 100%; display: flex; align-items: center; padding: 0.75rem 1.25rem; margin-bottom: 0.5rem; border-radius: 8px; color: #64748b; font-weight: 500; transition: all 0.2s; font-size: 0.9rem;}
         .nav-btn i { width: 1.5rem; text-align: center; font-size: 1.1rem; margin-right: 0.75rem; color: #94a3b8; transition: all 0.2s; }
         .nav-btn:hover { background-color: #f1f5f9; color: #1e3a8a; }
         .nav-btn:hover i { color: #1e3a8a; }
-        
-        /* ปุ่มเมนูที่ทำงานอยู่ (สีน้ำเงินกรมท่า) */
         .active-btn { background: #eff6ff; color: #1e3a8a; font-weight: 600; border-right: 4px solid #1e3a8a; }
         .active-btn i { color: #1e3a8a; }
         
@@ -271,30 +266,57 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
-        /* สไตล์เอกสารราชการ 100% */
+        /* 🟢 [แก้ไข 2] สไตล์เอกสารราชการ ปรับโครงสร้างเพื่อไม่ให้ตกขอบ */
         .official-doc {
-            font-family: 'THSarabunNew', sans-serif !important; font-size: 16pt !important; color: #000000 !important; background: #ffffff;
-            width: 210mm; min-height: 297mm; padding: 2.5cm 2cm 2cm 3cm; 
-            margin: 0 auto; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            position: relative; line-height: 1.15 !important; 
+            font-family: 'THSarabunNew', sans-serif !important; 
+            font-size: 16pt !important; 
+            color: #000000 !important; 
+            background: #ffffff;
+            width: 210mm; 
+            min-height: 297mm; 
+            padding: 2.5cm 2cm 2cm 3cm; 
+            margin: 0 auto; 
+            box-sizing: border-box; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative; 
+            line-height: 1.15 !important; 
         }
         .official-doc * { font-family: 'THSarabunNew', sans-serif !important; color: #000000 !important; font-size: 16pt; }
         .official-doc .title-doc { font-size: 29pt !important; font-weight: bold !important; text-align: center; margin-top: -10pt; margin-bottom: 5pt; }
         .official-doc .bold-text { font-weight: bold !important; }
         .official-doc p { text-align: justify; margin-bottom: 2pt; margin-top: 0; }
         .official-doc .thai-indent { text-indent: 2.5cm; }
-        .official-doc .thai-sub-indent { padding-left: 2.5cm; }
+        .official-doc .thai-sub-indent { padding-left: 2.5cm; margin-bottom: 5pt; }
         .official-doc .doc-row { display: flex; align-items: baseline; margin-bottom: 2pt; }
-        .keep-together { page-break-inside: avoid; break-inside: avoid; }
-
+        
         @media print {
-            @page { size: A4; margin: 0; }
-            body, html { height: 100% !important; overflow: visible !important; background: #ffffff !important; }
+            @page { size: A4; margin: 2.5cm 2cm 2cm 3cm; }
+            body, html { height: auto !important; overflow: visible !important; background: #ffffff !important; }
             .flex, .h-screen, .overflow-hidden { display: block !important; height: auto !important; overflow: visible !important; }
             aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #assets, #users { display: none !important; }
             main, .flex-1 { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; }
             #reports { display: block !important; margin: 0 !important; }
-            .official-doc { width: 210mm !important; height: auto !important; min-height: auto !important; margin: 0 !important; padding: 2.5cm 2cm 2cm 3cm !important; box-shadow: none !important; border: none !important; page-break-after: always; }
+            
+            .official-doc { 
+                width: 100% !important; 
+                height: auto !important; 
+                min-height: auto !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                box-shadow: none !important; 
+                border: none !important; 
+                page-break-after: avoid; 
+            }
+            
+            /* ดันลายเซ็นให้เกาะกลุ่มกัน ไม่แยกหน้า */
+            .signature-box {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                float: right;
+                width: 6.5cm;
+                text-align: center;
+                margin-top: 25pt;
+            }
         }
     </style>
 </head>
@@ -304,7 +326,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
 
     <aside id="sidebar" class="w-64 bg-white border-r border-slate-100 flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-sm no-print">
         <div class="h-20 flex items-center px-6 border-b border-slate-50">
-            <!-- โลโก้คณะบัญชี มมส (น้ำเงิน-เหลือง) -->
             <div class="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-blue-900 flex items-center justify-center shadow-md mr-3 shrink-0">
                 <i class="fas fa-tools text-amber-400 text-lg"></i>
             </div>
@@ -361,7 +382,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
             <!-- Dashboard Section -->
             <div id="dash" class="section space-y-6 animate-fade-in no-print">
                 
-                <!-- แถวที่ 1: กราฟ -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 modern-card p-6 flex flex-col relative overflow-hidden">
                         <div class="flex justify-between items-start mb-6 relative z-10">
@@ -386,7 +406,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                     </div>
                 </div>
 
-                <!-- แถวที่ 2: การ์ดสถิติ (คุมโทน MBS: น้ำเงิน, เหลือง, ฟ้า, เขียว) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <?php 
                         $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
@@ -426,10 +445,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                     </div>
                 </div>
 
-                <!-- แถวที่ 3: Timeline & Table -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
-                    <!-- Timeline (Recent Activities) -->
                     <div class="modern-card p-6">
                         <h3 class="font-bold text-slate-800 text-base mb-6">Broken Assets <span class="text-xs font-normal text-slate-400 block">Needs attention</span></h3>
                         <div class="relative border-l border-slate-200 ml-3 space-y-6">
@@ -461,7 +477,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                         </div>
                     </div>
 
-                    <!-- Table (Order Status) -->
                     <div class="lg:col-span-2 modern-card overflow-hidden flex flex-col">
                         <div class="p-5 border-b border-slate-100 flex justify-between items-center">
                             <div>
@@ -486,7 +501,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                         $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
                                         if($recent_dash && $recent_dash->num_rows > 0){
                                             while($rd = $recent_dash->fetch_assoc()) {
-                                                // สีป้ายสถานะคุมโทน
                                                 $stColor = ($rd['status'] == 'รอรับเรื่อง') ? 'bg-amber-500 text-white shadow-sm' : (($rd['status'] == 'กำลังดำเนินการ') ? 'bg-sky-500 text-white shadow-sm' : 'bg-emerald-500 text-white shadow-sm');
                                                 $statusText = ($rd['status'] == 'รอรับเรื่อง') ? 'Pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'In Progress' : 'Completed');
                                                 
@@ -649,7 +663,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                     </div>
                 </div>
 
-                <!-- ตาราง Technician -->
+                <!-- 🟢 [แก้ไข 3] เพิ่มคอลัมน์ "เบอร์โทรศัพท์" ลงในตารางช่างซ่อม -->
                 <div class="mt-6 md:mt-8">
                     <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-hard-hat text-blue-600 mr-2 text-xl"></i> ช่างซ่อม (Technician)</h3>
                     <div class="modern-card overflow-hidden">
@@ -659,7 +673,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                        <th class="px-6 py-4">เบอร์โทรศัพท์</th>
+                                        <th class="px-6 py-4">เบอร์โทรศัพท์</th> <!-- เพิ่ม Header เบอร์โทร -->
                                         <th class="px-6 py-4">ความเชี่ยวชาญ</th>
                                         <th class="px-6 py-4 text-center">งานที่รับ</th>
                                         <th class="px-6 py-4 text-right">จัดการ</th>
@@ -693,7 +707,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                                         ".(!empty($t['full_name']) ? $t['full_name'] : '- ไม่ระบุ -')."
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td>
+                                                <td class='px-6 py-4 text-slate-600'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td> <!-- แสดงผลเบอร์โทร -->
                                                 <td class='px-6 py-4 text-slate-600'>".(!empty($t['department']) ? $t['department'] : '-')."</td>
                                                 <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border bg-slate-100 text-slate-600 border-slate-200'>{$total_jobs} งาน</span></td>
                                                 <td class='px-6 py-4 text-right'>
@@ -934,7 +948,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                         <p class="thai-indent keep-together" style="margin-top: 10pt;">จึงเรียนมาเพื่อโปรดทราบ</p>
                     </div>
 
-                    <div class="keep-together" style="margin-top: 25pt; text-align: center; float: right; width: 6.5cm;">
+                    <div class="signature-box">
                         <p style="margin-bottom: 20pt;">(ลงชื่อ)...................................................</p>
                         <p>( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
                         <p id="docSignatureRole">ผู้รายงาน / ผู้จัดทำ</p>
