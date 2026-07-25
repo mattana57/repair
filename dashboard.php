@@ -202,7 +202,7 @@ if($check_repairs->num_rows > 0) {
     }
 }
 
-// 🟢 [แก้ไข 1] ดึงรายชื่อช่างสำหรับ Dropdown (ดึงเฉพาะ role 'Technician' เท่านั้น)
+// ดึงรายชื่อช่างทั้งหมดสำหรับ Dropdown (เฉพาะ Technician)
 $tech_options = [];
 $tech_list_res = $conn->query("SELECT DISTINCT full_name FROM users WHERE LOWER(role) = 'technician' AND full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
 if($tech_list_res){
@@ -266,7 +266,10 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
-        /* 🟢 [แก้ไข 2] สไตล์เอกสารราชการ ปรับโครงสร้างเพื่อไม่ให้ตกขอบ */
+        /* -------------------------------------------------------------------
+           สไตล์สำหรับเอกสารราชการ (TH Sarabun New) แบบตั้งค่า Block & Table
+           ป้องกันการซ้อนกันของข้อความตอนสั่ง Print ได้ 100%
+        ---------------------------------------------------------------------- */
         .official-doc {
             font-family: 'THSarabunNew', sans-serif !important; 
             font-size: 16pt !important; 
@@ -280,15 +283,32 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             position: relative; 
             line-height: 1.15 !important; 
+            display: block; /* สำคัญมาก ป้องกัน Flexbox ตีกัน */
         }
+        
         .official-doc * { font-family: 'THSarabunNew', sans-serif !important; color: #000000 !important; font-size: 16pt; }
-        .official-doc .title-doc { font-size: 29pt !important; font-weight: bold !important; text-align: center; margin-top: -10pt; margin-bottom: 5pt; }
+        .official-doc .title-doc { font-size: 29pt !important; font-weight: bold !important; text-align: center; margin-top: 0; margin-bottom: 10pt; clear: both;}
         .official-doc .bold-text { font-weight: bold !important; }
         .official-doc p { text-align: justify; margin-bottom: 2pt; margin-top: 0; }
         .official-doc .thai-indent { text-indent: 2.5cm; }
         .official-doc .thai-sub-indent { padding-left: 2.5cm; margin-bottom: 5pt; }
-        .official-doc .doc-row { display: flex; align-items: baseline; margin-bottom: 2pt; }
         
+        /* จัดเลย์เอาต์หัวข้อแบบตารางซ่อนเส้น เพื่อให้ตัวหนังสือไม่ทับกันตอน Print */
+        .doc-header-table { width: 100%; border-collapse: collapse; margin-bottom: 10pt; }
+        .doc-header-table td { padding: 2pt 0; vertical-align: top; }
+        .doc-header-table .col-label { font-weight: bold !important; white-space: nowrap; width: 1%; padding-right: 10pt; }
+        .doc-header-table .col-data { width: auto; }
+        
+        /* Layout ลายเซ็น */
+        .signature-box {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            width: 6.5cm;
+            margin-left: auto; /* ดันไปชิดขวา */
+            margin-top: 30pt;
+            text-align: center;
+        }
+
         @media print {
             @page { size: A4; margin: 2.5cm 2cm 2cm 3cm; }
             body, html { height: auto !important; overflow: visible !important; background: #ffffff !important; }
@@ -306,16 +326,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 box-shadow: none !important; 
                 border: none !important; 
                 page-break-after: avoid; 
-            }
-            
-            /* ดันลายเซ็นให้เกาะกลุ่มกัน ไม่แยกหน้า */
-            .signature-box {
-                page-break-inside: avoid;
-                break-inside: avoid;
-                float: right;
-                width: 6.5cm;
-                text-align: center;
-                margin-top: 25pt;
             }
         }
     </style>
@@ -663,7 +673,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                     </div>
                 </div>
 
-                <!-- 🟢 [แก้ไข 3] เพิ่มคอลัมน์ "เบอร์โทรศัพท์" ลงในตารางช่างซ่อม -->
+                <!-- ตาราง Technician -->
                 <div class="mt-6 md:mt-8">
                     <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-hard-hat text-blue-600 mr-2 text-xl"></i> ช่างซ่อม (Technician)</h3>
                     <div class="modern-card overflow-hidden">
@@ -673,7 +683,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                        <th class="px-6 py-4">เบอร์โทรศัพท์</th> <!-- เพิ่ม Header เบอร์โทร -->
+                                        <th class="px-6 py-4">เบอร์โทรศัพท์</th> 
                                         <th class="px-6 py-4">ความเชี่ยวชาญ</th>
                                         <th class="px-6 py-4 text-center">งานที่รับ</th>
                                         <th class="px-6 py-4 text-right">จัดการ</th>
@@ -707,7 +717,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                                         ".(!empty($t['full_name']) ? $t['full_name'] : '- ไม่ระบุ -')."
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td> <!-- แสดงผลเบอร์โทร -->
+                                                <td class='px-6 py-4 text-slate-600'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td> 
                                                 <td class='px-6 py-4 text-slate-600'>".(!empty($t['department']) ? $t['department'] : '-')."</td>
                                                 <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border bg-slate-100 text-slate-600 border-slate-200'>{$total_jobs} งาน</span></td>
                                                 <td class='px-6 py-4 text-right'>
@@ -868,7 +878,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                     </div>
                 </div>
 
-                <!-- หน้าเอกสารสำหรับพิมพ์ (ยังคงความทางการ ขาว-ดำ 100% TH Sarabun New) -->
+                <!-- 🟢 [แก้ไข 4] หน้าเอกสารสำหรับพิมพ์ เปลี่ยนจาก Flex เป็น Table Header -->
                 <div class="official-doc">
                     
                     <?php 
@@ -882,36 +892,39 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                         $pct_pending = $total_repairs > 0 ? number_format(($pending / $total_repairs) * 100, 2) : 0;
                     ?>
 
+                    <!-- รูปครุฑจากหน้าเว็บกรมประชาสัมพันธ์ -->
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Thai_government_Garuda_emblem_%28Version_2%29.svg" style="width: 1.5cm; position: absolute; left: 3cm; top: 1.5cm; filter: grayscale(100%);">
                     
                     <div class="title-doc">บันทึกข้อความ</div>
                     
-                    <div class="doc-row" style="margin-top: 10pt;">
-                        <span class="bold-text" style="width: 2.5cm;">ส่วนราชการ</span>
-                        <span>ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
-                    </div>
+                    <table class="doc-header-table">
+                        <tr>
+                            <td class="col-label">ส่วนราชการ</td>
+                            <td class="col-data">ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
+                        </tr>
+                    </table>
                     
-                    <div style="display: flex; justify-content: space-between;">
-                        <div class="doc-row" style="width: 50%;">
-                            <span class="bold-text" style="width: 1cm;">ที่</span>
-                            <span>ศธ ๐๕๓๐.๑๑/......................</span>
-                        </div>
-                        <div class="doc-row" style="width: 50%;">
-                            <span class="bold-text" style="width: 1.2cm;">วันที่</span>
-                            <span><?php echo $current_date_thai; ?></span>
-                        </div>
-                    </div>
+                    <table class="doc-header-table">
+                        <tr>
+                            <td class="col-label">ที่</td>
+                            <td class="col-data" style="width: 50%;">ศธ ๐๕๓๐.๑๑/......................</td>
+                            <td class="col-label">วันที่</td>
+                            <td class="col-data"><?php echo $current_date_thai; ?></td>
+                        </tr>
+                    </table>
                     
-                    <div class="doc-row">
-                        <span class="bold-text" style="width: 1.5cm;">เรื่อง</span>
-                        <span id="docSubject">รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></span>
-                    </div>
+                    <table class="doc-header-table">
+                        <tr>
+                            <td class="col-label">เรื่อง</td>
+                            <td class="col-data" id="docSubject">รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></td>
+                        </tr>
+                        <tr>
+                            <td class="col-label">เรียน</td>
+                            <td class="col-data">คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</td>
+                        </tr>
+                    </table>
                     
-                    <div class="doc-row" style="margin-bottom: 10pt;">
-                        <span class="bold-text" style="width: 1.5cm;">เรียน</span>
-                        <span>คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</span>
-                    </div>
-                    
+                    <!-- เนื้อหารายงาน -->
                     <div>
                         <p class="thai-indent" id="docContext">ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น</p>
                         <p class="thai-indent">ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $report_month; ?> เพื่อรายงานผลการดำเนินงานให้รับทราบ โดยมีรายละเอียดดังต่อไปนี้</p>
