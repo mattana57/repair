@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // ==========================================
         if(!empty($repair['line_user_id'])) {
             $icon = "🔔";
-            if($status == 'กำลังดำเนินการ') $icon = "🛠️";
+            if($status == 'รับเรื่องแล้ว กำลังดำเนินการ') $icon = "🛠️";
             if($status == 'ซ่อมเสร็จแล้ว') $icon = "🎉";
 
             $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
@@ -222,7 +222,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <input type="radio" name="status" value="กำลังดำเนินการ" class="peer sr-only" <?php echo ($repair['status'] == 'กำลังดำเนินการ') ? 'checked' : ''; ?>>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-sky-50 peer-checked:border-sky-300 peer-checked:text-sky-700 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-tools mb-1 text-lg"></i>
-                                        <div class="text-sm font-medium">กำลังดำเนินการ</div>
+                                        <div class="text-sm font-medium">รับเรื่องแล้ว กำลังดำเนินการ</div>
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
