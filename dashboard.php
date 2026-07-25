@@ -169,9 +169,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
 
 // ================= เตรียมข้อมูลประวัติและสถิติ =================
 $all_repairs_json = "[]";
-$status_counts = ['รอรับเรื่อง'=>0, 'กำลังดำเนินการ'=>0, 'ซ่อมเสร็จแล้ว'=>0];
-$eq_labels = []; 
-$eq_counts = [];
 
 if($check_repairs->num_rows > 0) {
     $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
@@ -183,23 +180,6 @@ if($check_repairs->num_rows > 0) {
         while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
         $all_repairs_json = json_encode($reps);
     }
-
-    $stat_res = $conn->query("SELECT status, COUNT(*) as cnt FROM repairs GROUP BY status");
-    if($stat_res) {
-        while($st = $stat_res->fetch_assoc()){ 
-            if(isset($status_counts[$st['status']])) {
-                $status_counts[$st['status']] = $st['cnt']; 
-            }
-        }
-    }
-
-    $eq_res = $conn->query("SELECT equipment_type, COUNT(*) as cnt FROM repairs GROUP BY equipment_type ORDER BY cnt DESC LIMIT 5");
-    if($eq_res) {
-        while($eq = $eq_res->fetch_assoc()){ 
-            $eq_labels[] = $eq['equipment_type']; 
-            $eq_counts[] = $eq['cnt']; 
-        }
-    }
 }
 
 // ดึงรายชื่อช่างทั้งหมดสำหรับ Dropdown (เฉพาะ Technician)
@@ -210,7 +190,6 @@ if($tech_list_res){
         $tech_options[] = $t['full_name'];
     }
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -226,13 +205,11 @@ if($tech_list_res){
     
     <style>
         body { 
-            /* ใช้ฟอนต์ผสม: ภาษาอังกฤษ Plus Jakarta (คล้ายเรฟ), ภาษาไทย Kanit */
             font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif; 
-            background-color: #f3f4f6; /* พื้นหลังเทาอ่อนมากๆ สบายตา */
+            background-color: #f3f4f6; 
             color: #1e293b; 
         }
         
-        /* สไตล์การ์ดโค้งมนและเงาฟุ้งๆ แบบ SaaS Dashboard */
         .modern-card { 
             background: #ffffff; 
             border-radius: 20px; 
@@ -240,7 +217,6 @@ if($tech_list_res){
             border: 1px solid #f1f5f9; 
         }
         
-        /* เมนู Sidebar */
         .nav-btn { 
             width: 100%; display: flex; align-items: center; padding: 0.875rem 1.25rem; 
             margin-bottom: 0.25rem; border-radius: 12px; color: #64748b; 
@@ -250,20 +226,17 @@ if($tech_list_res){
         .nav-btn:hover { background-color: #f8fafc; color: #4f46e5; }
         .nav-btn:hover i { color: #4f46e5; }
         
-        /* ปุ่มเมนูที่ Active (สี Indigo) */
         .active-btn { 
             background-color: #eef2ff; color: #4f46e5; font-weight: 700; 
         }
         .active-btn i { color: #4f46e5; }
         
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
-        /* Badge Status (มินิมอล) */
         .badge-pending { background-color: #fef3c7; color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-progress { background-color: #e0e7ff; color: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-success { background-color: #d1fae5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
@@ -277,10 +250,8 @@ if($tech_list_res){
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <!-- Sidebar สีขาว คลีนๆ -->
     <aside id="sidebar" class="w-[260px] bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
         <div class="h-24 flex items-center px-8 border-b border-slate-50">
-            <!-- โลโก้ไล่สีม่วง-ฟ้า (Indigo/Violet) -->
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3 shrink-0">
                 <i class="fas fa-tools text-white text-lg"></i>
             </div>
@@ -308,7 +279,6 @@ if($tech_list_res){
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
-        <!-- Header สีขาว มินิมอล -->
         <header class="h-20 bg-white/80 backdrop-blur-md flex items-center justify-between px-8 z-10 sticky top-0 no-print border-b border-slate-100">
             <div class="flex items-center">
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-indigo-600 focus:outline-none">
@@ -330,7 +300,6 @@ if($tech_list_res){
                         </span>
                         <span class="block text-[11px] text-slate-400 font-semibold">Administrator</span>
                     </div>
-                    <!-- ไอคอนโปรไฟล์แบบรูปภาพ/วงกลมสีเทา -->
                     <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 overflow-hidden">
                         <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
@@ -343,7 +312,7 @@ if($tech_list_res){
             <!-- Dashboard Section -->
             <div id="dash" class="section space-y-8 animate-fade-in no-print">
                 
-                <!-- แถวที่ 1: การ์ดสถิติแบบ Minimal (อิง Fundex/SalesPilot) -->
+                <!-- 🟢 แถวที่ 1: การ์ดสถิติ (คลิกเพื่อ Filter ได้) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <?php 
                         $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
@@ -356,7 +325,8 @@ if($tech_list_res){
                         $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     ?>
                     
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="show('repairs')">
+                    <!-- การ์ดรวมทั้งหมด (คลิกเพื่อล้าง Filter) -->
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer" onclick="filterRepairs('all')">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
                             <span class="text-xs font-bold text-slate-400">TOTAL</span>
@@ -367,7 +337,8 @@ if($tech_list_res){
                         </div>
                     </div>
                     
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                    <!-- การ์ดรอดำเนินการ -->
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer" onclick="filterRepairs('รอรับเรื่อง')">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-xl"><i class="fas fa-clock"></i></div>
                             <span class="text-xs font-bold text-slate-400">WAITING</span>
@@ -378,7 +349,8 @@ if($tech_list_res){
                         </div>
                     </div>
 
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                    <!-- การ์ดกำลังดำเนินการ -->
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer" onclick="filterRepairs('กำลังดำเนินการ')">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-xl"><i class="fas fa-spinner"></i></div>
                             <span class="text-xs font-bold text-slate-400">ACTIVE</span>
@@ -389,7 +361,8 @@ if($tech_list_res){
                         </div>
                     </div>
 
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                    <!-- การ์ดเสร็จสิ้นแล้ว -->
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl"><i class="fas fa-check-circle"></i></div>
                             <span class="text-xs font-bold text-slate-400">DONE</span>
@@ -401,7 +374,7 @@ if($tech_list_res){
                     </div>
                 </div>
 
-                <!-- แถวที่ 2: กราฟ (สไตล์ Reference มี Gradient ล่างเส้น) -->
+                <!-- แถวที่ 2: กราฟ -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start mb-6">
@@ -427,7 +400,7 @@ if($tech_list_res){
                     </div>
                 </div>
 
-                <!-- แถวที่ 3: ตาราง Transactions (สไตล์ Clean หัวตารางสีอ่อน) -->
+                <!-- แถวที่ 3: ตาราง Transactions -->
                 <div class="grid grid-cols-1 gap-6">
                     <div class="modern-card overflow-hidden flex flex-col">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
@@ -456,7 +429,6 @@ if($tech_list_res){
                                         $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
                                         if($recent_dash && $recent_dash->num_rows > 0){
                                             while($rd = $recent_dash->fetch_assoc()) {
-                                                // สไตล์ Badge มินิมอล
                                                 $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                                 $statusText = ($rd['status'] == 'รอรับเรื่อง') ? 'Pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'In Progress' : 'Completed');
                                                 $date_fmt = date("Y-m-d", strtotime($rd['created_at']));
@@ -496,7 +468,7 @@ if($tech_list_res){
                         </div>
                         <div class="w-full md:w-auto relative">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchInputMobile" placeholder="Search ticket..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
+                            <input type="text" id="searchInputMobile" placeholder="Search ticket or status..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
                         </div>
                     </div>
                     <div class="overflow-x-auto w-full">
@@ -522,9 +494,7 @@ if($tech_list_res){
                                     if($res && $res->num_rows > 0){
                                         while($row = $res->fetch_assoc()) {
                                             $date = !empty($row['created_at']) ? date("Y-m-d", strtotime($row['created_at'])) : "-";
-                                            
                                             $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
-                                            
                                             $techName = !empty($row['technician_name']) ? "<div class='text-indigo-600 font-bold'>{$row['technician_name']}</div>" : "<span class='text-slate-400'>Unassigned</span>";
 
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
@@ -563,7 +533,7 @@ if($tech_list_res){
                     </div>
                     <div class="flex w-full md:w-auto gap-3">
                         <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-all"><i class="fas fa-shield-alt mr-2 text-slate-400"></i> Add Admin</button>
-                        <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
+                        <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Tech</button>
                     </div>
                 </div>
 
@@ -1036,6 +1006,21 @@ if($tech_list_res){
             document.getElementById(m).classList.toggle('opacity-0'); 
             document.getElementById(m).classList.toggle('pointer-events-none'); 
             document.body.classList.toggle('modal-active'); 
+        }
+
+        // 🟢 ฟังก์ชันคัดกรองจากการกดการ์ด (ทำงานร่วมกับระบบค้นหา)
+        function filterRepairs(statusStr) {
+            show('repairs');
+            
+            setTimeout(() => {
+                let searchInputs = [document.getElementById('searchInput'), document.getElementById('searchInputMobile')];
+                searchInputs.forEach(input => {
+                    if(input) {
+                        input.value = statusStr === 'all' ? '' : statusStr;
+                        input.dispatchEvent(new Event('input'));
+                    }
+                });
+            }, 50);
         }
 
         function updateExcelLink() {
