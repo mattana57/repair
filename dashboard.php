@@ -3,7 +3,7 @@ session_start();
 
 // 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? 
 if (!isset($_SESSION['user_id'])) {
-    // ให้ระบบจำ URL ปัจจุบันเอาไว้ (รวมถึง ?tab=repairs ด้วย)
+    // ให้ระบบจำ URL ปัจจุบันเอาไว้
     $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
     header("Location: login.php");
     exit();
@@ -46,7 +46,6 @@ if($check_phone->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN phone
 $check_dept = $conn->query("SHOW COLUMNS FROM users LIKE 'department'");
 if($check_dept->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN department VARCHAR(100) NULL AFTER phone");
 
-// ตรวจสอบและเพิ่มคอลัมน์ password ถ้ายังไม่มี
 $check_pwd = $conn->query("SHOW COLUMNS FROM users LIKE 'password'");
 if($check_pwd->num_rows == 0) {
     $conn->query("ALTER TABLE users ADD COLUMN password VARCHAR(255) NULL AFTER username");
@@ -100,7 +99,6 @@ if (isset($_GET['delete_user'])) {
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
 
-// จัดการการบันทึกข้อมูลผู้ใช้งานและรหัสผ่าน
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $user_id = $_POST['user_id'];
     $username = $_POST['username'];
@@ -201,37 +199,45 @@ if($check_repairs->num_rows > 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="light">
     <title>MBS Smart Maintenance</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- นำเข้าฟอนต์ Kanit สำหรับหน้าจอปกติ และ TH Sarabun สำหรับรายงานเอกสาร -->
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        :root { color-scheme: light; }
+        /* นำเข้าฟอนต์ TH Sarabun New สำหรับเอกสารราชการโดยเฉพาะ */
+        @font-face {
+            font-family: 'THSarabunNew';
+            src: url('https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/THSarabunNew/THSarabunNew.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'THSarabunNew';
+            src: url('https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/THSarabunNew/THSarabunNew%20Bold.woff2') format('woff2');
+            font-weight: bold;
+            font-style: normal;
+        }
+
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
-        .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
         .nav-btn { width: 100%; display: flex; align-items: center; padding: 0.875rem 1.25rem; margin-bottom: 0.25rem; border-radius: 0.75rem; color: #64748b; font-weight: 500; transition: all 0.2s; }
         .nav-btn i { width: 1.5rem; text-align: center; font-size: 1.25rem; margin-right: 0.75rem; color: #94a3b8; transition: all 0.2s; }
         .nav-btn:hover { background-color: #f8fafc; color: #0284c7; }
-        .nav-btn:hover i { color: #0ea5e9; transform: scale(1.1); }
         .active-btn { background-color: #f0f9ff; color: #0369a1; font-weight: 600; box-shadow: 0 2px 10px rgba(14, 165, 233, 0.1); border: 1px solid #bae6fd; }
         .active-btn i { color: #0284c7; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
-        /* สไตล์สำหรับเอกสารราชการ (TH Sarabun) */
+        /* สไตล์สำหรับเอกสารราชการ (TH Sarabun New) แบบเป๊ะๆ 100% */
         .official-doc {
-            font-family: 'Sarabun', sans-serif;
-            font-size: 16pt;
-            color: #000000;
+            font-family: 'THSarabunNew', sans-serif !important;
+            font-size: 16pt !important;
+            color: #000000 !important;
             background: #ffffff;
             width: 210mm;
             min-height: 297mm;
@@ -241,22 +247,53 @@ if($check_repairs->num_rows > 0) {
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             position: relative;
         }
-        .official-doc p { margin-bottom: 0; line-height: 1.15; text-align: justify; text-justify: inter-word; }
+        .official-doc p, .official-doc span, .official-doc div {
+            font-family: 'THSarabunNew', sans-serif !important;
+            font-size: 16pt !important;
+            color: #000000 !important;
+        }
+        .official-doc b, .official-doc strong { font-weight: bold !important; }
+        .official-doc p { line-height: 1.15; text-align: justify; margin-bottom: 0; }
         .official-doc .thai-indent { text-indent: 2.5cm; }
         
+        /* แก้ปัญหาเอกสารโดนตัดตอนสั่ง Print */
         @media print {
-            aside, header, .no-print { display: none !important; }
-            main { padding: 0 !important; margin: 0 !important; background: white; }
-            body { background: white; margin: 0; padding: 0; }
-            #reports { display: block !important; margin: 0 !important; }
-            
-            /* ลบ shadow และ margin เมื่อปริ้นท์ ให้พอดีหน้ากระดาษ */
+            @page { 
+                size: A4; 
+                margin: 2.5cm 2cm 2cm 3cm; /* ตั้งระยะขอบกระดาษในระบบพิมพ์โดยตรง */
+            }
+            body, html { 
+                height: auto !important; 
+                overflow: visible !important; 
+                background: #ffffff !important; 
+            }
+            /* ลบล็อกการแสดงผลแบบหน้าเดียวของ Tailwind */
+            .flex, .h-screen, .overflow-hidden {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #assets, #users { 
+                display: none !important; 
+            }
+            main, .flex-1 { 
+                display: block !important; 
+                height: auto !important; 
+                overflow: visible !important; 
+                padding: 0 !important; 
+            }
+            #reports { 
+                display: block !important; 
+                margin: 0 !important; 
+            }
             .official-doc {
-                box-shadow: none !important;
-                margin: 0 !important;
-                padding: 1.5cm 1.5cm 1.5cm 2cm !important; /* ปรับลดขอบตอนปริ้นท์ให้พอดีเครื่อง */
                 width: 100% !important;
-                min-height: 100vh !important;
+                min-height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important; /* ให้ระยะขอบไปดึงจาก @page แทน */
+                box-shadow: none !important;
+                border: none !important;
+                page-break-after: auto;
             }
         }
     </style>
@@ -292,7 +329,6 @@ if($check_repairs->num_rows > 0) {
             <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-users"></i> ประวัติผู้แจ้งซ่อม</button>
             <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-invoice"></i> รายงานสรุป</button>
             
-            <!-- เพิ่มปุ่ม Logout -->
             <div class="mt-auto pt-4 border-t border-slate-100">
                 <a href="logout.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
             </div>
@@ -327,8 +363,9 @@ if($check_repairs->num_rows > 0) {
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-4 md:p-10 print:p-0">
+        <div class="flex-1 overflow-y-auto p-4 md:p-10 print:p-0 print:overflow-visible">
             
+            <!-- ส่วน Dashboard อื่นๆ ... (ยังคงเดิม ซ่อนตอนปริ้นท์) -->
             <div id="dash" class="section space-y-6 animate-fade-in no-print">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     <?php 
@@ -766,7 +803,7 @@ if($check_repairs->num_rows > 0) {
 
                     <!-- ส่วนหัวบันทึกข้อความ มีครุฑ -->
                     <div class="flex items-center mb-6 relative">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Thai_government_Garuda_emblem_%28Version_2%29.svg/120px-Thai_government_Garuda_emblem_%28Version_2%29.svg.png" class="w-[1.5cm] absolute left-0 top-0" style="filter: grayscale(100%);">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Thai_government_Garuda_emblem_%28Version_2%29.svg" class="w-[1.5cm] h-[1.5cm] object-contain absolute left-0 top-0" style="filter: grayscale(100%);">
                         <h1 class="w-full text-center font-bold" style="font-size: 29pt; margin-top: 15px;">บันทึกข้อความ</h1>
                     </div>
                     
@@ -955,7 +992,7 @@ if($check_repairs->num_rows > 0) {
                         <thead class="bg-slate-100 border-b border-slate-200 text-slate-600 text-[10px] md:text-xs uppercase tracking-wider font-bold">
                             <tr>
                                 <th class="px-3 md:px-4 py-3">เลขที่ใบงาน</th>
-                                <th class="px-3 md:px-4 py-3">อุปกรณ์ / อา อาการ</th>
+                                <th class="px-3 md:px-4 py-3">อุปกรณ์ / อาการ</th>
                                 <th class="px-3 md:px-4 py-3 text-center">สถานะ</th>
                                 <th class="px-3 md:px-4 py-3">วันที่แจ้ง</th>
                             </tr>
