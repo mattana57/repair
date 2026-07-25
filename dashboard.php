@@ -16,7 +16,7 @@ if (strtolower($_SESSION['role']) === 'executive') {
 
 include 'db_connect.php';
 
-// ================= ฟังก์ชันแปลงตัวเลขเป็นเลขไทย (สำหรับ PHP) =================
+// ================= ฟังก์ชันแปลงตัวเลขเป็นเลขไทย =================
 function thaiNum($num) {
     return str_replace(
         array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
@@ -169,6 +169,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
 
 // ================= เตรียมข้อมูลประวัติและสถิติ =================
 $all_repairs_json = "[]";
+$status_counts = ['รอรับเรื่อง'=>0, 'กำลังดำเนินการ'=>0, 'ซ่อมเสร็จแล้ว'=>0];
+$eq_labels = []; 
+$eq_counts = [];
 
 if($check_repairs->num_rows > 0) {
     $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
@@ -179,6 +182,23 @@ if($check_repairs->num_rows > 0) {
     if($rep_res) {
         while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
         $all_repairs_json = json_encode($reps);
+    }
+
+    $stat_res = $conn->query("SELECT status, COUNT(*) as cnt FROM repairs GROUP BY status");
+    if($stat_res) {
+        while($st = $stat_res->fetch_assoc()){ 
+            if(isset($status_counts[$st['status']])) {
+                $status_counts[$st['status']] = $st['cnt']; 
+            }
+        }
+    }
+
+    $eq_res = $conn->query("SELECT equipment_type, COUNT(*) as cnt FROM repairs GROUP BY equipment_type ORDER BY cnt DESC LIMIT 5");
+    if($eq_res) {
+        while($eq = $eq_res->fetch_assoc()){ 
+            $eq_labels[] = $eq['equipment_type']; 
+            $eq_counts[] = $eq['cnt']; 
+        }
     }
 }
 
@@ -212,236 +232,260 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* ฟอนต์สำหรับพิมพ์เอกสารราชการ TH Sarabun New มาตรฐานสากล */
         @font-face {
             font-family: 'THSarabunNew';
             src: url('https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/THSarabunNew/THSarabunNew.woff2') format('woff2');
-            font-weight: normal;
-            font-style: normal;
+            font-weight: normal; font-style: normal;
         }
         @font-face {
             font-family: 'THSarabunNew';
             src: url('https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/THSarabunNew/THSarabunNew%20Bold.woff2') format('woff2');
-            font-weight: bold;
-            font-style: normal;
+            font-weight: bold; font-style: normal;
         }
 
-        body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
-        .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
-        .nav-btn { width: 100%; display: flex; align-items: center; padding: 0.875rem 1.25rem; margin-bottom: 0.25rem; border-radius: 0.75rem; color: #64748b; font-weight: 500; transition: all 0.2s; }
-        .nav-btn i { width: 1.5rem; text-align: center; font-size: 1.25rem; margin-right: 0.75rem; color: #94a3b8; transition: all 0.2s; }
-        .nav-btn:hover { background-color: #f8fafc; color: #0284c7; }
-        .active-btn { background-color: #f0f9ff; color: #0369a1; font-weight: 600; box-shadow: 0 2px 10px rgba(14, 165, 233, 0.1); border: 1px solid #bae6fd; }
-        .active-btn i { color: #0284c7; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f4f7fb; color: #334155; }
+        
+        /* สไตล์โมเดิร์นแบบ Reference */
+        .modern-card { background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); }
+        .gradient-card-1 { background: linear-gradient(135deg, #2563eb, #1e40af); }
+        .gradient-card-2 { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+        .gradient-card-3 { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .gradient-card-4 { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+        
+        .nav-btn { width: 100%; display: flex; align-items: center; padding: 0.75rem 1.25rem; margin-bottom: 0.5rem; border-radius: 8px; color: #64748b; font-weight: 500; transition: all 0.2s; font-size: 0.9rem;}
+        .nav-btn i { width: 1.5rem; text-align: center; font-size: 1.1rem; margin-right: 0.75rem; color: #94a3b8; transition: all 0.2s; }
+        .nav-btn:hover { background-color: #f8fafc; color: #2563eb; }
+        
+        /* ปุ่มเมนูที่ทำงานอยู่ */
+        .active-btn { background: linear-gradient(90deg, #eff6ff, #ffffff); color: #2563eb; font-weight: 600; border-right: 4px solid #2563eb; }
+        .active-btn i { color: #2563eb; }
+        
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
-        /* สไตล์สำหรับเอกสารราชการ (TH Sarabun New) */
+        /* สไตล์สำหรับเอกสารราชการ (TH Sarabun New) แบบเป๊ะๆ 100% */
         .official-doc {
             font-family: 'THSarabunNew', sans-serif !important;
-            font-size: 16pt !important;
-            color: #000000 !important;
-            background: #ffffff;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 2.5cm 2cm 2cm 3cm; 
-            margin: 0 auto;
-            box-sizing: border-box;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            position: relative;
-            line-height: 1.15 !important; 
+            font-size: 16pt !important; color: #000000 !important; background: #ffffff;
+            width: 210mm; min-height: 297mm; padding: 2.5cm 2cm 2cm 3cm; 
+            margin: 0 auto; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative; line-height: 1.15 !important; 
         }
-        
-        .official-doc * {
-            font-family: 'THSarabunNew', sans-serif !important;
-            color: #000000 !important;
-            font-size: 16pt;
-        }
-
-        .official-doc .title-doc {
-            font-size: 29pt !important;
-            font-weight: bold !important;
-            text-align: center;
-            margin-top: -10pt;
-            margin-bottom: 5pt;
-        }
-
+        .official-doc * { font-family: 'THSarabunNew', sans-serif !important; color: #000000 !important; font-size: 16pt; }
+        .official-doc .title-doc { font-size: 29pt !important; font-weight: bold !important; text-align: center; margin-top: -10pt; margin-bottom: 5pt; }
         .official-doc .bold-text { font-weight: bold !important; }
-        
-        .official-doc p { 
-            text-align: justify; 
-            margin-bottom: 2pt;
-            margin-top: 0;
-        }
-        
+        .official-doc p { text-align: justify; margin-bottom: 2pt; margin-top: 0; }
         .official-doc .thai-indent { text-indent: 2.5cm; }
         .official-doc .thai-sub-indent { padding-left: 2.5cm; }
-
-        .official-doc .doc-row {
-            display: flex;
-            align-items: baseline;
-            margin-bottom: 2pt;
-        }
-
-        .keep-together {
-            page-break-inside: avoid;
-            break-inside: avoid;
-        }
+        .official-doc .doc-row { display: flex; align-items: baseline; margin-bottom: 2pt; }
+        .keep-together { page-break-inside: avoid; break-inside: avoid; }
 
         @media print {
-            @page { 
-                size: A4; 
-                margin: 0; 
-            }
-            body, html { 
-                height: 100% !important; 
-                overflow: visible !important; 
-                background: #ffffff !important; 
-            }
-            .flex, .h-screen, .overflow-hidden {
-                display: block !important;
-                height: auto !important;
-                overflow: visible !important;
-            }
-            aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #assets, #users { 
-                display: none !important; 
-            }
-            main, .flex-1 { 
-                display: block !important; 
-                height: auto !important; 
-                overflow: visible !important; 
-                padding: 0 !important; 
-            }
-            #reports { 
-                display: block !important; 
-                margin: 0 !important; 
-            }
-            .official-doc {
-                width: 210mm !important;
-                height: auto !important;
-                min-height: auto !important;
-                margin: 0 !important;
-                padding: 2.5cm 2cm 2cm 3cm !important; 
-                box-shadow: none !important;
-                border: none !important;
-                page-break-after: always;
-            }
+            @page { size: A4; margin: 0; }
+            body, html { height: 100% !important; overflow: visible !important; background: #ffffff !important; }
+            .flex, .h-screen, .overflow-hidden { display: block !important; height: auto !important; overflow: visible !important; }
+            aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #assets, #users { display: none !important; }
+            main, .flex-1 { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; }
+            #reports { display: block !important; margin: 0 !important; }
+            .official-doc { width: 210mm !important; height: auto !important; min-height: auto !important; margin: 0 !important; padding: 2.5cm 2cm 2cm 3cm !important; box-shadow: none !important; border: none !important; page-break-after: always; }
         }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden selection:bg-sky-200">
+<body class="flex h-screen overflow-hidden selection:bg-blue-200">
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
 
-    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] no-print">
-        <div class="h-20 md:h-24 flex items-center justify-between px-5 md:px-8 border-b border-slate-100">
-            <div class="flex items-center">
-                <div class="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 flex items-center justify-center shadow-lg shadow-sky-500/30 mr-3 shrink-0">
-                    <i class="fas fa-tools text-white text-lg md:text-xl"></i>
-                </div>
-                <div class="overflow-hidden flex-1">
-                    <h1 class="text-lg md:text-xl font-bold text-slate-800 leading-tight tracking-tight">MBS REPAIR</h1>
-                    <p class="text-[10px] md:text-xs text-sky-500 font-semibold tracking-widest uppercase mt-0.5">Admin Portal</p>
-                </div>
+    <aside id="sidebar" class="w-64 bg-white border-r border-slate-100 flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-sm no-print">
+        <div class="h-20 flex items-center px-6 border-b border-slate-50">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 mr-3 shrink-0">
+                <i class="fas fa-tools text-white text-lg"></i>
             </div>
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-red-500 focus:outline-none">
-                <i class="fas fa-times text-xl"></i>
-            </button>
+            <div class="overflow-hidden">
+                <h1 class="text-xl font-bold text-slate-800 leading-tight">MBS <span class="text-blue-600">REPAIR</span></h1>
+            </div>
         </div>
         
-        <nav class="flex-1 px-4 md:px-5 py-6 md:py-8 flex flex-col overflow-y-auto">
-            <p class="px-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">ระบบจัดการหลัก</p>
-            <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> ภาพรวมระบบ</button>
-            <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-layer-group"></i> รายการแจ้งซ่อม</button>
-            <button onclick="show('technicians')" class="nav-btn" id="btn-technicians"><i class="fas fa-user-shield"></i> ทีมงานระบบ</button>
+        <nav class="flex-1 px-4 py-6 flex flex-col overflow-y-auto">
+            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Main Menu</p>
+            <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-desktop"></i> Dashboard</button>
+            <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-layer-group"></i> Repairs List</button>
+            <button onclick="show('technicians')" class="nav-btn" id="btn-technicians"><i class="fas fa-users-cog"></i> Team Members</button>
             
-            <p class="px-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 mt-8">การตั้งค่าและรายงาน</p>
-            <button onclick="show('assets')" class="nav-btn" id="btn-assets"><i class="fas fa-server"></i> จัดการอุปกรณ์</button>
-            <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-users"></i> ประวัติผู้แจ้งซ่อม</button>
-            <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-invoice"></i> รายงานสรุป</button>
+            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 mt-6">Settings & Reports</p>
+            <button onclick="show('assets')" class="nav-btn" id="btn-assets"><i class="fas fa-boxes"></i> Assets</button>
+            <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-address-book"></i> User History</button>
+            <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-alt"></i> Official Report</button>
             
-            <div class="mt-auto pt-4 border-t border-slate-100">
-                <a href="logout.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
+            <div class="mt-auto pt-4">
+                <a href="logout.php" class="nav-btn text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-power-off"></i> Logout</a>
             </div>
         </nav>
     </aside>
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <div class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-sky-100/50 to-transparent -z-10 no-print"></div>
-        
-        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 md:px-10 shrink-0 z-10 sticky top-0 no-print">
-            <div class="flex items-center overflow-hidden">
-                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-sky-600 focus:outline-none shrink-0">
+        <header class="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-6 z-10 sticky top-0 no-print shadow-sm">
+            <div class="flex items-center">
+                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-blue-600 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h2 class="text-xl md:text-2xl font-bold text-slate-800 tracking-wide truncate" id="headerTitle">ภาพรวมระบบ (Dashboard)</h2>
+                <h2 class="text-xl font-bold text-slate-800 tracking-wide" id="headerTitle">Dashboard</h2>
             </div>
             
-            <div class="flex items-center space-x-3 md:space-x-6 shrink-0">
+            <div class="flex items-center space-x-6">
                 <div class="relative hidden lg:block">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" id="searchInput" placeholder="ค้นหาข้อมูลในตาราง..." class="bg-white border border-slate-200 text-sm rounded-full pl-11 pr-5 py-2.5 text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all w-72 shadow-sm">
+                    <input type="text" id="searchInput" placeholder="Search data..." class="bg-slate-50 border border-slate-100 text-sm rounded-full pl-10 pr-4 py-2.5 text-slate-700 focus:outline-none focus:border-blue-300 focus:bg-white transition-all w-64">
                 </div>
-                <div class="flex items-center space-x-3 cursor-pointer p-1.5 md:pr-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm">
-                    <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold"><i class="fas fa-user text-sm"></i></div>
-                    <div class="hidden sm:block text-left">
-                        <span class="block text-sm font-semibold text-slate-700 leading-none mb-1">
-                            <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Administrator'); ?>
+                <div class="flex items-center space-x-3 cursor-pointer">
+                    <div class="text-right hidden sm:block">
+                        <span class="block text-sm font-bold text-slate-700 leading-none mb-1">
+                            <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <span class="block text-[11px] text-slate-500 uppercase tracking-wide leading-none">ผู้ดูแลระบบ</span>
+                        <span class="block text-[10px] text-slate-500 uppercase tracking-wide">Administrator</span>
                     </div>
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 border border-blue-200"><i class="fas fa-user"></i></div>
                 </div>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-4 md:p-10 print:p-0 print:overflow-visible bg-slate-100/50 print:bg-white">
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 print:p-0 print:overflow-visible">
             
-            <!-- Dashboard Section -->
+            <!-- Dashboard Section (สไตล์ Reference สีฟ้า-น้ำเงิน) -->
             <div id="dash" class="section space-y-6 animate-fade-in no-print">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                    <?php 
-                    if($check_repairs->num_rows > 0) {
-                        $stats = [
-                            ["งานทั้งหมด", "repairs", "fa-briefcase", "text-blue-600", "bg-blue-100", "border-blue-200"], 
-                            ["รอรับเรื่อง", "status='รอรับเรื่อง'", "fa-clock", "text-amber-500", "bg-amber-100", "border-amber-200"], 
-                            ["กำลังดำเนินการ", "status='กำลังดำเนินการ'", "fa-tools", "text-sky-500", "bg-sky-100", "border-sky-200"], 
-                            ["ซ่อมเสร็จแล้ว", "status='ซ่อมเสร็จแล้ว'", "fa-check-circle", "text-emerald-500", "bg-emerald-100", "border-emerald-200"]
-                        ];
-                        foreach($stats as $s) {
-                            $res = $conn->query("SELECT count(*) as c FROM repairs ".($s[1] != "repairs" ? "WHERE {$s[1]}" : ""));
-                            $c = $res ? $res->fetch_assoc()['c'] : 0;
-                            echo "<div class='modern-card p-5 md:p-6 border-b-4 {$s[5]}'><div class='flex justify-between items-start'><div><p class='text-slate-500 text-xs md:text-sm font-medium mb-1 md:mb-2'>{$s[0]}</p><h3 class='text-3xl md:text-4xl font-extrabold text-slate-800'>{$c}</h3></div><div class='w-12 h-12 md:w-14 md:h-14 rounded-2xl {$s[4]} flex items-center justify-center {$s[3]} shadow-sm'><i class='fas {$s[2]} text-xl md:text-2xl'></i></div></div></div>";
-                        }
-                    }
-                    ?>
+                
+                <!-- แถวที่ 1: กราฟเหมือนในรูปเรฟ -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 modern-card p-6 flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-lg">Equipment Statistics</h3>
+                                <p class="text-xs text-slate-400">Overview of repairing items</p>
+                            </div>
+                        </div>
+                        <div class="flex-1 relative w-full h-[250px]">
+                            <canvas id="mainEquipChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="modern-card p-6 flex flex-col">
+                        <div class="mb-2">
+                            <h3 class="font-bold text-slate-800 text-lg">Traffic / Status</h3>
+                            <p class="text-xs text-slate-400">Current works proportion</p>
+                        </div>
+                        <div class="flex-1 relative w-full h-[220px] flex justify-center mt-4">
+                            <canvas id="mainStatusChart"></canvas>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                    <div class="lg:col-span-2 modern-card bg-white overflow-hidden flex flex-col">
-                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <h3 class="font-bold text-slate-800 text-sm md:text-base"><i class="fas fa-bolt text-amber-500 mr-2"></i> งานแจ้งซ่อมล่าสุด</h3>
-                            <button onclick="show('repairs')" class="text-xs font-bold text-sky-600 hover:text-sky-800 bg-sky-100 px-3 py-1.5 rounded-lg transition-colors">ดูทั้งหมด</button>
+                <!-- แถวที่ 2: การ์ดสถิติไล่สี (Gradient Cards) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <?php 
+                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
+                        $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
+                        
+                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE status='รอรับเรื่อง'");
+                        $cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
+                        
+                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE status='กำลังดำเนินการ'");
+                        $cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
+                        
+                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
+                        $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
+                    ?>
+                    <div class="gradient-card-1 rounded-xl p-5 text-white shadow-md relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-white/10 text-7xl transform group-hover:scale-110 transition-transform"><i class="fas fa-briefcase"></i></div>
+                        <p class="text-white/80 text-xs font-medium mb-1 uppercase tracking-wider">Total Works</p>
+                        <h3 class="text-3xl font-bold"><?php echo $cTotal; ?></h3>
+                    </div>
+                    
+                    <div class="gradient-card-2 rounded-xl p-5 text-white shadow-md relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-white/10 text-7xl transform group-hover:scale-110 transition-transform"><i class="fas fa-clock"></i></div>
+                        <p class="text-white/80 text-xs font-medium mb-1 uppercase tracking-wider">Pending</p>
+                        <h3 class="text-3xl font-bold"><?php echo $cPend; ?></h3>
+                    </div>
+
+                    <div class="gradient-card-3 rounded-xl p-5 text-white shadow-md relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-white/10 text-7xl transform group-hover:scale-110 transition-transform"><i class="fas fa-tools"></i></div>
+                        <p class="text-white/80 text-xs font-medium mb-1 uppercase tracking-wider">In Progress</p>
+                        <h3 class="text-3xl font-bold"><?php echo $cProg; ?></h3>
+                    </div>
+
+                    <div class="gradient-card-4 rounded-xl p-5 text-white shadow-md relative overflow-hidden group">
+                        <div class="absolute -right-6 -top-6 text-white/10 text-7xl transform group-hover:scale-110 transition-transform"><i class="fas fa-check-circle"></i></div>
+                        <p class="text-white/80 text-xs font-medium mb-1 uppercase tracking-wider">Completed</p>
+                        <h3 class="text-3xl font-bold"><?php echo $cComp; ?></h3>
+                    </div>
+                </div>
+
+                <!-- แถวที่ 3: Timeline & Table -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Timeline (Recent Activities) -->
+                    <div class="modern-card p-6">
+                        <h3 class="font-bold text-slate-800 text-base mb-6">Recent Activities <span class="text-xs font-normal text-slate-400 block">Broken assets report</span></h3>
+                        <div class="relative border-l-2 border-slate-100 ml-3 space-y-6">
+                            <?php
+                            $check_assets = $conn->query("SHOW TABLES LIKE 'assets'");
+                            if($check_assets->num_rows > 0) {
+                                $broken_assets = $conn->query("SELECT * FROM assets WHERE status = 'ชำรุด/ส่งซ่อม' LIMIT 4");
+                                if($broken_assets && $broken_assets->num_rows > 0){
+                                    while($ba = $broken_assets->fetch_assoc()) {
+                                        echo "
+                                        <div class='relative pl-6'>
+                                            <div class='absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-blue-500 border-4 border-white shadow-sm'></div>
+                                            <div class='flex flex-col'>
+                                                <span class='text-[10px] text-slate-400 font-bold mb-0.5 uppercase tracking-widest'>Broken Item</span>
+                                                <span class='text-sm font-bold text-slate-800 leading-tight'>{$ba['asset_name']}</span>
+                                                <span class='text-xs text-slate-500 mt-1'>Code: {$ba['asset_code']}</span>
+                                            </div>
+                                        </div>";
+                                    }
+                                } else {
+                                    echo "<div class='pl-6 text-slate-400 text-sm'>No broken assets found.</div>";
+                                }
+                            }
+                            ?>
                         </div>
-                        <div class="overflow-x-auto flex-1">
+                    </div>
+
+                    <!-- Table (Order Status) -->
+                    <div class="lg:col-span-2 modern-card overflow-hidden flex flex-col">
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-base">Order Status</h3>
+                                <p class="text-xs text-slate-400">Overview of latest repairs</p>
+                            </div>
+                            <button onclick="show('repairs')" class="text-xs text-blue-600 bg-blue-50 px-3 py-1.5 rounded-md font-semibold hover:bg-blue-100 transition-colors">View All</button>
+                        </div>
+                        <div class="overflow-x-auto">
                             <table class="w-full text-left whitespace-nowrap">
-                                <tbody class="text-sm divide-y divide-slate-100">
+                                <thead class="bg-slate-800 text-white text-[10px] uppercase tracking-wider font-semibold">
+                                    <tr>
+                                        <th class="px-5 py-3 rounded-tl-sm">INVOICE (No.)</th>
+                                        <th class="px-5 py-3">CUSTOMERS</th>
+                                        <th class="px-5 py-3">EQUIPMENT</th>
+                                        <th class="px-5 py-3 text-center rounded-tr-sm">STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-slate-50">
                                     <?php
                                     if($check_repairs->num_rows > 0) {
                                         $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
                                         if($recent_dash && $recent_dash->num_rows > 0){
                                             while($rd = $recent_dash->fetch_assoc()) {
-                                                $time_ago = date("d/m H:i", strtotime($rd['created_at']));
-                                                $stColor = ($rd['status'] == 'รอรับเรื่อง') ? 'text-amber-500 bg-amber-50 border-amber-100' : (($rd['status'] == 'กำลังดำเนินการ') ? 'text-sky-500 bg-sky-50 border-sky-100' : 'text-emerald-500 bg-emerald-50 border-emerald-100');
-                                                echo "<tr class='hover:bg-slate-50 transition-colors'>
-                                                    <td class='px-4 md:px-5 py-3 md:py-4 font-semibold text-slate-800'>{$rd['equipment_type']}</td>
-                                                    <td class='px-4 md:px-5 py-3 md:py-4 text-slate-500 text-xs'><i class='fas fa-map-marker-alt text-slate-300 mr-1'></i> {$rd['location']}</td>
-                                                    <td class='px-4 md:px-5 py-3 md:py-4 text-right'><span class='px-2.5 py-1 rounded-full text-[11px] font-bold border {$stColor}'>{$rd['status']}</span></td>
-                                                    <td class='px-4 md:px-5 py-3 md:py-4 text-right text-slate-400 text-xs'>{$time_ago}</td>
+                                                $stColor = ($rd['status'] == 'รอรับเรื่อง') ? 'bg-orange-400 text-white' : (($rd['status'] == 'กำลังดำเนินการ') ? 'bg-sky-400 text-white' : 'bg-emerald-400 text-white');
+                                                $statusText = ($rd['status'] == 'รอรับเรื่อง') ? 'Pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'In Progress' : 'Completed');
+                                                echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                                    <td class='px-5 py-3 text-slate-500 font-mono text-xs'>{$rd['ticket_no']}</td>
+                                                    <td class='px-5 py-3 text-slate-700 font-semibold'>{$rd['reporter_name']}</td>
+                                                    <td class='px-5 py-3 text-slate-500 text-xs'>{$rd['equipment_type']}</td>
+                                                    <td class='px-5 py-3 text-center'><span class='px-3 py-1 rounded text-[10px] font-bold {$stColor} shadow-sm'>{$statusText}</span></td>
                                                 </tr>";
                                             }
                                         } else {
@@ -451,38 +495,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                     ?>
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-
-                    <div class="modern-card bg-white overflow-hidden flex flex-col">
-                        <div class="p-4 md:p-5 border-b border-slate-100 bg-red-50/30">
-                            <h3 class="font-bold text-slate-800 text-sm md:text-base"><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i> อุปกรณ์ชำรุด (รอซ่อม)</h3>
-                        </div>
-                        <div class="p-4 md:p-5 flex-1 overflow-y-auto">
-                            <div class="space-y-3">
-                                <?php
-                                $check_assets = $conn->query("SHOW TABLES LIKE 'assets'");
-                                if($check_assets->num_rows > 0) {
-                                    $broken_assets = $conn->query("SELECT * FROM assets WHERE status = 'ชำรุด/ส่งซ่อม' LIMIT 4");
-                                    if($broken_assets && $broken_assets->num_rows > 0){
-                                        while($ba = $broken_assets->fetch_assoc()) {
-                                            echo "<div class='flex items-center justify-between p-3 rounded-xl border border-red-100 bg-white shadow-sm hover:shadow-md transition-shadow'>
-                                                <div>
-                                                    <p class='text-sm font-bold text-slate-800'>{$ba['asset_name']}</p>
-                                                    <p class='text-[11px] text-slate-500'>{$ba['asset_code']}</p>
-                                                </div>
-                                                <span class='text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1 rounded-lg border border-red-100'>ชำรุด</span>
-                                            </div>";
-                                        }
-                                    } else {
-                                        echo "<div class='text-center py-8 text-slate-400'>
-                                                <i class='fas fa-check-circle text-4xl text-emerald-200 mb-3 block'></i> 
-                                                <p class='text-sm font-medium'>ไม่มีอุปกรณ์ชำรุดในระบบ</p>
-                                              </div>";
-                                    }
-                                }
-                                ?>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -495,7 +507,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                         <h2 class="text-lg md:text-xl font-bold text-slate-800">รายการแจ้งซ่อมทั้งหมด</h2>
                         <div class="w-full md:w-auto relative lg:hidden">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchInputMobile" placeholder="ค้นหาใบงาน..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-sky-400">
+                            <input type="text" id="searchInputMobile" placeholder="ค้นหาใบงาน..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-blue-400">
                         </div>
                     </div>
                     <div class="overflow-x-auto w-full">
@@ -522,15 +534,15 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                         while($row = $res->fetch_assoc()) {
                                             $date = !empty($row['created_at']) ? date("d/m/Y H:i", strtotime($row['created_at'])) : "-";
                                             $statusClass = "bg-slate-100 text-slate-600 border-slate-200"; 
-                                            if($row['status'] == 'รอรับเรื่อง') $statusClass = "bg-amber-50 text-amber-600 border-amber-200";
+                                            if($row['status'] == 'รอรับเรื่อง') $statusClass = "bg-orange-50 text-orange-600 border-orange-200";
                                             elseif($row['status'] == 'กำลังดำเนินการ') $statusClass = "bg-sky-50 text-sky-600 border-sky-200";
                                             elseif($row['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
                                             
-                                            $techName = !empty($row['technician_name']) ? "<div class='flex items-center justify-center text-indigo-600 font-semibold'><i class='fas fa-hard-hat mr-2'></i>{$row['technician_name']}</div>" : "<span class='text-slate-400'>- ไม่ระบุ -</span>";
+                                            $techName = !empty($row['technician_name']) ? "<div class='flex items-center justify-center text-blue-600 font-semibold'><i class='fas fa-hard-hat mr-2'></i>{$row['technician_name']}</div>" : "<span class='text-slate-400'>- ไม่ระบุ -</span>";
 
                                             echo "<tr class='hover:bg-slate-50/80 transition-colors'>
                                                 <td class='px-6 py-4 text-slate-500'>{$date}</td>
-                                                <td class='px-6 py-4 font-bold text-sky-600'>{$row['ticket_no']}</td>
+                                                <td class='px-6 py-4 font-bold text-blue-600'>{$row['ticket_no']}</td>
                                                 <td class='px-6 py-4'><div class='text-slate-800 font-semibold'>{$row['reporter_name']}</div><div class='text-slate-500 text-[11px] md:text-xs mt-1'><i class='fas fa-phone-alt mr-1 text-slate-400'></i> {$row['phone_number']}</div></td>
                                                 <td class='px-6 py-4'>
                                                     <div class='text-slate-800 font-semibold'>{$row['equipment_type']}</div>
@@ -563,14 +575,14 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                         <p class="text-sm text-slate-500 mt-1">จัดการรายชื่อผู้ดูแลและช่างซ่อม</p>
                     </div>
                     <div class="flex w-full md:w-auto gap-2">
-                        <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> เพิ่มผู้ดูแล/ผู้บริหาร</button>
+                        <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-blue-700 hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> เพิ่มผู้ดูแล/ผู้บริหาร</button>
                         <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-hard-hat mr-2"></i> เพิ่มช่างซ่อม</button>
                     </div>
                 </div>
 
                 <!-- ตาราง Admin & Executive -->
                 <div>
-                    <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-user-shield text-purple-500 mr-2 text-xl"></i> ผู้ดูแลระบบ และ ผู้บริหาร</h3>
+                    <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-user-shield text-blue-600 mr-2 text-xl"></i> ผู้ดูแลระบบ และ ผู้บริหาร</h3>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
@@ -590,8 +602,8 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                         while($u = $admin_res->fetch_assoc()) {
                                             $r_lower = strtolower($u['role']);
                                             $roleDisplay = ($r_lower == 'executive') ? 'ผู้บริหาร' : 'Admin';
-                                            $roleClass = ($r_lower == 'executive') ? "bg-pink-50 text-pink-600 border-pink-200" : "bg-purple-50 text-purple-600 border-purple-200";
-                                            $iconClass = ($r_lower == 'executive') ? "fa-user-tie text-pink-600 bg-pink-50 border-pink-100" : "fa-user-shield text-purple-600 bg-purple-50 border-purple-100";
+                                            $roleClass = ($r_lower == 'executive') ? "bg-indigo-50 text-indigo-600 border-indigo-200" : "bg-blue-50 text-blue-600 border-blue-200";
+                                            $iconClass = ($r_lower == 'executive') ? "fa-user-tie text-indigo-600 bg-indigo-50 border-indigo-100" : "fa-user-shield text-blue-600 bg-blue-50 border-blue-100";
                                             $icon = ($r_lower == 'executive') ? "fa-user-tie" : "fa-user-shield";
                                             
                                             $js_uid = $u['id']; 
@@ -613,7 +625,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                                 <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 hover:text-blue-600 transition-all flex items-center justify-center border border-slate-200 shadow-sm'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
@@ -671,11 +683,11 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                                     </div>
                                                 </td>
                                                 <td class='px-6 py-4 text-slate-600'>".(!empty($t['department']) ? $t['department'] : '-')."</td>
-                                                <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border bg-indigo-50 text-indigo-600 border-indigo-200'>{$total_jobs} งาน</span></td>
+                                                <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border bg-blue-50 text-blue-600 border-blue-200'>{$total_jobs} งาน</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
                                                         <button onclick=\"viewHistory('{$js_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-sky-600 hover:bg-sky-50 px-2 md:px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>ดูผลงาน</span></button>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 hover:text-blue-600 transition-all flex items-center justify-center border border-slate-200 shadow-sm'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$t['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
@@ -695,7 +707,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 <div class="modern-card overflow-hidden">
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-white gap-3">
                         <h2 class="text-lg md:text-xl font-bold text-slate-800">ฐานข้อมูลอุปกรณ์</h2>
-                        <button onclick="openAddAssetModal()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-plus mr-2"></i> เพิ่มอุปกรณ์ใหม่</button>
+                        <button onclick="openAddAssetModal()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-plus mr-2"></i> เพิ่มอุปกรณ์ใหม่</button>
                     </div>
                     <div class="overflow-x-auto w-full">
                         <table class="w-full text-left whitespace-nowrap min-w-[600px]">
@@ -717,13 +729,13 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                         $js_id = $a['id']; $js_code = htmlspecialchars($a['asset_code'], ENT_QUOTES); $js_name = htmlspecialchars($a['asset_name'], ENT_QUOTES); $js_cat = htmlspecialchars($a['category'], ENT_QUOTES); $js_status = htmlspecialchars($a['status'], ENT_QUOTES);
 
                                         echo "<tr class='hover:bg-slate-50/80 transition-colors'>
-                                            <td class='px-6 py-4 font-bold text-indigo-600'>{$a['asset_code']}</td>
+                                            <td class='px-6 py-4 font-bold text-blue-600'>{$a['asset_code']}</td>
                                             <td class='px-6 py-4 text-slate-800 font-semibold'>{$a['asset_name']}</td>
                                             <td class='px-6 py-4 text-slate-600'><span class='bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200'>{$a['category']}</span></td>
                                             <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border {$a_statusClass}'>{$a['status']}</span></td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 hover:text-blue-600 transition-all flex items-center justify-center border border-slate-200 shadow-sm'><i class='fas fa-edit'></i></button>
                                                     <button onclick=\"confirmDelete('asset', {$a['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
@@ -737,7 +749,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 </div>
             </div>
 
-            <!-- Users Section (ประวัติผู้แจ้งซ่อม ที่จัดการได้) -->
+            <!-- Users Section -->
             <div id="users" class="section hidden space-y-4 md:space-y-6 no-print">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                     <div>
@@ -782,7 +794,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     <button onclick=\"viewHistory('{$js_old_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-sky-600 hover:bg-sky-50 px-2 md:px-4 py-1.5 md:py-2 rounded-xl text-xs font-bold transition-colors shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>ดูประวัติ</span></button>
-                                                    <button onclick=\"openEditReporterModal('{$js_old_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm' title='แก้ไขข้อมูล'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"openEditReporterModal('{$js_old_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 hover:text-blue-600 transition-all flex items-center justify-center border border-slate-200 shadow-sm' title='แก้ไขข้อมูล'><i class='fas fa-edit'></i></button>
                                                     <button onclick=\"confirmDeleteReporter('{$js_old_name}')\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm' title='ลบประวัติ'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
@@ -796,10 +808,9 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 </div>
             </div>
 
-            <!-- Report Summary Section (เอกสารบันทึกข้อความราชการ 100% พร้อม Filter บุคคล) -->
+            <!-- Report Summary Section (เอกสารบันทึกข้อความราชการ 100%) -->
             <div id="reports" class="section hidden space-y-6">
                 
-                <!-- แถบปุ่มกดด้านบน และตัวกรองช่าง (ไม่แสดงตอนพิมพ์) -->
                 <div class="modern-card bg-white p-4 md:p-6 no-print">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                         <div>
@@ -812,16 +823,15 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                 <i class="fas fa-file-excel mr-2 text-lg"></i> ดาวน์โหลดตาราง Excel
                             </a>
                             <!-- ปุ่มพิมพ์เอกสาร -->
-                            <button onclick="window.print()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-sky-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
+                            <button onclick="window.print()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
                                 <i class="fas fa-print mr-2 text-lg"></i> พิมพ์บันทึกข้อความ
                             </button>
                         </div>
                     </div>
 
-                    <!-- แถบตัวกรองรายบุคคล -->
-                    <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
-                        <label class="font-bold text-slate-700 text-sm"><i class="fas fa-filter text-sky-500 mr-1"></i> เลือกดูรายงาน:</label>
-                        <select id="techFilter" onchange="updateReportData()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-4 py-2 focus:outline-none focus:border-sky-500 font-medium min-w-[200px]">
+                    <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        <label class="font-bold text-slate-700 text-sm"><i class="fas fa-filter text-blue-500 mr-1"></i> เลือกดูรายงาน:</label>
+                        <select id="techFilter" onchange="updateReportData()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 font-medium min-w-[200px] w-full sm:w-auto">
                             <option value="all">ภาพรวมระบบทั้งหมด (All)</option>
                             <?php 
                                 foreach($tech_options as $tech) {
@@ -835,7 +845,17 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 <!-- หน้าเอกสารสำหรับพิมพ์ (A4 Style - บันทึกข้อความแบบทางการ 100%) -->
                 <div class="official-doc">
                     
-                    <!-- ส่วนหัวบันทึกข้อความ มีครุฑ -->
+                    <?php 
+                        $total_repairs = array_sum($status_counts);
+                        $pending = $status_counts['รอรับเรื่อง'] ?? 0;
+                        $progress = $status_counts['กำลังดำเนินการ'] ?? 0;
+                        $completed = $status_counts['ซ่อมเสร็จแล้ว'] ?? 0;
+
+                        $pct_completed = $total_repairs > 0 ? number_format(($completed / $total_repairs) * 100, 2) : 0;
+                        $pct_progress = $total_repairs > 0 ? number_format(($progress / $total_repairs) * 100, 2) : 0;
+                        $pct_pending = $total_repairs > 0 ? number_format(($pending / $total_repairs) * 100, 2) : 0;
+                    ?>
+
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Thai_government_Garuda_emblem_%28Version_2%29.svg" style="width: 1.5cm; position: absolute; left: 3cm; top: 1.5cm; filter: grayscale(100%);">
                     
                     <div class="title-doc">บันทึกข้อความ</div>
@@ -866,18 +886,17 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                         <span>คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</span>
                     </div>
                     
-                    <!-- เนื้อหารายงาน -->
                     <div>
                         <p class="thai-indent" id="docContext">ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น</p>
                         <p class="thai-indent">ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $report_month; ?> เพื่อรายงานผลการดำเนินงานให้รับทราบ โดยมีรายละเอียดดังต่อไปนี้</p>
                         
                         <div class="keep-together">
                             <p class="bold-text" style="margin-top: 5pt;">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
-                            <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b id="docTotal">๐</b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
+                            <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b id="docTotal"><?php echo thaiNum($total_repairs); ?></b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
                             <div class="thai-sub-indent">
-                                <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b id="docCompleted">๐</b> รายการ (คิดเป็นร้อยละ <span id="docPctCompleted">๐</span>)</p>
-                                <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b id="docProgress">๐</b> รายการ (คิดเป็นร้อยละ <span id="docPctProgress">๐</span>)</p>
-                                <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b id="docPending">๐</b> รายการ (คิดเป็นร้อยละ <span id="docPctPending">๐</span>)</p>
+                                <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b id="docCompleted"><?php echo thaiNum($completed); ?></b> รายการ (คิดเป็นร้อยละ <span id="docPctCompleted"><?php echo thaiNum($pct_completed); ?></span>)</p>
+                                <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b id="docProgress"><?php echo thaiNum($progress); ?></b> รายการ (คิดเป็นร้อยละ <span id="docPctProgress"><?php echo thaiNum($pct_progress); ?></span>)</p>
+                                <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b id="docPending"><?php echo thaiNum($pending); ?></b> รายการ (คิดเป็นร้อยละ <span id="docPctPending"><?php echo thaiNum($pct_pending); ?></span>)</p>
                             </div>
                         </div>
 
@@ -885,7 +904,16 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                             <p class="bold-text" style="margin-top: 5pt;">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
                             <p class="thai-indent">ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ประกอบด้วย</p>
                             <div class="thai-sub-indent" id="docTopEquip">
-                                <!-- อัปเดตผ่าน JS -->
+                                <?php 
+                                    if (!empty($eq_labels)) {
+                                        $thai_nums = ['๑', '๒', '๓', '๔', '๕'];
+                                        for ($i = 0; $i < count($eq_labels); $i++) {
+                                            echo "<p>๒." . $thai_nums[$i] . " " . htmlspecialchars($eq_labels[$i]) . " จำนวน <b>" . thaiNum($eq_counts[$i]) . "</b> รายการ</p>";
+                                        }
+                                    } else {
+                                        echo "<p>- ไม่มีข้อมูลการแจ้งซ่อมในระบบ -</p>";
+                                    }
+                                ?>
                             </div>
                         </div>
 
@@ -894,7 +922,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                         <p class="thai-indent keep-together" style="margin-top: 10pt;">จึงเรียนมาเพื่อโปรดทราบ</p>
                     </div>
 
-                    <!-- ลายเซ็น -->
                     <div class="keep-together" style="margin-top: 25pt; text-align: center; float: right; width: 6.5cm;">
                         <p style="margin-bottom: 20pt;">(ลงชื่อ)...................................................</p>
                         <p>( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
@@ -921,17 +948,17 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
             <form action="" method="POST" class="p-5 md:p-6">
                 <input type="hidden" name="save_asset" value="1"><input type="hidden" name="asset_id" id="asset_id" value="">
                 <div class="space-y-4">
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">รหัสครุภัณฑ์ <span class="text-red-500">*</span></label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่ออุปกรณ์ <span class="text-red-500">*</span></label><input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">หมวดหมู่ <span class="text-red-500">*</span></label><select name="category" id="asset_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"><option value="IT Support">IT Support</option><option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option><option value="อาคารสถานที่">อาคารสถานที่</option><option value="อื่นๆ">อื่นๆ</option></select></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">สถานะ</label><select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"><option value="ใช้งานปกติ">ใช้งานปกติ</option><option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option><option value="แทงจำหน่าย">แทงจำหน่าย</option></select></div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">รหัสครุภัณฑ์ <span class="text-red-500">*</span></label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"></div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่ออุปกรณ์ <span class="text-red-500">*</span></label><input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"></div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">หมวดหมู่ <span class="text-red-500">*</span></label><select name="category" id="asset_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"><option value="IT Support">IT Support</option><option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option><option value="อาคารสถานที่">อาคารสถานที่</option><option value="อื่นๆ">อื่นๆ</option></select></div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">สถานะ</label><select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"><option value="ใช้งานปกติ">ใช้งานปกติ</option><option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option><option value="แทงจำหน่าย">แทงจำหน่าย</option></select></div>
                 </div>
-                <div class="mt-6 md:mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('assetModal')" class="px-4 md:px-5 py-2 md:py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button><button type="submit" class="px-4 md:px-5 py-2 md:py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 shadow-md">บันทึกข้อมูล</button></div>
+                <div class="mt-6 md:mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('assetModal')" class="px-4 md:px-5 py-2 md:py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button><button type="submit" class="px-4 md:px-5 py-2 md:py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-500 shadow-md">บันทึกข้อมูล</button></div>
             </form>
         </div>
     </div>
 
-    <!-- Modal เพิ่ม/แก้ไข ทีมงาน (Admin & Tech) พร้อมฟังก์ชัน Toggle รหัสผ่านและเว้นชื่อได้ -->
+    <!-- Modal เพิ่ม/แก้ไข ทีมงาน (Admin & Tech) -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
@@ -947,14 +974,14 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">Username / รหัสประจำตัว <span class="text-red-500">*</span></label>
-                        <input type="text" name="username" id="techAdmin_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <input type="text" name="username" id="techAdmin_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none">
                     </div>
                     
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสผ่าน (Password) <span class="text-slate-400 font-normal text-xs" id="pwdHint"></span></label>
                         <div class="relative">
-                            <input type="password" name="password" id="techAdmin_password" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2 text-sm text-slate-700" placeholder="ตั้งรหัสผ่าน">
-                            <button type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-sky-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
+                            <input type="password" name="password" id="techAdmin_password" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none" placeholder="ตั้งรหัสผ่าน">
+                            <button type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-blue-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
                                 <i id="eyeIcon" class="fas fa-eye"></i>
                             </button>
                         </div>
@@ -962,7 +989,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
 
                     <div id="adminLevelDiv" class="hidden">
                         <label class="block text-sm font-semibold text-slate-700 mb-1">ระดับสิทธิ์ (Role) <span class="text-red-500">*</span></label>
-                        <select name="admin_level" id="techAdmin_level" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <select name="admin_level" id="techAdmin_level" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none">
                             <option value="Admin">ผู้ดูแลระบบ (Admin)</option>
                             <option value="Executive">ผู้บริหาร (Executive)</option>
                         </select>
@@ -970,16 +997,16 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล</label>
-                        <input type="text" name="full_name" id="techAdmin_fullname" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <input type="text" name="full_name" id="techAdmin_fullname" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์</label>
-                        <input type="text" name="phone" id="techAdmin_phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700">
+                        <input type="text" name="phone" id="techAdmin_phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none">
                     </div>
                     
                     <div id="deptDiv">
                         <label class="block text-sm font-semibold text-slate-700 mb-1">แผนก / ความเชี่ยวชาญ <span class="text-red-500">*</span></label>
-                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomDept(this, 'techAdmin_department_custom')" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 mb-2">
+                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomDept(this, 'techAdmin_department_custom')" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 mb-2 focus:border-blue-400 focus:outline-none">
                             <option value="" disabled selected>-- เลือกแผนก --</option>
                             <option value="แผนกช่าง">แผนกช่าง</option>
                             <option value="แผนกไฟฟ้า">แผนกไฟฟ้า</option>
@@ -987,10 +1014,10 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                             <option value="แม่บ้าน">แม่บ้าน</option>
                             <option value="อื่นๆ">อื่นๆ (พิมพ์เอง)</option>
                         </select>
-                        <input type="text" name="department_custom" id="techAdmin_department_custom" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 hidden" placeholder="ระบุแผนก/ความเชี่ยวชาญ">
+                        <input type="text" name="department_custom" id="techAdmin_department_custom" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 hidden focus:border-blue-400 focus:outline-none" placeholder="ระบุแผนก/ความเชี่ยวชาญ">
                     </div>
                 </div>
-                <div class="mt-6 md:mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('techAdminModal')" class="px-4 md:px-5 py-2 md:py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button><button type="submit" class="px-4 md:px-5 py-2 md:py-2.5 bg-sky-600 text-white rounded-xl text-sm font-bold hover:bg-sky-500 shadow-md">บันทึกข้อมูล</button></div>
+                <div class="mt-6 md:mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('techAdminModal')" class="px-4 md:px-5 py-2 md:py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button><button type="submit" class="px-4 md:px-5 py-2 md:py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-500 shadow-md">บันทึกข้อมูล</button></div>
             </form>
         </div>
     </div>
@@ -1010,8 +1037,8 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                     <i class="fas fa-info-circle mr-1"></i> อัปเดตไปยังประวัติการแจ้งซ่อมที่ผ่านมาทั้งหมด
                 </div>
                 <div class="space-y-4">
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label><input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์ <span class="text-red-500">*</span></label><input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700"></div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label><input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"></div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์ <span class="text-red-500">*</span></label><input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-400 focus:outline-none"></div>
                 </div>
                 <div class="mt-6 md:mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('editReporterModal')" class="px-4 md:px-5 py-2 md:py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button><button type="submit" class="px-4 md:px-5 py-2 md:py-2.5 bg-amber-500 text-white rounded-xl text-sm font-bold hover:bg-amber-400 shadow-md">อัปเดตข้อมูล</button></div>
             </form>
@@ -1054,7 +1081,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
         const reportMonthText = "<?php echo $report_month; ?>";
         
         const pageTitles = {
-            'dash': 'ภาพรวมระบบ (Dashboard)',
+            'dash': 'Dashboard',
             'repairs': 'ตรวจสอบงานแจ้งซ่อมทั้งหมด',
             'technicians': 'ทีมงานระบบ (แอดมิน & ช่าง)',
             'assets': 'ฐานข้อมูลอุปกรณ์และครุภัณฑ์',
@@ -1086,9 +1113,12 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 }
             });
 
-            // ถ้าเข้ามาหน้ารายงาน ให้สั่งอัปเดตข้อมูลสักครั้งเพื่อให้ตัวเลขขึ้น 
+            // อัปเดตข้อมูลและสร้างกราฟใหม่ทุกครั้งที่เปิดแท็บ
             if(id === 'reports') {
                 updateReportData();
+            } else if(id === 'dash' && !window.chartsRendered) {
+                renderCharts();
+                window.chartsRendered = true;
             }
         }
 
@@ -1100,6 +1130,8 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
+            window.chartsRendered = false;
+            
             if(tab) { show(tab); } else { show('dash'); }
 
             ['searchInput', 'searchInputMobile'].forEach(id => {
@@ -1129,7 +1161,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
             document.body.classList.toggle('modal-active'); 
         }
 
-        // ฟังก์ชันแปลงเลขเป็นเลขไทยใน JS
         function thaiNum(num) {
             if(num === null || num === undefined) return '๐';
             const thaiDigits = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
@@ -1138,12 +1169,11 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
             });
         }
 
-        // ฟังก์ชันหลักสำหรับอัปเดตเอกสารรายงาน
+        // อัปเดตเอกสารรายงานรายบุคคล
         function updateReportData() {
             const filterValue = document.getElementById('techFilter').value;
             let filteredRepairs = allRepairs;
             
-            // กรองข้อมูลถ้าไม่ได้เลือก "ทั้งหมด"
             if (filterValue !== 'all') {
                 filteredRepairs = allRepairs.filter(r => r.technician_name === filterValue);
                 document.getElementById('docSubject').innerText = `รายงานสรุปผลการปฏิบัติงานรายบุคคล (ช่าง: ${filterValue}) ประจำเดือน ${reportMonthText}`;
@@ -1159,7 +1189,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 document.getElementById('exportExcelBtn').href = `export_excel.php`;
             }
 
-            // คำนวณสถานะใหม่
             let pending = 0, progress = 0, completed = 0;
             let equipCountMap = {};
 
@@ -1168,7 +1197,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 else if(r.status === 'กำลังดำเนินการ') progress++;
                 else if(r.status === 'ซ่อมเสร็จแล้ว') completed++;
 
-                // นับความถี่อุปกรณ์
                 if(r.equipment_type) {
                     equipCountMap[r.equipment_type] = (equipCountMap[r.equipment_type] || 0) + 1;
                 }
@@ -1179,18 +1207,14 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
             let pctProgress = total > 0 ? ((progress / total) * 100).toFixed(2) : '0.00';
             let pctPending = total > 0 ? ((pending / total) * 100).toFixed(2) : '0.00';
 
-            // นำตัวเลขที่คำนวณได้ไปใส่ใน DOM
             document.getElementById('docTotal').innerText = thaiNum(total);
             document.getElementById('docCompleted').innerText = thaiNum(completed);
             document.getElementById('docPctCompleted').innerText = thaiNum(pctCompleted);
-            
             document.getElementById('docProgress').innerText = thaiNum(progress);
             document.getElementById('docPctProgress').innerText = thaiNum(pctProgress);
-            
             document.getElementById('docPending').innerText = thaiNum(pending);
             document.getElementById('docPctPending').innerText = thaiNum(pctPending);
 
-            // เรียงลำดับอุปกรณ์ที่พบปัญหามากสุด 5 อันดับ
             let sortedEquip = Object.keys(equipCountMap).map(key => {
                 return { name: key, count: equipCountMap[key] };
             }).sort((a, b) => b.count - a.count).slice(0, 5);
@@ -1207,60 +1231,107 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
             document.getElementById('docTopEquip').innerHTML = equipHtml;
         }
 
-        // ฟังก์ชันเปิด-ปิดตาอื่นๆ...
+        // ================== ฟังก์ชันสร้างกราฟในหน้าแรก ==================
+        function renderCharts() {
+            let pending = 0, progress = 0, completed = 0;
+            let equipCountMap = {};
+
+            allRepairs.forEach(r => {
+                if(r.status === 'รอรับเรื่อง') pending++;
+                else if(r.status === 'กำลังดำเนินการ') progress++;
+                else if(r.status === 'ซ่อมเสร็จแล้ว') completed++;
+
+                if(r.equipment_type) {
+                    equipCountMap[r.equipment_type] = (equipCountMap[r.equipment_type] || 0) + 1;
+                }
+            });
+
+            let sortedEquip = Object.keys(equipCountMap).map(key => {
+                return { name: key, count: equipCountMap[key] };
+            }).sort((a, b) => b.count - a.count).slice(0, 5);
+
+            let eLabels = sortedEquip.map(e => e.name);
+            let eCounts = sortedEquip.map(e => e.count);
+
+            const ctxStatus = document.getElementById('mainStatusChart').getContext('2d');
+            new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending', 'In Progress', 'Completed'],
+                    datasets: [{ data: [pending, progress, completed], backgroundColor: ['#fb923c', '#38bdf8', '#34d399'], borderWidth: 0, hoverOffset: 4 }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: "'Kanit', sans-serif" } } } }, 
+                    cutout: '75%' 
+                }
+            });
+
+            // สร้าง Gradient สำหรับ Bar Chart ให้สวยเหมือนรูป
+            const ctxEquip = document.getElementById('mainEquipChart').getContext('2d');
+            let gradient = ctxEquip.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(37, 99, 235, 0.8)'); // Blue-600
+            gradient.addColorStop(1, 'rgba(14, 165, 233, 0.2)'); // Sky-500 fading
+            
+            new Chart(ctxEquip, {
+                type: 'line', // เปลี่ยนเป็น Line แบบมีพื้นที่เติมสีใต้กราฟ ตามสไตล์ Dashboard หรูๆ
+                data: {
+                    labels: eLabels,
+                    datasets: [{ 
+                        label: 'Repairs', 
+                        data: eCounts, 
+                        borderColor: '#2563eb', 
+                        backgroundColor: gradient, 
+                        borderWidth: 3, 
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#2563eb',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4 // ทำให้เส้นโค้งสมูท
+                    }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Kanit', sans-serif", color: '#94a3b8' } }, grid: { color: '#f1f5f9', borderDash: [4, 4] }, border: {display: false} }, 
+                        x: { ticks: { font: { family: "'Kanit', sans-serif", color: '#94a3b8' } }, grid: { display: false }, border: {display: false} } 
+                    } 
+                }
+            });
+        }
+
         function togglePasswordVisibility(inputId, iconId) {
             const input = document.getElementById(inputId);
             const icon = document.getElementById(iconId);
             if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+                input.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
             } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+                input.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
             }
         }
 
         function toggleCustomDept(selectElement, customInputId) {
             const customInput = document.getElementById(customInputId);
-            if(selectElement.value === 'อื่นๆ') {
-                customInput.classList.remove('hidden');
-                customInput.required = true;
-            } else {
-                customInput.classList.add('hidden');
-                customInput.required = false;
-            }
+            if(selectElement.value === 'อื่นๆ') { customInput.classList.remove('hidden'); customInput.required = true;
+            } else { customInput.classList.add('hidden'); customInput.required = false; }
         }
 
         function setDropdownOrCustom(selectId, customInputId, val) {
             const selectEl = document.getElementById(selectId);
             const customEl = document.getElementById(customInputId);
-            
-            if (!val || val === '-') {
-                selectEl.value = '';
-                customEl.classList.add('hidden');
-                customEl.value = '';
-                customEl.required = false;
-                return;
-            }
-
+            if (!val || val === '-') { selectEl.value = ''; customEl.classList.add('hidden'); customEl.value = ''; customEl.required = false; return; }
             const options = Array.from(selectEl.options).map(opt => opt.value);
             if (options.includes(val) && val !== 'อื่นๆ') {
-                selectEl.value = val;
-                customEl.classList.add('hidden');
-                customEl.value = '';
-                customEl.required = false;
+                selectEl.value = val; customEl.classList.add('hidden'); customEl.value = ''; customEl.required = false;
             } else {
-                selectEl.value = 'อื่นๆ';
-                customEl.classList.remove('hidden');
-                customEl.value = val;
-                customEl.required = true;
+                selectEl.value = 'อื่นๆ'; customEl.classList.remove('hidden'); customEl.value = val; customEl.required = true;
             }
         }
 
         function openAddAssetModal() { 
-            document.getElementById('assetModalTitle').innerHTML = '<i class="fas fa-plus-circle text-sky-500 mr-2"></i> เพิ่มอุปกรณ์ใหม่'; 
+            document.getElementById('assetModalTitle').innerHTML = '<i class="fas fa-plus-circle text-blue-500 mr-2"></i> เพิ่มอุปกรณ์ใหม่'; 
             document.getElementById('asset_id').value = ''; document.getElementById('asset_code').value = ''; document.getElementById('asset_name').value = ''; document.getElementById('asset_category').value = 'IT Support'; document.getElementById('asset_status').value = 'ใช้งานปกติ'; toggleModal('assetModal'); 
         }
 
@@ -1272,67 +1343,36 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
         function openTechAdminModal(role, id='', u='', f='', p='', d='') { 
             let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
             let baseRole = isManagement ? 'Admin' : 'Technician';
-            let title = isManagement ? '<i class="fas fa-user-shield text-purple-500 mr-2"></i> จัดการผู้ดูแล/ผู้บริหาร' : '<i class="fas fa-hard-hat text-sky-500 mr-2"></i> จัดการช่างซ่อม';
+            let title = isManagement ? '<i class="fas fa-user-shield text-blue-500 mr-2"></i> จัดการผู้ดูแล/ผู้บริหาร' : '<i class="fas fa-hard-hat text-sky-500 mr-2"></i> จัดการช่างซ่อม';
+            document.getElementById('techAdminModalTitle').innerHTML = title; document.getElementById('techAdmin_role').value = baseRole; 
             
-            document.getElementById('techAdminModalTitle').innerHTML = title; 
-            document.getElementById('techAdmin_role').value = baseRole; 
-            
-            const adminLevelDiv = document.getElementById('adminLevelDiv');
-            const deptDiv = document.getElementById('deptDiv');
-            
+            const adminLevelDiv = document.getElementById('adminLevelDiv'); const deptDiv = document.getElementById('deptDiv');
             if(isManagement) {
-                adminLevelDiv.classList.remove('hidden');
-                deptDiv.classList.add('hidden');
-                document.getElementById('techAdmin_department_select').required = false;
-                let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin';
-                document.getElementById('techAdmin_level').value = exactRole;
+                adminLevelDiv.classList.remove('hidden'); deptDiv.classList.add('hidden'); document.getElementById('techAdmin_department_select').required = false;
+                let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; document.getElementById('techAdmin_level').value = exactRole;
             } else {
-                adminLevelDiv.classList.add('hidden');
-                deptDiv.classList.remove('hidden');
-                document.getElementById('techAdmin_department_select').required = true;
+                adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
             }
 
-            document.getElementById('techAdmin_id').value = id; 
-            document.getElementById('techAdmin_username').value = u; 
-            document.getElementById('techAdmin_fullname').value = f; 
-            document.getElementById('techAdmin_phone').value = p; 
+            document.getElementById('techAdmin_id').value = id; document.getElementById('techAdmin_username').value = u; 
+            document.getElementById('techAdmin_fullname').value = f; document.getElementById('techAdmin_phone').value = p; 
             
-            const pwdInput = document.getElementById('techAdmin_password');
-            const pwdHint = document.getElementById('pwdHint');
-            const eyeIcon = document.getElementById('eyeIcon');
-            pwdInput.value = ''; 
-            pwdInput.type = 'password'; 
-            if(eyeIcon) {
-                eyeIcon.classList.remove('fa-eye-slash');
-                eyeIcon.classList.add('fa-eye');
-            }
-
-            if(id === '') {
-                pwdInput.required = true;
-                pwdHint.innerText = "(บังคับกรอก)";
-            } else {
-                pwdInput.required = false;
-                pwdHint.innerText = "(ปล่อยว่างได้ถ้าไม่ต้องการเปลี่ยน)";
-            }
+            const pwdInput = document.getElementById('techAdmin_password'); const pwdHint = document.getElementById('pwdHint'); const eyeIcon = document.getElementById('eyeIcon');
+            pwdInput.value = ''; pwdInput.type = 'password'; 
+            if(eyeIcon) { eyeIcon.classList.remove('fa-eye-slash'); eyeIcon.classList.add('fa-eye'); }
+            if(id === '') { pwdInput.required = true; pwdHint.innerText = "(บังคับกรอก)"; } else { pwdInput.required = false; pwdHint.innerText = "(ปล่อยว่างได้ถ้าไม่ต้องการเปลี่ยน)"; }
             
-            document.getElementById('techAdmin_department_select').name = "department_select";
-            document.getElementById('techAdmin_department_custom').name = "department_custom";
+            document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
             setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
-            
             toggleModal('techAdminModal'); 
         }
 
         function openEditReporterModal(old_name, old_phone) {
-            document.getElementById('edit_rep_old_name').value = old_name;
-            document.getElementById('edit_rep_new_name').value = old_name;
-            document.getElementById('edit_rep_new_phone').value = old_phone;
-            toggleModal('editReporterModal');
+            document.getElementById('edit_rep_old_name').value = old_name; document.getElementById('edit_rep_new_name').value = old_name; document.getElementById('edit_rep_new_phone').value = old_phone; toggleModal('editReporterModal');
         }
 
         function viewHistory(fullName, type) {
-            const tbody = document.getElementById('historyTableBody');
-            tbody.innerHTML = '';
-            
+            const tbody = document.getElementById('historyTableBody'); tbody.innerHTML = '';
             const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
             
             if(userRepairs.length === 0) {
@@ -1341,21 +1381,20 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
             } else {
                 userRepairs.forEach(r => {
                     let statusClass = 'bg-slate-100 text-slate-600';
-                    if(r.status === 'รอรับเรื่อง') statusClass = 'bg-amber-50 text-amber-600';
+                    if(r.status === 'รอรับเรื่อง') statusClass = 'bg-orange-50 text-orange-600';
                     else if(r.status === 'กำลังดำเนินการ') statusClass = 'bg-sky-50 text-sky-600';
                     else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'bg-emerald-50 text-emerald-600';
                     
                     tbody.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td class="px-3 md:px-4 py-3 font-bold text-sky-600">${r.ticket_no}</td>
+                        <td class="px-3 md:px-4 py-3 font-bold text-blue-600">${r.ticket_no}</td>
                         <td class="px-3 md:px-4 py-3 text-slate-700 font-medium whitespace-normal min-w-[120px]">${r.equipment_type}</td>
                         <td class="px-3 md:px-4 py-3 text-center"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${statusClass}">${r.status}</span></td>
                         <td class="px-3 md:px-4 py-3 text-slate-500">${r.created_at_fmt}</td>
                     </tr>`;
                 });
             }
-            
             let titlePrefix = type === 'reporter' ? 'ประวัติการแจ้งซ่อมของ:' : 'ประวัติรับงานของช่าง:';
-            document.getElementById('historyModalTitle').innerHTML = `<i class="fas fa-history text-sky-500 mr-2"></i> ${titlePrefix} <span class="text-sky-700 ml-1 text-sm md:text-lg">${fullName}</span>`;
+            document.getElementById('historyModalTitle').innerHTML = `<i class="fas fa-history text-blue-500 mr-2"></i> ${titlePrefix} <span class="text-blue-700 ml-1 text-sm md:text-lg">${fullName}</span>`;
             toggleModal('historyModal');
         }
 
