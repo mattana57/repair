@@ -344,15 +344,14 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                     <input type="text" id="searchInput" placeholder="Search..." class="bg-slate-50 border border-slate-100 text-sm rounded-full pl-10 pr-4 py-2.5 text-slate-700 focus:outline-none focus:border-blue-300 focus:bg-white transition-all w-64">
                 </div>
-                <div class="flex items-center space-x-3 cursor-pointer">
-                    <div class="text-right hidden sm:block">
+                <div class="flex items-center space-x-3 cursor-pointer p-1.5 md:pr-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm">
+                    <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-blue-900 flex items-center justify-center text-amber-400 border border-blue-200"><i class="fas fa-user text-sm"></i></div>
+                    <div class="hidden sm:block text-left">
                         <span class="block text-sm font-bold text-slate-700 leading-none mb-1">
                             <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
                         <span class="block text-[10px] text-blue-600 uppercase tracking-wide">Administrator</span>
                     </div>
-                    <!-- ไอคอนโปรไฟล์สีน้ำเงิน -->
-                    <div class="w-10 h-10 rounded-full bg-blue-900 flex items-center justify-center text-amber-400 border-2 border-white shadow-md"><i class="fas fa-user text-sm"></i></div>
                 </div>
             </div>
         </header>
@@ -660,6 +659,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">ชื่อ-นามสกุล</th>
+                                        <th class="px-6 py-4">เบอร์โทรศัพท์</th>
                                         <th class="px-6 py-4">ความเชี่ยวชาญ</th>
                                         <th class="px-6 py-4 text-center">งานที่รับ</th>
                                         <th class="px-6 py-4 text-right">จัดการ</th>
@@ -693,6 +693,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                                         ".(!empty($t['full_name']) ? $t['full_name'] : '- ไม่ระบุ -')."
                                                     </div>
                                                 </td>
+                                                <td class='px-6 py-4 text-slate-600'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td>
                                                 <td class='px-6 py-4 text-slate-600'>".(!empty($t['department']) ? $t['department'] : '-')."</td>
                                                 <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border bg-slate-100 text-slate-600 border-slate-200'>{$total_jobs} งาน</span></td>
                                                 <td class='px-6 py-4 text-right'>
@@ -704,7 +705,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลช่างซ่อม</td></tr>"; }
+                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลช่างซ่อม</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -792,7 +793,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                         echo "<tr class='hover:bg-slate-50/80 transition-colors'>
                                             <td class='px-6 py-4 text-slate-800 font-semibold'>
                                                 <div class='flex items-center'>
-                                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 border border-slate-200'><i class='fas fa-user text-xs'></i></div>
+                                                    <div class='w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mr-3 border border-blue-100'><i class='fas fa-user text-xs'></i></div>
                                                     {$r['reporter_name']}
                                                 </div>
                                             </td>
@@ -800,7 +801,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                                 <div class='text-slate-700 font-medium'><i class='fas fa-phone-alt text-slate-400 mr-1.5'></i> ".($r['phone_number'] ? $r['phone_number'] : '-')."</div>
                                             </td>
                                             <td class='px-6 py-4 text-center'>
-                                                <span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border bg-blue-50 text-blue-600 border-blue-200'>{$r['total_repairs']} งาน</span>
+                                                <span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border bg-slate-100 text-slate-600 border-slate-200'>{$r['total_repairs']} งาน</span>
                                             </td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
@@ -1240,7 +1241,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
             document.getElementById('docTopEquip').innerHTML = equipHtml;
         }
 
-        // ================== ฟังก์ชันสร้างกราฟ Theme MBS ==================
         function renderCharts() {
             let pending = 0, progress = 0, completed = 0;
             let equipCountMap = {};
@@ -1267,7 +1267,6 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 type: 'doughnut',
                 data: {
                     labels: ['Pending', 'In Progress', 'Completed'],
-                    // สีโดนัท: เหลืองทอง, ฟ้า, กรมท่า
                     datasets: [{ data: [pending, progress, completed], backgroundColor: ['#f59e0b', '#38bdf8', '#1e3a8a'], borderWidth: 0, hoverOffset: 4 }]
                 },
                 options: { 
@@ -1277,11 +1276,10 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 }
             });
 
-            // สร้าง Gradient กรมท่า-ฟ้า (MBS Theme)
             const ctxEquip = document.getElementById('mainEquipChart').getContext('2d');
             let gradient = ctxEquip.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(30, 58, 138, 0.7)'); // Navy Blue 800
-            gradient.addColorStop(1, 'rgba(30, 58, 138, 0.05)'); // Fade Out
+            gradient.addColorStop(0, 'rgba(30, 58, 138, 0.7)'); 
+            gradient.addColorStop(1, 'rgba(30, 58, 138, 0.05)'); 
             
             new Chart(ctxEquip, {
                 type: 'line', 
@@ -1290,7 +1288,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                     datasets: [{ 
                         label: 'Repairs', 
                         data: eCounts, 
-                        borderColor: '#1e3a8a', // เส้นสีกรมท่า
+                        borderColor: '#1e3a8a', 
                         backgroundColor: gradient, 
                         borderWidth: 3, 
                         pointBackgroundColor: '#ffffff',
