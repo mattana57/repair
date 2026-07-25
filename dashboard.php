@@ -161,12 +161,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลผู้แจ้งสำเร็จ!', confirmButtonColor: '#0284c7' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
 }
 
-// ================= เตรียมข้อมูลประวัติและกราฟ =================
+// ================= เตรียมข้อมูลประวัติและสถิติ =================
 $all_repairs_json = "[]";
-$status_data_json = json_encode(['รอรับเรื่อง'=>0, 'กำลังดำเนินการ'=>0, 'ซ่อมเสร็จแล้ว'=>0]);
-$equip_labels_json = "[]";
-$equip_counts_json = "[]";
 $status_counts = ['รอรับเรื่อง'=>0, 'กำลังดำเนินการ'=>0, 'ซ่อมเสร็จแล้ว'=>0];
+$eq_labels = []; 
+$eq_counts = [];
 
 if($check_repairs->num_rows > 0) {
     $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
@@ -187,18 +186,14 @@ if($check_repairs->num_rows > 0) {
             }
         }
     }
-    $status_data_json = json_encode(array_values($status_counts));
 
     $eq_res = $conn->query("SELECT equipment_type, COUNT(*) as cnt FROM repairs GROUP BY equipment_type ORDER BY cnt DESC LIMIT 5");
-    $eq_labels = []; $eq_counts = [];
     if($eq_res) {
         while($eq = $eq_res->fetch_assoc()){ 
             $eq_labels[] = $eq['equipment_type']; 
             $eq_counts[] = $eq['cnt']; 
         }
     }
-    $equip_labels_json = json_encode($eq_labels);
-    $equip_counts_json = json_encode($eq_counts);
 }
 ?>
 <!DOCTYPE html>
@@ -214,7 +209,6 @@ if($check_repairs->num_rows > 0) {
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root { color-scheme: light; }
@@ -727,7 +721,7 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Report Summary Section (เอกสารบันทึกข้อความราชการ 100%) -->
+            <!-- Report Summary Section (เอกสารบันทึกข้อความราชการ 100% ไม่มีกราฟ) -->
             <div id="reports" class="section hidden space-y-6">
                 
                 <!-- แถบปุ่มกดด้านบน (ไม่แสดงตอนพิมพ์) -->
@@ -754,7 +748,14 @@ if($check_repairs->num_rows > 0) {
                     <?php 
                         // คำนวณตัวเลขและวันที่สำหรับแสดงในรายงาน
                         $total_repairs = array_sum($status_counts);
-                        $percent_completed = $total_repairs > 0 ? round(($status_counts['ซ่อมเสร็จแล้ว'] / $total_repairs) * 100) : 0;
+                        $pending = $status_counts['รอรับเรื่อง'] ?? 0;
+                        $progress = $status_counts['กำลังดำเนินการ'] ?? 0;
+                        $completed = $status_counts['ซ่อมเสร็จแล้ว'] ?? 0;
+
+                        $pct_completed = $total_repairs > 0 ? number_format(($completed / $total_repairs) * 100, 2) : 0;
+                        $pct_progress = $total_repairs > 0 ? number_format(($progress / $total_repairs) * 100, 2) : 0;
+                        $pct_pending = $total_repairs > 0 ? number_format(($pending / $total_repairs) * 100, 2) : 0;
+
                         $thai_months_doc = [
                             "01" => "มกราคม", "02" => "กุมภาพันธ์", "03" => "มีนาคม", "04" => "เมษายน",
                             "05" => "พฤษภาคม", "06" => "มิถุนายน", "07" => "กรกฎาคม", "08" => "สิงหาคม",
@@ -784,33 +785,43 @@ if($check_repairs->num_rows > 0) {
                         <b>เรียน</b> <span class="ml-2">คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</span>
                     </div>
                     
-                    <!-- เนื้อหารายงาน -->
+                    <!-- เนื้อหารายงาน (รูปแบบข้อความ ไม่มีกราฟ) -->
                     <div style="line-height: 1.15;">
-                        <p class="thai-indent">เพื่อให้ผู้บริหารรับทราบถึงสถิติและภาพรวมของการปฏิบัติงานแจ้งซ่อมอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ภายในคณะการบัญชีและการจัดการ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ทางผู้ดูแลระบบจึงขอรายงานสรุปผลการปฏิบัติงาน ดังนี้</p>
+                        <p class="thai-indent">ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น</p>
+                        <p class="thai-indent mt-2">ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $report_month; ?> เพื่อรายงานผลการดำเนินงานให้รับทราบ โดยมีรายละเอียดดังต่อไปนี้</p>
                         
                         <p class="font-bold mt-4">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
-                        <p class="thai-indent">จากการเก็บรวบรวมข้อมูลในระบบประจำเดือน <?php echo $report_month; ?> มีการแจ้งซ่อมทั้งสิ้น <b><?php echo $total_repairs; ?></b> รายการ โดยมีการดำเนินการซ่อมแซมเสร็จสิ้นแล้วคิดเป็น <b><?php echo $percent_completed; ?>%</b> ของงานทั้งหมด รายละเอียดสัดส่วนแสดงดังภาพประกอบด้านล่าง</p>
-                        
-                        <!-- กราฟที่ 1 -->
-                        <div class="w-full max-w-sm mx-auto h-[220px] my-4 chart-container" style="border: 1px solid #e2e8f0; padding: 10px;">
-                            <canvas id="statusChart"></canvas>
+                        <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b><?php echo $total_repairs; ?></b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
+                        <div class="ml-16 mt-2 space-y-1">
+                            <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b><?php echo $completed; ?></b> รายการ (คิดเป็นร้อยละ <?php echo $pct_completed; ?>)</p>
+                            <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b><?php echo $progress; ?></b> รายการ (คิดเป็นร้อยละ <?php echo $pct_progress; ?>)</p>
+                            <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b><?php echo $pending; ?></b> รายการ (คิดเป็นร้อยละ <?php echo $pct_pending; ?>)</p>
                         </div>
 
-                        <p class="font-bold mt-4">๒. สถิติอุปกรณ์ที่พบปัญหาบ่อยครั้ง</p>
-                        <p class="thai-indent">จากการวิเคราะห์ความถี่ของประเภทครุภัณฑ์และอุปกรณ์ที่มีการแจ้งซ่อม พบว่าอุปกรณ์ที่มีสถิติชำรุดสูงสุดแสดงดังข้อมูลกราฟด้านล่าง ซึ่งสามารถนำไปใช้วางแผนการจัดซื้ออะไหล่สำรอง หรือพิจารณาการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปได้</p>
-
-                        <!-- กราฟที่ 2 -->
-                        <div class="w-full max-w-md mx-auto h-[220px] my-4 chart-container" style="border: 1px solid #e2e8f0; padding: 10px;">
-                            <canvas id="equipChart"></canvas>
+                        <p class="font-bold mt-4">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
+                        <p class="thai-indent">ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ๕ อันดับแรก ประกอบด้วย</p>
+                        <div class="ml-16 mt-2 space-y-1">
+                            <?php 
+                                if (!empty($eq_labels)) {
+                                    $thai_nums = ['๑', '๒', '๓', '๔', '๕'];
+                                    for ($i = 0; $i < count($eq_labels); $i++) {
+                                        echo "<p>๒." . $thai_nums[$i] . " " . htmlspecialchars($eq_labels[$i]) . " จำนวน <b>" . $eq_counts[$i] . "</b> รายการ</p>";
+                                    }
+                                } else {
+                                    echo "<p>- ไม่มีข้อมูลการแจ้งซ่อมในระบบ -</p>";
+                                }
+                            ?>
                         </div>
+
+                        <p class="thai-indent mt-4">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
 
                         <p class="thai-indent mt-6">จึงเรียนมาเพื่อโปรดทราบ</p>
                     </div>
 
                     <!-- ลายเซ็น -->
-                    <div class="mt-12 flex flex-col items-center ml-auto w-72">
+                    <div class="mt-12 flex flex-col items-center ml-auto w-72 text-center">
                         <p class="mb-6">(ลงชื่อ).......................................................</p>
-                        <p>( นางสาวมัทนา รัตนแสง )</p>
+                        <p>( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
                         <p class="text-[14pt] mt-1">ผู้รายงาน / ผู้จัดทำ</p>
                     </div>
 
@@ -944,7 +955,7 @@ if($check_repairs->num_rows > 0) {
                         <thead class="bg-slate-100 border-b border-slate-200 text-slate-600 text-[10px] md:text-xs uppercase tracking-wider font-bold">
                             <tr>
                                 <th class="px-3 md:px-4 py-3">เลขที่ใบงาน</th>
-                                <th class="px-3 md:px-4 py-3">อุปกรณ์ / อาการ</th>
+                                <th class="px-3 md:px-4 py-3">อุปกรณ์ / อา อาการ</th>
                                 <th class="px-3 md:px-4 py-3 text-center">สถานะ</th>
                                 <th class="px-3 md:px-4 py-3">วันที่แจ้ง</th>
                             </tr>
@@ -963,10 +974,7 @@ if($check_repairs->num_rows > 0) {
     <!-- ================== JAVASCRIPT ================== -->
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
-        const statusDataArray = <?php echo $status_data_json; ?>;
-        const equipLabels = <?php echo $equip_labels_json; ?>;
-        const equipCounts = <?php echo $equip_counts_json; ?>;
-
+        
         const pageTitles = {
             'dash': 'ภาพรวมระบบ (Dashboard)',
             'repairs': 'ตรวจสอบงานแจ้งซ่อมทั้งหมด',
@@ -999,11 +1007,6 @@ if($check_repairs->num_rows > 0) {
                     }
                 }
             });
-            
-            if(id === 'reports' && !window.chartsRendered) {
-                renderCharts();
-                window.chartsRendered = true;
-            }
         }
 
         function toggleSidebar() {
@@ -1015,7 +1018,6 @@ if($check_repairs->num_rows > 0) {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
             if(tab) { show(tab); } else { show('dash'); }
-            window.chartsRendered = false;
 
             ['searchInput', 'searchInputMobile'].forEach(id => {
                 const inputElement = document.getElementById(id);
@@ -1206,46 +1208,6 @@ if($check_repairs->num_rows > 0) {
             Swal.fire({ title: 'ลบประวัติบุคคลนี้?', text: "จะทำให้ชื่อผู้แจ้งซ่อมในประวัติที่ผ่านมาถูกลบทั้งหมด!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยันลบ' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
         }
 
-        function renderCharts() {
-            // ตั้งค่า Font ให้เป็นแบบราชการ
-            Chart.defaults.font.family = "'Sarabun', sans-serif";
-            Chart.defaults.color = '#1e293b';
-
-            const ctxStatus = document.getElementById('statusChart').getContext('2d');
-            new Chart(ctxStatus, {
-                type: 'pie', // เปลี่ยนจาก Doughnut เป็น Pie ให้ดูวิชาการ
-                data: {
-                    labels: ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'],
-                    // เปลี่ยนสีให้เป็นโทนสุภาพ (Monochrome / Blue scale)
-                    datasets: [{ data: statusDataArray, backgroundColor: ['#94a3b8', '#60a5fa', '#1e40af'], borderWidth: 1, borderColor: '#ffffff', hoverOffset: 4 }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 14 } } } 
-                    } 
-                }
-            });
-
-            const ctxEquip = document.getElementById('equipChart').getContext('2d');
-            new Chart(ctxEquip, {
-                type: 'bar',
-                data: {
-                    labels: equipLabels,
-                    datasets: [{ label: 'จำนวนครั้งที่แจ้งซ่อม', data: equipCounts, backgroundColor: '#1e40af', borderRadius: 0 }] // ปรับเป็นเหลี่ยมปกติ
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } }, 
-                    scales: { 
-                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 14 } }, grid: { borderDash: [4, 4] } }, 
-                        x: { ticks: { font: { size: 14 } }, grid: { display: false } } 
-                    } 
-                }
-            });
-        }
     </script>
 </body>
 </html>
