@@ -3,7 +3,7 @@ session_start();
 
 // 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? 
 if (!isset($_SESSION['user_id'])) {
-    // ให้ระบบจำ URL ปัจจุบันเอาไว้ (รวมถึง ?tab=repairs ด้วย)
+    // ให้ระบบจำ URL ปัจจุบันเอาไว้
     $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
     header("Location: login.php");
     exit();
@@ -16,6 +16,15 @@ if (strtolower($_SESSION['role']) === 'executive') {
 }
 
 include 'db_connect.php';
+
+// ================= ฟังก์ชันแปลงตัวเลขเป็นเลขไทย =================
+function thaiNum($num) {
+    return str_replace(
+        array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
+        array('๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'),
+        $num
+    );
+}
 
 // ================= ปรับปรุงฐานข้อมูลอัตโนมัติ (Auto-Fix DB) =================
 $conn->query("CREATE TABLE IF NOT EXISTS assets (
@@ -46,7 +55,6 @@ if($check_phone->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN phone
 $check_dept = $conn->query("SHOW COLUMNS FROM users LIKE 'department'");
 if($check_dept->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN department VARCHAR(100) NULL AFTER phone");
 
-// ตรวจสอบและเพิ่มคอลัมน์ password ถ้ายังไม่มี
 $check_pwd = $conn->query("SHOW COLUMNS FROM users LIKE 'password'");
 if($check_pwd->num_rows == 0) {
     $conn->query("ALTER TABLE users ADD COLUMN password VARCHAR(255) NULL AFTER username");
@@ -100,7 +108,6 @@ if (isset($_GET['delete_user'])) {
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
 
-// จัดการการบันทึกข้อมูลผู้ใช้งานและรหัสผ่าน
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $user_id = $_POST['user_id'];
     $username = $_POST['username'];
@@ -203,12 +210,14 @@ if($check_repairs->num_rows > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBS Smart Maintenance</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- นำเข้าฟอนต์ Kanit สำหรับหน้าเว็บ และ TH Sarabun สำหรับพิมพ์เอกสาร -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        /* นำเข้าฟอนต์ TH Sarabun New สำหรับเอกสารราชการโดยเฉพาะ */
+        /* ฟอนต์สำหรับพิมพ์เอกสารราชการ TH Sarabun New มาตรฐานสากล */
         @font-face {
             font-family: 'THSarabunNew';
             src: url('https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/THSarabunNew/THSarabunNew.woff2') format('woff2');
@@ -243,32 +252,57 @@ if($check_repairs->num_rows > 0) {
             background: #ffffff;
             width: 210mm;
             min-height: 297mm;
-            padding: 2cm 2cm 2cm 3cm; /* ลดขอบบนลงนิดนึงเพื่อให้พอดี 1 หน้า */
+            padding: 2.5cm 2cm 2cm 3cm; /* มาตรฐาน: บน 2.5, ขวา 2, ล่าง 2, ซ้าย 3 */
             margin: 0 auto;
             box-sizing: border-box;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             position: relative;
+            line-height: 1.15 !important; 
         }
-        .official-doc p, .official-doc span, .official-doc div {
-            font-family: 'THSarabunNew', sans-serif !important;
-            font-size: 16pt !important;
-            color: #000000 !important;
-        }
-        .official-doc b, .official-doc strong { font-weight: bold !important; }
-        .official-doc p { line-height: 1.15; text-align: justify; margin-bottom: 0; }
-        .official-doc .thai-indent { text-indent: 2.5cm; }
         
-        /* แก้ปัญหาเอกสารโดนตัดตอนสั่ง Print */
+        .official-doc * {
+            font-family: 'THSarabunNew', sans-serif !important;
+            color: #000000 !important;
+            font-size: 16pt;
+        }
+
+        .official-doc .title-doc {
+            font-size: 29pt !important;
+            font-weight: bold !important;
+            text-align: center;
+            margin-top: -10pt; /* ดึงขึ้นนิดนึงเพื่อชดเชยพื้นที่ครุฑ */
+            margin-bottom: 5pt;
+        }
+
+        .official-doc .bold-text { font-weight: bold !important; }
+        
+        .official-doc p { 
+            text-align: justify; 
+            margin-bottom: 2pt; /* ลดช่องว่างระหว่างบรรทัด */
+            margin-top: 0;
+        }
+        
+        .official-doc .thai-indent { text-indent: 2.5cm; }
+        .official-doc .thai-sub-indent { padding-left: 2.5cm; }
+
+        .official-doc .doc-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 2pt;
+        }
+
+        /* แก้อาการเอกสารโดนตัดตอนสั่ง Print */
         @media print {
             @page { 
                 size: A4; 
-                margin: 2cm 2cm 2cm 3cm; /* ตั้งระยะขอบกระดาษในระบบพิมพ์โดยตรง */
+                margin: 0; /* ล้างค่า margin พื้นฐานของ Browser ออก */
             }
             body, html { 
-                height: auto !important; 
+                height: 100% !important; /* บังคับความสูงแบบ Full Page */
                 overflow: visible !important; 
                 background: #ffffff !important; 
             }
+            
             /* ลบล็อกการแสดงผลแบบหน้าเดียวของ Tailwind */
             .flex, .h-screen, .overflow-hidden {
                 display: block !important;
@@ -288,14 +322,16 @@ if($check_repairs->num_rows > 0) {
                 display: block !important; 
                 margin: 0 !important; 
             }
+            
+            /* ตั้งค่าให้หน้าเอกสารปริ้นท์แบบไร้ขอบ (ขอบจะถูกกำหนดโดย padding ของ .official-doc) */
             .official-doc {
-                width: 100% !important;
-                min-height: auto !important;
+                width: 210mm !important;
+                height: 297mm !important;
                 margin: 0 !important;
-                padding: 0 !important; /* ให้ระยะขอบไปดึงจาก @page แทน */
+                padding: 2.5cm 2cm 2cm 3cm !important; /* จัดระยะขอบตรงนี้แทน */
                 box-shadow: none !important;
                 border: none !important;
-                page-break-after: auto;
+                page-break-after: always;
             }
         }
     </style>
@@ -365,9 +401,9 @@ if($check_repairs->num_rows > 0) {
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-4 md:p-10 print:p-0 print:overflow-visible">
+        <div class="flex-1 overflow-y-auto p-4 md:p-10 print:p-0 print:overflow-visible bg-slate-100/50 print:bg-white">
             
-            <!-- ส่วน Dashboard อื่นๆ ... (ยังคงเดิม ซ่อนตอนปริ้นท์) -->
+            <!-- Dashboard Section -->
             <div id="dash" class="section space-y-6 animate-fade-in no-print">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     <?php 
@@ -454,6 +490,7 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
+            <!-- Repairs Section -->
             <div id="repairs" class="section hidden space-y-4 md:space-y-6 no-print">
                 <div class="modern-card overflow-hidden">
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-white gap-3">
@@ -520,6 +557,7 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
+            <!-- Technicians Section -->
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
@@ -532,7 +570,6 @@ if($check_repairs->num_rows > 0) {
                     </div>
                 </div>
 
-                <!-- ตาราง Admin & Executive -->
                 <div>
                     <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-user-shield text-purple-500 mr-2 text-xl"></i> ผู้ดูแลระบบ และ ผู้บริหาร</h3>
                     <div class="modern-card overflow-hidden">
@@ -591,7 +628,6 @@ if($check_repairs->num_rows > 0) {
                     </div>
                 </div>
 
-                <!-- ตาราง Technician -->
                 <div class="mt-6 md:mt-8">
                     <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-hard-hat text-sky-500 mr-2 text-xl"></i> ช่างซ่อม (Technician)</h3>
                     <div class="modern-card overflow-hidden">
@@ -781,7 +817,7 @@ if($check_repairs->num_rows > 0) {
                     </div>
                 </div>
 
-                <!-- หน้าเอกสารสำหรับพิมพ์ (A4 Style - บันทึกข้อความ) -->
+                <!-- หน้าเอกสารสำหรับพิมพ์ (A4 Style - บันทึกข้อความแบบทางการ 100%) -->
                 <div class="official-doc">
                     
                     <?php 
@@ -804,47 +840,58 @@ if($check_repairs->num_rows > 0) {
                     ?>
 
                     <!-- ส่วนหัวบันทึกข้อความ มีครุฑ -->
-                    <div class="flex items-center mb-4 relative">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Thai_government_Garuda_emblem_%28Version_2%29.svg" class="w-[1.5cm] h-[1.5cm] object-contain absolute left-0 top-0" style="filter: grayscale(100%);">
-                        <h1 class="w-full text-center font-bold" style="font-size: 29pt; margin-top: 15px;">บันทึกข้อความ</h1>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Thai_government_Garuda_emblem_%28Version_2%29.svg" style="width: 1.5cm; position: absolute; left: 3cm; top: 1.5cm; filter: grayscale(100%);">
+                    
+                    <div class="title-doc">บันทึกข้อความ</div>
+                    
+                    <div class="doc-row" style="margin-top: 15pt;">
+                        <span class="bold-text" style="width: 2.5cm;">ส่วนราชการ</span>
+                        <span>ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
                     </div>
                     
-                    <div class="flex justify-between items-end mb-2">
-                        <div><b>ส่วนราชการ</b> <span class="ml-2">ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span></div>
-                    </div>
-                    <div class="flex justify-between items-end mb-4">
-                        <div class="w-1/2"><b>ที่</b> <span class="ml-2">ศธ ๐๕๓๐.๑๑/......................</span></div>
-                        <div class="w-1/2"><b>วันที่</b> <span class="ml-2"><?php echo date('d ') . $report_month . " " . (date('Y')+543); ?></span></div>
-                    </div>
-                    <div class="mb-4">
-                        <b>เรื่อง</b> <span class="ml-2">รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></span>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <b>เรียน</b> <span class="ml-2">คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</span>
+                    <div style="display: flex; justify-content: space-between;">
+                        <div class="doc-row" style="width: 50%;">
+                            <span class="bold-text" style="width: 1cm;">ที่</span>
+                            <span>ศธ ๐๕๓๐.๑๑/......................</span>
+                        </div>
+                        <div class="doc-row" style="width: 50%;">
+                            <span class="bold-text" style="width: 1.2cm;">วันที่</span>
+                            <!-- แสดงวันที่แบบราชการ (ไม่มีคำว่า วันที่ นำหน้าตัวเลข) และแปลงเป็นเลขไทย -->
+                            <span><?php echo thaiNum(date('j')) . " " . $report_month . " " . thaiNum(date('Y')+543); ?></span>
+                        </div>
                     </div>
                     
-                    <!-- เนื้อหารายงาน (รูปแบบข้อความ ไม่มีกราฟ) -->
-                    <div style="line-height: 1.15;">
+                    <div class="doc-row">
+                        <span class="bold-text" style="width: 1.5cm;">เรื่อง</span>
+                        <span>รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></span>
+                    </div>
+                    
+                    <div class="doc-row" style="margin-bottom: 15pt;">
+                        <span class="bold-text" style="width: 1.5cm;">เรียน</span>
+                        <span>คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</span>
+                    </div>
+                    
+                    <!-- เนื้อหารายงาน -->
+                    <div>
                         <p class="thai-indent">ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น</p>
-                        <p class="thai-indent mt-2">ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $report_month; ?> เพื่อรายงานผลการดำเนินงานให้รับทราบ โดยมีรายละเอียดดังต่อไปนี้</p>
+                        <p class="thai-indent">ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $report_month; ?> เพื่อรายงานผลการดำเนินงานให้รับทราบ โดยมีรายละเอียดดังต่อไปนี้</p>
                         
-                        <p class="font-bold mt-3">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
-                        <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b><?php echo $total_repairs; ?></b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
-                        <div class="ml-16 mt-1 space-y-1">
-                            <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b><?php echo $completed; ?></b> รายการ (คิดเป็นร้อยละ <?php echo $pct_completed; ?>)</p>
-                            <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b><?php echo $progress; ?></b> รายการ (คิดเป็นร้อยละ <?php echo $pct_progress; ?>)</p>
-                            <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b><?php echo $pending; ?></b> รายการ (คิดเป็นร้อยละ <?php echo $pct_pending; ?>)</p>
+                        <p class="bold-text" style="margin-top: 10pt;">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
+                        <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b><?php echo thaiNum($total_repairs); ?></b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
+                        <div class="thai-sub-indent">
+                            <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b><?php echo thaiNum($completed); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_completed); ?>)</p>
+                            <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b><?php echo thaiNum($progress); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_progress); ?>)</p>
+                            <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b><?php echo thaiNum($pending); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_pending); ?>)</p>
                         </div>
 
-                        <p class="font-bold mt-3">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
+                        <p class="bold-text" style="margin-top: 10pt;">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
                         <p class="thai-indent">ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ๕ อันดับแรก ประกอบด้วย</p>
-                        <div class="ml-16 mt-1 space-y-1">
+                        <div class="thai-sub-indent">
                             <?php 
                                 if (!empty($eq_labels)) {
                                     $thai_nums = ['๑', '๒', '๓', '๔', '๕'];
                                     for ($i = 0; $i < count($eq_labels); $i++) {
-                                        echo "<p>๒." . $thai_nums[$i] . " " . htmlspecialchars($eq_labels[$i]) . " จำนวน <b>" . $eq_counts[$i] . "</b> รายการ</p>";
+                                        echo "<p>๒." . $thai_nums[$i] . " " . htmlspecialchars($eq_labels[$i]) . " จำนวน <b>" . thaiNum($eq_counts[$i]) . "</b> รายการ</p>";
                                     }
                                 } else {
                                     echo "<p>- ไม่มีข้อมูลการแจ้งซ่อมในระบบ -</p>";
@@ -852,17 +899,18 @@ if($check_repairs->num_rows > 0) {
                             ?>
                         </div>
 
-                        <p class="thai-indent mt-3">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
+                        <p class="thai-indent" style="margin-top: 10pt;">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
 
-                        <p class="thai-indent mt-4">จึงเรียนมาเพื่อโปรดทราบ</p>
+                        <p class="thai-indent" style="margin-top: 15pt;">จึงเรียนมาเพื่อโปรดทราบ</p>
                     </div>
 
                     <!-- ลายเซ็น -->
-                    <div class="mt-8 flex flex-col items-center ml-auto w-72 text-center" style="page-break-inside: avoid;">
-                        <p class="mb-6">(ลงชื่อ).......................................................</p>
+                    <div style="margin-top: 50pt; text-align: center; float: right; width: 8cm;">
+                        <p style="margin-bottom: 25pt;">(ลงชื่อ).......................................................</p>
                         <p>( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
-                        <p class="text-[14pt] mt-1">ผู้รายงาน / ผู้จัดทำ</p>
+                        <p>ผู้รายงาน / ผู้จัดทำ</p>
                     </div>
+                    <div style="clear: both;"></div>
 
                 </div>
             </div>
