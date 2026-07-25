@@ -104,17 +104,15 @@ if (isset($_GET['delete_user'])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $user_id = $_POST['user_id'];
     $username = $_POST['username'];
-    $password = $_POST['password']; // รับค่ารหัสผ่านจากฟอร์ม
+    $password = $_POST['password']; 
     
-    // แปลงให้เป็น NULL หากเว้นว่างไว้
     $full_name = !empty($_POST['full_name']) ? $_POST['full_name'] : NULL;
     $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
     $role = $_POST['role']; 
     
-    // ดักจับกรณีเป็น Admin/Executive เพื่อเซฟสิทธิ์ให้ถูกต้อง
     if (isset($_POST['admin_level']) && ($role === 'Admin' || $role === 'Executive')) {
         $role = $_POST['admin_level'];
-        $department = NULL; // ผู้บริหารและแอดมินไม่ต้องมีแผนก
+        $department = NULL; 
     } else {
         $department = isset($_POST['department_select']) ? $_POST['department_select'] : NULL;
         if ($department === 'อื่นๆ' && !empty($_POST['department_custom'])) {
@@ -125,18 +123,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $tab_redirect = ($role == 'User') ? 'users' : 'technicians';
 
     if (empty($user_id)) {
-        // เพิ่มใหม่ (บังคับมีรหัสผ่าน)
         $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, phone, department, role) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("ssssss", $username, $password, $full_name, $phone, $department, $role);
         $msg = 'บันทึกข้อมูลสำเร็จ!';
     } else {
-        // แก้ไขอัปเดตข้อมูล
         if (!empty($password)) {
-            // ถ้ามีการพิมพ์รหัสผ่านใหม่มา ให้เปลี่ยนรหัสผ่านด้วย
             $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
             $stmt->bind_param("ssssssi", $username, $password, $full_name, $phone, $department, $role, $user_id);
         } else {
-            // ถ้าเว้นว่างรหัสผ่านไว้ อัปเดตแค่ข้อมูลอื่นๆ
             $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
             $stmt->bind_param("sssssi", $username, $full_name, $phone, $department, $role, $user_id);
         }
@@ -215,10 +209,13 @@ if($check_repairs->num_rows > 0) {
     <meta name="color-scheme" content="light">
     <title>MBS Smart Maintenance</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- นำเข้าฟอนต์ Kanit สำหรับหน้าจอปกติ และ TH Sarabun สำหรับรายงานเอกสาร -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         :root { color-scheme: light; }
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
@@ -236,14 +233,37 @@ if($check_repairs->num_rows > 0) {
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
+        /* สไตล์สำหรับเอกสารราชการ (TH Sarabun) */
+        .official-doc {
+            font-family: 'Sarabun', sans-serif;
+            font-size: 16pt;
+            color: #000000;
+            background: #ffffff;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 2.5cm 2cm 2cm 3cm; /* บน 2.5, ขวา 2, ล่าง 2, ซ้าย 3 */
+            margin: 0 auto;
+            box-sizing: border-box;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .official-doc p { margin-bottom: 0; line-height: 1.15; text-align: justify; text-justify: inter-word; }
+        .official-doc .thai-indent { text-indent: 2.5cm; }
+        
         @media print {
             aside, header, .no-print { display: none !important; }
             main { padding: 0 !important; margin: 0 !important; background: white; }
-            .modern-card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
-            body { background: white; }
-            #reports { display: block !important; }
-            .print-header { display: flex !important; }
-            .chart-container { height: 350px !important; }
+            body { background: white; margin: 0; padding: 0; }
+            #reports { display: block !important; margin: 0 !important; }
+            
+            /* ลบ shadow และ margin เมื่อปริ้นท์ ให้พอดีหน้ากระดาษ */
+            .official-doc {
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 1.5cm 1.5cm 1.5cm 2cm !important; /* ปรับลดขอบตอนปริ้นท์ให้พอดีเครื่อง */
+                width: 100% !important;
+                min-height: 100vh !important;
+            }
         }
     </style>
 </head>
@@ -707,29 +727,29 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Report Summary Section (เอกสารบันทึกข้อความ & Excel) -->
+            <!-- Report Summary Section (เอกสารบันทึกข้อความราชการ 100%) -->
             <div id="reports" class="section hidden space-y-6">
                 
                 <!-- แถบปุ่มกดด้านบน (ไม่แสดงตอนพิมพ์) -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent mb-4 no-print">
                     <div>
                         <h2 class="text-xl md:text-2xl font-bold text-slate-800">รายงานสรุปผลการปฏิบัติงาน</h2>
-                        <p class="text-sm text-slate-500 mt-1">เอกสารรายงานและสถิติสำหรับการพิมพ์และส่งออก</p>
+                        <p class="text-sm text-slate-500 mt-1">เอกสารรายงานและสถิติสำหรับการพิมพ์แบบทางการ</p>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                        <!-- ปุ่มดาวน์โหลด Excel (ชี้ไปที่ไฟล์ export_excel.php ที่สร้างไว้) -->
+                        <!-- ปุ่มดาวน์โหลด Excel -->
                         <a href="export_excel.php" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
                             <i class="fas fa-file-excel mr-2 text-lg"></i> ดาวน์โหลดตาราง Excel
                         </a>
                         <!-- ปุ่มพิมพ์เอกสาร -->
                         <button onclick="window.print()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-sky-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
-                            <i class="fas fa-print mr-2 text-lg"></i> พิมพ์เอกสารรายงาน
+                            <i class="fas fa-print mr-2 text-lg"></i> พิมพ์บันทึกข้อความ
                         </button>
                     </div>
                 </div>
 
-                <!-- หน้าเอกสารสำหรับพิมพ์ (A4 Style) -->
-                <div class="modern-card bg-white p-8 md:p-14 mx-auto max-w-4xl print:shadow-none print:border-none print:p-0">
+                <!-- หน้าเอกสารสำหรับพิมพ์ (A4 Style - บันทึกข้อความ) -->
+                <div class="official-doc">
                     
                     <?php 
                         // คำนวณตัวเลขและวันที่สำหรับแสดงในรายงาน
@@ -743,54 +763,55 @@ if($check_repairs->num_rows > 0) {
                         $report_month = $thai_months_doc[date('m')];
                     ?>
 
-                    <!-- ส่วนหัวบันทึกข้อความ -->
-                    <div class="text-center font-bold text-2xl mb-8 text-slate-800 tracking-wide">บันทึกข้อความ</div>
-                    
-                    <div class="flex justify-between items-end mb-3 text-slate-800">
-                        <div class="text-base"><b>ส่วนราชการ</b> ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ</div>
-                    </div>
-                    <div class="flex justify-between items-end mb-6 text-slate-800">
-                        <div class="text-base"><b>ที่</b> ศธ ๐๕๓๐.๑๑/......................</div>
-                        <div class="text-base"><b>วันที่</b> <?php echo date('d/m/') . (date('Y')+543); ?></div>
-                    </div>
-                    <div class="mb-6 text-slate-800 text-base">
-                        <b>เรื่อง</b> รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?>
+                    <!-- ส่วนหัวบันทึกข้อความ มีครุฑ -->
+                    <div class="flex items-center mb-6 relative">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Thai_government_Garuda_emblem_%28Version_2%29.svg/120px-Thai_government_Garuda_emblem_%28Version_2%29.svg.png" class="w-[1.5cm] absolute left-0 top-0" style="filter: grayscale(100%);">
+                        <h1 class="w-full text-center font-bold" style="font-size: 29pt; margin-top: 15px;">บันทึกข้อความ</h1>
                     </div>
                     
-                    <hr class="border-slate-300 mb-6">
+                    <div class="flex justify-between items-end mb-2">
+                        <div><b>ส่วนราชการ</b> <span class="ml-2">ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span></div>
+                    </div>
+                    <div class="flex justify-between items-end mb-4">
+                        <div class="w-1/2"><b>ที่</b> <span class="ml-2">ศธ ๐๕๓๐.๑๑/......................</span></div>
+                        <div class="w-1/2"><b>วันที่</b> <span class="ml-2"><?php echo date('d ') . $report_month . " " . (date('Y')+543); ?></span></div>
+                    </div>
+                    <div class="mb-6">
+                        <b>เรื่อง</b> <span class="ml-2">รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></span>
+                    </div>
                     
-                    <div class="mb-6 text-slate-800 text-base">
-                        <b>เรียน</b> คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ
+                    <div class="mb-4">
+                        <b>เรียน</b> <span class="ml-2">คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</span>
                     </div>
                     
                     <!-- เนื้อหารายงาน -->
-                    <div class="space-y-4 text-slate-700 leading-relaxed text-base">
-                        <p class="indent-10">เพื่อให้ผู้บริหารรับทราบถึงสถิติและภาพรวมของการปฏิบัติงานแจ้งซ่อมอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ภายในคณะการบัญชีและการจัดการ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ทางผู้ดูแลระบบจึงขอรายงานสรุปผลการปฏิบัติงาน ดังนี้</p>
+                    <div style="line-height: 1.15;">
+                        <p class="thai-indent">เพื่อให้ผู้บริหารรับทราบถึงสถิติและภาพรวมของการปฏิบัติงานแจ้งซ่อมอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ภายในคณะการบัญชีและการจัดการ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ทางผู้ดูแลระบบจึงขอรายงานสรุปผลการปฏิบัติงาน ดังนี้</p>
                         
-                        <p class="font-bold mt-6 text-slate-800">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
-                        <p class="indent-10">จากการเก็บรวบรวมข้อมูลในระบบประจำเดือน <?php echo $report_month; ?> มีการแจ้งซ่อมทั้งสิ้น <b><?php echo $total_repairs; ?></b> รายการ โดยมีการดำเนินการซ่อมแซมเสร็จสิ้นแล้วคิดเป็น <b><?php echo $percent_completed; ?>%</b> ของงานทั้งหมด รายละเอียดสัดส่วนแสดงดังภาพประกอบด้านล่าง</p>
+                        <p class="font-bold mt-4">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
+                        <p class="thai-indent">จากการเก็บรวบรวมข้อมูลในระบบประจำเดือน <?php echo $report_month; ?> มีการแจ้งซ่อมทั้งสิ้น <b><?php echo $total_repairs; ?></b> รายการ โดยมีการดำเนินการซ่อมแซมเสร็จสิ้นแล้วคิดเป็น <b><?php echo $percent_completed; ?>%</b> ของงานทั้งหมด รายละเอียดสัดส่วนแสดงดังภาพประกอบด้านล่าง</p>
                         
-                        <!-- กราฟที่ 1 (จัดให้อยู่ตรงกลาง ไม่ใหญ่เกินไป) -->
-                        <div class="w-full max-w-md mx-auto h-[250px] my-6 chart-container">
+                        <!-- กราฟที่ 1 -->
+                        <div class="w-full max-w-sm mx-auto h-[220px] my-4 chart-container" style="border: 1px solid #e2e8f0; padding: 10px;">
                             <canvas id="statusChart"></canvas>
                         </div>
 
-                        <p class="font-bold mt-6 text-slate-800">๒. สถิติอุปกรณ์ที่พบปัญหาบ่อยครั้ง</p>
-                        <p class="indent-10">จากการวิเคราะห์ความถี่ของประเภทครุภัณฑ์และอุปกรณ์ที่มีการแจ้งซ่อม พบว่าอุปกรณ์ที่มีสถิติชำรุดสูงสุดแสดงดังข้อมูลกราฟด้านล่าง ซึ่งสามารถนำไปใช้วางแผนการจัดซื้ออะไหล่สำรอง หรือพิจารณาการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปได้</p>
+                        <p class="font-bold mt-4">๒. สถิติอุปกรณ์ที่พบปัญหาบ่อยครั้ง</p>
+                        <p class="thai-indent">จากการวิเคราะห์ความถี่ของประเภทครุภัณฑ์และอุปกรณ์ที่มีการแจ้งซ่อม พบว่าอุปกรณ์ที่มีสถิติชำรุดสูงสุดแสดงดังข้อมูลกราฟด้านล่าง ซึ่งสามารถนำไปใช้วางแผนการจัดซื้ออะไหล่สำรอง หรือพิจารณาการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปได้</p>
 
                         <!-- กราฟที่ 2 -->
-                        <div class="w-full max-w-xl mx-auto h-[250px] my-6 chart-container">
+                        <div class="w-full max-w-md mx-auto h-[220px] my-4 chart-container" style="border: 1px solid #e2e8f0; padding: 10px;">
                             <canvas id="equipChart"></canvas>
                         </div>
 
-                        <p class="indent-10 mt-8">จึงเรียนมาเพื่อโปรดทราบ</p>
+                        <p class="thai-indent mt-6">จึงเรียนมาเพื่อโปรดทราบ</p>
                     </div>
 
                     <!-- ลายเซ็น -->
-                    <div class="mt-16 flex flex-col items-center ml-auto w-72 text-slate-800">
-                        <p class="mb-8 text-slate-400">(ลงชื่อ).......................................................</p>
-                        <p>( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
-                        <p class="text-sm mt-1 text-slate-600">ผู้รายงาน / ผู้จัดทำ</p>
+                    <div class="mt-12 flex flex-col items-center ml-auto w-72">
+                        <p class="mb-6">(ลงชื่อ).......................................................</p>
+                        <p>( นางสาวมัทนา รัตนแสง )</p>
+                        <p class="text-[14pt] mt-1">ผู้รายงาน / ผู้จัดทำ</p>
                     </div>
 
                 </div>
@@ -1186,14 +1207,25 @@ if($check_repairs->num_rows > 0) {
         }
 
         function renderCharts() {
+            // ตั้งค่า Font ให้เป็นแบบราชการ
+            Chart.defaults.font.family = "'Sarabun', sans-serif";
+            Chart.defaults.color = '#1e293b';
+
             const ctxStatus = document.getElementById('statusChart').getContext('2d');
             new Chart(ctxStatus, {
-                type: 'doughnut',
+                type: 'pie', // เปลี่ยนจาก Doughnut เป็น Pie ให้ดูวิชาการ
                 data: {
                     labels: ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'],
-                    datasets: [{ data: statusDataArray, backgroundColor: ['#f59e0b', '#0ea5e9', '#10b981'], borderWidth: 0, hoverOffset: 4 }]
+                    // เปลี่ยนสีให้เป็นโทนสุภาพ (Monochrome / Blue scale)
+                    datasets: [{ data: statusDataArray, backgroundColor: ['#94a3b8', '#60a5fa', '#1e40af'], borderWidth: 1, borderColor: '#ffffff', hoverOffset: 4 }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: window.innerWidth < 768 ? 10 : 20, font: { family: "'Kanit', sans-serif", size: window.innerWidth < 768 ? 10 : 12 } } } }, cutout: '70%' }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 14 } } } 
+                    } 
+                }
             });
 
             const ctxEquip = document.getElementById('equipChart').getContext('2d');
@@ -1201,9 +1233,17 @@ if($check_repairs->num_rows > 0) {
                 type: 'bar',
                 data: {
                     labels: equipLabels,
-                    datasets: [{ label: 'จำนวนครั้งที่แจ้งซ่อม', data: equipCounts, backgroundColor: '#6366f1', borderRadius: 6 }]
+                    datasets: [{ label: 'จำนวนครั้งที่แจ้งซ่อม', data: equipCounts, backgroundColor: '#1e40af', borderRadius: 0 }] // ปรับเป็นเหลี่ยมปกติ
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Kanit', sans-serif" } }, grid: { borderDash: [4, 4] } }, x: { ticks: { font: { family: "'Kanit', sans-serif", size: window.innerWidth < 768 ? 10 : 12 } }, grid: { display: false } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 14 } }, grid: { borderDash: [4, 4] } }, 
+                        x: { ticks: { font: { size: 14 } }, grid: { display: false } } 
+                    } 
+                }
             });
         }
     </script>
