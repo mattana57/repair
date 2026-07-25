@@ -3,7 +3,7 @@ session_start();
 
 // 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? 
 if (!isset($_SESSION['user_id'])) {
-    // ให้ระบบจำ URL ปัจจุบันเอาไว้
+    // ให้ระบบจำ URL ปัจจุบันเอาไว้ (รวมถึง ?tab=repairs ด้วย)
     $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
     header("Location: login.php");
     exit();
@@ -46,6 +46,7 @@ if($check_phone->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN phone
 $check_dept = $conn->query("SHOW COLUMNS FROM users LIKE 'department'");
 if($check_dept->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN department VARCHAR(100) NULL AFTER phone");
 
+// ตรวจสอบและเพิ่มคอลัมน์ password ถ้ายังไม่มี
 $check_pwd = $conn->query("SHOW COLUMNS FROM users LIKE 'password'");
 if($check_pwd->num_rows == 0) {
     $conn->query("ALTER TABLE users ADD COLUMN password VARCHAR(255) NULL AFTER username");
@@ -99,6 +100,7 @@ if (isset($_GET['delete_user'])) {
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
 
+// จัดการการบันทึกข้อมูลผู้ใช้งานและรหัสผ่าน
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $user_id = $_POST['user_id'];
     $username = $_POST['username'];
@@ -241,7 +243,7 @@ if($check_repairs->num_rows > 0) {
             background: #ffffff;
             width: 210mm;
             min-height: 297mm;
-            padding: 2.5cm 2cm 2cm 3cm; /* บน 2.5, ขวา 2, ล่าง 2, ซ้าย 3 */
+            padding: 2cm 2cm 2cm 3cm; /* ลดขอบบนลงนิดนึงเพื่อให้พอดี 1 หน้า */
             margin: 0 auto;
             box-sizing: border-box;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -260,7 +262,7 @@ if($check_repairs->num_rows > 0) {
         @media print {
             @page { 
                 size: A4; 
-                margin: 2.5cm 2cm 2cm 3cm; /* ตั้งระยะขอบกระดาษในระบบพิมพ์โดยตรง */
+                margin: 2cm 2cm 2cm 3cm; /* ตั้งระยะขอบกระดาษในระบบพิมพ์โดยตรง */
             }
             body, html { 
                 height: auto !important; 
@@ -802,7 +804,7 @@ if($check_repairs->num_rows > 0) {
                     ?>
 
                     <!-- ส่วนหัวบันทึกข้อความ มีครุฑ -->
-                    <div class="flex items-center mb-6 relative">
+                    <div class="flex items-center mb-4 relative">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Thai_government_Garuda_emblem_%28Version_2%29.svg" class="w-[1.5cm] h-[1.5cm] object-contain absolute left-0 top-0" style="filter: grayscale(100%);">
                         <h1 class="w-full text-center font-bold" style="font-size: 29pt; margin-top: 15px;">บันทึกข้อความ</h1>
                     </div>
@@ -814,7 +816,7 @@ if($check_repairs->num_rows > 0) {
                         <div class="w-1/2"><b>ที่</b> <span class="ml-2">ศธ ๐๕๓๐.๑๑/......................</span></div>
                         <div class="w-1/2"><b>วันที่</b> <span class="ml-2"><?php echo date('d ') . $report_month . " " . (date('Y')+543); ?></span></div>
                     </div>
-                    <div class="mb-6">
+                    <div class="mb-4">
                         <b>เรื่อง</b> <span class="ml-2">รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></span>
                     </div>
                     
@@ -827,17 +829,17 @@ if($check_repairs->num_rows > 0) {
                         <p class="thai-indent">ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น</p>
                         <p class="thai-indent mt-2">ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $report_month; ?> เพื่อรายงานผลการดำเนินงานให้รับทราบ โดยมีรายละเอียดดังต่อไปนี้</p>
                         
-                        <p class="font-bold mt-4">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
+                        <p class="font-bold mt-3">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
                         <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b><?php echo $total_repairs; ?></b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
-                        <div class="ml-16 mt-2 space-y-1">
+                        <div class="ml-16 mt-1 space-y-1">
                             <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b><?php echo $completed; ?></b> รายการ (คิดเป็นร้อยละ <?php echo $pct_completed; ?>)</p>
                             <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b><?php echo $progress; ?></b> รายการ (คิดเป็นร้อยละ <?php echo $pct_progress; ?>)</p>
                             <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b><?php echo $pending; ?></b> รายการ (คิดเป็นร้อยละ <?php echo $pct_pending; ?>)</p>
                         </div>
 
-                        <p class="font-bold mt-4">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
+                        <p class="font-bold mt-3">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
                         <p class="thai-indent">ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ๕ อันดับแรก ประกอบด้วย</p>
-                        <div class="ml-16 mt-2 space-y-1">
+                        <div class="ml-16 mt-1 space-y-1">
                             <?php 
                                 if (!empty($eq_labels)) {
                                     $thai_nums = ['๑', '๒', '๓', '๔', '๕'];
@@ -850,13 +852,13 @@ if($check_repairs->num_rows > 0) {
                             ?>
                         </div>
 
-                        <p class="thai-indent mt-4">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
+                        <p class="thai-indent mt-3">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
 
-                        <p class="thai-indent mt-6">จึงเรียนมาเพื่อโปรดทราบ</p>
+                        <p class="thai-indent mt-4">จึงเรียนมาเพื่อโปรดทราบ</p>
                     </div>
 
                     <!-- ลายเซ็น -->
-                    <div class="mt-12 flex flex-col items-center ml-auto w-72 text-center">
+                    <div class="mt-8 flex flex-col items-center ml-auto w-72 text-center" style="page-break-inside: avoid;">
                         <p class="mb-6">(ลงชื่อ).......................................................</p>
                         <p>( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
                         <p class="text-[14pt] mt-1">ผู้รายงาน / ผู้จัดทำ</p>
