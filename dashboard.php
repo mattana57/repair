@@ -172,6 +172,7 @@ $all_repairs_json = "[]";
 $status_data_json = json_encode(['รอรับเรื่อง'=>0, 'กำลังดำเนินการ'=>0, 'ซ่อมเสร็จแล้ว'=>0]);
 $equip_labels_json = "[]";
 $equip_counts_json = "[]";
+$status_counts = ['รอรับเรื่อง'=>0, 'กำลังดำเนินการ'=>0, 'ซ่อมเสร็จแล้ว'=>0];
 
 if($check_repairs->num_rows > 0) {
     $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
@@ -185,7 +186,6 @@ if($check_repairs->num_rows > 0) {
     }
 
     $stat_res = $conn->query("SELECT status, COUNT(*) as cnt FROM repairs GROUP BY status");
-    $status_counts = ['รอรับเรื่อง'=>0, 'กำลังดำเนินการ'=>0, 'ซ่อมเสร็จแล้ว'=>0];
     if($stat_res) {
         while($st = $stat_res->fetch_assoc()){ 
             if(isset($status_counts[$st['status']])) {
@@ -707,44 +707,92 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Report Summary Section (รายงานสรุปแบบสากล) -->
+            <!-- Report Summary Section (เอกสารบันทึกข้อความ & Excel) -->
             <div id="reports" class="section hidden space-y-6">
-                <div class="hidden print-header print:flex items-center gap-4 mb-8 pb-6 border-b border-slate-200">
-                    <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg">
-                        <i class="fas fa-tools text-white text-3xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-extrabold text-slate-800">รายงานสรุปผลการปฏิบัติงาน</h1>
-                        <p class="text-slate-500 font-medium">MBS Smart Maintenance Hub • พิมพ์เมื่อ: <?php echo date('d/m/Y H:i'); ?></p>
-                    </div>
-                </div>
-
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent mb-2 no-print">
+                
+                <!-- แถบปุ่มกดด้านบน (ไม่แสดงตอนพิมพ์) -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent mb-4 no-print">
                     <div>
                         <h2 class="text-xl md:text-2xl font-bold text-slate-800">รายงานสรุปผลการปฏิบัติงาน</h2>
-                        <p class="text-sm text-slate-500 mt-1">สถิติและภาพรวมของการแจ้งซ่อมทั้งหมดในระบบ</p>
+                        <p class="text-sm text-slate-500 mt-1">เอกสารรายงานและสถิติสำหรับการพิมพ์และส่งออก</p>
                     </div>
-                    <button onclick="window.print()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-sky-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
-                        <i class="fas fa-print mr-2"></i> พิมพ์รายงาน
-                    </button>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        <!-- ปุ่มดาวน์โหลด Excel (ชี้ไปที่ไฟล์ export_excel.php ที่สร้างไว้) -->
+                        <a href="export_excel.php" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
+                            <i class="fas fa-file-excel mr-2 text-lg"></i> ดาวน์โหลดตาราง Excel
+                        </a>
+                        <!-- ปุ่มพิมพ์เอกสาร -->
+                        <button onclick="window.print()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-sky-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
+                            <i class="fas fa-print mr-2 text-lg"></i> พิมพ์เอกสารรายงาน
+                        </button>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 print:grid-cols-2 print:gap-8">
-                    <div class="modern-card p-4 md:p-6 bg-white flex flex-col h-[350px] md:h-[400px] print:h-[400px] print:shadow-none print:border">
-                        <h3 class="font-bold text-slate-800 mb-2 flex items-center text-sm md:text-base"><i class="fas fa-chart-pie text-sky-500 mr-2"></i> สัดส่วนสถานะงานซ่อม</h3>
-                        <p class="text-xs text-slate-500 mb-4 hidden md:block">แสดงเปอร์เซ็นต์ของงานที่รอรับเรื่อง, กำลังดำเนินการ, และเสร็จสิ้น</p>
-                        <div class="flex-1 relative w-full h-full flex justify-center pb-4 chart-container">
+                <!-- หน้าเอกสารสำหรับพิมพ์ (A4 Style) -->
+                <div class="modern-card bg-white p-8 md:p-14 mx-auto max-w-4xl print:shadow-none print:border-none print:p-0">
+                    
+                    <?php 
+                        // คำนวณตัวเลขและวันที่สำหรับแสดงในรายงาน
+                        $total_repairs = array_sum($status_counts);
+                        $percent_completed = $total_repairs > 0 ? round(($status_counts['ซ่อมเสร็จแล้ว'] / $total_repairs) * 100) : 0;
+                        $thai_months_doc = [
+                            "01" => "มกราคม", "02" => "กุมภาพันธ์", "03" => "มีนาคม", "04" => "เมษายน",
+                            "05" => "พฤษภาคม", "06" => "มิถุนายน", "07" => "กรกฎาคม", "08" => "สิงหาคม",
+                            "09" => "กันยายน", "10" => "ตุลาคม", "11" => "พฤศจิกายน", "12" => "ธันวาคม"
+                        ];
+                        $report_month = $thai_months_doc[date('m')];
+                    ?>
+
+                    <!-- ส่วนหัวบันทึกข้อความ -->
+                    <div class="text-center font-bold text-2xl mb-8 text-slate-800 tracking-wide">บันทึกข้อความ</div>
+                    
+                    <div class="flex justify-between items-end mb-3 text-slate-800">
+                        <div class="text-base"><b>ส่วนราชการ</b> ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ</div>
+                    </div>
+                    <div class="flex justify-between items-end mb-6 text-slate-800">
+                        <div class="text-base"><b>ที่</b> ศธ ๐๕๓๐.๑๑/......................</div>
+                        <div class="text-base"><b>วันที่</b> <?php echo date('d/m/') . (date('Y')+543); ?></div>
+                    </div>
+                    <div class="mb-6 text-slate-800 text-base">
+                        <b>เรื่อง</b> รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?>
+                    </div>
+                    
+                    <hr class="border-slate-300 mb-6">
+                    
+                    <div class="mb-6 text-slate-800 text-base">
+                        <b>เรียน</b> คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ
+                    </div>
+                    
+                    <!-- เนื้อหารายงาน -->
+                    <div class="space-y-4 text-slate-700 leading-relaxed text-base">
+                        <p class="indent-10">เพื่อให้ผู้บริหารรับทราบถึงสถิติและภาพรวมของการปฏิบัติงานแจ้งซ่อมอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ภายในคณะการบัญชีและการจัดการ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ทางผู้ดูแลระบบจึงขอรายงานสรุปผลการปฏิบัติงาน ดังนี้</p>
+                        
+                        <p class="font-bold mt-6 text-slate-800">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
+                        <p class="indent-10">จากการเก็บรวบรวมข้อมูลในระบบประจำเดือน <?php echo $report_month; ?> มีการแจ้งซ่อมทั้งสิ้น <b><?php echo $total_repairs; ?></b> รายการ โดยมีการดำเนินการซ่อมแซมเสร็จสิ้นแล้วคิดเป็น <b><?php echo $percent_completed; ?>%</b> ของงานทั้งหมด รายละเอียดสัดส่วนแสดงดังภาพประกอบด้านล่าง</p>
+                        
+                        <!-- กราฟที่ 1 (จัดให้อยู่ตรงกลาง ไม่ใหญ่เกินไป) -->
+                        <div class="w-full max-w-md mx-auto h-[250px] my-6 chart-container">
                             <canvas id="statusChart"></canvas>
                         </div>
-                    </div>
 
-                    <div class="modern-card p-4 md:p-6 bg-white flex flex-col h-[350px] md:h-[400px] print:h-[400px] print:shadow-none print:border">
-                        <h3 class="font-bold text-slate-800 mb-2 flex items-center text-sm md:text-base"><i class="fas fa-chart-bar text-indigo-500 mr-2"></i> อุปกรณ์ที่พบปัญหามากที่สุด</h3>
-                        <p class="text-xs text-slate-500 mb-4 hidden md:block">แสดงประเภทครุภัณฑ์หรืออุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด</p>
-                        <div class="flex-1 relative w-full h-full pb-4 chart-container">
+                        <p class="font-bold mt-6 text-slate-800">๒. สถิติอุปกรณ์ที่พบปัญหาบ่อยครั้ง</p>
+                        <p class="indent-10">จากการวิเคราะห์ความถี่ของประเภทครุภัณฑ์และอุปกรณ์ที่มีการแจ้งซ่อม พบว่าอุปกรณ์ที่มีสถิติชำรุดสูงสุดแสดงดังข้อมูลกราฟด้านล่าง ซึ่งสามารถนำไปใช้วางแผนการจัดซื้ออะไหล่สำรอง หรือพิจารณาการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปได้</p>
+
+                        <!-- กราฟที่ 2 -->
+                        <div class="w-full max-w-xl mx-auto h-[250px] my-6 chart-container">
                             <canvas id="equipChart"></canvas>
                         </div>
+
+                        <p class="indent-10 mt-8">จึงเรียนมาเพื่อโปรดทราบ</p>
                     </div>
+
+                    <!-- ลายเซ็น -->
+                    <div class="mt-16 flex flex-col items-center ml-auto w-72 text-slate-800">
+                        <p class="mb-8 text-slate-400">(ลงชื่อ).......................................................</p>
+                        <p>( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
+                        <p class="text-sm mt-1 text-slate-600">ผู้รายงาน / ผู้จัดทำ</p>
+                    </div>
+
                 </div>
             </div>
 
