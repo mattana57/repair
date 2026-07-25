@@ -270,7 +270,7 @@ if($check_repairs->num_rows > 0) {
             font-size: 29pt !important;
             font-weight: bold !important;
             text-align: center;
-            margin-top: -10pt; /* ดึงขึ้นนิดนึงเพื่อชดเชยพื้นที่ครุฑ */
+            margin-top: -10pt;
             margin-bottom: 5pt;
         }
 
@@ -278,7 +278,7 @@ if($check_repairs->num_rows > 0) {
         
         .official-doc p { 
             text-align: justify; 
-            margin-bottom: 2pt; /* ลดช่องว่างระหว่างบรรทัด */
+            margin-bottom: 2pt;
             margin-top: 0;
         }
         
@@ -291,14 +291,21 @@ if($check_repairs->num_rows > 0) {
             margin-bottom: 2pt;
         }
 
+        /* ป้องกันการตัดบรรทัด / ตัดกลุ่มข้อความ */
+        .keep-together {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
         /* แก้อาการเอกสารโดนตัดตอนสั่ง Print */
         @media print {
             @page { 
                 size: A4; 
-                margin: 0; /* ล้างค่า margin พื้นฐานของ Browser ออก */
+                margin: 2.5cm 2cm 2cm 3cm; /* ตั้งระยะขอบกระดาษในระบบพิมพ์โดยตรง */
             }
             body, html { 
-                height: 100% !important; /* บังคับความสูงแบบ Full Page */
+                height: auto !important; 
+                min-height: auto !important;
                 overflow: visible !important; 
                 background: #ffffff !important; 
             }
@@ -323,15 +330,15 @@ if($check_repairs->num_rows > 0) {
                 margin: 0 !important; 
             }
             
-            /* ตั้งค่าให้หน้าเอกสารปริ้นท์แบบไร้ขอบ (ขอบจะถูกกำหนดโดย padding ของ .official-doc) */
+            /* ตั้งค่าให้หน้าเอกสารปริ้นท์แบบไหลได้หลายหน้า */
             .official-doc {
-                width: 210mm !important;
-                height: 297mm !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: auto !important;
                 margin: 0 !important;
-                padding: 2.5cm 2cm 2cm 3cm !important; /* จัดระยะขอบตรงนี้แทน */
+                padding: 0 !important; /* ให้ระยะขอบไปดึงจาก @page แทน */
                 box-shadow: none !important;
                 border: none !important;
-                page-break-after: always;
             }
         }
     </style>
@@ -570,6 +577,7 @@ if($check_repairs->num_rows > 0) {
                     </div>
                 </div>
 
+                <!-- ตาราง Admin & Executive -->
                 <div>
                     <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-user-shield text-purple-500 mr-2 text-xl"></i> ผู้ดูแลระบบ และ ผู้บริหาร</h3>
                     <div class="modern-card overflow-hidden">
@@ -628,6 +636,7 @@ if($check_repairs->num_rows > 0) {
                     </div>
                 </div>
 
+                <!-- ตาราง Technician -->
                 <div class="mt-6 md:mt-8">
                     <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-hard-hat text-sky-500 mr-2 text-xl"></i> ช่างซ่อม (Technician)</h3>
                     <div class="modern-card overflow-hidden">
@@ -796,7 +805,7 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Report Summary Section (เอกสารบันทึกข้อความราชการ 100% ไม่มีกราฟ) -->
+            <!-- Report Summary Section (เอกสารบันทึกข้อความราชการ 100% ไม่มีกราฟ - บีบให้อยู่ในหน้าเดียว) -->
             <div id="reports" class="section hidden space-y-6">
                 
                 <!-- แถบปุ่มกดด้านบน (ไม่แสดงตอนพิมพ์) -->
@@ -844,7 +853,7 @@ if($check_repairs->num_rows > 0) {
                     
                     <div class="title-doc">บันทึกข้อความ</div>
                     
-                    <div class="doc-row" style="margin-top: 15pt;">
+                    <div class="doc-row" style="margin-top: 10pt;">
                         <span class="bold-text" style="width: 2.5cm;">ส่วนราชการ</span>
                         <span>ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
                     </div>
@@ -856,7 +865,6 @@ if($check_repairs->num_rows > 0) {
                         </div>
                         <div class="doc-row" style="width: 50%;">
                             <span class="bold-text" style="width: 1.2cm;">วันที่</span>
-                            <!-- แสดงวันที่แบบราชการ (ไม่มีคำว่า วันที่ นำหน้าตัวเลข) และแปลงเป็นเลขไทย -->
                             <span><?php echo thaiNum(date('j')) . " " . $report_month . " " . thaiNum(date('Y')+543); ?></span>
                         </div>
                     </div>
@@ -866,7 +874,7 @@ if($check_repairs->num_rows > 0) {
                         <span>รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></span>
                     </div>
                     
-                    <div class="doc-row" style="margin-bottom: 15pt;">
+                    <div class="doc-row" style="margin-bottom: 10pt;">
                         <span class="bold-text" style="width: 1.5cm;">เรียน</span>
                         <span>คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</span>
                     </div>
@@ -876,37 +884,41 @@ if($check_repairs->num_rows > 0) {
                         <p class="thai-indent">ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น</p>
                         <p class="thai-indent">ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $report_month; ?> เพื่อรายงานผลการดำเนินงานให้รับทราบ โดยมีรายละเอียดดังต่อไปนี้</p>
                         
-                        <p class="bold-text" style="margin-top: 10pt;">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
-                        <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b><?php echo thaiNum($total_repairs); ?></b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
-                        <div class="thai-sub-indent">
-                            <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b><?php echo thaiNum($completed); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_completed); ?>)</p>
-                            <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b><?php echo thaiNum($progress); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_progress); ?>)</p>
-                            <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b><?php echo thaiNum($pending); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_pending); ?>)</p>
+                        <div class="keep-together">
+                            <p class="bold-text" style="margin-top: 5pt;">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
+                            <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b><?php echo thaiNum($total_repairs); ?></b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
+                            <div class="thai-sub-indent">
+                                <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b><?php echo thaiNum($completed); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_completed); ?>)</p>
+                                <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b><?php echo thaiNum($progress); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_progress); ?>)</p>
+                                <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b><?php echo thaiNum($pending); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_pending); ?>)</p>
+                            </div>
                         </div>
 
-                        <p class="bold-text" style="margin-top: 10pt;">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
-                        <p class="thai-indent">ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ๕ อันดับแรก ประกอบด้วย</p>
-                        <div class="thai-sub-indent">
-                            <?php 
-                                if (!empty($eq_labels)) {
-                                    $thai_nums = ['๑', '๒', '๓', '๔', '๕'];
-                                    for ($i = 0; $i < count($eq_labels); $i++) {
-                                        echo "<p>๒." . $thai_nums[$i] . " " . htmlspecialchars($eq_labels[$i]) . " จำนวน <b>" . thaiNum($eq_counts[$i]) . "</b> รายการ</p>";
+                        <div class="keep-together">
+                            <p class="bold-text" style="margin-top: 5pt;">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
+                            <p class="thai-indent">ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ๕ อันดับแรก ประกอบด้วย</p>
+                            <div class="thai-sub-indent">
+                                <?php 
+                                    if (!empty($eq_labels)) {
+                                        $thai_nums = ['๑', '๒', '๓', '๔', '๕'];
+                                        for ($i = 0; $i < count($eq_labels); $i++) {
+                                            echo "<p>๒." . $thai_nums[$i] . " " . htmlspecialchars($eq_labels[$i]) . " จำนวน <b>" . thaiNum($eq_counts[$i]) . "</b> รายการ</p>";
+                                        }
+                                    } else {
+                                        echo "<p>- ไม่มีข้อมูลการแจ้งซ่อมในระบบ -</p>";
                                     }
-                                } else {
-                                    echo "<p>- ไม่มีข้อมูลการแจ้งซ่อมในระบบ -</p>";
-                                }
-                            ?>
+                                ?>
+                            </div>
                         </div>
 
-                        <p class="thai-indent" style="margin-top: 10pt;">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
+                        <p class="thai-indent keep-together" style="margin-top: 5pt;">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
 
-                        <p class="thai-indent" style="margin-top: 15pt;">จึงเรียนมาเพื่อโปรดทราบ</p>
+                        <p class="thai-indent keep-together" style="margin-top: 10pt;">จึงเรียนมาเพื่อโปรดทราบ</p>
                     </div>
 
                     <!-- ลายเซ็น -->
-                    <div style="margin-top: 50pt; text-align: center; float: right; width: 8cm;">
-                        <p style="margin-bottom: 25pt;">(ลงชื่อ).......................................................</p>
+                    <div class="keep-together" style="margin-top: 25pt; text-align: center; float: right; width: 6.5cm;">
+                        <p style="margin-bottom: 20pt;">(ลงชื่อ)...................................................</p>
                         <p>( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
                         <p>ผู้รายงาน / ผู้จัดทำ</p>
                     </div>
