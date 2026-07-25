@@ -16,6 +16,15 @@ if (strtolower($_SESSION['role']) === 'executive') {
 
 include 'db_connect.php';
 
+// ================= ฟังก์ชันแปลงตัวเลขเป็นเลขไทย =================
+function thaiNum($num) {
+    return str_replace(
+        array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
+        array('๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'),
+        $num
+    );
+}
+
 // ================= ปรับปรุงฐานข้อมูลอัตโนมัติ (Auto-Fix DB) =================
 $conn->query("CREATE TABLE IF NOT EXISTS assets (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -135,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     }
     
     if ($stmt->execute()) {
-        echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#1e3a8a' }).then(() => { window.location.href='dashboard.php?tab=$tab_redirect'; }); });</script>";
+        echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=$tab_redirect'; }); });</script>";
     }
 }
 
@@ -155,11 +164,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
     $stmt = $conn->prepare("UPDATE repairs SET reporter_name = ?, phone_number = ? WHERE reporter_name = ?");
     $stmt->bind_param("sss", $new_name, $new_phone, $old_name);
     $stmt->execute();
-    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลผู้แจ้งสำเร็จ!', confirmButtonColor: '#1e3a8a' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
+    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลผู้แจ้งสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
 }
 
 // ================= เตรียมข้อมูลประวัติและสถิติ =================
 $all_repairs_json = "[]";
+$status_counts = ['รอรับเรื่อง'=>0, 'กำลังดำเนินการ'=>0, 'ซ่อมเสร็จแล้ว'=>0];
+$eq_labels = []; 
+$eq_counts = [];
 
 if($check_repairs->num_rows > 0) {
     $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
@@ -171,6 +183,23 @@ if($check_repairs->num_rows > 0) {
         while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
         $all_repairs_json = json_encode($reps);
     }
+
+    $stat_res = $conn->query("SELECT status, COUNT(*) as cnt FROM repairs GROUP BY status");
+    if($stat_res) {
+        while($st = $stat_res->fetch_assoc()){ 
+            if(isset($status_counts[$st['status']])) {
+                $status_counts[$st['status']] = $st['cnt']; 
+            }
+        }
+    }
+
+    $eq_res = $conn->query("SELECT equipment_type, COUNT(*) as cnt FROM repairs GROUP BY equipment_type ORDER BY cnt DESC LIMIT 5");
+    if($eq_res) {
+        while($eq = $eq_res->fetch_assoc()){ 
+            $eq_labels[] = $eq['equipment_type']; 
+            $eq_counts[] = $eq['cnt']; 
+        }
+    }
 }
 
 // ดึงรายชื่อช่างทั้งหมดสำหรับ Dropdown (เฉพาะ Technician)
@@ -181,6 +210,7 @@ if($tech_list_res){
         $tech_options[] = $t['full_name'];
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -189,227 +219,263 @@ if($tech_list_res){
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBS Smart Maintenance</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; color: #334155; }
+        body { 
+            /* ใช้ฟอนต์ผสม: ภาษาอังกฤษ Plus Jakarta (คล้ายเรฟ), ภาษาไทย Kanit */
+            font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif; 
+            background-color: #f3f4f6; /* พื้นหลังเทาอ่อนมากๆ สบายตา */
+            color: #1e293b; 
+        }
         
-        .modern-card { background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04); border: 1px solid #f1f5f9; }
-        .gradient-card-1 { background: linear-gradient(135deg, #1e3a8a, #2563eb); } 
-        .gradient-card-2 { background: linear-gradient(135deg, #d97706, #f59e0b); } 
-        .gradient-card-3 { background: linear-gradient(135deg, #0284c7, #38bdf8); } 
-        .gradient-card-4 { background: linear-gradient(135deg, #059669, #10b981); } 
+        /* สไตล์การ์ดโค้งมนและเงาฟุ้งๆ แบบ SaaS Dashboard */
+        .modern-card { 
+            background: #ffffff; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 24px rgba(149, 157, 165, 0.15); 
+            border: 1px solid #f1f5f9; 
+        }
         
-        .nav-btn { width: 100%; display: flex; align-items: center; padding: 0.75rem 1.25rem; margin-bottom: 0.5rem; border-radius: 8px; color: #64748b; font-weight: 500; transition: all 0.2s; font-size: 0.9rem;}
-        .nav-btn i { width: 1.5rem; text-align: center; font-size: 1.1rem; margin-right: 0.75rem; color: #94a3b8; transition: all 0.2s; }
-        .nav-btn:hover { background-color: #f1f5f9; color: #1e3a8a; }
-        .nav-btn:hover i { color: #1e3a8a; }
-        .active-btn { background: #eff6ff; color: #1e3a8a; font-weight: 600; border-right: 4px solid #1e3a8a; }
-        .active-btn i { color: #1e3a8a; }
+        /* เมนู Sidebar */
+        .nav-btn { 
+            width: 100%; display: flex; align-items: center; padding: 0.875rem 1.25rem; 
+            margin-bottom: 0.25rem; border-radius: 12px; color: #64748b; 
+            font-weight: 600; transition: all 0.2s ease; font-size: 0.95rem;
+        }
+        .nav-btn i { width: 1.5rem; text-align: center; font-size: 1.1rem; margin-right: 0.875rem; color: #94a3b8; transition: all 0.2s ease; }
+        .nav-btn:hover { background-color: #f8fafc; color: #4f46e5; }
+        .nav-btn:hover i { color: #4f46e5; }
         
+        /* ปุ่มเมนูที่ Active (สี Indigo) */
+        .active-btn { 
+            background-color: #eef2ff; color: #4f46e5; font-weight: 700; 
+        }
+        .active-btn i { color: #4f46e5; }
+        
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+        
+        /* Badge Status (มินิมอล) */
+        .badge-pending { background-color: #fef3c7; color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-progress { background-color: #e0e7ff; color: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-success { background-color: #d1fae5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+
+        @media print {
+            aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #assets, #users, #reports { display: none !important; }
+        }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden selection:bg-blue-200">
+<body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
-    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <aside id="sidebar" class="w-64 bg-white border-r border-slate-100 flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-sm no-print">
-        <div class="h-20 flex items-center px-6 border-b border-slate-50">
-            <div class="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-blue-900 flex items-center justify-center shadow-md mr-3 shrink-0">
-                <i class="fas fa-tools text-amber-400 text-lg"></i>
+    <!-- Sidebar สีขาว คลีนๆ -->
+    <aside id="sidebar" class="w-[260px] bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
+        <div class="h-24 flex items-center px-8 border-b border-slate-50">
+            <!-- โลโก้ไล่สีม่วง-ฟ้า (Indigo/Violet) -->
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3 shrink-0">
+                <i class="fas fa-tools text-white text-lg"></i>
             </div>
             <div class="overflow-hidden">
-                <h1 class="text-xl font-bold text-slate-800 leading-tight">MBS <span class="text-blue-900">REPAIR</span></h1>
+                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight">MBS<span class="text-indigo-600">Repair</span></h1>
             </div>
         </div>
         
-        <nav class="flex-1 px-4 py-6 flex flex-col overflow-y-auto">
-            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Main Menu</p>
-            <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-line"></i> Dashboard</button>
-            <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-layer-group"></i> Repairs List</button>
-            <button onclick="show('technicians')" class="nav-btn" id="btn-technicians"><i class="fas fa-users-cog"></i> Team Members</button>
+        <nav class="flex-1 px-4 py-8 flex flex-col overflow-y-auto">
+            <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">Dashboard</p>
+            <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
+            <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
+            <button onclick="show('technicians')" class="nav-btn" id="btn-technicians"><i class="fas fa-user-friends"></i> Team</button>
             
-            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 mt-6">Settings & Reports</p>
-            <button onclick="show('assets')" class="nav-btn" id="btn-assets"><i class="fas fa-boxes"></i> Assets</button>
-            <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-address-book"></i> User History</button>
-            <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-alt"></i> Official Report</button>
+            <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4 mt-8">Management</p>
+            <button onclick="show('assets')" class="nav-btn" id="btn-assets"><i class="fas fa-box-open"></i> Assets</button>
+            <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-address-book"></i> Contacts</button>
+            <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
             
-            <div class="mt-auto pt-4">
-                <a href="logout.php" class="nav-btn text-slate-500 hover:bg-red-50 hover:text-red-600"><i class="fas fa-power-off"></i> Logout</a>
+            <div class="mt-auto pt-6 border-t border-slate-50">
+                <a href="logout.php" class="nav-btn text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
         </nav>
     </aside>
 
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <header class="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-6 z-10 sticky top-0 no-print shadow-sm">
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
+        
+        <!-- Header สีขาว มินิมอล -->
+        <header class="h-20 bg-white/80 backdrop-blur-md flex items-center justify-between px-8 z-10 sticky top-0 no-print border-b border-slate-100">
             <div class="flex items-center">
-                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-blue-900 focus:outline-none">
+                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-indigo-600 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h2 class="text-xl font-bold text-slate-800 tracking-wide" id="headerTitle">Dashboard</h2>
+                <h2 class="text-2xl font-bold text-slate-800 tracking-tight" id="headerTitle">Dashboard Overview</h2>
             </div>
             
-            <div class="flex items-center space-x-6">
-                <div class="relative hidden lg:block">
+            <div class="flex items-center space-x-5">
+                <div class="relative hidden md:block">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" id="searchInput" placeholder="Search..." class="bg-slate-50 border border-slate-100 text-sm rounded-full pl-10 pr-4 py-2.5 text-slate-700 focus:outline-none focus:border-blue-300 focus:bg-white transition-all w-64">
+                    <input type="text" id="searchInput" placeholder="Search data..." class="bg-slate-100 border-none text-sm rounded-full pl-10 pr-4 py-2.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all w-64 font-medium placeholder-slate-400">
                 </div>
-                <div class="flex items-center space-x-3 cursor-pointer p-1.5 md:pr-4 rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-all shadow-sm">
-                    <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-blue-900 flex items-center justify-center text-amber-400 border border-blue-200"><i class="fas fa-user text-sm"></i></div>
-                    <div class="hidden sm:block text-left">
-                        <span class="block text-sm font-bold text-slate-700 leading-none mb-1">
+                
+                <div class="flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer group">
+                    <div class="text-right hidden sm:block">
+                        <span class="block text-sm font-bold text-slate-700 leading-none mb-1 group-hover:text-indigo-600 transition-colors">
                             <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <span class="block text-[10px] text-blue-600 uppercase tracking-wide">Administrator</span>
+                        <span class="block text-[11px] text-slate-400 font-semibold">Administrator</span>
+                    </div>
+                    <!-- ไอคอนโปรไฟล์แบบรูปภาพ/วงกลมสีเทา -->
+                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 overflow-hidden">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-6 lg:p-8 print:p-0 print:overflow-visible">
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8">
             
             <!-- Dashboard Section -->
-            <div id="dash" class="section space-y-6 animate-fade-in no-print">
+            <div id="dash" class="section space-y-8 animate-fade-in no-print">
                 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 modern-card p-6 flex flex-col relative overflow-hidden">
-                        <div class="flex justify-between items-start mb-6 relative z-10">
-                            <div>
-                                <h3 class="font-bold text-slate-800 text-lg">Equipment Overview</h3>
-                                <p class="text-xs text-slate-400">Total repairs requested by item</p>
-                            </div>
+                <!-- แถวที่ 1: การ์ดสถิติแบบ Minimal (อิง Fundex/SalesPilot) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <?php 
+                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
+                        $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
+                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE status='รอรับเรื่อง'");
+                        $cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
+                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE status='กำลังดำเนินการ'");
+                        $cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
+                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
+                        $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
+                    ?>
+                    
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="show('repairs')">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
+                            <span class="text-xs font-bold text-slate-400">TOTAL</span>
                         </div>
-                        <div class="flex-1 relative w-full h-[250px] z-10">
+                        <div>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
+                            <p class="text-sm font-medium text-slate-500 mt-1">Total Repairs</p>
+                        </div>
+                    </div>
+                    
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-xl"><i class="fas fa-clock"></i></div>
+                            <span class="text-xs font-bold text-slate-400">WAITING</span>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
+                            <p class="text-sm font-medium text-slate-500 mt-1">Pending</p>
+                        </div>
+                    </div>
+
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-xl"><i class="fas fa-spinner"></i></div>
+                            <span class="text-xs font-bold text-slate-400">ACTIVE</span>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
+                            <p class="text-sm font-medium text-slate-500 mt-1">In Progress</p>
+                        </div>
+                    </div>
+
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl"><i class="fas fa-check-circle"></i></div>
+                            <span class="text-xs font-bold text-slate-400">DONE</span>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
+                            <p class="text-sm font-medium text-slate-500 mt-1">Completed</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แถวที่ 2: กราฟ (สไตล์ Reference มี Gradient ล่างเส้น) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 modern-card p-6 flex flex-col">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">Frequency of reported broken assets</p>
+                            </div>
+                            <div class="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-500">Overview</div>
+                        </div>
+                        <div class="flex-1 relative w-full h-[280px]">
                             <canvas id="mainEquipChart"></canvas>
                         </div>
                     </div>
                     
-                    <div class="modern-card p-6 flex flex-col relative overflow-hidden">
-                        <div class="mb-2 relative z-10">
-                            <h3 class="font-bold text-slate-800 text-lg">Traffic</h3>
-                            <p class="text-xs text-slate-400">Proportion of work status</p>
+                    <div class="modern-card p-6 flex flex-col">
+                        <div class="mb-4">
+                            <h3 class="font-extrabold text-slate-800 text-lg">Work Status</h3>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">Distribution</p>
                         </div>
-                        <div class="flex-1 relative w-full h-[220px] flex justify-center mt-4 z-10">
+                        <div class="flex-1 relative w-full h-[220px] flex justify-center items-center">
                             <canvas id="mainStatusChart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <?php 
-                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
-                        $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
-                        
-                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE status='รอรับเรื่อง'");
-                        $cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
-                        
-                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE status='กำลังดำเนินการ'");
-                        $cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
-                        
-                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
-                        $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
-                    ?>
-                    <div class="gradient-card-1 rounded-xl p-5 text-white shadow-md relative overflow-hidden group hover:-translate-y-1 transition-all duration-300 cursor-pointer" onclick="show('repairs')">
-                        <div class="absolute -right-6 -top-6 text-white/10 text-7xl transform group-hover:rotate-12 transition-transform"><i class="fas fa-briefcase"></i></div>
-                        <p class="text-white/80 text-xs font-semibold mb-1 uppercase tracking-wider">Total Works</p>
-                        <h3 class="text-3xl font-bold text-amber-400"><?php echo $cTotal; ?></h3>
-                    </div>
-                    
-                    <div class="gradient-card-2 rounded-xl p-5 text-white shadow-md relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
-                        <div class="absolute -right-6 -top-6 text-white/20 text-7xl transform group-hover:rotate-12 transition-transform"><i class="fas fa-clock"></i></div>
-                        <p class="text-white/90 text-xs font-semibold mb-1 uppercase tracking-wider">Pending</p>
-                        <h3 class="text-3xl font-bold"><?php echo $cPend; ?></h3>
-                    </div>
-
-                    <div class="gradient-card-3 rounded-xl p-5 text-white shadow-md relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
-                        <div class="absolute -right-6 -top-6 text-white/20 text-7xl transform group-hover:rotate-12 transition-transform"><i class="fas fa-tools"></i></div>
-                        <p class="text-white/90 text-xs font-semibold mb-1 uppercase tracking-wider">In Progress</p>
-                        <h3 class="text-3xl font-bold"><?php echo $cProg; ?></h3>
-                    </div>
-
-                    <div class="gradient-card-4 rounded-xl p-5 text-white shadow-md relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
-                        <div class="absolute -right-6 -top-6 text-white/20 text-7xl transform group-hover:rotate-12 transition-transform"><i class="fas fa-check-circle"></i></div>
-                        <p class="text-white/90 text-xs font-semibold mb-1 uppercase tracking-wider">Completed</p>
-                        <h3 class="text-3xl font-bold"><?php echo $cComp; ?></h3>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="modern-card p-6">
-                        <h3 class="font-bold text-slate-800 text-base mb-6">Broken Assets <span class="text-xs font-normal text-slate-400 block">Needs attention</span></h3>
-                        <div class="relative border-l border-slate-200 ml-3 space-y-6">
-                            <?php
-                            $dot_colors = ['bg-blue-900', 'bg-amber-500', 'bg-sky-500', 'bg-slate-500'];
-                            $check_assets = $conn->query("SHOW TABLES LIKE 'assets'");
-                            if($check_assets->num_rows > 0) {
-                                $broken_assets = $conn->query("SELECT * FROM assets WHERE status = 'ชำรุด/ส่งซ่อม' LIMIT 4");
-                                if($broken_assets && $broken_assets->num_rows > 0){
-                                    $idx = 0;
-                                    while($ba = $broken_assets->fetch_assoc()) {
-                                        $color = $dot_colors[$idx % 4];
-                                        echo "
-                                        <div class='relative pl-6 group'>
-                                            <div class='absolute -left-[9px] top-1 w-4 h-4 rounded-full {$color} border-[3px] border-white shadow-sm group-hover:scale-125 transition-transform'></div>
-                                            <div class='flex flex-col'>
-                                                <span class='text-[10px] text-slate-400 font-bold mb-0.5 uppercase tracking-widest'>Reported Broken</span>
-                                                <span class='text-sm font-bold text-slate-700 leading-tight'>{$ba['asset_name']}</span>
-                                                <span class='text-[11px] text-slate-500 mt-0.5'>Code: {$ba['asset_code']}</span>
-                                            </div>
-                                        </div>";
-                                        $idx++;
-                                    }
-                                } else {
-                                    echo "<div class='pl-6 text-slate-400 text-sm'>No broken assets found.</div>";
-                                }
-                            }
-                            ?>
-                        </div>
-                    </div>
-
-                    <div class="lg:col-span-2 modern-card overflow-hidden flex flex-col">
-                        <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                <!-- แถวที่ 3: ตาราง Transactions (สไตล์ Clean หัวตารางสีอ่อน) -->
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="modern-card overflow-hidden flex flex-col">
+                        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                             <div>
-                                <h3 class="font-bold text-slate-800 text-base">Order Status</h3>
-                                <p class="text-xs text-slate-400">Overview of latest repairs</p>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">Latest 5 repairs in system</p>
                             </div>
-                            <button onclick="show('repairs')" class="text-xs text-blue-800 bg-blue-50 px-3 py-1.5 rounded-md font-semibold hover:bg-blue-100 transition-colors">View All</button>
+                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
+                                See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
+                            </button>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left whitespace-nowrap">
-                                <thead class="bg-blue-900 text-amber-400 text-[10px] uppercase tracking-wider font-semibold">
+                                <thead class="bg-slate-50 text-slate-400 text-xs uppercase tracking-widest font-bold">
                                     <tr>
-                                        <th class="px-5 py-3 rounded-tl-sm">INVOICE (No.)</th>
-                                        <th class="px-5 py-3">CUSTOMERS</th>
-                                        <th class="px-5 py-3">EQUIPMENT</th>
-                                        <th class="px-5 py-3 text-center rounded-tr-sm">STATUS</th>
+                                        <th class="px-6 py-4">Ticket No.</th>
+                                        <th class="px-6 py-4">Reporter</th>
+                                        <th class="px-6 py-4">Equipment</th>
+                                        <th class="px-6 py-4 text-center">Status</th>
+                                        <th class="px-6 py-4 text-right">Date</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-sm divide-y divide-slate-50">
+                                <tbody class="text-sm divide-y divide-slate-100">
                                     <?php
                                     if($check_repairs->num_rows > 0) {
                                         $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
                                         if($recent_dash && $recent_dash->num_rows > 0){
                                             while($rd = $recent_dash->fetch_assoc()) {
-                                                $stColor = ($rd['status'] == 'รอรับเรื่อง') ? 'bg-amber-500 text-white shadow-sm' : (($rd['status'] == 'กำลังดำเนินการ') ? 'bg-sky-500 text-white shadow-sm' : 'bg-emerald-500 text-white shadow-sm');
+                                                // สไตล์ Badge มินิมอล
+                                                $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                                 $statusText = ($rd['status'] == 'รอรับเรื่อง') ? 'Pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'In Progress' : 'Completed');
+                                                $date_fmt = date("Y-m-d", strtotime($rd['created_at']));
                                                 
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                                    <td class='px-5 py-3 text-slate-500 font-mono text-xs'>{$rd['ticket_no']}</td>
-                                                    <td class='px-5 py-3 text-slate-700 font-semibold'>{$rd['reporter_name']}</td>
-                                                    <td class='px-5 py-3 text-slate-500 text-xs'>{$rd['equipment_type']}</td>
-                                                    <td class='px-5 py-3 text-center'><span class='px-3 py-1 rounded text-[10px] font-bold {$stColor}'>{$statusText}</span></td>
+                                                    <td class='px-6 py-4 text-slate-500 font-mono font-semibold'>{$rd['ticket_no']}</td>
+                                                    <td class='px-6 py-4 text-slate-800 font-bold'>
+                                                        <div class='flex items-center'>
+                                                            <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mr-3 text-xs'><i class='fas fa-user'></i></div>
+                                                            {$rd['reporter_name']}
+                                                        </div>
+                                                    </td>
+                                                    <td class='px-6 py-4 text-slate-600 font-medium'>{$rd['equipment_type']}</td>
+                                                    <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$statusText}</span></td>
+                                                    <td class='px-6 py-4 text-right text-slate-500 font-medium'>{$date_fmt}</td>
                                                 </tr>";
                                             }
                                         } else {
-                                            echo "<tr><td colspan='4' class='px-5 py-8 text-center text-slate-400'>ไม่มีงานแจ้งซ่อม</td></tr>";
+                                            echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No transactions found</td></tr>";
                                         }
                                     }
                                     ?>
@@ -421,26 +487,29 @@ if($tech_list_res){
             </div>
 
             <!-- Repairs Section -->
-            <div id="repairs" class="section hidden space-y-4 md:space-y-6 no-print">
+            <div id="repairs" class="section hidden space-y-6 no-print">
                 <div class="modern-card overflow-hidden">
-                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-white gap-3">
-                        <h2 class="text-lg md:text-xl font-bold text-slate-800">รายการแจ้งซ่อมทั้งหมด</h2>
-                        <div class="w-full md:w-auto relative lg:hidden">
+                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
+                        </div>
+                        <div class="w-full md:w-auto relative">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchInputMobile" placeholder="ค้นหาใบงาน..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-blue-400">
+                            <input type="text" id="searchInputMobile" placeholder="Search ticket..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
                         </div>
                     </div>
                     <div class="overflow-x-auto w-full">
                         <table class="w-full text-left whitespace-nowrap min-w-[800px]">
-                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
                                 <tr>
-                                    <th class="px-6 py-4">วัน/เวลาที่แจ้ง</th>
-                                    <th class="px-6 py-4">เลขที่ใบงาน</th>
-                                    <th class="px-6 py-4">ข้อมูลผู้แจ้ง</th>
-                                    <th class="px-6 py-4">อุปกรณ์ / อาการเสีย</th>
-                                    <th class="px-6 py-4 text-center">ผู้รับผิดชอบ (ช่าง)</th>
-                                    <th class="px-6 py-4 text-center">สถานะ</th>
-                                    <th class="px-6 py-4 text-right">การจัดการ</th>
+                                    <th class="px-6 py-4">Date</th>
+                                    <th class="px-6 py-4">Ticket No.</th>
+                                    <th class="px-6 py-4">Reporter</th>
+                                    <th class="px-6 py-4">Equipment</th>
+                                    <th class="px-6 py-4 text-center">Technician</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
@@ -452,34 +521,31 @@ if($tech_list_res){
                                     $res = $conn->query($select_query);
                                     if($res && $res->num_rows > 0){
                                         while($row = $res->fetch_assoc()) {
-                                            $date = !empty($row['created_at']) ? date("d/m/Y H:i", strtotime($row['created_at'])) : "-";
+                                            $date = !empty($row['created_at']) ? date("Y-m-d", strtotime($row['created_at'])) : "-";
                                             
-                                            $statusClass = "bg-slate-100 text-slate-600 border-slate-200"; 
-                                            if($row['status'] == 'รอรับเรื่อง') $statusClass = "bg-amber-50 text-amber-600 border-amber-200";
-                                            elseif($row['status'] == 'กำลังดำเนินการ') $statusClass = "bg-sky-50 text-sky-600 border-sky-200";
-                                            elseif($row['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
+                                            $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                             
-                                            $techName = !empty($row['technician_name']) ? "<div class='flex items-center justify-center text-blue-800 font-semibold'><i class='fas fa-hard-hat mr-2'></i>{$row['technician_name']}</div>" : "<span class='text-slate-400'>- ไม่ระบุ -</span>";
+                                            $techName = !empty($row['technician_name']) ? "<div class='text-indigo-600 font-bold'>{$row['technician_name']}</div>" : "<span class='text-slate-400'>Unassigned</span>";
 
-                                            echo "<tr class='hover:bg-slate-50/80 transition-colors'>
-                                                <td class='px-6 py-4 text-slate-500'>{$date}</td>
-                                                <td class='px-6 py-4 font-bold text-blue-800'>{$row['ticket_no']}</td>
-                                                <td class='px-6 py-4'><div class='text-slate-800 font-semibold'>{$row['reporter_name']}</div><div class='text-slate-500 text-[11px] md:text-xs mt-1'><i class='fas fa-phone-alt mr-1 text-slate-400'></i> {$row['phone_number']}</div></td>
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                                <td class='px-6 py-4 text-slate-500 font-medium'>{$date}</td>
+                                                <td class='px-6 py-4 font-mono font-semibold text-slate-600'>{$row['ticket_no']}</td>
+                                                <td class='px-6 py-4'><div class='text-slate-800 font-bold'>{$row['reporter_name']}</div><div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$row['phone_number']}</div></td>
                                                 <td class='px-6 py-4'>
-                                                    <div class='text-slate-800 font-semibold'>{$row['equipment_type']}</div>
-                                                    <div class='text-slate-500 text-[11px] md:text-xs mt-1 max-w-[150px] truncate' title='{$row['problem_desc']}'>{$row['problem_desc']}</div>
+                                                    <div class='text-slate-800 font-bold'>{$row['equipment_type']}</div>
+                                                    <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='{$row['problem_desc']}'>{$row['problem_desc']}</div>
                                                 </td>
                                                 <td class='px-6 py-4 text-center'>{$techName}</td>
-                                                <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border {$statusClass}'>{$row['status']}</span></td>
+                                                <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$row['status']}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <a href='update_repair.php?id={$row['id']}' class='w-8 h-8 md:w-9 md:h-9 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center border border-emerald-100 shadow-sm'><i class='fas fa-clipboard-check'></i></a>
-                                                        <a href='view_repair.php?id={$row['id']}' class='w-8 h-8 md:w-9 md:h-9 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-800 hover:text-white transition-all flex items-center justify-center border border-slate-200 shadow-sm'><i class='fas fa-eye'></i></a>
+                                                        <a href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100'><i class='fas fa-edit'></i></a>
+                                                        <a href='view_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100'><i class='fas fa-eye'></i></a>
                                                     </div>
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='7' class='px-6 py-16 text-center text-slate-400 font-medium'>ยังไม่มีข้อมูลการแจ้งซ่อมในระบบ</td></tr>"; }
+                                    } else { echo "<tr><td colspan='7' class='px-6 py-16 text-center text-slate-400 font-medium'>No records found</td></tr>"; }
                                 }
                                 ?>
                             </tbody>
@@ -492,28 +558,27 @@ if($tech_list_res){
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
-                        <h2 class="text-xl md:text-2xl font-bold text-slate-800">ทีมงานระบบ</h2>
-                        <p class="text-sm text-slate-500 mt-1">จัดการรายชื่อผู้ดูแลและช่างซ่อม</p>
+                        <h2 class="text-xl md:text-2xl font-extrabold text-slate-800">Team Management</h2>
+                        <p class="text-sm font-medium text-slate-500 mt-0.5">Manage administrators and technicians</p>
                     </div>
-                    <div class="flex w-full md:w-auto gap-2">
-                        <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-blue-900 hover:bg-blue-800 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> เพิ่มผู้ดูแล/ผู้บริหาร</button>
-                        <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-hard-hat mr-2"></i> เพิ่มช่างซ่อม</button>
+                    <div class="flex w-full md:w-auto gap-3">
+                        <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-all"><i class="fas fa-shield-alt mr-2 text-slate-400"></i> Add Admin</button>
+                        <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
                     </div>
                 </div>
 
-                <!-- ตาราง Admin & Executive -->
                 <div>
-                    <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-user-shield text-blue-800 mr-2 text-xl"></i> ผู้ดูแลระบบ และ ผู้บริหาร</h3>
+                    <h3 class="text-base font-extrabold text-slate-700 mb-3 flex items-center">Administrators</h3>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
-                                        <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                        <th class="px-6 py-4">เบอร์โทรศัพท์</th>
-                                        <th class="px-6 py-4 text-center">สิทธิ์</th>
-                                        <th class="px-6 py-4 text-right">จัดการ</th>
+                                        <th class="px-6 py-4">Name</th>
+                                        <th class="px-6 py-4">Contact</th>
+                                        <th class="px-6 py-4 text-center">Role</th>
+                                        <th class="px-6 py-4 text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100 bg-white">
@@ -522,37 +587,31 @@ if($tech_list_res){
                                     if($admin_res && $admin_res->num_rows > 0){
                                         while($u = $admin_res->fetch_assoc()) {
                                             $r_lower = strtolower($u['role']);
-                                            $roleDisplay = ($r_lower == 'executive') ? 'ผู้บริหาร' : 'Admin';
-                                            $roleClass = ($r_lower == 'executive') ? "bg-amber-50 text-amber-600 border-amber-200" : "bg-blue-50 text-blue-800 border-blue-200";
-                                            $iconClass = ($r_lower == 'executive') ? "fa-user-tie text-amber-600 bg-amber-50 border-amber-100" : "fa-user-shield text-blue-800 bg-blue-50 border-blue-100";
-                                            $icon = ($r_lower == 'executive') ? "fa-user-tie" : "fa-user-shield";
+                                            $roleDisplay = ($r_lower == 'executive') ? 'Executive' : 'Admin';
+                                            $roleClass = ($r_lower == 'executive') ? "bg-amber-100 text-amber-700" : "bg-purple-100 text-purple-700";
+                                            $icon = ($r_lower == 'executive') ? "fa-user-tie text-amber-500" : "fa-shield-alt text-purple-500";
                                             
-                                            $js_uid = $u['id']; 
-                                            $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); 
-                                            $js_fname = htmlspecialchars($u['full_name'] ?? '', ENT_QUOTES); 
-                                            $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); 
-                                            $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES);
-                                            $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
+                                            $js_uid = $u['id']; $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); $js_fname = htmlspecialchars($u['full_name'] ?? '', ENT_QUOTES); $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES); $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
 
-                                            echo "<tr class='hover:bg-slate-50/80 transition-colors'>
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
-                                                <td class='px-6 py-4 text-slate-800 font-semibold'>
+                                                <td class='px-6 py-4 text-slate-800 font-bold'>
                                                     <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full flex items-center justify-center mr-3 border {$iconClass}'><i class='fas {$icon} text-xs'></i></div>
-                                                        ".(!empty($u['full_name']) ? $u['full_name'] : '- ไม่ระบุ -')."
+                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3'><i class='fas {$icon} text-xs'></i></div>
+                                                        ".(!empty($u['full_name']) ? $u['full_name'] : '-')."
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600'>".(!empty($u['phone']) ? $u['phone'] : '-')."</td>
-                                                <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border {$roleClass}'>{$roleDisplay}</span></td>
+                                                <td class='px-6 py-4 text-slate-500 font-medium'>".(!empty($u['phone']) ? $u['phone'] : '-')."</td>
+                                                <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200 hover:text-blue-800 transition-all flex items-center justify-center border border-slate-200 shadow-sm'><i class='fas fa-edit'></i></button>
-                                                        <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลผู้ดูแลระบบและผู้บริหาร</td></tr>"; }
+                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No admins found</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -560,20 +619,19 @@ if($tech_list_res){
                     </div>
                 </div>
 
-                <!-- ตาราง Technician -->
-                <div class="mt-6 md:mt-8">
-                    <h3 class="text-base md:text-lg font-bold text-slate-700 mb-3 md:mb-4 flex items-center"><i class="fas fa-hard-hat text-blue-600 mr-2 text-xl"></i> ช่างซ่อม (Technician)</h3>
+                <div class="mt-8">
+                    <h3 class="text-base font-extrabold text-slate-700 mb-3 flex items-center">Technicians</h3>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
-                                        <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                        <th class="px-6 py-4">เบอร์โทรศัพท์</th> 
-                                        <th class="px-6 py-4">ความเชี่ยวชาญ</th>
-                                        <th class="px-6 py-4 text-center">งานที่รับ</th>
-                                        <th class="px-6 py-4 text-right">จัดการ</th>
+                                        <th class="px-6 py-4">Name</th>
+                                        <th class="px-6 py-4">Contact</th> 
+                                        <th class="px-6 py-4">Department</th>
+                                        <th class="px-6 py-4 text-center">Jobs</th>
+                                        <th class="px-6 py-4 text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100 bg-white">
@@ -582,12 +640,7 @@ if($tech_list_res){
                                     
                                     if($tech_res && $tech_res->num_rows > 0){
                                         while($t = $tech_res->fetch_assoc()) {
-                                            $js_uid = $t['id']; 
-                                            $js_uname = htmlspecialchars($t['username'], ENT_QUOTES); 
-                                            $js_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES); 
-                                            $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); 
-                                            $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES);
-                                            $js_role = htmlspecialchars($t['role'], ENT_QUOTES);
+                                            $js_uid = $t['id']; $js_uname = htmlspecialchars($t['username'], ENT_QUOTES); $js_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES); $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES); $js_role = htmlspecialchars($t['role'], ENT_QUOTES);
                                             
                                             $total_jobs = 0;
                                             if(!empty($t['full_name'])) {
@@ -596,27 +649,27 @@ if($tech_list_res){
                                                 if($job_res) $total_jobs = $job_res->fetch_assoc()['c'];
                                             }
 
-                                            echo "<tr class='hover:bg-slate-50/80 transition-colors'>
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 font-bold text-slate-700'>{$t['username']}</td>
-                                                <td class='px-6 py-4 text-slate-800 font-semibold'>
+                                                <td class='px-6 py-4 text-slate-800 font-bold'>
                                                     <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full flex items-center justify-center mr-3 border bg-blue-50 text-blue-600 border-blue-100'><i class='fas fa-hard-hat text-xs'></i></div>
-                                                        ".(!empty($t['full_name']) ? $t['full_name'] : '- ไม่ระบุ -')."
+                                                        <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mr-3'><i class='fas fa-tools text-xs'></i></div>
+                                                        ".(!empty($t['full_name']) ? $t['full_name'] : '-')."
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td> 
-                                                <td class='px-6 py-4 text-slate-600'>".(!empty($t['department']) ? $t['department'] : '-')."</td>
-                                                <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border bg-slate-100 text-slate-600 border-slate-200'>{$total_jobs} งาน</span></td>
+                                                <td class='px-6 py-4 text-slate-500 font-medium'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td> 
+                                                <td class='px-6 py-4 text-slate-500 font-medium'>".(!empty($t['department']) ? $t['department'] : '-')."</td>
+                                                <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <button onclick=\"viewHistory('{$js_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 px-2 md:px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>ดูผลงาน</span></button>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
-                                                        <button onclick=\"confirmDelete('user', {$t['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
+                                                        <button onclick=\"viewHistory('{$js_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"confirmDelete('user', {$t['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>ยังไม่มีข้อมูลช่างซ่อม</td></tr>"; }
+                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>No technicians found</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -626,21 +679,24 @@ if($tech_list_res){
             </div>
 
             <!-- Asset Management -->
-            <div id="assets" class="section hidden space-y-4 md:space-y-6 no-print">
-                <div class="modern-card overflow-hidden">
-                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-white gap-3">
-                        <h2 class="text-lg md:text-xl font-bold text-slate-800">ฐานข้อมูลอุปกรณ์</h2>
-                        <button onclick="openAddAssetModal()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md flex items-center justify-center"><i class="fas fa-plus mr-2"></i> เพิ่มอุปกรณ์ใหม่</button>
+            <div id="assets" class="section hidden space-y-6 no-print">
+                <div class="modern-card overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-slate-800">Assets Database</h2>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">Manage all registered equipments</p>
+                        </div>
+                        <button onclick="openAddAssetModal()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Asset</button>
                     </div>
                     <div class="overflow-x-auto w-full">
                         <table class="w-full text-left whitespace-nowrap min-w-[600px]">
-                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
                                 <tr>
-                                    <th class="px-6 py-4">รหัส</th>
-                                    <th class="px-6 py-4">ชื่ออุปกรณ์</th>
-                                    <th class="px-6 py-4">หมวดหมู่</th>
-                                    <th class="px-6 py-4 text-center">สถานะ</th>
-                                    <th class="px-6 py-4 text-right">การจัดการ</th>
+                                    <th class="px-6 py-4">Code</th>
+                                    <th class="px-6 py-4">Name</th>
+                                    <th class="px-6 py-4">Category</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
@@ -648,23 +704,23 @@ if($tech_list_res){
                                 $asset_res = $conn->query("SELECT * FROM assets ORDER BY created_at DESC");
                                 if($asset_res && $asset_res->num_rows > 0){
                                     while($a = $asset_res->fetch_assoc()) {
-                                        $a_statusClass = ($a['status'] == 'ใช้งานปกติ') ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200';
+                                        $a_statusClass = ($a['status'] == 'ใช้งานปกติ') ? 'badge-success' : 'bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-[11px] font-bold';
                                         $js_id = $a['id']; $js_code = htmlspecialchars($a['asset_code'], ENT_QUOTES); $js_name = htmlspecialchars($a['asset_name'], ENT_QUOTES); $js_cat = htmlspecialchars($a['category'], ENT_QUOTES); $js_status = htmlspecialchars($a['status'], ENT_QUOTES);
 
-                                        echo "<tr class='hover:bg-slate-50/80 transition-colors'>
-                                            <td class='px-6 py-4 font-bold text-blue-800'>{$a['asset_code']}</td>
-                                            <td class='px-6 py-4 text-slate-800 font-semibold'>{$a['asset_name']}</td>
-                                            <td class='px-6 py-4 text-slate-600'><span class='bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-medium border border-slate-200'>{$a['category']}</span></td>
-                                            <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border {$a_statusClass}'>{$a['status']}</span></td>
+                                        echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                            <td class='px-6 py-4 font-mono font-semibold text-slate-500'>{$a['asset_code']}</td>
+                                            <td class='px-6 py-4 text-slate-800 font-bold'>{$a['asset_name']}</td>
+                                            <td class='px-6 py-4 text-slate-500 font-medium'>{$a['category']}</td>
+                                            <td class='px-6 py-4 text-center'><span class='{$a_statusClass}'>{$a['status']}</span></td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm'><i class='fas fa-edit'></i></button>
-                                                    <button onclick=\"confirmDelete('asset', {$a['id']})\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm'><i class='fas fa-trash-alt'></i></button>
+                                                    <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"confirmDelete('asset', {$a['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
                                         </tr>";
                                     }
-                                } else { echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีข้อมูลครุภัณฑ์</td></tr>"; }
+                                } else { echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>No assets found</td></tr>"; }
                                 ?>
                             </tbody>
                         </table>
@@ -673,23 +729,22 @@ if($tech_list_res){
             </div>
 
             <!-- Users Section -->
-            <div id="users" class="section hidden space-y-4 md:space-y-6 no-print">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-                    <div>
-                        <h2 class="text-xl md:text-2xl font-bold text-slate-800">ประวัติผู้แจ้งซ่อม</h2>
-                        <p class="text-sm text-slate-500 mt-1">รายชื่อบุคลากรและประวัติการแจ้งซ่อมทั้งหมด</p>
+            <div id="users" class="section hidden space-y-6 no-print">
+                <div class="modern-card overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-slate-800">Reporter History</h2>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">Database of personnel who reported issues</p>
+                        </div>
                     </div>
-                </div>
-
-                <div class="modern-card overflow-hidden">
                     <div class="overflow-x-auto w-full">
                         <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
                                 <tr>
-                                    <th class="px-6 py-4">ชื่อ-นามสกุล (ผู้แจ้ง)</th>
-                                    <th class="px-6 py-4">เบอร์โทรศัพท์ / แผนก</th>
-                                    <th class="px-6 py-4 text-center">จำนวนที่แจ้ง</th>
-                                    <th class="px-6 py-4 text-right">การจัดการ</th>
+                                    <th class="px-6 py-4">Name</th>
+                                    <th class="px-6 py-4">Contact</th>
+                                    <th class="px-6 py-4 text-center">Reports</th>
+                                    <th class="px-6 py-4 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
@@ -701,29 +756,27 @@ if($tech_list_res){
                                         $js_old_name = htmlspecialchars($r['reporter_name'], ENT_QUOTES);
                                         $js_old_phone = htmlspecialchars($r['phone_number'], ENT_QUOTES);
                                         
-                                        echo "<tr class='hover:bg-slate-50/80 transition-colors'>
-                                            <td class='px-6 py-4 text-slate-800 font-semibold'>
+                                        echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                            <td class='px-6 py-4 text-slate-800 font-bold'>
                                                 <div class='flex items-center'>
-                                                    <div class='w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mr-3 border border-blue-100'><i class='fas fa-user text-xs'></i></div>
+                                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3'><i class='fas fa-user text-xs'></i></div>
                                                     {$r['reporter_name']}
                                                 </div>
                                             </td>
-                                            <td class='px-6 py-4'>
-                                                <div class='text-slate-700 font-medium'><i class='fas fa-phone-alt text-slate-400 mr-1.5'></i> ".($r['phone_number'] ? $r['phone_number'] : '-')."</div>
-                                            </td>
+                                            <td class='px-6 py-4 text-slate-500 font-medium'>".($r['phone_number'] ? $r['phone_number'] : '-')."</td>
                                             <td class='px-6 py-4 text-center'>
-                                                <span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border bg-slate-100 text-slate-600 border-slate-200'>{$r['total_repairs']} งาน</span>
+                                                <span class='px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600'>{$r['total_repairs']}</span>
                                             </td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"viewHistory('{$js_old_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 px-2 md:px-4 py-1.5 md:py-2 rounded-xl text-xs font-bold transition-colors shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>ดูประวัติ</span></button>
-                                                    <button onclick=\"openEditReporterModal('{$js_old_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center border border-amber-100 shadow-sm' title='แก้ไขข้อมูล'><i class='fas fa-edit'></i></button>
-                                                    <button onclick=\"confirmDeleteReporter('{$js_old_name}')\" class='w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center border border-red-100 shadow-sm' title='ลบประวัติ'><i class='fas fa-trash-alt'></i></button>
+                                                    <button onclick=\"viewHistory('{$js_old_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                                                    <button onclick=\"openEditReporterModal('{$js_old_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"confirmDeleteReporter('{$js_old_name}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
                                         </tr>";
                                     }
-                                } else { echo "<tr><td colspan='4' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีประวัติการแจ้งซ่อม</td></tr>"; }
+                                } else { echo "<tr><td colspan='4' class='px-6 py-12 text-center text-slate-400'>No history found</td></tr>"; }
                                 ?>
                             </tbody>
                         </table>
@@ -733,37 +786,34 @@ if($tech_list_res){
 
             <!-- Report Summary Section -->
             <div id="reports" class="section hidden space-y-6 no-print">
-                <div class="modern-card bg-white p-4 md:p-6">
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div class="modern-card p-6 md:p-8">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                         <div>
-                            <h2 class="text-xl md:text-2xl font-bold text-slate-800">รายงานสรุปผลการปฏิบัติงาน</h2>
-                            <p class="text-sm text-slate-500 mt-1">สามารถเลือกพิมพ์ภาพรวมทั้งหมด หรือพิมพ์เฉพาะผลงานของช่างรายบุคคลได้</p>
+                            <h2 class="text-2xl font-extrabold text-slate-800">Official Report</h2>
+                            <p class="text-sm font-medium text-slate-500 mt-1">Generate official print document or export to Excel.</p>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                            <!-- ปุ่มดาวน์โหลด Excel -->
-                            <a href="export_excel.php" id="exportExcelBtn" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
-                                <i class="fas fa-file-excel mr-2 text-lg"></i> ดาวน์โหลดตาราง Excel
+                            <a href="export_excel.php" id="exportExcelBtn" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-emerald-200 flex items-center justify-center transition-all">
+                                <i class="fas fa-file-excel mr-2 text-lg"></i> Export Excel
                             </a>
-                            <!-- 🟢 [แก้ไข 1] ปุ่มพิมพ์เอกสาร ส่งไปเปิดไฟล์ print_report.php -->
-                            <button onclick="printOfficialReport()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-800 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
-                                <i class="fas fa-print mr-2 text-lg"></i> พิมพ์บันทึกข้อความ
+                            <button onclick="printOfficialReport()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-all">
+                                <i class="fas fa-print mr-2 text-lg"></i> Print Document
                             </button>
                         </div>
                     </div>
 
-                    <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                        <label class="font-bold text-slate-700 text-sm"><i class="fas fa-filter text-blue-600 mr-1"></i> เลือกดูรายงาน:</label>
-                        <select id="techFilter" onchange="updateExcelLink()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-4 py-2 focus:outline-none focus:border-blue-800 font-medium min-w-[200px] w-full sm:w-auto">
-                            <option value="all">ภาพรวมระบบทั้งหมด (All)</option>
+                    <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <label class="font-bold text-slate-700 text-sm flex items-center"><i class="fas fa-filter text-indigo-500 mr-2"></i> Filter Data by Technician:</label>
+                        <select id="techFilter" onchange="updateExcelLink()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium min-w-[250px] w-full sm:w-auto cursor-pointer">
+                            <option value="all">Overall System (All Technicians)</option>
                             <?php 
                                 foreach($tech_options as $tech) {
-                                    echo "<option value=\"".htmlspecialchars($tech)."\">เฉพาะผลงานของ: ".htmlspecialchars($tech)."</option>"; 
+                                    echo "<option value=\"".htmlspecialchars($tech)."\">Technician: ".htmlspecialchars($tech)."</option>"; 
                                 }
                             ?>
                         </select>
                     </div>
                 </div>
-                <!-- ลบโค้ดส่วนหน้าพิมพ์เอกสารที่ซ่อนอยู่ออกแล้วเพื่อความสะอาดของโค้ด -->
             </div>
 
         </div>
@@ -774,20 +824,20 @@ if($tech_list_res){
     <!-- Modal เพิ่ม/แก้ไข อุปกรณ์ -->
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
-        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform transition-all">
-            <div class="px-5 md:px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
-                <p class="text-base md:text-lg font-bold text-slate-800" id="assetModalTitle">เพิ่มอุปกรณ์ใหม่</p>
-                <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                <p class="text-lg font-extrabold text-slate-800" id="assetModalTitle">Add Asset</p>
+                <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            <form action="" method="POST" class="p-5 md:p-6">
+            <form action="" method="POST" class="p-6">
                 <input type="hidden" name="save_asset" value="1"><input type="hidden" name="asset_id" id="asset_id" value="">
-                <div class="space-y-4">
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">รหัสครุภัณฑ์ <span class="text-red-500">*</span></label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none"></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่ออุปกรณ์ <span class="text-red-500">*</span></label><input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none"></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">หมวดหมู่ <span class="text-red-500">*</span></label><select name="category" id="asset_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none"><option value="IT Support">IT Support</option><option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option><option value="อาคารสถานที่">อาคารสถานที่</option><option value="อื่นๆ">อื่นๆ</option></select></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">สถานะ</label><select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none"><option value="ใช้งานปกติ">ใช้งานปกติ</option><option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option><option value="แทงจำหน่าย">แทงจำหน่าย</option></select></div>
+                <div class="space-y-5">
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Code</label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Name</label><input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label><select name="category" id="asset_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"><option value="IT Support">IT Support</option><option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option><option value="อาคารสถานที่">อาคารสถานที่</option><option value="อื่นๆ">อื่นๆ</option></select></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label><select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"><option value="ใช้งานปกติ">ใช้งานปกติ</option><option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option><option value="แทงจำหน่าย">แทงจำหน่าย</option></select></div>
                 </div>
-                <div class="mt-6 md:mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('assetModal')" class="px-4 md:px-5 py-2 md:py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button><button type="submit" class="px-4 md:px-5 py-2 md:py-2.5 bg-blue-800 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-md">บันทึกข้อมูล</button></div>
+                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Asset</button></div>
             </form>
         </div>
     </div>
@@ -795,63 +845,63 @@ if($tech_list_res){
     <!-- Modal เพิ่ม/แก้ไข ทีมงาน (Admin & Tech) -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
-        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
-            <div class="px-5 md:px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl sticky top-0 z-10">
-                <p class="text-base md:text-lg font-bold text-slate-800" id="techAdminModalTitle">เพิ่มทีมงานระบบ</p>
-                <button onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl sticky top-0 z-10">
+                <p class="text-lg font-extrabold text-slate-800" id="techAdminModalTitle">Add Member</p>
+                <button onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            <form action="" method="POST" class="p-5 md:p-6">
+            <form action="" method="POST" class="p-6">
                 <input type="hidden" name="save_user" value="1">
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
                 <input type="hidden" name="role" id="techAdmin_role" value="">
                 
-                <div class="space-y-4">
+                <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">Username / รหัสประจำตัว <span class="text-red-500">*</span></label>
-                        <input type="text" name="username" id="techAdmin_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
+                        <input type="text" name="username" id="techAdmin_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">รหัสผ่าน (Password) <span class="text-slate-400 font-normal text-xs" id="pwdHint"></span></label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span></label>
                         <div class="relative">
-                            <input type="password" name="password" id="techAdmin_password" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none" placeholder="ตั้งรหัสผ่าน">
-                            <button type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-blue-800 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
+                            <input type="password" name="password" id="techAdmin_password" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium" placeholder="••••••••">
+                            <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
                                 <i id="eyeIcon" class="fas fa-eye"></i>
                             </button>
                         </div>
                     </div>
 
                     <div id="adminLevelDiv" class="hidden">
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">ระดับสิทธิ์ (Role) <span class="text-red-500">*</span></label>
-                        <select name="admin_level" id="techAdmin_level" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none">
-                            <option value="Admin">ผู้ดูแลระบบ (Admin)</option>
-                            <option value="Executive">ผู้บริหาร (Executive)</option>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Role Level</label>
+                        <select name="admin_level" id="techAdmin_level" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
+                            <option value="Admin">Admin</option>
+                            <option value="Executive">Executive</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล</label>
-                        <input type="text" name="full_name" id="techAdmin_fullname" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
+                        <input type="text" name="full_name" id="techAdmin_fullname" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์</label>
-                        <input type="text" name="phone" id="techAdmin_phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone</label>
+                        <input type="text" name="phone" id="techAdmin_phone" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
                     </div>
                     
                     <div id="deptDiv">
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">แผนก / ความเชี่ยวชาญ <span class="text-red-500">*</span></label>
-                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomDept(this, 'techAdmin_department_custom')" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 mb-2 focus:border-blue-600 focus:outline-none">
-                            <option value="" disabled selected>-- เลือกแผนก --</option>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Department</label>
+                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomDept(this, 'techAdmin_department_custom')" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium mb-2">
+                            <option value="" disabled selected>-- Select Department --</option>
                             <option value="แผนกช่าง">แผนกช่าง</option>
                             <option value="แผนกไฟฟ้า">แผนกไฟฟ้า</option>
                             <option value="แผนกโสต">แผนกโสต</option>
                             <option value="แม่บ้าน">แม่บ้าน</option>
-                            <option value="อื่นๆ">อื่นๆ (พิมพ์เอง)</option>
+                            <option value="อื่นๆ">อื่นๆ (Custom)</option>
                         </select>
-                        <input type="text" name="department_custom" id="techAdmin_department_custom" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 hidden focus:border-blue-600 focus:outline-none" placeholder="ระบุแผนก/ความเชี่ยวชาญ">
+                        <input type="text" name="department_custom" id="techAdmin_department_custom" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium" placeholder="Specify department">
                     </div>
                 </div>
-                <div class="mt-6 md:mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('techAdminModal')" class="px-4 md:px-5 py-2 md:py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button><button type="submit" class="px-4 md:px-5 py-2 md:py-2.5 bg-blue-800 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-md">บันทึกข้อมูล</button></div>
+                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('techAdminModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Data</button></div>
             </form>
         </div>
     </div>
@@ -859,52 +909,49 @@ if($tech_list_res){
     <!-- Modal แก้ไขข้อมูลผู้แจ้งซ่อม -->
     <div id="editReporterModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('editReporterModal')"></div>
-        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform transition-all">
-            <div class="px-5 md:px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
-                <p class="text-base md:text-lg font-bold text-slate-800"><i class="fas fa-user-edit text-amber-500 mr-2"></i> แก้ไขผู้แจ้งซ่อม</p>
-                <button onclick="toggleModal('editReporterModal')" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                <p class="text-lg font-extrabold text-slate-800">Edit Reporter</p>
+                <button onclick="toggleModal('editReporterModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            <form action="" method="POST" class="p-5 md:p-6">
+            <form action="" method="POST" class="p-6">
                 <input type="hidden" name="edit_reporter" value="1">
                 <input type="hidden" name="old_name" id="edit_rep_old_name" value="">
-                <div class="bg-blue-50 border border-blue-100 text-blue-700 text-xs p-3 rounded-xl mb-4">
-                    <i class="fas fa-info-circle mr-1"></i> อัปเดตไปยังประวัติการแจ้งซ่อมที่ผ่านมาทั้งหมด
+                <div class="bg-indigo-50 text-indigo-700 text-xs p-4 rounded-xl mb-5 font-medium flex items-start">
+                    <i class="fas fa-info-circle mt-0.5 mr-2"></i> This will update all past repair records associated with this person.
                 </div>
-                <div class="space-y-4">
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label><input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none"></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">เบอร์โทรศัพท์ <span class="text-red-500">*</span></label><input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:border-blue-600 focus:outline-none"></div>
+                <div class="space-y-5">
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label><input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label><input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
                 </div>
-                <div class="mt-6 md:mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('editReporterModal')" class="px-4 md:px-5 py-2 md:py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors">ยกเลิก</button><button type="submit" class="px-4 md:px-5 py-2 md:py-2.5 bg-amber-500 text-white rounded-xl text-sm font-bold hover:bg-amber-400 shadow-md">อัปเดตข้อมูล</button></div>
+                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('editReporterModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Update</button></div>
             </form>
         </div>
     </div>
 
     <!-- Modal ดูประวัติการแจ้งซ่อม/รับงาน (👁️) -->
-    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-2 md:px-4">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('historyModal')"></div>
-        <div class="modal-container bg-white w-full max-w-3xl mx-auto rounded-2xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px]">
-            <div class="px-4 md:px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
-                <p class="text-base md:text-lg font-bold text-slate-800 truncate pr-4" id="historyModalTitle">ประวัติ</p>
-                <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-red-500 transition-colors shrink-0"><i class="fas fa-times text-xl"></i></button>
+    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('historyModal')"></div>
+        <div class="modal-container bg-white w-full max-w-3xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px]">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
+                <p class="text-lg font-extrabold text-slate-800 truncate pr-4" id="historyModalTitle">History</p>
+                <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-2 md:p-6 overflow-y-auto flex-1 bg-slate-50/50">
-                <div class="w-full overflow-x-auto rounded-xl border border-slate-200 shadow-sm bg-white">
+            <div class="p-6 overflow-y-auto flex-1 bg-white">
+                <div class="w-full overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
                     <table class="w-full text-left whitespace-nowrap min-w-[500px]">
-                        <thead class="bg-slate-100 border-b border-slate-200 text-slate-600 text-[10px] md:text-xs uppercase tracking-wider font-bold">
+                        <thead class="bg-slate-50 text-slate-400 text-xs uppercase tracking-widest font-bold border-b border-slate-100">
                             <tr>
-                                <th class="px-3 md:px-4 py-3">เลขที่ใบงาน</th>
-                                <th class="px-3 md:px-4 py-3">อุปกรณ์ / อาการ</th>
-                                <th class="px-3 md:px-4 py-3 text-center">สถานะ</th>
-                                <th class="px-3 md:px-4 py-3">วันที่แจ้ง</th>
+                                <th class="px-5 py-4">Ticket No.</th>
+                                <th class="px-5 py-4">Equipment</th>
+                                <th class="px-5 py-4 text-center">Status</th>
+                                <th class="px-5 py-4">Date</th>
                             </tr>
                         </thead>
-                        <tbody class="text-xs md:text-sm divide-y divide-slate-100" id="historyTableBody">
+                        <tbody class="text-sm divide-y divide-slate-50" id="historyTableBody">
                         </tbody>
                     </table>
                 </div>
-            </div>
-            <div class="px-4 md:px-6 py-3 border-t border-slate-100 bg-white shrink-0 flex justify-end">
-                <button onclick="toggleModal('historyModal')" class="px-5 md:px-6 py-2 md:py-2.5 bg-slate-800 text-white rounded-xl text-sm font-bold hover:bg-slate-700 shadow-md">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
@@ -991,7 +1038,6 @@ if($tech_list_res){
             document.body.classList.toggle('modal-active'); 
         }
 
-        // 🟢 [แก้ไข 2] อัปเดตลิงก์ให้ส่งค่าไปที่ไฟล์แยก
         function updateExcelLink() {
             const filterValue = document.getElementById('techFilter').value;
             if (filterValue !== 'all') {
@@ -1001,7 +1047,6 @@ if($tech_list_res){
             }
         }
 
-        // 🟢 [แก้ไข 3] ฟังก์ชันสำหรับเปิดหน้า print_report.php แยกต่างหาก
         function printOfficialReport() {
             const filterValue = document.getElementById('techFilter').value;
             let printUrl = 'print_report.php';
@@ -1027,7 +1072,7 @@ if($tech_list_res){
 
             let sortedEquip = Object.keys(equipCountMap).map(key => {
                 return { name: key, count: equipCountMap[key] };
-            }).sort((a, b) => b.count - a.count).slice(0, 5);
+            }).sort((a, b) => b.count - a.count).slice(0, 7);
 
             let eLabels = sortedEquip.map(e => e.name);
             let eCounts = sortedEquip.map(e => e.count);
@@ -1037,19 +1082,26 @@ if($tech_list_res){
                 type: 'doughnut',
                 data: {
                     labels: ['Pending', 'In Progress', 'Completed'],
-                    datasets: [{ data: [pending, progress, completed], backgroundColor: ['#f59e0b', '#38bdf8', '#1e3a8a'], borderWidth: 0, hoverOffset: 4 }]
+                    datasets: [{ 
+                        data: [pending, progress, completed], 
+                        backgroundColor: ['#f59e0b', '#38bdf8', '#8b5cf6'], // สีส้ม, ฟ้า, ม่วง (สไตล์ SaaS)
+                        borderWidth: 0, 
+                        hoverOffset: 6 
+                    }]
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
-                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: "'Kanit', sans-serif" } } } }, 
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: "'Plus Jakarta Sans', sans-serif", weight: '600' } } } 
+                    }, 
                     cutout: '75%' 
                 }
             });
 
             const ctxEquip = document.getElementById('mainEquipChart').getContext('2d');
             let gradient = ctxEquip.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(30, 58, 138, 0.7)'); 
-            gradient.addColorStop(1, 'rgba(30, 58, 138, 0.05)'); 
+            gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); // Violet 500
+            gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
             
             new Chart(ctxEquip, {
                 type: 'line', 
@@ -1058,23 +1110,24 @@ if($tech_list_res){
                     datasets: [{ 
                         label: 'Repairs', 
                         data: eCounts, 
-                        borderColor: '#1e3a8a', 
+                        borderColor: '#8b5cf6', 
                         backgroundColor: gradient, 
                         borderWidth: 3, 
                         pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#1e3a8a',
+                        pointBorderColor: '#8b5cf6',
                         pointBorderWidth: 2,
                         pointRadius: 4,
+                        pointHoverRadius: 6,
                         fill: true,
-                        tension: 0.4 
+                        tension: 0.4 // โค้งสมูท
                     }]
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
-                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Kanit', sans-serif", color: '#94a3b8' } }, grid: { color: '#f1f5f9', borderDash: [4, 4] }, border: {display: false} }, 
-                        x: { ticks: { font: { family: "'Kanit', sans-serif", color: '#94a3b8' } }, grid: { display: false }, border: {display: false} } 
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
+                        x: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
                     } 
                 }
             });
@@ -1109,19 +1162,19 @@ if($tech_list_res){
         }
 
         function openAddAssetModal() { 
-            document.getElementById('assetModalTitle').innerHTML = '<i class="fas fa-plus-circle text-blue-800 mr-2"></i> เพิ่มอุปกรณ์ใหม่'; 
+            document.getElementById('assetModalTitle').innerHTML = 'Add New Asset'; 
             document.getElementById('asset_id').value = ''; document.getElementById('asset_code').value = ''; document.getElementById('asset_name').value = ''; document.getElementById('asset_category').value = 'IT Support'; document.getElementById('asset_status').value = 'ใช้งานปกติ'; toggleModal('assetModal'); 
         }
 
         function openEditAssetModal(id, c, n, cat, s) { 
-            document.getElementById('assetModalTitle').innerHTML = '<i class="fas fa-edit text-amber-500 mr-2"></i> แก้ไขอุปกรณ์'; 
+            document.getElementById('assetModalTitle').innerHTML = 'Edit Asset'; 
             document.getElementById('asset_id').value = id; document.getElementById('asset_code').value = c; document.getElementById('asset_name').value = n; document.getElementById('asset_category').value = cat; document.getElementById('asset_status').value = s; toggleModal('assetModal'); 
         }
 
         function openTechAdminModal(role, id='', u='', f='', p='', d='') { 
             let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
             let baseRole = isManagement ? 'Admin' : 'Technician';
-            let title = isManagement ? '<i class="fas fa-user-shield text-blue-800 mr-2"></i> จัดการผู้ดูแล/ผู้บริหาร' : '<i class="fas fa-hard-hat text-sky-500 mr-2"></i> จัดการช่างซ่อม';
+            let title = isManagement ? 'Manage Administrator' : 'Manage Technician';
             document.getElementById('techAdminModalTitle').innerHTML = title; document.getElementById('techAdmin_role').value = baseRole; 
             
             const adminLevelDiv = document.getElementById('adminLevelDiv'); const deptDiv = document.getElementById('deptDiv');
@@ -1138,7 +1191,7 @@ if($tech_list_res){
             const pwdInput = document.getElementById('techAdmin_password'); const pwdHint = document.getElementById('pwdHint'); const eyeIcon = document.getElementById('eyeIcon');
             pwdInput.value = ''; pwdInput.type = 'password'; 
             if(eyeIcon) { eyeIcon.classList.remove('fa-eye-slash'); eyeIcon.classList.add('fa-eye'); }
-            if(id === '') { pwdInput.required = true; pwdHint.innerText = "(บังคับกรอก)"; } else { pwdInput.required = false; pwdHint.innerText = "(ปล่อยว่างได้ถ้าไม่ต้องการเปลี่ยน)"; }
+            if(id === '') { pwdInput.required = true; pwdHint.innerText = "(Required)"; } else { pwdInput.required = false; pwdHint.innerText = "(Leave blank to keep current)"; }
             
             document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
             setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
@@ -1154,34 +1207,34 @@ if($tech_list_res){
             const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
             
             if(userRepairs.length === 0) {
-                let emptyMsg = type === 'reporter' ? 'ไม่พบประวัติการแจ้งซ่อม' : 'ยังไม่เคยรับงานซ่อมในระบบ';
-                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">${emptyMsg}</td></tr>`;
+                let emptyMsg = type === 'reporter' ? 'No repair history found.' : 'No tasks assigned yet.';
+                tbody.innerHTML = `<tr><td colspan="4" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
             } else {
                 userRepairs.forEach(r => {
-                    let statusClass = 'bg-slate-100 text-slate-600';
-                    if(r.status === 'รอรับเรื่อง') statusClass = 'bg-amber-50 text-amber-600';
-                    else if(r.status === 'กำลังดำเนินการ') statusClass = 'bg-sky-50 text-sky-600';
-                    else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'bg-emerald-50 text-emerald-600';
+                    let statusClass = 'badge-pending';
+                    if(r.status === 'กำลังดำเนินการ') statusClass = 'badge-progress';
+                    else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'badge-success';
                     
-                    tbody.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td class="px-3 md:px-4 py-3 font-bold text-blue-800">${r.ticket_no}</td>
-                        <td class="px-3 md:px-4 py-3 text-slate-700 font-medium whitespace-normal min-w-[120px]">${r.equipment_type}</td>
-                        <td class="px-3 md:px-4 py-3 text-center"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${statusClass}">${r.status}</span></td>
-                        <td class="px-3 md:px-4 py-3 text-slate-500">${r.created_at_fmt}</td>
+                    let statusText = r.status == 'รอรับเรื่อง' ? 'Pending' : (r.status == 'กำลังดำเนินการ' ? 'In Progress' : 'Completed');
+
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-5 py-4 font-mono font-semibold text-slate-500">${r.ticket_no}</td>
+                        <td class="px-5 py-4 text-slate-800 font-medium whitespace-normal min-w-[150px]">${r.equipment_type}</td>
+                        <td class="px-5 py-4 text-center"><span class="${statusClass}">${statusText}</span></td>
+                        <td class="px-5 py-4 text-slate-500 font-medium">${r.created_at_fmt}</td>
                     </tr>`;
                 });
             }
-            let titlePrefix = type === 'reporter' ? 'ประวัติการแจ้งซ่อมของ:' : 'ประวัติรับงานของช่าง:';
-            document.getElementById('historyModalTitle').innerHTML = `<i class="fas fa-history text-blue-800 mr-2"></i> ${titlePrefix} <span class="text-blue-600 ml-1 text-sm md:text-lg">${fullName}</span>`;
+            document.getElementById('historyModalTitle').innerText = fullName;
             toggleModal('historyModal');
         }
 
         function confirmDelete(type, id) { 
-            Swal.fire({ title: 'ยืนยัน?', text: "ลบแล้วไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ลบเลย!' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_'+type+'=' + id; }); 
+            Swal.fire({ title: 'Are you sure?', text: "This action cannot be undone!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Yes, delete it!' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_'+type+'=' + id; }); 
         }
 
         function confirmDeleteReporter(name) { 
-            Swal.fire({ title: 'ลบประวัติบุคคลนี้?', text: "จะทำให้ชื่อผู้แจ้งซ่อมในประวัติที่ผ่านมาถูกลบทั้งหมด!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยันลบ' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
+            Swal.fire({ title: 'Delete this person?', text: "All past reporter names will be cleared!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Yes, delete!' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
         }
 
     </script>
