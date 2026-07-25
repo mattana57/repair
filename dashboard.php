@@ -3,7 +3,6 @@ session_start();
 
 // 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? 
 if (!isset($_SESSION['user_id'])) {
-    // ให้ระบบจำ URL ปัจจุบันเอาไว้
     $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
     header("Location: login.php");
     exit();
@@ -17,7 +16,7 @@ if (strtolower($_SESSION['role']) === 'executive') {
 
 include 'db_connect.php';
 
-// ================= ฟังก์ชันแปลงตัวเลขเป็นเลขไทย =================
+// ================= ฟังก์ชันแปลงตัวเลขเป็นเลขไทย (สำหรับ PHP) =================
 function thaiNum($num) {
     return str_replace(
         array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
@@ -170,9 +169,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
 
 // ================= เตรียมข้อมูลประวัติและสถิติ =================
 $all_repairs_json = "[]";
-$status_counts = ['รอรับเรื่อง'=>0, 'กำลังดำเนินการ'=>0, 'ซ่อมเสร็จแล้ว'=>0];
-$eq_labels = []; 
-$eq_counts = [];
 
 if($check_repairs->num_rows > 0) {
     $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
@@ -184,24 +180,25 @@ if($check_repairs->num_rows > 0) {
         while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
         $all_repairs_json = json_encode($reps);
     }
+}
 
-    $stat_res = $conn->query("SELECT status, COUNT(*) as cnt FROM repairs GROUP BY status");
-    if($stat_res) {
-        while($st = $stat_res->fetch_assoc()){ 
-            if(isset($status_counts[$st['status']])) {
-                $status_counts[$st['status']] = $st['cnt']; 
-            }
-        }
-    }
-
-    $eq_res = $conn->query("SELECT equipment_type, COUNT(*) as cnt FROM repairs GROUP BY equipment_type ORDER BY cnt DESC LIMIT 5");
-    if($eq_res) {
-        while($eq = $eq_res->fetch_assoc()){ 
-            $eq_labels[] = $eq['equipment_type']; 
-            $eq_counts[] = $eq['cnt']; 
-        }
+// ดึงรายชื่อช่างทั้งหมดสำหรับ Dropdown (ที่มีบทบาทเป็น Technician หรือ Admin)
+$tech_options = [];
+$tech_list_res = $conn->query("SELECT DISTINCT full_name FROM users WHERE role IN ('Technician', 'Admin') AND full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
+if($tech_list_res){
+    while($t = $tech_list_res->fetch_assoc()){
+        $tech_options[] = $t['full_name'];
     }
 }
+
+// เตรียมข้อมูลวันที่สำหรับเอกสารราชการ
+$thai_months_doc = [
+    "01" => "มกราคม", "02" => "กุมภาพันธ์", "03" => "มีนาคม", "04" => "เมษายน",
+    "05" => "พฤษภาคม", "06" => "มิถุนายน", "07" => "กรกฎาคม", "08" => "สิงหาคม",
+    "09" => "กันยายน", "10" => "ตุลาคม", "11" => "พฤศจิกายน", "12" => "ธันวาคม"
+];
+$report_month = $thai_months_doc[date('m')];
+$current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(date('Y')+543);
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -244,7 +241,7 @@ if($check_repairs->num_rows > 0) {
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
-        /* สไตล์สำหรับเอกสารราชการ (TH Sarabun New) แบบเป๊ะๆ 100% */
+        /* สไตล์สำหรับเอกสารราชการ (TH Sarabun New) */
         .official-doc {
             font-family: 'THSarabunNew', sans-serif !important;
             font-size: 16pt !important;
@@ -252,7 +249,7 @@ if($check_repairs->num_rows > 0) {
             background: #ffffff;
             width: 210mm;
             min-height: 297mm;
-            padding: 2.5cm 2cm 2cm 3cm; /* มาตรฐาน: บน 2.5, ขวา 2, ล่าง 2, ซ้าย 3 */
+            padding: 2.5cm 2cm 2cm 3cm; 
             margin: 0 auto;
             box-sizing: border-box;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -291,26 +288,21 @@ if($check_repairs->num_rows > 0) {
             margin-bottom: 2pt;
         }
 
-        /* ป้องกันการตัดบรรทัด / ตัดกลุ่มข้อความ */
         .keep-together {
             page-break-inside: avoid;
             break-inside: avoid;
         }
 
-        /* แก้อาการเอกสารโดนตัดตอนสั่ง Print */
         @media print {
             @page { 
                 size: A4; 
-                margin: 2.5cm 2cm 2cm 3cm; /* ตั้งระยะขอบกระดาษในระบบพิมพ์โดยตรง */
+                margin: 0; 
             }
             body, html { 
-                height: auto !important; 
-                min-height: auto !important;
+                height: 100% !important; 
                 overflow: visible !important; 
                 background: #ffffff !important; 
             }
-            
-            /* ลบล็อกการแสดงผลแบบหน้าเดียวของ Tailwind */
             .flex, .h-screen, .overflow-hidden {
                 display: block !important;
                 height: auto !important;
@@ -329,16 +321,15 @@ if($check_repairs->num_rows > 0) {
                 display: block !important; 
                 margin: 0 !important; 
             }
-            
-            /* ตั้งค่าให้หน้าเอกสารปริ้นท์แบบไหลได้หลายหน้า */
             .official-doc {
-                width: 100% !important;
+                width: 210mm !important;
                 height: auto !important;
                 min-height: auto !important;
                 margin: 0 !important;
-                padding: 0 !important; /* ให้ระยะขอบไปดึงจาก @page แทน */
+                padding: 2.5cm 2cm 2cm 3cm !important; 
                 box-shadow: none !important;
                 border: none !important;
+                page-break-after: always;
             }
         }
     </style>
@@ -805,49 +796,45 @@ if($check_repairs->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Report Summary Section (เอกสารบันทึกข้อความราชการ 100% ไม่มีกราฟ - บีบให้อยู่ในหน้าเดียว) -->
+            <!-- Report Summary Section (เอกสารบันทึกข้อความราชการ 100% พร้อม Filter บุคคล) -->
             <div id="reports" class="section hidden space-y-6">
                 
-                <!-- แถบปุ่มกดด้านบน (ไม่แสดงตอนพิมพ์) -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent mb-4 no-print">
-                    <div>
-                        <h2 class="text-xl md:text-2xl font-bold text-slate-800">รายงานสรุปผลการปฏิบัติงาน</h2>
-                        <p class="text-sm text-slate-500 mt-1">เอกสารรายงานและสถิติสำหรับการพิมพ์แบบทางการ</p>
+                <!-- แถบปุ่มกดด้านบน และตัวกรองช่าง (ไม่แสดงตอนพิมพ์) -->
+                <div class="modern-card bg-white p-4 md:p-6 no-print">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                        <div>
+                            <h2 class="text-xl md:text-2xl font-bold text-slate-800">รายงานสรุปผลการปฏิบัติงาน</h2>
+                            <p class="text-sm text-slate-500 mt-1">สามารถเลือกพิมพ์ภาพรวมทั้งหมด หรือพิมพ์เฉพาะผลงานของช่างรายบุคคลได้</p>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                            <!-- ปุ่มดาวน์โหลด Excel -->
+                            <a href="export_excel.php" id="exportExcelBtn" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
+                                <i class="fas fa-file-excel mr-2 text-lg"></i> ดาวน์โหลดตาราง Excel
+                            </a>
+                            <!-- ปุ่มพิมพ์เอกสาร -->
+                            <button onclick="window.print()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-sky-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
+                                <i class="fas fa-print mr-2 text-lg"></i> พิมพ์บันทึกข้อความ
+                            </button>
+                        </div>
                     </div>
-                    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                        <!-- ปุ่มดาวน์โหลด Excel -->
-                        <a href="export_excel.php" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
-                            <i class="fas fa-file-excel mr-2 text-lg"></i> ดาวน์โหลดตาราง Excel
-                        </a>
-                        <!-- ปุ่มพิมพ์เอกสาร -->
-                        <button onclick="window.print()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-sky-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-colors">
-                            <i class="fas fa-print mr-2 text-lg"></i> พิมพ์บันทึกข้อความ
-                        </button>
+
+                    <!-- แถบตัวกรองรายบุคคล -->
+                    <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
+                        <label class="font-bold text-slate-700 text-sm"><i class="fas fa-filter text-sky-500 mr-1"></i> เลือกดูรายงาน:</label>
+                        <select id="techFilter" onchange="updateReportData()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-4 py-2 focus:outline-none focus:border-sky-500 font-medium min-w-[200px]">
+                            <option value="all">ภาพรวมระบบทั้งหมด (All)</option>
+                            <?php 
+                                foreach($tech_options as $tech) {
+                                    echo "<option value=\"".htmlspecialchars($tech)."\">เฉพาะผลงานของ: ".htmlspecialchars($tech)."</option>"; 
+                                }
+                            ?>
+                        </select>
                     </div>
                 </div>
 
                 <!-- หน้าเอกสารสำหรับพิมพ์ (A4 Style - บันทึกข้อความแบบทางการ 100%) -->
                 <div class="official-doc">
                     
-                    <?php 
-                        // คำนวณตัวเลขและวันที่สำหรับแสดงในรายงาน
-                        $total_repairs = array_sum($status_counts);
-                        $pending = $status_counts['รอรับเรื่อง'] ?? 0;
-                        $progress = $status_counts['กำลังดำเนินการ'] ?? 0;
-                        $completed = $status_counts['ซ่อมเสร็จแล้ว'] ?? 0;
-
-                        $pct_completed = $total_repairs > 0 ? number_format(($completed / $total_repairs) * 100, 2) : 0;
-                        $pct_progress = $total_repairs > 0 ? number_format(($progress / $total_repairs) * 100, 2) : 0;
-                        $pct_pending = $total_repairs > 0 ? number_format(($pending / $total_repairs) * 100, 2) : 0;
-
-                        $thai_months_doc = [
-                            "01" => "มกราคม", "02" => "กุมภาพันธ์", "03" => "มีนาคม", "04" => "เมษายน",
-                            "05" => "พฤษภาคม", "06" => "มิถุนายน", "07" => "กรกฎาคม", "08" => "สิงหาคม",
-                            "09" => "กันยายน", "10" => "ตุลาคม", "11" => "พฤศจิกายน", "12" => "ธันวาคม"
-                        ];
-                        $report_month = $thai_months_doc[date('m')];
-                    ?>
-
                     <!-- ส่วนหัวบันทึกข้อความ มีครุฑ -->
                     <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Thai_government_Garuda_emblem_%28Version_2%29.svg" style="width: 1.5cm; position: absolute; left: 3cm; top: 1.5cm; filter: grayscale(100%);">
                     
@@ -865,13 +852,13 @@ if($check_repairs->num_rows > 0) {
                         </div>
                         <div class="doc-row" style="width: 50%;">
                             <span class="bold-text" style="width: 1.2cm;">วันที่</span>
-                            <span><?php echo thaiNum(date('j')) . " " . $report_month . " " . thaiNum(date('Y')+543); ?></span>
+                            <span><?php echo $current_date_thai; ?></span>
                         </div>
                     </div>
                     
                     <div class="doc-row">
                         <span class="bold-text" style="width: 1.5cm;">เรื่อง</span>
-                        <span>รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></span>
+                        <span id="docSubject">รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></span>
                     </div>
                     
                     <div class="doc-row" style="margin-bottom: 10pt;">
@@ -881,37 +868,28 @@ if($check_repairs->num_rows > 0) {
                     
                     <!-- เนื้อหารายงาน -->
                     <div>
-                        <p class="thai-indent">ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น</p>
+                        <p class="thai-indent" id="docContext">ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น</p>
                         <p class="thai-indent">ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $report_month; ?> เพื่อรายงานผลการดำเนินงานให้รับทราบ โดยมีรายละเอียดดังต่อไปนี้</p>
                         
                         <div class="keep-together">
                             <p class="bold-text" style="margin-top: 5pt;">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
-                            <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b><?php echo thaiNum($total_repairs); ?></b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
+                            <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b id="docTotal">๐</b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
                             <div class="thai-sub-indent">
-                                <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b><?php echo thaiNum($completed); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_completed); ?>)</p>
-                                <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b><?php echo thaiNum($progress); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_progress); ?>)</p>
-                                <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b><?php echo thaiNum($pending); ?></b> รายการ (คิดเป็นร้อยละ <?php echo thaiNum($pct_pending); ?>)</p>
+                                <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b id="docCompleted">๐</b> รายการ (คิดเป็นร้อยละ <span id="docPctCompleted">๐</span>)</p>
+                                <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b id="docProgress">๐</b> รายการ (คิดเป็นร้อยละ <span id="docPctProgress">๐</span>)</p>
+                                <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b id="docPending">๐</b> รายการ (คิดเป็นร้อยละ <span id="docPctPending">๐</span>)</p>
                             </div>
                         </div>
 
                         <div class="keep-together">
                             <p class="bold-text" style="margin-top: 5pt;">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
-                            <p class="thai-indent">ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ๕ อันดับแรก ประกอบด้วย</p>
-                            <div class="thai-sub-indent">
-                                <?php 
-                                    if (!empty($eq_labels)) {
-                                        $thai_nums = ['๑', '๒', '๓', '๔', '๕'];
-                                        for ($i = 0; $i < count($eq_labels); $i++) {
-                                            echo "<p>๒." . $thai_nums[$i] . " " . htmlspecialchars($eq_labels[$i]) . " จำนวน <b>" . thaiNum($eq_counts[$i]) . "</b> รายการ</p>";
-                                        }
-                                    } else {
-                                        echo "<p>- ไม่มีข้อมูลการแจ้งซ่อมในระบบ -</p>";
-                                    }
-                                ?>
+                            <p class="thai-indent">ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ประกอบด้วย</p>
+                            <div class="thai-sub-indent" id="docTopEquip">
+                                <!-- อัปเดตผ่าน JS -->
                             </div>
                         </div>
 
-                        <p class="thai-indent keep-together" style="margin-top: 5pt;">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
+                        <p class="thai-indent keep-together" style="margin-top: 5pt;" id="docFooterText">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
 
                         <p class="thai-indent keep-together" style="margin-top: 10pt;">จึงเรียนมาเพื่อโปรดทราบ</p>
                     </div>
@@ -920,7 +898,7 @@ if($check_repairs->num_rows > 0) {
                     <div class="keep-together" style="margin-top: 25pt; text-align: center; float: right; width: 6.5cm;">
                         <p style="margin-bottom: 20pt;">(ลงชื่อ)...................................................</p>
                         <p>( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
-                        <p>ผู้รายงาน / ผู้จัดทำ</p>
+                        <p id="docSignatureRole">ผู้รายงาน / ผู้จัดทำ</p>
                     </div>
                     <div style="clear: both;"></div>
 
@@ -1073,6 +1051,7 @@ if($check_repairs->num_rows > 0) {
     <!-- ================== JAVASCRIPT ================== -->
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
+        const reportMonthText = "<?php echo $report_month; ?>";
         
         const pageTitles = {
             'dash': 'ภาพรวมระบบ (Dashboard)',
@@ -1106,6 +1085,11 @@ if($check_repairs->num_rows > 0) {
                     }
                 }
             });
+
+            // ถ้าเข้ามาหน้ารายงาน ให้สั่งอัปเดตข้อมูลสักครั้งเพื่อให้ตัวเลขขึ้น 
+            if(id === 'reports') {
+                updateReportData();
+            }
         }
 
         function toggleSidebar() {
@@ -1145,7 +1129,85 @@ if($check_repairs->num_rows > 0) {
             document.body.classList.toggle('modal-active'); 
         }
 
-        // ฟังก์ชันสำหรับเปิด-ปิดตารหัสผ่าน
+        // ฟังก์ชันแปลงเลขเป็นเลขไทยใน JS
+        function thaiNum(num) {
+            if(num === null || num === undefined) return '๐';
+            const thaiDigits = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
+            return String(num).replace(/[0-9]/g, function(d) {
+                return thaiDigits[d];
+            });
+        }
+
+        // ฟังก์ชันหลักสำหรับอัปเดตเอกสารรายงาน
+        function updateReportData() {
+            const filterValue = document.getElementById('techFilter').value;
+            let filteredRepairs = allRepairs;
+            
+            // กรองข้อมูลถ้าไม่ได้เลือก "ทั้งหมด"
+            if (filterValue !== 'all') {
+                filteredRepairs = allRepairs.filter(r => r.technician_name === filterValue);
+                document.getElementById('docSubject').innerText = `รายงานสรุปผลการปฏิบัติงานรายบุคคล (ช่าง: ${filterValue}) ประจำเดือน ${reportMonthText}`;
+                document.getElementById('docContext').innerText = `ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้มอบหมายให้บุคลากรรับผิดชอบการแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น`;
+                document.getElementById('docFooterText').innerText = `ข้อมูลดังกล่าวสามารถนำไปใช้เป็นหลักฐานประกอบการประเมินผลการปฏิบัติงาน และกำหนดแนวทางการบำรุงรักษาในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น`;
+                document.getElementById('docSignatureRole').innerText = `ผู้รับผิดชอบงานซ่อม`;
+                document.getElementById('exportExcelBtn').href = `export_excel.php?tech=${encodeURIComponent(filterValue)}`;
+            } else {
+                document.getElementById('docSubject').innerText = `รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน ${reportMonthText}`;
+                document.getElementById('docContext').innerText = `ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น`;
+                document.getElementById('docFooterText').innerText = `ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น`;
+                document.getElementById('docSignatureRole').innerText = `ผู้รายงาน / ผู้จัดทำ`;
+                document.getElementById('exportExcelBtn').href = `export_excel.php`;
+            }
+
+            // คำนวณสถานะใหม่
+            let pending = 0, progress = 0, completed = 0;
+            let equipCountMap = {};
+
+            filteredRepairs.forEach(r => {
+                if(r.status === 'รอรับเรื่อง') pending++;
+                else if(r.status === 'กำลังดำเนินการ') progress++;
+                else if(r.status === 'ซ่อมเสร็จแล้ว') completed++;
+
+                // นับความถี่อุปกรณ์
+                if(r.equipment_type) {
+                    equipCountMap[r.equipment_type] = (equipCountMap[r.equipment_type] || 0) + 1;
+                }
+            });
+
+            let total = pending + progress + completed;
+            let pctCompleted = total > 0 ? ((completed / total) * 100).toFixed(2) : '0.00';
+            let pctProgress = total > 0 ? ((progress / total) * 100).toFixed(2) : '0.00';
+            let pctPending = total > 0 ? ((pending / total) * 100).toFixed(2) : '0.00';
+
+            // นำตัวเลขที่คำนวณได้ไปใส่ใน DOM
+            document.getElementById('docTotal').innerText = thaiNum(total);
+            document.getElementById('docCompleted').innerText = thaiNum(completed);
+            document.getElementById('docPctCompleted').innerText = thaiNum(pctCompleted);
+            
+            document.getElementById('docProgress').innerText = thaiNum(progress);
+            document.getElementById('docPctProgress').innerText = thaiNum(pctProgress);
+            
+            document.getElementById('docPending').innerText = thaiNum(pending);
+            document.getElementById('docPctPending').innerText = thaiNum(pctPending);
+
+            // เรียงลำดับอุปกรณ์ที่พบปัญหามากสุด 5 อันดับ
+            let sortedEquip = Object.keys(equipCountMap).map(key => {
+                return { name: key, count: equipCountMap[key] };
+            }).sort((a, b) => b.count - a.count).slice(0, 5);
+
+            let equipHtml = '';
+            if(sortedEquip.length > 0) {
+                const thaiNums = ['๑', '๒', '๓', '๔', '๕'];
+                sortedEquip.forEach((eq, index) => {
+                    equipHtml += `<p>๒.${thaiNums[index]} ${eq.name} จำนวน <b>${thaiNum(eq.count)}</b> รายการ</p>`;
+                });
+            } else {
+                equipHtml = `<p>- ไม่มีข้อมูลการแจ้งซ่อมในระบบ -</p>`;
+            }
+            document.getElementById('docTopEquip').innerHTML = equipHtml;
+        }
+
+        // ฟังก์ชันเปิด-ปิดตาอื่นๆ...
         function togglePasswordVisibility(inputId, iconId) {
             const input = document.getElementById(inputId);
             const icon = document.getElementById(iconId);
@@ -1218,7 +1280,6 @@ if($check_repairs->num_rows > 0) {
             const adminLevelDiv = document.getElementById('adminLevelDiv');
             const deptDiv = document.getElementById('deptDiv');
             
-            // เปิด/ปิด แผนกตามตำแหน่ง
             if(isManagement) {
                 adminLevelDiv.classList.remove('hidden');
                 deptDiv.classList.add('hidden');
@@ -1236,7 +1297,6 @@ if($check_repairs->num_rows > 0) {
             document.getElementById('techAdmin_fullname').value = f; 
             document.getElementById('techAdmin_phone').value = p; 
             
-            // จัดการช่องรหัสผ่านและคืนค่าดวงตาให้เป็นแบบซ่อน (Password)
             const pwdInput = document.getElementById('techAdmin_password');
             const pwdHint = document.getElementById('pwdHint');
             const eyeIcon = document.getElementById('eyeIcon');
