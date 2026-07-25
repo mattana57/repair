@@ -267,8 +267,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         
         /* -------------------------------------------------------------------
-           สไตล์สำหรับเอกสารราชการ (TH Sarabun New) แบบตั้งค่า Block & Table
-           ป้องกันการซ้อนกันของข้อความตอนสั่ง Print ได้ 100%
+           สไตล์สำหรับเอกสารราชการ (TH Sarabun New) แก้ปัญหาข้อความซ้อนกัน 100%
         ---------------------------------------------------------------------- */
         .official-doc {
             font-family: 'THSarabunNew', sans-serif !important; 
@@ -283,35 +282,57 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             position: relative; 
             line-height: 1.15 !important; 
-            display: block; /* สำคัญมาก ป้องกัน Flexbox ตีกัน */
+            display: block; /* บังคับให้เป็น Block ป้องกัน Flexbox ใน Tailwind เข้ามากวน */
         }
         
-        .official-doc * { font-family: 'THSarabunNew', sans-serif !important; color: #000000 !important; font-size: 16pt; }
-        .official-doc .title-doc { font-size: 29pt !important; font-weight: bold !important; text-align: center; margin-top: 0; margin-bottom: 10pt; clear: both;}
-        .official-doc .bold-text { font-weight: bold !important; }
-        .official-doc p { text-align: justify; margin-bottom: 2pt; margin-top: 0; }
-        .official-doc .thai-indent { text-indent: 2.5cm; }
-        .official-doc .thai-sub-indent { padding-left: 2.5cm; margin-bottom: 5pt; }
+        .official-doc * { 
+            font-family: 'THSarabunNew', sans-serif !important; 
+            color: #000000 !important; 
+            font-size: 16pt !important; 
+            /* ล้างค่า Flex ทั้งหมดทิ้งในเอกสาร */
+            display: inline;
+            margin: 0;
+            padding: 0;
+            flex: none !important;
+        }
+
+        .official-doc p, .official-doc div, .official-doc table, .official-doc tbody, .official-doc tr, .official-doc td, .official-doc b, .official-doc span {
+             line-height: 1.15 !important;
+        }
+
+        .official-doc div { display: block !important; }
+        .official-doc p { display: block !important; text-align: justify; margin-bottom: 2pt !important; margin-top: 0 !important; }
         
-        /* จัดเลย์เอาต์หัวข้อแบบตารางซ่อนเส้น เพื่อให้ตัวหนังสือไม่ทับกันตอน Print */
-        .doc-header-table { width: 100%; border-collapse: collapse; margin-bottom: 10pt; }
-        .doc-header-table td { padding: 2pt 0; vertical-align: top; }
-        .doc-header-table .col-label { font-weight: bold !important; white-space: nowrap; width: 1%; padding-right: 10pt; }
-        .doc-header-table .col-data { width: auto; }
+        .official-doc .title-doc { font-size: 29pt !important; font-weight: bold !important; text-align: center; margin-top: 0 !important; margin-bottom: 10pt !important; clear: both;}
+        .official-doc .bold-text { font-weight: bold !important; }
+        .official-doc .thai-indent { text-indent: 2.5cm; }
+        .official-doc .thai-sub-indent { padding-left: 2.5cm; margin-bottom: 5pt !important; }
+        
+        /* ใช้ Table สร้างโครงสร้างแทน Flex ป้องกันหน้าเละตอนปริ้นท์ */
+        .doc-header-table { width: 100%; border-collapse: collapse; margin-bottom: 5pt !important; display: table !important; }
+        .doc-header-table tbody { display: table-row-group !important; }
+        .doc-header-table tr { display: table-row !important; }
+        .doc-header-table td { display: table-cell !important; padding: 2pt 0 !important; vertical-align: top !important; }
+        .doc-header-table .col-label { font-weight: bold !important; white-space: nowrap !important; width: 1% !important; padding-right: 10pt !important; }
+        .doc-header-table .col-data { width: auto !important; }
         
         /* Layout ลายเซ็น */
         .signature-box {
             page-break-inside: avoid;
             break-inside: avoid;
-            width: 6.5cm;
-            margin-left: auto; /* ดันไปชิดขวา */
-            margin-top: 30pt;
-            text-align: center;
+            width: 6.5cm !important;
+            margin-left: auto !important; /* ดันไปขวาด้วย Margin แบบ Block */
+            margin-top: 30pt !important;
+            text-align: center !important;
+            display: block !important;
         }
+        .signature-box p { text-align: center !important; }
 
         @media print {
             @page { size: A4; margin: 2.5cm 2cm 2cm 3cm; }
             body, html { height: auto !important; overflow: visible !important; background: #ffffff !important; }
+            
+            /* ลบล็อกการแสดงผลแบบหน้าเดียวของ Tailwind ออกจากระบบทั้งหมด */
             .flex, .h-screen, .overflow-hidden { display: block !important; height: auto !important; overflow: visible !important; }
             aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #assets, #users { display: none !important; }
             main, .flex-1 { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; }
@@ -683,7 +704,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">ชื่อ-นามสกุล</th>
-                                        <th class="px-6 py-4">เบอร์โทรศัพท์</th> 
+                                        <th class="px-6 py-4">เบอร์โทรศัพท์</th>
                                         <th class="px-6 py-4">ความเชี่ยวชาญ</th>
                                         <th class="px-6 py-4 text-center">งานที่รับ</th>
                                         <th class="px-6 py-4 text-right">จัดการ</th>
@@ -717,7 +738,7 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                                                         ".(!empty($t['full_name']) ? $t['full_name'] : '- ไม่ระบุ -')."
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td> 
+                                                <td class='px-6 py-4 text-slate-600'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td>
                                                 <td class='px-6 py-4 text-slate-600'>".(!empty($t['department']) ? $t['department'] : '-')."</td>
                                                 <td class='px-6 py-4 text-center'><span class='inline-flex items-center px-3 py-1 rounded-full text-[11px] md:text-xs font-bold border bg-slate-100 text-slate-600 border-slate-200'>{$total_jobs} งาน</span></td>
                                                 <td class='px-6 py-4 text-right'>
@@ -844,10 +865,10 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                 </div>
             </div>
 
-            <!-- Report Summary Section (เอกสารบันทึกข้อความราชการ 100%) -->
-            <div id="reports" class="section hidden space-y-6">
+            <!-- Report Summary Section -->
+            <div id="reports" class="section hidden space-y-6 no-print">
                 
-                <div class="modern-card bg-white p-4 md:p-6 no-print">
+                <div class="modern-card bg-white p-4 md:p-6">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                         <div>
                             <h2 class="text-xl md:text-2xl font-bold text-slate-800">รายงานสรุปผลการปฏิบัติงาน</h2>
@@ -878,97 +899,96 @@ $current_date_thai = thaiNum(date('j')) . " " . $report_month . " " . thaiNum(da
                     </div>
                 </div>
 
-                <!-- 🟢 [แก้ไข 4] หน้าเอกสารสำหรับพิมพ์ เปลี่ยนจาก Flex เป็น Table Header -->
-                <div class="official-doc">
-                    
-                    <?php 
-                        $total_repairs = array_sum($status_counts);
-                        $pending = $status_counts['รอรับเรื่อง'] ?? 0;
-                        $progress = $status_counts['กำลังดำเนินการ'] ?? 0;
-                        $completed = $status_counts['ซ่อมเสร็จแล้ว'] ?? 0;
-
-                        $pct_completed = $total_repairs > 0 ? number_format(($completed / $total_repairs) * 100, 2) : 0;
-                        $pct_progress = $total_repairs > 0 ? number_format(($progress / $total_repairs) * 100, 2) : 0;
-                        $pct_pending = $total_repairs > 0 ? number_format(($pending / $total_repairs) * 100, 2) : 0;
-                    ?>
-
-                    <!-- รูปครุฑจากหน้าเว็บกรมประชาสัมพันธ์ -->
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Thai_government_Garuda_emblem_%28Version_2%29.svg" style="width: 1.5cm; position: absolute; left: 3cm; top: 1.5cm; filter: grayscale(100%);">
-                    
-                    <div class="title-doc">บันทึกข้อความ</div>
-                    
-                    <table class="doc-header-table">
-                        <tr>
-                            <td class="col-label">ส่วนราชการ</td>
-                            <td class="col-data">ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
-                        </tr>
-                    </table>
-                    
-                    <table class="doc-header-table">
-                        <tr>
-                            <td class="col-label">ที่</td>
-                            <td class="col-data" style="width: 50%;">ศธ ๐๕๓๐.๑๑/......................</td>
-                            <td class="col-label">วันที่</td>
-                            <td class="col-data"><?php echo $current_date_thai; ?></td>
-                        </tr>
-                    </table>
-                    
-                    <table class="doc-header-table">
-                        <tr>
-                            <td class="col-label">เรื่อง</td>
-                            <td class="col-data" id="docSubject">รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></td>
-                        </tr>
-                        <tr>
-                            <td class="col-label">เรียน</td>
-                            <td class="col-data">คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</td>
-                        </tr>
-                    </table>
-                    
-                    <!-- เนื้อหารายงาน -->
-                    <div>
-                        <p class="thai-indent" id="docContext">ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น</p>
-                        <p class="thai-indent">ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $report_month; ?> เพื่อรายงานผลการดำเนินงานให้รับทราบ โดยมีรายละเอียดดังต่อไปนี้</p>
-                        
-                        <div class="keep-together">
-                            <p class="bold-text" style="margin-top: 5pt;">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
-                            <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b id="docTotal"><?php echo thaiNum($total_repairs); ?></b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
-                            <div class="thai-sub-indent">
-                                <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b id="docCompleted"><?php echo thaiNum($completed); ?></b> รายการ (คิดเป็นร้อยละ <span id="docPctCompleted"><?php echo thaiNum($pct_completed); ?></span>)</p>
-                                <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b id="docProgress"><?php echo thaiNum($progress); ?></b> รายการ (คิดเป็นร้อยละ <span id="docPctProgress"><?php echo thaiNum($pct_progress); ?></span>)</p>
-                                <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b id="docPending"><?php echo thaiNum($pending); ?></b> รายการ (คิดเป็นร้อยละ <span id="docPctPending"><?php echo thaiNum($pct_pending); ?></span>)</p>
-                            </div>
-                        </div>
-
-                        <div class="keep-together">
-                            <p class="bold-text" style="margin-top: 5pt;">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
-                            <p class="thai-indent">ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ประกอบด้วย</p>
-                            <div class="thai-sub-indent" id="docTopEquip">
-                                <?php 
-                                    if (!empty($eq_labels)) {
-                                        $thai_nums = ['๑', '๒', '๓', '๔', '๕'];
-                                        for ($i = 0; $i < count($eq_labels); $i++) {
-                                            echo "<p>๒." . $thai_nums[$i] . " " . htmlspecialchars($eq_labels[$i]) . " จำนวน <b>" . thaiNum($eq_counts[$i]) . "</b> รายการ</p>";
-                                        }
-                                    } else {
-                                        echo "<p>- ไม่มีข้อมูลการแจ้งซ่อมในระบบ -</p>";
-                                    }
-                                ?>
-                            </div>
-                        </div>
-
-                        <p class="thai-indent keep-together" style="margin-top: 5pt;" id="docFooterText">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
-
-                        <p class="thai-indent keep-together" style="margin-top: 10pt;">จึงเรียนมาเพื่อโปรดทราบ</p>
-                    </div>
-
-                    <div class="signature-box">
-                        <p style="margin-bottom: 20pt;">(ลงชื่อ)...................................................</p>
-                        <p>( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
-                        <p id="docSignatureRole">ผู้รายงาน / ผู้จัดทำ</p>
-                    </div>
-                    <div style="clear: both;"></div>
-
+                <!-- 🟢 [แก้ไข] โครงสร้างเอกสารราชการ ใช้ Table แทน div/flex เพื่อไม่ให้ซ้อนทับกัน -->
+                <div class="official-doc bg-white" style="display: none;"> <!-- ซ่อนในหน้าจอปกติ ไปแสดงตอน Print แทน เพื่อความสวยงาม -->
                 </div>
+            </div>
+
+            <!-- 🟢 พื้นที่สำหรับเอกสารที่ใช้พิมพ์โดยเฉพาะ (แยกออกจากโครงสร้างเว็บ) -->
+            <div id="printArea" class="official-doc hidden print:block">
+                <?php 
+                    $total_repairs = array_sum($status_counts);
+                    $pending = $status_counts['รอรับเรื่อง'] ?? 0;
+                    $progress = $status_counts['กำลังดำเนินการ'] ?? 0;
+                    $completed = $status_counts['ซ่อมเสร็จแล้ว'] ?? 0;
+
+                    $pct_completed = $total_repairs > 0 ? number_format(($completed / $total_repairs) * 100, 2) : 0;
+                    $pct_progress = $total_repairs > 0 ? number_format(($progress / $total_repairs) * 100, 2) : 0;
+                    $pct_pending = $total_repairs > 0 ? number_format(($pending / $total_repairs) * 100, 2) : 0;
+                ?>
+
+                <!-- เรียกใช้รูปจากไฟล์ในเครื่อง -->
+                <img src="uploads/garuda.png" style="width: 1.5cm; position: absolute; left: 3cm; top: 1.5cm; filter: grayscale(100%);">
+                
+                <div class="title-doc">บันทึกข้อความ</div>
+                
+                <table class="doc-header-table">
+                    <tr>
+                        <td class="col-label">ส่วนราชการ</td>
+                        <td class="col-data">ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
+                    </tr>
+                </table>
+                
+                <table class="doc-header-table">
+                    <tr>
+                        <td class="col-label">ที่</td>
+                        <td class="col-data" style="width: 50%;">ศธ ๐๕๓๐.๑๑/......................</td>
+                        <td class="col-label">วันที่</td>
+                        <td class="col-data"><?php echo $current_date_thai; ?></td>
+                    </tr>
+                </table>
+                
+                <table class="doc-header-table">
+                    <tr>
+                        <td class="col-label">เรื่อง</td>
+                        <td class="col-data" id="docSubject">รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) ประจำเดือน <?php echo $report_month; ?></td>
+                    </tr>
+                    <tr>
+                        <td class="col-label">เรียน</td>
+                        <td class="col-data">คณบดีคณะการบัญชีและการจัดการ / หัวหน้าฝ่ายเทคโนโลยีสารสนเทศ</td>
+                    </tr>
+                </table>
+                
+                <!-- เนื้อหารายงาน -->
+                <div style="display: block !important;">
+                    <p class="thai-indent" id="docContext">ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น</p>
+                    <p class="thai-indent">ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $report_month; ?> เพื่อรายงานผลการดำเนินงานให้รับทราบ โดยมีรายละเอียดดังต่อไปนี้</p>
+                    
+                    <p class="bold-text" style="margin-top: 5pt !important; clear: both;">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
+                    <p class="thai-indent">มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <b id="docTotal"><?php echo thaiNum($total_repairs); ?></b> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้</p>
+                    <div class="thai-sub-indent" style="display: block !important;">
+                        <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <b id="docCompleted"><?php echo thaiNum($completed); ?></b> รายการ (คิดเป็นร้อยละ <span id="docPctCompleted"><?php echo thaiNum($pct_completed); ?></span>)</p>
+                        <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <b id="docProgress"><?php echo thaiNum($progress); ?></b> รายการ (คิดเป็นร้อยละ <span id="docPctProgress"><?php echo thaiNum($pct_progress); ?></span>)</p>
+                        <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <b id="docPending"><?php echo thaiNum($pending); ?></b> รายการ (คิดเป็นร้อยละ <span id="docPctPending"><?php echo thaiNum($pct_pending); ?></span>)</p>
+                    </div>
+
+                    <p class="bold-text" style="margin-top: 5pt !important; clear: both;">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
+                    <p class="thai-indent">ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ประกอบด้วย</p>
+                    <div class="thai-sub-indent" id="docTopEquip" style="display: block !important;">
+                        <?php 
+                            if (!empty($eq_labels)) {
+                                $thai_nums = ['๑', '๒', '๓', '๔', '๕'];
+                                for ($i = 0; $i < count($eq_labels); $i++) {
+                                    echo "<p>๒." . $thai_nums[$i] . " " . htmlspecialchars($eq_labels[$i]) . " จำนวน <b>" . thaiNum($eq_counts[$i]) . "</b> รายการ</p>";
+                                }
+                            } else {
+                                echo "<p>- ไม่มีข้อมูลการแจ้งซ่อมในระบบ -</p>";
+                            }
+                        ?>
+                    </div>
+
+                    <p class="thai-indent" style="margin-top: 5pt !important; clear: both;" id="docFooterText">ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น</p>
+
+                    <p class="thai-indent" style="margin-top: 10pt !important; clear: both;">จึงเรียนมาเพื่อโปรดทราบ</p>
+                </div>
+
+                <div class="signature-box" style="float: right;">
+                    <p style="text-align: center; margin-bottom: 20pt !important;">(ลงชื่อ)...................................................</p>
+                    <p style="text-align: center;">( <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'ผู้ดูแลระบบ'; ?> )</p>
+                    <p style="text-align: center;" id="docSignatureRole">ผู้รายงาน / ผู้จัดทำ</p>
+                </div>
+                <div style="clear: both;"></div>
+
             </div>
 
         </div>
