@@ -76,6 +76,9 @@ if($check_repairs->num_rows > 0) {
                   GROUP BY reporter_name, phone_number");
 }
 
+// เช็คว่ามีคอลัมน์เก็บรูปภาพในฐานข้อมูลไหม ถ้าไม่มีให้ข้ามไป (ป้องกัน Error)
+$has_image_col = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'")->num_rows > 0);
+
 // ================= จัดการข้อมูล =================
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
@@ -171,8 +174,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
 $all_repairs_json = "[]";
 
 if($check_repairs->num_rows > 0) {
-    $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
-    $select_query = $has_tech_name ? "SELECT ticket_no, equipment_type, status, DATE_FORMAT(created_at, '%d/%m/%Y %H:%i') as created_at_fmt, reporter_name, technician_name FROM repairs ORDER BY created_at DESC" : "SELECT ticket_no, equipment_type, status, DATE_FORMAT(created_at, '%d/%m/%Y %H:%i') as created_at_fmt, reporter_name, '' as technician_name FROM repairs ORDER BY created_at DESC";
+    // 🟢 เช็คว่าฐานข้อมูลมีฟิลด์รูปไหม จะได้ดึงมาใช้ได้
+    $select_fields = "ticket_no, equipment_type, status, DATE_FORMAT(created_at, '%Y-%m-%d') as created_at_fmt, reporter_name";
+    if ($has_tech_name) $select_fields .= ", technician_name"; else $select_fields .= ", '' as technician_name";
+    if ($has_image_col) $select_fields .= ", image_path"; else $select_fields .= ", NULL as image_path";
+    
+    $select_query = "SELECT {$select_fields} FROM repairs ORDER BY created_at DESC";
     
     $rep_res = $conn->query($select_query);
     $reps = [];
@@ -250,8 +257,10 @@ if($tech_list_res){
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
+    <!-- Sidebar สีขาว คลีนๆ -->
     <aside id="sidebar" class="w-[260px] bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
         <div class="h-24 flex items-center px-8 border-b border-slate-50">
+            <!-- โลโก้ไล่สีม่วง-ฟ้า (Indigo/Violet) -->
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3 shrink-0">
                 <i class="fas fa-tools text-white text-lg"></i>
             </div>
@@ -279,6 +288,7 @@ if($tech_list_res){
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
+        <!-- Header สีขาว มินิมอล -->
         <header class="h-20 bg-white/80 backdrop-blur-md flex items-center justify-between px-8 z-10 sticky top-0 no-print border-b border-slate-100">
             <div class="flex items-center">
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-indigo-600 focus:outline-none">
@@ -300,6 +310,7 @@ if($tech_list_res){
                         </span>
                         <span class="block text-[11px] text-slate-400 font-semibold">Administrator</span>
                     </div>
+                    <!-- ไอคอนโปรไฟล์แบบรูปภาพ/วงกลมสีเทา -->
                     <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 overflow-hidden">
                         <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
@@ -312,7 +323,7 @@ if($tech_list_res){
             <!-- Dashboard Section -->
             <div id="dash" class="section space-y-8 animate-fade-in no-print">
                 
-                <!-- 🟢 แถวที่ 1: การ์ดสถิติ (คลิกเพื่อ Filter ได้) -->
+                <!-- แถวที่ 1: การ์ดสถิติแบบ Minimal -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <?php 
                         $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
@@ -325,8 +336,7 @@ if($tech_list_res){
                         $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     ?>
                     
-                    <!-- การ์ดรวมทั้งหมด (คลิกเพื่อล้าง Filter) -->
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer" onclick="filterRepairs('all')">
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('all')">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
                             <span class="text-xs font-bold text-slate-400">TOTAL</span>
@@ -337,8 +347,7 @@ if($tech_list_res){
                         </div>
                     </div>
                     
-                    <!-- การ์ดรอดำเนินการ -->
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer" onclick="filterRepairs('รอรับเรื่อง')">
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('รอรับเรื่อง')">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-xl"><i class="fas fa-clock"></i></div>
                             <span class="text-xs font-bold text-slate-400">WAITING</span>
@@ -349,8 +358,7 @@ if($tech_list_res){
                         </div>
                     </div>
 
-                    <!-- การ์ดกำลังดำเนินการ -->
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer" onclick="filterRepairs('กำลังดำเนินการ')">
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('กำลังดำเนินการ')">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-xl"><i class="fas fa-spinner"></i></div>
                             <span class="text-xs font-bold text-slate-400">ACTIVE</span>
@@ -361,8 +369,7 @@ if($tech_list_res){
                         </div>
                     </div>
 
-                    <!-- การ์ดเสร็จสิ้นแล้ว -->
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl"><i class="fas fa-check-circle"></i></div>
                             <span class="text-xs font-bold text-slate-400">DONE</span>
@@ -429,9 +436,16 @@ if($tech_list_res){
                                         $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
                                         if($recent_dash && $recent_dash->num_rows > 0){
                                             while($rd = $recent_dash->fetch_assoc()) {
+                                                // สไตล์ Badge มินิมอล
                                                 $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                                 $statusText = ($rd['status'] == 'รอรับเรื่อง') ? 'Pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'In Progress' : 'Completed');
                                                 $date_fmt = date("Y-m-d", strtotime($rd['created_at']));
+                                                
+                                                // 🟢 เช็คว่ามีรูปภาพไหม ถ้ามีให้แสดงไอคอน
+                                                $imageIcon = "";
+                                                if($has_image_col && !empty($rd['image_path'])) {
+                                                    $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
+                                                }
                                                 
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                     <td class='px-6 py-4 text-slate-500 font-mono font-semibold'>{$rd['ticket_no']}</td>
@@ -441,7 +455,7 @@ if($tech_list_res){
                                                             {$rd['reporter_name']}
                                                         </div>
                                                     </td>
-                                                    <td class='px-6 py-4 text-slate-600 font-medium'>{$rd['equipment_type']}</td>
+                                                    <td class='px-6 py-4 text-slate-600 font-medium'>{$rd['equipment_type']} {$imageIcon}</td>
                                                     <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$statusText}</span></td>
                                                     <td class='px-6 py-4 text-right text-slate-500 font-medium'>{$date_fmt}</td>
                                                 </tr>";
@@ -487,8 +501,11 @@ if($tech_list_res){
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
                                 if($check_repairs->num_rows > 0) {
-                                    $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
-                                    $select_query = $has_tech_name ? "SELECT * FROM repairs ORDER BY created_at DESC" : "SELECT *, '' as technician_name FROM repairs ORDER BY created_at DESC";
+                                    $select_fields = "id, ticket_no, equipment_type, status, problem_desc, reporter_name, phone_number, created_at";
+                                    if ($has_tech_name) $select_fields .= ", technician_name"; else $select_fields .= ", '' as technician_name";
+                                    if ($has_image_col) $select_fields .= ", image_path"; else $select_fields .= ", NULL as image_path";
+                                    
+                                    $select_query = "SELECT {$select_fields} FROM repairs ORDER BY created_at DESC";
                                     
                                     $res = $conn->query($select_query);
                                     if($res && $res->num_rows > 0){
@@ -497,12 +514,18 @@ if($tech_list_res){
                                             $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                             $techName = !empty($row['technician_name']) ? "<div class='text-indigo-600 font-bold'>{$row['technician_name']}</div>" : "<span class='text-slate-400'>Unassigned</span>";
 
+                                            // 🟢 เช็คว่ามีรูปภาพไหม ถ้ามีให้แสดงไอคอน
+                                            $imageIcon = "";
+                                            if($has_image_col && !empty($row['image_path'])) {
+                                                $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
+                                            }
+
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 text-slate-500 font-medium'>{$date}</td>
                                                 <td class='px-6 py-4 font-mono font-semibold text-slate-600'>{$row['ticket_no']}</td>
                                                 <td class='px-6 py-4'><div class='text-slate-800 font-bold'>{$row['reporter_name']}</div><div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$row['phone_number']}</div></td>
                                                 <td class='px-6 py-4'>
-                                                    <div class='text-slate-800 font-bold'>{$row['equipment_type']}</div>
+                                                    <div class='text-slate-800 font-bold'>{$row['equipment_type']} {$imageIcon}</div>
                                                     <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='{$row['problem_desc']}'>{$row['problem_desc']}</div>
                                                 </td>
                                                 <td class='px-6 py-4 text-center'>{$techName}</td>
@@ -533,7 +556,7 @@ if($tech_list_res){
                     </div>
                     <div class="flex w-full md:w-auto gap-3">
                         <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-all"><i class="fas fa-shield-alt mr-2 text-slate-400"></i> Add Admin</button>
-                        <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Tech</button>
+                        <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
                     </div>
                 </div>
 
