@@ -74,7 +74,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if($status == 'รับเรื่องแล้ว กำลังดำเนินการ') $icon = "🛠️";
             if($status == 'ซ่อมเสร็จแล้ว') $icon = "🎉";
 
-            // 🟢 เพิ่มตัวแปร $tech_phone ในข้อความที่จะส่งให้ผู้แจ้ง
             $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
                            "📋 เลขที่ใบงาน: " . $repair['ticket_no'] . "\n" .
                            "🕒 เวลาอัปเดต: " . $current_time . "\n" .
@@ -193,21 +192,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <p class="text-slate-600 mt-1"><?php echo htmlspecialchars($repair['problem_desc']); ?></p>
                         </div>
                         
-                        <!-- 🟢 แก้ไขส่วนแสดงรูปภาพ: เช็คทั้ง image_before และ image_path (รองรับทุกระบบ) -->
-                        <?php 
-                            $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
-                            if($image_file): 
-                        ?>
+                        <!-- 🟢 แก้ไขการแสดงรูปภาพ เพิ่มเงื่อนไขกรณีไม่มีรูป -->
                         <div>
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-2">ภาพประกอบ</p>
-                            <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-48 rounded-xl border border-slate-200 overflow-hidden group relative">
-                                <img src="uploads/<?php echo htmlspecialchars($image_file); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span class="text-white font-medium text-sm"><i class="fas fa-expand mr-1"></i> ดูรูปภาพเต็ม</span>
+                            <?php 
+                                $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
+                                if($image_file): 
+                            ?>
+                                <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-48 rounded-xl border border-slate-200 overflow-hidden group relative">
+                                    <img src="uploads/<?php echo htmlspecialchars($image_file); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span class="text-white font-medium text-sm"><i class="fas fa-expand mr-1"></i> ดูรูปภาพเต็ม</span>
+                                    </div>
+                                </a>
+                            <?php else: ?>
+                                <div class="w-full h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
+                                    <i class="fas fa-image text-xl mb-1 opacity-50"></i>
+                                    <span class="text-[11px] font-medium">ไม่มีรูปภาพแนบมาด้วย</span>
                                 </div>
-                            </a>
+                            <?php endif; ?>
                         </div>
-                        <?php endif; ?>
                         <!-- สิ้นสุดการแก้ไขส่วนแสดงรูปภาพ -->
 
                     </div>

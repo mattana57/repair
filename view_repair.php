@@ -111,17 +111,28 @@ if (isset($_GET['id'])) {
                             <p class="text-slate-700 text-sm leading-relaxed"><?php echo nl2br(htmlspecialchars($repair['problem_desc'])); ?></p>
                         </div>
 
-                        <?php if(!empty($repair['image_before'])): ?>
+                        <!-- 🟢 แก้ไขการแสดงรูปภาพ เพิ่มเงื่อนไขกรณีไม่มีรูป -->
                         <div>
                             <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">ภาพประกอบปัญหา</p>
-                            <a href="uploads/<?php echo $repair['image_before']; ?>" target="_blank" class="block w-full h-40 rounded-xl border border-slate-200 overflow-hidden relative group">
-                                <img src="uploads/<?php echo $repair['image_before']; ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                                <div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span class="text-white font-medium text-sm bg-black/40 px-3 py-1.5 rounded-lg backdrop-blur-sm"><i class="fas fa-search-plus mr-1.5"></i> คลิกดูรูปเต็ม</span>
+                            <?php 
+                                $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
+                                if($image_file): 
+                            ?>
+                                <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-40 rounded-xl border border-slate-200 overflow-hidden relative group">
+                                    <img src="uploads/<?php echo htmlspecialchars($image_file); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                    <div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span class="text-white font-medium text-sm bg-black/40 px-3 py-1.5 rounded-lg backdrop-blur-sm"><i class="fas fa-search-plus mr-1.5"></i> คลิกดูรูปเต็ม</span>
+                                    </div>
+                                </a>
+                            <?php else: ?>
+                                <div class="w-full h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
+                                    <i class="fas fa-image text-xl mb-1 opacity-50"></i>
+                                    <span class="text-[11px] font-medium">ไม่มีรูปภาพแนบมาด้วย</span>
                                 </div>
-                            </a>
+                            <?php endif; ?>
                         </div>
-                        <?php endif; ?>
+                        <!-- สิ้นสุดการแก้ไขส่วนแสดงรูปภาพ -->
+
                     </div>
                 </div>
 
