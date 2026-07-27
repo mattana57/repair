@@ -66,12 +66,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
+        // 🟢 แปลงข้อความสถานะให้ดูซอฟต์ลงสำหรับส่งให้ผู้แจ้ง (แต่ในระบบหลังบ้านยังเก็บเป็น 'กำลังดำเนินการ' เหมือนเดิม)
+        $status_display = $status;
+        if ($status == 'กำลังดำเนินการ') {
+            $status_display = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';
+        }
+
         // ==========================================
-        // 1. ส่งแจ้งเตือนหา "ผู้แจ้งซ่อม" แบบส่วนตัว (รายละเอียดครบถ้วนเหมือนเดิม)
+        // 1. ส่งแจ้งเตือนหา "ผู้แจ้งซ่อม" แบบส่วนตัว
         // ==========================================
         if(!empty($repair['line_user_id'])) {
             $icon = "🔔";
-            if($status == 'รับเรื่องแล้ว กำลังดำเนินการ') $icon = "🛠️";
+            if($status == 'กำลังดำเนินการ') $icon = "🛠️";
             if($status == 'ซ่อมเสร็จแล้ว') $icon = "🎉";
 
             $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
@@ -79,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                            "🕒 เวลาอัปเดต: " . $current_time . "\n" .
                            "💻 อุปกรณ์: " . $repair['equipment_type'] . "\n" .
                            "⚠️ อาการ: " . $repair['problem_desc'] . "\n\n" .
-                           "📌 สถานะใหม่: " . $status . "\n" .
+                           "📌 สถานะใหม่: " . $status_display . "\n" .  // ใช้ตัวแปรที่แปลงคำแล้ว
                            "👨‍🔧 ช่างผู้ดูแล: " . $tech_display . "\n" .
                            "📱 เบอร์ติดต่อช่าง: " . $tech_phone . "\n" .
                            "📝 หมายเหตุ: " . $note_display;
@@ -100,26 +106,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // ==========================================
-        // 2. ประกาศความคืบหน้าเข้า "กลุ่มช่าง" (ข้อความแบบสั้น กระชับ)
+        // 2. ประกาศความคืบหน้าเข้า "กลุ่มช่าง" (แจ้งเฉพาะตอนรับงานเท่านั้น)
         // ==========================================
         // 🚨 Group ID ของกลุ่มช่าง
         $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
         
-        if(!empty($line_group_id)) {
-            // ปรับข้อความให้สั้นลง ตามสถานะ
-            if ($status == 'กำลังดำเนินการ') {
-                $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
-                                "👨‍🔧 ช่าง: " . $tech_display . "\n" .
-                                "💻 งาน: " . $repair['equipment_type'] . " (" . $repair['location'] . ")";
-            } elseif ($status == 'ซ่อมเสร็จแล้ว') {
-                $groupMessage = "✅ ปิดจ๊อบ! ซ่อมเสร็จเรียบร้อย\n" .
-                                "👨‍🔧 ช่าง: " . $tech_display . "\n" .
-                                "💻 งาน: " . $repair['equipment_type'] . " (" . $repair['location'] . ")";
-            } else {
-                $groupMessage = "🕒 อัปเดตสถานะ: " . $status . "\n" .
-                                "📋 ใบงาน: " . $repair['ticket_no'] . "\n" .
-                                "👨‍🔧 ช่าง: " . $tech_display;
-            }
+        // จะส่งเข้ากลุ่มช่างก็ต่อเมื่อสถานะคือ "กำลังดำเนินการ" เท่านั้น
+        if(!empty($line_group_id) && $status == 'กำลังดำเนินการ') {
+            $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
+                            "👨‍🔧 ช่าง: " . $tech_display . "\n" .
+                            "💻 งาน: " . $repair['equipment_type'] . " (" . $repair['location'] . ")";
 
             $postDataGroup = [
                 'to' => $line_group_id,
@@ -252,10 +248,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
+                                    <!-- ค่า value ยังเป็นกำลังดำเนินการเหมือนเดิมเพื่อไม่ให้ระบบพัง แต่ข้อความแสดงผลเปลี่ยนแล้ว -->
                                     <input type="radio" name="status" value="กำลังดำเนินการ" class="peer sr-only" <?php echo ($repair['status'] == 'กำลังดำเนินการ') ? 'checked' : ''; ?>>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-sky-50 peer-checked:border-sky-300 peer-checked:text-sky-700 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-tools mb-1 text-lg"></i>
-                                        <div class="text-sm font-medium">รับเรื่องแล้ว กำลังดำเนินการ</div>
+                                        <div class="text-sm font-medium">ช่างรับเรื่องแจ้งซ่อมแล้ว</div>
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
