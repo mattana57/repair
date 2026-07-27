@@ -10,8 +10,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     $search_keyword = trim($_POST['search_query']);
     $search_param = "%" . $search_keyword . "%";
 
-    // ค้นหาจาก "เลขที่ใบงาน" หรือ "ชื่อผู้แจ้ง"
-    $stmt = $conn->prepare("SELECT ticket_no, equipment_type, status, created_at, technician_name, repair_note, reporter_name 
+    // 🟢 เพิ่ม id เข้ามาใน SELECT เพื่อใช้ทำลิงก์
+    $stmt = $conn->prepare("SELECT id, ticket_no, equipment_type, status, created_at, technician_name, repair_note, reporter_name 
                             FROM repairs 
                             WHERE ticket_no = ? OR reporter_name LIKE ? 
                             ORDER BY created_at DESC LIMIT 10");
@@ -179,41 +179,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <?php foreach($status_result as $res): 
                     $badgeClass = "bg-slate-100 border-slate-200 text-slate-600";
                     if($res['status'] == 'รอรับเรื่อง') $badgeClass = "bg-amber-50 border-amber-200 text-amber-600";
-                    elseif($res['status'] == 'กำลังดำเนินการ') $badgeClass = "bg-sky-50 border-sky-200 text-sky-600";
+                    elseif($res['status'] == 'กำลังดำเนินการ') { $badgeClass = "bg-sky-50 border-sky-200 text-sky-600"; $res['status'] = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';}
                     elseif($res['status'] == 'ซ่อมเสร็จแล้ว') $badgeClass = "bg-emerald-50 border-emerald-200 text-emerald-600";
                 ?>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-                        <div class="absolute left-0 top-0 bottom-0 w-1.5 <?php echo str_replace(['bg-', 'text-', 'border-'], ['bg-', 'bg-', 'bg-'], explode(' ', $badgeClass)[0]); ?>"></div>
-                        
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-3 pl-2">
-                            <div>
-                                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">เลขที่ใบงาน</p>
-                                <h3 class="text-lg font-bold text-sky-700"><?php echo $res['ticket_no']; ?></h3>
+                    <!-- 🟢 เพิ่มลิงก์ครอบการ์ด เพื่อคลิกไปดูรายละเอียดได้ -->
+                    <a href="view_repair.php?id=<?php echo $res['id']; ?>" target="_blank" class="block mb-3">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden hover:bg-sky-50 hover:border-sky-200 transition-colors h-full">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 <?php echo str_replace(['bg-', 'text-', 'border-'], ['bg-', 'bg-', 'bg-'], explode(' ', $badgeClass)[0]); ?>"></div>
+                            
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-3 pl-2">
+                                <div>
+                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">เลขที่ใบงาน</p>
+                                    <h3 class="text-lg font-bold text-sky-700"><?php echo $res['ticket_no']; ?></h3>
+                                </div>
+                                <div class="text-left md:text-right">
+                                    <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border <?php echo $badgeClass; ?>">
+                                        <?php echo $res['status']; ?>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="text-left md:text-right">
-                                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold border <?php echo $badgeClass; ?>">
-                                    <?php echo $res['status']; ?>
-                                </span>
+                            
+                            <div class="pl-2 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600">
+                                <div>
+                                    <p class="mb-1"><i class="fas fa-desktop text-slate-400 w-4 text-center mr-1"></i> <b class="text-slate-700">อุปกรณ์:</b> <?php echo $res['equipment_type']; ?></p>
+                                    <p><i class="fas fa-user text-slate-400 w-4 text-center mr-1"></i> <b class="text-slate-700">ผู้แจ้ง:</b> <?php echo $res['reporter_name']; ?></p>
+                                </div>
+                                <div>
+                                    <p class="mb-1"><i class="fas fa-hard-hat text-slate-400 w-4 text-center mr-1"></i> <b class="text-slate-700">ผู้รับผิดชอบ:</b> <span class="font-medium <?php echo !empty($res['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>"><?php echo !empty($res['technician_name']) ? $res['technician_name'] : '- ยังไม่ระบุ -'; ?></span></p>
+                                    <p><i class="far fa-clock text-slate-400 w-4 text-center mr-1"></i> <b class="text-slate-700">วันที่แจ้ง:</b> <?php echo date("d/m/Y H:i", strtotime($res['created_at'])); ?></p>
+                                </div>
                             </div>
+                            
+                            <?php if(!empty($res['repair_note'])): ?>
+                            <div class="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-sm text-slate-600 pl-2">
+                                <b class="text-slate-700 block mb-1"><i class="fas fa-comment-dots text-slate-400 mr-1"></i> หมายเหตุจากช่าง:</b> <?php echo $res['repair_note']; ?>
+                            </div>
+                            <?php endif; ?>
                         </div>
-                        
-                        <div class="pl-2 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-600">
-                            <div>
-                                <p class="mb-1"><i class="fas fa-desktop text-slate-400 w-4 text-center mr-1"></i> <b class="text-slate-700">อุปกรณ์:</b> <?php echo $res['equipment_type']; ?></p>
-                                <p><i class="fas fa-user text-slate-400 w-4 text-center mr-1"></i> <b class="text-slate-700">ผู้แจ้ง:</b> <?php echo $res['reporter_name']; ?></p>
-                            </div>
-                            <div>
-                                <p class="mb-1"><i class="fas fa-hard-hat text-slate-400 w-4 text-center mr-1"></i> <b class="text-slate-700">ผู้รับผิดชอบ:</b> <span class="font-medium <?php echo !empty($res['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>"><?php echo !empty($res['technician_name']) ? $res['technician_name'] : '- ยังไม่ระบุ -'; ?></span></p>
-                                <p><i class="far fa-clock text-slate-400 w-4 text-center mr-1"></i> <b class="text-slate-700">วันที่แจ้ง:</b> <?php echo date("d/m/Y H:i", strtotime($res['created_at'])); ?></p>
-                            </div>
-                        </div>
-                        
-                        <?php if(!empty($res['repair_note'])): ?>
-                        <div class="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-sm text-slate-600 pl-2">
-                            <b class="text-slate-700 block mb-1"><i class="fas fa-comment-dots text-slate-400 mr-1"></i> หมายเหตุจากช่าง:</b> <?php echo $res['repair_note']; ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
+                    </a>
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
@@ -223,7 +226,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     </div>
 </div>
 
-<!-- Scripts -->
 <script>
     function checkOther() {
         const select = document.getElementById('equipSelect');

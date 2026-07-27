@@ -43,7 +43,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     $search_keyword = trim($_POST['search_query']);
     $search_param = "%" . $search_keyword . "%";
 
-    $stmt = $conn->prepare("SELECT ticket_no, equipment_type, status, created_at, technician_name, repair_note, reporter_name 
+    // 🟢 เพิ่ม id เข้ามาใน SELECT เพื่อใช้ทำลิงก์
+    $stmt = $conn->prepare("SELECT id, ticket_no, equipment_type, status, created_at, technician_name, repair_note, reporter_name 
                             FROM repairs 
                             WHERE ticket_no = ? OR reporter_name LIKE ? 
                             ORDER BY created_at DESC LIMIT 10");
@@ -369,59 +370,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         } elseif($res['status'] == 'กำลังดำเนินการ') {
                             $statusColor = "bg-blue-400";
                             $icon = "fa-tools";
+                            $res['status'] = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';
                         } elseif($res['status'] == 'ซ่อมเสร็จแล้ว') {
                             $statusColor = "bg-green-400";
                             $icon = "fa-check";
                         }
                     ?>
-                        <div class="brutal-border bg-[#f4f4f0] p-6 relative">
-                            
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b-2 border-slate-900">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 bg-white brutal-border flex items-center justify-center text-xl shadow-[4px_4px_0_0_#111827]">
-                                        <i class="fas <?php echo $icon; ?>"></i>
+                        <!-- 🟢 เพิ่มลิงก์ครอบการ์ด เพื่อคลิกไปดูรายละเอียดได้ -->
+                        <a href="view_repair.php?id=<?php echo $res['id']; ?>" target="_blank" class="block transition-transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#2563eb] mb-4">
+                            <div class="brutal-border bg-[#f4f4f0] p-6 relative h-full">
+                                
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b-2 border-slate-900">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-white brutal-border flex items-center justify-center text-xl shadow-[4px_4px_0_0_#111827]">
+                                            <i class="fas <?php echo $icon; ?>"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ticket No.</p>
+                                            <h3 class="text-xl font-black text-slate-900 uppercase"><?php echo $res['ticket_no']; ?></h3>
+                                        </div>
                                     </div>
                                     <div>
-                                        <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ticket No.</p>
-                                        <h3 class="text-xl font-black text-slate-900 uppercase"><?php echo $res['ticket_no']; ?></h3>
+                                        <!-- Hard Edge Badge -->
+                                        <span class="inline-flex items-center px-4 py-2 brutal-border font-bold text-xs uppercase tracking-wider <?php echo $statusColor; ?> brutal-shadow">
+                                            <?php echo $res['status']; ?>
+                                        </span>
                                     </div>
                                 </div>
-                                <div>
-                                    <!-- Hard Edge Badge -->
-                                    <span class="inline-flex items-center px-4 py-2 brutal-border font-bold text-xs uppercase tracking-wider <?php echo $statusColor; ?> brutal-shadow">
-                                        <?php echo $res['status']; ?>
-                                    </span>
-                                </div>
-                            </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8 text-sm">
-                                <div>
-                                    <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 pb-1 mb-2">อุปกรณ์</p>
-                                    <p class="font-bold text-slate-800"><?php echo $res['equipment_type']; ?></p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8 text-sm">
+                                    <div>
+                                        <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 pb-1 mb-2">อุปกรณ์</p>
+                                        <p class="font-bold text-slate-800"><?php echo $res['equipment_type']; ?></p>
+                                    </div>
+                                    <div>
+                                        <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 pb-1 mb-2">ผู้แจ้ง</p>
+                                        <p class="font-bold text-slate-800"><?php echo $res['reporter_name']; ?></p>
+                                    </div>
+                                    <div>
+                                        <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 pb-1 mb-2">ช่างดูแล</p>
+                                        <p class="font-bold <?php echo !empty($res['technician_name']) ? 'text-blue-600' : 'text-slate-400 line-through'; ?>">
+                                            <?php echo !empty($res['technician_name']) ? $res['technician_name'] : 'N/A'; ?>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 pb-1 mb-2">วันที่แจ้ง</p>
+                                        <p class="font-bold font-mono text-slate-800"><?php echo date("d/m/Y H:i", strtotime($res['created_at'])); ?></p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 pb-1 mb-2">ผู้แจ้ง</p>
-                                    <p class="font-bold text-slate-800"><?php echo $res['reporter_name']; ?></p>
+                                
+                                <?php if(!empty($res['repair_note'])): ?>
+                                <div class="mt-6 pt-4 border-t-2 border-slate-900 border-dashed">
+                                    <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">หมายเหตุจากช่าง</p>
+                                    <p class="text-sm font-medium text-slate-700 bg-white brutal-border p-3">"<?php echo $res['repair_note']; ?>"</p>
                                 </div>
-                                <div>
-                                    <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 pb-1 mb-2">ช่างดูแล</p>
-                                    <p class="font-bold <?php echo !empty($res['technician_name']) ? 'text-blue-600' : 'text-slate-400 line-through'; ?>">
-                                        <?php echo !empty($res['technician_name']) ? $res['technician_name'] : 'N/A'; ?>
-                                    </p>
-                                </div>
-                                <div>
-                                    <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-300 pb-1 mb-2">วันที่แจ้ง</p>
-                                    <p class="font-bold font-mono text-slate-800"><?php echo date("d/m/Y H:i", strtotime($res['created_at'])); ?></p>
-                                </div>
+                                <?php endif; ?>
                             </div>
-                            
-                            <?php if(!empty($res['repair_note'])): ?>
-                            <div class="mt-6 pt-4 border-t-2 border-slate-900 border-dashed">
-                                <p class="font-mono text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">หมายเหตุจากช่าง</p>
-                                <p class="text-sm font-medium text-slate-700 bg-white brutal-border p-3">"<?php echo $res['repair_note']; ?>"</p>
-                            </div>
-                            <?php endif; ?>
-                        </div>
+                        </a>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>

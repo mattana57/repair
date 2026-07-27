@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
-        // 🟢 แปลงข้อความสถานะให้ดูซอฟต์ลงสำหรับส่งให้ผู้แจ้ง (แต่ในระบบหลังบ้านยังเก็บเป็น 'กำลังดำเนินการ' เหมือนเดิม)
+        // 🟢 แปลงข้อความสถานะให้ดูซอฟต์ลงสำหรับส่งให้ผู้แจ้ง 
         $status_display = $status;
         if ($status == 'กำลังดำเนินการ') {
             $status_display = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';
@@ -85,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                            "🕒 เวลาอัปเดต: " . $current_time . "\n" .
                            "💻 อุปกรณ์: " . $repair['equipment_type'] . "\n" .
                            "⚠️ อาการ: " . $repair['problem_desc'] . "\n\n" .
-                           "📌 สถานะใหม่: " . $status_display . "\n" .  // ใช้ตัวแปรที่แปลงคำแล้ว
+                           "📌 สถานะใหม่: " . $status_display . "\n" .  
                            "👨‍🔧 ช่างผู้ดูแล: " . $tech_display . "\n" .
                            "📱 เบอร์ติดต่อช่าง: " . $tech_phone . "\n" .
                            "📝 หมายเหตุ: " . $note_display;
@@ -106,9 +106,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // ==========================================
-        // 2. ประกาศความคืบหน้าเข้า "กลุ่มช่าง" (แจ้งเฉพาะตอนรับงานเท่านั้น)
+        // 2. ประกาศความคืบหน้าเข้า "กลุ่มช่าง" 
         // ==========================================
-        // 🚨 Group ID ของกลุ่มช่าง
         $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
         
         // จะส่งเข้ากลุ่มช่างก็ต่อเมื่อสถานะคือ "กำลังดำเนินการ" เท่านั้น
@@ -222,12 +221,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="modern-card p-6 md:p-8 h-full">
                     <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-6">บันทึกการปฏิบัติงาน</h2>
                     
-                    <form action="" method="POST" class="space-y-6">
+                    <!-- 🟢 เพิ่ม ID ให้กับฟอร์มเพื่อใช้ตรวจสอบใน JavaScript -->
+                    <form id="updateForm" action="" method="POST" class="space-y-6">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
                         
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
-                            <select name="technician_name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
+                            <select name="technician_name" id="technician_name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
                                 <option value="">-- ยังไม่ระบุผู้รับผิดชอบ --</option>
                                 <?php foreach($techs as $t): ?>
                                     <option value="<?php echo htmlspecialchars($t); ?>" <?php echo (isset($repair['technician_name']) && $repair['technician_name'] == $t) ? 'selected' : ''; ?>>
@@ -248,7 +248,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
-                                    <!-- ค่า value ยังเป็นกำลังดำเนินการเหมือนเดิมเพื่อไม่ให้ระบบพัง แต่ข้อความแสดงผลเปลี่ยนแล้ว -->
                                     <input type="radio" name="status" value="กำลังดำเนินการ" class="peer sr-only" <?php echo ($repair['status'] == 'กำลังดำเนินการ') ? 'checked' : ''; ?>>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-sky-50 peer-checked:border-sky-300 peer-checked:text-sky-700 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-tools mb-1 text-lg"></i>
@@ -291,6 +290,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         <?php endif; ?>
     </div>
+
+    <!-- 🟢 สคริปต์สำหรับตรวจสอบการกรอกข้อมูลช่างก่อนบันทึก -->
+    <script>
+        document.getElementById('updateForm').addEventListener('submit', function(e) {
+            // ดึงค่าสถานะที่ถูกเลือก
+            const statusChecked = document.querySelector('input[name="status"]:checked');
+            // ดึงค่าชื่อช่างจาก dropdown
+            const techName = document.getElementById('technician_name').value;
+
+            if (statusChecked) {
+                const status = statusChecked.value;
+                // ถ้ารับงาน หรือ ปิดงาน แต่ลืมเลือกชื่อช่าง
+                if ((status === 'กำลังดำเนินการ' || status === 'ซ่อมเสร็จแล้ว') && techName === '') {
+                    e.preventDefault(); // หยุดการส่งฟอร์มทันที
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'ลืมระบุชื่อช่างหรือเปล่าคะ?',
+                        text: 'กรุณาเลือก "ช่างผู้รับผิดชอบ" ก่อนอัปเดตสถานะรับงานหรือปิดงานค่ะ',
+                        confirmButtonColor: '#0284c7',
+                        confirmButtonText: 'ตกลงเข้าใจแล้ว'
+                    });
+                }
+            }
+        });
+    </script>
 
     <?php if($show_alert): ?>
     <script>
