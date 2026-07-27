@@ -67,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // ==========================================
-        // 1. ส่งแจ้งเตือนหา "ผู้แจ้งซ่อม" แบบส่วนตัว
+        // 1. ส่งแจ้งเตือนหา "ผู้แจ้งซ่อม" แบบส่วนตัว (รายละเอียดครบถ้วนเหมือนเดิม)
         // ==========================================
         if(!empty($repair['line_user_id'])) {
             $icon = "🔔";
@@ -100,20 +100,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // ==========================================
-        // 2. ประกาศความคืบหน้าเข้า "กลุ่มช่าง" 
+        // 2. ประกาศความคืบหน้าเข้า "กลุ่มช่าง" (ข้อความแบบสั้น กระชับ)
         // ==========================================
         // 🚨 Group ID ของกลุ่มช่าง
         $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
         
         if(!empty($line_group_id)) {
-            $groupIcon = "📢";
-            if($status == 'ซ่อมเสร็จแล้ว') $groupIcon = "✅";
-            
-            $groupMessage = $groupIcon . " อัปเดตงาน: " . $repair['ticket_no'] . "\n\n" .
-                            "👨‍🔧 ผู้รับผิดชอบ: " . $tech_display . "\n" .
-                            "📌 สถานะ: " . $status . "\n" .
-                            "💻 อุปกรณ์: " . $repair['equipment_type'] . " (" . $repair['location'] . ")\n" .
-                            "📝 หมายเหตุ: " . $note_display;
+            // ปรับข้อความให้สั้นลง ตามสถานะ
+            if ($status == 'กำลังดำเนินการ') {
+                $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
+                                "👨‍🔧 ช่าง: " . $tech_display . "\n" .
+                                "💻 งาน: " . $repair['equipment_type'] . " (" . $repair['location'] . ")";
+            } elseif ($status == 'ซ่อมเสร็จแล้ว') {
+                $groupMessage = "✅ ปิดจ๊อบ! ซ่อมเสร็จเรียบร้อย\n" .
+                                "👨‍🔧 ช่าง: " . $tech_display . "\n" .
+                                "💻 งาน: " . $repair['equipment_type'] . " (" . $repair['location'] . ")";
+            } else {
+                $groupMessage = "🕒 อัปเดตสถานะ: " . $status . "\n" .
+                                "📋 ใบงาน: " . $repair['ticket_no'] . "\n" .
+                                "👨‍🔧 ช่าง: " . $tech_display;
+            }
 
             $postDataGroup = [
                 'to' => $line_group_id,
@@ -192,7 +198,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <p class="text-slate-600 mt-1"><?php echo htmlspecialchars($repair['problem_desc']); ?></p>
                         </div>
                         
-                        <!-- 🟢 แก้ไขการแสดงรูปภาพ เพิ่มเงื่อนไขกรณีไม่มีรูป -->
                         <div>
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-2">ภาพประกอบ</p>
                             <?php 
@@ -212,7 +217,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                             <?php endif; ?>
                         </div>
-                        <!-- สิ้นสุดการแก้ไขส่วนแสดงรูปภาพ -->
 
                     </div>
                 </div>
