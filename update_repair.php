@@ -193,17 +193,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <p class="text-slate-600 mt-1"><?php echo htmlspecialchars($repair['problem_desc']); ?></p>
                         </div>
                         
-                        <?php if(!empty($repair['image_before'])): ?>
+                        <!-- 🟢 แก้ไขส่วนแสดงรูปภาพ: เช็คทั้ง image_before และ image_path (รองรับทุกระบบ) -->
+                        <?php 
+                            $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
+                            if($image_file): 
+                        ?>
                         <div>
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-2">ภาพประกอบ</p>
-                            <a href="uploads/<?php echo htmlspecialchars($repair['image_before']); ?>" target="_blank" class="block w-full h-32 rounded-xl border border-slate-200 overflow-hidden group relative">
-                                <img src="uploads/<?php echo htmlspecialchars($repair['image_before']); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-48 rounded-xl border border-slate-200 overflow-hidden group relative">
+                                <img src="uploads/<?php echo htmlspecialchars($image_file); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <span class="text-white font-medium text-sm"><i class="fas fa-expand mr-1"></i> ดูรูปภาพเต็ม</span>
                                 </div>
                             </a>
                         </div>
                         <?php endif; ?>
+                        <!-- สิ้นสุดการแก้ไขส่วนแสดงรูปภาพ -->
+
                     </div>
                 </div>
             </div>
