@@ -71,15 +71,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // เช็คแค่ว่ามีค่า Group ID ไม่เป็นค่าว่าง ก็ให้ส่งเลย
         if(!empty($line_group_id)) {
+            // 🟢 เพิ่มตัวแปร $phone_number ในข้อความแจ้งเตือนกลุ่มช่าง
             $groupMessage = "🚨 มีงานแจ้งซ่อมใหม่เข้ามาจ้า!\n\n" .
                             "📋 ใบงาน: " . $ticket_no . "\n" .
                             "🕒 เวลา: " . $current_time . "\n" .
                             "👤 ผู้แจ้ง: " . $reporter_name . "\n" .
+                            "📞 เบอร์ติดต่อ: " . $phone_number . "\n" . 
                             "💻 อุปกรณ์: " . $equipment . "\n" .
                             "📍 สถานที่: " . $location . "\n" .
                             "⚠️ อาการ: " . $problem_desc . "\n\n" .
                             "👇 ช่างคนไหนว่าง กดลิงก์เข้าระบบไปรับงานได้เลยค่ะ!\n" .
-                            "http://103.99.11.147/repair/dashboard.php?tab=repairs"; // 👈 เติม ?tab=repairs เพื่อให้วิ่งไปหน้ารายการแจ้งซ่อมทันที
+                            "http://103.99.11.147/repair/dashboard.php?tab=repairs"; 
 
             $postDataGroup = [
                 'to' => $line_group_id,

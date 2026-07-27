@@ -48,6 +48,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // ดึงเวลาปัจจุบันที่ช่างกดอัปเดต
         $current_time = date("d/m/Y H:i น.");
 
+        // 🟢 ดึงเบอร์โทรศัพท์ของช่างจากฐานข้อมูล เพื่อส่งไปแจ้งเตือนผู้แจ้ง
+        $tech_phone = "- ไม่ระบุ -";
+        if (!empty($technician_name)) {
+            $stmt_tech = $conn->prepare("SELECT phone FROM users WHERE full_name = ? AND LOWER(role) = 'technician' LIMIT 1");
+            if ($stmt_tech) {
+                $stmt_tech->bind_param("s", $technician_name);
+                $stmt_tech->execute();
+                $res_tech = $stmt_tech->get_result();
+                if ($res_tech->num_rows > 0) {
+                    $row_tech = $res_tech->fetch_assoc();
+                    if (!empty($row_tech['phone'])) {
+                        $tech_phone = $row_tech['phone'];
+                    }
+                }
+                $stmt_tech->close();
+            }
+        }
+
         // ==========================================
         // 1. ส่งแจ้งเตือนหา "ผู้แจ้งซ่อม" แบบส่วนตัว
         // ==========================================
@@ -56,6 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if($status == 'รับเรื่องแล้ว กำลังดำเนินการ') $icon = "🛠️";
             if($status == 'ซ่อมเสร็จแล้ว') $icon = "🎉";
 
+            // 🟢 เพิ่มตัวแปร $tech_phone ในข้อความที่จะส่งให้ผู้แจ้ง
             $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
                            "📋 เลขที่ใบงาน: " . $repair['ticket_no'] . "\n" .
                            "🕒 เวลาอัปเดต: " . $current_time . "\n" .
@@ -63,6 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                            "⚠️ อาการ: " . $repair['problem_desc'] . "\n\n" .
                            "📌 สถานะใหม่: " . $status . "\n" .
                            "👨‍🔧 ช่างผู้ดูแล: " . $tech_display . "\n" .
+                           "📱 เบอร์ติดต่อช่าง: " . $tech_phone . "\n" .
                            "📝 หมายเหตุ: " . $note_display;
 
             $postData = [
@@ -87,7 +107,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
         
         if(!empty($line_group_id)) {
-            // ปรับข้อความประกาศให้กระชับ เพื่อให้ช่างคนอื่นรู้ว่างานนี้มีคนดูแลแล้ว
             $groupIcon = "📢";
             if($status == 'ซ่อมเสร็จแล้ว') $groupIcon = "✅";
             
