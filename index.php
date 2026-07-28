@@ -116,14 +116,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     <main class="flex-1 flex flex-col items-center justify-center px-4 pt-12 pb-20 z-10">
         
         <div class="text-center max-w-3xl mx-auto mb-10">
-            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-6 border border-blue-100">
-                <span class="relative flex h-2.5 w-2.5">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
-                </span>
-                ระบบพร้อมให้บริการ 24 ชั่วโมง
-            </div>
-            
+            <!-- สังเกตว่าโค้ดส่วนที่เป็นป้าย 24 ชั่วโมงถูกลบออกไปจากตรงนี้เรียบร้อยแล้วค่ะ -->
             <h2 class="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6 leading-tight">
                 แจ้งซ่อมง่าย <br class="hidden sm:block">
                 <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">ตรวจสอบได้แบบ Real-time</span>
@@ -180,11 +173,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
     </main>
 
-    <!-- 🟢 Footer แบบเต็ม (Full Version) ปรับโครงสร้างใหม่ -->
+    <!-- Footer -->
     <footer class="w-full bg-white border-t border-gray-200 pt-12 pb-10 mt-auto">
         <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-4">
             
-            <!-- ด้านซ้าย: ข้อมูลระบบ -->
             <div>
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-10 h-10 bg-gray-900 rounded-xl text-white flex items-center justify-center shadow-sm">
@@ -200,7 +192,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <p class="text-xs text-gray-400 font-medium">&copy; <?php echo date('Y'); ?> All rights reserved.</p>
             </div>
             
-            <!-- ด้านขวา: ข้อมูลผู้จัดทำโครงงาน (เต็มรูปแบบ) -->
             <div class="md:text-right border-t md:border-t-0 border-gray-100 pt-6 md:pt-0">
                 <h3 class="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-4">Project Developers</h3>
                 
@@ -224,10 +215,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </footer>
 
-
-    <!-- ==============================================
-         Modal: แสดงผลการค้นหาใบงาน
-         ============================================== -->
+    <!-- Modal: แสดงผลการค้นหาใบงาน -->
     <div id="resultModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-50 px-4">
         <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
         <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl z-50 flex flex-col max-h-[85vh] transform transition-transform duration-300 scale-95 data-[open=true]:scale-100" id="resultModalContent">
@@ -309,9 +297,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </div>
 
-    <!-- ==============================================
-         Modal: เข้าสู่ระบบเจ้าหน้าที่
-         ============================================== -->
+    <!-- Modal: เข้าสู่ระบบเจ้าหน้าที่ -->
     <div id="loginModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-50 px-4">
         <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
         <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden transform transition-transform duration-300 scale-95 data-[open=true]:scale-100" id="loginModalContent">
@@ -349,7 +335,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts สำหรับเปิด/ปิด Popup -->
     <script>
         function toggleModal(modalID) { 
             const modal = document.getElementById(modalID);
