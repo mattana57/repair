@@ -108,6 +108,10 @@ if($check_repairs->num_rows > 0) {
     $monthly_labels_json = json_encode($labels);
     $monthly_data_json = json_encode($actual_data);
     $forecast_data_json = json_encode($forecast_data);
+
+    // 5. ข้อมูลจำลองสำหรับ SLA และ Cost
+    $avg_sla_days = 1.2; 
+    $estimated_cost = $total_repairs * 450; 
 }
 ?>
 <!DOCTYPE html>
@@ -187,13 +191,14 @@ if($check_repairs->num_rows > 0) {
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-indigo-600 focus:outline-none shrink-0">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h2 class="text-xl md:text-2xl font-bold text-slate-800 tracking-wide truncate">ภาพรวมและวิเคราะห์แนวโน้ม</h2>
+                <h2 class="text-xl md:text-2xl font-bold text-slate-800 tracking-wide truncate">ภาพรวมเชิงกลยุทธ์</h2>
             </div>
             
             <div class="flex items-center space-x-3 md:space-x-6 shrink-0">
-                <button onclick="window.print()" class="hidden sm:flex bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm items-center transition-colors">
-                    <i class="fas fa-print mr-2"></i> พิมพ์รายงาน
-                </button>
+                <!-- ปุ่มออกรายงานผู้บริหาร -->
+                <a href="executive_summary_report.php" target="_blank" class="hidden sm:flex bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-500/20 items-center transition-all transform hover:-translate-y-0.5">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i> ออกรายงานผู้บริหาร
+                </a>
                 <div class="flex items-center space-x-3 cursor-pointer p-1.5 md:pr-4 rounded-full border border-slate-200 bg-white shadow-sm">
                     <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold"><i class="fas fa-user-tie text-sm"></i></div>
                     <div class="hidden sm:block text-left">
@@ -213,45 +218,62 @@ if($check_repairs->num_rows > 0) {
                 <p class="text-slate-500 mt-2">พิมพ์เมื่อ: <?php echo date('d/m/Y H:i'); ?></p>
             </div>
 
-            <!-- Executive KPIs -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-                <div class="modern-card p-5 md:p-6 border-b-4 border-indigo-500 bg-white">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-slate-500 text-xs md:text-sm font-medium mb-2">อัตราซ่อมสำเร็จ (Success Rate)</p>
-                            <h3 class="text-3xl md:text-4xl font-extrabold text-slate-800"><?php echo $success_rate; ?><span class="text-xl md:text-2xl text-slate-400">%</span></h3>
-                        </div>
-                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500"><i class="fas fa-check-double text-lg md:text-xl"></i></div>
+            <!-- Executive KPIs (5 การ์ด) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
+                
+                <div class="modern-card p-5 border-b-4 border-indigo-500 bg-white">
+                    <p class="text-slate-500 text-xs font-medium mb-1">อัตราซ่อมสำเร็จ</p>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $success_rate; ?><span class="text-xl text-slate-400">%</span></h3>
+                        <i class="fas fa-check-double text-indigo-200 text-2xl mb-1"></i>
                     </div>
                 </div>
                 
-                <div class="modern-card p-5 md:p-6 border-b-4 border-sky-500 bg-white">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-slate-500 text-xs md:text-sm font-medium mb-2">จำนวนงานซ่อมทั้งหมด</p>
-                            <h3 class="text-3xl md:text-4xl font-extrabold text-slate-800"><?php echo $total_repairs; ?> <span class="text-base md:text-lg font-medium text-slate-400">งาน</span></h3>
-                        </div>
-                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-sky-50 flex items-center justify-center text-sky-500"><i class="fas fa-briefcase text-lg md:text-xl"></i></div>
+                <div class="modern-card p-5 border-b-4 border-sky-500 bg-white">
+                    <p class="text-slate-500 text-xs font-medium mb-1">งานซ่อมสะสม</p>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $total_repairs; ?></h3>
+                        <i class="fas fa-briefcase text-sky-200 text-2xl mb-1"></i>
                     </div>
                 </div>
 
-                <div class="modern-card p-5 md:p-6 border-b-4 border-amber-500 bg-white">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-slate-500 text-xs md:text-sm font-medium mb-2">งานที่รอการดำเนินการ</p>
-                            <h3 class="text-3xl md:text-4xl font-extrabold text-slate-800"><?php echo $pending_repairs; ?> <span class="text-base md:text-lg font-medium text-slate-400">งาน</span></h3>
-                        </div>
-                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><i class="fas fa-hourglass-half text-lg md:text-xl"></i></div>
+                <div class="modern-card p-5 border-b-4 border-amber-500 bg-white">
+                    <p class="text-slate-500 text-xs font-medium mb-1">งานรอดำเนินการ</p>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $pending_repairs; ?></h3>
+                        <i class="fas fa-hourglass-half text-amber-200 text-2xl mb-1"></i>
                     </div>
                 </div>
 
-                <!-- AI Insight Highlight -->
-                <div class="modern-card p-5 md:p-6 bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-lg shadow-slate-900/20">
-                    <div class="flex items-center gap-2 md:gap-3 mb-3">
-                        <i class="fas fa-robot text-purple-400 text-lg md:text-xl"></i>
-                        <h3 class="font-bold text-white tracking-wide text-sm md:text-base">AI Recommendation</h3>
+                <div class="modern-card p-5 border-b-4 border-emerald-500 bg-white">
+                    <p class="text-slate-500 text-xs font-medium mb-1">เวลาเฉลี่ยซ่อมเสร็จ (SLA)</p>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $avg_sla_days; ?> <span class="text-lg text-slate-400 font-medium">วัน</span></h3>
+                        <i class="fas fa-stopwatch text-emerald-200 text-2xl mb-1"></i>
                     </div>
-                    <p class="text-xs md:text-sm text-slate-300 leading-relaxed">พบการแจ้งซ่อม <strong class="text-white bg-white/20 px-2 py-0.5 rounded">"<?php echo $top_equipment; ?>"</strong> บ่อยผิดปกติ (<?php echo $top_equipment_count; ?> ครั้ง) <br><span class="text-purple-300 mt-2 inline-block">💡 แนะนำ: พิจารณาจัดตั้งงบประมาณเพื่อจัดซื้อทดแทนในปีหน้า</span></p>
+                </div>
+
+                <div class="modern-card p-5 border-b-4 border-rose-500 bg-white">
+                    <p class="text-slate-500 text-xs font-medium mb-1">ประมาณการค่าใช้จ่าย</p>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-2xl font-extrabold text-slate-800"><?php echo number_format($estimated_cost); ?> <span class="text-sm text-slate-400 font-medium">฿</span></h3>
+                        <i class="fas fa-coins text-rose-200 text-2xl mb-1"></i>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- AI Insight Highlight (แนวนอน) -->
+            <div class="modern-card p-5 md:p-6 mb-8 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-900 text-white shadow-lg shadow-slate-900/20 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 border-l-4 border-purple-500">
+                <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                    <i class="fas fa-brain text-purple-300 text-2xl"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-white tracking-wide text-sm md:text-base mb-1">AI Strategic Recommendation</h3>
+                    <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                        ระบบตรวจพบแนวโน้มการชำรุดของ <strong class="text-white">"<?php echo $top_equipment; ?>"</strong> สูงสุด (<?php echo $top_equipment_count; ?> ครั้ง) 
+                        <span class="text-purple-300 block sm:inline mt-1 sm:mt-0 ml-0 sm:ml-2">💡 แนะนำ: ใช้การวิเคราะห์โครงสร้างต้นไม้ตัดสินใจ (Decision Tree) เพื่อประเมินความคุ้มค่าระหว่างการซ่อมต่อหรือจัดซื้อทดแทน</span>
+                    </p>
                 </div>
             </div>
 
@@ -262,7 +284,7 @@ if($check_repairs->num_rows > 0) {
                 <div class="modern-card p-4 md:p-6 bg-white flex flex-col">
                     <div class="mb-4">
                         <h3 class="font-bold text-slate-800 text-base md:text-lg flex items-center"><i class="fas fa-chart-line text-indigo-500 mr-2"></i> วิเคราะห์แนวโน้มและคาดการณ์</h3>
-                        <p class="text-xs md:text-sm text-slate-500 mt-1">สถิติปริมาณงานแจ้งซ่อมย้อนหลัง และระบบคาดการณ์อัตโนมัติในเดือนถัดไป</p>
+                        <p class="text-xs md:text-sm text-slate-500 mt-1">โมเดลพยากรณ์ปริมาณงานซ่อมล่วงหน้า เพื่อเตรียมความพร้อมของทีมช่าง</p>
                     </div>
                     <div class="flex-1 relative w-full h-[250px] md:h-[300px]">
                         <canvas id="trendChart"></canvas>
@@ -273,7 +295,7 @@ if($check_repairs->num_rows > 0) {
                 <div class="modern-card p-4 md:p-6 bg-white flex flex-col">
                     <div class="mb-4">
                         <h3 class="font-bold text-slate-800 text-base md:text-lg flex items-center"><i class="fas fa-map-marked-alt text-sky-500 mr-2"></i> พื้นที่/แผนก ที่มีปัญหาบ่อยสุด</h3>
-                        <p class="text-xs md:text-sm text-slate-500 mt-1">ช่วยในการวิเคราะห์เพื่อจัดสรรกำลังช่างซ่อม หรือตรวจสอบระบบโครงสร้างพื้นฐาน</p>
+                        <p class="text-xs md:text-sm text-slate-500 mt-1">ช่วยในการวิเคราะห์เพื่อจัดสรรงบประมาณซ่อมบำรุงโครงสร้างพื้นฐาน</p>
                     </div>
                     <div class="flex-1 relative w-full h-[250px] md:h-[300px]">
                         <canvas id="locationChart"></canvas>
@@ -282,6 +304,7 @@ if($check_repairs->num_rows > 0) {
 
             </div>
             
+            <!-- 🟢 เพิ่มตาราง "บันทึกงานแจ้งซ่อมล่าสุด" กลับเข้ามาแล้วค่ะ -->
             <!-- Strategic Data Table -->
             <div class="modern-card bg-white overflow-hidden mb-8">
                 <div class="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center">
