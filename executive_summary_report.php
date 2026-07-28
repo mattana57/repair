@@ -37,10 +37,6 @@ if($top_eq_query && $top_eq_query->num_rows > 0) {
     $top_equipment_count = $top_eq_data['cnt'];
 }
 
-// ข้อมูลจำลองสำหรับ SLA และ Cost เชิงบริหาร
-$avg_sla_days = 1.2; 
-$estimated_cost = $total_repairs * 450; 
-
 // ข้อมูลวันที่
 $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 $current_month_num = (int)date('m');
@@ -62,7 +58,6 @@ $reporter_name = isset($_SESSION['full_name']) && !empty($_SESSION['full_name'])
         * { box-sizing: border-box; }
         body { font-family: 'Sarabun', sans-serif; background-color: #f4f8ff; color: #000; margin: 0; padding: 0; }
         
-        /* 🟢 ใช้การจัดหน้ากระดาษแบบเดียวกับ generate_report.php */
         .a4-container {
             width: 210mm;
             min-height: 297mm;
@@ -90,7 +85,6 @@ $reporter_name = isset($_SESSION['full_name']) && !empty($_SESSION['full_name'])
             }
         }
 
-        /* 🟢 ขนาดและระยะบรรทัดแบบเดียวกับ generate_report.php */
         .memo-head-box { position: relative; height: 2.2cm; margin-bottom: 0.8rem; }
         .garuda-img { width: 1.8cm; height: auto; position: absolute; left: 0; top: 0; }
         .memo-head-title { 
@@ -184,8 +178,6 @@ $reporter_name = isset($_SESSION['full_name']) && !empty($_SESSION['full_name'])
                         <p>๑.๑ ปริมาณงานรับแจ้งซ่อมทั้งหมด จำนวน <strong class="font-bold"><?php echo toThaiNumber($total_repairs); ?></strong> รายการ</p>
                         <p>๑.๒ ดำเนินการแก้ไขเสร็จสิ้นแล้ว จำนวน <strong class="font-bold"><?php echo toThaiNumber($completed_repairs); ?></strong> รายการ (คิดเป็นอัตราความสำเร็จ ร้อยละ <?php echo toThaiNumber(number_format($success_rate, 2)); ?>)</p>
                         <p>๑.๓ งานที่อยู่ระหว่างดำเนินการและรอรับเรื่อง จำนวน <strong class="font-bold"><?php echo toThaiNumber($pending_repairs); ?></strong> รายการ</p>
-                        <p>๑.๔ ระยะเวลาเฉลี่ยในการดำเนินการซ่อมต่อรายการ (SLA) อยู่ที่ <strong class="font-bold"><?php echo toThaiNumber($avg_sla_days); ?></strong> วัน</p>
-                        <p>๑.๕ ประมาณการมูลค่าภาระค่าใช้จ่ายในการซ่อมบำรุงรวมทั้งสิ้น <strong class="font-bold"><?php echo toThaiNumber(number_format($estimated_cost)); ?></strong> บาท</p>
                     </div>
                 </div>
 
