@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบแจ้งซ่อม คณะการบัญชีและการจัดการ มมส.</title>
+    <title>MBS REPAIR | คณะการบัญชีและการจัดการ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -73,292 +73,251 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     <style>
         body { 
             font-family: 'Kanit', sans-serif; 
-            background-color: #d1d5db; /* สีเทาอ่อนเรียบๆ ตัดกับกรอบขาว */
-            background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
-            overflow-x: hidden; 
+            background-color: #F9FAFB; /* สีเทาอ่อนมากๆ คลีนๆ */
+            color: #111827;
         }
-        .modal { transition: opacity 0.3s ease, visibility 0.3s ease; }
+        /* ลายตารางบางๆ เป็นกิมมิคความเทคๆ */
+        .bg-grid {
+            background-image: linear-gradient(to right, #f3f4f6 1px, transparent 1px),
+                              linear-gradient(to bottom, #f3f4f6 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .modal { transition: opacity 0.2s ease, visibility 0.2s ease; }
         body.modal-active { overflow: hidden; }
         
-        /* สกอร์บาร์ */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
-
-        /* การ์ดกระจก (Glassmorphism) */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-0 md:p-6 lg:p-10 selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen flex flex-col bg-grid selection:bg-blue-600 selection:text-white">
 
-    <!-- กรอบแอปพลิเคชันหลัก (App Window) -->
-    <div class="w-full max-w-[1400px] h-[100vh] md:h-[90vh] md:min-h-[700px] bg-white md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row overflow-hidden relative">
-
-        <!-- Sidebar แนวตั้ง (สำหรับ Tablet & Desktop) -->
-        <aside class="hidden md:flex w-24 border-r border-slate-100 flex-col items-center py-8 gap-8 shrink-0 z-20 bg-white">
-            <!-- Logo Icon -->
-            <div class="w-12 h-12 bg-indigo-600 rounded-full text-white flex items-center justify-center shadow-lg shadow-indigo-200">
-                <i class="fas fa-tools text-xl"></i>
+    <!-- Navbar: เรียบหรู คลีนๆ -->
+    <header class="w-full bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl text-white flex items-center justify-center shadow-md shadow-blue-200">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 leading-none">MBS REPAIR</h1>
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Mahasarakham University</span>
+                </div>
             </div>
             
-            <!-- Navigation Icons -->
-            <nav class="flex flex-col gap-6 w-full items-center mt-4">
-                <a href="#" class="w-12 h-12 rounded-full bg-slate-100 text-indigo-600 flex items-center justify-center relative group shadow-inner">
-                    <i class="fas fa-home text-lg"></i>
-                    <span class="absolute left-16 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg z-50">หน้าหลัก</span>
-                </a>
-                <a href="form_repair.php" class="w-12 h-12 rounded-full text-slate-400 hover:bg-slate-50 hover:text-indigo-600 flex items-center justify-center transition-all relative group">
-                    <i class="fas fa-plus text-lg"></i>
-                    <span class="absolute left-16 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg z-50">แจ้งซ่อมใหม่ (สำหรับบุคลากร)</span>
-                </a>
-                <button onclick="toggleModal('loginModal')" class="w-12 h-12 rounded-full text-slate-400 hover:bg-slate-50 hover:text-indigo-600 flex items-center justify-center transition-all relative group">
-                    <i class="fas fa-user-lock text-lg"></i>
-                    <span class="absolute left-16 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg z-50">เข้าสู่ระบบ (เจ้าหน้าที่)</span>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleModal('loginModal')" class="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors flex items-center gap-2">
+                    <i class="fas fa-user-circle"></i> เจ้าหน้าที่
                 </button>
-            </nav>
-
-            <!-- Bottom Line Icon -->
-            <div class="mt-auto">
-                <a href="https://line.me/R/ti/p/@941kflsc" target="_blank" class="w-12 h-12 rounded-full bg-[#00B900]/10 text-[#00B900] flex items-center justify-center hover:bg-[#00B900] hover:text-white transition-all relative group">
-                    <i class="fab fa-line text-2xl"></i>
-                    <span class="absolute left-16 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg z-50">ติดต่อ LINE Bot</span>
-                </a>
             </div>
-        </aside>
+        </div>
+    </header>
 
-        <!-- พื้นที่เนื้อหาหลัก (Main Content) -->
-        <main class="flex-1 p-3 md:p-6 flex flex-col relative z-10 h-full overflow-hidden bg-white pb-24 md:pb-6">
+    <!-- Main Content: เน้นจุดโฟกัสตรงกลาง -->
+    <main class="flex-1 flex flex-col items-center justify-center px-4 pt-12 pb-20 z-10">
+        
+        <!-- ส่วนข้อความต้อนรับ (Hero Section) -->
+        <div class="text-center max-w-3xl mx-auto mb-10">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-6 border border-blue-100">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
+                </span>
+                ระบบพร้อมให้บริการ 24 ชั่วโมง
+            </div>
             
-            <!-- Header ด้านบน (เหมือนแถบ Filter) -->
-            <header class="flex justify-between items-center mb-4 px-2 mt-2 md:mt-0">
-                <div class="flex items-center gap-4 bg-slate-50 rounded-full p-1.5 pr-6 border border-slate-100 shadow-sm">
-                    <div class="bg-white rounded-full px-5 py-2 shadow-sm text-sm font-bold text-slate-800">
-                        MBS REPAIR
-                    </div>
-                    <span class="text-xs font-medium text-slate-500 hidden sm:block">Faculty of Accountancy and Management</span>
+            <h2 class="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6 leading-tight">
+                แจ้งซ่อมง่าย <br class="hidden sm:block">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">ตรวจสอบได้แบบ Real-time</span>
+            </h2>
+            
+            <p class="text-gray-500 text-lg max-w-xl mx-auto">
+                แพลตฟอร์มรับแจ้งซ่อมสำหรับบุคลากรและนิสิต คณะการบัญชีและการจัดการ ดูแลครอบคลุมทุกอุปกรณ์และอาคารสถานที่
+            </p>
+        </div>
+
+        <!-- ช่องค้นหาสถานะ (ใหญ่ เด่น ใช้งานง่าย) -->
+        <div class="w-full max-w-2xl mx-auto mb-16">
+            <form action="" method="POST" class="bg-white p-2 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 flex items-center transition-all focus-within:shadow-[0_8px_30px_rgb(37,99,235,0.12)] focus-within:border-blue-200">
+                <input type="hidden" name="check_status" value="1">
+                <div class="pl-6 pr-4 text-gray-400">
+                    <i class="fas fa-search text-lg"></i>
                 </div>
-                <div class="hidden sm:flex items-center gap-2 bg-slate-50 rounded-full px-5 py-2.5 border border-slate-100 shadow-sm">
-                    <i class="far fa-clock text-indigo-500"></i>
-                    <span class="text-xs font-semibold text-slate-600 tracking-wide uppercase">24/7 Service</span>
+                <input type="text" name="search_query" required placeholder="พิมพ์เลขใบงาน หรือ ชื่อผู้แจ้ง เพื่อดูสถานะ..." class="w-full py-4 text-base font-medium text-gray-700 placeholder-gray-400 bg-transparent border-none focus:outline-none">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 py-4 font-bold text-sm transition-colors shadow-md flex items-center gap-2 whitespace-nowrap">
+                    ติดตามสถานะ <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- เมนูทางลัด (Bento Grid) คลีนๆ จัดเรียงสวยงาม -->
+        <div class="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- ปุ่มแจ้งซ่อม (เน้นสีสัน) -->
+            <a href="form_repair.php" class="group bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-100 hover:-translate-y-1 transition-all flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-5 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <i class="fas fa-plus"></i>
                 </div>
-            </header>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">แจ้งซ่อมใหม่</h3>
+                <p class="text-sm text-gray-500">กรอกฟอร์มเพื่อแจ้งปัญหาให้ช่างทราบทันที</p>
+            </a>
 
-            <!-- รูปภาพหลัก (Hero Image) แบบขอบมน -->
-            <div class="flex-1 rounded-[2rem] relative overflow-hidden bg-slate-900 group shadow-inner">
-                <!-- ใช้ภาพพื้นหลัง (เปลี่ยนชื่อไฟล์ตามที่มีได้เลยค่ะ) -->
-                <img src="uploads/mbs_bg.jpg?v=1" onerror="this.src='https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070&auto=format&fit=crop'" class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-[2s] ease-in-out">
-                
-                <!-- การไล่สีให้ตัวหนังสืออ่านง่าย -->
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-slate-900/10"></div>
-
-                <!-- ข้อความทักทาย -->
-                <div class="absolute top-8 left-6 md:top-14 md:left-12 max-w-xl z-10">
-                    <h1 class="text-4xl md:text-6xl font-semibold text-white leading-[1.1] tracking-tight mb-3 drop-shadow-lg">
-                        New Way Of<br>Maintenance
-                    </h1>
-                    <p class="text-white/90 text-sm md:text-base font-light max-w-md leading-relaxed hidden sm:block drop-shadow-md">
-                        ยกระดับการให้บริการด้านอาคารสถานที่และไอที คณะบัญชีฯ มมส. ด้วยระบบแจ้งซ่อมออนไลน์ที่รวดเร็วและตรวจสอบได้
-                    </p>
+            <!-- ปุ่ม LINE (เน้นสีเขียว) -->
+            <a href="https://line.me/R/ti/p/@941kflsc" target="_blank" class="group bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#00B900]/20 hover:-translate-y-1 transition-all flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-[#00B900]/10 text-[#00B900] rounded-2xl flex items-center justify-center text-3xl mb-5 group-hover:bg-[#00B900] group-hover:text-white transition-colors">
+                    <i class="fab fa-line"></i>
                 </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">ติดต่อผ่าน LINE</h3>
+                <p class="text-sm text-gray-500">รับแจ้งเตือนและสอบถามผ่าน LINE Official</p>
+            </a>
 
-                <!-- การ์ดค้นหา (ไฮไลท์ของหน้านี้ ให้คนกดใช้ง่ายสุดๆ) -->
-                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-12 w-[90%] md:w-[420px] glass-card rounded-[2rem] p-6 md:p-8 shadow-2xl z-20">
-                    <h2 class="text-xl md:text-2xl font-bold text-white mb-1 drop-shadow">ติดตามสถานะใบงาน</h2>
-                    <p class="text-xs md:text-sm text-white/80 mb-6 drop-shadow-sm">กรอกรหัส หรือชื่อผู้แจ้ง เพื่อตรวจสอบความคืบหน้า</p>
-
-                    <form action="" method="POST" class="flex flex-col gap-4">
-                        <input type="hidden" name="check_status" value="1">
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                                <i class="fas fa-search text-slate-400"></i>
-                            </div>
-                            <input type="text" name="search_query" required placeholder="เช่น MR-2026..." class="w-full pl-12 pr-4 py-4 bg-white/95 rounded-2xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/50 shadow-inner transition-all">
-                        </div>
-                        <button type="submit" class="w-full bg-indigo-600/90 hover:bg-indigo-600 text-white rounded-2xl py-4 text-sm font-bold shadow-lg transition-colors flex justify-center items-center gap-2 backdrop-blur-sm border border-indigo-500/50">
-                            ค้นหาข้อมูล <i class="fas fa-arrow-right text-[10px]"></i>
-                        </button>
-                    </form>
-                </div>
-
-                <!-- การ์ดข้อมูลเล็กๆ ด้านขวาล่าง (เติมเต็ม Layout ให้สวยงาม) -->
-                <div class="hidden lg:flex absolute bottom-12 right-12 glass-card rounded-[2rem] p-6 shadow-2xl w-[320px] z-20 flex-col">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h3 class="text-white font-bold text-lg leading-tight drop-shadow">MBS Smart<br>Support Team</h3>
-                        </div>
-                        <div class="w-10 h-10 rounded-full bg-white/90 text-indigo-600 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-headset"></i>
-                        </div>
-                    </div>
-                    <p class="text-xs text-white/80 leading-relaxed mb-5 drop-shadow-sm">
-                        บริการแก้ไขปัญหาด้านคอมพิวเตอร์ เครือข่าย ไฟฟ้า และอาคารสถานที่ โดยทีมช่างผู้เชี่ยวชาญ
-                    </p>
-                    <div class="flex items-center gap-4 text-white text-xs font-medium bg-white/10 p-3 rounded-xl border border-white/20">
-                        <div class="flex items-center gap-1.5"><i class="fas fa-check-circle text-emerald-400"></i> สะดวก</div>
-                        <div class="w-px h-3 bg-white/30"></div>
-                        <div class="flex items-center gap-1.5"><i class="fas fa-check-circle text-emerald-400"></i> โปร่งใส</div>
-                    </div>
-                </div>
-
+            <!-- ข้อมูลหมวดหมู่ (ตกแต่งให้สมดุล) -->
+            <div class="bg-gray-900 p-8 rounded-3xl shadow-xl flex flex-col justify-center text-left relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 text-white/5 text-9xl"><i class="fas fa-cogs"></i></div>
+                <h3 class="text-xl font-bold text-white mb-4 relative z-10">หมวดหมู่บริการ</h3>
+                <ul class="space-y-3 text-sm text-gray-400 font-medium relative z-10">
+                    <li class="flex items-center gap-3"><i class="fas fa-desktop text-blue-400 w-4"></i> คอมพิวเตอร์ & ไอที</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-wifi text-blue-400 w-4"></i> ระบบเครือข่าย</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-bolt text-blue-400 w-4"></i> ไฟฟ้า & แอร์</li>
+                    <li class="flex items-center gap-3"><i class="fas fa-building text-blue-400 w-4"></i> อาคารสถานที่</li>
+                </ul>
             </div>
-        </main>
 
-        <!-- Mobile Bottom Navigation (เมนูด้านล่างสำหรับมือถือ โชว์เฉพาะจอมือถือ) -->
-        <nav class="md:hidden fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex justify-around items-center p-2 z-50">
-            <a href="#" class="flex flex-col items-center p-2 text-indigo-600">
-                <i class="fas fa-home text-lg mb-1"></i>
-                <span class="text-[9px] font-bold">หน้าหลัก</span>
-            </a>
-            <a href="form_repair.php" class="flex flex-col items-center p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                <div class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center -mt-8 shadow-lg shadow-indigo-200 border-4 border-white">
-                    <i class="fas fa-plus text-xl"></i>
-                </div>
-                <span class="text-[9px] font-bold mt-1 text-slate-600">แจ้งซ่อม</span>
-            </a>
-            <button onclick="toggleModal('loginModal')" class="flex flex-col items-center p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                <i class="fas fa-user-lock text-lg mb-1"></i>
-                <span class="text-[9px] font-bold">เจ้าหน้าที่</span>
-            </button>
-        </nav>
+        </div>
 
-    </div>
+    </main>
+
+    <!-- Footer แบบคลีนๆ -->
+    <footer class="w-full bg-white border-t border-gray-200 py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm font-medium text-gray-500">
+            <p>&copy; <?php echo date('Y'); ?> MBS REPAIR. Faculty of Accountancy and Management.</p>
+            <p>Developed by <span class="text-gray-900 font-bold">ภัทรวดี & มัทนา</span> (BIS 4th Year)</p>
+        </div>
+    </footer>
 
 
     <!-- ==============================================
-         Result Modal (แสดงผลการค้นหา)
+         Modal: แสดงผลการค้นหาใบงาน (Clean Design)
          ============================================== -->
-    <div id="resultModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-[100] px-4">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
-        <div class="bg-white/95 backdrop-blur-xl w-full max-w-2xl rounded-[2.5rem] shadow-2xl z-50 flex flex-col max-h-[85vh] overflow-hidden transform transition-transform duration-300 scale-95 data-[open=true]:scale-100" id="resultModalContent">
+    <div id="resultModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-50 px-4">
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
+        <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl z-50 flex flex-col max-h-[85vh] transform transition-transform duration-300 scale-95 data-[open=true]:scale-100" id="resultModalContent">
             
-            <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
+            <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-800">ผลการค้นหาใบงาน</h2>
-                    <p class="text-xs font-medium text-slate-500 mt-1">คำค้นหา: <span class="text-indigo-600 font-bold">"<?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?>"</span></p>
+                    <h2 class="text-2xl font-bold text-gray-900">ผลการค้นหา</h2>
+                    <p class="text-sm font-medium text-gray-500 mt-1">คำค้นหา: <span class="text-blue-600 font-bold">"<?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?>"</span></p>
                 </div>
-                <button onclick="toggleModal('resultModal')" class="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-200 hover:text-slate-800 flex items-center justify-center transition-colors">
+                <button onclick="toggleModal('resultModal')" class="w-10 h-10 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900 flex items-center justify-center transition-colors">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <div class="p-4 md:p-8 overflow-y-auto flex-1 bg-slate-50/50 space-y-4">
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 bg-gray-50 space-y-4">
                 <?php if (is_array($status_result)): ?>
                     <?php foreach($status_result as $res): 
-                        $statusClass = "bg-slate-100 text-slate-600 border-slate-200"; 
-                        $icon = "fa-file-alt text-slate-400";
+                        // แต่งสีสถานะแบบเรียบหรู
+                        $statusClass = "bg-gray-100 text-gray-700"; 
+                        $icon = "fa-file-alt text-gray-400";
 
                         if($res['status'] == 'รอรับเรื่อง') {
-                            $statusClass = "bg-amber-50 text-amber-600 border-amber-200";
-                            $icon = "fa-clock text-amber-500";
+                            $statusClass = "bg-yellow-100 text-yellow-800";
+                            $icon = "fa-clock text-yellow-600";
                         } elseif($res['status'] == 'กำลังดำเนินการ') {
-                            $statusClass = "bg-sky-50 text-sky-600 border-sky-200";
-                            $icon = "fa-tools text-sky-500";
+                            $statusClass = "bg-blue-100 text-blue-800";
+                            $icon = "fa-tools text-blue-600";
                             $res['status'] = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';
                         } elseif($res['status'] == 'ซ่อมเสร็จแล้ว') {
-                            $statusClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
-                            $icon = "fa-check-circle text-emerald-500";
+                            $statusClass = "bg-green-100 text-green-800";
+                            $icon = "fa-check-circle text-green-600";
                         }
                     ?>
-                        <a href="view_repair.php?id=<?php echo $res['id']; ?>" target="_blank" class="block group">
-                            <div class="bg-white rounded-[1.5rem] p-6 shadow-sm border border-slate-100 hover:shadow-lg hover:border-indigo-100 transition-all duration-300">
-                                
-                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 pb-4 border-b border-slate-50">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
-                                            <i class="fas <?php echo $icon; ?>"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">เลขที่ใบงาน</p>
-                                            <h3 class="text-lg font-extrabold text-slate-800 group-hover:text-indigo-600 transition-colors"><?php echo $res['ticket_no']; ?></h3>
-                                        </div>
+                        <a href="view_repair.php?id=<?php echo $res['id']; ?>" target="_blank" class="block bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all">
+                            
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 pb-4 border-b border-gray-100">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-lg">
+                                        <i class="fas <?php echo $icon; ?>"></i>
                                     </div>
-                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border <?php echo $statusClass; ?>">
-                                        <?php echo $res['status']; ?>
-                                    </span>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
-                                    <div class="flex items-center gap-2">
-                                        <i class="fas fa-desktop text-slate-300 w-4"></i>
-                                        <span class="text-slate-500 text-xs">อุปกรณ์:</span>
-                                        <span class="font-semibold text-slate-700"><?php echo $res['equipment_type']; ?></span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <i class="fas fa-hard-hat text-slate-300 w-4"></i>
-                                        <span class="text-slate-500 text-xs">ผู้ดูแล:</span>
-                                        <span class="font-semibold <?php echo !empty($res['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>">
-                                            <?php echo !empty($res['technician_name']) ? $res['technician_name'] : '-'; ?>
-                                        </span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <i class="far fa-user text-slate-300 w-4"></i>
-                                        <span class="text-slate-500 text-xs">ผู้แจ้ง:</span>
-                                        <span class="font-semibold text-slate-700"><?php echo $res['reporter_name']; ?></span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <i class="far fa-calendar-alt text-slate-300 w-4"></i>
-                                        <span class="text-slate-500 text-xs">วันที่แจ้ง:</span>
-                                        <span class="font-semibold text-slate-700 text-[11px]"><?php echo date("d/m/Y H:i", strtotime($res['created_at'])); ?></span>
+                                    <div>
+                                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Ticket No.</p>
+                                        <h3 class="text-lg font-bold text-gray-900"><?php echo $res['ticket_no']; ?></h3>
                                     </div>
                                 </div>
-                                
+                                <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold <?php echo $statusClass; ?>">
+                                    <?php echo $res['status']; ?>
+                                </span>
                             </div>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 mb-1">อุปกรณ์</p>
+                                    <p class="font-semibold text-gray-900 truncate"><?php echo $res['equipment_type']; ?></p>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 mb-1">ผู้แจ้ง</p>
+                                    <p class="font-semibold text-gray-900 truncate"><?php echo $res['reporter_name']; ?></p>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 mb-1">ผู้รับผิดชอบ</p>
+                                    <p class="font-semibold <?php echo !empty($res['technician_name']) ? 'text-blue-600' : 'text-gray-400'; ?>">
+                                        <?php echo !empty($res['technician_name']) ? $res['technician_name'] : '-'; ?>
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 mb-1">วันที่แจ้ง</p>
+                                    <p class="font-semibold text-gray-900"><?php echo date("d/m/Y H:i", strtotime($res['created_at'])); ?></p>
+                                </div>
+                            </div>
+                            
                         </a>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
             
-            <div class="p-4 border-t border-slate-100 bg-white text-center">
-                <button onclick="toggleModal('resultModal')" class="bg-slate-900 text-white rounded-full px-8 py-3 text-sm font-bold hover:bg-slate-800 transition-colors">ปิดหน้าต่าง</button>
+            <div class="p-6 border-t border-gray-100 bg-white text-right">
+                <button onclick="toggleModal('resultModal')" class="bg-gray-100 text-gray-700 rounded-xl px-6 py-2.5 text-sm font-bold hover:bg-gray-200 transition-colors">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
 
     <!-- ==============================================
-         Login Modal (ฟอร์มล็อกอินเจ้าหน้าที่)
+         Modal: เข้าสู่ระบบเจ้าหน้าที่ (Clean Form)
          ============================================== -->
-    <div id="loginModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-[100] px-4">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
-        <div class="bg-white/95 backdrop-blur-xl w-full max-w-sm rounded-[2.5rem] shadow-2xl z-50 flex flex-col transform transition-transform duration-300 scale-95 data-[open=true]:scale-100" id="loginModalContent">
+    <div id="loginModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-50 px-4">
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden transform transition-transform duration-300 scale-95 data-[open=true]:scale-100" id="loginModalContent">
             
-            <div class="p-8 text-center relative pt-12">
-                <button onclick="toggleModal('loginModal')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-200 hover:text-slate-800 flex items-center justify-center transition-colors">
-                    <i class="fas fa-times"></i>
+            <!-- Header Form -->
+            <div class="px-8 pt-10 pb-6 text-center relative border-b border-gray-100">
+                <button onclick="toggleModal('loginModal')" class="absolute top-6 right-6 text-gray-400 hover:text-gray-700 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
                 </button>
-                <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 border border-indigo-100">
-                    <i class="fas fa-shield-alt"></i>
+                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">
+                    <i class="fas fa-user-shield"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-800">ระบบเจ้าหน้าที่</h2>
-                <p class="text-xs text-slate-500 mt-2 font-medium">กรุณาเข้าสู่ระบบเพื่อจัดการใบงาน</p>
+                <h2 class="text-2xl font-extrabold text-gray-900">เข้าสู่ระบบเจ้าหน้าที่</h2>
+                <p class="text-sm text-gray-500 mt-2">สำหรับผู้บริหาร และช่างซ่อมบำรุง</p>
             </div>
 
-            <form action="" method="POST" class="p-8 pt-0">
+            <!-- Body Form -->
+            <form action="" method="POST" class="p-8 bg-gray-50">
                 <input type="hidden" name="login" value="1">
                 
-                <div class="space-y-4">
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                            <i class="fas fa-user text-sm"></i>
-                        </div>
-                        <input type="text" name="username" required placeholder="ชื่อผู้ใช้งาน" class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">ชื่อผู้ใช้งาน (Username)</label>
+                        <input type="text" name="username" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
                     </div>
                     
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                            <i class="fas fa-lock text-sm"></i>
-                        </div>
-                        <input type="password" name="password" required placeholder="รหัสผ่าน" class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">รหัสผ่าน (Password)</label>
+                        <input type="password" name="password" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
                     </div>
                 </div>
                 
-                <button type="submit" class="w-full mt-8 bg-slate-900 text-white rounded-2xl py-4 font-bold text-sm hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-500/30 transition-all flex justify-center items-center gap-2">
-                    เข้าสู่ระบบ <i class="fas fa-sign-in-alt text-xs"></i>
+                <button type="submit" class="w-full mt-8 bg-gray-900 text-white rounded-xl py-4 font-bold text-sm hover:bg-blue-600 shadow-md transition-all">
+                    เข้าสู่ระบบ
                 </button>
             </form>
         </div>
@@ -380,7 +339,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 setTimeout(() => {
                     modal.classList.add('invisible');
                     document.body.classList.remove('modal-active');
-                }, 300);
+                }, 200);
             }
         }
     </script>
@@ -390,10 +349,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'error',
-                title: 'เข้าสู่ระบบไม่สำเร็จ',
+                title: 'ไม่สามารถเข้าสู่ระบบได้',
                 text: '<?php echo $error_msg; ?>',
-                confirmButtonColor: '#4f46e5',
-                customClass: { popup: 'rounded-[2rem] shadow-2xl border border-slate-100' }
+                confirmButtonColor: '#111827', // สีดำเข้ม
+                customClass: { popup: 'rounded-2xl shadow-xl' }
             }).then(() => { toggleModal('loginModal'); });
         });
     </script>
@@ -406,8 +365,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 icon: 'warning',
                 title: 'ไม่พบข้อมูล',
                 text: 'ไม่พบประวัติการแจ้งซ่อมจาก: "<?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?>" กรุณาตรวจสอบอีกครั้ง',
-                confirmButtonColor: '#4f46e5',
-                customClass: { popup: 'rounded-[2rem] shadow-2xl border border-slate-100' }
+                confirmButtonColor: '#2563EB', // สีฟ้า
+                customClass: { popup: 'rounded-2xl shadow-xl' }
             });
         });
     </script>
