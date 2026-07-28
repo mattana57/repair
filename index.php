@@ -73,10 +73,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     <style>
         body { 
             font-family: 'Kanit', sans-serif; 
-            background-color: #F9FAFB; /* สีเทาอ่อนมากๆ คลีนๆ */
+            background-color: #F9FAFB; 
             color: #111827;
         }
-        /* ลายตารางบางๆ เป็นกิมมิคความเทคๆ */
         .bg-grid {
             background-image: linear-gradient(to right, #f3f4f6 1px, transparent 1px),
                               linear-gradient(to bottom, #f3f4f6 1px, transparent 1px);
@@ -92,7 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 </head>
 <body class="min-h-screen flex flex-col bg-grid selection:bg-blue-600 selection:text-white">
 
-    <!-- Navbar: เรียบหรู คลีนๆ -->
+    <!-- Navbar -->
     <header class="w-full bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -113,10 +112,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </header>
 
-    <!-- Main Content: เน้นจุดโฟกัสตรงกลาง -->
+    <!-- Main Content -->
     <main class="flex-1 flex flex-col items-center justify-center px-4 pt-12 pb-20 z-10">
         
-        <!-- ส่วนข้อความต้อนรับ (Hero Section) -->
         <div class="text-center max-w-3xl mx-auto mb-10">
             <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-6 border border-blue-100">
                 <span class="relative flex h-2.5 w-2.5">
@@ -136,7 +134,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             </p>
         </div>
 
-        <!-- ช่องค้นหาสถานะ (ใหญ่ เด่น ใช้งานง่าย) -->
         <div class="w-full max-w-2xl mx-auto mb-16">
             <form action="" method="POST" class="bg-white p-2 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 flex items-center transition-all focus-within:shadow-[0_8px_30px_rgb(37,99,235,0.12)] focus-within:border-blue-200">
                 <input type="hidden" name="check_status" value="1">
@@ -150,10 +147,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             </form>
         </div>
 
-        <!-- เมนูทางลัด (Bento Grid) คลีนๆ จัดเรียงสวยงาม -->
         <div class="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <!-- ปุ่มแจ้งซ่อม (เน้นสีสัน) -->
             <a href="form_repair.php" class="group bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-100 hover:-translate-y-1 transition-all flex flex-col items-center text-center">
                 <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-5 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fas fa-plus"></i>
@@ -162,7 +157,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <p class="text-sm text-gray-500">กรอกฟอร์มเพื่อแจ้งปัญหาให้ช่างทราบทันที</p>
             </a>
 
-            <!-- ปุ่ม LINE (เน้นสีเขียว) -->
             <a href="https://line.me/R/ti/p/@941kflsc" target="_blank" class="group bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#00B900]/20 hover:-translate-y-1 transition-all flex flex-col items-center text-center">
                 <div class="w-16 h-16 bg-[#00B900]/10 text-[#00B900] rounded-2xl flex items-center justify-center text-3xl mb-5 group-hover:bg-[#00B900] group-hover:text-white transition-colors">
                     <i class="fab fa-line"></i>
@@ -171,7 +165,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <p class="text-sm text-gray-500">รับแจ้งเตือนและสอบถามผ่าน LINE Official</p>
             </a>
 
-            <!-- ข้อมูลหมวดหมู่ (ตกแต่งให้สมดุล) -->
             <div class="bg-gray-900 p-8 rounded-3xl shadow-xl flex flex-col justify-center text-left relative overflow-hidden">
                 <div class="absolute -right-6 -top-6 text-white/5 text-9xl"><i class="fas fa-cogs"></i></div>
                 <h3 class="text-xl font-bold text-white mb-4 relative z-10">หมวดหมู่บริการ</h3>
@@ -187,17 +180,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
     </main>
 
-    <!-- Footer แบบคลีนๆ -->
-    <footer class="w-full bg-white border-t border-gray-200 py-6 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm font-medium text-gray-500">
-            <p>&copy; <?php echo date('Y'); ?> MBS REPAIR. Faculty of Accountancy and Management.</p>
-            <p>Developed by <span class="text-gray-900 font-bold">ภัทรวดี & มัทนา</span> (BIS 4th Year)</p>
+    <!-- 🟢 Footer แบบเต็ม (Full Version) ปรับโครงสร้างใหม่ -->
+    <footer class="w-full bg-white border-t border-gray-200 pt-12 pb-10 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-4">
+            
+            <!-- ด้านซ้าย: ข้อมูลระบบ -->
+            <div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-gray-900 rounded-xl text-white flex items-center justify-center shadow-sm">
+                        <i class="fas fa-tools text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-extrabold text-gray-900 leading-none">MBS REPAIR</h2>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 leading-relaxed max-w-sm mb-4">
+                    ระบบรับแจ้งซ่อมออนไลน์สำหรับบุคลากรและนิสิต<br>คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม
+                </p>
+                <p class="text-xs text-gray-400 font-medium">&copy; <?php echo date('Y'); ?> All rights reserved.</p>
+            </div>
+            
+            <!-- ด้านขวา: ข้อมูลผู้จัดทำโครงงาน (เต็มรูปแบบ) -->
+            <div class="md:text-right border-t md:border-t-0 border-gray-100 pt-6 md:pt-0">
+                <h3 class="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-4">Project Developers</h3>
+                
+                <ul class="space-y-2 mb-5 inline-block text-left md:text-right">
+                    <li class="text-sm font-bold text-gray-800 flex items-center md:justify-end gap-2">
+                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full md:order-2"></span> 
+                        <span class="md:order-1">นางสาวภัทรวดี ขามประโคน</span>
+                    </li>
+                    <li class="text-sm font-bold text-gray-800 flex items-center md:justify-end gap-2">
+                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full md:order-2"></span> 
+                        <span class="md:order-1">นางสาวมัทนา รัตนแสง</span>
+                    </li>
+                </ul>
+                
+                <div class="space-y-1">
+                    <p class="text-sm text-gray-600 font-medium">นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ (BIS)</p>
+                    <p class="text-sm text-gray-500">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
+                </div>
+            </div>
+
         </div>
     </footer>
 
 
     <!-- ==============================================
-         Modal: แสดงผลการค้นหาใบงาน (Clean Design)
+         Modal: แสดงผลการค้นหาใบงาน
          ============================================== -->
     <div id="resultModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-50 px-4">
         <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
@@ -216,7 +245,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             <div class="p-6 md:p-8 overflow-y-auto flex-1 bg-gray-50 space-y-4">
                 <?php if (is_array($status_result)): ?>
                     <?php foreach($status_result as $res): 
-                        // แต่งสีสถานะแบบเรียบหรู
                         $statusClass = "bg-gray-100 text-gray-700"; 
                         $icon = "fa-file-alt text-gray-400";
 
@@ -282,13 +310,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     </div>
 
     <!-- ==============================================
-         Modal: เข้าสู่ระบบเจ้าหน้าที่ (Clean Form)
+         Modal: เข้าสู่ระบบเจ้าหน้าที่
          ============================================== -->
     <div id="loginModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-50 px-4">
         <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
         <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden transform transition-transform duration-300 scale-95 data-[open=true]:scale-100" id="loginModalContent">
             
-            <!-- Header Form -->
             <div class="px-8 pt-10 pb-6 text-center relative border-b border-gray-100">
                 <button onclick="toggleModal('loginModal')" class="absolute top-6 right-6 text-gray-400 hover:text-gray-700 transition-colors">
                     <i class="fas fa-times text-xl"></i>
@@ -300,7 +327,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <p class="text-sm text-gray-500 mt-2">สำหรับผู้บริหาร และช่างซ่อมบำรุง</p>
             </div>
 
-            <!-- Body Form -->
             <form action="" method="POST" class="p-8 bg-gray-50">
                 <input type="hidden" name="login" value="1">
                 
@@ -323,7 +349,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </div>
 
-    <!-- Scripts สำหรับเปิด/ปิด Popup -->
+    <!-- Scripts -->
     <script>
         function toggleModal(modalID) { 
             const modal = document.getElementById(modalID);
@@ -351,7 +377,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 icon: 'error',
                 title: 'ไม่สามารถเข้าสู่ระบบได้',
                 text: '<?php echo $error_msg; ?>',
-                confirmButtonColor: '#111827', // สีดำเข้ม
+                confirmButtonColor: '#111827',
                 customClass: { popup: 'rounded-2xl shadow-xl' }
             }).then(() => { toggleModal('loginModal'); });
         });
@@ -365,7 +391,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 icon: 'warning',
                 title: 'ไม่พบข้อมูล',
                 text: 'ไม่พบประวัติการแจ้งซ่อมจาก: "<?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?>" กรุณาตรวจสอบอีกครั้ง',
-                confirmButtonColor: '#2563EB', // สีฟ้า
+                confirmButtonColor: '#2563EB',
                 customClass: { popup: 'rounded-2xl shadow-xl' }
             });
         });
