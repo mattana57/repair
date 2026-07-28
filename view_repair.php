@@ -1,12 +1,18 @@
 <?php
-// 🟢 เพิ่ม session_start() เพื่อเช็คว่าใครล็อคอินอยู่
-session_start();
 include 'db_connect.php';
 
-// 🟢 ตรวจสอบสิทธิ์ ว่าเป็นแอดมินหรือช่างหรือไม่
-$is_staff = false;
-if(isset($_SESSION['role']) && in_array(strtolower($_SESSION['role']), ['admin', 'technician', 'executive'])) {
-    $is_staff = true;
+// ฟังก์ชันช่วยเซ็นเซอร์เบอร์โทรศัพท์
+function formatCensoredPhone($phone) {
+    $phone = trim((string)$phone);
+    // เอาขีดออกก่อนเพื่อเช็คความยาวที่แท้จริง
+    $clean_phone = str_replace('-', '', $phone);
+    
+    if (strlen($clean_phone) >= 9) {
+        return substr($clean_phone, 0, 3) . '-XXX-' . substr($clean_phone, -4);
+    } elseif (strlen($clean_phone) > 0) {
+        return '- ซ่อนข้อมูล -';
+    }
+    return '- ไม่ระบุ -';
 }
 
 // ดึงข้อมูลใบงาน
@@ -22,7 +28,7 @@ if (isset($_GET['id'])) {
     $result = $stmt->get_result();
     $repair = $result->fetch_assoc();
     
-    // 🟢 ดึงเบอร์โทรศัพท์ของช่างผู้รับผิดชอบจากตาราง users
+    // ดึงเบอร์โทรศัพท์ของช่างผู้รับผิดชอบจากตาราง users
     if (!empty($repair['technician_name'])) {
         $stmt_tech = $conn->prepare("SELECT phone FROM users WHERE full_name = ? LIMIT 1");
         if ($stmt_tech) {
@@ -42,7 +48,7 @@ if (isset($_GET['id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายละเอียดใบงาน | MSU MAINT</title>
+    <title>รายละเอียดใบงาน | MBS MAINT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -77,7 +83,7 @@ if (isset($_GET['id'])) {
             $statusIcon = "fa-clock";
             if($repair['status'] == 'รอรับเรื่อง') { $statusColor = "bg-amber-50 text-amber-600 border-amber-200"; $statusIcon = "fa-clock"; }
             elseif($repair['status'] == 'กำลังดำเนินการ') { $statusColor = "bg-sky-50 text-sky-600 border-sky-200"; $statusIcon = "fa-tools"; $repair['status'] = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';}
-            elseif($repair['status'] == 'ซ่อมเสร็จแล้ว') { $statusColor = "bg-emerald-50 text-emerald-600 border-emerald-200"; $statusIcon = "fa-check-circle"; }
+            elseif($repair['status'] == 'ซ่อมเสร็จแล้ว' || $repair['status'] == 'เสร็จสิ้น') { $statusColor = "bg-emerald-50 text-emerald-600 border-emerald-200"; $statusIcon = "fa-check-circle"; }
         ?>
         
         <div class="space-y-6">
@@ -115,17 +121,8 @@ if (isset($_GET['id'])) {
                             <div>
                                 <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">เบอร์โทรศัพท์</p>
                                 <?php 
-                                    // 🟢 ระบบแยกการแสดงผลเบอร์โทรศัพท์ผู้แจ้ง
-                                    $phone = $repair['phone_number'];
-                                    if ($is_staff) {
-                                        $display_phone = $phone;
-                                    } else {
-                                        if(strlen($phone) >= 9) {
-                                            $display_phone = substr($phone, 0, 3) . '-XXX-' . substr($phone, -4);
-                                        } else {
-                                            $display_phone = '- ไม่ระบุ -';
-                                        }
-                                    }
+                                    // 🟢 บังคับเซ็นเซอร์เบอร์โทรศัพท์ผู้แจ้งเสมอในหน้านี้ (สาธารณะ)
+                                    $display_phone = formatCensoredPhone($repair['phone_number']);
                                 ?>
                                 <p class="font-medium text-slate-700"><?php echo htmlspecialchars($display_phone); ?></p>
                             </div>
@@ -177,24 +174,22 @@ if (isset($_GET['id'])) {
                             <div>
                                 <h3 class="font-bold text-slate-800">บันทึกการปฏิบัติงาน (ฝ่ายช่าง)</h3>
                                 
-                                <!-- 🟢 ข้อมูลผู้รับผิดชอบ และ เงื่อนไขการแสดงเบอร์ช่าง -->
                                 <div class="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
                                     <span>ผู้รับผิดชอบ: <span class="font-bold <?php echo !empty($repair['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>"><?php echo !empty($repair['technician_name']) ? htmlspecialchars($repair['technician_name']) : '- ยังไม่ระบุช่าง -'; ?></span></span>
                                     
                                     <?php 
+                                    // 🟢 บังคับโชว์เบอร์ช่างเฉพาะตอนกำลังดำเนินการเท่านั้น (สำหรับหน้าสาธารณะ)
                                     if(!empty($tech_phone)): 
-                                        $display_tech_phone = $tech_phone;
-                                        // ถ้าไม่ใช่เจ้าหน้าที่ และสถานะคือซ่อมเสร็จแล้ว ให้เซ็นเซอร์เบอร์ช่าง
-                                        if (!$is_staff && ($repair['status'] == 'ซ่อมเสร็จแล้ว' || $repair['status'] == 'เสร็จสิ้น')) {
-                                            if(strlen($tech_phone) >= 9) {
-                                                $display_tech_phone = substr($tech_phone, 0, 3) . '-XXX-' . substr($tech_phone, -4);
-                                            } else {
-                                                $display_tech_phone = 'ซ่อนเบอร์ (ปิดงานแล้ว)';
-                                            }
+                                        if ($repair['status'] == 'กำลังดำเนินการ' || $repair['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') {
+                                            $display_tech_phone = $tech_phone;
+                                            $phone_icon = "fa-phone-alt";
+                                        } else {
+                                            $display_tech_phone = 'ซ่อนเบอร์ (ปิดงานแล้ว)';
+                                            $phone_icon = "fa-user-slash";
                                         }
                                     ?>
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-600 border border-indigo-100">
-                                            <i class="fas fa-phone-alt mr-1"></i> <?php echo htmlspecialchars($display_tech_phone); ?>
+                                            <i class="fas <?php echo $phone_icon; ?> mr-1"></i> <?php echo htmlspecialchars($display_tech_phone); ?>
                                         </span>
                                     <?php endif; ?>
                                 </div>
