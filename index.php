@@ -207,7 +207,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </ul>
                 
                 <div class="space-y-1">
-                    <p class="text-sm text-gray-600 font-medium">นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ (BIS)</p>
+                    <p class="text-sm text-gray-600 font-medium">นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ (BC)</p>
                     <p class="text-sm text-gray-500">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
                 </div>
             </div>
