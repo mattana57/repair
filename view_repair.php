@@ -11,6 +11,8 @@ if(isset($_SESSION['role']) && in_array(strtolower($_SESSION['role']), ['admin',
 
 // ดึงข้อมูลใบงาน
 $repair = null;
+$tech_phone = null; // ตัวแปรเก็บเบอร์ช่าง
+
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
     $sql = "SELECT * FROM repairs WHERE id = ?";
@@ -19,6 +21,20 @@ if (isset($_GET['id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $repair = $result->fetch_assoc();
+    
+    // 🟢 ดึงเบอร์โทรศัพท์ของช่างผู้รับผิดชอบจากตาราง users
+    if (!empty($repair['technician_name'])) {
+        $stmt_tech = $conn->prepare("SELECT phone FROM users WHERE full_name = ? LIMIT 1");
+        if ($stmt_tech) {
+            $stmt_tech->bind_param("s", $repair['technician_name']);
+            $stmt_tech->execute();
+            $res_tech = $stmt_tech->get_result();
+            if ($row_tech = $res_tech->fetch_assoc()) {
+                $tech_phone = $row_tech['phone'];
+            }
+            $stmt_tech->close();
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -99,13 +115,11 @@ if (isset($_GET['id'])) {
                             <div>
                                 <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">เบอร์โทรศัพท์</p>
                                 <?php 
-                                    // 🟢 ระบบแยกการแสดงผลเบอร์โทรศัพท์ตามสิทธิ์ผู้ใช้งาน
+                                    // 🟢 ระบบแยกการแสดงผลเบอร์โทรศัพท์ผู้แจ้ง
                                     $phone = $repair['phone_number'];
                                     if ($is_staff) {
-                                        // ถ้าเป็นแอดมินหรือช่าง ให้เห็นเบอร์เต็ม
                                         $display_phone = $phone;
                                     } else {
-                                        // ถ้าเป็นบุคคลทั่วไป ให้เซ็นเซอร์เบอร์โทร
                                         if(strlen($phone) >= 9) {
                                             $display_phone = substr($phone, 0, 3) . '-XXX-' . substr($phone, -4);
                                         } else {
@@ -156,16 +170,35 @@ if (isset($_GET['id'])) {
                 <!-- ฝั่งขวา: ข้อมูลการปฏิบัติงาน -->
                 <div class="modern-card overflow-hidden flex flex-col h-full">
                     <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3 shrink-0">
+                        <div class="flex items-start md:items-center">
+                            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3 shrink-0 mt-1 md:mt-0">
                                 <i class="fas fa-tools text-sm"></i>
                             </div>
                             <div>
                                 <h3 class="font-bold text-slate-800">บันทึกการปฏิบัติงาน (ฝ่ายช่าง)</h3>
-                                <!-- 🟢 เพิ่มชื่อช่างตรงนี้ -->
-                                <p class="text-xs text-slate-500 mt-0.5">
-                                    ผู้รับผิดชอบ: <span class="font-bold <?php echo !empty($repair['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>"><?php echo !empty($repair['technician_name']) ? htmlspecialchars($repair['technician_name']) : '- ยังไม่ระบุช่าง -'; ?></span>
-                                </p>
+                                
+                                <!-- 🟢 ข้อมูลผู้รับผิดชอบ และ เงื่อนไขการแสดงเบอร์ช่าง -->
+                                <div class="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
+                                    <span>ผู้รับผิดชอบ: <span class="font-bold <?php echo !empty($repair['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>"><?php echo !empty($repair['technician_name']) ? htmlspecialchars($repair['technician_name']) : '- ยังไม่ระบุช่าง -'; ?></span></span>
+                                    
+                                    <?php 
+                                    if(!empty($tech_phone)): 
+                                        $display_tech_phone = $tech_phone;
+                                        // ถ้าไม่ใช่เจ้าหน้าที่ และสถานะคือซ่อมเสร็จแล้ว ให้เซ็นเซอร์เบอร์ช่าง
+                                        if (!$is_staff && ($repair['status'] == 'ซ่อมเสร็จแล้ว' || $repair['status'] == 'เสร็จสิ้น')) {
+                                            if(strlen($tech_phone) >= 9) {
+                                                $display_tech_phone = substr($tech_phone, 0, 3) . '-XXX-' . substr($tech_phone, -4);
+                                            } else {
+                                                $display_tech_phone = 'ซ่อนเบอร์ (ปิดงานแล้ว)';
+                                            }
+                                        }
+                                    ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-600 border border-indigo-100">
+                                            <i class="fas fa-phone-alt mr-1"></i> <?php echo htmlspecialchars($display_tech_phone); ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+
                             </div>
                         </div>
                     </div>
