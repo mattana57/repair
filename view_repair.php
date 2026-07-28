@@ -82,6 +82,7 @@ if (isset($_GET['id'])) {
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
+                <!-- ฝั่งซ้าย: ข้อมูลผู้แจ้ง -->
                 <div class="modern-card overflow-hidden">
                     <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center">
                         <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
@@ -152,13 +153,20 @@ if (isset($_GET['id'])) {
                     </div>
                 </div>
 
+                <!-- ฝั่งขวา: ข้อมูลการปฏิบัติงาน -->
                 <div class="modern-card overflow-hidden flex flex-col h-full">
                     <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between">
                         <div class="flex items-center">
-                            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3 shrink-0">
                                 <i class="fas fa-tools text-sm"></i>
                             </div>
-                            <h3 class="font-bold text-slate-800">บันทึกการปฏิบัติงาน (ฝ่ายช่าง)</h3>
+                            <div>
+                                <h3 class="font-bold text-slate-800">บันทึกการปฏิบัติงาน (ฝ่ายช่าง)</h3>
+                                <!-- 🟢 เพิ่มชื่อช่างตรงนี้ -->
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    ผู้รับผิดชอบ: <span class="font-bold <?php echo !empty($repair['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>"><?php echo !empty($repair['technician_name']) ? htmlspecialchars($repair['technician_name']) : '- ยังไม่ระบุช่าง -'; ?></span>
+                                </p>
+                            </div>
                         </div>
                     </div>
                     
