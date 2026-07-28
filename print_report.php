@@ -78,7 +78,7 @@ $repairs_list = $conn->query("SELECT * FROM repairs $where_sql ORDER BY created_
 $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 $thai_year = $selected_year + 543;
 
-// 🟢 ตัวแปรสำหรับเนื้อหาที่เปลี่ยนไปตามบริบท
+// ตัวแปรสำหรับเนื้อหาที่เปลี่ยนไปตามบริบท
 $reporter_name = isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'นางสาวมัทนา รัตนแสง';
 
 if ($selected_tech !== 'all' && !empty($selected_tech)) {
@@ -100,93 +100,99 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        @font-face {
+            font-family: 'THSarabunNew';
+            src: url('https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/THSarabunNew/THSarabunNew.woff2') format('woff2');
+            font-weight: normal; font-style: normal;
+        }
+        @font-face {
+            font-family: 'THSarabunNew';
+            src: url('https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/THSarabunNew/THSarabunNew%20Bold.woff2') format('woff2');
+            font-weight: bold; font-style: normal;
+        }
+
         * { box-sizing: border-box; }
         body { font-family: 'Sarabun', sans-serif; background-color: #f4f8ff; color: #000; margin: 0; padding: 0; }
         
         .a4-container {
+            font-family: 'THSarabunNew', sans-serif;
             width: 210mm;
             min-height: 297mm;
-            padding: 20mm 20mm 20mm 25mm;
+            padding: 1.5cm 2cm 2cm 3cm; 
             margin: 20px auto;
             background: white;
             box-shadow: 0 4px 25px rgba(106, 156, 253, 0.15);
             position: relative;
+            font-size: 16pt;
         }
 
         .page-footer {
             position: absolute;
             bottom: 10mm;
-            left: 25mm;
-            right: 20mm;
+            left: 3cm;
+            right: 2cm;
+            font-family: 'Sarabun', sans-serif;
         }
 
         @media print {
             .no-print { display: none !important; }
-            body { background: white !important; font-size: 15px; color: black !important; }
+            body { background: white !important; color: black !important; }
             .a4-container { 
                 box-shadow: none !important; 
                 border: none !important; 
-                padding: 0 !important; 
+                padding: 1.5cm 2cm 2cm 3cm !important; 
                 margin: 0 !important; 
                 width: 100% !important; 
                 min-height: auto !important;
             }
             @page { 
                 size: A4 portrait; 
-                margin: 20mm 20mm 20mm 25mm; 
+                margin: 0; 
             }
         }
 
-        .memo-head-box { position: relative; height: 2.2cm; margin-bottom: 0.8rem; }
-        .garuda-img { width: 1.8cm; height: auto; position: absolute; left: 0; top: 0; }
+        .memo-head-box { position: relative; height: 2.2cm; margin-bottom: 1rem; }
+        .garuda-img { width: 1.5cm; height: auto; position: absolute; left: 0; top: 0; }
         .memo-head-title { 
             position: absolute; 
             left: 0; 
             right: 0; 
-            top: 0.4cm; 
+            top: 0.5cm; 
             text-align: center; 
-            font-size: 20pt; 
-            font-weight: 700; 
+            font-size: 29pt; 
+            font-weight: bold; 
             line-height: 1; 
         }
 
-        .memo-table { width: 100%; border-collapse: collapse; margin-bottom: 0.8rem; font-size: 15px; }
-        .memo-table td { padding: 2px 0; vertical-align: top; }
-        .memo-lbl { font-weight: 700; white-space: nowrap; padding-right: 4px; width: 1%; }
+        .memo-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 16pt; }
+        .memo-table td { padding: 2px 0; vertical-align: top; line-height: 1.2; }
+        .memo-lbl { font-weight: bold; white-space: nowrap; padding-right: 15px; width: 1%; }
 
-        .gov-p { font-size: 15px; line-height: 1.6; text-align: justify; margin-bottom: 0.6rem; }
+        .gov-p { font-size: 16pt; line-height: 1.15; text-align: justify; margin-bottom: 5px; }
         .gov-indent { text-indent: 2.5cm; }
-        .gov-sub { padding-left: 1.2cm; }
+        .gov-sub { padding-left: 2.5cm; }
 
-        .bg-palette-header {
-            background: linear-gradient(135deg, #033495 0%, #6A9CFD 100%);
-        }
-        .btn-palette-active {
-            background-color: #FFB8D0;
-            color: #033495;
-        }
-        .btn-palette-inactive {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: #ffffff;
-        }
-        .btn-palette-inactive:hover {
-            background-color: rgba(255, 255, 255, 0.35);
-        }
+        .bg-palette-header { background: linear-gradient(135deg, #033495 0%, #6A9CFD 100%); font-family: 'Sarabun', sans-serif;}
+        .btn-palette-active { background-color: #FFB8D0; color: #033495; }
+        .btn-palette-inactive { background-color: rgba(255, 255, 255, 0.2); color: #ffffff; }
+        .btn-palette-inactive:hover { background-color: rgba(255, 255, 255, 0.35); }
     </style>
 </head>
 <body>
 
-    <!-- แถบเมนูควบคุม ด้านบน -->
+    <!-- แถบเมนูควบคุม ด้านบน (ไม่แสดงตอนพิมพ์) -->
     <div class="no-print bg-palette-header text-white p-3.5 sticky top-0 z-50 shadow-md">
         <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
             
             <div class="flex items-center space-x-3">
-                <a href="executive_dashboard.php" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all backdrop-blur-sm">
+                <!-- 🟢 เปลี่ยนลิงก์กลับไปที่หน้า dashboard.php (แอดมิน) เสมอ -->
+                <a href="dashboard.php" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all backdrop-blur-sm">
                     ← Dashboard
                 </a>
-                <h1 class="font-bold text-sm border-l border-white/30 pl-3 text-white tracking-wide">ระบบออกเอกสารรายงาน</h1>
+                <h1 class="font-bold text-sm border-l border-white/30 pl-3 text-white tracking-wide">พิมพ์เอกสารรายงาน (Print Report)</h1>
             </div>
 
+            <!-- ฟอร์มเลือกกรองข้อมูล -->
             <form method="GET" action="" class="flex flex-wrap items-center gap-2.5">
                 <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                 
@@ -221,6 +227,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </button>
             </form>
 
+            <!-- ปุ่มสลับรูปแบบเอกสาร และปุ่มพิมพ์ -->
             <div class="flex items-center space-x-2">
                 <a href="?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm <?php echo $report_type === 'table' ? 'btn-palette-active' : 'btn-palette-inactive'; ?>">
@@ -253,15 +260,15 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 <div class="memo-head-title">บันทึกข้อความ</div>
             </div>
 
-            <table class="memo-table pb-1">
+            <table class="memo-table pb-2">
                 <tr>
                     <td class="memo-lbl">ส่วนราชการ</td>
                     <td colspan="3">ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
                 </tr>
                 <tr>
                     <td class="memo-lbl">ที่</td>
-                    <td style="width: 48%;">ศธ ๐๕๓๐.๑๑/.........................</td>
-                    <td style="width: 1%; font-weight:700; white-space:nowrap; padding-right: 4px;">วันที่</td>
+                    <td style="width: 50%;">ศธ ๐๕๓๐.๑๑/.........................</td>
+                    <td class="memo-lbl">วันที่</td>
                     <td><?php echo toThaiNumber(date('j'))." ".$thai_months[$selected_month]." ".toThaiNumber($thai_year); ?></td>
                 </tr>
                 <tr>
@@ -274,32 +281,32 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </tr>
             </table>
 
-            <div class="pt-1">
+            <div class="pt-2">
                 <p class="gov-p gov-indent">
                     ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น
                 </p>
                 <p class="gov-p gov-indent">
-                    ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงานประจำเดือน <?php echo $thai_months[$selected_month]; ?> เพื่อรายงานผลการดำเนินงานให้ทราบ โดยมีรายละเอียดดังต่อไปนี้
+                    ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงาน ประจำเดือน <?php echo $thai_months[$selected_month]; ?> เพื่อรายงานผลการดำเนินงานให้ทราบ โดยมีรายละเอียดดังต่อไปนี้
                 </p>
 
-                <div class="mb-2">
+                <div class="mt-3 mb-2" style="page-break-inside: avoid;">
                     <p class="gov-p font-bold mb-1">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
                     <p class="gov-p gov-indent mb-1">
                         มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <strong class="font-bold"><?php echo toThaiNumber($total_jobs); ?></strong> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้
                     </p>
-                    <div class="gov-sub space-y-0.5 text-[15px]">
+                    <div class="gov-sub space-y-0 text-[16pt]">
                         <p>๑.๑ ดำเนินการซ่อมแซมเสร็จสิ้นแล้ว จำนวน <strong class="font-bold"><?php echo toThaiNumber($done_jobs); ?></strong> รายการ (คิดเป็นร้อยละ <?php echo toThaiNumber(number_format($success_rate, 2)); ?>)</p>
                         <p>๑.๒ อยู่ระหว่างดำเนินการ จำนวน <strong class="font-bold"><?php echo toThaiNumber($in_progress_jobs); ?></strong> รายการ</p>
                         <p>๑.๓ รอดำเนินการ/รอรับเรื่อง จำนวน <strong class="font-bold"><?php echo toThaiNumber($pending_jobs); ?></strong> รายการ</p>
                     </div>
                 </div>
 
-                <div class="mb-2">
+                <div class="mt-3 mb-2" style="page-break-inside: avoid;">
                     <p class="gov-p font-bold mb-1">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
                     <p class="gov-p gov-indent mb-1">
                         ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ประกอบด้วย
                     </p>
-                    <div class="gov-sub space-y-0.5 text-[15px]">
+                    <div class="gov-sub space-y-0 text-[16pt]">
                         <?php 
                         if(count($top_devices) > 0) {
                             $num_thai = ['๒.๑', '๒.๒', '๒.๓', '๒.๔', '๒.๕'];
@@ -313,21 +320,21 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </div>
                 </div>
 
-                <p class="gov-p gov-indent">
+                <p class="gov-p gov-indent mt-3" style="page-break-inside: avoid;">
                     <?php echo $doc_purpose; ?>
                 </p>
 
-                <p class="gov-p gov-indent pt-1">
+                <p class="gov-p gov-indent mt-3" style="page-break-inside: avoid;">
                     จึงเรียนมาเพื่อโปรดทราบ
                 </p>
             </div>
 
             <!-- ส่วนลงชื่อ (แสดงเสมอ และเปลี่ยนชื่อตาม Session อัตโนมัติ) -->
-            <div class="mt-8 flex justify-end">
-                <div class="w-72 text-center space-y-1.5 text-[15px]">
+            <div class="mt-12 flex justify-end" style="page-break-inside: avoid;">
+                <div class="w-80 text-center space-y-2 text-[16pt]">
                     <p>(ลงชื่อ).................................................................</p>
-                    <p class="font-bold mt-2">( <?php echo $reporter_name; ?> )</p>
-                    <p class="text-slate-700 text-sm">ตำแหน่ง <?php echo $sign_role; ?></p>
+                    <p class="mt-2">( <?php echo $reporter_name; ?> )</p>
+                    <p><?php echo $sign_role; ?></p>
                 </div>
             </div>
 
@@ -337,8 +344,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         <!-- ==========================================
              รูปแบบที่ 2: ตารางรายงานทางการ
              ========================================== -->
-        <div class="pb-10">
-            <div class="text-center border-b-2 border-slate-900 pb-3 mb-5">
+        <div class="pb-10 font-sans" style="font-family: 'Sarabun', sans-serif; font-size: 14px;">
+            <div class="text-center border-b-2 border-slate-900 pb-3 mb-5 mt-5">
                 <h2 class="text-xl font-bold text-slate-900">รายงานสรุปผลการปฏิบัติงานซ่อมบำรุงครุภัณฑ์</h2>
                 <p class="text-sm font-semibold text-slate-700 mt-1">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
                 <p class="text-xs text-slate-600 mt-1">
@@ -374,7 +381,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             <div class="mb-5">
                 <h3 class="font-bold text-sm text-slate-800 mb-2">
                     2. บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง 
-                    <?php if($selected_tech !== 'all') echo " (เฉพาะ: ".htmlspecialchars($tech_formal_name).")"; ?>
                 </h3>
                 <table class="w-full text-xs border-collapse border border-slate-300">
                     <thead class="bg-slate-100 font-bold text-slate-700 border-b border-slate-300">
@@ -419,7 +425,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </table>
             </div>
 
-            <div class="mt-8 flex justify-end">
+            <div class="mt-8 flex justify-end" style="page-break-inside: avoid;">
                 <div class="w-72 text-center space-y-1.5 text-xs">
                     <p class="mb-8">ลงชื่อ..........................................................ผู้รายงาน</p>
                     <p class="font-bold text-slate-800">( <?php echo $reporter_name; ?> )</p>
