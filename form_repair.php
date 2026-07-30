@@ -112,7 +112,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
             <div class="mb-5">
                 <label class="block text-sm font-bold text-slate-700 mb-2">เบอร์ติดต่อกลับ <span class="text-red-500">*</span></label>
-                <input type="tel" name="phone_number" class="w-full p-3.5 rounded-xl input-light" required placeholder="08x-xxx-xxxx">
+                <!-- 🟢 ล็อกการกรอกเบอร์โทรศัพท์ (ให้กรอกได้แค่ตัวเลข 10 หลัก) -->
+                <input type="tel" name="phone_number" class="w-full p-3.5 rounded-xl input-light" required placeholder="08x-xxx-xxxx" maxlength="10" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" title="กรุณากรอกเบอร์โทรศัพท์ด้วยตัวเลข 10 หลัก">
             </div>
 
             <div class="mb-5">
