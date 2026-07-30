@@ -352,7 +352,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                             </div>
                             <div class="overflow-hidden">
                                 <h5 class="text-sm sm:text-base font-bold text-slate-800 truncate">นางสาวภัทรวดี ขามประโคน</h5>
-                                <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">นิสิตชั้นปีที่ 4 คอมพิวเตอร์ธุรกิจ (BC)</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ (BC)</p>
                             </div>
                         </div>
 
@@ -362,7 +362,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                             </div>
                             <div class="overflow-hidden">
                                 <h5 class="text-sm sm:text-base font-bold text-slate-800 truncate">นางสาวมัทนา รัตนแสง</h5>
-                                <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">นิสิตชั้นปีที่ 4 คอมพิวเตอร์ธุรกิจ (BC)</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ (BC)</p>
                             </div>
                         </div>
 
