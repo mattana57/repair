@@ -190,7 +190,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <a href="form_repair.php" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-blue-600/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2.5">
                     <i class="fas fa-file-pen text-xl"></i> กรอกแบบฟอร์มแจ้งซ่อมใหม่
                 </a>
-                <a href="https://line.me/@941kflsc" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2.5">
+                <a href="https://line.me/account/@941kflsc" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2.5">
                     <i class="fab fa-line text-2xl"></i> ติดต่อผ่าน LINE Official
                 </a>
             </div>
