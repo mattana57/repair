@@ -190,7 +190,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <a href="form_repair.php" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-blue-600/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2.5">
                     <i class="fas fa-file-pen text-xl"></i> กรอกแบบฟอร์มแจ้งซ่อมใหม่
                 </a>
-                <a href="https://line.me/account/@941kflsc" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2.5">
+                <a href="https://line.me/R/ti/p/@941kflsc" target="_bank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2.5">
                     <i class="fab fa-line text-2xl"></i> ติดต่อผ่าน LINE Official
                 </a>
             </div>
@@ -286,7 +286,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         <i class="fas fa-pen-to-square text-2xl sm:text-3xl text-blue-400 group-hover:scale-110 transition-transform"></i>
                     </div>
                     <h3 class="text-base sm:text-lg font-bold text-white">1. กรอกแบบฟอร์ม</h3>
-                    <p class="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">ระบุรายละเอียดอุปกรณ์ อาคารสถานที่ และปัญหาที่พบผ่านเว็บ</p>
+                    <p class="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">ระบุรายละเอียดอุปกรณ์ อาคารสถานที่ และปัญหาที่พบผ่านเว็บหรือไลน์</p>
                 </div>
 
                 <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 hover:border-amber-400/50 transition-all space-y-3 sm:space-y-4 group">
@@ -313,7 +313,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         <i class="fas fa-circle-check text-2xl sm:text-3xl text-emerald-400 group-hover:scale-110 transition-transform"></i>
                     </div>
                     <h3 class="text-base sm:text-lg font-bold text-white">4. เสร็จสิ้น & แจ้งเตือน</h3>
-                    <p class="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">รับอุปกรณ์คืน พร้อมอัปเดตสถานะเป็นซ่อมเสร็จเรียบร้อย</p>
+                    <p class="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">ซ่อมอุปกรณ์ พร้อมอัปเดตสถานะเป็นซ่อมเสร็จเรียบร้อย</p>
                 </div>
 
             </div>
