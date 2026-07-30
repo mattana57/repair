@@ -174,7 +174,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
 $all_repairs_json = "[]";
 
 if($check_repairs->num_rows > 0) {
-    // 🟢 เช็คว่าฐานข้อมูลมีฟิลด์รูปไหม จะได้ดึงมาใช้ได้
     $select_fields = "ticket_no, equipment_type, status, DATE_FORMAT(created_at, '%Y-%m-%d') as created_at_fmt, reporter_name";
     $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
     
@@ -191,7 +190,6 @@ if($check_repairs->num_rows > 0) {
     }
 }
 
-// ดึงรายชื่อช่างทั้งหมดสำหรับ Dropdown (เฉพาะ Technician)
 $tech_options = [];
 $tech_list_res = $conn->query("SELECT DISTINCT full_name FROM users WHERE LOWER(role) = 'technician' AND full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
 if($tech_list_res){
@@ -259,10 +257,8 @@ if($tech_list_res){
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <!-- Sidebar สีขาว คลีนๆ -->
     <aside id="sidebar" class="w-[260px] bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
         <div class="h-24 flex items-center px-8 border-b border-slate-50">
-            <!-- โลโก้ไล่สีม่วง-ฟ้า (Indigo/Violet) -->
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3 shrink-0">
                 <i class="fas fa-tools text-white text-lg"></i>
             </div>
@@ -282,7 +278,8 @@ if($tech_list_res){
             <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-address-book"></i> Contacts</button>
             <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
             
-            <div class="mt-auto pt-6 border-t border-slate-50">
+            <div class="mt-auto pt-6 border-t border-slate-50 flex flex-col gap-1">
+                <a href="index.php" class="nav-btn text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-home"></i> Back to Website</a>
                 <a href="logout.php" class="nav-btn text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
         </nav>
@@ -290,7 +287,6 @@ if($tech_list_res){
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
-        <!-- Header สีขาว มินิมอล -->
         <header class="h-20 bg-white/80 backdrop-blur-md flex items-center justify-between px-8 z-10 sticky top-0 no-print border-b border-slate-100">
             <div class="flex items-center">
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-indigo-600 focus:outline-none">
@@ -308,7 +304,6 @@ if($tech_list_res){
                         </span>
                         <span class="block text-[11px] text-slate-400 font-semibold">Administrator</span>
                     </div>
-                    <!-- ไอคอนโปรไฟล์แบบรูปภาพ/วงกลมสีเทา -->
                     <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 overflow-hidden">
                         <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
@@ -318,10 +313,8 @@ if($tech_list_res){
 
         <div class="flex-1 overflow-y-auto p-6 lg:p-8">
             
-            <!-- Dashboard Section -->
             <div id="dash" class="section space-y-8 animate-fade-in no-print">
                 
-                <!-- แถวที่ 1: การ์ดสถิติแบบ Minimal -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <?php 
                         $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
@@ -379,7 +372,6 @@ if($tech_list_res){
                     </div>
                 </div>
 
-                <!-- แถวที่ 2: กราฟ -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start mb-6">
@@ -405,7 +397,6 @@ if($tech_list_res){
                     </div>
                 </div>
 
-                <!-- แถวที่ 3: ตาราง Transactions -->
                 <div class="grid grid-cols-1 gap-6">
                     <div class="modern-card overflow-hidden flex flex-col">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
@@ -434,12 +425,10 @@ if($tech_list_res){
                                         $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
                                         if($recent_dash && $recent_dash->num_rows > 0){
                                             while($rd = $recent_dash->fetch_assoc()) {
-                                                // สไตล์ Badge มินิมอล
                                                 $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                                 $statusText = ($rd['status'] == 'รอรับเรื่อง') ? 'Pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'In Progress' : 'Completed');
                                                 $date_fmt = date("Y-m-d", strtotime($rd['created_at']));
                                                 
-                                                // 🟢 เช็คว่ามีรูปภาพไหม ถ้ามีให้แสดงไอคอน
                                                 $imageIcon = "";
                                                 if($has_image_col && !empty($rd['image_path'])) {
                                                     $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
@@ -512,7 +501,6 @@ if($tech_list_res){
                                             $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                             $techName = !empty($row['technician_name']) ? "<div class='text-indigo-600 font-bold'>{$row['technician_name']}</div>" : "<span class='text-slate-400'>Unassigned</span>";
 
-                                            // 🟢 เช็คว่ามีรูปภาพไหม ถ้ามีให้แสดงไอคอน
                                             $imageIcon = "";
                                             if($has_image_col && !empty($row['image_path'])) {
                                                 $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
@@ -1029,7 +1017,6 @@ if($tech_list_res){
             document.body.classList.toggle('modal-active'); 
         }
 
-        // 🟢 ฟังก์ชันคัดกรองจากการกดการ์ด (ทำงานร่วมกับระบบค้นหา)
         function filterRepairs(statusStr) {
             show('repairs');
             
