@@ -60,8 +60,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         <p class="text-slate-500 font-medium mt-1">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
     </div>
 
-    <!-- ปุ่มตรวจสอบสถานะ (ธีมสว่าง) -->
-    <div class="flex justify-center mb-8">
+    <!-- ปุ่มนำทาง (เพิ่มปุ่มกลับหน้าแรก) -->
+    <div class="flex flex-wrap justify-center gap-4 mb-8">
+        <a href="index.php" class="bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50 text-slate-700 px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center shadow-sm">
+            <i class="fas fa-home mr-2 text-sky-500"></i> กลับหน้าแรก
+        </a>
         <button type="button" onclick="toggleModal('searchModal')" class="bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50 text-slate-700 px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center shadow-sm">
             <i class="fas fa-search mr-2 text-sky-500"></i> ตรวจสอบสถานะการแจ้งซ่อม
         </button>
