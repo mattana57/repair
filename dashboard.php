@@ -176,6 +176,8 @@ $all_repairs_json = "[]";
 if($check_repairs->num_rows > 0) {
     // 🟢 เช็คว่าฐานข้อมูลมีฟิลด์รูปไหม จะได้ดึงมาใช้ได้
     $select_fields = "ticket_no, equipment_type, status, DATE_FORMAT(created_at, '%Y-%m-%d') as created_at_fmt, reporter_name";
+    $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
+    
     if ($has_tech_name) $select_fields .= ", technician_name"; else $select_fields .= ", '' as technician_name";
     if ($has_image_col) $select_fields .= ", image_path"; else $select_fields .= ", NULL as image_path";
     
@@ -297,13 +299,9 @@ if($tech_list_res){
                 <h2 class="text-2xl font-bold text-slate-800 tracking-tight" id="headerTitle">Dashboard Overview</h2>
             </div>
             
-            <div class="flex items-center space-x-5">
-                <div class="relative hidden md:block">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" id="searchInput" placeholder="Search data..." class="bg-slate-100 border-none text-sm rounded-full pl-10 pr-4 py-2.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all w-64 font-medium placeholder-slate-400">
-                </div>
+            <div class="flex items-center">
                 
-                <div class="flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer group">
+                <div class="flex items-center gap-3 cursor-pointer group">
                     <div class="text-right hidden sm:block">
                         <span class="block text-sm font-bold text-slate-700 leading-none mb-1 group-hover:text-indigo-600 transition-colors">
                             <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
