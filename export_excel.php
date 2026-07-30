@@ -69,21 +69,21 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
     <table>
         <!-- ================= ส่วนหัวรายงาน (Header) ================= -->
         <tr>
-            <td colspan="9" class="header-title">รายงานทะเบียนประวัติการแจ้งซ่อม (Log Book) ผ่านระบบ MBS REPAIR</td>
+            <td colspan="10" class="header-title">รายงานทะเบียนประวัติการแจ้งซ่อม (Log Book) ผ่านระบบ MBS REPAIR</td>
         </tr>
         <tr>
-            <td colspan="9" class="sub-header">หน่วยงาน: คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
+            <td colspan="10" class="sub-header">หน่วยงาน: คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
         </tr>
         <tr>
-            <td colspan="9" class="sub-header">ขอบเขตการรายงาน: <?php echo $report_title_suffix; ?></td>
+            <td colspan="10" class="sub-header">ขอบเขตการรายงาน: <?php echo $report_title_suffix; ?></td>
         </tr>
         <tr>
             <td colspan="3"><b>ข้อมูลประจำเดือน:</b> <?php echo $current_month; ?></td>
-            <td colspan="3"><b>วันที่พิมพ์รายงาน:</b> <?php echo $current_date; ?></td>
+            <td colspan="4"><b>วันที่พิมพ์รายงาน:</b> <?php echo $current_date; ?></td>
             <td colspan="3"><b>ผู้พิมพ์รายงาน:</b> <?php echo $print_by; ?></td>
         </tr>
         <tr>
-            <td colspan="9"></td> <!-- แถวว่างเว้นระยะ -->
+            <td colspan="10"></td> <!-- แถวว่างเว้นระยะ -->
         </tr>
 
         <!-- ================= ส่วนหัวตารางข้อมูล (Table Head) ================= -->
@@ -92,6 +92,7 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
             <th class="table-head">เลขที่ใบงาน</th>
             <th class="table-head">วัน/เวลาที่แจ้ง</th>
             <th class="table-head">หมวดหมู่/อุปกรณ์</th>
+            <th class="table-head">อาการเสีย</th>
             <th class="table-head">ผู้แจ้ง</th>
             <th class="table-head">สถานะงาน</th>
             <th class="table-head">ช่างผู้ดำเนินการ</th>
@@ -116,7 +117,8 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
                 elseif($row['status'] == 'กำลังดำเนินการ') $status_class = "status-progress";
                 elseif($row['status'] == 'ซ่อมเสร็จแล้ว') $status_class = "status-success";
 
-                // ตรวจสอบค่าว่างของช่างและหมายเหตุ
+                // ตรวจสอบค่าว่างของช่าง, อาการเสีย และหมายเหตุ
+                $problem_desc = !empty($row['problem_desc']) ? $row['problem_desc'] : "-";
                 $tech_name = !empty($row['technician_name']) ? $row['technician_name'] : "-";
                 $note = !empty($row['repair_note']) ? $row['repair_note'] : "-";
         ?>
@@ -125,6 +127,7 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
                 <td class="text-center" style="mso-number-format:'\@';"><?php echo $row['ticket_no']; ?></td>
                 <td class="text-center"><?php echo $created_date; ?></td>
                 <td class="text-left"><?php echo $row['equipment_type']; ?></td>
+                <td class="text-left"><?php echo $problem_desc; ?></td>
                 <td class="text-left"><?php echo $row['reporter_name']; ?></td>
                 <td class="text-center <?php echo $status_class; ?>"><?php echo $row['status']; ?></td>
                 <td class="text-center"><?php echo $tech_name; ?></td>
@@ -136,7 +139,7 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
         } else {
         ?>
             <tr>
-                <td colspan="9" class="text-center" style="padding: 20px; color: #666; font-weight: bold;">
+                <td colspan="10" class="text-center" style="padding: 20px; color: #666; font-weight: bold;">
                     ไม่มีประวัติการแจ้งซ่อมในระบบ หรือไม่มีข้อมูลการซ่อมตามเงื่อนไขที่เลือก
                 </td>
             </tr>
