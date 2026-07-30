@@ -157,14 +157,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </div>
             </div>
 
-            <!-- Nav Links -->
-            <nav class="hidden md:flex items-center gap-8 text-sm font-extrabold text-slate-600">
-                <a href="#" class="hover:text-blue-600 focus:outline-none transition-colors flex items-center gap-2.5"><i class="fas fa-house text-blue-500 text-lg"></i> หน้าแรก</a>
-                <a href="#process" class="hover:text-blue-600 focus:outline-none transition-colors flex items-center gap-2.5"><i class="fas fa-list-check text-blue-500 text-lg"></i> ขั้นตอนการทำงาน</a>
-                <a href="#developers" class="hover:text-blue-600 focus:outline-none transition-colors flex items-center gap-2.5"><i class="fas fa-user-group text-blue-500 text-lg"></i> ผู้พัฒนา</a>
-            </nav>
-
-            <!-- Login Button -->
+            <!-- Login Button (Only button, no menu) -->
             <button onclick="toggleModal('loginModal')" class="bg-[#0f172a] hover:bg-blue-600 text-white font-bold px-6 py-3 rounded-xl text-sm focus:outline-none transition-all flex items-center gap-2 shadow-md hover:shadow-blue-500/20 active:scale-95">
                 <i class="fas fa-user-shield text-blue-400 text-lg"></i> เจ้าหน้าที่เข้าสู่ระบบ
             </button>
