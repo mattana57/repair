@@ -2,6 +2,15 @@
 session_start();
 include 'db_connect.php'; // ตรวจสอบให้แน่ใจว่าชื่อไฟล์เชื่อมต่อฐานข้อมูลตรงกันนะคะ
 
+// ================= ปรับปรุงฐานข้อมูลอัตโนมัติ (Auto-Fix DB) =================
+// ตรวจสอบว่ามีคอลัมน์ updated_at หรือยัง ถ้ายังไม่มีให้สร้างขึ้นมาใหม่
+// และตั้งค่าให้มันอัปเดตเวลาปัจจุบันอัตโนมัติ (ON UPDATE CURRENT_TIMESTAMP) เมื่อมีการแก้ไขข้อมูล
+$check_updated = $conn->query("SHOW COLUMNS FROM repairs LIKE 'updated_at'");
+if($check_updated->num_rows == 0) {
+    $conn->query("ALTER TABLE repairs ADD COLUMN updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP");
+}
+// =======================================================================
+
 // 1. รับค่าชื่อช่างที่ส่งมาจากการเลือก Dropdown ในหน้า Dashboard
 $filter_tech = isset($_GET['tech']) ? trim($_GET['tech']) : 'all';
 
@@ -69,7 +78,6 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
     <table>
         <!-- ================= ส่วนหัวรายงาน (Header) ================= -->
         <tr>
-            <!-- ปรับ colspan เป็น 12 เพื่อให้คลุมจำนวนคอลัมน์ทั้งหมด -->
             <td colspan="12" class="header-title">รายงานทะเบียนประวัติการแจ้งซ่อม (Log Book) ผ่านระบบ MBS REPAIR</td>
         </tr>
         <tr>
@@ -99,7 +107,7 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
             <th class="table-head">เบอร์โทรติดต่อ</th>
             <th class="table-head">สถานะงาน</th>
             <th class="table-head">ช่างผู้ดำเนินการ</th>
-            <th class="table-head">เวลาปิดงาน/อัปเดตล่าสุด</th>
+            <th class="table-head">เวลาอัปเดตล่าสุด</th>
             <th class="table-head">หมายเหตุจากช่าง</th>
         </tr>
 
@@ -109,9 +117,10 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
             $i = 1;
             while($row = $result->fetch_assoc()) { 
                 
-                // จัดรูปแบบวันที่
+                // จัดรูปแบบวันที่แจ้ง
                 $created_date = date("d/m/Y H:i", strtotime($row['created_at']));
-                // หากสถานะเป็นซ่อมเสร็จแล้ว จะดึงเวลาล่าสุด (ถ้ามีคอลัมน์ updated_at)
+                
+                // จัดรูปแบบเวลาอัปเดตล่าสุด (ถ้ายังไม่มีการอัปเดต ให้เป็น - )
                 $updated_date = !empty($row['updated_at']) ? date("d/m/Y H:i", strtotime($row['updated_at'])) : "-";
                 
                 // จัดคลาสสีตามสถานะ
@@ -120,13 +129,12 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
                 elseif($row['status'] == 'กำลังดำเนินการ') $status_class = "status-progress";
                 elseif($row['status'] == 'ซ่อมเสร็จแล้ว') $status_class = "status-success";
 
-                // ตรวจสอบค่าว่างของข้อมูลต่างๆ เพื่อไม่ให้ตารางพัง
+                // ตรวจสอบค่าว่างของข้อมูลต่างๆ ป้องกัน Error
                 $problem_desc = !empty($row['problem_desc']) ? $row['problem_desc'] : "-";
                 
-                // ค้นหาคอลัมน์สถานที่ (ขึ้นอยู่กับชื่อฟิลด์ในฐานข้อมูล เช่น location, room หรือ building_room)
                 $location = "-";
                 if(!empty($row['location'])) $location = $row['location'];
-                elseif(!empty($row['room'])) $location = $row['room'];
+                elseif(!empty($row['room_no'])) $location = $row['room_no'];
                 elseif(!empty($row['building'])) $location = $row['building'];
                 
                 $phone_number = !empty($row['phone_number']) ? $row['phone_number'] : "-";
@@ -135,7 +143,6 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
         ?>
             <tr>
                 <td class="text-center"><?php echo $i++; ?></td>
-                <!-- บังคับรูปแบบ text (mso-number-format) ป้องกัน Excel ทำเลข 0 หาย -->
                 <td class="text-center" style="mso-number-format:'\@';"><?php echo htmlspecialchars($row['ticket_no']); ?></td>
                 <td class="text-center"><?php echo $created_date; ?></td>
                 <td class="text-left"><?php echo htmlspecialchars($row['equipment_type']); ?></td>
