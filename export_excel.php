@@ -69,21 +69,22 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
     <table>
         <!-- ================= ส่วนหัวรายงาน (Header) ================= -->
         <tr>
-            <td colspan="10" class="header-title">รายงานทะเบียนประวัติการแจ้งซ่อม (Log Book) ผ่านระบบ MBS REPAIR</td>
+            <!-- ปรับ colspan เป็น 12 เพื่อให้คลุมจำนวนคอลัมน์ทั้งหมด -->
+            <td colspan="12" class="header-title">รายงานทะเบียนประวัติการแจ้งซ่อม (Log Book) ผ่านระบบ MBS REPAIR</td>
         </tr>
         <tr>
-            <td colspan="10" class="sub-header">หน่วยงาน: คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
+            <td colspan="12" class="sub-header">หน่วยงาน: คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
         </tr>
         <tr>
-            <td colspan="10" class="sub-header">ขอบเขตการรายงาน: <?php echo $report_title_suffix; ?></td>
+            <td colspan="12" class="sub-header">ขอบเขตการรายงาน: <?php echo $report_title_suffix; ?></td>
         </tr>
         <tr>
-            <td colspan="3"><b>ข้อมูลประจำเดือน:</b> <?php echo $current_month; ?></td>
+            <td colspan="4"><b>ข้อมูลประจำเดือน:</b> <?php echo $current_month; ?></td>
             <td colspan="4"><b>วันที่พิมพ์รายงาน:</b> <?php echo $current_date; ?></td>
-            <td colspan="3"><b>ผู้พิมพ์รายงาน:</b> <?php echo $print_by; ?></td>
+            <td colspan="4"><b>ผู้พิมพ์รายงาน:</b> <?php echo $print_by; ?></td>
         </tr>
         <tr>
-            <td colspan="10"></td> <!-- แถวว่างเว้นระยะ -->
+            <td colspan="12"></td> <!-- แถวว่างเว้นระยะ -->
         </tr>
 
         <!-- ================= ส่วนหัวตารางข้อมูล (Table Head) ================= -->
@@ -93,10 +94,12 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
             <th class="table-head">วัน/เวลาที่แจ้ง</th>
             <th class="table-head">หมวดหมู่/อุปกรณ์</th>
             <th class="table-head">อาการเสีย</th>
+            <th class="table-head">สถานที่/ห้อง</th>
             <th class="table-head">ผู้แจ้ง</th>
+            <th class="table-head">เบอร์โทรติดต่อ</th>
             <th class="table-head">สถานะงาน</th>
             <th class="table-head">ช่างผู้ดำเนินการ</th>
-            <th class="table-head">วัน/เวลาที่อัปเดตล่าสุด</th>
+            <th class="table-head">เวลาปิดงาน/อัปเดตล่าสุด</th>
             <th class="table-head">หมายเหตุจากช่าง</th>
         </tr>
 
@@ -108,8 +111,8 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
                 
                 // จัดรูปแบบวันที่
                 $created_date = date("d/m/Y H:i", strtotime($row['created_at']));
-                // สมมติว่ามีฟิลด์ updated_at ถ้าไม่มีให้ใช้ created_at แทน
-                $updated_date = isset($row['updated_at']) ? date("d/m/Y H:i", strtotime($row['updated_at'])) : "-";
+                // หากสถานะเป็นซ่อมเสร็จแล้ว จะดึงเวลาล่าสุด (ถ้ามีคอลัมน์ updated_at)
+                $updated_date = !empty($row['updated_at']) ? date("d/m/Y H:i", strtotime($row['updated_at'])) : "-";
                 
                 // จัดคลาสสีตามสถานะ
                 $status_class = "";
@@ -117,29 +120,40 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
                 elseif($row['status'] == 'กำลังดำเนินการ') $status_class = "status-progress";
                 elseif($row['status'] == 'ซ่อมเสร็จแล้ว') $status_class = "status-success";
 
-                // ตรวจสอบค่าว่างของช่าง, อาการเสีย และหมายเหตุ
+                // ตรวจสอบค่าว่างของข้อมูลต่างๆ เพื่อไม่ให้ตารางพัง
                 $problem_desc = !empty($row['problem_desc']) ? $row['problem_desc'] : "-";
+                
+                // ค้นหาคอลัมน์สถานที่ (ขึ้นอยู่กับชื่อฟิลด์ในฐานข้อมูล เช่น location, room หรือ building_room)
+                $location = "-";
+                if(!empty($row['location'])) $location = $row['location'];
+                elseif(!empty($row['room'])) $location = $row['room'];
+                elseif(!empty($row['building'])) $location = $row['building'];
+                
+                $phone_number = !empty($row['phone_number']) ? $row['phone_number'] : "-";
                 $tech_name = !empty($row['technician_name']) ? $row['technician_name'] : "-";
                 $note = !empty($row['repair_note']) ? $row['repair_note'] : "-";
         ?>
             <tr>
                 <td class="text-center"><?php echo $i++; ?></td>
-                <td class="text-center" style="mso-number-format:'\@';"><?php echo $row['ticket_no']; ?></td>
+                <!-- บังคับรูปแบบ text (mso-number-format) ป้องกัน Excel ทำเลข 0 หาย -->
+                <td class="text-center" style="mso-number-format:'\@';"><?php echo htmlspecialchars($row['ticket_no']); ?></td>
                 <td class="text-center"><?php echo $created_date; ?></td>
-                <td class="text-left"><?php echo $row['equipment_type']; ?></td>
-                <td class="text-left"><?php echo $problem_desc; ?></td>
-                <td class="text-left"><?php echo $row['reporter_name']; ?></td>
-                <td class="text-center <?php echo $status_class; ?>"><?php echo $row['status']; ?></td>
-                <td class="text-center"><?php echo $tech_name; ?></td>
+                <td class="text-left"><?php echo htmlspecialchars($row['equipment_type']); ?></td>
+                <td class="text-left"><?php echo htmlspecialchars($problem_desc); ?></td>
+                <td class="text-left"><?php echo htmlspecialchars($location); ?></td>
+                <td class="text-left"><?php echo htmlspecialchars($row['reporter_name']); ?></td>
+                <td class="text-center" style="mso-number-format:'\@';"><?php echo htmlspecialchars($phone_number); ?></td>
+                <td class="text-center <?php echo $status_class; ?>"><?php echo htmlspecialchars($row['status']); ?></td>
+                <td class="text-center"><?php echo htmlspecialchars($tech_name); ?></td>
                 <td class="text-center"><?php echo $updated_date; ?></td>
-                <td class="text-left"><?php echo $note; ?></td>
+                <td class="text-left"><?php echo htmlspecialchars($note); ?></td>
             </tr>
         <?php 
             } 
         } else {
         ?>
             <tr>
-                <td colspan="10" class="text-center" style="padding: 20px; color: #666; font-weight: bold;">
+                <td colspan="12" class="text-center" style="padding: 20px; color: #666; font-weight: bold;">
                     ไม่มีประวัติการแจ้งซ่อมในระบบ หรือไม่มีข้อมูลการซ่อมตามเงื่อนไขที่เลือก
                 </td>
             </tr>
