@@ -22,19 +22,46 @@ if($tech_res && $tech_res->num_rows > 0){
     }
 }
 
+// 🟢 ดึงข้อมูล Assets Code สำหรับให้ช่างเลือก
+$assets_list = [];
+$assets_res = $conn->query("SELECT asset_code, asset_name FROM assets ORDER BY asset_code ASC");
+if($assets_res && $assets_res->num_rows > 0){
+    while($a = $assets_res->fetch_assoc()){
+        $assets_list[] = $a;
+    }
+}
+
+// ตรวจสอบว่าในตาราง repairs มีฟิลด์ asset_code หรือไม่
+$check_asset_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'asset_code'");
+if($check_asset_col->num_rows == 0) {
+    $conn->query("ALTER TABLE repairs ADD COLUMN asset_code VARCHAR(50) NULL AFTER equipment_type");
+}
+
 $show_alert = false;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $status = $_POST['status'];
     $repair_note = $_POST['repair_note'];
     $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
+    $asset_code = isset($_POST['asset_code']) && $_POST['asset_code'] !== '' ? $_POST['asset_code'] : null;
+    // 🟢 รับค่าสถานะครุภัณฑ์ที่ช่างเป็นคนเลือก
+    $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
     $update_id = $_POST['id'];
 
-    $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, technician_name = ? WHERE id = ?";
+    // อัปเดตข้อมูลการแจ้งซ่อม (รวม asset_code)
+    $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, technician_name = ?, asset_code = ? WHERE id = ?";
     $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("sssi", $status, $repair_note, $technician_name, $update_id);
+    $update_stmt->bind_param("ssssi", $status, $repair_note, $technician_name, $asset_code, $update_id);
     
     if ($update_stmt->execute()) {
         $show_alert = true;
+        
+        // 🟢 อัปเดตสถานะของอุปกรณ์ (Assets) ตามที่ช่างเลือกมาตรงๆ
+        if (!empty($asset_code) && !empty($asset_status)) {
+            $stmt_asset = $conn->prepare("UPDATE assets SET status = ? WHERE asset_code = ?");
+            $stmt_asset->bind_param("ss", $asset_status, $asset_code);
+            $stmt_asset->execute();
+            $stmt_asset->close();
+        }
         
         $stmt->execute();
         $repair = $stmt->get_result()->fetch_assoc();
@@ -45,10 +72,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
         $note_display = !empty($repair_note) ? $repair_note : "-";
         
-        // ดึงเวลาปัจจุบันที่ช่างกดอัปเดต
         $current_time = date("d/m/Y H:i น.");
 
-        // 🟢 ดึงเบอร์โทรศัพท์ของช่างจากฐานข้อมูล เพื่อส่งไปแจ้งเตือนผู้แจ้ง
         $tech_phone = "- ไม่ระบุ -";
         if (!empty($technician_name)) {
             $stmt_tech = $conn->prepare("SELECT phone FROM users WHERE full_name = ? AND LOWER(role) = 'technician' LIMIT 1");
@@ -66,7 +91,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
-        // 🟢 แปลงข้อความสถานะให้ดูซอฟต์ลงสำหรับส่งให้ผู้แจ้ง 
         $status_display = $status;
         if ($status == 'กำลังดำเนินการ') {
             $status_display = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';
@@ -110,7 +134,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // ==========================================
         $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
         
-        // จะส่งเข้ากลุ่มช่างก็ต่อเมื่อสถานะคือ "กำลังดำเนินการ" เท่านั้น
         if(!empty($line_group_id) && $status == 'กำลังดำเนินการ') {
             $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
                             "👨‍🔧 ช่าง: " . $tech_display . "\n" .
@@ -221,11 +244,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="modern-card p-6 md:p-8 h-full">
                     <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-6">บันทึกการปฏิบัติงาน</h2>
                     
-                    <!-- 🟢 เพิ่ม ID ให้กับฟอร์มเพื่อใช้ตรวจสอบใน JavaScript -->
                     <form id="updateForm" action="" method="POST" class="space-y-6">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
                         
-                        <div>
+                        <!-- ผู้รับผิดชอบ -->
+                        <div class="mb-4">
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
                             <select name="technician_name" id="technician_name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
                                 <option value="">-- ยังไม่ระบุผู้รับผิดชอบ --</option>
@@ -237,8 +260,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </select>
                         </div>
 
+                        <!-- 🟢 ข้อมูลครุภัณฑ์และสถานะครุภัณฑ์ (เพิ่มใหม่) -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 border border-slate-100 bg-slate-50/50 rounded-xl">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-barcode text-sky-500 mr-2"></i> รหัสครุภัณฑ์ (ที่ซ่อม)</label>
+                                <select name="asset_code" id="asset_code" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
+                                    <option value="">-- ไม่ระบุรหัสครุภัณฑ์ --</option>
+                                    <?php foreach($assets_list as $asset): ?>
+                                        <option value="<?php echo htmlspecialchars($asset['asset_code']); ?>" <?php echo (isset($repair['asset_code']) && $repair['asset_code'] == $asset['asset_code']) ? 'selected' : ''; ?>>
+                                            [<?php echo htmlspecialchars($asset['asset_code']); ?>] - <?php echo htmlspecialchars($asset['asset_name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
+                                <select name="asset_status" id="asset_status" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
+                                    <option value="ใช้งานปกติ">🟢 ใช้งานปกติ (ซ่อมผ่าน)</option>
+                                    <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม (ซ่อมไม่ผ่าน/รออะไหล่)</option>
+                                    <option value="แทงจำหน่าย">🔴 แทงจำหน่าย (พังเกินเยียวยา)</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-tasks text-sky-500 mr-2"></i> อัปเดตสถานะงาน <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-tasks text-sky-500 mr-2"></i> อัปเดตสถานะงานแจ้งซ่อม <span class="text-red-500">*</span></label>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <label class="cursor-pointer">
                                     <input type="radio" name="status" value="รอรับเรื่อง" class="peer sr-only" <?php echo ($repair['status'] == 'รอรับเรื่อง') ? 'checked' : ''; ?> required>
@@ -291,19 +338,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
     </div>
 
-    <!-- 🟢 สคริปต์สำหรับตรวจสอบการกรอกข้อมูลช่างก่อนบันทึก -->
+    <!-- สคริปต์สำหรับตรวจสอบการกรอกข้อมูลช่างก่อนบันทึก -->
     <script>
         document.getElementById('updateForm').addEventListener('submit', function(e) {
-            // ดึงค่าสถานะที่ถูกเลือก
             const statusChecked = document.querySelector('input[name="status"]:checked');
-            // ดึงค่าชื่อช่างจาก dropdown
             const techName = document.getElementById('technician_name').value;
 
             if (statusChecked) {
                 const status = statusChecked.value;
-                // ถ้ารับงาน หรือ ปิดงาน แต่ลืมเลือกชื่อช่าง
                 if ((status === 'กำลังดำเนินการ' || status === 'ซ่อมเสร็จแล้ว') && techName === '') {
-                    e.preventDefault(); // หยุดการส่งฟอร์มทันที
+                    e.preventDefault(); 
                     Swal.fire({
                         icon: 'warning',
                         title: 'ลืมระบุชื่อช่างหรือเปล่าคะ?',
@@ -326,7 +370,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             confirmButtonText: 'ตกลง'
         }).then((result) => {
             if (result.isConfirmed) {
-                // เด้งกลับไปที่แท็บรายการแจ้งซ่อม
                 window.location.href = 'dashboard.php?tab=repairs';
             }
         });
