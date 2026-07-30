@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             border-color: #60a5fa;
         }
 
-        .modal { transition: opacity 0.25s ease, visibility 0.25s ease; }
+        .modal { transition: opacity 0.3s ease, visibility 0.3s ease; }
         body.modal-active { overflow: hidden; }
         
         ::-webkit-scrollbar { width: 8px; }
@@ -204,7 +204,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     <input type="hidden" name="check_status" value="1">
                     <div class="relative flex-1">
                         <i class="fas fa-ticket-simple absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                        <!-- 🟢 ลบแอตทริบิวต์ value ออก เพื่อไม่ให้คำเดิมค้างอยู่ในช่อง -->
                         <input type="text" name="search_query" required placeholder="กรอกเลขที่ใบงาน (เช่น MR-001) หรือชื่อผู้แจ้ง..." class="w-full pl-12 pr-4 py-4 bg-slate-100/90 border border-slate-200 rounded-xl text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-all">
                     </div>
                     <button type="submit" class="bg-slate-900 hover:bg-blue-600 text-white font-bold px-8 py-4 rounded-xl text-sm sm:text-base focus:outline-none transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-blue-500/20">
@@ -380,9 +379,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     <!-- ==============================================
          MODAL 1: RESULT MODAL 
          ============================================== -->
-    <div id="resultModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-[100] px-4">
+    <div id="resultModal" class="modal opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-[100] px-4">
         <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
-        <div class="relative bg-white w-11/12 md:max-w-2xl mx-auto z-50 overflow-hidden transform transition-all flex flex-col max-h-[85vh] rounded-[2rem] shadow-2xl border border-white">
+        <!-- 🟢 แก้ไข: เพิ่ม id="resultModalContent" กลับมาแล้ว เพื่อให้ JavaScript ทำงานได้ถูกต้อง -->
+        <div id="resultModalContent" class="relative bg-white w-11/12 md:max-w-2xl mx-auto z-50 overflow-hidden transform transition-all flex flex-col max-h-[85vh] rounded-[2rem] shadow-2xl border border-white">
             
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-sky-400 to-emerald-400"></div>
 
@@ -438,9 +438,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     <!-- ==============================================
          MODAL 2: LOGIN MODAL 
          ============================================== -->
-    <div id="loginModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-[100] px-4">
+    <div id="loginModal" class="modal opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-[100] px-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
-        <div class="relative bg-white w-full max-w-md rounded-[2rem] shadow-2xl z-50 flex flex-col transform transition-transform duration-300 scale-95 data-[open=true]:scale-100 overflow-hidden" id="loginModalContent">
+        <div id="loginModalContent" class="relative bg-white w-full max-w-md rounded-[2rem] shadow-2xl z-50 flex flex-col transform transition-transform duration-300 scale-95 data-[open=true]:scale-100 overflow-hidden">
             
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-sky-400 to-emerald-400"></div>
 
@@ -487,22 +487,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </div>
 
+    <!-- Scripts -->
     <script>
         function toggleModal(m) { 
             const modal = document.getElementById(m);
             const content = document.getElementById(m + 'Content');
             
             if (modal.classList.contains('opacity-0')) {
-                modal.classList.remove('opacity-0', 'invisible');
-                content.setAttribute('data-open', 'true');
+                // เปิด Modal: แสดงผลและลบการบล็อกคลิกออก
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                if (content) content.setAttribute('data-open', 'true');
                 document.body.classList.add('modal-active');
             } else {
+                // ปิด Modal: ซ่อนและเติมบล็อกคลิกกลับเข้าไป
                 modal.classList.add('opacity-0');
-                content.setAttribute('data-open', 'false');
+                if (content) content.setAttribute('data-open', 'false');
                 setTimeout(() => {
-                    modal.classList.add('invisible');
+                    modal.classList.add('pointer-events-none');
                     document.body.classList.remove('modal-active');
-                }, 250);
+                }, 300); // ดีเลย์รอให้แอนิเมชันซ่อนเสร็จก่อน
             }
         }
 
