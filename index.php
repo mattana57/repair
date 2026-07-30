@@ -72,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         $search_keyword = trim($_POST['search_query']);
         $search_param = "%" . $search_keyword . "%";
 
-        $stmt = $conn->prepare("SELECT ticket_no, equipment_type, status, created_at, technician_name, repair_note, reporter_name 
+        $stmt = $conn->prepare("SELECT id, ticket_no, equipment_type, status, created_at, technician_name, repair_note, reporter_name 
                                 FROM repairs 
                                 WHERE ticket_no = ? OR reporter_name LIKE ? 
                                 ORDER BY created_at DESC LIMIT 10");
@@ -157,7 +157,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </div>
             </div>
 
-            <!-- Login Button (Only button, no menu) -->
+            <!-- Login Button -->
             <button onclick="toggleModal('loginModal')" class="bg-[#0f172a] hover:bg-blue-600 text-white font-bold px-6 py-3 rounded-xl text-sm focus:outline-none transition-all flex items-center gap-2 shadow-md hover:shadow-blue-500/20 active:scale-95">
                 <i class="fas fa-user-shield text-blue-400 text-lg"></i> เจ้าหน้าที่เข้าสู่ระบบ
             </button>
@@ -204,7 +204,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     <input type="hidden" name="check_status" value="1">
                     <div class="relative flex-1">
                         <i class="fas fa-ticket-simple absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                        <input type="text" name="search_query" required placeholder="กรอกเลขที่ใบงาน (เช่น MR-001) หรือชื่อผู้แจ้ง..." class="w-full pl-12 pr-4 py-4 bg-slate-100/90 border border-slate-200 rounded-xl text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-all">
+                        <!-- 🟢 เพิ่ม value ให้จำคำค้นหาเดิม จะได้ไม่ต้องพิมพ์ใหม่ -->
+                        <input type="text" name="search_query" required placeholder="กรอกเลขที่ใบงาน (เช่น MR-001) หรือชื่อผู้แจ้ง..." value="<?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?>" class="w-full pl-12 pr-4 py-4 bg-slate-100/90 border border-slate-200 rounded-xl text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-all">
                     </div>
                     <button type="submit" class="bg-slate-900 hover:bg-blue-600 text-white font-bold px-8 py-4 rounded-xl text-sm sm:text-base focus:outline-none transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-blue-500/20">
                         <i class="fas fa-search"></i> ตรวจสอบสถานะ
@@ -321,7 +322,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-8 border-b border-slate-100">
                 
-                <!-- Left: System Branding Info -->
                 <div class="lg:col-span-5 space-y-4">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-xl font-bold shadow-md shadow-blue-500/20">
@@ -335,7 +335,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     </p>
                 </div>
 
-                <!-- Right: Developer Showcase -->
                 <div class="lg:col-span-7 space-y-4">
                     <h4 class="text-sm font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                         <i class="fas fa-code text-blue-600"></i> ผู้พัฒนาโครงการ (Project Developers)
@@ -343,7 +342,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         
-                        <!-- Dev Card 1 -->
                         <div class="bg-slate-50 border border-slate-200/80 hover:border-blue-300 p-4 rounded-2xl transition-all flex items-center gap-4">
                             <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-bold shrink-0">
                                 <i class="fas fa-user-graduate"></i>
@@ -354,7 +352,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                             </div>
                         </div>
 
-                        <!-- Dev Card 2 -->
                         <div class="bg-slate-50 border border-slate-200/80 hover:border-blue-300 p-4 rounded-2xl transition-all flex items-center gap-4">
                             <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-bold shrink-0">
                                 <i class="fas fa-user-graduate"></i>
@@ -370,7 +367,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
             </div>
 
-            <!-- Bottom Bar -->
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm font-medium text-slate-400">
                 <p>© 2026 MBS REPAIR — คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
                 <p class="text-slate-500 font-semibold flex items-center gap-1.5">
@@ -381,9 +377,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </footer>
 
-    <!-- MODAL 1: RESULT MODAL -->
-    <div id="resultModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
-        <div class="modal-overlay absolute w-full h-full bg-slate-950/60 backdrop-blur-xs" onclick="toggleModal('resultModal')"></div>
+    <!-- ==============================================
+         MODAL 1: RESULT MODAL 
+         ============================================== -->
+    <!-- 🟢 เปลี่ยนจาก pointer-events-none เป็น invisible เพื่อให้เคลียร์จากหน้าจอ 100% ป้องกันการบล็อกคลิก -->
+    <div id="resultModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-[100] px-4">
+        <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
         <div class="relative bg-white w-11/12 md:max-w-2xl mx-auto z-50 overflow-hidden transform transition-all flex flex-col max-h-[85vh] rounded-[2rem] shadow-2xl border border-white">
             
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-sky-400 to-emerald-400"></div>
@@ -410,7 +409,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         elseif($res['status'] == 'กำลังดำเนินการ') $statusClass = "bg-sky-50 text-sky-800 border-sky-200";
                         elseif($res['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-800 border-emerald-200";
                     ?>
-                        <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow">
+                        <!-- 🟢 เปลี่ยนจาก div ธรรมดา กลับมาเป็น tag <a> เพื่อให้กดลิงก์ได้ -->
+                        <a href="view_repair.php?id=<?php echo $res['id']; ?>" target="_blank" class="block bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
                                     <span class="text-xs font-extrabold text-slate-400 uppercase tracking-widest">เลขที่ใบงาน</span>
@@ -426,7 +426,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                                 <p><b class="text-slate-800 font-extrabold">ช่างผู้ดูแล:</b> <?php echo !empty($res['technician_name']) ? $res['technician_name'] : '-'; ?></p>
                                 <p><b class="text-slate-800 font-extrabold">วันที่แจ้ง:</b> <?php echo date("d/m/Y H:i", strtotime($res['created_at'])); ?></p>
                             </div>
-                        </div>
+                        </a>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
@@ -437,8 +437,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </div>
 
-    <!-- MODAL 2: LOGIN MODAL -->
-    <div id="loginModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[100] px-4">
+    <!-- ==============================================
+         MODAL 2: LOGIN MODAL 
+         ============================================== -->
+    <div id="loginModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-[100] px-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
         <div class="relative bg-white w-full max-w-md rounded-[2rem] shadow-2xl z-50 flex flex-col transform transition-transform duration-300 scale-95 data-[open=true]:scale-100 overflow-hidden" id="loginModalContent">
             
@@ -487,20 +489,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </div>
 
+    <!-- Scripts -->
     <script>
         function toggleModal(m) { 
             const modal = document.getElementById(m);
             const content = document.getElementById(m + 'Content');
             
             if (modal.classList.contains('opacity-0')) {
-                modal.classList.remove('opacity-0', 'pointer-events-none');
+                // 🟢 ลบ class invisible ออก เพื่อให้เห็นและกดใช้งานได้
+                modal.classList.remove('opacity-0', 'invisible');
                 content.setAttribute('data-open', 'true');
                 document.body.classList.add('modal-active');
             } else {
                 modal.classList.add('opacity-0');
                 content.setAttribute('data-open', 'false');
                 setTimeout(() => {
-                    modal.classList.add('pointer-events-none');
+                    // 🟢 เติม class invisible กลับเข้าไป เพื่อซ่อนแบบ 100% ไม่ให้บังหน้าจอ
+                    modal.classList.add('invisible');
                     document.body.classList.remove('modal-active');
                 }, 250);
             }
