@@ -87,6 +87,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* Animation สำหรับพื้นหลัง Modal Login */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-grid selection:bg-blue-600 selection:text-white">
@@ -116,7 +130,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     <main class="flex-1 flex flex-col items-center justify-center px-4 pt-12 pb-20 z-10">
         
         <div class="text-center max-w-3xl mx-auto mb-10">
-            <!-- สังเกตว่าโค้ดส่วนที่เป็นป้าย 24 ชั่วโมงถูกลบออกไปจากตรงนี้เรียบร้อยแล้วค่ะ -->
             <h2 class="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6 leading-tight">
                 แจ้งซ่อมง่าย <br class="hidden sm:block">
                 <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">ตรวจสอบได้แบบ Real-time</span>
@@ -297,45 +310,73 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </div>
 
-    <!-- Modal: เข้าสู่ระบบเจ้าหน้าที่ -->
+    <!-- Modal: เข้าสู่ระบบเจ้าหน้าที่ (อัปเดตดีไซน์ใหม่) -->
     <div id="loginModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-50 px-4">
-        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden transform transition-transform duration-300 scale-95 data-[open=true]:scale-100" id="loginModalContent">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
+        
+        <!-- Modal Content (Glassmorphism & Animated) -->
+        <div class="relative bg-white/90 backdrop-blur-xl w-full max-w-md rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white z-50 flex flex-col transform transition-all duration-300 scale-95 data-[open=true]:scale-100" id="loginModalContent">
             
-            <div class="px-8 pt-10 pb-6 text-center relative border-b border-gray-100">
-                <button onclick="toggleModal('loginModal')" class="absolute top-6 right-6 text-gray-400 hover:text-gray-700 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
+            <!-- Animated Blobs inside Modal -->
+            <div class="absolute top-0 -left-10 w-40 h-40 bg-purple-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob pointer-events-none"></div>
+            <div class="absolute top-0 -right-10 w-40 h-40 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob animation-delay-2000 pointer-events-none"></div>
+
+            <!-- Header -->
+            <div class="px-8 pt-10 pb-6 text-center relative z-10">
+                <button onclick="toggleModal('loginModal')" class="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors">
+                    <i class="fas fa-times"></i>
                 </button>
-                <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4">
-                    <i class="fas fa-user-shield"></i>
+                <!-- Gradient Icon -->
+                <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5 shadow-lg shadow-blue-500/30 transform transition-transform hover:scale-110 hover:rotate-3 duration-300">
+                    <i class="fas fa-fingerprint"></i>
                 </div>
-                <h2 class="text-2xl font-extrabold text-gray-900">เข้าสู่ระบบเจ้าหน้าที่</h2>
-                <p class="text-sm text-gray-500 mt-2">สำหรับผู้บริหาร และช่างซ่อมบำรุง</p>
+                <h2 class="text-2xl font-bold text-slate-800 tracking-tight">เข้าสู่ระบบเจ้าหน้าที่</h2>
+                <p class="text-sm text-slate-500 mt-1 font-medium">สำหรับผู้บริหาร และช่างซ่อมบำรุง</p>
             </div>
 
-            <form action="" method="POST" class="p-8 bg-gray-50">
+            <!-- Form -->
+            <form action="" method="POST" class="p-8 pt-0 relative z-10">
                 <input type="hidden" name="login" value="1">
                 
                 <div class="space-y-5">
+                    <!-- Username -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">ชื่อผู้ใช้งาน (Username)</label>
-                        <input type="text" name="username" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Username</label>
+                        <div class="relative group">
+                            <input type="text" name="username" required placeholder="ระบุชื่อผู้ใช้งาน" class="peer w-full bg-slate-50/50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-indigo-600 transition-colors">
+                                <i class="fas fa-at text-sm"></i>
+                            </div>
+                        </div>
                     </div>
                     
+                    <!-- Password -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">รหัสผ่าน (Password)</label>
-                        <input type="password" name="password" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
+                        <div class="relative group">
+                            <input type="password" id="modalPassword" name="password" required placeholder="ระบุรหัสผ่าน" class="peer w-full bg-slate-50/50 border border-slate-200 rounded-2xl pl-12 pr-12 py-3.5 text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-indigo-600 transition-colors">
+                                <i class="fas fa-key text-sm"></i>
+                            </div>
+                            <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none transition-colors" onclick="toggleModalPassword()">
+                                <i id="modalEyeIcon" class="fas fa-eye text-sm"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
-                <button type="submit" class="w-full mt-8 bg-gray-900 text-white rounded-xl py-4 font-bold text-sm hover:bg-blue-600 shadow-md transition-all">
-                    เข้าสู่ระบบ
+                <!-- Submit Button -->
+                <button type="submit" class="relative overflow-hidden w-full mt-8 bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-bold text-sm py-4 rounded-2xl shadow-lg shadow-indigo-500/30 transform transition-all hover:-translate-y-0.5 hover:shadow-indigo-500/50 active:scale-95 group">
+                    <span class="relative z-10 flex items-center justify-center gap-2">
+                        เข้าสู่ระบบ <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </span>
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Scripts สำหรับเปิด/ปิด Popup -->
+    <!-- Scripts สำหรับเปิด/ปิด Popup และแสดงรหัสผ่าน -->
     <script>
         function toggleModal(modalID) { 
             const modal = document.getElementById(modalID);
@@ -352,6 +393,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     modal.classList.add('invisible');
                     document.body.classList.remove('modal-active');
                 }, 200);
+            }
+        }
+
+        // Script ควบคุมรูปตา เปิด/ปิด รหัสผ่าน ใน Modal
+        function toggleModalPassword() {
+            var x = document.getElementById("modalPassword");
+            var icon = document.getElementById("modalEyeIcon");
+            if (x.type === "password") {
+                x.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                x.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
             }
         }
     </script>
