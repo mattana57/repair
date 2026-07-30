@@ -204,8 +204,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     <input type="hidden" name="check_status" value="1">
                     <div class="relative flex-1">
                         <i class="fas fa-ticket-simple absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                        <!-- 🟢 เพิ่ม value ให้จำคำค้นหาเดิม จะได้ไม่ต้องพิมพ์ใหม่ -->
-                        <input type="text" name="search_query" required placeholder="กรอกเลขที่ใบงาน (เช่น MR-001) หรือชื่อผู้แจ้ง..." value="<?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?>" class="w-full pl-12 pr-4 py-4 bg-slate-100/90 border border-slate-200 rounded-xl text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-all">
+                        <!-- 🟢 ลบแอตทริบิวต์ value ออก เพื่อไม่ให้คำเดิมค้างอยู่ในช่อง -->
+                        <input type="text" name="search_query" required placeholder="กรอกเลขที่ใบงาน (เช่น MR-001) หรือชื่อผู้แจ้ง..." class="w-full pl-12 pr-4 py-4 bg-slate-100/90 border border-slate-200 rounded-xl text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-all">
                     </div>
                     <button type="submit" class="bg-slate-900 hover:bg-blue-600 text-white font-bold px-8 py-4 rounded-xl text-sm sm:text-base focus:outline-none transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-blue-500/20">
                         <i class="fas fa-search"></i> ตรวจสอบสถานะ
@@ -380,7 +380,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     <!-- ==============================================
          MODAL 1: RESULT MODAL 
          ============================================== -->
-    <!-- 🟢 เปลี่ยนจาก pointer-events-none เป็น invisible เพื่อให้เคลียร์จากหน้าจอ 100% ป้องกันการบล็อกคลิก -->
     <div id="resultModal" class="modal opacity-0 invisible fixed inset-0 flex items-center justify-center z-[100] px-4">
         <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
         <div class="relative bg-white w-11/12 md:max-w-2xl mx-auto z-50 overflow-hidden transform transition-all flex flex-col max-h-[85vh] rounded-[2rem] shadow-2xl border border-white">
@@ -409,7 +408,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         elseif($res['status'] == 'กำลังดำเนินการ') $statusClass = "bg-sky-50 text-sky-800 border-sky-200";
                         elseif($res['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-800 border-emerald-200";
                     ?>
-                        <!-- 🟢 เปลี่ยนจาก div ธรรมดา กลับมาเป็น tag <a> เพื่อให้กดลิงก์ได้ -->
                         <a href="view_repair.php?id=<?php echo $res['id']; ?>" target="_blank" class="block bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
@@ -489,14 +487,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </div>
 
-    <!-- Scripts -->
     <script>
         function toggleModal(m) { 
             const modal = document.getElementById(m);
             const content = document.getElementById(m + 'Content');
             
             if (modal.classList.contains('opacity-0')) {
-                // 🟢 ลบ class invisible ออก เพื่อให้เห็นและกดใช้งานได้
                 modal.classList.remove('opacity-0', 'invisible');
                 content.setAttribute('data-open', 'true');
                 document.body.classList.add('modal-active');
@@ -504,7 +500,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 modal.classList.add('opacity-0');
                 content.setAttribute('data-open', 'false');
                 setTimeout(() => {
-                    // 🟢 เติม class invisible กลับเข้าไป เพื่อซ่อนแบบ 100% ไม่ให้บังหน้าจอ
                     modal.classList.add('invisible');
                     document.body.classList.remove('modal-active');
                 }, 250);
