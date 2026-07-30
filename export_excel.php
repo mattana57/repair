@@ -2,15 +2,6 @@
 session_start();
 include 'db_connect.php'; // ตรวจสอบให้แน่ใจว่าชื่อไฟล์เชื่อมต่อฐานข้อมูลตรงกันนะคะ
 
-// ================= ปรับปรุงฐานข้อมูลอัตโนมัติ (Auto-Fix DB) =================
-// ตรวจสอบว่ามีคอลัมน์ updated_at หรือยัง ถ้ายังไม่มีให้สร้างขึ้นมาใหม่
-// และตั้งค่าให้มันอัปเดตเวลาปัจจุบันอัตโนมัติ (ON UPDATE CURRENT_TIMESTAMP) เมื่อมีการแก้ไขข้อมูล
-$check_updated = $conn->query("SHOW COLUMNS FROM repairs LIKE 'updated_at'");
-if($check_updated->num_rows == 0) {
-    $conn->query("ALTER TABLE repairs ADD COLUMN updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP");
-}
-// =======================================================================
-
 // 1. รับค่าชื่อช่างที่ส่งมาจากการเลือก Dropdown ในหน้า Dashboard
 $filter_tech = isset($_GET['tech']) ? trim($_GET['tech']) : 'all';
 
@@ -78,21 +69,21 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
     <table>
         <!-- ================= ส่วนหัวรายงาน (Header) ================= -->
         <tr>
-            <td colspan="12" class="header-title">รายงานทะเบียนประวัติการแจ้งซ่อม (Log Book) ผ่านระบบ MBS REPAIR</td>
+            <td colspan="11" class="header-title">รายงานทะเบียนประวัติการแจ้งซ่อม (Log Book) ผ่านระบบ MBS REPAIR</td>
         </tr>
         <tr>
-            <td colspan="12" class="sub-header">หน่วยงาน: คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
+            <td colspan="11" class="sub-header">หน่วยงาน: คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
         </tr>
         <tr>
-            <td colspan="12" class="sub-header">ขอบเขตการรายงาน: <?php echo $report_title_suffix; ?></td>
+            <td colspan="11" class="sub-header">ขอบเขตการรายงาน: <?php echo $report_title_suffix; ?></td>
         </tr>
         <tr>
             <td colspan="4"><b>ข้อมูลประจำเดือน:</b> <?php echo $current_month; ?></td>
-            <td colspan="4"><b>วันที่พิมพ์รายงาน:</b> <?php echo $current_date; ?></td>
+            <td colspan="3"><b>วันที่พิมพ์รายงาน:</b> <?php echo $current_date; ?></td>
             <td colspan="4"><b>ผู้พิมพ์รายงาน:</b> <?php echo $print_by; ?></td>
         </tr>
         <tr>
-            <td colspan="12"></td> <!-- แถวว่างเว้นระยะ -->
+            <td colspan="11"></td> <!-- แถวว่างเว้นระยะ -->
         </tr>
 
         <!-- ================= ส่วนหัวตารางข้อมูล (Table Head) ================= -->
@@ -107,7 +98,6 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
             <th class="table-head">เบอร์โทรติดต่อ</th>
             <th class="table-head">สถานะงาน</th>
             <th class="table-head">ช่างผู้ดำเนินการ</th>
-            <th class="table-head">เวลาอัปเดตล่าสุด</th>
             <th class="table-head">หมายเหตุจากช่าง</th>
         </tr>
 
@@ -120,9 +110,6 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
                 // จัดรูปแบบวันที่แจ้ง
                 $created_date = date("d/m/Y H:i", strtotime($row['created_at']));
                 
-                // จัดรูปแบบเวลาอัปเดตล่าสุด (ถ้ายังไม่มีการอัปเดต ให้เป็น - )
-                $updated_date = !empty($row['updated_at']) ? date("d/m/Y H:i", strtotime($row['updated_at'])) : "-";
-                
                 // จัดคลาสสีตามสถานะ
                 $status_class = "";
                 if($row['status'] == 'รอรับเรื่อง') $status_class = "status-pending";
@@ -132,6 +119,7 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
                 // ตรวจสอบค่าว่างของข้อมูลต่างๆ ป้องกัน Error
                 $problem_desc = !empty($row['problem_desc']) ? $row['problem_desc'] : "-";
                 
+                // ค้นหาคอลัมน์สถานที่
                 $location = "-";
                 if(!empty($row['location'])) $location = $row['location'];
                 elseif(!empty($row['room_no'])) $location = $row['room_no'];
@@ -143,6 +131,7 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
         ?>
             <tr>
                 <td class="text-center"><?php echo $i++; ?></td>
+                <!-- บังคับรูปแบบ text (mso-number-format) ป้องกัน Excel ทำเลข 0 หาย -->
                 <td class="text-center" style="mso-number-format:'\@';"><?php echo htmlspecialchars($row['ticket_no']); ?></td>
                 <td class="text-center"><?php echo $created_date; ?></td>
                 <td class="text-left"><?php echo htmlspecialchars($row['equipment_type']); ?></td>
@@ -152,7 +141,6 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
                 <td class="text-center" style="mso-number-format:'\@';"><?php echo htmlspecialchars($phone_number); ?></td>
                 <td class="text-center <?php echo $status_class; ?>"><?php echo htmlspecialchars($row['status']); ?></td>
                 <td class="text-center"><?php echo htmlspecialchars($tech_name); ?></td>
-                <td class="text-center"><?php echo $updated_date; ?></td>
                 <td class="text-left"><?php echo htmlspecialchars($note); ?></td>
             </tr>
         <?php 
@@ -160,7 +148,7 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
         } else {
         ?>
             <tr>
-                <td colspan="12" class="text-center" style="padding: 20px; color: #666; font-weight: bold;">
+                <td colspan="11" class="text-center" style="padding: 20px; color: #666; font-weight: bold;">
                     ไม่มีประวัติการแจ้งซ่อมในระบบ หรือไม่มีข้อมูลการซ่อมตามเงื่อนไขที่เลือก
                 </td>
             </tr>
