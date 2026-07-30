@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'db_connect.php'; // ตรวจสอบให้แน่ใจว่าชื่อไฟล์เชื่อมต่อฐานข้อมูลตรงกันนะคะ
+include 'db_connect.php'; 
 
 // 1. รับค่าชื่อช่างที่ส่งมาจากการเลือก Dropdown ในหน้า Dashboard
 $filter_tech = isset($_GET['tech']) ? trim($_GET['tech']) : 'all';
@@ -49,7 +49,6 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
 <head>
     <meta charset="UTF-8">
     <style>
-        /* สไตล์ตารางสำหรับ Excel ให้ดูเป็นระเบียบ */
         table { border-collapse: collapse; font-family: 'Sarabun', 'Tahoma', sans-serif; font-size: 12pt; }
         th, td { border: 1px solid #000000; padding: 5px 10px; vertical-align: middle; }
         .header-title { font-size: 16pt; font-weight: bold; background-color: #0f172a; color: #ffffff; text-align: center; }
@@ -57,8 +56,6 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
         .table-head { background-color: #3b82f6; color: #ffffff; font-weight: bold; text-align: center; }
         .text-center { text-align: center; }
         .text-left { text-align: left; }
-        
-        /* สีกำกับสถานะงาน (เพื่อให้ดูง่ายเวลาอยู่บน Excel) */
         .status-pending { color: #d97706; font-weight: bold; } 
         .status-progress { color: #2563eb; font-weight: bold; } 
         .status-success { color: #16a34a; font-weight: bold; } 
@@ -67,26 +64,24 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
 <body>
 
     <table>
-        <!-- ================= ส่วนหัวรายงาน (Header) ================= -->
         <tr>
-            <td colspan="11" class="header-title">รายงานทะเบียนประวัติการแจ้งซ่อม (Log Book) ผ่านระบบ MBS REPAIR</td>
+            <td colspan="12" class="header-title">รายงานทะเบียนประวัติการแจ้งซ่อม (Log Book) ผ่านระบบ MBS REPAIR</td>
         </tr>
         <tr>
-            <td colspan="11" class="sub-header">หน่วยงาน: คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
+            <td colspan="12" class="sub-header">หน่วยงาน: คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>
         </tr>
         <tr>
-            <td colspan="11" class="sub-header">ขอบเขตการรายงาน: <?php echo $report_title_suffix; ?></td>
+            <td colspan="12" class="sub-header">ขอบเขตการรายงาน: <?php echo $report_title_suffix; ?></td>
         </tr>
         <tr>
             <td colspan="4"><b>ข้อมูลประจำเดือน:</b> <?php echo $current_month; ?></td>
-            <td colspan="3"><b>วันที่พิมพ์รายงาน:</b> <?php echo $current_date; ?></td>
+            <td colspan="4"><b>วันที่พิมพ์รายงาน:</b> <?php echo $current_date; ?></td>
             <td colspan="4"><b>ผู้พิมพ์รายงาน:</b> <?php echo $print_by; ?></td>
         </tr>
         <tr>
-            <td colspan="11"></td> <!-- แถวว่างเว้นระยะ -->
+            <td colspan="12"></td>
         </tr>
 
-        <!-- ================= ส่วนหัวตารางข้อมูล (Table Head) ================= -->
         <tr>
             <th class="table-head">ลำดับ</th>
             <th class="table-head">เลขที่ใบงาน</th>
@@ -98,28 +93,26 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
             <th class="table-head">เบอร์โทรติดต่อ</th>
             <th class="table-head">สถานะงาน</th>
             <th class="table-head">ช่างผู้ดำเนินการ</th>
+            <th class="table-head">เวลาปิดงาน/อัปเดตล่าสุด</th>
             <th class="table-head">หมายเหตุจากช่าง</th>
         </tr>
 
-        <!-- ================= ส่วนข้อมูล (Data Rows) ================= -->
         <?php 
         if ($result && $result->num_rows > 0) {
             $i = 1;
             while($row = $result->fetch_assoc()) { 
                 
-                // จัดรูปแบบวันที่แจ้ง
                 $created_date = date("d/m/Y H:i", strtotime($row['created_at']));
+                // ดึงข้อมูลจากคอลัมน์ updated_at ที่เราเพิ่งสร้าง
+                $updated_date = !empty($row['updated_at']) ? date("d/m/Y H:i", strtotime($row['updated_at'])) : "-";
                 
-                // จัดคลาสสีตามสถานะ
                 $status_class = "";
                 if($row['status'] == 'รอรับเรื่อง') $status_class = "status-pending";
                 elseif($row['status'] == 'กำลังดำเนินการ') $status_class = "status-progress";
                 elseif($row['status'] == 'ซ่อมเสร็จแล้ว') $status_class = "status-success";
 
-                // ตรวจสอบค่าว่างของข้อมูลต่างๆ ป้องกัน Error
                 $problem_desc = !empty($row['problem_desc']) ? $row['problem_desc'] : "-";
                 
-                // ค้นหาคอลัมน์สถานที่
                 $location = "-";
                 if(!empty($row['location'])) $location = $row['location'];
                 elseif(!empty($row['room_no'])) $location = $row['room_no'];
@@ -131,7 +124,6 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
         ?>
             <tr>
                 <td class="text-center"><?php echo $i++; ?></td>
-                <!-- บังคับรูปแบบ text (mso-number-format) ป้องกัน Excel ทำเลข 0 หาย -->
                 <td class="text-center" style="mso-number-format:'\@';"><?php echo htmlspecialchars($row['ticket_no']); ?></td>
                 <td class="text-center"><?php echo $created_date; ?></td>
                 <td class="text-left"><?php echo htmlspecialchars($row['equipment_type']); ?></td>
@@ -141,6 +133,7 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
                 <td class="text-center" style="mso-number-format:'\@';"><?php echo htmlspecialchars($phone_number); ?></td>
                 <td class="text-center <?php echo $status_class; ?>"><?php echo htmlspecialchars($row['status']); ?></td>
                 <td class="text-center"><?php echo htmlspecialchars($tech_name); ?></td>
+                <td class="text-center"><?php echo $updated_date; ?></td>
                 <td class="text-left"><?php echo htmlspecialchars($note); ?></td>
             </tr>
         <?php 
@@ -148,7 +141,7 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
         } else {
         ?>
             <tr>
-                <td colspan="11" class="text-center" style="padding: 20px; color: #666; font-weight: bold;">
+                <td colspan="12" class="text-center" style="padding: 20px; color: #666; font-weight: bold;">
                     ไม่มีประวัติการแจ้งซ่อมในระบบ หรือไม่มีข้อมูลการซ่อมตามเงื่อนไขที่เลือก
                 </td>
             </tr>
