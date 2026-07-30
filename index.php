@@ -31,42 +31,7 @@ if ($db_connected) {
     if ($res_t) $stats['total'] = $res_t->fetch_assoc()['cnt'];
 }
 
-// ================= 1. จัดการการเข้าสู่ระบบ (Login) =================
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
-    if ($db_connected) {
-        $username = $conn->real_escape_string($_POST['username']);
-        $password = $_POST['password']; 
-
-        $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
-        $stmt->bind_param("ss", $username, $password);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            $user = $result->fetch_assoc();
-            
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['full_name'] = $user['full_name'];
-            $_SESSION['role'] = $user['role'];
-
-            $role = strtolower($user['role']);
-            
-            if ($role === 'executive') {
-                header("Location: executive_dashboard.php");
-            } else {
-                header("Location: dashboard.php");
-            }
-            exit();
-        } else {
-            $error_msg = "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง!";
-        }
-    } else {
-        $error_msg = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาตรวจสอบการเชื่อมต่อ DB";
-    }
-}
-
-// ================= 2. จัดการการค้นหาสถานะ (Check Status) =================
+// ================= จัดการการค้นหาสถานะ (Check Status) =================
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     if ($db_connected) {
         $search_keyword = trim($_POST['search_query']);
@@ -122,12 +87,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             border: 1px solid rgba(226, 232, 240, 0.8);
             border-radius: 1.5rem;
             box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05);
-            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .card-3d:hover {
-            transform: translateY(-8px) scale(1.01);
-            box-shadow: 0 22px 40px -12px rgba(37, 99, 235, 0.18);
-            border-color: #60a5fa;
         }
 
         .modal { transition: opacity 0.3s ease, visibility 0.3s ease; }
@@ -153,18 +112,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     <h1 class="text-lg sm:text-2xl font-black tracking-tight leading-none text-slate-900 truncate">
                         MBS <span class="text-[#0ea5e9]">REPAIR</span>
                     </h1>
-                    <!-- ซ่อนชื่อคณะเมื่อดูผ่านจอมือถือ ป้องกันเลย์เอาต์พัง -->
                     <p class="hidden sm:block text-[11px] sm:text-xs text-slate-500 font-bold mt-1 truncate">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
                 </div>
             </div>
 
-            <!-- Login Button -->
-            <button onclick="toggleModal('loginModal')" class="bg-[#0f172a] hover:bg-blue-600 text-white font-bold px-3.5 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:outline-none transition-all flex items-center gap-2 shadow-md hover:shadow-blue-500/20 active:scale-95 shrink-0">
+            <!-- 🟢 Login Button (เปลี่ยนเป็นลิงก์ไปหน้า login.php) -->
+            <a href="login.php" class="bg-[#0f172a] hover:bg-blue-600 text-white font-bold px-3.5 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:outline-none transition-all flex items-center gap-2 shadow-md hover:shadow-blue-500/20 active:scale-95 shrink-0">
                 <i class="fas fa-user-shield text-blue-400 sm:text-lg"></i> 
-                <!-- เปลี่ยนข้อความให้สั้นลงในจอมือถือ -->
                 <span class="hidden sm:inline">เจ้าหน้าที่เข้าสู่ระบบ</span>
                 <span class="sm:hidden">เข้าสู่ระบบ</span>
-            </button>
+            </a>
         </div>
     </header>
 
@@ -187,17 +144,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
             <!-- Action Buttons -->
             <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-4">
-                <a href="form_repair.php" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-blue-600/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2.5">
+                <a href="form_repair.php" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-blue-600/30 transition-all flex items-center justify-center gap-2.5">
                     <i class="fas fa-file-pen text-xl"></i> กรอกแบบฟอร์มแจ้งซ่อมใหม่
                 </a>
-                <a href="https://line.me/R/ti/p/@941kflsc" target="_bank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-emerald-500/25 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2.5">
+                <a href="https://line.me" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2.5">
                     <i class="fab fa-line text-2xl"></i> ติดต่อผ่าน LINE Official
                 </a>
             </div>
 
             <!-- Floating Search Card -->
-            <div class="max-w-2xl mx-auto bg-white/95 backdrop-blur-xl p-4 sm:p-7 rounded-3xl shadow-2xl border border-white/40 text-slate-800 text-left mt-8 sm:mt-10 transform hover:scale-[1.01] transition-transform">
-                <!-- Flex Wrap เพื่อไม่ให้ป้ายหดไปทับข้อความในมือถือ -->
+            <div class="max-w-2xl mx-auto bg-white/95 backdrop-blur-xl p-4 sm:p-7 rounded-3xl shadow-2xl border border-white/40 text-slate-800 text-left mt-8 sm:mt-10">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3 sm:mb-4 px-1">
                     <label class="text-sm sm:text-base font-extrabold text-blue-950 flex items-center gap-2">
                         <i class="fas fa-magnifying-glass text-blue-600"></i> ค้นหาประวัติ / ตรวจสอบสถานะ
@@ -280,40 +236,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 relative z-10">
                 
-                <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 hover:border-blue-400/50 transition-all space-y-3 sm:space-y-4 group">
+                <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 space-y-3 sm:space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-600 text-white font-extrabold flex items-center justify-center text-sm sm:text-lg shadow-md">01</span>
-                        <i class="fas fa-pen-to-square text-2xl sm:text-3xl text-blue-400 group-hover:scale-110 transition-transform"></i>
+                        <i class="fas fa-pen-to-square text-2xl sm:text-3xl text-blue-400"></i>
                     </div>
                     <h3 class="text-base sm:text-lg font-bold text-white">1. กรอกแบบฟอร์ม</h3>
-                    <p class="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">ระบุรายละเอียดอุปกรณ์ อาคารสถานที่ และปัญหาที่พบผ่านเว็บหรือไลน์</p>
+                    <p class="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">ระบุรายละเอียดอุปกรณ์ อาคารสถานที่ และปัญหาที่พบผ่านเว็บ</p>
                 </div>
 
-                <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 hover:border-amber-400/50 transition-all space-y-3 sm:space-y-4 group">
+                <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 space-y-3 sm:space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500 text-white font-extrabold flex items-center justify-center text-sm sm:text-lg shadow-md">02</span>
-                        <i class="fas fa-user-check text-2xl sm:text-3xl text-amber-400 group-hover:scale-110 transition-transform"></i>
+                        <i class="fas fa-user-check text-2xl sm:text-3xl text-amber-400"></i>
                     </div>
                     <h3 class="text-base sm:text-lg font-bold text-white">2. เจ้าหน้าที่รับเรื่อง</h3>
                     <p class="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">ทีมช่างตรวจสอบข้อมูลและมอบหมายผู้รับผิดชอบงานซ่อม</p>
                 </div>
 
-                <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 hover:border-sky-400/50 transition-all space-y-3 sm:space-y-4 group">
+                <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 space-y-3 sm:space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sky-500 text-white font-extrabold flex items-center justify-center text-sm sm:text-lg shadow-md">03</span>
-                        <i class="fas fa-wrench text-2xl sm:text-3xl text-sky-400 group-hover:scale-110 transition-transform"></i>
+                        <i class="fas fa-wrench text-2xl sm:text-3xl text-sky-400"></i>
                     </div>
                     <h3 class="text-base sm:text-lg font-bold text-white">3. ดำเนินการซ่อม</h3>
                     <p class="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">ช่างผู้เชี่ยวชาญเข้าแก้ไขตามจุดที่ได้รับแจ้งอย่างรวดเร็ว</p>
                 </div>
 
-                <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 hover:border-emerald-400/50 transition-all space-y-3 sm:space-y-4 group">
+                <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 space-y-3 sm:space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500 text-white font-extrabold flex items-center justify-center text-sm sm:text-lg shadow-md">04</span>
-                        <i class="fas fa-circle-check text-2xl sm:text-3xl text-emerald-400 group-hover:scale-110 transition-transform"></i>
+                        <i class="fas fa-circle-check text-2xl sm:text-3xl text-emerald-400"></i>
                     </div>
                     <h3 class="text-base sm:text-lg font-bold text-white">4. เสร็จสิ้น & แจ้งเตือน</h3>
-                    <p class="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">ซ่อมอุปกรณ์ พร้อมอัปเดตสถานะเป็นซ่อมเสร็จเรียบร้อย</p>
+                    <p class="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">รับอุปกรณ์คืน พร้อมอัปเดตสถานะเป็นซ่อมเสร็จเรียบร้อย</p>
                 </div>
 
             </div>
@@ -352,7 +308,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                             </div>
                             <div class="overflow-hidden">
                                 <h5 class="text-sm sm:text-base font-bold text-slate-800 truncate">นางสาวภัทรวดี ขามประโคน</h5>
-                                <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ (BC)</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">นิสิตชั้นปีที่ 4 คอมพิวเตอร์ธุรกิจ (BC)</p>
                             </div>
                         </div>
 
@@ -362,7 +318,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                             </div>
                             <div class="overflow-hidden">
                                 <h5 class="text-sm sm:text-base font-bold text-slate-800 truncate">นางสาวมัทนา รัตนแสง</h5>
-                                <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">นิสิตชั้นปีที่ 4 สาขาคอมพิวเตอร์ธุรกิจ (BC)</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">นิสิตชั้นปีที่ 4 คอมพิวเตอร์ธุรกิจ (BC)</p>
                             </div>
                         </div>
 
@@ -439,58 +395,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         </div>
     </div>
 
-    <!-- ==============================================
-         MODAL 2: LOGIN MODAL 
-         ============================================== -->
-    <div id="loginModal" class="modal opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-[100] px-4">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('loginModal')"></div>
-        <div id="loginModalContent" class="relative bg-white w-full max-w-md rounded-3xl sm:rounded-[2rem] shadow-2xl z-50 flex flex-col transform transition-transform duration-300 scale-95 data-[open=true]:scale-100 overflow-hidden">
-            
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-sky-400 to-emerald-400"></div>
-
-            <div class="px-6 pt-8 pb-5 sm:px-8 sm:pt-10 sm:pb-6 text-center relative border-b border-slate-50">
-                <button onclick="toggleModal('loginModal')" class="absolute top-4 right-4 sm:top-6 sm:right-6 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 focus:outline-none transition-colors">
-                    <i class="fas fa-times text-base sm:text-lg"></i>
-                </button>
-                
-                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-tr from-blue-600 to-sky-400 text-white rounded-2xl flex items-center justify-center text-2xl sm:text-3xl mx-auto mb-4 sm:mb-5 shadow-lg shadow-blue-500/30">
-                    <i class="fas fa-user-shield"></i>
-                </div>
-                <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">เจ้าหน้าที่เข้าสู่ระบบ</h2>
-                <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1 sm:mt-1.5">MBS Smart Maintenance</p>
-            </div>
-
-            <form action="" method="POST" class="p-6 pt-5 sm:p-8 sm:pt-6 bg-slate-50/30">
-                <input type="hidden" name="login" value="1">
-                
-                <div class="space-y-4 sm:space-y-6">
-                    <div>
-                        <label class="block text-xs sm:text-sm font-extrabold text-slate-600 uppercase tracking-widest mb-2 sm:mb-2.5 pl-1">Username</label>
-                        <div class="relative group">
-                            <i class="fas fa-user absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-slate-400 text-base sm:text-lg group-focus-within:text-blue-500 transition-colors"></i>
-                            <input type="text" name="username" required placeholder="ระบุชื่อผู้ใช้งาน" class="w-full pl-11 pr-4 py-3 sm:pl-14 sm:pr-4 sm:py-4 bg-white border border-slate-200 rounded-xl text-sm sm:text-base font-bold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 transition-all shadow-sm">
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-xs sm:text-sm font-extrabold text-slate-600 uppercase tracking-widest mb-2 sm:mb-2.5 pl-1">Password</label>
-                        <div class="relative group">
-                            <i class="fas fa-lock absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-slate-400 text-base sm:text-lg group-focus-within:text-blue-500 transition-colors"></i>
-                            <input type="password" id="modalPassword" name="password" required placeholder="ระบุรหัสผ่าน" class="w-full pl-11 pr-10 py-3 sm:pl-14 sm:pr-12 sm:py-4 bg-white border border-slate-200 rounded-xl text-sm sm:text-base font-bold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 transition-all shadow-sm">
-                            <button type="button" class="absolute inset-y-0 right-0 pr-4 sm:pr-5 flex items-center text-slate-400 hover:text-blue-600 focus:outline-none transition-colors" onclick="toggleModalPassword()">
-                                <i id="modalEyeIcon" class="fas fa-eye text-base sm:text-lg"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <button type="submit" class="w-full mt-6 sm:mt-8 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl py-3.5 sm:py-4 font-bold text-sm sm:text-base hover:from-blue-500 hover:to-blue-400 focus:outline-none transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_-5px_rgba(59,130,246,0.5)] transform hover:-translate-y-0.5 active:scale-95">
-                    เข้าสู่ระบบ <i class="fas fa-arrow-right"></i>
-                </button>
-            </form>
-        </div>
-    </div>
-
+    <!-- สคริปต์สำหรับเปิด-ปิด Modal ค้นหาสถานะ -->
     <script>
         function toggleModal(m) { 
             const modal = document.getElementById(m);
@@ -507,20 +412,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     modal.classList.add('pointer-events-none');
                     document.body.classList.remove('modal-active');
                 }, 300);
-            }
-        }
-
-        function toggleModalPassword() {
-            var x = document.getElementById("modalPassword");
-            var icon = document.getElementById("modalEyeIcon");
-            if (x.type === "password") {
-                x.type = "text";
-                icon.classList.remove("fa-eye");
-                icon.classList.add("fa-eye-slash");
-            } else {
-                x.type = "password";
-                icon.classList.remove("fa-eye-slash");
-                icon.classList.add("fa-eye");
             }
         }
     </script>
