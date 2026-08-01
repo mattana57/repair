@@ -34,19 +34,20 @@ if (!is_null($events['events'])) {
                 send_reply($replyToken, $replyMsg, $channelAccessToken);
             }
             else {
-                // ดักคำขอบคุณ/รับทราบ (ปรับให้ค้นหาแบบยืดหยุ่นขึ้น)
-                $text_lower = mb_strtolower(str_replace(' ', '', $text), 'UTF-8');
+                // ดักคำขอบคุณ/รับทราบ ให้ฉลาดขึ้นและยืดหยุ่นขึ้น
+                $text_clean = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
+                $greetings = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'เค', 'รับทราบ', 'เยี่ยม', 'แต้ง'];
                 $is_greeting = false;
-                $greetings = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'เค', 'รับทราบ', 'เยี่ยม'];
                 
                 foreach ($greetings as $g) {
-                    if (mb_strpos($text_lower, $g) !== false && mb_strlen($text_lower) < 30) {
+                    if (mb_strpos($text_clean, $g) !== false) {
                         $is_greeting = true;
                         break;
                     }
                 }
                 
-                if ($is_greeting) {
+                // ถ้าเป็นคำขอบคุณ และประโยคไม่ยาวเกินไป (ป้องกันการพิมพ์แจ้งซ่อมแล้วต่อท้ายด้วยขอบคุณ)
+                if ($is_greeting && mb_strlen($text_clean) < 40) {
                     $replyMsg = ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งบอทได้ตลอดเลยนะคะ"];
                     send_reply($replyToken, $replyMsg, $channelAccessToken);
                 } 
@@ -79,8 +80,9 @@ if (!is_null($events['events'])) {
                         $location = trim($building . ' ' . $room) ?: 'ไม่ระบุสถานที่';
                         $problem = !empty($ai_data['problem']) ? $ai_data['problem'] : 'ไม่ระบุอาการ';
                         
+                        // ป้องกัน AI สร้างใบงานขยะ
                         if ($equipment == 'ไม่ระบุอุปกรณ์' && $problem == 'ไม่ระบุอาการ') {
-                            // ไม่สร้างใบงานขยะ
+                            // ไม่ทำอะไร
                         } else {
                             $ticket_no = "MR-" . date("Ymd-His");
                             $status = "รอยืนยัน"; 
@@ -200,11 +202,10 @@ if (!is_null($events['events'])) {
                     $replyText = "🗑️ ยกเลิกข้อมูลเดิมแล้วค่ะ รบกวนพิมพ์แจ้งซ่อมใหม่ได้เลยค่ะ";
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
                 }
-                // 3. ช่างกดปุ่มรับงานในกลุ่ม
+                // 3. ช่างกดปุ่มรับงานในกลุ่ม (แสดงการ์ดเล็กๆ บอกว่าใครรับอะไร พร้อมปุ่มปิดงาน)
                 elseif ($postbackData['action'] == 'accept') {
                     $tech_name = isset($postbackData['tech']) ? $postbackData['tech'] : 'ช่าง';
                     
-                    // ดึงข้อมูลอุปกรณ์และสถานที่มาแสดง
                     $stmt_info = $conn->prepare("SELECT equipment_type, location, line_user_id FROM repairs WHERE ticket_no = ?");
                     $stmt_info->bind_param("s", $ticket_no);
                     $stmt_info->execute();
@@ -217,27 +218,90 @@ if (!is_null($events['events'])) {
                     $stmt->bind_param("s", $ticket_no);
                     $stmt->execute();
 
-                    // ตอบกลับในกลุ่มช่างแบบละเอียดขึ้น แต่ยังสั้นกระชับ
-                    $replyText = "✅ $tech_name รับงานซ่อม: $equip ($loc) แล้วครับ";
-                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                    // ส่งการ์ดเล็กๆ (size: kilo) แจ้งในกลุ่มว่าใครรับงาน + ปุ่มปิดงาน
+                    $messageData = [
+                        'type' => 'flex',
+                        'altText' => "$tech_name รับงานแล้ว",
+                        'contents' => [
+                            'type' => 'bubble',
+                            'size' => 'kilo',
+                            'body' => [
+                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                'contents' => [
+                                    ['type' => 'text', 'text' => "✅ $tech_name รับงานแล้ว", 'weight' => 'bold', 'color' => '#10b981', 'size' => 'sm'],
+                                    ['type' => 'text', 'text' => "ซ่อม: $equip ($loc)", 'wrap' => true, 'size' => 'sm', 'color' => '#666666']
+                                ]
+                            ],
+                            'footer' => [
+                                'type' => 'box', 'layout' => 'horizontal',
+                                'contents' => [
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'color' => '#e5e7eb',
+                                     'action' => ['type' => 'postback', 'label' => '🔒 ปิดงาน', 'data' => "action=close&ticket=$ticket_no&tech=$tech_name"]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ];
+                    send_reply($replyToken, $messageData, $channelAccessToken);
 
-                    // แจ้งเตือนกลับไปหาผู้แจ้งซ่อม
+                    // แจ้งเตือนสั้นๆ กลับไปหาผู้แจ้งซ่อม
                     if($job && !empty($job['line_user_id'])) {
                         $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 $tech_name รับงานซ่อมของคุณแล้วนะคะ"];
                         send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
                     }
                 }
-                // 4. ผู้ใช้กดปุ่มให้ดาว (จาก Quick Reply)
+                // 4. ช่างกดปิดงาน (ส่งระบบให้ดาวแบบ Quick Reply ไม่รกแชท)
+                elseif ($postbackData['action'] == 'close') {
+                    $tech_name = isset($postbackData['tech']) ? $postbackData['tech'] : 'ช่าง';
+                    
+                    $stmt_info = $conn->prepare("SELECT equipment_type, line_user_id FROM repairs WHERE ticket_no = ?");
+                    $stmt_info->bind_param("s", $ticket_no);
+                    $stmt_info->execute();
+                    $job = $stmt_info->get_result()->fetch_assoc();
+                    $equip = $job ? $job['equipment_type'] : 'อุปกรณ์';
+
+                    $stmt = $conn->prepare("UPDATE repairs SET status = 'รอการรีวิว' WHERE ticket_no = ?");
+                    $stmt->bind_param("s", $ticket_no);
+                    $stmt->execute();
+
+                    // แจ้งช่างว่าปิดงานสำเร็จ
+                    send_reply($replyToken, ['type' => 'text', 'text' => "🔒 ปิดงานซ่อม $equip เรียบร้อย! ระบบส่งแบบประเมินให้ผู้แจ้งแล้วครับ"], $channelAccessToken);
+
+                    // ส่งปุ่ม Quick Reply ให้ดาวไปหาผู้ใช้
+                    if($job && !empty($job['line_user_id'])) {
+                        $pushMsg = [
+                            'type' => 'text',
+                            'text' => "งานซ่อม '$equip' เสร็จเรียบร้อยแล้วค่ะ! รบกวนให้คะแนนเพื่อเป็นกำลังใจให้ $tech_name หน่อยนะคะ ⭐️",
+                            'quickReply' => [
+                                'items' => [
+                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '5 ดาว ⭐️', 'data' => "action=rate&ticket=$ticket_no&score=5&tech=$tech_name", 'displayText' => 'ให้ 5 ดาว']],
+                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '4 ดาว ⭐️', 'data' => "action=rate&ticket=$ticket_no&score=4&tech=$tech_name", 'displayText' => 'ให้ 4 ดาว']],
+                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '3 ดาว ⭐️', 'data' => "action=rate&ticket=$ticket_no&score=3&tech=$tech_name", 'displayText' => 'ให้ 3 ดาว']],
+                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '2 ดาว ⭐️', 'data' => "action=rate&ticket=$ticket_no&score=2&tech=$tech_name", 'displayText' => 'ให้ 2 ดาว']],
+                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '1 ดาว ⭐️', 'data' => "action=rate&ticket=$ticket_no&score=1&tech=$tech_name", 'displayText' => 'ให้ 1 ดาว']]
+                                ]
+                            ]
+                        ];
+                        send_push($job['line_user_id'], $pushMsg, $channelAccessToken);
+                    }
+                }
+                // 5. ผู้ใช้กดให้ดาว
                 elseif ($postbackData['action'] == 'rate') {
                     $score = $postbackData['score'];
+                    $tech_name = isset($postbackData['tech']) ? $postbackData['tech'] : 'ช่าง';
                     $new_status = "เสร็จสิ้น ($score ดาว)"; 
                     
                     $stmt = $conn->prepare("UPDATE repairs SET status = ? WHERE ticket_no = ?");
                     $stmt->bind_param("ss", $new_status, $ticket_no);
                     $stmt->execute();
                     
-                    $replyText = "💖 ขอบคุณสำหรับคะแนน $score ดาวนะคะ!";
-                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                    // ขอบคุณผู้ใช้
+                    send_reply($replyToken, ['type' => 'text', 'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาวนะคะ!"], $channelAccessToken);
+                    
+                    // แอบกระซิบไปบอกช่างในกลุ่มว่าได้กี่ดาว
+                    if (!empty($line_group_id)) {
+                        send_push($line_group_id, ['type' => 'text', 'text' => "🎉 $tech_name ได้รับรีวิว $score ดาวจากงานซ่อม $ticket_no ครับ! 👏"], $channelAccessToken);
+                    }
                 }
             }
         }
