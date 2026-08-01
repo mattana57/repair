@@ -56,7 +56,10 @@ if (!is_null($events['events'])) {
                                  "- room: เลขห้อง\n" .
                                  "- problem: อาการที่เสีย";
 
-$gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" . $gemini_api_key;                    $gemini_data = [
+                // *** แก้ไข 1: เปลี่ยน URL ให้ตรงกับที่ Google ระบุ ***
+                $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+
+                $gemini_data = [
                     "contents" => [["parts" => [["text" => $gemini_prompt]]]],
                     "generationConfig" => [
                         "temperature" => 0.1, 
@@ -66,11 +69,18 @@ $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pr
 
                 $ch = curl_init($gemini_url);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                
+                // *** แก้ไข 2: เพิ่ม x-goog-api-key ใน Header ***
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json',
+                    'x-goog-api-key: ' . $gemini_api_key
+                ]);
+
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // <--- เพิ่มบรรทัดนี้เพื่อแก้ปัญหาการเชื่อมต่อ
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
                 $gemini_response = curl_exec($ch);
+                $curl_err = curl_error($ch);
                 curl_close($ch);
 
                 $gemini_result = json_decode($gemini_response, true);
@@ -101,7 +111,6 @@ $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pr
                         $replyText = "ขออภัยค่ะ ระบบไม่สามารถบันทึกข้อมูลได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง";
                     }
                 } else {
-                    $curl_err = curl_error($ch);
                     $replyText = "🚨 พบข้อผิดพลาดจากระบบ:\n" . $gemini_response . "\nCURL Error: " . $curl_err;
                 }
 
