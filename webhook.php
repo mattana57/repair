@@ -105,10 +105,11 @@ if (!is_null($events['events'])) {
                     $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, line_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
                     $stmt->bind_param("sssssss", $ticket_no, $equipment, $location, $problem, $status, $reporter_name, $userId);
                     
+                    // ส่วนที่เติมกลับเข้ามาให้ครบสมบูรณ์
                     if($stmt->execute()) {
                         $replyText = "🤖 บอทรับเรื่องแจ้งซ่อมเรียบร้อยแล้วค่ะ!\n\n📌 เลขที่ใบงาน: $ticket_no\n💻 อุปกรณ์: $equipment\n📍 สถานที่: $location\n⚠️ ปัญหา: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
                     } else {
-                        $replyText = "ขออภัยค่ะ ระบบไม่สามารถบันทึกข้อมูลได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง";
+                        $replyText = "🚨 เกิดข้อผิดพลาดในการบันทึกฐานข้อมูล: " . $stmt->error;
                     }
                 } else {
                     $replyText = "🚨 พบข้อผิดพลาดจากระบบ:\n" . $gemini_response . "\nCURL Error: " . $curl_err;
