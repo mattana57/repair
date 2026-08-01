@@ -56,7 +56,7 @@ if (!is_null($events['events'])) {
                                  "- room: เลขห้อง\n" .
                                  "- problem: อาการที่เสีย";
 
-                // *** แก้ไข 1: เปลี่ยน URL ให้ตรงกับที่ Google ระบุ ***
+                // URL สำหรับเรียกใช้ Gemini AI
                 $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 
                 $gemini_data = [
@@ -70,7 +70,7 @@ if (!is_null($events['events'])) {
                 $ch = curl_init($gemini_url);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 
-                // *** แก้ไข 2: เพิ่ม x-goog-api-key ใน Header ***
+                // ตั้งค่า Header (ใส่ x-goog-api-key ตามที่ Google กำหนด)
                 curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Content-Type: application/json',
                     'x-goog-api-key: ' . $gemini_api_key
@@ -100,12 +100,12 @@ if (!is_null($events['events'])) {
                     $ticket_no = "MR-" . date("Ymd-His");
                     $status = "รอรับเรื่อง";
                     $reporter_name = "แจ้งผ่านแชทบอท AI"; 
+                    $phone_number = "ไม่ระบุ"; // <--- เพิ่มตัวแปรเบอร์โทรศัพท์ตรงนี้
 
-                    // บันทึกลงฐานข้อมูล
-                    $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, line_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                    $stmt->bind_param("sssssss", $ticket_no, $equipment, $location, $problem, $status, $reporter_name, $userId);
+                    // บันทึกลงฐานข้อมูล (เพิ่ม phone_number และอัปเดต s เป็น 8 ตัว)
+                    $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->bind_param("ssssssss", $ticket_no, $equipment, $location, $problem, $status, $reporter_name, $phone_number, $userId);
                     
-                    // ส่วนที่เติมกลับเข้ามาให้ครบสมบูรณ์
                     if($stmt->execute()) {
                         $replyText = "🤖 บอทรับเรื่องแจ้งซ่อมเรียบร้อยแล้วค่ะ!\n\n📌 เลขที่ใบงาน: $ticket_no\n💻 อุปกรณ์: $equipment\n📍 สถานที่: $location\n⚠️ ปัญหา: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
                     } else {
