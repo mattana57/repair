@@ -56,8 +56,8 @@ if (!is_null($events['events'])) {
                                  "- room: เลขห้อง\n" .
                                  "- problem: อาการที่เสีย";
 
-                $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $gemini_api_key;
-                $gemini_data = [
+                    $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" . $gemini_api_key;                
+                    $gemini_data = [
                     "contents" => [["parts" => [["text" => $gemini_prompt]]]],
                     "generationConfig" => [
                         "temperature" => 0.1, 
