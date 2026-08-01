@@ -34,21 +34,14 @@ if (!is_null($events['events'])) {
                 send_reply($replyToken, $replyMsg, $channelAccessToken);
             }
             else {
-                // ----------------------------------------------------
-                // *** เพิ่มใหม่: ดักคำขอบคุณ/รับทราบ เพื่อป้องกัน AI สร้างใบงานขยะ ***
-                // ----------------------------------------------------
-                // ตัดคำลงท้ายและช่องว่างทิ้ง เพื่อให้เช็คคำหลักได้แม่นยำขึ้น
+                // ดักคำขอบคุณ/รับทราบ เพื่อป้องกัน AI สร้างใบงานขยะ
                 $clean_text = str_replace([' ', 'ครับ', 'ค่ะ', 'คับ', 'จ้า', 'นะคะ', 'นะ', 'พี่'], '', mb_strtolower($text, 'UTF-8'));
                 $greeting_words = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'เค', 'รับทราบ', 'รับแซ่บ', 'เยี่ยม', 'ดีมาก', 'thankyou', 'thanks'];
                 
-                // ถ้าข้อความที่พิมพ์มา เป็นแค่คำขอบคุณ บอทจะตอบกลับและจบการทำงานทันที
                 if (in_array($clean_text, $greeting_words)) {
                     $replyMsg = ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 ทีมงานพร้อมดูแลเสมอ หากมีปัญหาเพิ่มเติมแจ้งบอทเข้ามาได้ตลอดเลยนะคะ 🛠️"];
                     send_reply($replyToken, $replyMsg, $channelAccessToken);
                 } 
-                // ----------------------------------------------------
-                // แต่ถ้าไม่ใช่คำขอบคุณ -> ส่งให้ AI ตีความแจ้งซ่อมตามปกติ
-                // ----------------------------------------------------
                 else {
                     $gemini_prompt = "ทำหน้าที่เป็นผู้ช่วยรับแจ้งซ่อม สกัดข้อมูลจากข้อความต่อไปนี้:\nข้อความ: '$text'\nให้ส่งกลับมาเป็น JSON format อย่างเดียว ห้ามมีข้อความอื่น โดยมี key ดังนี้:\n- equipment: ชื่ออุปกรณ์\n- building: ชื่อตึก\n- room: เลขห้อง\n- problem: อาการที่เสีย";
 
@@ -204,30 +197,11 @@ if (!is_null($events['events'])) {
                     $stmt->bind_param("s", $ticket_no);
                     $stmt->execute();
 
-                    // ตอบกลับในกลุ่มช่างพร้อมปุ่มปิดงาน
-                    $messageData = [
-                        'type' => 'flex',
-                        'altText' => "$tech_name รับงานแล้ว",
-                        'contents' => [
-                            'type' => 'bubble',
-                            'body' => [
-                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
-                                'contents' => [
-                                    ['type' => 'text', 'text' => "✅ $tech_name รับงานแล้ว!", 'weight' => 'bold', 'color' => '#10b981'],
-                                    ['type' => 'text', 'text' => "ใบงาน: $ticket_no\nเมื่อดำเนินการเสร็จสิ้น รบกวนกดปุ่มด้านล่างเพื่อปิดงานและส่งแบบประเมินให้ลูกค้านะคะ", 'wrap' => true, 'size' => 'sm']
-                                ]
-                            ],
-                            'footer' => [
-                                'type' => 'box', 'layout' => 'vertical',
-                                'contents' => [
-                                    ['type' => 'button', 'style' => 'primary', 'color' => '#ef4444', 'action' => ['type' => 'postback', 'label' => '🔒 ปิดงานซ่อม', 'data' => "action=close&ticket=$ticket_no"]]
-                                ]
-                            ]
-                        ]
-                    ];
-                    send_reply($replyToken, $messageData, $channelAccessToken);
+                    // *** แก้ไข: ตอบกลับในกลุ่มช่างด้วยข้อความสั้นๆ แทนการ์ดใหญ่ๆ ***
+                    $replyText = "✅ $tech_name รับใบงาน $ticket_no แล้วครับ!";
+                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
-                    // แจ้งเตือนกลับไปหาผู้แจ้งซ่อม
+                    // แจ้งเตือนกลับไปหาผู้แจ้งซ่อม (เหมือนเดิม)
                     $stmt_user = $conn->prepare("SELECT line_user_id, equipment_type FROM repairs WHERE ticket_no = ?");
                     $stmt_user->bind_param("s", $ticket_no);
                     $stmt_user->execute();
@@ -236,67 +210,6 @@ if (!is_null($events['events'])) {
                     if($user_result && !empty($user_result['line_user_id'])) {
                         $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 $tech_name รับงานซ่อมของคุณแล้วนะคะ!\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
                         send_push($user_result['line_user_id'], $pushMsgToUser, $channelAccessToken);
-                    }
-                }
-                // 4. ช่างกดปุ่ม "ปิดงานซ่อม"
-                elseif ($postbackData['action'] == 'close') {
-                    $stmt = $conn->prepare("UPDATE repairs SET status = 'รอการรีวิว' WHERE ticket_no = ?");
-                    $stmt->bind_param("s", $ticket_no);
-                    $stmt->execute();
-
-                    // แจ้งในกลุ่มว่าปิดงานแล้ว
-                    send_reply($replyToken, ['type' => 'text', 'text' => "🔒 ปิดงาน $ticket_no เรียบร้อย! ระบบกำลังส่งแบบประเมินให้ลูกค้าครับ"], $channelAccessToken);
-
-                    // ส่ง Flex ประเมินให้ลูกค้า
-                    $stmt_user = $conn->prepare("SELECT line_user_id FROM repairs WHERE ticket_no = ?");
-                    $stmt_user->bind_param("s", $ticket_no);
-                    $stmt_user->execute();
-                    $user_result = $stmt_user->get_result()->fetch_assoc();
-
-                    if($user_result && !empty($user_result['line_user_id'])) {
-                        $pushMsg = [
-                            'type' => 'flex',
-                            'altText' => 'รบกวนประเมินความพึงพอใจ',
-                            'contents' => [
-                                'type' => 'bubble',
-                                'header' => [
-                                    'type' => 'box', 'layout' => 'vertical',
-                                    'contents' => [['type' => 'text', 'text' => '⭐️ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#f59e0b', 'size' => 'lg']]
-                                ],
-                                'body' => [
-                                    'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
-                                    'contents' => [
-                                        ['type' => 'text', 'text' => 'งานซ่อมของคุณเสร็จเรียบร้อยแล้ว!', 'wrap' => true],
-                                        ['type' => 'text', 'text' => 'รบกวนให้คะแนนช่างเพื่อเป็นกำลังใจด้วยนะคะ', 'wrap' => true, 'size' => 'sm', 'color' => '#aaaaaa']
-                                    ]
-                                ],
-                                'footer' => [
-                                    'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
-                                    'contents' => [
-                                        ['type' => 'button', 'style' => 'primary', 'color' => '#f59e0b', 'action' => ['type' => 'postback', 'label' => '⭐⭐⭐⭐⭐ ดีมาก', 'data' => "action=rate&ticket=$ticket_no&score=5", 'displayText' => 'ให้ 5 ดาว ⭐⭐⭐⭐⭐']],
-                                        ['type' => 'button', 'style' => 'secondary', 'action' => ['type' => 'postback', 'label' => '⭐⭐⭐⭐ ดี', 'data' => "action=rate&ticket=$ticket_no&score=4", 'displayText' => 'ให้ 4 ดาว ⭐⭐⭐⭐']],
-                                        ['type' => 'button', 'style' => 'secondary', 'action' => ['type' => 'postback', 'label' => '⭐⭐⭐ ปานกลาง', 'data' => "action=rate&ticket=$ticket_no&score=3", 'displayText' => 'ให้ 3 ดาว ⭐⭐⭐']]
-                                    ]
-                                ]
-                            ]
-                        ];
-                        send_push($user_result['line_user_id'], $pushMsg, $channelAccessToken);
-                    }
-                }
-                // 5. ลูกค้ากดให้คะแนนดาว
-                elseif ($postbackData['action'] == 'rate') {
-                    $score = $postbackData['score'];
-                    $new_status = "เสร็จสิ้น ($score ดาว)"; 
-                    
-                    $stmt = $conn->prepare("UPDATE repairs SET status = ? WHERE ticket_no = ?");
-                    $stmt->bind_param("ss", $new_status, $ticket_no);
-                    $stmt->execute();
-                    
-                    $replyText = "💖 ขอบคุณสำหรับคะแนน $score ดาวนะคะ!\n\nหวังว่าคุณลูกค้าจะประทับใจในบริการของเราค่ะ หากมีปัญหาเพิ่มเติมแจ้งบอทได้ตลอดเลยนะคะ";
-                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
-                    
-                    if (!empty($line_group_id)) {
-                        send_push($line_group_id, ['type' => 'text', 'text' => "🎉 ใบงาน $ticket_no ได้รับคะแนนรีวิว $score ดาวจากลูกค้าครับ! เก่งมากๆ 👏"], $channelAccessToken);
                     }
                 }
             }
