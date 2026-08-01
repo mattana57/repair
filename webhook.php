@@ -34,86 +34,102 @@ if (!is_null($events['events'])) {
                 send_reply($replyToken, $replyMsg, $channelAccessToken);
             }
             else {
-                // ให้ AI สกัดข้อมูล
-                $gemini_prompt = "ทำหน้าที่เป็นผู้ช่วยรับแจ้งซ่อม สกัดข้อมูลจากข้อความต่อไปนี้:\nข้อความ: '$text'\nให้ส่งกลับมาเป็น JSON format อย่างเดียว ห้ามมีข้อความอื่น โดยมี key ดังนี้:\n- equipment: ชื่ออุปกรณ์\n- building: ชื่อตึก\n- room: เลขห้อง\n- problem: อาการที่เสีย";
-
-                $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
-                $gemini_data = [
-                    "contents" => [["parts" => [["text" => $gemini_prompt]]]],
-                    "generationConfig" => ["temperature" => 0.1, "responseMimeType" => "application/json"]
-                ];
-
-                $ch = curl_init($gemini_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'x-goog-api-key: ' . $gemini_api_key]);
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-                $gemini_response = curl_exec($ch);
-                curl_close($ch);
-
-                $gemini_result = json_decode($gemini_response, true);
+                // ----------------------------------------------------
+                // *** เพิ่มใหม่: ดักคำขอบคุณ/รับทราบ เพื่อป้องกัน AI สร้างใบงานขยะ ***
+                // ----------------------------------------------------
+                // ตัดคำลงท้ายและช่องว่างทิ้ง เพื่อให้เช็คคำหลักได้แม่นยำขึ้น
+                $clean_text = str_replace([' ', 'ครับ', 'ค่ะ', 'คับ', 'จ้า', 'นะคะ', 'นะ', 'พี่'], '', mb_strtolower($text, 'UTF-8'));
+                $greeting_words = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'เค', 'รับทราบ', 'รับแซ่บ', 'เยี่ยม', 'ดีมาก', 'thankyou', 'thanks'];
                 
-                if(isset($gemini_result['candidates'][0]['content']['parts'][0]['text'])) {
-                    $ai_data = json_decode($gemini_result['candidates'][0]['content']['parts'][0]['text'], true);
+                // ถ้าข้อความที่พิมพ์มา เป็นแค่คำขอบคุณ บอทจะตอบกลับและจบการทำงานทันที
+                if (in_array($clean_text, $greeting_words)) {
+                    $replyMsg = ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 ทีมงานพร้อมดูแลเสมอ หากมีปัญหาเพิ่มเติมแจ้งบอทเข้ามาได้ตลอดเลยนะคะ 🛠️"];
+                    send_reply($replyToken, $replyMsg, $channelAccessToken);
+                } 
+                // ----------------------------------------------------
+                // แต่ถ้าไม่ใช่คำขอบคุณ -> ส่งให้ AI ตีความแจ้งซ่อมตามปกติ
+                // ----------------------------------------------------
+                else {
+                    $gemini_prompt = "ทำหน้าที่เป็นผู้ช่วยรับแจ้งซ่อม สกัดข้อมูลจากข้อความต่อไปนี้:\nข้อความ: '$text'\nให้ส่งกลับมาเป็น JSON format อย่างเดียว ห้ามมีข้อความอื่น โดยมี key ดังนี้:\n- equipment: ชื่ออุปกรณ์\n- building: ชื่อตึก\n- room: เลขห้อง\n- problem: อาการที่เสีย";
 
-                    $equipment = !empty($ai_data['equipment']) ? $ai_data['equipment'] : 'ไม่ระบุอุปกรณ์';
-                    $building = !empty($ai_data['building']) ? $ai_data['building'] : '';
-                    $room = !empty($ai_data['room']) ? $ai_data['room'] : '';
-                    $location = trim($building . ' ' . $room) ?: 'ไม่ระบุสถานที่';
-                    $problem = !empty($ai_data['problem']) ? $ai_data['problem'] : 'ไม่ระบุอาการ';
-                    
-                    $ticket_no = "MR-" . date("Ymd-His");
-                    $status = "รอยืนยัน"; 
-                    $reporter_name = "แจ้งผ่านแชทบอท AI"; 
-                    $phone_number = "ไม่ระบุ";
+                    $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+                    $gemini_data = [
+                        "contents" => [["parts" => [["text" => $gemini_prompt]]]],
+                        "generationConfig" => ["temperature" => 0.1, "responseMimeType" => "application/json"]
+                    ];
 
-                    $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmt->bind_param("ssssssss", $ticket_no, $equipment, $location, $problem, $status, $reporter_name, $phone_number, $userId);
+                    $ch = curl_init($gemini_url);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'x-goog-api-key: ' . $gemini_api_key]);
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+                    $gemini_response = curl_exec($ch);
+                    curl_close($ch);
+
+                    $gemini_result = json_decode($gemini_response, true);
                     
-                    if($stmt->execute()) {
-                        $messageData = [
-                            'type' => 'flex',
-                            'altText' => 'กรุณายืนยันข้อมูลแจ้งซ่อม',
-                            'contents' => [
-                                'type' => 'bubble',
-                                'header' => [
-                                    'type' => 'box', 'layout' => 'vertical',
-                                    'contents' => [['type' => 'text', 'text' => '📋 ตรวจสอบความถูกต้อง', 'weight' => 'bold', 'size' => 'lg', 'color' => '#1DB446']]
-                                ],
-                                'body' => [
-                                    'type' => 'box', 'layout' => 'vertical', 'spacing' => 'md',
-                                    'contents' => [
-                                        ['type' => 'box', 'layout' => 'horizontal', 'contents' => [
-                                            ['type' => 'text', 'text' => 'อุปกรณ์:', 'color' => '#aaaaaa', 'size' => 'sm', 'flex' => 1],
-                                            ['type' => 'text', 'text' => $equipment, 'wrap' => true, 'color' => '#333333', 'size' => 'sm', 'flex' => 3]
-                                        ]],
-                                        ['type' => 'box', 'layout' => 'horizontal', 'contents' => [
-                                            ['type' => 'text', 'text' => 'สถานที่:', 'color' => '#aaaaaa', 'size' => 'sm', 'flex' => 1],
-                                            ['type' => 'text', 'text' => $location, 'wrap' => true, 'color' => '#333333', 'size' => 'sm', 'flex' => 3]
-                                        ]],
-                                        ['type' => 'box', 'layout' => 'horizontal', 'contents' => [
-                                            ['type' => 'text', 'text' => 'ปัญหา:', 'color' => '#aaaaaa', 'size' => 'sm', 'flex' => 1],
-                                            ['type' => 'text', 'text' => $problem, 'wrap' => true, 'color' => '#ef4444', 'size' => 'sm', 'flex' => 3]
-                                        ]]
-                                    ]
-                                ],
-                                'footer' => [
-                                    'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm',
-                                    'contents' => [
-                                        ['type' => 'button', 'style' => 'primary', 'height' => 'sm', 'color' => '#1DB446',
-                                            'action' => ['type' => 'postback', 'label' => '✅ ถูกต้อง', 'data' => "action=confirm&ticket=$ticket_no", 'displayText' => '✅ ข้อมูลถูกต้อง ดำเนินการต่อได้เลย']
-                                        ],
-                                        ['type' => 'button', 'style' => 'secondary', 'height' => 'sm',
-                                            'action' => ['type' => 'postback', 'label' => '❌ พิมพ์ใหม่', 'data' => "action=cancel&ticket=$ticket_no", 'displayText' => '❌ ข้อมูลผิด (ต้องการพิมพ์แจ้งใหม่)']
+                    if(isset($gemini_result['candidates'][0]['content']['parts'][0]['text'])) {
+                        $ai_data = json_decode($gemini_result['candidates'][0]['content']['parts'][0]['text'], true);
+
+                        $equipment = !empty($ai_data['equipment']) ? $ai_data['equipment'] : 'ไม่ระบุอุปกรณ์';
+                        $building = !empty($ai_data['building']) ? $ai_data['building'] : '';
+                        $room = !empty($ai_data['room']) ? $ai_data['room'] : '';
+                        $location = trim($building . ' ' . $room) ?: 'ไม่ระบุสถานที่';
+                        $problem = !empty($ai_data['problem']) ? $ai_data['problem'] : 'ไม่ระบุอาการ';
+                        
+                        $ticket_no = "MR-" . date("Ymd-His");
+                        $status = "รอยืนยัน"; 
+                        $reporter_name = "แจ้งผ่านแชทบอท AI"; 
+                        $phone_number = "ไม่ระบุ";
+
+                        $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                        $stmt->bind_param("ssssssss", $ticket_no, $equipment, $location, $problem, $status, $reporter_name, $phone_number, $userId);
+                        
+                        if($stmt->execute()) {
+                            $messageData = [
+                                'type' => 'flex',
+                                'altText' => 'กรุณายืนยันข้อมูลแจ้งซ่อม',
+                                'contents' => [
+                                    'type' => 'bubble',
+                                    'header' => [
+                                        'type' => 'box', 'layout' => 'vertical',
+                                        'contents' => [['type' => 'text', 'text' => '📋 ตรวจสอบความถูกต้อง', 'weight' => 'bold', 'size' => 'lg', 'color' => '#1DB446']]
+                                    ],
+                                    'body' => [
+                                        'type' => 'box', 'layout' => 'vertical', 'spacing' => 'md',
+                                        'contents' => [
+                                            ['type' => 'box', 'layout' => 'horizontal', 'contents' => [
+                                                ['type' => 'text', 'text' => 'อุปกรณ์:', 'color' => '#aaaaaa', 'size' => 'sm', 'flex' => 1],
+                                                ['type' => 'text', 'text' => $equipment, 'wrap' => true, 'color' => '#333333', 'size' => 'sm', 'flex' => 3]
+                                            ]],
+                                            ['type' => 'box', 'layout' => 'horizontal', 'contents' => [
+                                                ['type' => 'text', 'text' => 'สถานที่:', 'color' => '#aaaaaa', 'size' => 'sm', 'flex' => 1],
+                                                ['type' => 'text', 'text' => $location, 'wrap' => true, 'color' => '#333333', 'size' => 'sm', 'flex' => 3]
+                                            ]],
+                                            ['type' => 'box', 'layout' => 'horizontal', 'contents' => [
+                                                ['type' => 'text', 'text' => 'ปัญหา:', 'color' => '#aaaaaa', 'size' => 'sm', 'flex' => 1],
+                                                ['type' => 'text', 'text' => $problem, 'wrap' => true, 'color' => '#ef4444', 'size' => 'sm', 'flex' => 3]
+                                            ]]
+                                        ]
+                                    ],
+                                    'footer' => [
+                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm',
+                                        'contents' => [
+                                            ['type' => 'button', 'style' => 'primary', 'height' => 'sm', 'color' => '#1DB446',
+                                                'action' => ['type' => 'postback', 'label' => '✅ ถูกต้อง', 'data' => "action=confirm&ticket=$ticket_no", 'displayText' => '✅ ข้อมูลถูกต้อง ดำเนินการต่อได้เลย']
+                                            ],
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm',
+                                                'action' => ['type' => 'postback', 'label' => '❌ พิมพ์ใหม่', 'data' => "action=cancel&ticket=$ticket_no", 'displayText' => '❌ ข้อมูลผิด (ต้องการพิมพ์แจ้งใหม่)']
+                                            ]
                                         ]
                                     ]
                                 ]
-                            ]
-                        ];
+                            ];
+                        }
                     }
+                    send_reply($replyToken, $messageData, $channelAccessToken);
                 }
-                send_reply($replyToken, $messageData, $channelAccessToken);
             }
         }
         
@@ -132,11 +148,9 @@ if (!is_null($events['events'])) {
                     $stmt = $conn->prepare("UPDATE repairs SET status = 'รอรับเรื่อง' WHERE ticket_no = ?");
                     $stmt->bind_param("s", $ticket_no);
                     if ($stmt->execute()) {
-                        // ตอบกลับผู้ใช้สั้นๆ
                         $replyText = "✅ ยืนยันข้อมูลเรียบร้อย รอช่างรับงานนะคะ 🛠️";
                         send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
-                        // ดึงข้อมูลไปสร้างการ์ดส่งเข้ากลุ่มช่าง
                         $stmt_info = $conn->prepare("SELECT equipment_type, location, problem_desc FROM repairs WHERE ticket_no = ?");
                         $stmt_info->bind_param("s", $ticket_no);
                         $stmt_info->execute();
@@ -190,9 +204,28 @@ if (!is_null($events['events'])) {
                     $stmt->bind_param("s", $ticket_no);
                     $stmt->execute();
 
-                    // ตอบกลับในกลุ่มช่าง
-                    $replyText = "✅ $tech_name รับงาน $ticket_no แล้ว! ลุยเลยครับ 🏃‍♂️💨";
-                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                    // ตอบกลับในกลุ่มช่างพร้อมปุ่มปิดงาน
+                    $messageData = [
+                        'type' => 'flex',
+                        'altText' => "$tech_name รับงานแล้ว",
+                        'contents' => [
+                            'type' => 'bubble',
+                            'body' => [
+                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                'contents' => [
+                                    ['type' => 'text', 'text' => "✅ $tech_name รับงานแล้ว!", 'weight' => 'bold', 'color' => '#10b981'],
+                                    ['type' => 'text', 'text' => "ใบงาน: $ticket_no\nเมื่อดำเนินการเสร็จสิ้น รบกวนกดปุ่มด้านล่างเพื่อปิดงานและส่งแบบประเมินให้ลูกค้านะคะ", 'wrap' => true, 'size' => 'sm']
+                                ]
+                            ],
+                            'footer' => [
+                                'type' => 'box', 'layout' => 'vertical',
+                                'contents' => [
+                                    ['type' => 'button', 'style' => 'primary', 'color' => '#ef4444', 'action' => ['type' => 'postback', 'label' => '🔒 ปิดงานซ่อม', 'data' => "action=close&ticket=$ticket_no"]]
+                                ]
+                            ]
+                        ]
+                    ];
+                    send_reply($replyToken, $messageData, $channelAccessToken);
 
                     // แจ้งเตือนกลับไปหาผู้แจ้งซ่อม
                     $stmt_user = $conn->prepare("SELECT line_user_id, equipment_type FROM repairs WHERE ticket_no = ?");
@@ -201,10 +234,69 @@ if (!is_null($events['events'])) {
                     $user_result = $stmt_user->get_result()->fetch_assoc();
 
                     if($user_result && !empty($user_result['line_user_id'])) {
-                        $user_id_to_push = $user_result['line_user_id'];
-                        $equip = $user_result['equipment_type'];
-                        $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 $tech_name รับงานซ่อม '$equip' ของคุณแล้วนะคะ!\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
-                        send_push($user_id_to_push, $pushMsgToUser, $channelAccessToken);
+                        $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 $tech_name รับงานซ่อมของคุณแล้วนะคะ!\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
+                        send_push($user_result['line_user_id'], $pushMsgToUser, $channelAccessToken);
+                    }
+                }
+                // 4. ช่างกดปุ่ม "ปิดงานซ่อม"
+                elseif ($postbackData['action'] == 'close') {
+                    $stmt = $conn->prepare("UPDATE repairs SET status = 'รอการรีวิว' WHERE ticket_no = ?");
+                    $stmt->bind_param("s", $ticket_no);
+                    $stmt->execute();
+
+                    // แจ้งในกลุ่มว่าปิดงานแล้ว
+                    send_reply($replyToken, ['type' => 'text', 'text' => "🔒 ปิดงาน $ticket_no เรียบร้อย! ระบบกำลังส่งแบบประเมินให้ลูกค้าครับ"], $channelAccessToken);
+
+                    // ส่ง Flex ประเมินให้ลูกค้า
+                    $stmt_user = $conn->prepare("SELECT line_user_id FROM repairs WHERE ticket_no = ?");
+                    $stmt_user->bind_param("s", $ticket_no);
+                    $stmt_user->execute();
+                    $user_result = $stmt_user->get_result()->fetch_assoc();
+
+                    if($user_result && !empty($user_result['line_user_id'])) {
+                        $pushMsg = [
+                            'type' => 'flex',
+                            'altText' => 'รบกวนประเมินความพึงพอใจ',
+                            'contents' => [
+                                'type' => 'bubble',
+                                'header' => [
+                                    'type' => 'box', 'layout' => 'vertical',
+                                    'contents' => [['type' => 'text', 'text' => '⭐️ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#f59e0b', 'size' => 'lg']]
+                                ],
+                                'body' => [
+                                    'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                    'contents' => [
+                                        ['type' => 'text', 'text' => 'งานซ่อมของคุณเสร็จเรียบร้อยแล้ว!', 'wrap' => true],
+                                        ['type' => 'text', 'text' => 'รบกวนให้คะแนนช่างเพื่อเป็นกำลังใจด้วยนะคะ', 'wrap' => true, 'size' => 'sm', 'color' => '#aaaaaa']
+                                    ]
+                                ],
+                                'footer' => [
+                                    'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                    'contents' => [
+                                        ['type' => 'button', 'style' => 'primary', 'color' => '#f59e0b', 'action' => ['type' => 'postback', 'label' => '⭐⭐⭐⭐⭐ ดีมาก', 'data' => "action=rate&ticket=$ticket_no&score=5", 'displayText' => 'ให้ 5 ดาว ⭐⭐⭐⭐⭐']],
+                                        ['type' => 'button', 'style' => 'secondary', 'action' => ['type' => 'postback', 'label' => '⭐⭐⭐⭐ ดี', 'data' => "action=rate&ticket=$ticket_no&score=4", 'displayText' => 'ให้ 4 ดาว ⭐⭐⭐⭐']],
+                                        ['type' => 'button', 'style' => 'secondary', 'action' => ['type' => 'postback', 'label' => '⭐⭐⭐ ปานกลาง', 'data' => "action=rate&ticket=$ticket_no&score=3", 'displayText' => 'ให้ 3 ดาว ⭐⭐⭐']]
+                                    ]
+                                ]
+                            ]
+                        ];
+                        send_push($user_result['line_user_id'], $pushMsg, $channelAccessToken);
+                    }
+                }
+                // 5. ลูกค้ากดให้คะแนนดาว
+                elseif ($postbackData['action'] == 'rate') {
+                    $score = $postbackData['score'];
+                    $new_status = "เสร็จสิ้น ($score ดาว)"; 
+                    
+                    $stmt = $conn->prepare("UPDATE repairs SET status = ? WHERE ticket_no = ?");
+                    $stmt->bind_param("ss", $new_status, $ticket_no);
+                    $stmt->execute();
+                    
+                    $replyText = "💖 ขอบคุณสำหรับคะแนน $score ดาวนะคะ!\n\nหวังว่าคุณลูกค้าจะประทับใจในบริการของเราค่ะ หากมีปัญหาเพิ่มเติมแจ้งบอทได้ตลอดเลยนะคะ";
+                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                    
+                    if (!empty($line_group_id)) {
+                        send_push($line_group_id, ['type' => 'text', 'text' => "🎉 ใบงาน $ticket_no ได้รับคะแนนรีวิว $score ดาวจากลูกค้าครับ! เก่งมากๆ 👏"], $channelAccessToken);
                     }
                 }
             }
