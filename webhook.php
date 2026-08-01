@@ -70,6 +70,7 @@ if (!is_null($events['events'])) {
                 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // <--- เพิ่มบรรทัดนี้เพื่อแก้ปัญหาการเชื่อมต่อ
                 $gemini_response = curl_exec($ch);
                 curl_close($ch);
 
@@ -101,7 +102,8 @@ if (!is_null($events['events'])) {
                         $replyText = "ขออภัยค่ะ ระบบไม่สามารถบันทึกข้อมูลได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง";
                     }
                 } else {
-                    $replyText = "ขออภัยค่ะ AI ไม่สามารถประมวลผลข้อความได้ในขณะนี้ รบกวนแจ้งรายละเอียดอีกครั้งนะคะ";
+                    $curl_err = curl_error($ch);
+                    $replyText = "🚨 พบข้อผิดพลาดจากระบบ:\n" . $gemini_response . "\nCURL Error: " . $curl_err;
                 }
 
                 $messageData = ['type' => 'text', 'text' => $replyText];
