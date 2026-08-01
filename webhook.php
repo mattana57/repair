@@ -32,15 +32,10 @@ if (!is_null($events['events'])) {
             elseif ($text == 'ติดต่อแอดมิน') {
                 $replyMsg = ['type' => 'text', 'text' => "แอดมินรับทราบแล้วค่ะ 🙋‍♀️\n\nรบกวนพิมพ์รายละเอียดปัญหา หรือข้อสงสัยทิ้งไว้ได้เลยนะคะ เจ้าหน้าที่จะรีบเข้ามาตรวจสอบและตอบกลับให้เร็วที่สุดค่ะ"];
                 send_reply($replyToken, $replyMsg, $channelAccessToken);
-
-                if (!empty($line_group_id)) {
-                    $pushMsg = ['type' => 'text', 'text' => "🚨 แจ้งเตือน: มีผู้ใช้ต้องการติดต่อเจ้าหน้าที่!\n\nรบกวนแอดมินเข้าไปตรวจสอบและตอบแชทผู้ใช้ในแอป LINE Official Account ด้วยนะคะ 💬"];
-                    send_push($line_group_id, $pushMsg, $channelAccessToken);
-                }
             }
             else {
                 // ให้ AI สกัดข้อมูล
-                $gemini_prompt = "ทำหน้าที่เป็นผู้ช่วยรับแจ้งซ่อม สกัดข้อมูลจากข้อความต่อไปนี้:\nข้อความ: '$text'\nให้ส่งกลับมาเป็น JSON format อย่างเดียว ห้ามมีข้อความอื่น โดยมี key ดังนี้:\n- equipment: ชื่ออุปกรณ์ (เช่น แอร์, คอมพิวเตอร์)\n- building: ชื่อตึก (เช่น SBB)\n- room: เลขห้อง\n- problem: อาการที่เสีย";
+                $gemini_prompt = "ทำหน้าที่เป็นผู้ช่วยรับแจ้งซ่อม สกัดข้อมูลจากข้อความต่อไปนี้:\nข้อความ: '$text'\nให้ส่งกลับมาเป็น JSON format อย่างเดียว ห้ามมีข้อความอื่น โดยมี key ดังนี้:\n- equipment: ชื่ออุปกรณ์\n- building: ชื่อตึก\n- room: เลขห้อง\n- problem: อาการที่เสีย";
 
                 $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
                 $gemini_data = [
@@ -55,7 +50,6 @@ if (!is_null($events['events'])) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
                 $gemini_response = curl_exec($ch);
-                $curl_err = curl_error($ch);
                 curl_close($ch);
 
                 $gemini_result = json_decode($gemini_response, true);
@@ -70,7 +64,7 @@ if (!is_null($events['events'])) {
                     $problem = !empty($ai_data['problem']) ? $ai_data['problem'] : 'ไม่ระบุอาการ';
                     
                     $ticket_no = "MR-" . date("Ymd-His");
-                    $status = "รอยืนยัน"; // <--- ตั้งเป็นรอยืนยัน
+                    $status = "รอยืนยัน"; 
                     $reporter_name = "แจ้งผ่านแชทบอท AI"; 
                     $phone_number = "ไม่ระบุ";
 
@@ -78,7 +72,6 @@ if (!is_null($events['events'])) {
                     $stmt->bind_param("ssssssss", $ticket_no, $equipment, $location, $problem, $status, $reporter_name, $phone_number, $userId);
                     
                     if($stmt->execute()) {
-                        // สร้างรูปแบบการ์ด Flex Message
                         $messageData = [
                             'type' => 'flex',
                             'altText' => 'กรุณายืนยันข้อมูลแจ้งซ่อม',
@@ -92,7 +85,7 @@ if (!is_null($events['events'])) {
                                     'type' => 'box', 'layout' => 'vertical', 'spacing' => 'md',
                                     'contents' => [
                                         ['type' => 'box', 'layout' => 'horizontal', 'contents' => [
-                                            ['type' => 'text', 'text' => 'อุปกณ์:', 'color' => '#aaaaaa', 'size' => 'sm', 'flex' => 1],
+                                            ['type' => 'text', 'text' => 'อุปกรณ์:', 'color' => '#aaaaaa', 'size' => 'sm', 'flex' => 1],
                                             ['type' => 'text', 'text' => $equipment, 'wrap' => true, 'color' => '#333333', 'size' => 'sm', 'flex' => 3]
                                         ]],
                                         ['type' => 'box', 'layout' => 'horizontal', 'contents' => [
@@ -118,45 +111,102 @@ if (!is_null($events['events'])) {
                                 ]
                             ]
                         ];
-                    } else {
-                        $messageData = ['type' => 'text', 'text' => "🚨 เกิดข้อผิดพลาดในการบันทึกฐานข้อมูล: " . $stmt->error];
                     }
-                } else {
-                    $messageData = ['type' => 'text', 'text' => "🚨 พบข้อผิดพลาดจากระบบ:\n" . $gemini_response . "\nCURL Error: " . $curl_err];
                 }
                 send_reply($replyToken, $messageData, $channelAccessToken);
             }
         }
         
         // ========================================================
-        // ส่วนที่ B: จัดการเมื่อผู้ใช้กดปุ่ม (Postback Event)
+        // ส่วนที่ B: จัดการเมื่อกดปุ่ม (Postback Event)
         // ========================================================
         elseif ($event['type'] == 'postback') {
             $replyToken = $event['replyToken'];
-            parse_str($event['postback']['data'], $postbackData); // แยกข้อมูลที่ส่งมาจากปุ่ม
+            parse_str($event['postback']['data'], $postbackData);
 
             if (isset($postbackData['action']) && isset($postbackData['ticket'])) {
                 $ticket_no = $postbackData['ticket'];
 
+                // 1. ผู้ใช้กดยืนยันข้อมูล
                 if ($postbackData['action'] == 'confirm') {
-                    // อัปเดตสถานะเป็น "รอรับเรื่อง"
                     $stmt = $conn->prepare("UPDATE repairs SET status = 'รอรับเรื่อง' WHERE ticket_no = ?");
                     $stmt->bind_param("s", $ticket_no);
                     if ($stmt->execute()) {
-                        $replyText = "✅ ยืนยันข้อมูลเรียบร้อยแล้วค่ะ!\n\n📌 เลขที่ใบงาน: $ticket_no\n\nระบบส่งเรื่องให้เจ้าหน้าที่แล้ว จะมีการแจ้งเตือนอีกครั้งเมื่อช่างเริ่มดำเนินการนะคะ";
-                    } else {
-                        $replyText = "🚨 เกิดข้อผิดพลาด: " . $stmt->error;
+                        // ตอบกลับผู้ใช้สั้นๆ
+                        $replyText = "✅ ยืนยันข้อมูลเรียบร้อย รอช่างรับงานนะคะ 🛠️";
+                        send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+
+                        // ดึงข้อมูลไปสร้างการ์ดส่งเข้ากลุ่มช่าง
+                        $stmt_info = $conn->prepare("SELECT equipment_type, location, problem_desc FROM repairs WHERE ticket_no = ?");
+                        $stmt_info->bind_param("s", $ticket_no);
+                        $stmt_info->execute();
+                        $job = $stmt_info->get_result()->fetch_assoc();
+
+                        if($job && !empty($line_group_id)) {
+                            $pushMsg = [
+                                'type' => 'flex',
+                                'altText' => '🚨 มีงานแจ้งซ่อมใหม่!',
+                                'contents' => [
+                                    'type' => 'bubble',
+                                    'body' => [
+                                        'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                        'contents' => [
+                                            ['type' => 'text', 'text' => '🚨 มีงานแจ้งซ่อมใหม่!', 'weight' => 'bold', 'color' => '#ef4444', 'size' => 'lg'],
+                                            ['type' => 'text', 'text' => 'ใบงาน: ' . $ticket_no, 'size' => 'sm', 'color' => '#aaaaaa'],
+                                            ['type' => 'text', 'text' => 'ซ่อม: ' . $job['equipment_type'] . ' (' . $job['location'] . ')', 'wrap' => true],
+                                            ['type' => 'text', 'text' => 'อาการ: ' . $job['problem_desc'], 'wrap' => true, 'color' => '#ef4444']
+                                        ]
+                                    ],
+                                    'footer' => [
+                                        'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                        'contents' => [
+                                            ['type' => 'button', 'style' => 'primary', 'color' => '#3b82f6',
+                                                'action' => ['type' => 'postback', 'label' => '👨‍🔧 ช่างต้อม รับงาน', 'data' => "action=accept&ticket=$ticket_no&tech=ช่างต้อม"]
+                                            ],
+                                            ['type' => 'button', 'style' => 'primary', 'color' => '#10b981',
+                                                'action' => ['type' => 'postback', 'label' => '👨‍🔧 ช่างเอ รับงาน', 'data' => "action=accept&ticket=$ticket_no&tech=ช่างเอ"]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ];
+                            send_push($line_group_id, $pushMsg, $channelAccessToken);
+                        }
                     }
-                } elseif ($postbackData['action'] == 'cancel') {
-                    // เปลี่ยนสถานะเป็น "ยกเลิก"
+                } 
+                // 2. ผู้ใช้กดยกเลิก/พิมพ์ใหม่
+                elseif ($postbackData['action'] == 'cancel') {
                     $stmt = $conn->prepare("UPDATE repairs SET status = 'ยกเลิก' WHERE ticket_no = ?");
                     $stmt->bind_param("s", $ticket_no);
                     $stmt->execute();
-                    $replyText = "🗑️ ยกเลิกข้อมูลเดิมเรียบร้อยแล้วค่ะ\n\nรบกวนคุณลูกค้าพิมพ์อธิบายอุปกรณ์และปัญหาที่ต้องการแจ้งซ่อมเข้ามาใหม่อีกครั้งได้เลยนะคะ 🛠️";
+                    $replyText = "🗑️ ยกเลิกข้อมูลเดิมเรียบร้อยแล้วค่ะ\n\nรบกวนพิมพ์แจ้งอุปกรณ์และปัญหาเข้ามาใหม่อีกครั้งได้เลยนะคะ 🛠️";
+                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
                 }
+                // 3. ช่างกดปุ่มรับงานในกลุ่ม
+                elseif ($postbackData['action'] == 'accept') {
+                    $tech_name = isset($postbackData['tech']) ? $postbackData['tech'] : 'ช่าง';
+                    
+                    $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ' WHERE ticket_no = ?");
+                    $stmt->bind_param("s", $ticket_no);
+                    $stmt->execute();
 
-                $messageData = ['type' => 'text', 'text' => $replyText];
-                send_reply($replyToken, $messageData, $channelAccessToken);
+                    // ตอบกลับในกลุ่มช่าง
+                    $replyText = "✅ $tech_name รับงาน $ticket_no แล้ว! ลุยเลยครับ 🏃‍♂️💨";
+                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+
+                    // แจ้งเตือนกลับไปหาผู้แจ้งซ่อม
+                    $stmt_user = $conn->prepare("SELECT line_user_id, equipment_type FROM repairs WHERE ticket_no = ?");
+                    $stmt_user->bind_param("s", $ticket_no);
+                    $stmt_user->execute();
+                    $user_result = $stmt_user->get_result()->fetch_assoc();
+
+                    if($user_result && !empty($user_result['line_user_id'])) {
+                        $user_id_to_push = $user_result['line_user_id'];
+                        $equip = $user_result['equipment_type'];
+                        $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 $tech_name รับงานซ่อม '$equip' ของคุณแล้วนะคะ!\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
+                        send_push($user_id_to_push, $pushMsgToUser, $channelAccessToken);
+                    }
+                }
             }
         }
     }
