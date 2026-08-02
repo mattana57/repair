@@ -18,7 +18,7 @@ if (!is_null($events['events'])) {
             $quoted_msg_id = isset($event['message']['quotedMessageId']) ? $event['message']['quotedMessageId'] : null;
             
             // ========================================================
-            // เคสที่ 1: ช่างกด Reply "รับงาน"
+            // สเตปที่ 2: ช่างกด Reply "รับงาน" -> เปลี่ยนสถานะเป็น "ช่างรับงาน" และบันทึกชื่อช่าง
             // ========================================================
             if ($quoted_msg_id) {
                 $text_clean = mb_strtolower(str_replace(' ', '', $text), 'UTF-8');
@@ -37,24 +37,25 @@ if (!is_null($events['events'])) {
                     $stmt->execute();
                     $job = $stmt->get_result()->fetch_assoc();
 
+                    // ถ้าสถานะเป็นรอรับเรื่อง ช่างตอบปุ๊บ ให้ถือว่ารับงาน
                     if ($job && $job['status'] == 'รอรับเรื่อง') {
                         $user_name = get_line_profile($userId, $groupId, $channelAccessToken);
                         
-                        $stmt_up = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_name = ? WHERE ticket_no = ?");
+                        // 🛠️ เปลี่ยนสถานะตรงนี้เป็น "ช่างรับงาน" ตามที่ออกแบบไว้เลยค่ะ
+                        $stmt_up = $conn->prepare("UPDATE repairs SET status = 'ช่างรับงาน', technician_name = ? WHERE ticket_no = ?");
                         $stmt_up->bind_param("ss", $user_name, $job['ticket_no']);
                         $stmt_up->execute();
                     }
                 }
             } 
             // ========================================================
-            // เคสที่ 2: คนพิมพ์แจ้งซ่อมใหม่ 
+            // สเตปที่ 1: คนพิมพ์แจ้งซ่อมใหม่ -> บันทึกสถานะ "รอรับเรื่อง"
             // ========================================================
             else {
                 if (mb_strpos($text, '@') !== false || mb_strpos($text, 'แจ้งซ่อม') !== false || mb_strpos($text, 'พัง') !== false || mb_strpos($text, 'เสีย') !== false || mb_strpos($text, 'แปลก') !== false || mb_strpos($text, 'ดู') !== false) {
                     
                     $gemini_prompt = "ดึงข้อมูลจากประโยค: '$text' ตอบแค่ JSON โครงสร้างนี้เท่านั้น {\"equipment\":\"\",\"building\":\"\",\"room\":\"\",\"problem\":\"\"} ถ้าไม่มีให้ใส่ ไม่ระบุ";
 
-                    // กลับมาใช้โมเดลเดิมที่ทำงานได้ชัวร์ๆ
                     $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
                     $gemini_data = [
                         "contents" => [["parts" => [["text" => $gemini_prompt]]]],
@@ -67,7 +68,7 @@ if (!is_null($events['events'])) {
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 60); // คงเวลา 60 วินาทีไว้ให้ AI มีเวลาคิด
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 60); 
                     
                     $gemini_response = curl_exec($ch);
                     $curl_error = curl_error($ch);
