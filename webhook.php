@@ -22,7 +22,6 @@ if (!is_null($events['events'])) {
             if ($quoted_msg_id) {
                 $text_clean = mb_strtolower(str_replace(' ', '', $text), 'UTF-8');
                 
-                // 🛠️ อัปเดตคลังคำศัพท์ให้ครอบคลุมการประสานงานของเจ้าหน้าที่และแม่บ้าน
                 $accept_words = [
                     'ครับ', 'ค่ะ', 'รับงาน', 'รับทราบ', 'โอเค', 'จัดไป', 'รับเรื่อง', 'กำลังไป', 'ok', 
                     'ได้ครับ', 'ได้ค่ะ', 'ได้ครับผม', 'สักครู่นะครับ', 'เดี๋ยวดูให้ครับ', 'เดี๋ยวแจ้งแม่บ้านให้ครับ', 'บอกแม่บ้านให้แล้วครับ'
@@ -62,8 +61,9 @@ if (!is_null($events['events'])) {
                     $status = "รอรับเรื่อง"; 
                     $phone_number = "ไม่ระบุ";
                     
-                    // 1. บันทึกข้อความดิบลงฐานข้อมูลทันที
-                    $tmp_equipment = "รอ AI ตรวจสอบ";
+                    // 1. บันทึกข้อความดิบลงฐานข้อมูลทันที!
+                    // 🛠️ ปรับเป็น "กำลังวิเคราะห์ข้อมูล" ตามที่คุณน้ำฝนต้องการค่ะ
+                    $tmp_equipment = "กำลังวิเคราะห์ข้อมูล";
                     $tmp_location = "ไม่ระบุสถานที่";
                     $stmt_insert = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id, line_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     $stmt_insert->bind_param("sssssssss", $ticket_no, $tmp_equipment, $tmp_location, $text, $status, $user_name, $phone_number, $userId, $message_id);
