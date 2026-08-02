@@ -34,9 +34,9 @@ if (!is_null($events['events'])) {
                 send_reply($replyToken, $replyMsg, $channelAccessToken);
             }
             else {
-                // ดักคำขอบคุณ/รับทราบ
+                // ดักคำขอบคุณ ปรับให้รัดกุมขึ้น จะได้ไม่ไปทับกับคำแจ้งซ่อม
                 $text_clean = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
-                $greetings = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'เค', 'รับทราบ', 'เยี่ยม', 'แต้ง'];
+                $greetings = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'รับทราบ', 'เยี่ยม', 'แต้ง'];
                 $is_greeting = false;
                 
                 foreach ($greetings as $g) {
@@ -66,7 +66,14 @@ if (!is_null($events['events'])) {
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
                     $gemini_response = curl_exec($ch);
+                    $curl_err = curl_error($ch);
                     curl_close($ch);
+
+                    // --- เพิ่มตัวจับ Error การเชื่อมต่อ ---
+                    if ($curl_err) {
+                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบขัดข้อง (เครือข่าย): " . $curl_err], $channelAccessToken);
+                        continue; 
+                    }
 
                     $gemini_result = json_decode($gemini_response, true);
                     
@@ -79,8 +86,9 @@ if (!is_null($events['events'])) {
                         $location = trim($building . ' ' . $room) ?: 'ไม่ระบุสถานที่';
                         $problem = !empty($ai_data['problem']) ? $ai_data['problem'] : 'ไม่ระบุอาการ';
                         
+                        // --- เพิ่มตัวจับ Error กรณี AI งง ---
                         if ($equipment == 'ไม่ระบุอุปกรณ์' && $problem == 'ไม่ระบุอาการ') {
-                            // ไม่ทำอะไร
+                            send_reply($replyToken, ['type' => 'text', 'text' => "🤖 บอทจับใจความไม่ค่อยได้ค่ะ รบกวนพิมพ์ 'ชื่ออุปกรณ์' และ 'อาการ' ใหม่อีกครั้งนะคะ 🛠️"], $channelAccessToken);
                         } else {
                             $ticket_no = "MR-" . date("Ymd-His");
                             $status = "รอยืนยัน"; 
@@ -131,8 +139,14 @@ if (!is_null($events['events'])) {
                                     ]
                                 ];
                                 send_reply($replyToken, $messageData, $channelAccessToken);
+                            } else {
+                                // --- เพิ่มตัวจับ Error ฐานข้อมูล ---
+                                send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบขัดข้อง (ฐานข้อมูล): " . $stmt->error], $channelAccessToken);
                             }
                         }
+                    } else {
+                        // --- เพิ่มตัวจับ Error จาก AI (Gemini) ---
+                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบขัดข้อง (AI ตอบกลับผิดพลาด): " . $gemini_response], $channelAccessToken);
                     }
                 }
             }
@@ -148,7 +162,6 @@ if (!is_null($events['events'])) {
             if (isset($postbackData['action']) && isset($postbackData['ticket'])) {
                 $ticket_no = $postbackData['ticket'];
 
-                // 1. ผู้ใช้กดยืนยันข้อมูล
                 if ($postbackData['action'] == 'confirm') {
                     $stmt = $conn->prepare("UPDATE repairs SET status = 'รอรับเรื่อง' WHERE ticket_no = ?");
                     $stmt->bind_param("s", $ticket_no);
@@ -192,7 +205,6 @@ if (!is_null($events['events'])) {
                         }
                     }
                 } 
-                // 2. ผู้ใช้กดยกเลิก/พิมพ์ใหม่
                 elseif ($postbackData['action'] == 'cancel') {
                     $stmt = $conn->prepare("UPDATE repairs SET status = 'ยกเลิก' WHERE ticket_no = ?");
                     $stmt->bind_param("s", $ticket_no);
@@ -200,7 +212,6 @@ if (!is_null($events['events'])) {
                     $replyText = "🗑️ ยกเลิกข้อมูลเดิมแล้วค่ะ รบกวนพิมพ์แจ้งซ่อมใหม่ได้เลยค่ะ";
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
                 }
-                // 3. ช่างกดปุ่มรับงานในกลุ่ม -> ตอบกลับผู้ใช้พร้อมแนบ Quick Reply ให้ดาว
                 elseif ($postbackData['action'] == 'accept') {
                     $tech_name = isset($postbackData['tech']) ? $postbackData['tech'] : 'ช่าง';
                     
@@ -216,43 +227,12 @@ if (!is_null($events['events'])) {
                     $stmt->bind_param("s", $ticket_no);
                     $stmt->execute();
 
-                    // ตอบกลับในกลุ่มช่าง
                     $replyText = "✅ $tech_name รับงานแล้ว\nซ่อม: $equip ($loc)";
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
-                    // แจ้งเตือนกลับไปหาผู้แจ้งซ่อม พร้อมปุ่ม Quick Reply ให้ดาว
                     if($job && !empty($job['line_user_id'])) {
-                        $pushMsgToUser = [
-                            'type' => 'text',
-                            'text' => "👨‍🔧 $tech_name รับงานซ่อมของคุณแล้วนะคะ\n\n(หากดำเนินการเสร็จสิ้น รบกวนประเมินให้คะแนนช่างหน่อยนะคะ ⭐️)",
-                            'quickReply' => [
-                                'items' => [
-                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '5 ดาว ⭐️', 'data' => "action=rate&ticket=$ticket_no&score=5&tech=$tech_name", 'displayText' => 'ให้ 5 ดาว']],
-                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '4 ดาว ⭐️', 'data' => "action=rate&ticket=$ticket_no&score=4&tech=$tech_name", 'displayText' => 'ให้ 4 ดาว']],
-                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '3 ดาว ⭐️', 'data' => "action=rate&ticket=$ticket_no&score=3&tech=$tech_name", 'displayText' => 'ให้ 3 ดาว']],
-                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '2 ดาว ⭐️', 'data' => "action=rate&ticket=$ticket_no&score=2&tech=$tech_name", 'displayText' => 'ให้ 2 ดาว']],
-                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '1 ดาว ⭐️', 'data' => "action=rate&ticket=$ticket_no&score=1&tech=$tech_name", 'displayText' => 'ให้ 1 ดาว']]
-                                ]
-                            ]
-                        ];
+                        $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 $tech_name รับงานซ่อมของคุณแล้วนะคะ"];
                         send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
-                    }
-                }
-                // 4. ผู้ใช้กดให้ดาว
-                elseif ($postbackData['action'] == 'rate') {
-                    $score = $postbackData['score'];
-                    $tech_name = isset($postbackData['tech']) ? $postbackData['tech'] : 'ช่าง';
-                    $new_status = "เสร็จสิ้น ($score ดาว)"; 
-                    
-                    $stmt = $conn->prepare("UPDATE repairs SET status = ? WHERE ticket_no = ?");
-                    $stmt->bind_param("ss", $new_status, $ticket_no);
-                    $stmt->execute();
-                    
-                    send_reply($replyToken, ['type' => 'text', 'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาวนะคะ!"], $channelAccessToken);
-                    
-                    // แจ้งให้ช่างทราบในกลุ่ม
-                    if (!empty($line_group_id)) {
-                        send_push($line_group_id, ['type' => 'text', 'text' => "🎉 $tech_name ได้รับรีวิว $score ดาวจากงานซ่อม $ticket_no ครับ! 👏"], $channelAccessToken);
                     }
                 }
             }
@@ -261,7 +241,6 @@ if (!is_null($events['events'])) {
 }
 echo "OK";
 
-// (ฟังก์ชัน send_reply และ send_push คงเดิม)
 function send_reply($replyToken, $messageData, $accessToken) {
     $url = 'https://api.line.me/v2/bot/message/reply';
     $data = ['replyToken' => $replyToken, 'messages' => [$messageData]];
