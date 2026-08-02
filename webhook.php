@@ -10,7 +10,7 @@ if (!is_null($events['events'])) {
         
         if ($event['type'] == 'message' && $event['message']['type'] == 'text') {
             $text = trim($event['message']['text']);
-            $replyToken = $event['replyToken']; // ดึง Token กลับมาเพื่อใช้ส่ง Error
+            $replyToken = $event['replyToken']; 
             $userId = $event['source']['userId'];
             $groupId = isset($event['source']['groupId']) ? $event['source']['groupId'] : null;
             
@@ -54,7 +54,8 @@ if (!is_null($events['events'])) {
                     
                     $gemini_prompt = "ดึงข้อมูลจากประโยค: '$text' ตอบแค่ JSON โครงสร้างนี้เท่านั้น {\"equipment\":\"\",\"building\":\"\",\"room\":\"\",\"problem\":\"\"} ถ้าไม่มีให้ใส่ ไม่ระบุ";
 
-                    $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+                    // อัปเกรดไปใช้โมเดล gemini-1.5-flash ที่มีความเสถียรที่สุด
+                    $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
                     $gemini_data = [
                         "contents" => [["parts" => [["text" => $gemini_prompt]]]],
                         "generationConfig" => ["temperature" => 0.0, "responseMimeType" => "application/json"]
@@ -66,15 +67,20 @@ if (!is_null($events['events'])) {
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 15); // ขยายเวลาให้ AI หายใจเป็น 15 วินาที
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 60); // ขยายเวลาให้ AI แบบเหลือเฟือ 60 วินาที
                     
                     $gemini_response = curl_exec($ch);
                     $curl_error = curl_error($ch);
+                    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
 
-                    // --- ระบบฟ้อง Error ถ้าระบบขัดข้อง ---
+                    // --- ระบบฟ้อง Error ที่ละเอียดขึ้น ---
                     if ($curl_error) {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [ระบบหลังบ้าน]: AI ประมวลผลไม่ทัน รบกวนพิมพ์แจ้งใหม่อีกครั้งนะคะ 🙏"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [เครือข่ายขัดข้อง]: " . $curl_error], $channelAccessToken);
+                        continue;
+                    }
+                    if ($http_code != 200) {
+                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [Google API Error (รหัส $http_code)]: " . $gemini_response], $channelAccessToken);
                         continue;
                     }
 
@@ -104,13 +110,13 @@ if (!is_null($events['events'])) {
                             $stmt->bind_param("sssssssss", $ticket_no, $equipment, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id);
                             
                             if (!$stmt->execute()) {
-                                send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [ระบบหลังบ้าน]: บันทึกฐานข้อมูลไม่สำเร็จ!"], $channelAccessToken);
+                                send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [ฐานข้อมูลขัดข้อง]: บันทึกไม่สำเร็จ " . $stmt->error], $channelAccessToken);
                             }
                         } else {
-                            send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [ระบบหลังบ้าน]: AI จับชื่อ 'อุปกรณ์ที่เสีย' จากประโยคไม่ได้ค่ะ รบกวนระบุชื่ออุปกรณ์ชัดๆ อีกครั้งนะคะ"], $channelAccessToken);
+                            send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [บอทงง]: หาชื่อ 'อุปกรณ์' จากประโยคไม่เจอค่ะ ช่วยระบุชื่ออุปกรณ์ให้หน่อยนะคะ 🙏"], $channelAccessToken);
                         }
                     } else {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [ระบบหลังบ้าน]: AI เกิดความสับสนในการวิเคราะห์ประโยคค่ะ"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [AI สับสน]: AI ตอบข้อมูลมาผิดรูปแบบค่ะ ลองพิมพ์ใหม่อีกครั้งนะคะ"], $channelAccessToken);
                     }
                 }
             }
@@ -131,7 +137,6 @@ function get_line_profile($userId, $groupId, $accessToken) {
     return isset($data['displayName']) ? $data['displayName'] : 'ผู้ใช้งาน';
 }
 
-// นำฟังก์ชันนี้กลับมาใช้ส่ง Error แจ้งเตือนในกลุ่ม
 function send_reply($replyToken, $messageData, $accessToken) {
     $url = 'https://api.line.me/v2/bot/message/reply';
     $data = ['replyToken' => $replyToken, 'messages' => [$messageData]];
