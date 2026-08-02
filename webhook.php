@@ -54,8 +54,8 @@ if (!is_null($events['events'])) {
                     
                     $gemini_prompt = "ดึงข้อมูลจากประโยค: '$text' ตอบแค่ JSON โครงสร้างนี้เท่านั้น {\"equipment\":\"\",\"building\":\"\",\"room\":\"\",\"problem\":\"\"} ถ้าไม่มีให้ใส่ ไม่ระบุ";
 
-                    // อัปเกรดไปใช้โมเดล gemini-1.5-flash ที่มีความเสถียรที่สุด
-                    $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+                    // กลับมาใช้โมเดลเดิมที่ทำงานได้ชัวร์ๆ
+                    $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
                     $gemini_data = [
                         "contents" => [["parts" => [["text" => $gemini_prompt]]]],
                         "generationConfig" => ["temperature" => 0.0, "responseMimeType" => "application/json"]
@@ -67,14 +67,13 @@ if (!is_null($events['events'])) {
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 60); // ขยายเวลาให้ AI แบบเหลือเฟือ 60 วินาที
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 60); // คงเวลา 60 วินาทีไว้ให้ AI มีเวลาคิด
                     
                     $gemini_response = curl_exec($ch);
                     $curl_error = curl_error($ch);
                     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
 
-                    // --- ระบบฟ้อง Error ที่ละเอียดขึ้น ---
                     if ($curl_error) {
                         send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [เครือข่ายขัดข้อง]: " . $curl_error], $channelAccessToken);
                         continue;
