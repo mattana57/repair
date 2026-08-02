@@ -21,7 +21,7 @@ if (!is_null($events['events'])) {
             // ========================================================
             if ($quoted_msg_id) {
                 $text_clean = mb_strtolower(str_replace(' ', '', $text), 'UTF-8');
-                $accept_words = ['ครับ', 'ค่ะ', 'รับงาน', 'รับทราบ', 'โอเค', 'จัดไป', 'รับเรื่อง', 'กำลังไป', 'ok'];
+                $accept_words = ['ครับ', 'ค่ะ', 'รับงาน', 'รับทราบ', 'โอเค', 'จัดไป', 'รับเรื่อง', 'กำลังไป', 'ok', 'ได้ครับ', 'ได้ค่ะ'];
                 $is_accept = false;
                 
                 foreach ($accept_words as $w) {
@@ -46,12 +46,11 @@ if (!is_null($events['events'])) {
                 }
             } 
             // ========================================================
-            // เคสที่ 2: คนพิมพ์แจ้งซ่อมใหม่ (อัปเกรดความเร็ว AI)
+            // เคสที่ 2: คนพิมพ์แจ้งซ่อมใหม่ 
             // ========================================================
             else {
-                if (mb_strpos($text, '@') !== false || mb_strpos($text, 'แจ้งซ่อม') !== false || mb_strpos($text, 'พัง') !== false || mb_strpos($text, 'เสีย') !== false || mb_strpos($text, 'แปลก') !== false) {
+                if (mb_strpos($text, '@') !== false || mb_strpos($text, 'แจ้งซ่อม') !== false || mb_strpos($text, 'พัง') !== false || mb_strpos($text, 'เสีย') !== false || mb_strpos($text, 'แปลก') !== false || mb_strpos($text, 'ดู') !== false) {
                     
-                    // ปรับ Prompt ให้สั้นที่สุด บังคับ AI ตอบกลับไวๆ
                     $gemini_prompt = "ดึงข้อมูลจากประโยค: '$text' ตอบแค่ JSON โครงสร้างนี้เท่านั้น {\"equipment\":\"\",\"building\":\"\",\"room\":\"\",\"problem\":\"\"} ถ้าไม่มีให้ใส่ ไม่ระบุ";
 
                     $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
@@ -66,7 +65,7 @@ if (!is_null($events['events'])) {
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 5); // จำกัดเวลาสูงสุด 5 วินาที
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 5); 
                     
                     $gemini_response = curl_exec($ch);
                     curl_close($ch);
@@ -76,13 +75,20 @@ if (!is_null($events['events'])) {
                     if(isset($gemini_result['candidates'][0]['content']['parts'][0]['text'])) {
                         $ai_data = json_decode($gemini_result['candidates'][0]['content']['parts'][0]['text'], true);
 
-                        $equipment = !empty($ai_data['equipment']) ? $ai_data['equipment'] : 'ไม่ระบุอุปกรณ์';
+                        $equipment = !empty($ai_data['equipment']) ? $ai_data['equipment'] : 'ไม่ระบุ';
                         $building = !empty($ai_data['building']) ? $ai_data['building'] : '';
                         $room = !empty($ai_data['room']) ? $ai_data['room'] : '';
                         $location = trim($building . ' ' . $room) ?: 'ไม่ระบุสถานที่';
-                        $problem = !empty($ai_data['problem']) ? $ai_data['problem'] : 'ไม่ระบุอาการ';
                         
-                        if ($equipment != 'ไม่ระบุ' && $problem != 'ไม่ระบุ' && $equipment != 'ไม่ระบุอุปกรณ์') {
+                        // ปรับแต่งให้เติมคำอัตโนมัติหากไม่มีการระบุอาการเสีย
+                        $problem = !empty($ai_data['problem']) ? $ai_data['problem'] : 'ไม่ระบุ';
+                        if ($problem == 'ไม่ระบุ' || $problem == 'ไม่ระบุอาการ' || $problem == 'null') {
+                            $problem = 'มีความผิดปกติ (รอช่างตรวจสอบ)';
+                        }
+                        
+                        // ตรวจสอบแค่ว่ามีชื่ออุปกรณ์ก็พอ แล้วให้บันทึกเลย
+                        if ($equipment != 'ไม่ระบุ' && $equipment != 'ไม่ระบุอุปกรณ์') {
+                            
                             $user_name = get_line_profile($userId, $groupId, $channelAccessToken);
                             
                             $ticket_no = "MR-" . date("Ymd-His");
