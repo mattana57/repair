@@ -41,7 +41,6 @@ if (!is_null($events['events'])) {
                     if ($job && $job['status'] == 'รอรับเรื่อง') {
                         $user_name = get_line_profile($userId, $groupId, $channelAccessToken);
                         
-                        // 🛠️ เปลี่ยนสถานะตรงนี้เป็น "ช่างรับงาน" ตามที่ออกแบบไว้เลยค่ะ
                         $stmt_up = $conn->prepare("UPDATE repairs SET status = 'ช่างรับงาน', technician_name = ? WHERE ticket_no = ?");
                         $stmt_up->bind_param("ss", $user_name, $job['ticket_no']);
                         $stmt_up->execute();
@@ -52,7 +51,8 @@ if (!is_null($events['events'])) {
             // สเตปที่ 1: คนพิมพ์แจ้งซ่อมใหม่ -> บันทึกสถานะ "รอรับเรื่อง"
             // ========================================================
             else {
-                if (mb_strpos($text, '@') !== false || mb_strpos($text, 'แจ้งซ่อม') !== false || mb_strpos($text, 'พัง') !== false || mb_strpos($text, 'เสีย') !== false || mb_strpos($text, 'แปลก') !== false || mb_strpos($text, 'ดู') !== false) {
+                // 🛠️ อัปเดตเงื่อนไขให้ดักจับเฉพาะคำที่ระบุอย่างชัดเจนเท่านั้น
+                if (mb_strpos($text, '@repair-แจ้งซ่อม') !== false || mb_strpos($text, 'แจ้งซ่อม') !== false) {
                     
                     $gemini_prompt = "ดึงข้อมูลจากประโยค: '$text' ตอบแค่ JSON โครงสร้างนี้เท่านั้น {\"equipment\":\"\",\"building\":\"\",\"room\":\"\",\"problem\":\"\"} ถ้าไม่มีให้ใส่ ไม่ระบุ";
 
