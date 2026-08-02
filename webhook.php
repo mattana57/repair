@@ -13,12 +13,8 @@ if (!is_null($events['events'])) {
             $userId = $event['source']['userId'];
             $groupId = isset($event['source']['groupId']) ? $event['source']['groupId'] : null;
             
-            // 1. ดึง ID ของข้อความ
             $message_id = $event['message']['id'];
             $quoted_msg_id = isset($event['message']['quotedMessageId']) ? $event['message']['quotedMessageId'] : null;
-
-            // 2. ฟังก์ชันดึงชื่อผู้ใช้จาก LINE
-            $user_name = get_line_profile($userId, $groupId, $channelAccessToken);
             
             // ========================================================
             // เคสที่ 1: ช่างกด Reply ข้อความเพื่อ "รับงาน"
@@ -35,19 +31,18 @@ if (!is_null($events['events'])) {
                 }
 
                 if ($is_accept) {
-                    // ตรวจสอบว่าข้อความที่ Reply เป็นใบงานที่รอรับเรื่องหรือไม่
                     $stmt = $conn->prepare("SELECT ticket_no, status FROM repairs WHERE line_message_id = ?");
                     $stmt->bind_param("s", $quoted_msg_id);
                     $stmt->execute();
                     $job = $stmt->get_result()->fetch_assoc();
 
                     if ($job && $job['status'] == 'รอรับเรื่อง') {
-                        // อัปเดตสถานะและบันทึกชื่อช่างแบบเงียบๆ
+                        // ดึงชื่อเฉพาะตอนที่จะบันทึกช่าง (ประหยัดเวลา)
+                        $user_name = get_line_profile($userId, $groupId, $channelAccessToken);
+                        
                         $stmt_up = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_name = ? WHERE ticket_no = ?");
                         $stmt_up->bind_param("ss", $user_name, $job['ticket_no']);
                         $stmt_up->execute();
-                        
-                        // ❌ ลบคำสั่ง send_reply ออกแล้ว บอทจะไม่ตอบกลับ
                     }
                 }
             } 
@@ -55,8 +50,7 @@ if (!is_null($events['events'])) {
             // เคสที่ 2: คนพิมพ์แจ้งซ่อมใหม่
             // ========================================================
             else {
-                // ดักเฉพาะข้อความที่มีคำเกี่ยวกับแจ้งซ่อม เพื่อลดการทำงานของ AI
-                if (mb_strpos($text, '@') !== false || mb_strpos($text, 'แจ้งซ่อม') !== false || mb_strpos($text, 'พัง') !== false || mb_strpos($text, 'เสีย') !== false) {
+                if (mb_strpos($text, '@') !== false || mb_strpos($text, 'แจ้งซ่อม') !== false || mb_strpos($text, 'พัง') !== false || mb_strpos($text, 'เสีย') !== false || mb_strpos($text, 'แปลก') !== false) {
                     
                     $gemini_prompt = "ทำหน้าที่เป็นผู้ช่วยรับแจ้งซ่อม สกัดข้อมูลจากข้อความต่อไปนี้:\nข้อความ: '$text'\nส่งกลับมาเป็น JSON format ห้ามมีข้อความอื่น โดยมี key:\n- equipment: ชื่ออุปกรณ์\n- building: ชื่อตึก\n- room: เลขห้อง\n- problem: อาการ";
 
@@ -72,6 +66,8 @@ if (!is_null($events['events'])) {
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 10); // จำกัดเวลาให้ AI ไม่เกิน 10 วินาที เพื่อไม่ให้ระบบค้าง
+                    
                     $gemini_response = curl_exec($ch);
                     curl_close($ch);
 
@@ -86,18 +82,17 @@ if (!is_null($events['events'])) {
                         $location = trim($building . ' ' . $room) ?: 'ไม่ระบุสถานที่';
                         $problem = !empty($ai_data['problem']) ? $ai_data['problem'] : 'ไม่ระบุอาการ';
                         
-                        // ถ้า AI วิเคราะห์แล้วว่าเป็นการแจ้งซ่อมจริงๆ
                         if ($equipment != 'ไม่ระบุอุปกรณ์' && $problem != 'ไม่ระบุอาการ') {
+                            // ดึงชื่อเฉพาะตอนสร้างใบงานสำเร็จ (ประหยัดเวลา)
+                            $user_name = get_line_profile($userId, $groupId, $channelAccessToken);
+                            
                             $ticket_no = "MR-" . date("Ymd-His");
                             $status = "รอรับเรื่อง"; 
                             $phone_number = "ไม่ระบุ";
 
-                            // บันทึกลงฐานข้อมูลแบบเงียบๆ 
                             $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id, line_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                             $stmt->bind_param("sssssssss", $ticket_no, $equipment, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id);
                             $stmt->execute();
-                            
-                            // ❌ ลบคำสั่ง send_reply ออกแล้ว บอทจะไม่ตอบกลับ
                         }
                     }
                 }
@@ -107,17 +102,14 @@ if (!is_null($events['events'])) {
 }
 echo "OK";
 
-// ฟังก์ชันดึงชื่อโปรไฟล์จาก LINE
 function get_line_profile($userId, $groupId, $accessToken) {
     $url = $groupId ? "https://api.line.me/v2/bot/group/$groupId/member/$userId" : "https://api.line.me/v2/bot/profile/$userId";
-    
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $accessToken]);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     $result = curl_exec($ch);
     curl_close($ch);
-    
     $data = json_decode($result, true);
     return isset($data['displayName']) ? $data['displayName'] : 'ผู้ใช้งาน';
 }
