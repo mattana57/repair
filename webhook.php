@@ -17,7 +17,7 @@ if (!is_null($events['events'])) {
             $quoted_msg_id = isset($event['message']['quotedMessageId']) ? $event['message']['quotedMessageId'] : null;
             
             // ========================================================
-            // เคสที่ 1: ช่างกด Reply ข้อความเพื่อ "รับงาน"
+            // เคสที่ 1: ช่างกด Reply "รับงาน"
             // ========================================================
             if ($quoted_msg_id) {
                 $text_clean = mb_strtolower(str_replace(' ', '', $text), 'UTF-8');
@@ -37,7 +37,6 @@ if (!is_null($events['events'])) {
                     $job = $stmt->get_result()->fetch_assoc();
 
                     if ($job && $job['status'] == 'รอรับเรื่อง') {
-                        // ดึงชื่อเฉพาะตอนที่จะบันทึกช่าง (ประหยัดเวลา)
                         $user_name = get_line_profile($userId, $groupId, $channelAccessToken);
                         
                         $stmt_up = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_name = ? WHERE ticket_no = ?");
@@ -47,17 +46,18 @@ if (!is_null($events['events'])) {
                 }
             } 
             // ========================================================
-            // เคสที่ 2: คนพิมพ์แจ้งซ่อมใหม่
+            // เคสที่ 2: คนพิมพ์แจ้งซ่อมใหม่ (อัปเกรดความเร็ว AI)
             // ========================================================
             else {
                 if (mb_strpos($text, '@') !== false || mb_strpos($text, 'แจ้งซ่อม') !== false || mb_strpos($text, 'พัง') !== false || mb_strpos($text, 'เสีย') !== false || mb_strpos($text, 'แปลก') !== false) {
                     
-                    $gemini_prompt = "ทำหน้าที่เป็นผู้ช่วยรับแจ้งซ่อม สกัดข้อมูลจากข้อความต่อไปนี้:\nข้อความ: '$text'\nส่งกลับมาเป็น JSON format ห้ามมีข้อความอื่น โดยมี key:\n- equipment: ชื่ออุปกรณ์\n- building: ชื่อตึก\n- room: เลขห้อง\n- problem: อาการ";
+                    // ปรับ Prompt ให้สั้นที่สุด บังคับ AI ตอบกลับไวๆ
+                    $gemini_prompt = "ดึงข้อมูลจากประโยค: '$text' ตอบแค่ JSON โครงสร้างนี้เท่านั้น {\"equipment\":\"\",\"building\":\"\",\"room\":\"\",\"problem\":\"\"} ถ้าไม่มีให้ใส่ ไม่ระบุ";
 
                     $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
                     $gemini_data = [
                         "contents" => [["parts" => [["text" => $gemini_prompt]]]],
-                        "generationConfig" => ["temperature" => 0.1, "responseMimeType" => "application/json"]
+                        "generationConfig" => ["temperature" => 0.0, "responseMimeType" => "application/json"]
                     ];
 
                     $ch = curl_init($gemini_url);
@@ -66,7 +66,7 @@ if (!is_null($events['events'])) {
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 10); // จำกัดเวลาให้ AI ไม่เกิน 10 วินาที เพื่อไม่ให้ระบบค้าง
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 5); // จำกัดเวลาสูงสุด 5 วินาที
                     
                     $gemini_response = curl_exec($ch);
                     curl_close($ch);
@@ -82,8 +82,7 @@ if (!is_null($events['events'])) {
                         $location = trim($building . ' ' . $room) ?: 'ไม่ระบุสถานที่';
                         $problem = !empty($ai_data['problem']) ? $ai_data['problem'] : 'ไม่ระบุอาการ';
                         
-                        if ($equipment != 'ไม่ระบุอุปกรณ์' && $problem != 'ไม่ระบุอาการ') {
-                            // ดึงชื่อเฉพาะตอนสร้างใบงานสำเร็จ (ประหยัดเวลา)
+                        if ($equipment != 'ไม่ระบุ' && $problem != 'ไม่ระบุ' && $equipment != 'ไม่ระบุอุปกรณ์') {
                             $user_name = get_line_profile($userId, $groupId, $channelAccessToken);
                             
                             $ticket_no = "MR-" . date("Ymd-His");
