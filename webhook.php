@@ -10,6 +10,7 @@ if (!is_null($events['events'])) {
         
         if ($event['type'] == 'message' && $event['message']['type'] == 'text') {
             $text = trim($event['message']['text']);
+            $replyToken = $event['replyToken']; // ดึง Token กลับมาเพื่อใช้ส่ง Error
             $userId = $event['source']['userId'];
             $groupId = isset($event['source']['groupId']) ? $event['source']['groupId'] : null;
             
@@ -21,7 +22,7 @@ if (!is_null($events['events'])) {
             // ========================================================
             if ($quoted_msg_id) {
                 $text_clean = mb_strtolower(str_replace(' ', '', $text), 'UTF-8');
-                $accept_words = ['ครับ', 'ค่ะ', 'รับงาน', 'รับทราบ', 'โอเค', 'จัดไป', 'รับเรื่อง', 'กำลังไป', 'ok', 'ได้ครับ', 'ได้ค่ะ'];
+                $accept_words = ['ครับ', 'ค่ะ', 'รับงาน', 'รับทราบ', 'โอเค', 'จัดไป', 'รับเรื่อง', 'กำลังไป', 'ok', 'ได้ครับ', 'ได้ค่ะ', 'ได้ครับผม'];
                 $is_accept = false;
                 
                 foreach ($accept_words as $w) {
@@ -65,10 +66,17 @@ if (!is_null($events['events'])) {
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 5); 
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 15); // ขยายเวลาให้ AI หายใจเป็น 15 วินาที
                     
                     $gemini_response = curl_exec($ch);
+                    $curl_error = curl_error($ch);
                     curl_close($ch);
+
+                    // --- ระบบฟ้อง Error ถ้าระบบขัดข้อง ---
+                    if ($curl_error) {
+                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [ระบบหลังบ้าน]: AI ประมวลผลไม่ทัน รบกวนพิมพ์แจ้งใหม่อีกครั้งนะคะ 🙏"], $channelAccessToken);
+                        continue;
+                    }
 
                     $gemini_result = json_decode($gemini_response, true);
                     
@@ -80,15 +88,12 @@ if (!is_null($events['events'])) {
                         $room = !empty($ai_data['room']) ? $ai_data['room'] : '';
                         $location = trim($building . ' ' . $room) ?: 'ไม่ระบุสถานที่';
                         
-                        // ปรับแต่งให้เติมคำอัตโนมัติหากไม่มีการระบุอาการเสีย
                         $problem = !empty($ai_data['problem']) ? $ai_data['problem'] : 'ไม่ระบุ';
                         if ($problem == 'ไม่ระบุ' || $problem == 'ไม่ระบุอาการ' || $problem == 'null') {
                             $problem = 'มีความผิดปกติ (รอช่างตรวจสอบ)';
                         }
                         
-                        // ตรวจสอบแค่ว่ามีชื่ออุปกรณ์ก็พอ แล้วให้บันทึกเลย
                         if ($equipment != 'ไม่ระบุ' && $equipment != 'ไม่ระบุอุปกรณ์') {
-                            
                             $user_name = get_line_profile($userId, $groupId, $channelAccessToken);
                             
                             $ticket_no = "MR-" . date("Ymd-His");
@@ -97,8 +102,15 @@ if (!is_null($events['events'])) {
 
                             $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id, line_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                             $stmt->bind_param("sssssssss", $ticket_no, $equipment, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id);
-                            $stmt->execute();
+                            
+                            if (!$stmt->execute()) {
+                                send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [ระบบหลังบ้าน]: บันทึกฐานข้อมูลไม่สำเร็จ!"], $channelAccessToken);
+                            }
+                        } else {
+                            send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [ระบบหลังบ้าน]: AI จับชื่อ 'อุปกรณ์ที่เสีย' จากประโยคไม่ได้ค่ะ รบกวนระบุชื่ออุปกรณ์ชัดๆ อีกครั้งนะคะ"], $channelAccessToken);
                         }
+                    } else {
+                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 [ระบบหลังบ้าน]: AI เกิดความสับสนในการวิเคราะห์ประโยคค่ะ"], $channelAccessToken);
                     }
                 }
             }
@@ -117,5 +129,19 @@ function get_line_profile($userId, $groupId, $accessToken) {
     curl_close($ch);
     $data = json_decode($result, true);
     return isset($data['displayName']) ? $data['displayName'] : 'ผู้ใช้งาน';
+}
+
+// นำฟังก์ชันนี้กลับมาใช้ส่ง Error แจ้งเตือนในกลุ่ม
+function send_reply($replyToken, $messageData, $accessToken) {
+    $url = 'https://api.line.me/v2/bot/message/reply';
+    $data = ['replyToken' => $replyToken, 'messages' => [$messageData]];
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Authorization: Bearer ' . $accessToken]);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_exec($ch);
+    curl_close($ch);
 }
 ?>
