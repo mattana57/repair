@@ -63,7 +63,7 @@ if (!is_null($events['events'])) {
                     
                     // 1. บันทึกข้อความดิบลงฐานข้อมูลทันที!
                     // 🛠️ ปรับเป็น "กำลังวิเคราะห์ข้อมูล" ตามที่คุณน้ำฝนต้องการค่ะ
-                    $tmp_equipment = "กำลังวิเคราะห์ข้อมูล";
+                    $tmp_equipment = "รอระบุรายละเอียดเพิ่มเติม";
                     $tmp_location = "ไม่ระบุสถานที่";
                     $stmt_insert = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id, line_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     $stmt_insert->bind_param("sssssssss", $ticket_no, $tmp_equipment, $tmp_location, $text, $status, $user_name, $phone_number, $userId, $message_id);
