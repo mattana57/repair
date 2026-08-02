@@ -21,7 +21,13 @@ if (!is_null($events['events'])) {
             // ========================================================
             if ($quoted_msg_id) {
                 $text_clean = mb_strtolower(str_replace(' ', '', $text), 'UTF-8');
-                $accept_words = ['ครับ', 'ค่ะ', 'รับงาน', 'รับทราบ', 'โอเค', 'จัดไป', 'รับเรื่อง', 'กำลังไป', 'ok', 'ได้ครับ', 'ได้ค่ะ', 'ได้ครับผม'];
+                
+                // 🛠️ อัปเดตคลังคำศัพท์ให้ครอบคลุมการประสานงานของเจ้าหน้าที่และแม่บ้าน
+                $accept_words = [
+                    'ครับ', 'ค่ะ', 'รับงาน', 'รับทราบ', 'โอเค', 'จัดไป', 'รับเรื่อง', 'กำลังไป', 'ok', 
+                    'ได้ครับ', 'ได้ค่ะ', 'ได้ครับผม', 'สักครู่นะครับ', 'เดี๋ยวดูให้ครับ', 'เดี๋ยวแจ้งแม่บ้านให้ครับ', 'บอกแม่บ้านให้แล้วครับ'
+                ];
+                
                 $is_accept = false;
                 
                 foreach ($accept_words as $w) {
@@ -56,15 +62,14 @@ if (!is_null($events['events'])) {
                     $status = "รอรับเรื่อง"; 
                     $phone_number = "ไม่ระบุ";
                     
-                    // 🛠️ 1. บันทึกข้อความดิบลงฐานข้อมูลทันที! (เซฟตี้ 100% ป้องกันเน็ตหลุด)
-                    // ใส่ equipment ไว้ชั่วคราวว่า "รอ AI ตรวจสอบ"
+                    // 1. บันทึกข้อความดิบลงฐานข้อมูลทันที
                     $tmp_equipment = "รอ AI ตรวจสอบ";
                     $tmp_location = "ไม่ระบุสถานที่";
                     $stmt_insert = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id, line_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     $stmt_insert->bind_param("sssssssss", $ticket_no, $tmp_equipment, $tmp_location, $text, $status, $user_name, $phone_number, $userId, $message_id);
                     $stmt_insert->execute();
 
-                    // 🛠️ 2. ค่อยเรียก Google Gemini AI ให้ช่วยแกะข้อมูล
+                    // 2. เรียก Google Gemini AI 
                     $gemini_prompt = "ดึงข้อมูลจากประโยค: '$text' ตอบแค่ JSON โครงสร้างนี้เท่านั้น {\"equipment\":\"\",\"building\":\"\",\"room\":\"\",\"problem\":\"\"} ถ้าไม่มีให้ใส่ ไม่ระบุ";
 
                     $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
@@ -79,15 +84,14 @@ if (!is_null($events['events'])) {
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gemini_data));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-                    curl_setopt($ch, CURLOPT_TIMEOUT, 15); // รอแค่ 15 วิพอ
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 15); 
                     
                     $gemini_response = curl_exec($ch);
                     $curl_error = curl_error($ch);
                     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
 
-                    // 🛠️ 3. ถ้า AI ทำงานสำเร็จ ก็เอาข้อมูลมาอัปเดตทับของเดิมให้สวยงาม
-                    // (แต่ถ้า AI ค้าง โค้ดตรงนี้ก็จะไม่ทำงาน และแชทก็จะไม่แจ้งเตือนอะไรให้รกกลุ่มเลยค่ะ!)
+                    // 3. อัปเดตข้อมูลทับของเดิมถ้า AI ทำงานสำเร็จ
                     if (!$curl_error && $http_code == 200) {
                         $gemini_result = json_decode($gemini_response, true);
                         
@@ -105,7 +109,6 @@ if (!is_null($events['events'])) {
                             }
                             
                             if ($equipment != 'ไม่ระบุ' && $equipment != 'ไม่ระบุอุปกรณ์') {
-                                // อัปเดตข้อมูลใหม่ที่ AI สกัดมาได้ ทับลงไปใน Ticket เดิม
                                 $stmt_update = $conn->prepare("UPDATE repairs SET equipment_type = ?, location = ?, problem_desc = ? WHERE ticket_no = ?");
                                 $stmt_update->bind_param("ssss", $equipment, $location, $problem, $ticket_no);
                                 $stmt_update->execute();
@@ -120,7 +123,6 @@ if (!is_null($events['events'])) {
 echo "OK";
 
 function get_line_profile($userId, $groupId, $accessToken) {
-    // ... ฟังก์ชันเดิมคงไว้ ...
     $url = $groupId ? "https://api.line.me/v2/bot/group/$groupId/member/$userId" : "https://api.line.me/v2/bot/profile/$userId";
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
