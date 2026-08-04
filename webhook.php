@@ -44,6 +44,52 @@ if (!is_null($events['events'])) {
             $text = trim($event['message']['text']);
             $message_id = $event['message']['id']; 
 
+            // ==========================================
+            // 💡 1. ระบบลงทะเบียนช่าง
+            // ==========================================
+            if (mb_strpos($text, 'ลงทะเบียนช่าง') === 0) {
+                $raw_data = trim(mb_substr($text, 13)); 
+                
+                preg_match('/[0-9]{9,10}$/', $raw_data, $phone_matches);
+                $phone = !empty($phone_matches[0]) ? $phone_matches[0] : '';
+                $full_name = trim(str_replace($phone, '', $raw_data));
+
+                if(empty($full_name) || empty($phone)) {
+                    send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รูปแบบไม่ถูกต้องค่ะ\nกรุณาพิมพ์: ลงทะเบียนช่าง [ชื่อ-นามสกุล] [เบอร์โทร]\nเช่น: ลงทะเบียนช่าง สมชาย ใจงาม 0812345678"], $channelAccessToken);
+                } else {
+                    // ใช้ approval_status แทน status
+                    $stmt_check = $conn->prepare("SELECT approval_status FROM technicians WHERE line_user_id = ?");
+                    $stmt_check->bind_param("s", $userId);
+                    $stmt_check->execute();
+                    $res = $stmt_check->get_result()->fetch_assoc();
+
+                    if($res) {
+                        if($res['approval_status'] == 'รออนุมัติ') {
+                            $msg = "⏳ ข้อมูลของคุณอยู่ในระบบแล้ว กรุณารอแอดมินตรวจสอบและอนุมัติค่ะ";
+                        } else {
+                            $msg = "✅ บัญชีนี้ได้รับการอนุมัติเรียบร้อยแล้ว คุณสามารถรับงานได้เลยค่ะ";
+                        }
+                    } else {
+                        // บันทึกข้อมูลลงตารางใหม่
+                        $stmt_insert = $conn->prepare("INSERT INTO technicians (line_user_id, full_name, phone) VALUES (?, ?, ?)");
+                        $stmt_insert->bind_param("sss", $userId, $full_name, $phone);
+                        if($stmt_insert->execute()) {
+                            $msg = "📝 ส่งข้อมูลลงทะเบียนเรียบร้อย!\nชื่อ: $full_name\nเบอร์: $phone\n\nกรุณารอแอดมินตรวจสอบและอนุมัติในระบบหลังบ้านสักครู่นะคะ ⏳";
+                            if(!empty($line_group_id)) {
+                                send_push($line_group_id, ['type' => 'text', 'text' => "👤 มีคำขอลงทะเบียนช่างใหม่!\nชื่อ: $full_name\nรบกวนแอดมินตรวจสอบในระบบ Dashboard ด้วยครับ"], $channelAccessToken);
+                            }
+                        } else {
+                            $msg = "🚨 เกิดข้อผิดพลาดในการบันทึกข้อมูล: " . $stmt_insert->error;
+                        }
+                    }
+                    send_reply($replyToken, ['type' => 'text', 'text' => $msg], $channelAccessToken);
+                }
+                continue; 
+            }
+
+            // ==========================================
+            // 2. ดักคำขอบคุณ
+            // ==========================================
             $text_clean = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
             $greetings = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'รับทราบ', 'เยี่ยม', 'แต้ง'];
             $is_greeting = false;
@@ -61,9 +107,11 @@ if (!is_null($events['events'])) {
                 continue; 
             }
 
+            // ==========================================
+            // 3. ระบบรับแจ้งซ่อม
+            // ==========================================
             list($equipment, $location) = extract_repair_info($text);
 
-            // 💡 ตัดคำว่า 'แจ้งซ่อม' ออก บังคับให้ทำงานเมื่อเจอ 'ชื่ออุปกรณ์' เท่านั้น
             if ($equipment !== "ไม่ระบุอุปกรณ์") {
                 
                 $user_name = get_line_profile($userId, null, $channelAccessToken);
@@ -124,7 +172,9 @@ if (!is_null($events['events'])) {
                 }
             }
             else {
-                // ระบบรองรับคอมเมนต์รีวิว กรณีที่ไม่เจอชื่ออุปกรณ์
+                // ==========================================
+                // 4. ระบบรองรับคอมเมนต์รีวิว กรณีที่ไม่เจอชื่ออุปกรณ์
+                // ==========================================
                 $stmt_check_review = $conn->prepare("SELECT ticket_no FROM repairs WHERE line_user_id = ? AND status = 'ปิดงาน' AND rating IS NOT NULL AND review_comment IS NULL ORDER BY ticket_no DESC LIMIT 1");
                 
                 if ($stmt_check_review) {
@@ -155,7 +205,18 @@ if (!is_null($events['events'])) {
                     $job = $stmt_check->get_result()->fetch_assoc();
 
                     if ($job && $job['status'] == 'รอรับเรื่อง') {
-                        $tech_name = get_line_profile($userId, null, $channelAccessToken);
+                        // 💡 เช็กว่าคนที่กด เป็นช่างที่ได้รับการอนุมัติแล้วหรือยัง? (ใช้ approval_status)
+                        $stmt_tech = $conn->prepare("SELECT full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
+                        $stmt_tech->bind_param("s", $userId);
+                        $stmt_tech->execute();
+                        $tech_result = $stmt_tech->get_result()->fetch_assoc();
+
+                        if ($tech_result) {
+                            $tech_name = $tech_result['full_name'];
+                        } else {
+                            send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ คุณยังไม่มีสิทธิ์รับงานค่ะ กรุณาลงทะเบียนช่าง หรือรอแอดมินอนุมัติบัญชีของคุณก่อนนะคะ"], $channelAccessToken);
+                            continue;
+                        }
 
                         $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_name = ? WHERE ticket_no = ?");
                         $stmt->bind_param("ss", $tech_name, $ticket_no);
