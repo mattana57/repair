@@ -16,7 +16,6 @@ function extract_repair_info($text) {
     ];
 
     $text_lower = mb_strtolower($text, 'UTF-8');
-    
     foreach ($keywords as $keyword) {
         if (mb_strpos($text_lower, $keyword) !== false) {
             $equipment = $keyword;
@@ -24,7 +23,7 @@ function extract_repair_info($text) {
         }
     }
     
-    preg_match('/(ห้อง\s*[a-zA-Z0-9ก-๙]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+)/i', $text, $matches);
+    preg_match('/(ห้อง\s*[a-zA-Z0-9ก-๙]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+)/iu', $text, $matches);
     if (!empty($matches[0])) {
         $location = trim($matches[0]);
     }
@@ -41,10 +40,32 @@ if (!is_null($events['events'])) {
         $userId = $event['source']['userId'];
         $groupId = isset($event['source']['groupId']) ? $event['source']['groupId'] : null;
 
+        // ========================================================
+        // ส่วนที่ A: จัดการข้อความพิมพ์
+        // ========================================================
         if ($event['type'] == 'message' && $event['message']['type'] == 'text') {
             $text = trim($event['message']['text']);
             $message_id = $event['message']['id']; 
 
+            // 1. ดักจับคำขอบคุณ/โอเค (จากเวอร์ชันเดิม)
+            $text_clean = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
+            $greetings = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'รับทราบ', 'เยี่ยม', 'แต้ง'];
+            $is_greeting = false;
+            
+            foreach ($greetings as $g) {
+                if (mb_strpos($text_clean, $g) !== false) {
+                    $is_greeting = true;
+                    break;
+                }
+            }
+            
+            if ($is_greeting && mb_strlen($text_clean) < 40) {
+                $replyMsg = ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งบอทได้ตลอดเลยนะคะ"];
+                send_reply($replyToken, $replyMsg, $channelAccessToken);
+                continue; 
+            }
+
+            // 2. ดักจับการแจ้งซ่อม
             list($equipment, $location) = extract_repair_info($text);
 
             if (mb_strpos($text, 'แจ้งซ่อม') !== false || $equipment !== "ไม่ระบุอุปกรณ์") {
@@ -59,8 +80,10 @@ if (!is_null($events['events'])) {
                 $stmt->bind_param("sssssssss", $ticket_no, $equipment, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id);
                 
                 if($stmt->execute()) {
-                    $replyMsg = ['type' => 'text', 'text' => "📝 รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\nอุปกรณ์: $equipment\nสถานที่: $location\n\nระบบกำลังประสานงานให้ รอสักครู่นะคะ 🔎"];
-                    send_reply($replyToken, $replyMsg, $channelAccessToken);
+                    // รูปแบบข้อความยืนยันสวยๆ (แบบเก่าที่ต้องการ)
+                    $replyText = "🤖 ขอรับเรื่องแจ้งซ่อมเรียบร้อยแล้วค่ะ!\n\n📌 เลขที่ใบงาน:\n$ticket_no\n💻 อุปกรณ์: $equipment\n📍 สถานที่: $location\n⚠️ ปัญหา: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
+                    
+                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
                     $pushMsg = [
                         'type' => 'flex',
@@ -89,10 +112,10 @@ if (!is_null($events['events'])) {
                     ];
                     send_push($line_group_id, $pushMsg, $channelAccessToken);
                 } else {
-                    $error_msg = "🚨 ข้อมูลไม่เข้าฐานข้อมูลค่ะ (SQL Error): " . $stmt->error;
-                    send_reply($replyToken, ['type' => 'text', 'text' => $error_msg], $channelAccessToken);
+                    send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ข้อมูลไม่เข้าฐานข้อมูลค่ะ (SQL Error): " . $stmt->error], $channelAccessToken);
                 }
             }
+            // 3. รับข้อความรีวิว
             else {
                 $stmt_check_review = $conn->prepare("SELECT ticket_no FROM repairs WHERE line_user_id = ? AND status = 'ปิดงาน' AND rating IS NOT NULL AND review_comment IS NULL ORDER BY ticket_no DESC LIMIT 1");
                 
@@ -111,6 +134,9 @@ if (!is_null($events['events'])) {
                 }
             }
         }
+        // ========================================================
+        // ส่วนที่ B: Postback Event (ปุ่มกดช่าง)
+        // ========================================================
         elseif ($event['type'] == 'postback') {
             parse_str($event['postback']['data'], $postbackData);
 
@@ -153,9 +179,10 @@ if (!is_null($events['events'])) {
                             ]
                         ];
                         send_reply($replyToken, $replyMsg, $channelAccessToken);
-                        send_push($job['line_user_id'], ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานแล้ว\nและกำลังเดินทางไปดำเนินการค่ะ 🛵"], $channelAccessToken);
-                    } else {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ งานนี้มีผู้รับไปแล้ว หรือถูกปิดไปแล้วค่ะ"], $channelAccessToken);
+                        
+                        // ข้อความแจ้งผู้ใช้งานตอนช่างรับงาน (แบบเก่าที่ต้องการ)
+                        $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ!\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
+                        send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
                     }
                 }
                 elseif ($postbackData['action'] == 'close') {
@@ -171,9 +198,21 @@ if (!is_null($events['events'])) {
 
                         send_reply($replyToken, ['type' => 'text', 'text' => "🎉 ปิดงาน $ticket_no สำเร็จ ส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
 
+                        // Flex Message ประเมินดาว (แบบเก่าที่ต้องการ)
                         $review_msg = [
-                            'type' => 'text',
-                            'text' => "🎉 งานแจ้งซ่อม $ticket_no เสร็จสิ้นแล้ว!\nรบกวนให้คะแนนความพึงพอใจ เพื่อการพัฒนาบริการด้วยนะคะ 👇",
+                            'type' => 'flex',
+                            'altText' => 'ประเมินผลการซ่อม',
+                            'contents' => [
+                                'type' => 'bubble',
+                                'body' => [
+                                    'type' => 'box', 'layout' => 'vertical', 'spacing' => 'md',
+                                    'contents' => [
+                                        ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'lg'],
+                                        ['type' => 'text', 'text' => 'งานซ่อมของคุณเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'wrap' => true],
+                                        ['type' => 'text', 'text' => 'รบกวนให้คะแนนช่างเพื่อเป็นกำลังใจด้วยนะคะ', 'color' => '#aaaaaa', 'size' => 'sm', 'wrap' => true]
+                                    ]
+                                ]
+                            ],
                             'quickReply' => [
                                 'items' => [
                                     ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '⭐️⭐️⭐️⭐️⭐️', 'data' => "action=rate&score=5&ticket=$ticket_no", 'displayText' => 'ให้ 5 ดาว']],
@@ -238,4 +277,4 @@ function send_push($to, $messageData, $accessToken) {
     curl_exec($ch);
     curl_close($ch);
 }
-?>
+?>a
