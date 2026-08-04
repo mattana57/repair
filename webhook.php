@@ -10,7 +10,7 @@ function extract_repair_info($text) {
     
     $keywords = [
         'แอร์', 'คอม', 'เครื่องปริ้น', 'printer', 'projector', 'เครื่องฉาย', 
-        'จอ', 'ทีวี', 'ไมค์', 'หลอดไฟ', 'ไฟดับ', 'สายไฟ', 'ปลั๊ก', 'เน็ต', 
+        'จอ', 'ทีวี', 'ไมค์', 'หลอดไฟ', 'ไฟดับ', 'สายไฟ', 'ปลั๊ก', 'ไฟ', 'หลอด', 'พัดลม', 'เน็ต', 
         'เว็บคณะ', 'มคอ', 'ประตู', 'สแกนหน้า', 'ท่อ', 'ห้องน้ำ', 'ก๊อก', 
         'ตู้กดน้ำ', 'จิ้งจก', 'นก', 'ตุ๊กแก', 'หนู', 'กลิ่นเหม็น'
     ];
@@ -23,7 +23,6 @@ function extract_repair_info($text) {
         }
     }
     
-    // 💡 แก้ไข: เอา ก-๙ ออกแล้ว เพื่อให้จับแค่ตัวเลขหรือภาษาอังกฤษหลังคำว่าห้อง
     preg_match('/(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9]+|อาคาร\s*[a-zA-Z0-9]+)/iu', $text, $matches);
     if (!empty($matches[0])) {
         $location = trim($matches[0]);
@@ -64,20 +63,20 @@ if (!is_null($events['events'])) {
 
             list($equipment, $location) = extract_repair_info($text);
 
-            if (mb_strpos($text, 'แจ้งซ่อม') !== false || $equipment !== "ไม่ระบุอุปกรณ์") {
+            // 💡 ตัดคำว่า 'แจ้งซ่อม' ออก บังคับให้ทำงานเมื่อเจอ 'ชื่ออุปกรณ์' เท่านั้น
+            if ($equipment !== "ไม่ระบุอุปกรณ์") {
                 
                 $user_name = get_line_profile($userId, null, $channelAccessToken);
                 $ticket_no = "MR-" . rand(1000, 9999);
                 $status = "รอรับเรื่อง"; 
                 $phone_number = "ไม่ระบุ";
                 
-                // กรองคำฟุ่มเฟือยออกจากอาการเสีย
                 $words_to_remove = [
                     'แอร์', 'คอม', 'เครื่องปริ้น', 'printer', 'projector', 'เครื่องฉาย', 
-                    'จอ', 'ทีวี', 'ไมค์', 'หลอดไฟ', 'ไฟดับ', 'สายไฟ', 'ปลั๊ก', 'เน็ต', 
+                    'จอ', 'ทีวี', 'ไมค์', 'หลอดไฟ', 'ไฟดับ', 'สายไฟ', 'ปลั๊ก', 'ไฟ', 'หลอด', 'พัดลม', 'เน็ต', 
                     'เว็บคณะ', 'มคอ', 'ประตู', 'สแกนหน้า', 'ท่อ', 'ห้องน้ำ', 'ก๊อก', 
                     'ตู้กดน้ำ', 'จิ้งจก', 'นก', 'ตุ๊กแก', 'หนู', 'กลิ่นเหม็น',
-                    $location, 'ค่ะ', 'ครับ', 'คะ', 'คับ', 'มัน', 'รบกวน', 'ด่วน', 'แจ้งซ่อม'
+                    $location, 'ค่ะ', 'ครับ', 'คะ', 'คับ', 'มัน', 'รบกวน', 'ด่วน', 'แจ้งซ่อม', 'นึง'
                 ];
                 
                 $problem = str_replace($words_to_remove, '', $text);
@@ -125,6 +124,7 @@ if (!is_null($events['events'])) {
                 }
             }
             else {
+                // ระบบรองรับคอมเมนต์รีวิว กรณีที่ไม่เจอชื่ออุปกรณ์
                 $stmt_check_review = $conn->prepare("SELECT ticket_no FROM repairs WHERE line_user_id = ? AND status = 'ปิดงาน' AND rating IS NOT NULL AND review_comment IS NULL ORDER BY ticket_no DESC LIMIT 1");
                 
                 if ($stmt_check_review) {
