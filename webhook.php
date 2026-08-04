@@ -23,7 +23,8 @@ function extract_repair_info($text) {
         }
     }
     
-    preg_match('/(ห้อง\s*[a-zA-Z0-9ก-๙]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+)/iu', $text, $matches);
+    // 💡 แก้ไข: เอา ก-๙ ออกแล้ว เพื่อให้จับแค่ตัวเลขหรือภาษาอังกฤษหลังคำว่าห้อง
+    preg_match('/(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9]+|อาคาร\s*[a-zA-Z0-9]+)/iu', $text, $matches);
     if (!empty($matches[0])) {
         $location = trim($matches[0]);
     }
@@ -70,9 +71,7 @@ if (!is_null($events['events'])) {
                 $status = "รอรับเรื่อง"; 
                 $phone_number = "ไม่ระบุ";
                 
-                // ==========================================
-                // 💡 กรองคำฟุ่มเฟือยออกจากประโยคอาการเสีย
-                // ==========================================
+                // กรองคำฟุ่มเฟือยออกจากอาการเสีย
                 $words_to_remove = [
                     'แอร์', 'คอม', 'เครื่องปริ้น', 'printer', 'projector', 'เครื่องฉาย', 
                     'จอ', 'ทีวี', 'ไมค์', 'หลอดไฟ', 'ไฟดับ', 'สายไฟ', 'ปลั๊ก', 'เน็ต', 
@@ -81,15 +80,12 @@ if (!is_null($events['events'])) {
                     $location, 'ค่ะ', 'ครับ', 'คะ', 'คับ', 'มัน', 'รบกวน', 'ด่วน', 'แจ้งซ่อม'
                 ];
                 
-                // ลบคำทั้งหมดที่อยู่ใน Array ออกจากข้อความที่ผู้ใช้พิมพ์
                 $problem = str_replace($words_to_remove, '', $text);
-                $problem = trim($problem); // ลบช่องว่างหัวท้าย
+                $problem = trim($problem); 
                 
-                // ถ้าลบหมดแล้วไม่เหลืออะไรเลย ให้ใส่ค่าเริ่มต้นแทน
                 if (empty($problem)) {
                     $problem = "มีความผิดปกติ (รอตรวจสอบ)";
                 }
-                // ==========================================
 
                 $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id, line_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param("sssssssss", $ticket_no, $equipment, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id);
