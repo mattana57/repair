@@ -5,7 +5,6 @@ require 'env.php';
 // ========================================================
 // 1. ตั้งค่า API Keys และข้อมูลกลุ่มช่าง
 // ========================================================
-// (ดึง $channelAccessToken มาจากไฟล์ env.php)
 $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; // ไอดีกลุ่มช่างที่ให้บอทส่งงานไปให้
 
 // ========================================================
@@ -15,16 +14,47 @@ function extract_repair_info($text) {
     $equipment = "ไม่ระบุอุปกรณ์ (รอช่างตรวจสอบ)";
     $location = "ไม่ระบุสถานที่";
     
-    // คลังคำศัพท์ที่พบบ่อย (เพิ่มลดได้ตามต้องการ)
-    $equipments = ['แอร์', 'ไฟ', 'น้ำ', 'พัดลม', 'คอม', 'ปริ้น', 'เน็ต', 'ประตู', 'หน้าต่าง', 'โปรเจคเตอร์', 'ท่อ'];
-    foreach ($equipments as $keyword) {
-        if (mb_strpos($text, $keyword) !== false) {
-            $equipment = $keyword;
+    // คลังคำศัพท์ที่จัดหมวดหมู่แล้วอย่างเป็นระบบ
+    $keyword_map = [
+        'แอร์' => 'เครื่องปรับอากาศ',
+        'คอม' => 'คอมพิวเตอร์',
+        'เครื่องปริ้น' => 'ปริ้นเตอร์',
+        'printer' => 'ปริ้นเตอร์',
+        'projector' => 'โปรเจคเตอร์',
+        'เครื่องฉาย' => 'โปรเจคเตอร์',
+        'จอ' => 'จอมอนิเตอร์/ทีวี',
+        'ทีวี' => 'จอมอนิเตอร์/ทีวี',
+        'ไมค์' => 'ระบบเสียง/ไมโครโฟน',
+        'หลอดไฟ' => 'ระบบไฟฟ้า (หลอดไฟ)',
+        'ไฟดับ' => 'ระบบไฟฟ้า (ไฟดับ)',
+        'สายไฟ' => 'ระบบไฟฟ้า (สายไฟ)',
+        'ปลั๊ก' => 'ระบบไฟฟ้า (ปลั๊ก)',
+        'เน็ต' => 'ระบบเครือข่ายอินเทอร์เน็ต',
+        'เว็บคณะ' => 'ระบบสารสนเทศ (เว็บคณะ)',
+        'มคอ' => 'ระบบสารสนเทศ (มคอ.)',
+        'ประตู' => 'อาคารสถานที่ (ประตู)',
+        'สแกนหน้า' => 'เครื่องสแกนหน้า',
+        'ท่อ' => 'ระบบประปา (ท่อ)',
+        'ห้องน้ำ' => 'สุขภัณฑ์/ห้องน้ำ',
+        'ก๊อก' => 'ระบบประปา (ก๊อกน้ำ)',
+        'ตู้กดน้ำ' => 'ตู้กดน้ำดื่ม',
+        'จิ้งจก' => 'งานแม่บ้าน/กำจัดสัตว์รบกวน',
+        'นก' => 'งานแม่บ้าน/กำจัดสัตว์รบกวน',
+        'ตุ๊กแก' => 'งานแม่บ้าน/กำจัดสัตว์รบกวน',
+        'หนู' => 'งานแม่บ้าน/กำจัดสัตว์รบกวน',
+        'กลิ่นเหม็น' => 'งานแม่บ้าน (ทำความสะอาด)'
+    ];
+
+    $text_lower = mb_strtolower($text, 'UTF-8');
+    
+    foreach ($keyword_map as $keyword => $category) {
+        if (mb_strpos($text_lower, $keyword) !== false) {
+            $equipment = $category;
             break;
         }
     }
     
-    // ดักจับสถานที่ เช่น ห้อง 101, ตึก A
+    // ดักจับสถานที่ เช่น ห้อง 101, ตึก A, อาคารเรียนรวม
     preg_match('/(ห้อง\s*[a-zA-Z0-9ก-๙]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+)/i', $text, $matches);
     if (!empty($matches[0])) {
         $location = trim($matches[0]);
@@ -51,27 +81,28 @@ if (!is_null($events['events'])) {
         if ($event['type'] == 'message' && $event['message']['type'] == 'text') {
             $text = trim($event['message']['text']);
 
-            if (mb_strpos($text, 'แจ้งซ่อม') !== false) {
+            // 1. ลองสกัดคำก่อนเลย
+            list($equipment, $location) = extract_repair_info($text);
+
+            // 2. ถ้าเจอคำว่าแจ้งซ่อม หรือ พบคำศัพท์อุปกรณ์ ให้ทำงานทันที!
+            if (mb_strpos($text, 'แจ้งซ่อม') !== false || $equipment !== "ไม่ระบุอุปกรณ์ (รอช่างตรวจสอบ)") {
                 
                 $user_name = get_line_profile($userId, null, $channelAccessToken);
                 $ticket_no = "MR-" . date("Ymd-His");
                 $status = "รอรับเรื่อง"; 
                 $phone_number = "ไม่ระบุ";
+                $problem = $text; // เก็บประโยคดิบเป็นอาการ
 
-                // ใช้ฟังก์ชันดักคำแทน AI
-                list($equipment, $location) = extract_repair_info($text);
-                $problem = $text; // เก็บประโยคเต็มๆ เป็นอาการเสียไปเลย
-
-                // 1. บันทึกลงฐานข้อมูล
+                // 3. บันทึกลงฐานข้อมูล
                 $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param("ssssssss", $ticket_no, $equipment, $location, $problem, $status, $user_name, $phone_number, $userId);
                 
                 if($stmt->execute()) {
-                    // 2. ตอบกลับผู้ใช้ว่ารับเรื่องแล้ว
-                    $replyMsg = ['type' => 'text', 'text' => "📝 รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\nอุปกรณ์: $equipment\nสถานที่: $location\n\nระบบกำลังประสานงานช่างให้ รอสักครู่นะคะ 🔎"];
+                    // ตอบกลับผู้ใช้
+                    $replyMsg = ['type' => 'text', 'text' => "📝 รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\nหมวดหมู่: $equipment\nสถานที่: $location\n\nระบบกำลังประสานงานให้ รอสักครู่นะคะ 🔎"];
                     send_reply($replyToken, $replyMsg, $channelAccessToken);
 
-                    // 3. ส่ง Flex Message ไปที่กลุ่มช่าง ให้กดรับงาน
+                    // ส่ง Flex ไปกลุ่มช่าง (เพิ่มข้อมูลชื่อผู้แจ้งลงไปในการ์ดด้วย)
                     $pushMsg = [
                         'type' => 'flex',
                         'altText' => '🚨 มีงานแจ้งซ่อมใหม่',
@@ -81,9 +112,10 @@ if (!is_null($events['events'])) {
                                 'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
                                 'contents' => [
                                     ['type' => 'text', 'text' => '🚨 มีงานแจ้งซ่อมใหม่!', 'weight' => 'bold', 'color' => '#ef4444', 'size' => 'md'],
-                                    ['type' => 'text', 'text' => "อุปกรณ์: $equipment", 'wrap' => true],
+                                    ['type' => 'text', 'text' => "หมวดหมู่: $equipment", 'wrap' => true],
                                     ['type' => 'text', 'text' => "สถานที่: $location", 'wrap' => true],
-                                    ['type' => 'text', 'text' => "อาการ: $problem", 'wrap' => true, 'color' => '#666666']
+                                    ['type' => 'text', 'text' => "ผู้แจ้ง: $user_name", 'wrap' => true, 'color' => '#888888'],
+                                    ['type' => 'text', 'text' => "รายละเอียด: $problem", 'wrap' => true, 'color' => '#666666']
                                 ]
                             ],
                             'footer' => [
@@ -99,10 +131,25 @@ if (!is_null($events['events'])) {
                     send_push($line_group_id, $pushMsg, $channelAccessToken);
                 }
             }
+            // 3. ระบบรอรับข้อความรีวิวแบบพิมพ์ (ถ้าเพิ่งให้คะแนนดาวเสร็จ)
+            else {
+                $stmt_check_review = $conn->prepare("SELECT ticket_no FROM repairs WHERE line_user_id = ? AND status = 'ปิดงาน' AND rating IS NOT NULL AND review_comment IS NULL ORDER BY created_at DESC LIMIT 1");
+                $stmt_check_review->bind_param("s", $userId);
+                $stmt_check_review->execute();
+                $recent_job = $stmt_check_review->get_result()->fetch_assoc();
+
+                if ($recent_job) {
+                    $stmt_update_review = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE ticket_no = ?");
+                    $stmt_update_review->bind_param("ss", $text, $recent_job['ticket_no']);
+                    $stmt_update_review->execute();
+                    
+                    send_reply($replyToken, ['type' => 'text', 'text' => "ขอบคุณสำหรับข้อเสนอแนะค่ะ 🙏 ระบบบันทึกข้อมูลเรียบร้อยแล้ว"], $channelAccessToken);
+                }
+            }
         }
         
         // ========================================================
-        // ส่วนที่ B: จัดการเมื่อกดปุ่ม (Postback Event) - ช่างรับงาน / ปิดงาน / ประเมิน
+        // ส่วนที่ B: Postback Event (ช่างรับงาน / ปิดงาน / รีวิว)
         // ========================================================
         elseif ($event['type'] == 'postback') {
             parse_str($event['postback']['data'], $postbackData);
@@ -110,24 +157,20 @@ if (!is_null($events['events'])) {
             if (isset($postbackData['action']) && isset($postbackData['ticket'])) {
                 $ticket_no = $postbackData['ticket'];
 
-                // ----------------------------------------------------
                 // 1. ช่างกดรับงาน
-                // ----------------------------------------------------
                 if ($postbackData['action'] == 'accept') {
-                    $stmt_check = $conn->prepare("SELECT status, line_user_id, equipment_type FROM repairs WHERE ticket_no = ?");
+                    $stmt_check = $conn->prepare("SELECT status, line_user_id FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
 
                     if ($job && $job['status'] == 'รอรับเรื่อง') {
-                        // ดึงชื่อช่างจาก ID ของคนที่กดปุ่ม
                         $tech_name = get_line_profile($userId, null, $channelAccessToken);
 
                         $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_name = ? WHERE ticket_no = ?");
                         $stmt->bind_param("ss", $tech_name, $ticket_no);
                         $stmt->execute();
 
-                        // ตอบกลับในกลุ่มช่างว่ารับงานแล้ว + ขึ้นปุ่มให้กดปิดงาน
                         $replyMsg = [
                             'type' => 'flex',
                             'altText' => 'อัปเดตสถานะงาน',
@@ -151,17 +194,13 @@ if (!is_null($events['events'])) {
                             ]
                         ];
                         send_reply($replyToken, $replyMsg, $channelAccessToken);
-
-                        // แจ้งเตือนผู้แจ้งซ่อม
                         send_push($job['line_user_id'], ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานแล้ว\nและกำลังเดินทางไปดำเนินการค่ะ 🛵"], $channelAccessToken);
                     } else {
                         send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ งานนี้มีผู้รับไปแล้ว หรือถูกปิดไปแล้วค่ะ"], $channelAccessToken);
                     }
                 }
                 
-                // ----------------------------------------------------
                 // 2. ช่างกดปิดงาน
-                // ----------------------------------------------------
                 elseif ($postbackData['action'] == 'close') {
                     $stmt_check = $conn->prepare("SELECT status, line_user_id FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
@@ -173,9 +212,8 @@ if (!is_null($events['events'])) {
                         $stmt->bind_param("s", $ticket_no);
                         $stmt->execute();
 
-                        send_reply($replyToken, ['type' => 'text', 'text' => "🎉 ปิดงาน $ticket_no สำเร็จ ระบบได้ส่งแบบประเมินให้ผู้แจ้งซ่อมแล้วค่ะ"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "🎉 ปิดงาน $ticket_no สำเร็จ ส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
 
-                        // ส่ง Quick Reply รูปดาวไปให้ผู้แจ้งซ่อม
                         $review_msg = [
                             'type' => 'text',
                             'text' => "🎉 งานแจ้งซ่อม $ticket_no เสร็จสิ้นแล้ว!\nรบกวนให้คะแนนความพึงพอใจ เพื่อการพัฒนาบริการด้วยนะคะ 👇",
@@ -191,19 +229,14 @@ if (!is_null($events['events'])) {
                     }
                 }
 
-                // ----------------------------------------------------
                 // 3. ผู้ใช้กดให้คะแนนดาว
-                // ----------------------------------------------------
                 elseif ($postbackData['action'] == 'rate') {
                     $score = $postbackData['score'];
-                    
-                    // 💡 หมายเหตุ: ในฐานข้อมูลตาราง repairs ต้องมีคอลัมน์ชื่อ rating (ชนิด INT) ด้วยนะคะ
-                    // ถ้ายังไม่มี ต้องไปเพิ่มใน phpMyAdmin ก่อนค่ะ
                     $stmt = $conn->prepare("UPDATE repairs SET rating = ? WHERE ticket_no = ?");
                     $stmt->bind_param("is", $score, $ticket_no);
                     
                     if($stmt->execute()){
-                        send_reply($replyToken, ['type' => 'text', 'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาว ค่ะ!\nหากมีปัญหาเพิ่มเติม แจ้งซ่อมได้ตลอดเลยนะคะ"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาว ค่ะ!\nหากมีข้อเสนอแนะเพิ่มเติม สามารถพิมพ์ตอบกลับมาในแชทนี้ได้เลยนะคะ (ถ้าไม่มี ปิดแชทได้เลยค่ะ)"], $channelAccessToken);
                     }
                 }
             }
@@ -212,9 +245,6 @@ if (!is_null($events['events'])) {
 }
 echo "OK";
 
-// ========================================================
-// ฟังก์ชันช่วยเหลือต่างๆ
-// ========================================================
 function get_line_profile($userId, $groupId, $accessToken) {
     $url = $groupId ? "https://api.line.me/v2/bot/group/$groupId/member/$userId" : "https://api.line.me/v2/bot/profile/$userId";
     $ch = curl_init($url);
@@ -224,7 +254,7 @@ function get_line_profile($userId, $groupId, $accessToken) {
     $result = curl_exec($ch);
     curl_close($ch);
     $data = json_decode($result, true);
-    return isset($data['displayName']) ? $data['displayName'] : 'เจ้าหน้าที่ช่าง';
+    return isset($data['displayName']) ? $data['displayName'] : 'เจ้าหน้าที่/ผู้ใช้งาน';
 }
 
 function send_reply($replyToken, $messageData, $accessToken) {
