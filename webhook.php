@@ -168,7 +168,7 @@ if (!is_null($events['events'])) {
             }
             else {
                 // ==========================================
-                // 4. ระบบรองรับคอมเมนต์รีวิว (แก้ไขให้เช็กสถานะ 'ซ่อมเสร็จแล้ว')
+                // 4. ระบบรองรับคอมเมนต์รีวิว
                 // ==========================================
                 $stmt_check_review = $conn->prepare("SELECT ticket_no FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' AND rating IS NOT NULL AND review_comment IS NULL ORDER BY ticket_no DESC LIMIT 1");
                 
@@ -208,7 +208,8 @@ if (!is_null($events['events'])) {
                         if ($tech_result) {
                             $tech_name = $tech_result['full_name'];
                         } else {
-                            send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ คุณยังไม่มีสิทธิ์รับงานค่ะ กรุณาลงทะเบียนช่าง หรือรอแอดมินอนุมัติบัญชีของคุณก่อนนะคะ"], $channelAccessToken);
+                            // ใช้ send_push ส่งข้อความแจ้งเตือนช่างแบบส่วนตัว กรณีหมดเวลา Reply Token
+                            send_push($userId, ['type' => 'text', 'text' => "⚠️ คุณยังไม่มีสิทธิ์รับงานค่ะ กรุณาลงทะเบียนช่าง หรือรอแอดมินอนุมัติบัญชีของคุณก่อนนะคะ"], $channelAccessToken);
                             continue;
                         }
 
@@ -216,7 +217,6 @@ if (!is_null($events['events'])) {
                         $stmt->bind_param("ss", $tech_name, $ticket_no);
                         $stmt->execute();
 
-                        // 💡 ส่วนที่แก้ไข: เพิ่ม "สถานะ" เข้าไปในการ์ด Flex Message ให้ชัดเจน
                         $replyMsg = [
                             'type' => 'flex',
                             'altText' => 'อัปเดตสถานะงาน',
@@ -240,7 +240,9 @@ if (!is_null($events['events'])) {
                                 ]
                             ]
                         ];
-                        send_reply($replyToken, $replyMsg, $channelAccessToken);
+                        
+                        // 💡 แก้ไข: ใช้ send_push โยนข้อความกลับเข้ากลุ่มแจ้งซ่อม หมดปัญหา Token หมดอายุ
+                        send_push($line_group_id, $replyMsg, $channelAccessToken);
                         
                         $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ!\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
                         send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
@@ -257,7 +259,8 @@ if (!is_null($events['events'])) {
                         $stmt->bind_param("s", $ticket_no);
                         $stmt->execute();
 
-                        send_reply($replyToken, ['type' => 'text', 'text' => "🎉 บันทึกการซ่อมเสร็จสิ้น ระบบส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
+                        // 💡 แก้ไข: ใช้ send_push แจ้งเตือนในกลุ่มว่าปิดงานแล้ว
+                        send_push($line_group_id, ['type' => 'text', 'text' => "🎉 ใบงาน $ticket_no : บันทึกการซ่อมเสร็จสิ้น ระบบส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
 
                         $review_msg = [
                             'type' => 'flex',
@@ -290,7 +293,8 @@ if (!is_null($events['events'])) {
                     $stmt->bind_param("is", $score, $ticket_no);
                     
                     if($stmt->execute()){
-                        send_reply($replyToken, ['type' => 'text', 'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาว ค่ะ!\nหากมีข้อเสนอแนะเพิ่มเติม สามารถพิมพ์ตอบกลับมาในแชทนี้ได้เลยนะคะ (ถ้าไม่มี ปิดแชทได้เลยค่ะ)"], $channelAccessToken);
+                        // 💡 แก้ไข: ส่งคำขอบคุณกลับไปที่แชทส่วนตัวของผู้แจ้ง
+                        send_push($userId, ['type' => 'text', 'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาว ค่ะ!\nหากมีข้อเสนอแนะเพิ่มเติม สามารถพิมพ์ตอบกลับมาในแชทนี้ได้เลยนะคะ (ถ้าไม่มี ปิดแชทได้เลยค่ะ)"], $channelAccessToken);
                     }
                 }
             }
