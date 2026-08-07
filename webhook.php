@@ -57,7 +57,6 @@ if (!is_null($events['events'])) {
                 if(empty($full_name) || empty($phone)) {
                     send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รูปแบบไม่ถูกต้องค่ะ\nกรุณาพิมพ์: ลงทะเบียนช่าง [ชื่อ-นามสกุล] [เบอร์โทร]\nเช่น: ลงทะเบียนช่าง สมชาย ใจงาม 0812345678"], $channelAccessToken);
                 } else {
-                    // ใช้ approval_status แทน status
                     $stmt_check = $conn->prepare("SELECT approval_status FROM technicians WHERE line_user_id = ?");
                     $stmt_check->bind_param("s", $userId);
                     $stmt_check->execute();
@@ -75,9 +74,7 @@ if (!is_null($events['events'])) {
                         $stmt_insert->bind_param("sss", $userId, $full_name, $phone);
                         if($stmt_insert->execute()) {
                             $msg = "📝 ส่งข้อมูลลงทะเบียนเรียบร้อย!\nชื่อ: $full_name\nเบอร์: $phone\n\nกรุณารอแอดมินตรวจสอบและอนุมัติในระบบหลังบ้านสักครู่นะคะ ⏳";
-                            if(!empty($line_group_id)) {
-                                send_push($line_group_id, ['type' => 'text', 'text' => "👤 มีคำขอลงทะเบียนช่างใหม่!\nชื่อ: $full_name\nรบกวนแอดมินตรวจสอบในระบบ Dashboard ด้วยครับ"], $channelAccessToken);
-                            }
+                            // ❌ ลบส่วน send_push ที่แจ้งเตือนเข้ากลุ่มแอดมินออกแล้ว
                         } else {
                             $msg = "🚨 เกิดข้อผิดพลาดในการบันทึกข้อมูล: " . $stmt_insert->error;
                         }
@@ -205,7 +202,7 @@ if (!is_null($events['events'])) {
                     $job = $stmt_check->get_result()->fetch_assoc();
 
                     if ($job && $job['status'] == 'รอรับเรื่อง') {
-                        // 💡 เช็กว่าคนที่กด เป็นช่างที่ได้รับการอนุมัติแล้วหรือยัง? (ใช้ approval_status)
+                        // เช็กว่าคนที่กด เป็นช่างที่ได้รับการอนุมัติแล้วหรือยัง
                         $stmt_tech = $conn->prepare("SELECT full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
                         $stmt_tech->bind_param("s", $userId);
                         $stmt_tech->execute();
