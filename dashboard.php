@@ -1,12 +1,14 @@
 <?php 
 session_start();
 
+// 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? 
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
     header("Location: login.php");
     exit();
 }
 
+// 2. ป้องกันผู้บริหาร (Executive) แอบเข้ามาดูหน้าจัดการช่าง
 if (strtolower($_SESSION['role']) === 'executive') {
     header("Location: executive_dashboard.php");
     exit();
@@ -14,6 +16,7 @@ if (strtolower($_SESSION['role']) === 'executive') {
 
 include 'db_connect.php';
 
+// ================= ฟังก์ชันแปลงตัวเลขเป็นเลขไทย =================
 function thaiNum($num) {
     return str_replace(
         array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
@@ -22,6 +25,7 @@ function thaiNum($num) {
     );
 }
 
+// ================= ปรับปรุงฐานข้อมูลอัตโนมัติ (Auto-Fix DB) =================
 $conn->query("CREATE TABLE IF NOT EXISTS assets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     asset_code VARCHAR(50) NOT NULL,
@@ -72,8 +76,10 @@ if($check_repairs->num_rows > 0) {
                   GROUP BY reporter_name, phone_number");
 }
 
+// เช็คว่ามีคอลัมน์เก็บรูปภาพในฐานข้อมูลไหม ถ้าไม่มีให้ข้ามไป (ป้องกัน Error)
 $has_image_col = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'")->num_rows > 0);
 
+// ================= จัดการข้อมูล =================
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
     $conn->query("DELETE FROM assets WHERE id = $del_id");
@@ -164,24 +170,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลผู้แจ้งสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
 }
 
+// ================= ระบบจัดการช่างจาก LINE =================
 if (isset($_GET['approve_tech'])) {
     $id = intval($_GET['approve_tech']);
+    
+    // 1. ดึงข้อมูล LINE ID และชื่อของช่างออกมาก่อน
+    $stmt_get_line = $conn->prepare("SELECT line_user_id, full_name FROM technicians WHERE id = ?");
+    $stmt_get_line->bind_param("i", $id);
+    $stmt_get_line->execute();
+    $tech_info = $stmt_get_line->get_result()->fetch_assoc();
+
+    // 2. เปลี่ยนสถานะในฐานข้อมูลเป็น อนุมัติแล้ว
     $conn->query("UPDATE technicians SET approval_status = 'อนุมัติแล้ว', status = 'ว่าง' WHERE id = $id");
+
+    // 3. ส่งข้อความแจ้งเตือนกลับไปหาช่างใน LINE
+    if ($tech_info && !empty($tech_info['line_user_id'])) {
+        require_once 'env.php'; 
+        
+        $pushMsgToTech = [
+            'type' => 'text', 
+            'text' => "🎉 ยินดีด้วยค่ะ ช่าง " . $tech_info['full_name'] . "!\n\n✅ บัญชีของคุณได้รับการอนุมัติเรียบร้อยแล้ว\nตอนนี้คุณสามารถกดปุ่ม 'รับงาน' ในกลุ่มแจ้งซ่อมได้เลยค่ะ 🛠️"
+        ];
+        
+        $url = 'https://api.line.me/v2/bot/message/push';
+        $data = ['to' => $tech_info['line_user_id'], 'messages' => [$pushMsgToTech]];
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_exec($ch);
+        curl_close($ch);
+    }
+
     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อนุมัติช่างสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
 }
 
 if (isset($_GET['reject_tech'])) {
     $id = intval($_GET['reject_tech']);
+    // ลบคำขอที่ถูกปฏิเสธทิ้ง
     $conn->query("DELETE FROM technicians WHERE id = $id");
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
 
 if (isset($_GET['delete_tech_db'])) {
     $id = intval($_GET['delete_tech_db']);
+    // แอดมินลบช่างที่เคยอนุมัติไปแล้วออกจากระบบ
     $conn->query("DELETE FROM technicians WHERE id = $id");
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
 
+// ================= เตรียมข้อมูลประวัติและสถิติ =================
 $all_repairs_json = "[]";
 
 if($check_repairs->num_rows > 0) {
