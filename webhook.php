@@ -45,7 +45,7 @@ if (!is_null($events['events'])) {
             $message_id = $event['message']['id']; 
 
             // ==========================================
-            // 💡 1. ระบบลงทะเบียนช่าง
+            // 1. ระบบลงทะเบียนช่าง
             // ==========================================
             if (mb_strpos($text, 'ลงทะเบียนช่าง') === 0) {
                 $raw_data = trim(mb_substr($text, 13)); 
@@ -69,12 +69,10 @@ if (!is_null($events['events'])) {
                             $msg = "✅ บัญชีนี้ได้รับการอนุมัติเรียบร้อยแล้ว คุณสามารถรับงานได้เลยค่ะ";
                         }
                     } else {
-                        // บันทึกข้อมูลลงตารางใหม่
                         $stmt_insert = $conn->prepare("INSERT INTO technicians (line_user_id, full_name, phone) VALUES (?, ?, ?)");
                         $stmt_insert->bind_param("sss", $userId, $full_name, $phone);
                         if($stmt_insert->execute()) {
                             $msg = "📝 ส่งข้อมูลลงทะเบียนเรียบร้อย!\nชื่อ: $full_name\nเบอร์: $phone\n\nกรุณารอแอดมินตรวจสอบและอนุมัติในระบบหลังบ้านสักครู่นะคะ ⏳";
-                            // ❌ ลบส่วน send_push ที่แจ้งเตือนเข้ากลุ่มแอดมินออกแล้ว
                         } else {
                             $msg = "🚨 เกิดข้อผิดพลาดในการบันทึกข้อมูล: " . $stmt_insert->error;
                         }
@@ -170,9 +168,9 @@ if (!is_null($events['events'])) {
             }
             else {
                 // ==========================================
-                // 4. ระบบรองรับคอมเมนต์รีวิว กรณีที่ไม่เจอชื่ออุปกรณ์
+                // 4. ระบบรองรับคอมเมนต์รีวิว (แก้ไขให้เช็กสถานะ 'ซ่อมเสร็จแล้ว')
                 // ==========================================
-                $stmt_check_review = $conn->prepare("SELECT ticket_no FROM repairs WHERE line_user_id = ? AND status = 'ปิดงาน' AND rating IS NOT NULL AND review_comment IS NULL ORDER BY ticket_no DESC LIMIT 1");
+                $stmt_check_review = $conn->prepare("SELECT ticket_no FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' AND rating IS NOT NULL AND review_comment IS NULL ORDER BY ticket_no DESC LIMIT 1");
                 
                 if ($stmt_check_review) {
                     $stmt_check_review->bind_param("s", $userId);
@@ -202,7 +200,6 @@ if (!is_null($events['events'])) {
                     $job = $stmt_check->get_result()->fetch_assoc();
 
                     if ($job && $job['status'] == 'รอรับเรื่อง') {
-                        // เช็กว่าคนที่กด เป็นช่างที่ได้รับการอนุมัติแล้วหรือยัง
                         $stmt_tech = $conn->prepare("SELECT full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
                         $stmt_tech->bind_param("s", $userId);
                         $stmt_tech->execute();
@@ -215,20 +212,22 @@ if (!is_null($events['events'])) {
                             continue;
                         }
 
-                        $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_name = ? WHERE ticket_no = ?");
+                        $stmt = $conn->prepare("UPDATE repairs SET status = 'ช่างรับเรื่องแจ้งซ่อมแล้ว', technician_name = ? WHERE ticket_no = ?");
                         $stmt->bind_param("ss", $tech_name, $ticket_no);
                         $stmt->execute();
 
+                        // 💡 ส่วนที่แก้ไข: เพิ่ม "สถานะ" เข้าไปในการ์ด Flex Message ให้ชัดเจน
                         $replyMsg = [
                             'type' => 'flex',
                             'altText' => 'อัปเดตสถานะงาน',
                             'contents' => [
                                 'type' => 'bubble',
                                 'body' => [
-                                    'type' => 'box', 'layout' => 'vertical',
+                                    'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
                                     'contents' => [
-                                        ['type' => 'text', 'text' => "✅ ช่าง $tech_name รับงานแล้ว", 'weight' => 'bold', 'color' => '#10b981'],
-                                        ['type' => 'text', 'text' => "ใบงาน: $ticket_no"]
+                                        ['type' => 'text', 'text' => "✅ ช่าง $tech_name รับงานแล้ว", 'weight' => 'bold', 'color' => '#10b981', 'size' => 'md'],
+                                        ['type' => 'text', 'text' => "ใบงาน: $ticket_no", 'size' => 'sm', 'color' => '#666666'],
+                                        ['type' => 'text', 'text' => "สถานะ: ช่างรับเรื่องแจ้งซ่อมแล้ว", 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'sm']
                                     ]
                                 ],
                                 'footer' => [
@@ -253,12 +252,12 @@ if (!is_null($events['events'])) {
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
 
-                    if ($job && $job['status'] == 'กำลังดำเนินการ') {
-                        $stmt = $conn->prepare("UPDATE repairs SET status = 'ปิดงาน' WHERE ticket_no = ?");
+                    if ($job && $job['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') {
+                        $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว' WHERE ticket_no = ?");
                         $stmt->bind_param("s", $ticket_no);
                         $stmt->execute();
 
-                        send_reply($replyToken, ['type' => 'text', 'text' => "🎉 ปิดงาน $ticket_no สำเร็จ ส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "🎉 บันทึกการซ่อมเสร็จสิ้น ระบบส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
 
                         $review_msg = [
                             'type' => 'flex',
