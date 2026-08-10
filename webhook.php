@@ -168,9 +168,9 @@ if (!is_null($events['events'])) {
             }
             else {
                 // ==========================================
-                // 4. ระบบรองรับคอมเมนต์รีวิว
+                // 4. ระบบรองรับการพิมพ์คอมเมนต์รีวิวเพิ่ม (อัปเดตแบบต่อข้อความ)
                 // ==========================================
-                $stmt_check_review = $conn->prepare("SELECT ticket_no FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' AND rating IS NOT NULL AND review_comment IS NULL ORDER BY ticket_no DESC LIMIT 1");
+                $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
                 
                 if ($stmt_check_review) {
                     $stmt_check_review->bind_param("s", $userId);
@@ -178,11 +178,15 @@ if (!is_null($events['events'])) {
                     $recent_job = $stmt_check_review->get_result()->fetch_assoc();
 
                     if ($recent_job) {
+                        // นำข้อความที่พิมพ์มาต่อท้ายคำชมที่มีอยู่
+                        $current_rev = (string)$recent_job['review_comment'];
+                        $new_rev = trim($current_rev . " " . $text);
+                        
                         $stmt_update_review = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE ticket_no = ?");
-                        $stmt_update_review->bind_param("ss", $text, $recent_job['ticket_no']);
+                        $stmt_update_review->bind_param("ss", $new_rev, $recent_job['ticket_no']);
                         $stmt_update_review->execute();
                         
-                        send_reply($replyToken, ['type' => 'text', 'text' => "บันทึกรีวิวเรียบร้อยแล้วค่ะ ขอบคุณที่ใช้บริการนะคะ 🙏✨"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "บันทึกรีวิวเพิ่มเติมเรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
                     }
                 }
             }
@@ -197,7 +201,6 @@ if (!is_null($events['events'])) {
                 // 🛠️ ตรวจสอบการกด "รับงาน"
                 // ==========================================
                 if ($postbackData['action'] == 'accept') {
-                    // 💡 ดึงข้อมูลอุปกรณ์และสถานที่มาใช้ด้วย
                     $stmt_check = $conn->prepare("SELECT status, line_user_id, technician_name, equipment_type, location FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
@@ -221,7 +224,6 @@ if (!is_null($events['events'])) {
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
 
-                            // 💡 แก้ไขการ์ด Flex Message ให้แสดงอุปกรณ์และสถานที่ด้วย
                             $replyMsg = [
                                 'type' => 'flex',
                                 'altText' => 'อัปเดตสถานะงาน',
@@ -285,6 +287,7 @@ if (!is_null($events['events'])) {
 
                                     send_push($line_group_id, ['type' => 'text', 'text' => "🎉 ใบงาน $ticket_no : ช่าง $clicker_name บันทึกการซ่อมเสร็จสิ้น ระบบส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
 
+                                    // 💡 เปลี่ยนรูปแบบรีวิวเป็นการ์ด Flex Message ที่กดได้ตลอดเวลา
                                     $review_msg = [
                                         'type' => 'flex',
                                         'altText' => 'ประเมินผลการซ่อม',
@@ -295,15 +298,35 @@ if (!is_null($events['events'])) {
                                                 'contents' => [
                                                     ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'lg'],
                                                     ['type' => 'text', 'text' => 'งานซ่อมของคุณเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'wrap' => true],
-                                                    ['type' => 'text', 'text' => 'รบกวนให้คะแนนช่างเพื่อเป็นกำลังใจด้วยนะคะ', 'color' => '#aaaaaa', 'size' => 'sm', 'wrap' => true]
+                                                    ['type' => 'separator', 'margin' => 'md'],
+                                                    ['type' => 'text', 'text' => '1️⃣ ให้คะแนนดาว (กดเปลี่ยนได้)', 'size' => 'sm', 'color' => '#aaaaaa', 'margin' => 'md'],
+                                                    [
+                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm',
+                                                        'contents' => [
+                                                            ['type' => 'button', 'style' => 'primary', 'color' => '#fbbf24', 'action' => ['type' => 'postback', 'label' => '5 ดาว', 'data' => "action=rate&score=5&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'action' => ['type' => 'postback', 'label' => '4 ดาว', 'data' => "action=rate&score=4&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'action' => ['type' => 'postback', 'label' => '3 ดาว', 'data' => "action=rate&score=3&ticket=$ticket_no"]]
+                                                        ]
+                                                    ],
+                                                    ['type' => 'separator', 'margin' => 'md'],
+                                                    ['type' => 'text', 'text' => '2️⃣ เลือกคำชม (กดได้หลายข้อ)', 'size' => 'sm', 'color' => '#aaaaaa', 'margin' => 'md'],
+                                                    [
+                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
+                                                        'contents' => [
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '👍 บริการดีเยี่ยม', 'data' => "action=add_tag&tag=บริการดีเยี่ยม&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ตรงต่อเวลา', 'data' => "action=add_tag&tag=ตรงต่อเวลา&ticket=$ticket_no"]]
+                                                        ]
+                                                    ],
+                                                    [
+                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
+                                                        'contents' => [
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ สะอาด', 'data' => "action=add_tag&tag=สะอาดเรียบร้อย&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพ', 'data' => "action=add_tag&tag=พูดจาสุภาพ&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🛠️ ซ่อมเร็ว', 'data' => "action=add_tag&tag=ซ่อมเร็วทันใจ&ticket=$ticket_no"]]
+                                                        ]
+                                                    ],
+                                                    ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวส่งมาในแชทได้เลยค่ะ', 'size' => 'xs', 'color' => '#bbbbbb', 'margin' => 'md', 'wrap' => true]
                                                 ]
-                                            ]
-                                        ],
-                                        'quickReply' => [
-                                            'items' => [
-                                                ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '⭐️⭐️⭐️⭐️⭐️', 'data' => "action=rate&score=5&ticket=$ticket_no", 'displayText' => 'ให้ 5 ดาว']],
-                                                ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '⭐️⭐️⭐️⭐️', 'data' => "action=rate&score=4&ticket=$ticket_no", 'displayText' => 'ให้ 4 ดาว']],
-                                                ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '⭐️⭐️⭐️', 'data' => "action=rate&score=3&ticket=$ticket_no", 'displayText' => 'ให้ 3 ดาว']]
                                             ]
                                         ]
                                     ];
@@ -322,29 +345,41 @@ if (!is_null($events['events'])) {
                     }
                 }
                 // ==========================================
-                // ⭐ ระบบให้ดาว และเด้ง Quick Reply ให้เลือกคำชม
+                // ⭐ ระบบจัดการคะแนนดาว (อัปเดตทับได้)
                 // ==========================================
                 elseif ($postbackData['action'] == 'rate') {
                     $score = $postbackData['score'];
                     $stmt = $conn->prepare("UPDATE repairs SET rating = ? WHERE ticket_no = ?");
                     $stmt->bind_param("is", $score, $ticket_no);
-                    
                     if($stmt->execute()){
-                        // 💡 แก้ไข: เพิ่มคำแนะนำให้ผู้ใช้เข้าใจว่าสามารถแก้ดาวได้ และพิมพ์รวมกันได้
-                        $thankYouMsg = [
-                            'type' => 'text', 
-                            'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาว ค่ะ!\n(เปลี่ยนคะแนนดาวได้โดยเลื่อนไปกดปุ่มเดิมใหม่นะคะ)\n\nประทับใจส่วนไหน กดแท็กด้านล่างได้ 1 อัน 👇\n(หากมีหลายคำชม หรืออยากรีวิวเพิ่มเติม แนะนำให้พิมพ์ข้อความทั้งหมดรวมกัน แล้วกดส่งมาได้เลยค่ะ 💬)",
-                            'quickReply' => [
-                                'items' => [
-                                    ['type' => 'action', 'action' => ['type' => 'message', 'label' => '👍 ให้บริการดีเยี่ยม', 'text' => 'ให้บริการดีเยี่ยม']],
-                                    ['type' => 'action', 'action' => ['type' => 'message', 'label' => '⏱️ ตรงต่อเวลา', 'text' => 'ตรงต่อเวลา']],
-                                    ['type' => 'action', 'action' => ['type' => 'message', 'label' => '✨ สะอาดเรียบร้อย', 'text' => 'สะอาดเรียบร้อย']],
-                                    ['type' => 'action', 'action' => ['type' => 'message', 'label' => '🗣️ พูดจาสุภาพ', 'text' => 'พูดจาสุภาพ']],
-                                    ['type' => 'action', 'action' => ['type' => 'message', 'label' => '🛠️ ซ่อมเร็วทันใจ', 'text' => 'ซ่อมเร็วทันใจ']]
-                                ]
-                            ]
-                        ];
-                        send_push($userId, $thankYouMsg, $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกคะแนน $score ดาว เรียบร้อยแล้วค่ะ"], $channelAccessToken);
+                    }
+                }
+                // ==========================================
+                // 🏷️ ระบบจัดการเลือกแท็กคำชม (เพิ่มคำต่อท้ายได้)
+                // ==========================================
+                elseif ($postbackData['action'] == 'add_tag') {
+                    $tag = $postbackData['tag'];
+                    
+                    // ดึงข้อมูลรีวิวเดิมออกมาเช็กก่อน
+                    $stmt_check = $conn->prepare("SELECT review_comment FROM repairs WHERE ticket_no = ?");
+                    $stmt_check->bind_param("s", $ticket_no);
+                    $stmt_check->execute();
+                    $job_rev = $stmt_check->get_result()->fetch_assoc();
+                    $current_rev = $job_rev ? (string)$job_rev['review_comment'] : "";
+
+                    // เช็กว่าผู้ใช้เคยเลือกแท็กนี้ไปแล้วหรือยัง (ป้องกันกดเบิ้ลซ้ำ)
+                    if (mb_strpos($current_rev, $tag) === false) {
+                        $new_rev = trim($current_rev . " [" . $tag . "]");
+                        $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE ticket_no = ?");
+                        $stmt_upd->bind_param("ss", $new_rev, $ticket_no);
+                        
+                        if($stmt_upd->execute()){
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ เพิ่มคำชม: $tag"], $channelAccessToken);
+                        }
+                    } else {
+                        // ถ้าเคยจิ้มแท็กนี้ไปแล้ว บอทจะตอบว่าเลือกไปแล้ว
+                        send_reply($replyToken, ['type' => 'text', 'text' => "คุณได้เลือกคำชม '$tag' ไปแล้วค่ะ 💖"], $channelAccessToken);
                     }
                 }
             }
