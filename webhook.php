@@ -106,11 +106,7 @@ if (!is_null($events['events'])) {
                 $phone_number = "ไม่ระบุ";
                 
                 $words_to_remove = [
-                    'แอร์', 'คอม', 'เครื่องปริ้น', 'printer', 'projector', 'เครื่องฉาย', 
-                    'จอ', 'ทีวี', 'ไมค์', 'หลอดไฟ', 'ไฟดับ', 'สายไฟ', 'ปลั๊ก', 'ไฟ', 'หลอด', 'พัดลม', 'เน็ต', 
-                    'เว็บคณะ', 'มคอ', 'ประตู', 'สแกนหน้า', 'ท่อ', 'ห้องน้ำ', 'ก๊อก', 
-                    'ตู้กดน้ำ', 'จิ้งจก', 'นก', 'ตุ๊กแก', 'หนู', 'กลิ่นเหม็น',
-                    $location, 'ค่ะ', 'ครับ', 'คะ', 'คับ', 'มัน', 'รบกวน', 'ด่วน', 'แจ้งซ่อม', 'นึง'
+                    $location, 'ค่ะ', 'ครับ', 'คะ', 'คับ', 'รบกวน', 'ด่วน', 'แจ้งซ่อม', 'นึง', 'หน่อย'
                 ];
                 
                 $problem = str_replace($words_to_remove, '', $text);
@@ -290,26 +286,11 @@ if (!is_null($events['events'])) {
                                                     ],
                                                     ['type' => 'separator', 'margin' => 'md'],
                                                     ['type' => 'text', 'text' => '2️⃣ เลือกคำชม (กดได้หลายข้อ)', 'size' => 'sm', 'color' => '#aaaaaa', 'margin' => 'md'],
-                                                    [
-                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
-                                                        'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '👍 บริการดีเยี่ยม', 'data' => "action=add_tag&tag=บริการดีเยี่ยม&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ตรงต่อเวลา', 'data' => "action=add_tag&tag=ตรงต่อเวลา&ticket=$ticket_no"]]
-                                                        ]
-                                                    ],
-                                                    [
-                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
-                                                        'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ สะอาดเรียบร้อย', 'data' => "action=add_tag&tag=สะอาดเรียบร้อย&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ พูดจาสุภาพ', 'data' => "action=add_tag&tag=พูดจาสุภาพ&ticket=$ticket_no"]]
-                                                        ]
-                                                    ],
-                                                    [
-                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
-                                                        'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🛠️ ซ่อมเร็วทันใจ', 'data' => "action=add_tag&tag=ซ่อมเร็วทันใจ&ticket=$ticket_no"]]
-                                                        ]
-                                                    ],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '👍 บริการดีเยี่ยม', 'data' => "action=add_tag&tag=บริการดีเยี่ยม&ticket=$ticket_no"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ตรงต่อเวลา', 'data' => "action=add_tag&tag=ตรงต่อเวลา&ticket=$ticket_no"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ สะอาดเรียบร้อย', 'data' => "action=add_tag&tag=สะอาดเรียบร้อย&ticket=$ticket_no"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ พูดจาสุภาพ', 'data' => "action=add_tag&tag=พูดจาสุภาพ&ticket=$ticket_no"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🛠️ ซ่อมเร็วทันใจ', 'data' => "action=add_tag&tag=ซ่อมเร็วทันใจ&ticket=$ticket_no"]],
                                                     ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวส่งมาในแชทได้เลยค่ะ', 'size' => 'xs', 'color' => '#bbbbbb', 'margin' => 'md', 'wrap' => true]
                                                 ]
                                             ]
