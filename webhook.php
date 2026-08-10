@@ -23,7 +23,6 @@ function extract_repair_info($text) {
         }
     }
     
-    // 💡 อัปเดต: เพิ่มการค้นหาคำว่า "ชั้น" เข้าไปในระบบดักจับสถานที่
     preg_match('/(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+|ชั้น\s*[0-9]+)/iu', $text, $matches);
     if (!empty($matches[0])) {
         $location = trim($matches[0]);
@@ -301,9 +300,14 @@ if (!is_null($events['events'])) {
                                                     [
                                                         'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
                                                         'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ สะอาด', 'data' => "action=add_tag&tag=สะอาดเรียบร้อย&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพ', 'data' => "action=add_tag&tag=พูดจาสุภาพ&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🛠️ ซ่อมเร็ว', 'data' => "action=add_tag&tag=ซ่อมเร็วทันใจ&ticket=$ticket_no"]]
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ สะอาดเรียบร้อย', 'data' => "action=add_tag&tag=สะอาดเรียบร้อย&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ พูดจาสุภาพ', 'data' => "action=add_tag&tag=พูดจาสุภาพ&ticket=$ticket_no"]]
+                                                        ]
+                                                    ],
+                                                    [
+                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
+                                                        'contents' => [
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🛠️ ซ่อมเร็วทันใจ', 'data' => "action=add_tag&tag=ซ่อมเร็วทันใจ&ticket=$ticket_no"]]
                                                         ]
                                                     ],
                                                     ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวส่งมาในแชทได้เลยค่ะ', 'size' => 'xs', 'color' => '#bbbbbb', 'margin' => 'md', 'wrap' => true]
