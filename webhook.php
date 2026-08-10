@@ -204,7 +204,8 @@ if (!is_null($events['events'])) {
                             if ($tech_result) {
                                 $tech_name = $tech_result['full_name'];
                             } else {
-                                send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธการทำรายการ:\nผู้กดรับงานใบงาน $ticket_no ยังไม่ได้รับการอนุมัติสิทธิ์ช่างค่ะ"], $channelAccessToken);
+                                // 💡 ใช้ send_reply ตอบกลับการกดปุ่มทันที
+                                send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธการทำรายการ:\nผู้กดรับงานใบงาน $ticket_no ยังไม่ได้รับการอนุมัติสิทธิ์ช่างค่ะ"], $channelAccessToken);
                                 continue;
                             }
 
@@ -246,10 +247,15 @@ if (!is_null($events['events'])) {
                                 ]
                             ];
                             
-                            send_push($line_group_id, $replyMsg, $channelAccessToken);
+                            // 💡 ใช้ send_reply ส่งการ์ดลงกลุ่มได้ไวปรี๊ด 
+                            send_reply($replyToken, $replyMsg, $channelAccessToken);
+                            
+                            // 💡 จากนั้นค่อยใช้ send_push ทักหาผู้ใช้อย่างสบายใจ
+                            $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ!\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
+                            send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
                         } else {
                             $taken_by = !empty($job['technician_name']) ? $job['technician_name'] : "ช่างท่านอื่น";
-                            send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ใบงาน $ticket_no ไม่สามารถรับได้ค่ะ เนื่องจากถูกรับไปแล้วโดยช่าง $taken_by"], $channelAccessToken);
+                            send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ใบงาน $ticket_no ไม่สามารถรับได้ค่ะ เนื่องจากถูกรับไปแล้วโดยช่าง $taken_by"], $channelAccessToken);
                         }
                     }
                 }
@@ -276,7 +282,8 @@ if (!is_null($events['events'])) {
                                     $stmt->bind_param("s", $ticket_no);
                                     $stmt->execute();
 
-                                    send_push($line_group_id, ['type' => 'text', 'text' => "🎉 ใบงาน $ticket_no : ช่าง $clicker_name บันทึกการซ่อมเสร็จสิ้น ระบบส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
+                                    // 💡 ตอบกลับในกลุ่มทันทีว่าปิดงานแล้ว
+                                    send_reply($replyToken, ['type' => 'text', 'text' => "🎉 ใบงาน $ticket_no : ช่าง $clicker_name บันทึกการซ่อมเสร็จสิ้น ระบบส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
 
                                     $review_msg = [
                                         'type' => 'flex',
@@ -330,17 +337,18 @@ if (!is_null($events['events'])) {
                                             ]
                                         ]
                                     ];
-                                    send_push($line_group_id, $review_msg, $channelAccessToken);
+                                    // 💡 ส่ง Push แจ้งประเมินผลไปให้ผู้ใช้
+                                    send_push($job['line_user_id'], $review_msg, $channelAccessToken);
                                     
                                 } else {
-                                    send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: เฉพาะช่าง ".$job['technician_name']." ที่สามารถแจ้งปิดงานใบงาน $ticket_no ได้ค่ะ"], $channelAccessToken);
+                                    send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: เฉพาะช่าง ".$job['technician_name']." ที่สามารถแจ้งปิดงานใบงาน $ticket_no ได้ค่ะ"], $channelAccessToken);
                                 }
                             } else {
-                                send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: ผู้กดไม่มีสิทธิ์ทำรายการนี้ค่ะ"], $channelAccessToken);
+                                send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: ผู้กดไม่มีสิทธิ์ทำรายการนี้ค่ะ"], $channelAccessToken);
                             }
                             
                         } else if ($job['status'] == 'ซ่อมเสร็จแล้ว') {
-                             send_push($line_group_id, ['type' => 'text', 'text' => "✅ ใบงาน $ticket_no ถูกแจ้งปิดงานไปเรียบร้อยแล้วค่ะ"], $channelAccessToken);
+                             send_reply($replyToken, ['type' => 'text', 'text' => "✅ ใบงาน $ticket_no ถูกแจ้งปิดงานไปเรียบร้อยแล้วค่ะ"], $channelAccessToken);
                         }
                     }
                 }
