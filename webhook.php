@@ -196,15 +196,17 @@ if (!is_null($events['events'])) {
 
                     if ($job) {
                         if ($job['status'] == 'รอรับเรื่อง') {
-                            $stmt_tech = $conn->prepare("SELECT full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
+                            // 💡 อัปเดตการดึงข้อมูลช่าง ให้ดึงเบอร์โทรศัพท์ (phone) ออกมาด้วย
+                            $stmt_tech = $conn->prepare("SELECT full_name, phone FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
                             $stmt_tech->bind_param("s", $userId);
                             $stmt_tech->execute();
                             $tech_result = $stmt_tech->get_result()->fetch_assoc();
 
                             if ($tech_result) {
                                 $tech_name = $tech_result['full_name'];
+                                $tech_phone = !empty($tech_result['phone']) ? $tech_result['phone'] : "-"; // กำหนดค่าเบอร์โทร
                             } else {
-                                send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธการทำรายการ:\nผู้กดรับงานใบงาน $ticket_no ยังไม่ได้รับการอนุมัติสิทธิ์ช่างค่ะ"], $channelAccessToken);
+                                send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธการทำรายการ:\nผู้กดรับงานใบงาน $ticket_no ยังไม่ได้รับการอนุมัติสิทธิ์ช่างค่ะ"], $channelAccessToken);
                                 continue;
                             }
 
@@ -248,7 +250,8 @@ if (!is_null($events['events'])) {
                             
                             send_reply($replyToken, $replyMsg, $channelAccessToken);
                             
-                            $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ!\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
+                            // 💡 เพิ่มเบอร์โทรศัพท์ลงในข้อความที่แจ้งเตือนผู้ใช้งาน (อาจารย์)
+                            $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ!\n📞 เบอร์ติดต่อช่าง: $tech_phone\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
                             send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
                         } else {
                             $taken_by = !empty($job['technician_name']) ? $job['technician_name'] : "ช่างท่านอื่น";
