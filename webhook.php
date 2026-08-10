@@ -23,7 +23,8 @@ function extract_repair_info($text) {
         }
     }
     
-    preg_match('/(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9]+|อาคาร\s*[a-zA-Z0-9]+)/iu', $text, $matches);
+    // 💡 อัปเดต: เพิ่มการค้นหาคำว่า "ชั้น" เข้าไปในระบบดักจับสถานที่
+    preg_match('/(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+|ชั้น\s*[0-9]+)/iu', $text, $matches);
     if (!empty($matches[0])) {
         $location = trim($matches[0]);
     }
