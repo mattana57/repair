@@ -204,7 +204,7 @@ if (!is_null($events['events'])) {
                             if ($tech_result) {
                                 $tech_name = $tech_result['full_name'];
                             } else {
-                                send_push($userId, ['type' => 'text', 'text' => "⚠️ คุณยังไม่มีสิทธิ์รับงานค่ะ กรุณาลงทะเบียนช่าง หรือรอแอดมินอนุมัติบัญชีของคุณก่อนนะคะ"], $channelAccessToken);
+                                send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธการทำรายการ:\nผู้กดรับงานใบงาน $ticket_no ยังไม่ได้รับการอนุมัติสิทธิ์ช่างค่ะ"], $channelAccessToken);
                                 continue;
                             }
 
@@ -247,17 +247,14 @@ if (!is_null($events['events'])) {
                             ];
                             
                             send_push($line_group_id, $replyMsg, $channelAccessToken);
-                            
-                            $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ!\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
-                            send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
                         } else {
                             $taken_by = !empty($job['technician_name']) ? $job['technician_name'] : "ช่างท่านอื่น";
-                            send_push($userId, ['type' => 'text', 'text' => "⚠️ ไม่สามารถรับงานได้ค่ะ เนื่องจากงานนี้ถูกรับไปแล้วโดยช่าง $taken_by"], $channelAccessToken);
+                            send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ใบงาน $ticket_no ไม่สามารถรับได้ค่ะ เนื่องจากถูกรับไปแล้วโดยช่าง $taken_by"], $channelAccessToken);
                         }
                     }
                 }
                 elseif ($postbackData['action'] == 'close') {
-                    $stmt_check = $conn->prepare("SELECT status, line_user_id, technician_name FROM repairs WHERE ticket_no = ?");
+                    $stmt_check = $conn->prepare("SELECT status, line_user_id, technician_name, reporter_name FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
@@ -290,23 +287,24 @@ if (!is_null($events['events'])) {
                                                 'type' => 'box', 'layout' => 'vertical', 'spacing' => 'md',
                                                 'contents' => [
                                                     ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'lg'],
-                                                    ['type' => 'text', 'text' => 'งานซ่อมของคุณเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'wrap' => true],
+                                                    ['type' => 'text', 'text' => "ถึงคุณ ".$job['reporter_name'], 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'sm'],
+                                                    ['type' => 'text', 'text' => 'ช่าง '.$clicker_name.' ดำเนินการซ่อมเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'wrap' => true],
                                                     ['type' => 'separator', 'margin' => 'md'],
                                                     ['type' => 'text', 'text' => '1️⃣ ให้คะแนนดาว (กดเปลี่ยนได้)', 'size' => 'sm', 'color' => '#aaaaaa', 'margin' => 'md'],
                                                     [
-                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
+                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm',
                                                         'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⭐ 5', 'data' => "action=rate&score=5&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⭐ 4', 'data' => "action=rate&score=4&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⭐ 3', 'data' => "action=rate&score=3&ticket=$ticket_no"]]
+                                                            ['type' => 'button', 'style' => 'primary', 'color' => '#fbbf24', 'action' => ['type' => 'postback', 'label' => '5 ดาว', 'data' => "action=rate&score=5&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'action' => ['type' => 'postback', 'label' => '4 ดาว', 'data' => "action=rate&score=4&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'action' => ['type' => 'postback', 'label' => '3 ดาว', 'data' => "action=rate&score=3&ticket=$ticket_no"]]
                                                         ]
                                                     ],
                                                     [
                                                         'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
                                                         'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⭐ 2', 'data' => "action=rate&score=2&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⭐ 1', 'data' => "action=rate&score=1&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⭐ 0', 'data' => "action=rate&score=0&ticket=$ticket_no"]]
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '2 ดาว', 'data' => "action=rate&score=2&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '1 ดาว', 'data' => "action=rate&score=1&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '0 ดาว', 'data' => "action=rate&score=0&ticket=$ticket_no"]]
                                                         ]
                                                     ],
                                                     ['type' => 'separator', 'margin' => 'md'],
@@ -314,39 +312,35 @@ if (!is_null($events['events'])) {
                                                     [
                                                         'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
                                                         'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '👍 บริการดี', 'data' => "action=add_tag&tag=บริการดีเยี่ยม&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ตรงเวลา', 'data' => "action=add_tag&tag=ตรงต่อเวลา&ticket=$ticket_no"]]
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ดำเนินการเร็ว', 'data' => "action=add_tag&tag=ดำเนินการรวดเร็วทันใจ&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🎯 ตรงจุด', 'data' => "action=add_tag&tag=แก้ไขปัญหาได้อย่างตรงจุด&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '💡 แนะนำดี', 'data' => "action=add_tag&tag=อธิบายและให้คำแนะนำชัดเจน&ticket=$ticket_no"]]
                                                         ]
                                                     ],
                                                     [
                                                         'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
                                                         'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ สะอาด', 'data' => "action=add_tag&tag=สะอาดเรียบร้อย&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพ', 'data' => "action=add_tag&tag=พูดจาสุภาพ&ticket=$ticket_no"]]
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพ', 'data' => "action=add_tag&tag=สุภาพเรียบร้อย บริการเต็มใจ&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ เรียบร้อย', 'data' => "action=add_tag&tag=ซ่อมแซมและเก็บงานเรียบร้อย&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🙏 ช่วยเหลือดี', 'data' => "action=add_tag&tag=ช่วยอำนวยความสะดวกได้ดีเยี่ยม&ticket=$ticket_no"]]
                                                         ]
                                                     ],
-                                                    [
-                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
-                                                        'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🛠️ ซ่อมเร็ว', 'data' => "action=add_tag&tag=ซ่อมเร็วทันใจ&ticket=$ticket_no"]]
-                                                        ]
-                                                    ],
-                                                    ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวส่งมาในแชทได้เลยค่ะ', 'size' => 'xs', 'color' => '#bbbbbb', 'margin' => 'md', 'wrap' => true]
+                                                    ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวเพิ่มเติมส่งมาในกลุ่มได้เลยค่ะ', 'size' => 'xs', 'color' => '#bbbbbb', 'margin' => 'md', 'wrap' => true]
                                                 ]
                                             ]
                                         ]
                                     ];
-                                    send_push($job['line_user_id'], $review_msg, $channelAccessToken);
+                                    send_push($line_group_id, $review_msg, $channelAccessToken);
                                     
                                 } else {
-                                    send_push($userId, ['type' => 'text', 'text' => "⚠️ คุณไม่สามารถแจ้งปิดงานนี้ได้ค่ะ เนื่องจากช่าง ".$job['technician_name']." เป็นผู้รับผิดชอบ"], $channelAccessToken);
+                                    send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: เฉพาะช่าง ".$job['technician_name']." ที่สามารถแจ้งปิดงานใบงาน $ticket_no ได้ค่ะ"], $channelAccessToken);
                                 }
                             } else {
-                                send_push($userId, ['type' => 'text', 'text' => "⚠️ คุณไม่มีสิทธิ์ทำรายการนี้ค่ะ"], $channelAccessToken);
+                                send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: ผู้กดไม่มีสิทธิ์ทำรายการนี้ค่ะ"], $channelAccessToken);
                             }
                             
                         } else if ($job['status'] == 'ซ่อมเสร็จแล้ว') {
-                             send_push($userId, ['type' => 'text', 'text' => "✅ ใบงาน $ticket_no นี้ถูกแจ้งปิดงานไปเรียบร้อยแล้วค่ะ"], $channelAccessToken);
+                             send_push($line_group_id, ['type' => 'text', 'text' => "✅ ใบงาน $ticket_no ถูกแจ้งปิดงานไปเรียบร้อยแล้วค่ะ"], $channelAccessToken);
                         }
                     }
                 }
@@ -356,7 +350,11 @@ if (!is_null($events['events'])) {
                     $stmt->bind_param("is", $score, $ticket_no);
                     
                     if($stmt->execute()){
-                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกคะแนน $score ดาว เรียบร้อยแล้วค่ะ"], $channelAccessToken);
+                        $thankYouMsg = [
+                            'type' => 'text', 
+                            'text' => "✅ บันทึกคะแนน $score ดาว ให้ช่างเรียบร้อยค่ะ\n\n(ประทับใจส่วนไหน เลือกจิ้มแท็กด้านบน 👆 หรือพิมพ์รีวิวส่งมาในแชทนี้ได้เลยนะคะ 💬)"
+                        ];
+                        send_reply($replyToken, $thankYouMsg, $channelAccessToken);
                     }
                 }
                 elseif ($postbackData['action'] == 'add_tag') {
