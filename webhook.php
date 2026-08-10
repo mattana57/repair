@@ -123,6 +123,7 @@ if (!is_null($events['events'])) {
                     $replyText = "🤖 รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n💻 อุปกรณ์: $equipment\n📍 สถานที่: $location\n⚠️ ปัญหา: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
+                    // 💡 การ์ดแจ้งงานใหม่ (กระชับและมินิมอล)
                     $pushMsg = [
                         'type' => 'flex',
                         'altText' => 'แจ้งงานซ่อมใหม่: '.$ticket_no,
@@ -130,24 +131,24 @@ if (!is_null($events['events'])) {
                             'type' => 'bubble',
                             'size' => 'kilo',
                             'body' => [
-                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'md',
+                                'type' => 'box', 'layout' => 'vertical', 'paddingAll' => '15px',
                                 'contents' => [
-                                    ['type' => 'text', 'text' => '🔔 งานแจ้งซ่อมใหม่', 'weight' => 'bold', 'color' => '#ef4444', 'size' => 'sm'],
-                                    ['type' => 'text', 'text' => $ticket_no, 'weight' => 'bold', 'size' => 'xl', 'margin' => 'sm'],
-                                    ['type' => 'separator', 'margin' => 'md'],
+                                    ['type' => 'text', 'text' => '🔔 งานแจ้งซ่อมใหม่', 'weight' => 'bold', 'color' => '#ef4444', 'size' => 'xs'],
+                                    ['type' => 'text', 'text' => $ticket_no, 'weight' => 'bold', 'size' => 'lg', 'margin' => 'xs'],
+                                    ['type' => 'separator', 'margin' => 'sm'],
                                     [
-                                        'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm', 'margin' => 'md',
+                                        'type' => 'box', 'layout' => 'vertical', 'spacing' => 'xs', 'margin' => 'sm',
                                         'contents' => [
-                                            ['type' => 'text', 'text' => "อุปกรณ์: $equipment", 'size' => 'sm', 'color' => '#333333', 'wrap' => true],
-                                            ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'sm', 'color' => '#333333', 'wrap' => true],
-                                            ['type' => 'text', 'text' => "ผู้แจ้ง: $user_name", 'size' => 'sm', 'color' => '#666666', 'wrap' => true],
-                                            ['type' => 'text', 'text' => "ปัญหา: $problem", 'size' => 'sm', 'color' => '#ef4444', 'wrap' => true]
+                                            ['type' => 'text', 'text' => "อุปกรณ์: $equipment", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
+                                            ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
+                                            ['type' => 'text', 'text' => "ผู้แจ้ง: $user_name", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
+                                            ['type' => 'text', 'text' => "ปัญหา: $problem", 'size' => 'xs', 'color' => '#ef4444', 'wrap' => true]
                                         ]
                                     ]
                                 ]
                             ],
                             'footer' => [
-                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                'type' => 'box', 'layout' => 'vertical', 'paddingAll' => '15px', 'paddingTop' => '0px',
                                 'contents' => [
                                     ['type' => 'button', 'style' => 'primary', 'color' => '#3b82f6', 'height' => 'sm',
                                         'action' => ['type' => 'postback', 'label' => 'กดรับงาน', 'data' => "action=accept&ticket=$ticket_no"]
@@ -215,6 +216,7 @@ if (!is_null($events['events'])) {
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
 
+                            // 💡 การ์ดรับงานเรียบร้อย (กระชับและมินิมอล)
                             $replyMsg = [
                                 'type' => 'flex',
                                 'altText' => 'รับงานซ่อม: '.$ticket_no,
@@ -222,25 +224,25 @@ if (!is_null($events['events'])) {
                                     'type' => 'bubble',
                                     'size' => 'kilo',
                                     'body' => [
-                                        'type' => 'box', 'layout' => 'vertical', 'spacing' => 'md',
+                                        'type' => 'box', 'layout' => 'vertical', 'paddingAll' => '15px',
                                         'contents' => [
-                                            ['type' => 'text', 'text' => '✅ รับงานเรียบร้อย', 'weight' => 'bold', 'color' => '#10b981', 'size' => 'sm'],
-                                            ['type' => 'text', 'text' => "ช่าง $tech_name", 'weight' => 'bold', 'size' => 'lg', 'margin' => 'sm'],
-                                            ['type' => 'text', 'text' => "($tech_dept)", 'size' => 'xs', 'color' => '#888888', 'margin' => 'none'],
-                                            ['type' => 'separator', 'margin' => 'md'],
+                                            ['type' => 'text', 'text' => '✅ รับงานเรียบร้อย', 'weight' => 'bold', 'color' => '#10b981', 'size' => 'xs'],
+                                            ['type' => 'text', 'text' => "ช่าง $tech_name", 'weight' => 'bold', 'size' => 'md', 'margin' => 'xs'],
+                                            ['type' => 'text', 'text' => "($tech_dept)", 'size' => 'xxs', 'color' => '#888888', 'margin' => 'none'],
+                                            ['type' => 'separator', 'margin' => 'sm'],
                                             [
-                                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm', 'margin' => 'md',
+                                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'xs', 'margin' => 'sm',
                                                 'contents' => [
-                                                    ['type' => 'text', 'text' => "ใบงาน: $ticket_no", 'size' => 'sm', 'color' => '#333333'],
-                                                    ['type' => 'text', 'text' => "อุปกรณ์: ".$job['equipment_type'], 'size' => 'sm', 'color' => '#333333', 'wrap' => true],
-                                                    ['type' => 'text', 'text' => "สถานที่: ".$job['location'], 'size' => 'sm', 'color' => '#333333', 'wrap' => true],
-                                                    ['type' => 'text', 'text' => "สถานะ: กำลังดำเนินการ", 'size' => 'sm', 'color' => '#3b82f6', 'weight' => 'bold', 'wrap' => true]
+                                                    ['type' => 'text', 'text' => "ใบงาน: $ticket_no", 'size' => 'xs', 'color' => '#333333'],
+                                                    ['type' => 'text', 'text' => "อุปกรณ์: ".$job['equipment_type'], 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
+                                                    ['type' => 'text', 'text' => "สถานที่: ".$job['location'], 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
+                                                    ['type' => 'text', 'text' => "สถานะ: กำลังดำเนินการ", 'size' => 'xs', 'color' => '#3b82f6', 'weight' => 'bold', 'wrap' => true]
                                                 ]
                                             ]
                                         ]
                                     ],
                                     'footer' => [
-                                        'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                        'type' => 'box', 'layout' => 'vertical', 'paddingAll' => '15px', 'paddingTop' => '0px',
                                         'contents' => [
                                             ['type' => 'button', 'style' => 'primary', 'color' => '#ef4444', 'height' => 'sm',
                                                 'action' => ['type' => 'postback', 'label' => 'แจ้งปิดงาน', 'data' => "action=close&ticket=$ticket_no"]
@@ -291,19 +293,19 @@ if (!is_null($events['events'])) {
                                         'contents' => [
                                             'type' => 'bubble',
                                             'body' => [
-                                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'md',
+                                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
                                                 'contents' => [
-                                                    ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'lg'],
-                                                    ['type' => 'text', 'text' => "ถึงคุณ ".$job['reporter_name'], 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'sm'],
-                                                    ['type' => 'text', 'text' => 'ช่าง '.$clicker_name.' ดำเนินการซ่อมเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'wrap' => true],
-                                                    ['type' => 'separator', 'margin' => 'md'],
-                                                    ['type' => 'text', 'text' => '1️⃣ ให้คะแนนดาว (กดเปลี่ยนได้)', 'size' => 'sm', 'color' => '#aaaaaa', 'margin' => 'md'],
+                                                    ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'md'],
+                                                    ['type' => 'text', 'text' => "ถึงคุณ ".$job['reporter_name'], 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'xs'],
+                                                    ['type' => 'text', 'text' => 'ช่าง '.$clicker_name.' ดำเนินการซ่อมเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'size' => 'xs', 'wrap' => true],
+                                                    ['type' => 'separator', 'margin' => 'sm'],
+                                                    ['type' => 'text', 'text' => '1️⃣ ให้คะแนนดาว (กดเปลี่ยนได้)', 'size' => 'xs', 'color' => '#aaaaaa', 'margin' => 'sm'],
                                                     [
                                                         'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm',
                                                         'contents' => [
-                                                            ['type' => 'button', 'style' => 'primary', 'color' => '#fbbf24', 'action' => ['type' => 'postback', 'label' => '5 ดาว', 'data' => "action=rate&score=5&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'action' => ['type' => 'postback', 'label' => '4 ดาว', 'data' => "action=rate&score=4&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'action' => ['type' => 'postback', 'label' => '3 ดาว', 'data' => "action=rate&score=3&ticket=$ticket_no"]]
+                                                            ['type' => 'button', 'style' => 'primary', 'color' => '#fbbf24', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '5 ดาว', 'data' => "action=rate&score=5&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '4 ดาว', 'data' => "action=rate&score=4&ticket=$ticket_no"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '3 ดาว', 'data' => "action=rate&score=3&ticket=$ticket_no"]]
                                                         ]
                                                     ],
                                                     [
@@ -314,19 +316,20 @@ if (!is_null($events['events'])) {
                                                             ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '0 ดาว', 'data' => "action=rate&score=0&ticket=$ticket_no"]]
                                                         ]
                                                     ],
-                                                    ['type' => 'separator', 'margin' => 'md'],
-                                                    ['type' => 'text', 'text' => '2️⃣ เลือกรีวิว (กดได้หลายข้อ)', 'size' => 'sm', 'color' => '#aaaaaa', 'margin' => 'md'],
+                                                    ['type' => 'separator', 'margin' => 'sm'],
+                                                    ['type' => 'text', 'text' => '2️⃣ เลือกรีวิว (กดได้หลายข้อ)', 'size' => 'xs', 'color' => '#aaaaaa', 'margin' => 'sm'],
                                                     ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ดำเนินการเร็ว', 'data' => "action=add_tag&tag=ดำเนินการรวดเร็วทันใจ&ticket=$ticket_no"]],
                                                     ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🎯 แก้ปัญหาตรงจุด', 'data' => "action=add_tag&tag=แก้ไขปัญหาได้อย่างตรงจุด&ticket=$ticket_no"]],
                                                     ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '💡 ให้คำแนะนำดี', 'data' => "action=add_tag&tag=อธิบายและให้คำแนะนำชัดเจน&ticket=$ticket_no"]],
                                                     ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพเรียบร้อย', 'data' => "action=add_tag&tag=สุภาพเรียบร้อย บริการเต็มใจ&ticket=$ticket_no"]],
                                                     ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ เก็บงานเรียบร้อย', 'data' => "action=add_tag&tag=ซ่อมแซมและเก็บงานเรียบร้อย&ticket=$ticket_no"]],
                                                     ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🙏 ช่วยเหลือดีเยี่ยม', 'data' => "action=add_tag&tag=ช่วยอำนวยความสะดวกได้ดีเยี่ยม&ticket=$ticket_no"]],
-                                                    ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวเพิ่มเติมส่งมาในแชทได้เลยค่ะ', 'size' => 'xs', 'color' => '#bbbbbb', 'margin' => 'md', 'wrap' => true]
+                                                    ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวเพิ่มเติมส่งมาในแชทได้เลยค่ะ', 'size' => 'xxs', 'color' => '#bbbbbb', 'margin' => 'sm', 'wrap' => true]
                                                 ]
                                             ]
                                         ]
                                     ];
+                                    
                                     send_push($job['line_user_id'], $review_msg, $channelAccessToken);
                                     
                                 } else {
