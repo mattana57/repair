@@ -5,7 +5,7 @@ require 'env.php';
 $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
 
 function extract_repair_info($text) {
-    $equipment = "ไม่ระบุอุปกรณ์";
+    $category = "ไม่ระบุปัญหา";
     $location = "ไม่ระบุสถานที่";
     
     $keywords = [
@@ -18,7 +18,7 @@ function extract_repair_info($text) {
     $text_lower = mb_strtolower($text, 'UTF-8');
     foreach ($keywords as $keyword) {
         if (mb_strpos($text_lower, $keyword) !== false) {
-            $equipment = $keyword;
+            $category = $keyword;
             break;
         }
     }
@@ -28,7 +28,7 @@ function extract_repair_info($text) {
         $location = trim($matches[0]);
     }
     
-    return [$equipment, $location];
+    return [$category, $location];
 }
 
 $content = file_get_contents('php://input');
@@ -96,9 +96,9 @@ if (!is_null($events['events'])) {
                 continue; 
             }
 
-            list($equipment, $location) = extract_repair_info($text);
+            list($category, $location) = extract_repair_info($text);
 
-            if ($equipment !== "ไม่ระบุอุปกรณ์") {
+            if ($category !== "ไม่ระบุปัญหา") {
                 
                 $user_name = get_line_profile($userId, null, $channelAccessToken);
                 $ticket_no = "MR-" . rand(1000, 9999);
@@ -117,13 +117,13 @@ if (!is_null($events['events'])) {
                 }
 
                 $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id, line_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssssssss", $ticket_no, $equipment, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id);
+                $stmt->bind_param("sssssssss", $ticket_no, $category, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id);
                 
                 if($stmt->execute()) {
-                    $replyText = "🤖 รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n💻 อุปกรณ์: $equipment\n📍 สถานที่: $location\n⚠️ ปัญหา: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
+                    // 💡 เปลี่ยนคำว่า อุปกรณ์ -> ปัญหา และ ปัญหา -> รายละเอียด
+                    $replyText = "✅ รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n⚠️ ปัญหา: $category\n📍 สถานที่: $location\n📝 รายละเอียด: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
-                    // 💡 การ์ดแจ้งงานใหม่ (กระชับและมินิมอล)
                     $pushMsg = [
                         'type' => 'flex',
                         'altText' => 'แจ้งงานซ่อมใหม่: '.$ticket_no,
@@ -139,10 +139,11 @@ if (!is_null($events['events'])) {
                                     [
                                         'type' => 'box', 'layout' => 'vertical', 'spacing' => 'xs', 'margin' => 'sm',
                                         'contents' => [
-                                            ['type' => 'text', 'text' => "อุปกรณ์: $equipment", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
+                                            // 💡 อัปเดตคำในตัวการ์ด Flex Message ให้ตรงกัน
+                                            ['type' => 'text', 'text' => "ปัญหา: $category", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                                             ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                                             ['type' => 'text', 'text' => "ผู้แจ้ง: $user_name", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
-                                            ['type' => 'text', 'text' => "ปัญหา: $problem", 'size' => 'xs', 'color' => '#ef4444', 'wrap' => true]
+                                            ['type' => 'text', 'text' => "รายละเอียด: $problem", 'size' => 'xs', 'color' => '#ef4444', 'wrap' => true]
                                         ]
                                     ]
                                 ]
@@ -216,7 +217,6 @@ if (!is_null($events['events'])) {
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
 
-                            // 💡 การ์ดรับงานเรียบร้อย (กระชับและมินิมอล)
                             $replyMsg = [
                                 'type' => 'flex',
                                 'altText' => 'รับงานซ่อม: '.$ticket_no,
@@ -234,7 +234,8 @@ if (!is_null($events['events'])) {
                                                 'type' => 'box', 'layout' => 'vertical', 'spacing' => 'xs', 'margin' => 'sm',
                                                 'contents' => [
                                                     ['type' => 'text', 'text' => "ใบงาน: $ticket_no", 'size' => 'xs', 'color' => '#333333'],
-                                                    ['type' => 'text', 'text' => "อุปกรณ์: ".$job['equipment_type'], 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
+                                                    // 💡 เปลี่ยนคำว่า หมวดหมู่ -> ปัญหาในการ์ดรับงานด้วย
+                                                    ['type' => 'text', 'text' => "ปัญหา: ".$job['equipment_type'], 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                                                     ['type' => 'text', 'text' => "สถานที่: ".$job['location'], 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                                                     ['type' => 'text', 'text' => "สถานะ: กำลังดำเนินการ", 'size' => 'xs', 'color' => '#3b82f6', 'weight' => 'bold', 'wrap' => true]
                                                 ]
