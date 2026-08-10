@@ -120,7 +120,6 @@ if (!is_null($events['events'])) {
                 $stmt->bind_param("sssssssss", $ticket_no, $category, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id);
                 
                 if($stmt->execute()) {
-                    // 💡 เปลี่ยนคำว่า อุปกรณ์ -> ปัญหา และ ปัญหา -> รายละเอียด
                     $replyText = "✅ รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n⚠️ ปัญหา: $category\n📍 สถานที่: $location\n📝 รายละเอียด: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
@@ -139,7 +138,6 @@ if (!is_null($events['events'])) {
                                     [
                                         'type' => 'box', 'layout' => 'vertical', 'spacing' => 'xs', 'margin' => 'sm',
                                         'contents' => [
-                                            // 💡 อัปเดตคำในตัวการ์ด Flex Message ให้ตรงกัน
                                             ['type' => 'text', 'text' => "ปัญหา: $category", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                                             ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                                             ['type' => 'text', 'text' => "ผู้แจ้ง: $user_name", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
@@ -234,7 +232,6 @@ if (!is_null($events['events'])) {
                                                 'type' => 'box', 'layout' => 'vertical', 'spacing' => 'xs', 'margin' => 'sm',
                                                 'contents' => [
                                                     ['type' => 'text', 'text' => "ใบงาน: $ticket_no", 'size' => 'xs', 'color' => '#333333'],
-                                                    // 💡 เปลี่ยนคำว่า หมวดหมู่ -> ปัญหาในการ์ดรับงานด้วย
                                                     ['type' => 'text', 'text' => "ปัญหา: ".$job['equipment_type'], 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                                                     ['type' => 'text', 'text' => "สถานที่: ".$job['location'], 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                                                     ['type' => 'text', 'text' => "สถานะ: กำลังดำเนินการ", 'size' => 'xs', 'color' => '#3b82f6', 'weight' => 'bold', 'wrap' => true]
@@ -255,7 +252,8 @@ if (!is_null($events['events'])) {
                             
                             send_reply($replyToken, $replyMsg, $channelAccessToken);
                             
-                            $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name ($tech_dept) รับงานซ่อมของคุณแล้วนะคะ\n📞 เบอร์ติดต่อ: $tech_phone\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ 🛠️"];
+                            // 💡 ข้อความแจ้งผู้ใช้งาน เอาชื่อแผนกออกแล้ว
+                            $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ\n📞 เบอร์ติดต่อ: $tech_phone\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ 🛠️"];
                             send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
                         } else {
                             $taken_by = !empty($job['technician_name']) ? $job['technician_name'] : "ช่างท่านอื่น";
