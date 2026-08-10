@@ -168,7 +168,7 @@ if (!is_null($events['events'])) {
             }
             else {
                 // ==========================================
-                // 4. ระบบรองรับคอมเมนต์รีวิว
+                // 4. ระบบรองรับคอมเมนต์รีวิว 
                 // ==========================================
                 $stmt_check_review = $conn->prepare("SELECT ticket_no FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' AND rating IS NOT NULL AND review_comment IS NULL ORDER BY ticket_no DESC LIMIT 1");
                 
@@ -182,7 +182,7 @@ if (!is_null($events['events'])) {
                         $stmt_update_review->bind_param("ss", $text, $recent_job['ticket_no']);
                         $stmt_update_review->execute();
                         
-                        send_reply($replyToken, ['type' => 'text', 'text' => "ขอบคุณสำหรับข้อเสนอแนะค่ะ 🙏 ระบบบันทึกข้อมูลเรียบร้อยแล้ว"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "บันทึกรีวิวเรียบร้อยแล้วค่ะ ขอบคุณที่ใช้บริการนะคะ 🙏✨"], $channelAccessToken);
                     }
                 }
             }
@@ -193,108 +193,155 @@ if (!is_null($events['events'])) {
             if (isset($postbackData['action']) && isset($postbackData['ticket'])) {
                 $ticket_no = $postbackData['ticket'];
 
+                // ==========================================
+                // 🛠️ ตรวจสอบการกด "รับงาน"
+                // ==========================================
                 if ($postbackData['action'] == 'accept') {
-                    $stmt_check = $conn->prepare("SELECT status, line_user_id FROM repairs WHERE ticket_no = ?");
+                    $stmt_check = $conn->prepare("SELECT status, line_user_id, technician_name FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
 
-                    if ($job && $job['status'] == 'รอรับเรื่อง') {
-                        $stmt_tech = $conn->prepare("SELECT full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
-                        $stmt_tech->bind_param("s", $userId);
-                        $stmt_tech->execute();
-                        $tech_result = $stmt_tech->get_result()->fetch_assoc();
+                    if ($job) {
+                        if ($job['status'] == 'รอรับเรื่อง') {
+                            $stmt_tech = $conn->prepare("SELECT full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
+                            $stmt_tech->bind_param("s", $userId);
+                            $stmt_tech->execute();
+                            $tech_result = $stmt_tech->get_result()->fetch_assoc();
 
-                        if ($tech_result) {
-                            $tech_name = $tech_result['full_name'];
-                        } else {
-                            // ใช้ send_push ส่งข้อความแจ้งเตือนช่างแบบส่วนตัว กรณีหมดเวลา Reply Token
-                            send_push($userId, ['type' => 'text', 'text' => "⚠️ คุณยังไม่มีสิทธิ์รับงานค่ะ กรุณาลงทะเบียนช่าง หรือรอแอดมินอนุมัติบัญชีของคุณก่อนนะคะ"], $channelAccessToken);
-                            continue;
-                        }
+                            if ($tech_result) {
+                                $tech_name = $tech_result['full_name'];
+                            } else {
+                                send_push($userId, ['type' => 'text', 'text' => "⚠️ คุณยังไม่มีสิทธิ์รับงานค่ะ กรุณาลงทะเบียนช่าง หรือรอแอดมินอนุมัติบัญชีของคุณก่อนนะคะ"], $channelAccessToken);
+                                continue;
+                            }
 
-                        $stmt = $conn->prepare("UPDATE repairs SET status = 'ช่างรับเรื่องแจ้งซ่อมแล้ว', technician_name = ? WHERE ticket_no = ?");
-                        $stmt->bind_param("ss", $tech_name, $ticket_no);
-                        $stmt->execute();
+                            $stmt = $conn->prepare("UPDATE repairs SET status = 'ช่างรับเรื่องแจ้งซ่อมแล้ว', technician_name = ? WHERE ticket_no = ?");
+                            $stmt->bind_param("ss", $tech_name, $ticket_no);
+                            $stmt->execute();
 
-                        $replyMsg = [
-                            'type' => 'flex',
-                            'altText' => 'อัปเดตสถานะงาน',
-                            'contents' => [
-                                'type' => 'bubble',
-                                'body' => [
-                                    'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
-                                    'contents' => [
-                                        ['type' => 'text', 'text' => "✅ ช่าง $tech_name รับงานแล้ว", 'weight' => 'bold', 'color' => '#10b981', 'size' => 'md'],
-                                        ['type' => 'text', 'text' => "ใบงาน: $ticket_no", 'size' => 'sm', 'color' => '#666666'],
-                                        ['type' => 'text', 'text' => "สถานะ: ช่างรับเรื่องแจ้งซ่อมแล้ว", 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'sm']
-                                    ]
-                                ],
-                                'footer' => [
-                                    'type' => 'box', 'layout' => 'horizontal',
-                                    'contents' => [
-                                        ['type' => 'button', 'style' => 'primary', 'color' => '#ef4444',
-                                            'action' => ['type' => 'postback', 'label' => '🏁 แจ้งปิดงาน', 'data' => "action=close&ticket=$ticket_no"]
+                            $replyMsg = [
+                                'type' => 'flex',
+                                'altText' => 'อัปเดตสถานะงาน',
+                                'contents' => [
+                                    'type' => 'bubble',
+                                    'body' => [
+                                        'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                        'contents' => [
+                                            ['type' => 'text', 'text' => "✅ ช่าง $tech_name รับงานแล้ว", 'weight' => 'bold', 'color' => '#10b981', 'size' => 'md'],
+                                            ['type' => 'text', 'text' => "ใบงาน: $ticket_no", 'size' => 'sm', 'color' => '#666666'],
+                                            ['type' => 'text', 'text' => "สถานะ: ช่างรับเรื่องแจ้งซ่อมแล้ว", 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'sm']
+                                        ]
+                                    ],
+                                    'footer' => [
+                                        'type' => 'box', 'layout' => 'horizontal',
+                                        'contents' => [
+                                            ['type' => 'button', 'style' => 'primary', 'color' => '#ef4444',
+                                                'action' => ['type' => 'postback', 'label' => '🏁 แจ้งปิดงาน', 'data' => "action=close&ticket=$ticket_no"]
+                                            ]
                                         ]
                                     ]
                                 ]
-                            ]
-                        ];
-                        
-                        // 💡 แก้ไข: ใช้ send_push โยนข้อความกลับเข้ากลุ่มแจ้งซ่อม หมดปัญหา Token หมดอายุ
-                        send_push($line_group_id, $replyMsg, $channelAccessToken);
-                        
-                        $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ!\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
-                        send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
+                            ];
+                            
+                            send_push($line_group_id, $replyMsg, $channelAccessToken);
+                            
+                            $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ!\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
+                            send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
+                        } else {
+                            $taken_by = !empty($job['technician_name']) ? $job['technician_name'] : "ช่างท่านอื่น";
+                            send_push($userId, ['type' => 'text', 'text' => "⚠️ ไม่สามารถรับงานได้ค่ะ เนื่องจากงานนี้ถูกรับไปแล้วโดยช่าง $taken_by"], $channelAccessToken);
+                        }
                     }
                 }
+                // ==========================================
+                // 🏁 ตรวจสอบการกด "ปิดงาน"
+                // ==========================================
                 elseif ($postbackData['action'] == 'close') {
-                    $stmt_check = $conn->prepare("SELECT status, line_user_id FROM repairs WHERE ticket_no = ?");
+                    $stmt_check = $conn->prepare("SELECT status, line_user_id, technician_name FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
 
-                    if ($job && $job['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') {
-                        $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว' WHERE ticket_no = ?");
-                        $stmt->bind_param("s", $ticket_no);
-                        $stmt->execute();
+                    if ($job) {
+                        if ($job['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') {
+                            
+                            $stmt_tech = $conn->prepare("SELECT full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
+                            $stmt_tech->bind_param("s", $userId);
+                            $stmt_tech->execute();
+                            $tech_result = $stmt_tech->get_result()->fetch_assoc();
 
-                        // 💡 แก้ไข: ใช้ send_push แจ้งเตือนในกลุ่มว่าปิดงานแล้ว
-                        send_push($line_group_id, ['type' => 'text', 'text' => "🎉 ใบงาน $ticket_no : บันทึกการซ่อมเสร็จสิ้น ระบบส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
+                            if ($tech_result) {
+                                $clicker_name = $tech_result['full_name'];
+                                
+                                if ($clicker_name === $job['technician_name']) {
+                                    
+                                    $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว' WHERE ticket_no = ?");
+                                    $stmt->bind_param("s", $ticket_no);
+                                    $stmt->execute();
 
-                        $review_msg = [
-                            'type' => 'flex',
-                            'altText' => 'ประเมินผลการซ่อม',
-                            'contents' => [
-                                'type' => 'bubble',
-                                'body' => [
-                                    'type' => 'box', 'layout' => 'vertical', 'spacing' => 'md',
-                                    'contents' => [
-                                        ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'lg'],
-                                        ['type' => 'text', 'text' => 'งานซ่อมของคุณเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'wrap' => true],
-                                        ['type' => 'text', 'text' => 'รบกวนให้คะแนนช่างเพื่อเป็นกำลังใจด้วยนะคะ', 'color' => '#aaaaaa', 'size' => 'sm', 'wrap' => true]
-                                    ]
-                                ]
-                            ],
-                            'quickReply' => [
-                                'items' => [
-                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '⭐️⭐️⭐️⭐️⭐️', 'data' => "action=rate&score=5&ticket=$ticket_no", 'displayText' => 'ให้ 5 ดาว']],
-                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '⭐️⭐️⭐️⭐️', 'data' => "action=rate&score=4&ticket=$ticket_no", 'displayText' => 'ให้ 4 ดาว']],
-                                    ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '⭐️⭐️⭐️', 'data' => "action=rate&score=3&ticket=$ticket_no", 'displayText' => 'ให้ 3 ดาว']]
-                                ]
-                            ]
-                        ];
-                        send_push($job['line_user_id'], $review_msg, $channelAccessToken);
+                                    send_push($line_group_id, ['type' => 'text', 'text' => "🎉 ใบงาน $ticket_no : ช่าง $clicker_name บันทึกการซ่อมเสร็จสิ้น ระบบส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
+
+                                    $review_msg = [
+                                        'type' => 'flex',
+                                        'altText' => 'ประเมินผลการซ่อม',
+                                        'contents' => [
+                                            'type' => 'bubble',
+                                            'body' => [
+                                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'md',
+                                                'contents' => [
+                                                    ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'lg'],
+                                                    ['type' => 'text', 'text' => 'งานซ่อมของคุณเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'wrap' => true],
+                                                    ['type' => 'text', 'text' => 'รบกวนให้คะแนนช่างเพื่อเป็นกำลังใจด้วยนะคะ', 'color' => '#aaaaaa', 'size' => 'sm', 'wrap' => true]
+                                                ]
+                                            ]
+                                        ],
+                                        'quickReply' => [
+                                            'items' => [
+                                                ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '⭐️⭐️⭐️⭐️⭐️', 'data' => "action=rate&score=5&ticket=$ticket_no", 'displayText' => 'ให้ 5 ดาว']],
+                                                ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '⭐️⭐️⭐️⭐️', 'data' => "action=rate&score=4&ticket=$ticket_no", 'displayText' => 'ให้ 4 ดาว']],
+                                                ['type' => 'action', 'action' => ['type' => 'postback', 'label' => '⭐️⭐️⭐️', 'data' => "action=rate&score=3&ticket=$ticket_no", 'displayText' => 'ให้ 3 ดาว']]
+                                            ]
+                                        ]
+                                    ];
+                                    send_push($job['line_user_id'], $review_msg, $channelAccessToken);
+                                    
+                                } else {
+                                    send_push($userId, ['type' => 'text', 'text' => "⚠️ คุณไม่สามารถแจ้งปิดงานนี้ได้ค่ะ เนื่องจากช่าง ".$job['technician_name']." เป็นผู้รับผิดชอบ"], $channelAccessToken);
+                                }
+                            } else {
+                                send_push($userId, ['type' => 'text', 'text' => "⚠️ คุณไม่มีสิทธิ์ทำรายการนี้ค่ะ"], $channelAccessToken);
+                            }
+                            
+                        } else if ($job['status'] == 'ซ่อมเสร็จแล้ว') {
+                             send_push($userId, ['type' => 'text', 'text' => "✅ ใบงาน $ticket_no นี้ถูกแจ้งปิดงานไปเรียบร้อยแล้วค่ะ"], $channelAccessToken);
+                        }
                     }
                 }
+                // ==========================================
+                // ⭐ ระบบให้ดาว และเด้ง Quick Reply ให้เลือกคำชม (อัปเดตใหม่)
+                // ==========================================
                 elseif ($postbackData['action'] == 'rate') {
                     $score = $postbackData['score'];
                     $stmt = $conn->prepare("UPDATE repairs SET rating = ? WHERE ticket_no = ?");
                     $stmt->bind_param("is", $score, $ticket_no);
                     
                     if($stmt->execute()){
-                        // 💡 แก้ไข: ส่งคำขอบคุณกลับไปที่แชทส่วนตัวของผู้แจ้ง
-                        send_push($userId, ['type' => 'text', 'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาว ค่ะ!\nหากมีข้อเสนอแนะเพิ่มเติม สามารถพิมพ์ตอบกลับมาในแชทนี้ได้เลยนะคะ (ถ้าไม่มี ปิดแชทได้เลยค่ะ)"], $channelAccessToken);
+                        // สร้างปุ่ม Quick Reply แบบเดียวกับในแอป ให้เลือกจิ้มได้เลย
+                        $thankYouMsg = [
+                            'type' => 'text', 
+                            'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาว ค่ะ!\n\nประทับใจการบริการส่วนไหนเป็นพิเศษ กดเลือกแท็กด้านล่าง หรือจะพิมพ์รีวิวส่งมาเองก็ได้นะคะ 👇",
+                            'quickReply' => [
+                                'items' => [
+                                    ['type' => 'action', 'action' => ['type' => 'message', 'label' => '👍 ให้บริการดีเยี่ยม', 'text' => 'ให้บริการดีเยี่ยม']],
+                                    ['type' => 'action', 'action' => ['type' => 'message', 'label' => '⏱️ ตรงต่อเวลา', 'text' => 'ตรงต่อเวลา']],
+                                    ['type' => 'action', 'action' => ['type' => 'message', 'label' => '✨ สะอาดเรียบร้อย', 'text' => 'สะอาดเรียบร้อย']],
+                                    ['type' => 'action', 'action' => ['type' => 'message', 'label' => '🗣️ พูดจาสุภาพ', 'text' => 'พูดจาสุภาพ']],
+                                    ['type' => 'action', 'action' => ['type' => 'message', 'label' => '🛠️ ซ่อมเร็วทันใจ', 'text' => 'ซ่อมเร็วทันใจ']]
+                                ]
+                            ]
+                        ];
+                        send_push($userId, $thankYouMsg, $channelAccessToken);
                     }
                 }
             }
