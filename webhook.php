@@ -168,7 +168,7 @@ if (!is_null($events['events'])) {
             }
             else {
                 // ==========================================
-                // 4. ระบบรองรับคอมเมนต์รีวิว 
+                // 4. ระบบรองรับคอมเมนต์รีวิว
                 // ==========================================
                 $stmt_check_review = $conn->prepare("SELECT ticket_no FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' AND rating IS NOT NULL AND review_comment IS NULL ORDER BY ticket_no DESC LIMIT 1");
                 
@@ -197,7 +197,8 @@ if (!is_null($events['events'])) {
                 // 🛠️ ตรวจสอบการกด "รับงาน"
                 // ==========================================
                 if ($postbackData['action'] == 'accept') {
-                    $stmt_check = $conn->prepare("SELECT status, line_user_id, technician_name FROM repairs WHERE ticket_no = ?");
+                    // 💡 ดึงข้อมูลอุปกรณ์และสถานที่มาใช้ด้วย
+                    $stmt_check = $conn->prepare("SELECT status, line_user_id, technician_name, equipment_type, location FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
@@ -220,6 +221,7 @@ if (!is_null($events['events'])) {
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
 
+                            // 💡 แก้ไขการ์ด Flex Message ให้แสดงอุปกรณ์และสถานที่ด้วย
                             $replyMsg = [
                                 'type' => 'flex',
                                 'altText' => 'อัปเดตสถานะงาน',
@@ -230,6 +232,7 @@ if (!is_null($events['events'])) {
                                         'contents' => [
                                             ['type' => 'text', 'text' => "✅ ช่าง $tech_name รับงานแล้ว", 'weight' => 'bold', 'color' => '#10b981', 'size' => 'md'],
                                             ['type' => 'text', 'text' => "ใบงาน: $ticket_no", 'size' => 'sm', 'color' => '#666666'],
+                                            ['type' => 'text', 'text' => "อุปกรณ์: ".$job['equipment_type']." | สถานที่: ".$job['location'], 'size' => 'sm', 'color' => '#888888'],
                                             ['type' => 'text', 'text' => "สถานะ: ช่างรับเรื่องแจ้งซ่อมแล้ว", 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'sm']
                                         ]
                                     ],
@@ -319,7 +322,7 @@ if (!is_null($events['events'])) {
                     }
                 }
                 // ==========================================
-                // ⭐ ระบบให้ดาว และเด้ง Quick Reply ให้เลือกคำชม (อัปเดตใหม่)
+                // ⭐ ระบบให้ดาว และเด้ง Quick Reply ให้เลือกคำชม
                 // ==========================================
                 elseif ($postbackData['action'] == 'rate') {
                     $score = $postbackData['score'];
@@ -327,10 +330,10 @@ if (!is_null($events['events'])) {
                     $stmt->bind_param("is", $score, $ticket_no);
                     
                     if($stmt->execute()){
-                        // สร้างปุ่ม Quick Reply แบบเดียวกับในแอป ให้เลือกจิ้มได้เลย
+                        // 💡 แก้ไข: เพิ่มคำแนะนำให้ผู้ใช้เข้าใจว่าสามารถแก้ดาวได้ และพิมพ์รวมกันได้
                         $thankYouMsg = [
                             'type' => 'text', 
-                            'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาว ค่ะ!\n\nประทับใจการบริการส่วนไหนเป็นพิเศษ กดเลือกแท็กด้านล่าง หรือจะพิมพ์รีวิวส่งมาเองก็ได้นะคะ 👇",
+                            'text' => "💖 ขอบคุณสำหรับคะแนน $score ดาว ค่ะ!\n(เปลี่ยนคะแนนดาวได้โดยเลื่อนไปกดปุ่มเดิมใหม่นะคะ)\n\nประทับใจส่วนไหน กดแท็กด้านล่างได้ 1 อัน 👇\n(หากมีหลายคำชม หรืออยากรีวิวเพิ่มเติม แนะนำให้พิมพ์ข้อความทั้งหมดรวมกัน แล้วกดส่งมาได้เลยค่ะ 💬)",
                             'quickReply' => [
                                 'items' => [
                                     ['type' => 'action', 'action' => ['type' => 'message', 'label' => '👍 ให้บริการดีเยี่ยม', 'text' => 'ให้บริการดีเยี่ยม']],
