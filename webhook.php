@@ -204,8 +204,7 @@ if (!is_null($events['events'])) {
                             if ($tech_result) {
                                 $tech_name = $tech_result['full_name'];
                             } else {
-                                // 💡 ใช้ send_reply ตอบกลับการกดปุ่มทันที
-                                send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธการทำรายการ:\nผู้กดรับงานใบงาน $ticket_no ยังไม่ได้รับการอนุมัติสิทธิ์ช่างค่ะ"], $channelAccessToken);
+                                send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธการทำรายการ:\nผู้กดรับงานใบงาน $ticket_no ยังไม่ได้รับการอนุมัติสิทธิ์ช่างค่ะ"], $channelAccessToken);
                                 continue;
                             }
 
@@ -247,15 +246,10 @@ if (!is_null($events['events'])) {
                                 ]
                             ];
                             
-                            // 💡 ใช้ send_reply ส่งการ์ดลงกลุ่มได้ไวปรี๊ด 
-                            send_reply($replyToken, $replyMsg, $channelAccessToken);
-                            
-                            // 💡 จากนั้นค่อยใช้ send_push ทักหาผู้ใช้อย่างสบายใจ
-                            $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ!\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ รบกวนรอสักครู่นะคะ 🛠️"];
-                            send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
+                            send_push($line_group_id, $replyMsg, $channelAccessToken);
                         } else {
                             $taken_by = !empty($job['technician_name']) ? $job['technician_name'] : "ช่างท่านอื่น";
-                            send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ใบงาน $ticket_no ไม่สามารถรับได้ค่ะ เนื่องจากถูกรับไปแล้วโดยช่าง $taken_by"], $channelAccessToken);
+                            send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ใบงาน $ticket_no ไม่สามารถรับได้ค่ะ เนื่องจากถูกรับไปแล้วโดยช่าง $taken_by"], $channelAccessToken);
                         }
                     }
                 }
@@ -282,8 +276,7 @@ if (!is_null($events['events'])) {
                                     $stmt->bind_param("s", $ticket_no);
                                     $stmt->execute();
 
-                                    // 💡 ตอบกลับในกลุ่มทันทีว่าปิดงานแล้ว
-                                    send_reply($replyToken, ['type' => 'text', 'text' => "🎉 ใบงาน $ticket_no : ช่าง $clicker_name บันทึกการซ่อมเสร็จสิ้น ระบบส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
+                                    send_push($line_group_id, ['type' => 'text', 'text' => "🎉 ใบงาน $ticket_no : ช่าง $clicker_name บันทึกการซ่อมเสร็จสิ้น ระบบส่งแบบประเมินให้ผู้แจ้งแล้วค่ะ"], $channelAccessToken);
 
                                     $review_msg = [
                                         'type' => 'flex',
@@ -315,40 +308,29 @@ if (!is_null($events['events'])) {
                                                         ]
                                                     ],
                                                     ['type' => 'separator', 'margin' => 'md'],
-                                                    ['type' => 'text', 'text' => '2️⃣ เลือกคำชม (กดได้หลายข้อ)', 'size' => 'sm', 'color' => '#aaaaaa', 'margin' => 'md'],
-                                                    [
-                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
-                                                        'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ดำเนินการเร็ว', 'data' => "action=add_tag&tag=ดำเนินการรวดเร็วทันใจ&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🎯 ตรงจุด', 'data' => "action=add_tag&tag=แก้ไขปัญหาได้อย่างตรงจุด&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '💡 แนะนำดี', 'data' => "action=add_tag&tag=อธิบายและให้คำแนะนำชัดเจน&ticket=$ticket_no"]]
-                                                        ]
-                                                    ],
-                                                    [
-                                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
-                                                        'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพ', 'data' => "action=add_tag&tag=สุภาพเรียบร้อย บริการเต็มใจ&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ เรียบร้อย', 'data' => "action=add_tag&tag=ซ่อมแซมและเก็บงานเรียบร้อย&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '🙏 ช่วยเหลือดี', 'data' => "action=add_tag&tag=ช่วยอำนวยความสะดวกได้ดีเยี่ยม&ticket=$ticket_no"]]
-                                                        ]
-                                                    ],
+                                                    ['type' => 'text', 'text' => '2️⃣ เลือกรีวิว (กดได้หลายข้อ)', 'size' => 'sm', 'color' => '#aaaaaa', 'margin' => 'md'],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ดำเนินการรวดเร็วทันใจ', 'data' => "action=add_tag&tag=ดำเนินการรวดเร็วทันใจ&ticket=$ticket_no"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🎯 แก้ไขปัญหาได้อย่างตรงจุด', 'data' => "action=add_tag&tag=แก้ไขปัญหาได้อย่างตรงจุด&ticket=$ticket_no"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '💡 อธิบายและให้คำแนะนำชัดเจน', 'data' => "action=add_tag&tag=อธิบายและให้คำแนะนำชัดเจน&ticket=$ticket_no"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพเรียบร้อย บริการเต็มใจ', 'data' => "action=add_tag&tag=สุภาพเรียบร้อย บริการเต็มใจ&ticket=$ticket_no"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ ซ่อมแซมและเก็บงานเรียบร้อย', 'data' => "action=add_tag&tag=ซ่อมแซมและเก็บงานเรียบร้อย&ticket=$ticket_no"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🙏 ช่วยอำนวยความสะดวกได้ดีเยี่ยม', 'data' => "action=add_tag&tag=ช่วยอำนวยความสะดวกได้ดีเยี่ยม&ticket=$ticket_no"]],
                                                     ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวเพิ่มเติมส่งมาในกลุ่มได้เลยค่ะ', 'size' => 'xs', 'color' => '#bbbbbb', 'margin' => 'md', 'wrap' => true]
                                                 ]
                                             ]
                                         ]
                                     ];
-                                    // 💡 ส่ง Push แจ้งประเมินผลไปให้ผู้ใช้
-                                    send_push($job['line_user_id'], $review_msg, $channelAccessToken);
+                                    send_push($line_group_id, $review_msg, $channelAccessToken);
                                     
                                 } else {
-                                    send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: เฉพาะช่าง ".$job['technician_name']." ที่สามารถแจ้งปิดงานใบงาน $ticket_no ได้ค่ะ"], $channelAccessToken);
+                                    send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: เฉพาะช่าง ".$job['technician_name']." ที่สามารถแจ้งปิดงานใบงาน $ticket_no ได้ค่ะ"], $channelAccessToken);
                                 }
                             } else {
-                                send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: ผู้กดไม่มีสิทธิ์ทำรายการนี้ค่ะ"], $channelAccessToken);
+                                send_push($line_group_id, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: ผู้กดไม่มีสิทธิ์ทำรายการนี้ค่ะ"], $channelAccessToken);
                             }
                             
                         } else if ($job['status'] == 'ซ่อมเสร็จแล้ว') {
-                             send_reply($replyToken, ['type' => 'text', 'text' => "✅ ใบงาน $ticket_no ถูกแจ้งปิดงานไปเรียบร้อยแล้วค่ะ"], $channelAccessToken);
+                             send_push($line_group_id, ['type' => 'text', 'text' => "✅ ใบงาน $ticket_no ถูกแจ้งปิดงานไปเรียบร้อยแล้วค่ะ"], $channelAccessToken);
                         }
                     }
                 }
@@ -360,7 +342,7 @@ if (!is_null($events['events'])) {
                     if($stmt->execute()){
                         $thankYouMsg = [
                             'type' => 'text', 
-                            'text' => "✅ บันทึกคะแนน $score ดาว ให้ช่างเรียบร้อยค่ะ\n\n(ประทับใจส่วนไหน เลือกจิ้มแท็กด้านบน 👆 หรือพิมพ์รีวิวส่งมาในแชทนี้ได้เลยนะคะ 💬)"
+                            'text' => "✅ บันทึกคะแนน $score ดาว ให้ช่างเรียบร้อยค่ะ\n\n(ประทับใจส่วนไหน เลือกจิ้มรีวิวด้านบน 👆 หรือพิมพ์ส่งมาในแชทนี้ได้เลยนะคะ 💬)"
                         ];
                         send_reply($replyToken, $thankYouMsg, $channelAccessToken);
                     }
@@ -380,10 +362,10 @@ if (!is_null($events['events'])) {
                         $stmt_upd->bind_param("ss", $new_rev, $ticket_no);
                         
                         if($stmt_upd->execute()){
-                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ เพิ่มคำชม: $tag"], $channelAccessToken);
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ เพิ่มรีวิว: $tag"], $channelAccessToken);
                         }
                     } else {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "คุณได้เลือกคำชม '$tag' ไปแล้วค่ะ 💖"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "คุณได้เลือกรีวิว '$tag' ไปแล้วค่ะ 💖"], $channelAccessToken);
                     }
                 }
             }
