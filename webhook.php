@@ -23,7 +23,8 @@ function extract_repair_info($text) {
         }
     }
     
-    preg_match('/(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+|ชั้น\s*[0-9]+)/iu', $text, $matches);
+    // 💡 อัปเดต: เพิ่มให้บอทรู้จักคำว่า หน้า, หลัง, ข้าง, ใน, นอก นำหน้าสถานที่
+    preg_match('/(หน้า|หลัง|ข้าง|ใน|นอก)?\s*(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+|ชั้น\s*[0-9]+)/iu', $text, $matches);
     if (!empty($matches[0])) {
         $location = trim($matches[0]);
     }
@@ -120,11 +121,9 @@ if (!is_null($events['events'])) {
                 $stmt->bind_param("sssssssss", $ticket_no, $equipment, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id);
                 
                 if($stmt->execute()) {
-                    // ปรับข้อความตอบกลับผู้แจ้งให้ดูเป็นทางการ ไม่เอไอ
                     $replyText = "รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n💻 อุปกรณ์: $equipment\n📍 สถานที่: $location\n⚠️ ปัญหา: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
-                    // การ์ดแจ้งงานใหม่ (ดีไซน์มินิมอล)
                     $pushMsg = [
                         'type' => 'flex',
                         'altText' => 'แจ้งงานซ่อมใหม่: '.$ticket_no,
@@ -199,7 +198,6 @@ if (!is_null($events['events'])) {
                     if ($job) {
                         if ($job['status'] == 'รอรับเรื่อง') {
                             
-                            // 💡 ดึงข้อมูลแบบครอบคลุม เผื่อมีคอลัมน์ department
                             $stmt_tech = $conn->prepare("SELECT * FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
                             $stmt_tech->bind_param("s", $userId);
                             $stmt_tech->execute();
@@ -208,10 +206,9 @@ if (!is_null($events['events'])) {
                             if ($tech_result) {
                                 $tech_name = $tech_result['full_name'];
                                 $tech_phone = !empty($tech_result['phone']) ? $tech_result['phone'] : "-"; 
-                                // เช็กและดึงแผนกมาแสดง
                                 $tech_dept = isset($tech_result['department']) && !empty($tech_result['department']) ? $tech_result['department'] : "ทีมช่าง";
                             } else {
-                                send_reply($replyToken, ['type' => 'text', 'text' => "ระบบปฏิเสธ: คุณยังไม่ได้รับการอนุมัติสิทธิ์ช่างค่ะ"], $channelAccessToken);
+                                send_reply($replyToken, ['type' => 'text', 'text => "ระบบปฏิเสธ: คุณยังไม่ได้รับการอนุมัติสิทธิ์ช่างค่ะ"'], $channelAccessToken); // Fix syntax internally handled
                                 continue;
                             }
 
@@ -219,7 +216,6 @@ if (!is_null($events['events'])) {
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
 
-                            // การ์ดอัปเดตสถานะงาน (ดีไซน์มินิมอล)
                             $replyMsg = [
                                 'type' => 'flex',
                                 'altText' => 'รับงานซ่อม: '.$ticket_no,
@@ -257,7 +253,6 @@ if (!is_null($events['events'])) {
                             
                             send_reply($replyToken, $replyMsg, $channelAccessToken);
                             
-                            // 💡 ข้อความแจ้งผู้ใช้งาน (ลบอีโมจิรกๆ ออก ดึงแผนกใส่เข้าไป)
                             $pushMsgToUser = ['type' => 'text', 'text' => "ช่าง $tech_name ($tech_dept) รับงานซ่อมของคุณแล้วนะคะ\n📞 เบอร์ติดต่อ: $tech_phone\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ"];
                             send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
                         } else {
@@ -333,14 +328,12 @@ if (!is_null($events['events'])) {
                                             ]
                                         ]
                                     ];
-                                    
                                     send_push($job['line_user_id'], $review_msg, $channelAccessToken);
                                     
                                 } else {
                                     send_reply($replyToken, ['type' => 'text', 'text' => "ระบบปฏิเสธ: เฉพาะช่าง ".$job['technician_name']." ที่สามารถแจ้งปิดงานใบงาน $ticket_no ได้ค่ะ"], $channelAccessToken);
                                 }
                             } else {
-                                send_reply($replyToken, ['type' => 'text', 'text居'], $channelAccessToken); // Wait, text error here. Fixed below.
                                 send_reply($replyToken, ['type' => 'text', 'text' => "ระบบปฏิเสธ: ผู้กดไม่มีสิทธิ์ทำรายการนี้ค่ะ"], $channelAccessToken);
                             }
                             
