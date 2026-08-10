@@ -8,11 +8,13 @@ function extract_repair_info($text) {
     $category = "ไม่ระบุปัญหา";
     $location = "ไม่ระบุสถานที่";
     
+    // 💡 อัปเดต: เพิ่มคีย์เวิร์ดสารพัดสัตว์และสิ่งของทั่วไป
     $keywords = [
         'แอร์', 'คอม', 'เครื่องปริ้น', 'printer', 'projector', 'เครื่องฉาย', 
         'จอ', 'ทีวี', 'ไมค์', 'หลอดไฟ', 'ไฟดับ', 'สายไฟ', 'ปลั๊ก', 'ไฟ', 'หลอด', 'พัดลม', 'เน็ต', 
         'เว็บคณะ', 'มคอ', 'ประตู', 'สแกนหน้า', 'ท่อ', 'ห้องน้ำ', 'ก๊อก', 
-        'ตู้กดน้ำ', 'จิ้งจก', 'นก', 'ตุ๊กแก', 'หนู', 'กลิ่นเหม็น'
+        'ตู้กดน้ำ', 'จิ้งจก', 'นก', 'ตุ๊กแก', 'หนู', 'กลิ่นเหม็น', 
+        'งู', 'หมา', 'แมว', 'น้ำรั่ว', 'หน้าต่าง', 'กระจก', 'โต๊ะ', 'เก้าอี้', 'เพดาน', 'หลังคา'
     ];
 
     $text_lower = mb_strtolower($text, 'UTF-8');
@@ -98,8 +100,14 @@ if (!is_null($events['events'])) {
 
             list($category, $location) = extract_repair_info($text);
 
-            if ($category !== "ไม่ระบุปัญหา") {
+            // 💡 อัปเดตตรรกะใหม่: ถ้าเจอชื่อปัญหา "หรือ" เจอสถานที่อย่างใดอย่างหนึ่ง ให้ถือเป็นการแจ้งซ่อมใหม่ทันที!
+            if ($category !== "ไม่ระบุปัญหา" || $location !== "ไม่ระบุสถานที่") {
                 
+                // ถ้าระบุสถานที่มา แต่หาคีย์เวิร์ดปัญหาไม่เจอ ให้จัดเป็นหมวดหมู่อื่นๆ
+                if ($category === "ไม่ระบุปัญหา") {
+                    $category = "อื่น ๆ (รอตรวจสอบ)";
+                }
+
                 $user_name = get_line_profile($userId, null, $channelAccessToken);
                 $ticket_no = "MR-" . rand(1000, 9999);
                 $status = "รอรับเรื่อง"; 
@@ -162,6 +170,7 @@ if (!is_null($events['events'])) {
                 }
             }
             else {
+                // เข้าลูปบันทึกรีวิว เฉพาะตอนที่หาทั้ง "ชื่อปัญหา" และ "สถานที่" ไม่เจอจริงๆ เท่านั้น
                 $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
                 
                 if ($stmt_check_review) {
@@ -252,7 +261,6 @@ if (!is_null($events['events'])) {
                             
                             send_reply($replyToken, $replyMsg, $channelAccessToken);
                             
-                            // 💡 ข้อความแจ้งผู้ใช้งาน เอาชื่อแผนกออกแล้ว
                             $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ\n📞 เบอร์ติดต่อ: $tech_phone\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ 🛠️"];
                             send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
                         } else {
