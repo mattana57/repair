@@ -165,14 +165,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         if ($department === 'อื่นๆ' && !empty($_POST['department_custom'])) {
             $department = $_POST['department_custom'];
         }
+
+        // ระบบอัปโหลดรูปภาพช่าง
+        $avatar_url = NULL;
+        $upload_dir = 'uploads/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true); // สร้างโฟลเดอร์ถ้ายังไม่มี
+        }
+
+        if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+            $file_extension = strtolower(pathinfo($_FILES["avatar"]["name"], PATHINFO_EXTENSION));
+            $allowed_extensions = array("jpg", "jpeg", "png", "webp");
+            
+            if (in_array($file_extension, $allowed_extensions)) {
+                $file_name = time() . '_' . uniqid() . '.' . $file_extension;
+                $target_path = $upload_dir . $file_name;
+                
+                if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_path)) {
+                    $avatar_url = $target_path;
+                }
+            }
+        }
         
         if (empty($user_id)) {
-            $stmt = $conn->prepare("INSERT INTO technicians (full_name, phone, department, approval_status) VALUES (?, ?, ?, 'อนุมัติแล้ว')");
-            $stmt->bind_param("sss", $full_name, $phone, $department);
+            $stmt = $conn->prepare("INSERT INTO technicians (full_name, phone, department, avatar_url, approval_status) VALUES (?, ?, ?, ?, 'อนุมัติแล้ว')");
+            $stmt->bind_param("ssss", $full_name, $phone, $department, $avatar_url);
             $msg = 'เพิ่มข้อมูลช่างเทคนิคสำเร็จ!';
         } else {
-            $stmt = $conn->prepare("UPDATE technicians SET full_name=?, phone=?, department=? WHERE id=?");
-            $stmt->bind_param("sssi", $full_name, $phone, $department, $user_id);
+            if ($avatar_url) {
+                // ถ้ามีการอัปโหลดรูปใหม่ ให้บันทึกทับด้วย
+                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, phone=?, department=?, avatar_url=? WHERE id=?");
+                $stmt->bind_param("ssssi", $full_name, $phone, $department, $avatar_url, $user_id);
+            } else {
+                // ถ้าไม่ได้อัปโหลดรูปใหม่ ใช้รูปเดิม
+                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, phone=?, department=? WHERE id=?");
+                $stmt->bind_param("sssi", $full_name, $phone, $department, $user_id);
+            }
             $msg = 'อัปเดตข้อมูลช่างเทคนิคสำเร็จ!';
         }
         
@@ -725,7 +753,7 @@ if($tech_list_res){
                         $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป';
                         if(!isset($departments_data[$dept])) $departments_data[$dept] = [];
                         
-                        $img = !empty($row['avatar_url']) ? $row['avatar_url'] : 'https://api.dicebear.com/7.x/notionists/svg?seed='.urlencode($row['full_name']).'&backgroundColor=e2e8f0';
+                        $img = !empty($row['avatar_url']) ? $row['avatar_url'] : '';
 
                         $departments_data[$dept][] = [
                             'th' => $row['full_name'],
@@ -762,7 +790,10 @@ if($tech_list_res){
                         <?php foreach ($techs as $tech): ?>
                         <div class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs hover:border-indigo-300 hover:shadow-md transition-all flex flex-col">
                             <div class="bg-slate-100 aspect-[4/5] overflow-hidden relative">
-                                <img src="<?php echo htmlspecialchars($tech['img']); ?>" alt="<?php echo htmlspecialchars($tech['th']); ?>" class="w-full h-full object-cover">
+                                <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
+                                     onerror="this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
+                                     alt="<?php echo htmlspecialchars($tech['th']); ?>" 
+                                     class="w-full h-full object-cover">
                             </div>
                             <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
                                 <div>
@@ -950,6 +981,7 @@ if($tech_list_res){
         </div>
     </div>
 
+    <!-- ฟอร์มเพิ่ม/แก้ไขช่างและแอดมิน (เพิ่มระบบอัปโหลดรูป) -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
@@ -957,7 +989,8 @@ if($tech_list_res){
                 <p class="text-lg font-extrabold text-slate-800" id="techAdminModalTitle">Add Member</p>
                 <button onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            <form action="" method="POST" class="p-6">
+            <!-- เพิ่ม enctype multipart เพื่อรองรับการอัปโหลดไฟล์ -->
+            <form action="" method="POST" class="p-6" enctype="multipart/form-data">
                 <input type="hidden" name="save_user" value="1">
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
                 <input type="hidden" name="role" id="techAdmin_role" value="">
@@ -987,6 +1020,13 @@ if($tech_list_res){
                             <option value="Admin">Admin</option>
                             <option value="Executive">Executive</option>
                         </select>
+                    </div>
+
+                    <!-- ช่องอัปโหลดรูปภาพช่าง -->
+                    <div id="avatarDiv" class="hidden">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Profile Picture (รูปช่าง)</label>
+                        <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
+                        <p class="text-[10px] text-slate-400 mt-1">* ไฟล์ JPG, PNG (แนะนำสัดส่วน 4:5 แนวตั้ง)</p>
                     </div>
 
                     <div>
@@ -1303,19 +1343,25 @@ if($tech_list_res){
             const adminLevelDiv = document.getElementById('adminLevelDiv'); 
             const deptDiv = document.getElementById('deptDiv');
             const loginCredsDiv = document.getElementById('loginCredsDiv');
+            const avatarDiv = document.getElementById('avatarDiv');
             
             if(isManagement) {
                 adminLevelDiv.classList.remove('hidden'); deptDiv.classList.add('hidden'); document.getElementById('techAdmin_department_select').required = false;
                 let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; document.getElementById('techAdmin_level').value = exactRole;
                 loginCredsDiv.classList.remove('hidden'); document.getElementById('techAdmin_username').required = true;
+                if(avatarDiv) avatarDiv.classList.add('hidden');
             } else {
                 adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
                 loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
+                if(avatarDiv) avatarDiv.classList.remove('hidden');
             }
 
             document.getElementById('techAdmin_id').value = id; document.getElementById('techAdmin_username').value = u; 
             document.getElementById('techAdmin_fullname').value = f; document.getElementById('techAdmin_phone').value = p; 
             
+            const avatarInput = document.getElementById('techAdmin_avatar');
+            if(avatarInput) avatarInput.value = '';
+
             const pwdInput = document.getElementById('techAdmin_password'); const pwdHint = document.getElementById('pwdHint'); const eyeIcon = document.getElementById('eyeIcon');
             pwdInput.value = ''; pwdInput.type = 'password'; 
             if(eyeIcon) { eyeIcon.classList.remove('fa-eye-slash'); eyeIcon.classList.add('fa-eye'); }
