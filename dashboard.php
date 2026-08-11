@@ -31,40 +31,50 @@ $conn->query("CREATE TABLE IF NOT EXISTS assets (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
+$conn->query("CREATE TABLE IF NOT EXISTS technicians (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    line_user_id VARCHAR(100) NULL,
+    full_name VARCHAR(100) NOT NULL,
+    department VARCHAR(100) NULL,
+    phone VARCHAR(50) NULL,
+    avatar_url VARCHAR(255) NULL,
+    approval_status VARCHAR(50) DEFAULT 'รออนุมัติ',
+    status VARCHAR(50) DEFAULT 'ว่าง',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+$check_line_id = $conn->query("SHOW COLUMNS FROM technicians LIKE 'line_user_id'");
+if($check_line_id && $check_line_id->num_rows == 0) {
+    $conn->query("ALTER TABLE technicians ADD COLUMN line_user_id VARCHAR(100) NULL AFTER id");
+}
+$check_app_status = $conn->query("SHOW COLUMNS FROM technicians LIKE 'approval_status'");
+if($check_app_status && $check_app_status->num_rows == 0) {
+    $conn->query("ALTER TABLE technicians ADD COLUMN approval_status VARCHAR(50) DEFAULT 'รออนุมัติ' AFTER avatar_url");
+}
+
 $conn->query("CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NULL,
     full_name VARCHAR(100) NULL,
+    phone VARCHAR(20) NULL,
     department VARCHAR(100) NULL,
     role VARCHAR(50) DEFAULT 'User',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
-$conn->query("ALTER TABLE users MODIFY COLUMN role VARCHAR(50) DEFAULT 'User'");
-$check_fullname = $conn->query("SHOW COLUMNS FROM users LIKE 'full_name'");
-if($check_fullname->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN full_name VARCHAR(100) NULL AFTER username");
+$check_repairs_table = $conn->query("SHOW TABLES LIKE 'repairs'");
+if($check_repairs_table && $check_repairs_table->num_rows > 0) {
+    $check_tech_name = $conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'");
+    if($check_tech_name && $check_tech_name->num_rows == 0) {
+        $conn->query("ALTER TABLE repairs ADD COLUMN technician_name VARCHAR(100) NULL");
+    }
 
-$check_phone = $conn->query("SHOW COLUMNS FROM users LIKE 'phone'");
-if($check_phone->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN phone VARCHAR(20) NULL AFTER full_name");
+    $check_root_cause = $conn->query("SHOW COLUMNS FROM repairs LIKE 'root_cause'");
+    if($check_root_cause && $check_root_cause->num_rows == 0) {
+        $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
+    }
 
-$check_dept = $conn->query("SHOW COLUMNS FROM users LIKE 'department'");
-if($check_dept->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN department VARCHAR(100) NULL AFTER phone");
-
-$check_pwd = $conn->query("SHOW COLUMNS FROM users LIKE 'password'");
-if($check_pwd->num_rows == 0) {
-    $conn->query("ALTER TABLE users ADD COLUMN password VARCHAR(255) NULL AFTER username");
-}
-
-$check_created = $conn->query("SHOW COLUMNS FROM users LIKE 'created_at'");
-if($check_created->num_rows == 0) $conn->query("ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
-
-$check_tech_name = $conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'");
-if($check_tech_name->num_rows == 0) {
-    $conn->query("ALTER TABLE repairs ADD COLUMN technician_name VARCHAR(100) NULL");
-}
-
-$check_repairs = $conn->query("SHOW TABLES LIKE 'repairs'");
-if($check_repairs->num_rows > 0) {
     $conn->query("INSERT INTO users (username, full_name, phone, department, role) 
                   SELECT CONCAT('U', REPLACE(phone_number, '-', '')), reporter_name, phone_number, 'บุคลากรทั่วไป', 'User' 
                   FROM repairs 
@@ -72,7 +82,35 @@ if($check_repairs->num_rows > 0) {
                   GROUP BY reporter_name, phone_number");
 }
 
-$has_image_col = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'")->num_rows > 0);
+$all_repairs_json = "[]";
+$check_repairs_list = $conn->query("SHOW TABLES LIKE 'repairs'");
+
+if($check_repairs_list && $check_repairs_list->num_rows > 0) {
+    $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
+    $rep_res = $conn->query($select_query);
+    $reps = [];
+    if($rep_res) {
+        while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
+        $all_repairs_json = json_encode($reps);
+    }
+}
+
+$tech_dept_map = [];
+$td_res = $conn->query("SELECT full_name, department FROM technicians");
+if($td_res) {
+    while($tr = $td_res->fetch_assoc()) {
+        $tech_dept_map[$tr['full_name']] = !empty($tr['department']) ? $tr['department'] : 'ฝ่ายงานทั่วไป';
+    }
+}
+$tech_dept_map_json = json_encode($tech_dept_map);
+
+$has_image_col = false;
+if($check_repairs_list && $check_repairs_list->num_rows > 0) {
+    $res_img = $conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'");
+    if($res_img && $res_img->num_rows > 0) {
+        $has_image_col = true;
+    }
+}
 
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
@@ -98,6 +136,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
     echo "<script>window.location.href='dashboard.php?tab=assets';</script>";
 }
 
+if (isset($_GET['delete_tech'])) {
+    $del_id = intval($_GET['delete_tech']);
+    $conn->query("DELETE FROM technicians WHERE id = $del_id");
+    echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
+}
+if (isset($_GET['approve_tech'])) {
+    $app_id = intval($_GET['approve_tech']);
+    $conn->query("UPDATE technicians SET approval_status = 'อนุมัติแล้ว' WHERE id = $app_id");
+    echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
+}
+
 if (isset($_GET['delete_user'])) {
     $del_id = intval($_GET['delete_user']);
     $conn->query("DELETE FROM users WHERE id = $del_id");
@@ -106,42 +155,57 @@ if (isset($_GET['delete_user'])) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $user_id = $_POST['user_id'];
-    $username = $_POST['username'];
-    $password = $_POST['password']; 
+    $role = $_POST['role']; 
     
     $full_name = !empty($_POST['full_name']) ? $_POST['full_name'] : NULL;
     $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
-    $role = $_POST['role']; 
     
-    if (isset($_POST['admin_level']) && ($role === 'Admin' || $role === 'Executive')) {
-        $role = $_POST['admin_level'];
-        $department = NULL; 
-    } else {
+    if ($role === 'Technician') {
         $department = isset($_POST['department_select']) ? $_POST['department_select'] : NULL;
         if ($department === 'อื่นๆ' && !empty($_POST['department_custom'])) {
             $department = $_POST['department_custom'];
         }
-    }
-
-    $tab_redirect = ($role == 'User') ? 'users' : 'technicians';
-
-    if (empty($user_id)) {
-        $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, phone, department, role) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssss", $username, $password, $full_name, $phone, $department, $role);
-        $msg = 'บันทึกข้อมูลสำเร็จ!';
-    } else {
-        if (!empty($password)) {
-            $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
-            $stmt->bind_param("ssssssi", $username, $password, $full_name, $phone, $department, $role, $user_id);
+        
+        if (empty($user_id)) {
+            $stmt = $conn->prepare("INSERT INTO technicians (full_name, phone, department, approval_status) VALUES (?, ?, ?, 'อนุมัติแล้ว')");
+            $stmt->bind_param("sss", $full_name, $phone, $department);
+            $msg = 'เพิ่มข้อมูลช่างเทคนิคสำเร็จ!';
         } else {
-            $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
-            $stmt->bind_param("sssssi", $username, $full_name, $phone, $department, $role, $user_id);
+            $stmt = $conn->prepare("UPDATE technicians SET full_name=?, phone=?, department=? WHERE id=?");
+            $stmt->bind_param("sssi", $full_name, $phone, $department, $user_id);
+            $msg = 'อัปเดตข้อมูลช่างเทคนิคสำเร็จ!';
         }
-        $msg = 'อัปเดตข้อมูลสำเร็จ!';
-    }
-    
-    if ($stmt->execute()) {
-        echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=$tab_redirect'; }); });</script>";
+        
+        if ($stmt->execute()) {
+            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+        }
+        
+    } else {
+        $username = $_POST['username'];
+        $password = $_POST['password']; 
+        if (isset($_POST['admin_level'])) {
+            $role = $_POST['admin_level'];
+        }
+        $department = NULL;
+
+        if (empty($user_id)) {
+            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, phone, department, role) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssss", $username, $password, $full_name, $phone, $department, $role);
+            $msg = 'เพิ่มข้อมูลผู้ดูแลระบบสำเร็จ!';
+        } else {
+            if (!empty($password)) {
+                $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
+                $stmt->bind_param("ssssssi", $username, $password, $full_name, $phone, $department, $role, $user_id);
+            } else {
+                $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
+                $stmt->bind_param("sssssi", $username, $full_name, $phone, $department, $role, $user_id);
+            }
+            $msg = 'อัปเดตข้อมูลผู้ดูแลระบบสำเร็จ!';
+        }
+        
+        if ($stmt->execute()) {
+            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+        }
     }
 }
 
@@ -164,72 +228,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลผู้แจ้งสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
 }
 
-if (isset($_GET['approve_tech'])) {
-    $id = intval($_GET['approve_tech']);
-    
-    $stmt_get_line = $conn->prepare("SELECT full_name FROM technicians WHERE id = ?");
-    $stmt_get_line->bind_param("i", $id);
-    $stmt_get_line->execute();
-    $tech_info = $stmt_get_line->get_result()->fetch_assoc();
-
-    $conn->query("UPDATE technicians SET approval_status = 'อนุมัติแล้ว', status = 'ว่าง' WHERE id = $id");
-
-    if ($tech_info) {
-        require_once 'env.php'; 
-        
-        $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
-        
-        $pushMsgToTech = [
-            'type' => 'text', 
-            'text' => "🎉 ประกาศอนุมัติช่างใหม่!\n\nช่าง " . $tech_info['full_name'] . " ได้รับการอนุมัติบัญชีแล้ว ✅\nสามารถกดปุ่ม 'รับงาน' ในกลุ่มนี้ได้เลยค่ะ 🛠️"
-        ];
-        
-        $url = 'https://api.line.me/v2/bot/message/push';
-        $data = ['to' => $line_group_id, 'messages' => [$pushMsgToTech]];
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken]);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_exec($ch);
-        curl_close($ch);
-    }
-
-    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อนุมัติช่างสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
-}
-
-if (isset($_GET['reject_tech'])) {
-    $id = intval($_GET['reject_tech']);
-    $conn->query("DELETE FROM technicians WHERE id = $id");
-    echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
-}
-
-if (isset($_GET['delete_tech_db'])) {
-    $id = intval($_GET['delete_tech_db']);
-    $conn->query("DELETE FROM technicians WHERE id = $id");
-    echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
-}
-
-$all_repairs_json = "[]";
-
-if($check_repairs->num_rows > 0) {
-    $select_fields = "ticket_no, equipment_type, status, DATE_FORMAT(created_at, '%Y-%m-%d') as created_at_fmt, reporter_name";
-    $has_tech_name = ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0);
-    
-    if ($has_tech_name) $select_fields .= ", technician_name"; else $select_fields .= ", '' as technician_name";
-    if ($has_image_col) $select_fields .= ", image_path"; else $select_fields .= ", NULL as image_path";
-    
-    $select_query = "SELECT {$select_fields} FROM repairs ORDER BY created_at DESC";
-    
-    $rep_res = $conn->query($select_query);
-    $reps = [];
-    if($rep_res) {
-        while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
-        $all_repairs_json = json_encode($reps);
-    }
-}
-
 $tech_options = [];
 $tech_list_res = $conn->query("SELECT DISTINCT full_name FROM technicians WHERE approval_status = 'อนุมัติแล้ว' AND full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
 if($tech_list_res){
@@ -243,62 +241,42 @@ if($tech_list_res){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MBS Smart Maintenance</title>
+    <title>MBS Repair Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        body { 
-            font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif; 
-            background-color: #f3f4f6; 
-            color: #1e293b; 
-        }
-        
-        .modern-card { 
-            background: #ffffff; 
-            border-radius: 20px; 
-            box-shadow: 0 4px 24px rgba(149, 157, 165, 0.15); 
-            border: 1px solid #f1f5f9; 
-        }
-        
-        .nav-btn { 
-            width: 100%; display: flex; align-items: center; padding: 0.875rem 1.25rem; 
-            margin-bottom: 0.25rem; border-radius: 12px; color: #64748b; 
-            font-weight: 600; transition: all 0.2s ease; font-size: 0.95rem;
-        }
-        .nav-btn i { width: 1.5rem; text-align: center; font-size: 1.1rem; margin-right: 0.875rem; color: #94a3b8; transition: all 0.2s ease; }
-        .nav-btn:hover { background-color: #f8fafc; color: #4f46e5; }
-        .nav-btn:hover i { color: #4f46e5; }
-        
-        .active-btn { 
-            background-color: #eef2ff; color: #4f46e5; font-weight: 700; 
-        }
-        .active-btn i { color: #4f46e5; }
-        
+        body { font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .modern-card { background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; }
+        #sidebar { width: 240px !important; min-width: 240px !important; max-width: 240px !important; }
+        .sidebar-logo-box { height: 88px !important; padding: 0 24px !important; }
+        .top-header { height: 88px !important; padding: 0 32px !important; }
+        .nav-btn { width: calc(100% - 32px) !important; display: flex !important; align-items: center !important; padding: 0.65rem 1rem !important; margin: 2px 16px !important; border-radius: 12px !important; color: #64748b !important; font-weight: 600 !important; font-size: 0.875rem !important; transition: all 0.2s ease !important; cursor: pointer !important; }
+        .nav-btn i { width: 1.5rem !important; text-align: center !important; font-size: 1rem !important; margin-right: 0.75rem !important; color: #94a3b8 !important; }
+        .nav-btn:hover { background-color: #f8fafc !important; color: #4f46e5 !important; }
+        .nav-btn:hover i { color: #4f46e5 !important; }
+        .active-btn { background-color: #eef2ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
+        .active-btn i { color: #4f46e5 !important; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
-        
         .badge-pending { background-color: #fef3c7; color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-progress { background-color: #e0e7ff; color: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-success { background-color: #d1fae5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-
-        @media print {
-            aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #assets, #users, #reports { display: none !important; }
-        }
+        @media print { aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #team_cards, #assets, #users, #reports { display: none !important; } }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <aside id="sidebar" class="w-[260px] bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
-        <div class="h-24 flex items-center px-8 border-b border-slate-50">
+    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
+        <div class="sidebar-logo-box flex items-center border-b border-slate-50">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3 shrink-0">
                 <i class="fas fa-tools text-white text-lg"></i>
             </div>
@@ -307,19 +285,19 @@ if($tech_list_res){
             </div>
         </div>
         
-        <nav class="flex-1 px-4 py-8 flex flex-col overflow-y-auto">
-            <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4">Dashboard</p>
+        <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
+            <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dashboard</p>
             <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
             <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
             <button onclick="show('technicians')" class="nav-btn" id="btn-technicians"><i class="fas fa-user-friends"></i> Team</button>
+            <button onclick="show('team_cards')" class="nav-btn" id="btn-team_cards"><i class="fas fa-id-badge"></i> Technician</button>
             
-            <p class="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4 mt-8">Management</p>
+            <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Management</p>
             <button onclick="show('assets')" class="nav-btn" id="btn-assets"><i class="fas fa-box-open"></i> Assets</button>
             <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-address-book"></i> Contacts</button>
             <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
             
-            <div class="mt-auto pt-6 border-t border-slate-50 flex flex-col gap-1">
-                <a href="index.php" class="nav-btn text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-home"></i> Back to Website</a>
+            <div class="mt-auto pt-4 border-t border-slate-50">
                 <a href="logout.php" class="nav-btn text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
         </nav>
@@ -327,7 +305,7 @@ if($tech_list_res){
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
-        <header class="h-20 bg-white/80 backdrop-blur-md flex items-center justify-between px-8 z-10 sticky top-0 no-print border-b border-slate-100">
+        <header class="top-header bg-white/80 backdrop-blur-md flex items-center justify-between z-10 sticky top-0 no-print border-b border-slate-100">
             <div class="flex items-center">
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-indigo-600 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
@@ -336,7 +314,6 @@ if($tech_list_res){
             </div>
             
             <div class="flex items-center">
-                
                 <div class="flex items-center gap-3 cursor-pointer group">
                     <div class="text-right hidden sm:block">
                         <span class="block text-sm font-bold text-slate-700 leading-none mb-1 group-hover:text-indigo-600 transition-colors">
@@ -344,7 +321,7 @@ if($tech_list_res){
                         </span>
                         <span class="block text-[11px] text-slate-400 font-semibold">Administrator</span>
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 overflow-hidden">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 overflow-hidden border border-slate-200 shadow-xs">
                         <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
@@ -354,7 +331,6 @@ if($tech_list_res){
         <div class="flex-1 overflow-y-auto p-6 lg:p-8">
             
             <div id="dash" class="section space-y-8 animate-fade-in no-print">
-                
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <?php 
                         $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
@@ -461,35 +437,33 @@ if($tech_list_res){
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100">
                                     <?php
-                                    if($check_repairs->num_rows > 0) {
-                                        $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
-                                        if($recent_dash && $recent_dash->num_rows > 0){
-                                            while($rd = $recent_dash->fetch_assoc()) {
-                                                $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
-                                                $statusText = ($rd['status'] == 'รอรับเรื่อง') ? 'Pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'In Progress' : 'Completed');
-                                                $date_fmt = date("Y-m-d", strtotime($rd['created_at']));
-                                                
-                                                $imageIcon = "";
-                                                if($has_image_col && !empty($rd['image_path'])) {
-                                                    $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                                                }
-                                                
-                                                echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                                    <td class='px-6 py-4 text-slate-500 font-mono font-semibold'>{$rd['ticket_no']}</td>
-                                                    <td class='px-6 py-4 text-slate-800 font-bold'>
-                                                        <div class='flex items-center'>
-                                                            <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mr-3 text-xs'><i class='fas fa-user'></i></div>
-                                                            {$rd['reporter_name']}
-                                                        </div>
-                                                    </td>
-                                                    <td class='px-6 py-4 text-slate-600 font-medium'>{$rd['equipment_type']} {$imageIcon}</td>
-                                                    <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$statusText}</span></td>
-                                                    <td class='px-6 py-4 text-right text-slate-500 font-medium'>{$date_fmt}</td>
-                                                </tr>";
+                                    $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
+                                    if($recent_dash && $recent_dash->num_rows > 0){
+                                        while($rd = $recent_dash->fetch_assoc()) {
+                                            $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
+                                            $statusText = ($rd['status'] == 'รอรับเรื่อง') ? 'Pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'In Progress' : 'Completed');
+                                            $date_fmt = date("Y-m-d", strtotime($rd['created_at']));
+                                            
+                                            $imageIcon = "";
+                                            if(isset($rd['image_path']) && !empty($rd['image_path'])) {
+                                                $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
                                             }
-                                        } else {
-                                            echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No transactions found</td></tr>";
+                                            
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                                <td class='px-6 py-4 text-slate-500 font-mono font-semibold'>{$rd['ticket_no']}</td>
+                                                <td class='px-6 py-4 text-slate-800 font-bold'>
+                                                    <div class='flex items-center'>
+                                                        <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mr-3 text-xs'><i class='fas fa-user'></i></div>
+                                                        {$rd['reporter_name']}
+                                                    </div>
+                                                </td>
+                                                <td class='px-6 py-4 text-slate-600 font-medium'>{$rd['equipment_type']} {$imageIcon}</td>
+                                                <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$statusText}</span></td>
+                                                <td class='px-6 py-4 text-right text-slate-500 font-medium'>{$date_fmt}</td>
+                                            </tr>";
                                         }
+                                    } else {
+                                        echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No transactions found</td></tr>";
                                     }
                                     ?>
                                 </tbody>
@@ -507,64 +481,102 @@ if($tech_list_res){
                             <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
                         </div>
                         <div class="w-full md:w-auto relative">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchInputMobile" placeholder="Search ticket or status..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
+                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="searchInput" placeholder="Search ticket or status..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
                         </div>
                     </div>
                     <div class="overflow-x-auto w-full">
-                        <table class="w-full text-left whitespace-nowrap min-w-[800px]">
+                        <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
                             <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
                                 <tr>
-                                    <th class="px-6 py-4">Date</th>
+                                    <th class="px-6 py-4">Date / Time</th>
                                     <th class="px-6 py-4">Ticket No.</th>
                                     <th class="px-6 py-4">Reporter</th>
                                     <th class="px-6 py-4">Equipment</th>
-                                    <th class="px-6 py-4 text-center">Technician</th>
+                                    <th class="px-6 py-4">Department</th>
+                                    <th class="px-6 py-4">Technician</th>
+                                    <th class="px-6 py-4">Root Cause</th>
+                                    <th class="px-6 py-4">Received At</th>
+                                    <th class="px-6 py-4">Completed At</th>
                                     <th class="px-6 py-4 text-center">Status</th>
                                     <th class="px-6 py-4 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                if($check_repairs->num_rows > 0) {
-                                    $select_fields = "id, ticket_no, equipment_type, status, problem_desc, reporter_name, phone_number, created_at";
-                                    if ($has_tech_name) $select_fields .= ", technician_name"; else $select_fields .= ", '' as technician_name";
-                                    if ($has_image_col) $select_fields .= ", image_path"; else $select_fields .= ", NULL as image_path";
-                                    
-                                    $select_query = "SELECT {$select_fields} FROM repairs ORDER BY created_at DESC";
-                                    
-                                    $res = $conn->query($select_query);
-                                    if($res && $res->num_rows > 0){
-                                        while($row = $res->fetch_assoc()) {
-                                            $date = !empty($row['created_at']) ? date("Y-m-d", strtotime($row['created_at'])) : "-";
-                                            $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
-                                            $techName = !empty($row['technician_name']) ? "<div class='text-indigo-600 font-bold'>{$row['technician_name']}</div>" : "<span class='text-slate-400'>Unassigned</span>";
+                                $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
+                                $res = $conn->query($select_query);
 
-                                            $imageIcon = "";
-                                            if($has_image_col && !empty($row['image_path'])) {
-                                                $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                                            }
+                                if($res && $res->num_rows > 0){
+                                    while($row = $res->fetch_assoc()) {
+                                        $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
+                                        $techName = !empty($row['technician_name']) ? "<div class='text-indigo-600 font-bold'>{$row['technician_name']}</div>" : "<span class='text-slate-400'>Unassigned</span>";
 
-                                            echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                                <td class='px-6 py-4 text-slate-500 font-medium'>{$date}</td>
-                                                <td class='px-6 py-4 font-mono font-semibold text-slate-600'>{$row['ticket_no']}</td>
-                                                <td class='px-6 py-4'><div class='text-slate-800 font-bold'>{$row['reporter_name']}</div><div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$row['phone_number']}</div></td>
-                                                <td class='px-6 py-4'>
-                                                    <div class='text-slate-800 font-bold'>{$row['equipment_type']} {$imageIcon}</div>
-                                                    <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='{$row['problem_desc']}'>{$row['problem_desc']}</div>
-                                                </td>
-                                                <td class='px-6 py-4 text-center'>{$techName}</td>
-                                                <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$row['status']}</span></td>
-                                                <td class='px-6 py-4 text-right'>
-                                                    <div class='flex items-center justify-end space-x-2'>
-                                                        <a href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100'><i class='fas fa-edit'></i></a>
-                                                        <a href='view_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100'><i class='fas fa-eye'></i></a>
-                                                    </div>
-                                                </td>
-                                            </tr>";
+                                        $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
+                                        if (empty($row['technician_name'])) {
+                                            $deptEng = "<span class='text-slate-400'>-</span>";
+                                        } else {
+                                            $deptEng = "<span class='px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider'>{$dept_str}</span>";
                                         }
-                                    } else { echo "<tr><td colspan='7' class='px-6 py-16 text-center text-slate-400 font-medium'>No records found</td></tr>"; }
-                                }
+
+                                        $created_date = !empty($row['created_at']) ? date('Y-m-d', strtotime($row['created_at'])) : '-';
+                                        $created_time = !empty($row['created_at']) ? date('H:i', strtotime($row['created_at'])) : '';
+
+                                        $has_received = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
+                                        $received_date = $has_received ? date('Y-m-d', strtotime($row['created_at'])) : '-';
+                                        $received_time = $has_received ? date('H:i', strtotime($row['created_at'])) : '';
+
+                                        $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
+                                        $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : '-';
+                                        $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
+
+                                        $rootCause = !empty($row['root_cause']) ? "<span class='text-slate-700 font-medium'>{$row['root_cause']}</span>" : "<span class='text-rose-500 font-bold'>-</span>";
+
+                                        $imageIcon = "";
+                                        if(isset($row['image_path']) && !empty($row['image_path'])) {
+                                            $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
+                                        }
+
+                                        echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                            <td class='px-6 py-4 text-xs whitespace-nowrap'>
+                                                <div class='font-medium text-slate-700'>{$created_date}</div>
+                                                <div class='text-[11px] text-slate-400 font-semibold'>{$created_time}</div>
+                                            </td>
+                                            <td class='px-6 py-4 font-mono font-semibold text-slate-600'>{$row['ticket_no']}</td>
+                                            <td class='px-6 py-4'><div class='text-slate-800 font-bold'>{$row['reporter_name']}</div><div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$row['phone_number']}</div></td>
+                                            <td class='px-6 py-4'>
+                                                <div class='text-slate-800 font-bold'>{$row['equipment_type']} {$imageIcon}</div>
+                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='{$row['problem_desc']}'>{$row['problem_desc']}</div>
+                                            </td>
+                                            <td class='px-6 py-4'>{$deptEng}</td>
+                                            <td class='px-6 py-4'>{$techName}</td>
+                                            <td class='px-6 py-4'>{$rootCause}</td>
+                                            <td class='px-6 py-4 text-xs whitespace-nowrap'>";
+                                        if($has_received) {
+                                            echo "<div class='font-medium text-slate-700'>{$received_date}</div>
+                                                  <div class='text-[11px] text-indigo-600 font-semibold'>{$received_time}</div>";
+                                        } else {
+                                            echo "<span class='text-slate-400'>-</span>";
+                                        }
+                                        echo "</td>
+                                            <td class='px-6 py-4 text-xs whitespace-nowrap'>";
+                                        if($has_completed) {
+                                            echo "<div class='font-medium text-emerald-700'>{$completed_date}</div>
+                                                  <div class='text-[11px] text-emerald-500 font-semibold'>{$completed_time}</div>";
+                                        } else {
+                                            echo "<span class='text-slate-400'>-</span>";
+                                        }
+                                        echo "</td>
+                                            <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$row['status']}</span></td>
+                                            <td class='px-6 py-4 text-right'>
+                                                <div class='flex items-center justify-end space-x-2'>
+                                                    <a href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                                    <a href='view_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
+                                                </div>
+                                            </td>
+                                        </tr>";
+                                    }
+                                } else { echo "<tr><td colspan='11' class='px-6 py-16 text-center text-slate-400 font-medium'>No records found</td></tr>"; }
                                 ?>
                             </tbody>
                         </table>
@@ -580,44 +592,9 @@ if($tech_list_res){
                     </div>
                     <div class="flex w-full md:w-auto gap-3">
                         <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-all"><i class="fas fa-shield-alt mr-2 text-slate-400"></i> Add Admin</button>
+                        <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
                     </div>
                 </div>
-
-                <?php
-                $pending_res = $conn->query("SELECT * FROM technicians WHERE approval_status = 'รออนุมัติ' ORDER BY id DESC");
-                if($pending_res && $pending_res->num_rows > 0) {
-                ?>
-                <div class="mb-8">
-                    <h3 class="text-base font-extrabold text-amber-600 mb-3 flex items-center"><i class="fas fa-user-clock mr-2"></i> Pending Approvals (รออนุมัติ)</h3>
-                    <div class="modern-card overflow-hidden border-2 border-amber-100">
-                        <div class="overflow-x-auto w-full">
-                            <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                                <thead class="bg-amber-50 border-b border-amber-100 text-amber-600 text-xs uppercase tracking-widest font-bold">
-                                    <tr>
-                                        <th class="px-6 py-4">Name</th>
-                                        <th class="px-6 py-4">Contact</th>
-                                        <th class="px-6 py-4 text-center">Status</th>
-                                        <th class="px-6 py-4 text-right">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
-                                    <?php while($p = $pending_res->fetch_assoc()) { ?>
-                                    <tr class="hover:bg-slate-50/50 transition-colors">
-                                        <td class="px-6 py-4 text-slate-800 font-bold"><?php echo htmlspecialchars($p['full_name']); ?></td>
-                                        <td class="px-6 py-4 text-slate-500 font-medium"><?php echo htmlspecialchars($p['phone']); ?></td>
-                                        <td class="px-6 py-4 text-center"><span class="badge-pending">รออนุมัติ</span></td>
-                                        <td class="px-6 py-4 text-right">
-                                            <button onclick="window.location.href='dashboard.php?approve_tech=<?php echo $p['id']; ?>'" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all mr-2"><i class="fas fa-check md:mr-1"></i> <span class="hidden md:inline">อนุมัติ</span></button>
-                                            <button onclick="confirmRejectTech(<?php echo $p['id']; ?>)" class="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all"><i class="fas fa-times md:mr-1"></i> <span class="hidden md:inline">ปฏิเสธ</span></button>
-                                        </td>
-                                    </tr>
-                                    <?php } ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <?php } ?>
 
                 <div>
                     <h3 class="text-base font-extrabold text-slate-700 mb-3 flex items-center">Administrators</h3>
@@ -672,26 +649,27 @@ if($tech_list_res){
                 </div>
 
                 <div class="mt-8">
-                    <h3 class="text-base font-extrabold text-slate-700 mb-3 flex items-center">Technicians (ช่างที่อนุมัติแล้ว)</h3>
+                    <h3 class="text-base font-extrabold text-slate-700 mb-3 flex items-center">Technicians</h3>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto w-full">
-                            <table class="w-full text-left whitespace-nowrap min-w-[700px]">
+                            <table class="w-full text-left whitespace-nowrap min-w-[800px]">
                                 <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
                                     <tr>
                                         <th class="px-6 py-4">Name</th>
                                         <th class="px-6 py-4">Contact</th> 
                                         <th class="px-6 py-4">Department</th>
+                                        <th class="px-6 py-4 text-center">Status</th>
                                         <th class="px-6 py-4 text-center">Jobs</th>
                                         <th class="px-6 py-4 text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                     <?php
-                                    $tech_res = $conn->query("SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว' ORDER BY id DESC");
+                                    $tech_res = $conn->query("SELECT * FROM technicians ORDER BY id DESC");
                                     
                                     if($tech_res && $tech_res->num_rows > 0){
                                         while($t = $tech_res->fetch_assoc()) {
-                                            $js_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES);
+                                            $js_uid = $t['id']; $js_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES); $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES); $js_role = 'Technician';
                                             
                                             $total_jobs = 0;
                                             if(!empty($t['full_name'])) {
@@ -699,6 +677,9 @@ if($tech_list_res){
                                                 $job_res = $conn->query("SELECT COUNT(id) as c FROM repairs WHERE technician_name = '{$safe_tech_name}'");
                                                 if($job_res) $total_jobs = $job_res->fetch_assoc()['c'];
                                             }
+
+                                            $statusBadge = ($t['approval_status'] == 'อนุมัติแล้ว') ? "<span class='px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700'>อนุมัติแล้ว</span>" : "<span class='px-3 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700'>รออนุมัติ</span>";
+                                            $approveBtn = ($t['approval_status'] == 'รออนุมัติ') ? "<button onclick=\"window.location.href='dashboard.php?approve_tech={$t['id']}'\" class='w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:text-white hover:bg-emerald-500 transition-all flex items-center justify-center' title='อนุมัติสิทธิ์ช่าง'><i class='fas fa-check'></i></button>" : "";
 
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 text-slate-800 font-bold'>
@@ -709,22 +690,106 @@ if($tech_list_res){
                                                 </td>
                                                 <td class='px-6 py-4 text-slate-500 font-medium'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td> 
                                                 <td class='px-6 py-4 text-slate-500 font-medium'>".(!empty($t['department']) ? $t['department'] : '-')."</td>
+                                                <td class='px-6 py-4 text-center'>{$statusBadge}</td>
                                                 <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
+                                                        {$approveBtn}
                                                         <button onclick=\"viewHistory('{$js_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                        <button onclick=\"confirmDelete('tech_db', {$t['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No technicians found</td></tr>"; }
+                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>No technicians found</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div id="team_cards" class="section hidden space-y-8 no-print">
+                <div>
+                    <h2 class="text-xl md:text-2xl font-extrabold text-slate-800">Team Management (ทีมช่างผู้ดูแล)</h2>
+                    <p class="text-xs text-slate-400 mt-1">รายชื่อเจ้าหน้าที่แยกตามฝ่ายงาน (เฉพาะผู้ที่ได้รับการอนุมัติแล้ว)</p>
+                </div>
+
+                <?php 
+                $departments_data = [];
+                $res_techs = $conn->query("SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว'");
+                if($res_techs && $res_techs->num_rows > 0) {
+                    while($row = $res_techs->fetch_assoc()) {
+                        $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป';
+                        if(!isset($departments_data[$dept])) $departments_data[$dept] = [];
+                        
+                        $img = !empty($row['avatar_url']) ? $row['avatar_url'] : 'https://api.dicebear.com/7.x/notionists/svg?seed='.urlencode($row['full_name']).'&backgroundColor=e2e8f0';
+
+                        $departments_data[$dept][] = [
+                            'th' => $row['full_name'],
+                            'eng' => '', 
+                            'phone' => $row['phone'],
+                            'img' => $img
+                        ];
+                    }
+                }
+
+                $dept_icons = [
+                    'แผนกช่าง' => 'fas fa-tools',
+                    'แผนกไฟฟ้า' => 'fas fa-bolt',
+                    'แผนกโสต' => 'fas fa-tv',
+                    'แม่บ้าน' => 'fas fa-broom',
+                    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
+                    'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
+                    'ฝ่ายงานยานยนต์' => 'fas fa-car'
+                ];
+
+                if(empty($departments_data)) {
+                    echo "<div class='modern-card p-12 text-center flex flex-col items-center justify-center'><i class='fas fa-user-slash text-4xl text-slate-300 mb-4'></i><p class='text-slate-500 font-bold'>ยังไม่มีช่างในระบบ หรือยังไม่มีช่างที่ได้รับการอนุมัติ</p></div>";
+                }
+
+                foreach ($departments_data as $dept_name => $techs):
+                    $icon_class = $dept_icons[$dept_name] ?? 'fas fa-users';
+                ?>
+                <div class="modern-card p-6 md:p-8 space-y-6 bg-white">
+                    <h3 class="font-bold text-indigo-600 text-lg flex items-center border-b pb-3 border-slate-100">
+                        <i class="<?php echo $icon_class; ?> mr-3 text-xl"></i> <?php echo $dept_name; ?>
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-start">
+                        <?php foreach ($techs as $tech): ?>
+                        <div class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs hover:border-indigo-300 hover:shadow-md transition-all flex flex-col">
+                            <div class="bg-slate-100 aspect-[4/5] overflow-hidden relative">
+                                <img src="<?php echo htmlspecialchars($tech['img']); ?>" alt="<?php echo htmlspecialchars($tech['th']); ?>" class="w-full h-full object-cover">
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                                <div>
+                                    <h5 class="font-bold text-slate-800 text-sm leading-snug">
+                                        <?php echo htmlspecialchars($tech['th']); ?>
+                                    </h5>
+                                    <?php if (!empty($tech['phone'])): ?>
+                                    <p class="text-xs text-indigo-600 font-semibold mt-2.5 flex items-center">
+                                        <i class="fas fa-phone text-[10px] mr-2 opacity-70"></i> 
+                                        <?php echo htmlspecialchars($tech['phone']); ?>
+                                    </p>
+                                    <?php else: ?>
+                                    <p class="text-xs text-slate-400 font-medium mt-2.5 flex items-center">
+                                        <i class="fas fa-phone-slash text-[10px] mr-2 opacity-50"></i> 
+                                        ไม่มีเบอร์ติดต่อ
+                                    </p>
+                                    <?php endif; ?>
+                                </div>
+                                <button onclick="viewHistory('<?php echo htmlspecialchars($tech['th']); ?>', 'technician')" class="w-full text-xs font-bold text-slate-600 hover:text-white bg-slate-50 hover:bg-indigo-600 border border-slate-200 hover:border-indigo-600 py-2.5 rounded-xl transition-all shadow-2xs">
+                                    <i class="fas fa-history mr-1.5"></i> ประวัติงาน
+                                </button>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
             </div>
 
             <div id="assets" class="section hidden space-y-6 no-print">
@@ -898,18 +963,21 @@ if($tech_list_res){
                 <input type="hidden" name="role" id="techAdmin_role" value="">
                 
                 <div class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
-                        <input type="text" name="username" id="techAdmin_username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
-                    </div>
                     
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span></label>
-                        <div class="relative">
-                            <input type="password" name="password" id="techAdmin_password" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium" placeholder="••••••••">
-                            <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
-                                <i id="eyeIcon" class="fas fa-eye"></i>
-                            </button>
+                    <div id="loginCredsDiv" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
+                            <input type="text" name="username" id="techAdmin_username" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span></label>
+                            <div class="relative">
+                                <input type="password" name="password" id="techAdmin_password" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium" placeholder="••••••••">
+                                <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
+                                    <i id="eyeIcon" class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -923,7 +991,7 @@ if($tech_list_res){
 
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
-                        <input type="text" name="full_name" id="techAdmin_fullname" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
+                        <input type="text" name="full_name" id="techAdmin_fullname" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone</label>
@@ -972,20 +1040,27 @@ if($tech_list_res){
 
     <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('historyModal')"></div>
-        <div class="modal-container bg-white w-full max-w-3xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px]">
+        <div class="modal-container bg-white w-full max-w-5xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[85vh] max-h-[850px]">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
                 <p class="text-lg font-extrabold text-slate-800 truncate pr-4" id="historyModalTitle">History</p>
                 <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto flex-1 bg-white">
+           <div class="p-6 overflow-y-auto flex-1 bg-white">
                 <div class="w-full overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
-                    <table class="w-full text-left whitespace-nowrap min-w-[500px]">
+                    <table class="w-full text-left whitespace-nowrap min-w-[1100px]">
                         <thead class="bg-slate-50 text-slate-400 text-xs uppercase tracking-widest font-bold border-b border-slate-100">
                             <tr>
+                                <th class="px-5 py-4">Date / Time</th>
                                 <th class="px-5 py-4">Ticket No.</th>
+                                <th class="px-5 py-4">Reporter</th>
                                 <th class="px-5 py-4">Equipment</th>
+                                <th class="px-5 py-4">Department</th>
+                                <th class="px-5 py-4">Technician</th>
+                                <th class="px-5 py-4">Root Cause</th>
+                                <th class="px-5 py-4">Received At</th>
+                                <th class="px-5 py-4">Completed At</th>
                                 <th class="px-5 py-4 text-center">Status</th>
-                                <th class="px-5 py-4">Date</th>
+                                <th class="px-5 py-4 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody class="text-sm divide-y divide-slate-50" id="historyTableBody">
@@ -998,11 +1073,13 @@ if($tech_list_res){
 
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
+        const techDeptMap = <?php echo $tech_dept_map_json; ?>;
         
         const pageTitles = {
             'dash': 'Dashboard Overview',
             'repairs': 'All Repairs List',
             'technicians': 'Team Management',
+            'team_cards': 'Team Management',
             'assets': 'Assets Database',
             'users': 'Reporter History',
             'reports': 'Official Report'
@@ -1021,16 +1098,14 @@ if($tech_list_res){
                 document.getElementById('sidebarOverlay').classList.add('hidden');
             }
 
-            let searchInputs = [document.getElementById('searchInput'), document.getElementById('searchInputMobile')];
-            searchInputs.forEach(input => {
-                if(input) {
-                    input.value = '';
-                    let activeSection = document.getElementById(id);
-                    if(activeSection) {
-                        activeSection.querySelectorAll('table tbody tr').forEach(row => row.style.display = '');
-                    }
+            let searchInput = document.getElementById('searchInput');
+            if(searchInput) {
+                searchInput.value = '';
+                let activeSection = document.getElementById(id);
+                if(activeSection) {
+                    activeSection.querySelectorAll('table tbody tr').forEach(row => row.style.display = '');
                 }
-            });
+            }
 
             if(id === 'dash' && !window.chartsRendered) {
                 renderCharts();
@@ -1050,25 +1125,23 @@ if($tech_list_res){
             
             if(tab) { show(tab); } else { show('dash'); }
 
-            ['searchInput', 'searchInputMobile'].forEach(id => {
-                const inputElement = document.getElementById(id);
-                if(inputElement) {
-                    inputElement.addEventListener('input', function() {
-                        let filter = this.value.toLowerCase();
-                        let activeSection = document.querySelector('.section:not(.hidden)');
-                        if (!activeSection) return;
-                        
-                        let rows = activeSection.querySelectorAll('table tbody tr');
-                        rows.forEach(row => {
-                            if (row.innerText.toLowerCase().includes(filter)) {
-                                row.style.display = '';
-                            } else {
-                                row.style.display = 'none';
-                            }
-                        });
+            const inputElement = document.getElementById('searchInput');
+            if(inputElement) {
+                inputElement.addEventListener('input', function() {
+                    let filter = this.value.toLowerCase();
+                    let activeSection = document.querySelector('.section:not(.hidden)');
+                    if (!activeSection) return;
+                    
+                    let rows = activeSection.querySelectorAll('table tbody tr');
+                    rows.forEach(row => {
+                        if (row.innerText.toLowerCase().includes(filter)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
                     });
-                }
-            });
+                });
+            }
         });
 
         function toggleModal(m) { 
@@ -1079,15 +1152,12 @@ if($tech_list_res){
 
         function filterRepairs(statusStr) {
             show('repairs');
-            
             setTimeout(() => {
-                let searchInputs = [document.getElementById('searchInput'), document.getElementById('searchInputMobile')];
-                searchInputs.forEach(input => {
-                    if(input) {
-                        input.value = statusStr === 'all' ? '' : statusStr;
-                        input.dispatchEvent(new Event('input'));
-                    }
-                });
+                let searchInput = document.getElementById('searchInput');
+                if(searchInput) {
+                    searchInput.value = statusStr === 'all' ? '' : statusStr;
+                    searchInput.dispatchEvent(new Event('input'));
+                }
             }, 50);
         }
 
@@ -1102,9 +1172,9 @@ if($tech_list_res){
 
         function printOfficialReport() {
             const filterValue = document.getElementById('techFilter').value;
-            let printUrl = 'print_report.php';
+            let printUrl = 'generate_report.php?type=table';
             if (filterValue !== 'all') {
-                printUrl += `?tech=${encodeURIComponent(filterValue)}`;
+                printUrl += `&tech=${encodeURIComponent(filterValue)}`;
             }
             window.open(printUrl, '_blank');
         }
@@ -1137,7 +1207,7 @@ if($tech_list_res){
                     labels: ['Pending', 'In Progress', 'Completed'],
                     datasets: [{ 
                         data: [pending, progress, completed], 
-                        backgroundColor: ['#f59e0b', '#38bdf8', '#8b5cf6'], 
+                        backgroundColor: ['#f59e0b', '#38bdf8', '#8b5cf6'],
                         borderWidth: 0, 
                         hoverOffset: 6 
                     }]
@@ -1153,7 +1223,7 @@ if($tech_list_res){
 
             const ctxEquip = document.getElementById('mainEquipChart').getContext('2d');
             let gradient = ctxEquip.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); 
+            gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)');
             gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
             
             new Chart(ctxEquip, {
@@ -1172,7 +1242,7 @@ if($tech_list_res){
                         pointRadius: 4,
                         pointHoverRadius: 6,
                         fill: true,
-                        tension: 0.4 
+                        tension: 0.4
                     }]
                 },
                 options: { 
@@ -1230,12 +1300,17 @@ if($tech_list_res){
             let title = isManagement ? 'Manage Administrator' : 'Manage Technician';
             document.getElementById('techAdminModalTitle').innerHTML = title; document.getElementById('techAdmin_role').value = baseRole; 
             
-            const adminLevelDiv = document.getElementById('adminLevelDiv'); const deptDiv = document.getElementById('deptDiv');
+            const adminLevelDiv = document.getElementById('adminLevelDiv'); 
+            const deptDiv = document.getElementById('deptDiv');
+            const loginCredsDiv = document.getElementById('loginCredsDiv');
+            
             if(isManagement) {
                 adminLevelDiv.classList.remove('hidden'); deptDiv.classList.add('hidden'); document.getElementById('techAdmin_department_select').required = false;
                 let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; document.getElementById('techAdmin_level').value = exactRole;
+                loginCredsDiv.classList.remove('hidden'); document.getElementById('techAdmin_username').required = true;
             } else {
                 adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
+                loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
             }
 
             document.getElementById('techAdmin_id').value = id; document.getElementById('techAdmin_username').value = u; 
@@ -1244,7 +1319,7 @@ if($tech_list_res){
             const pwdInput = document.getElementById('techAdmin_password'); const pwdHint = document.getElementById('pwdHint'); const eyeIcon = document.getElementById('eyeIcon');
             pwdInput.value = ''; pwdInput.type = 'password'; 
             if(eyeIcon) { eyeIcon.classList.remove('fa-eye-slash'); eyeIcon.classList.add('fa-eye'); }
-            if(id === '') { pwdInput.required = true; pwdHint.innerText = "(Required)"; } else { pwdInput.required = false; pwdHint.innerText = "(Leave blank to keep current)"; }
+            if(id === '') { if(isManagement) pwdInput.required = true; pwdHint.innerText = "(Required)"; } else { pwdInput.required = false; pwdHint.innerText = "(Leave blank to keep current)"; }
             
             document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
             setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
@@ -1256,53 +1331,94 @@ if($tech_list_res){
         }
 
         function viewHistory(fullName, type) {
-            const tbody = document.getElementById('historyTableBody'); tbody.innerHTML = '';
+            const tbody = document.getElementById('historyTableBody'); 
+            tbody.innerHTML = '';
+
             const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
-            
+
             if(userRepairs.length === 0) {
                 let emptyMsg = type === 'reporter' ? 'No repair history found.' : 'No tasks assigned yet.';
-                tbody.innerHTML = `<tr><td colspan="4" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
             } else {
                 userRepairs.forEach(r => {
                     let statusClass = 'badge-pending';
                     if(r.status === 'กำลังดำเนินการ') statusClass = 'badge-progress';
                     else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'badge-success';
+
+                    let statusText = r.status || '-';
+
+                    let createdDate = '-';
+                    let createdTime = '';
+                    if(r.created_at) {
+                        let parts = r.created_at.split(' ');
+                        createdDate = parts[0] || '-';
+                        createdTime = parts[1] ? parts[1].substring(0, 5) : '';
+                    }
+
+                    let techName = r.technician_name ? `<div class='text-indigo-600 font-bold'>${r.technician_name}</div>` : "<span class='text-slate-400'>Unassigned</span>";
+                    let rootCause = r.root_cause ? `<span class='text-slate-700 font-medium'>${r.root_cause}</span>` : "<span class='text-rose-500 font-bold'>-</span>";
+
+                    let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
+                    let received_date = has_received ? createdDate : '-';
+                    let received_time = has_received ? createdTime : '';
+
+                    let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
+                    let completed_date = has_completed ? r.completed_at.split(' ')[0] : '-';
+                    let completed_time = has_completed ? r.completed_at.split(' ')[1].substring(0, 5) : '';
                     
-                    let statusText = r.status == 'รอรับเรื่อง' ? 'Pending' : (r.status == 'กำลังดำเนินการ' ? 'In Progress' : 'Completed');
+                    let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
+                    let deptEng = `<span class='px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider'>${dName}</span>`;
 
                     tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-5 py-4 font-mono font-semibold text-slate-500">${r.ticket_no}</td>
-                        <td class="px-5 py-4 text-slate-800 font-medium whitespace-normal min-w-[150px]">${r.equipment_type}</td>
+                        <td class="px-5 py-4 text-xs whitespace-nowrap">
+                            <div class="font-medium text-slate-700">${createdDate}</div>
+                            <div class="text-[11px] text-slate-400 font-semibold">${createdTime}</div>
+                        </td>
+                        <td class="px-5 py-4 font-mono font-semibold text-slate-600">${r.ticket_no || '-'}</td>
+                        <td class="px-5 py-4">
+                            <div class="text-slate-800 font-bold">${r.reporter_name || 'ไม่ระบุ'}</div>
+                            <div class="text-slate-500 text-[11px] font-medium mt-0.5">${r.phone_number || ''}</div>
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="text-slate-800 font-bold">${r.equipment_type || '-'}</div>
+                            <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${r.problem_desc || ''}">${r.problem_desc || ''}</div>
+                        </td>
+                        <td class="px-5 py-4">${deptEng}</td>
+                        <td class="px-5 py-4">${techName}</td>
+                        <td class="px-5 py-4">${rootCause}</td>
+                        <td class="px-5 py-4 text-xs whitespace-nowrap">
+                            ${has_received ? `<div class='font-medium text-slate-700'>${received_date}</div><div class='text-[11px] text-indigo-600 font-semibold'>${received_time}</div>` : "<span class='text-slate-400'>-</span>"}
+                        </td>
+                        <td class="px-5 py-4 text-xs whitespace-nowrap">
+                            ${has_completed ? `<div class='font-medium text-emerald-700'>${completed_date}</div><div class='text-[11px] text-emerald-500 font-semibold'>${completed_time}</div>` : "<span class='text-slate-400'>-</span>"}
+                        </td>
                         <td class="px-5 py-4 text-center"><span class="${statusClass}">${statusText}</span></td>
-                        <td class="px-5 py-4 text-slate-500 font-medium">${r.created_at_fmt}</td>
+                        <td class="px-5 py-4 text-right">
+                            <div class='flex items-center justify-end space-x-2'>
+                                <a href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                <a href='view_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
+                            </div>
+                        </td>
                     </tr>`;
                 });
             }
-            document.getElementById('historyModalTitle').innerText = fullName;
+            document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + fullName;
             toggleModal('historyModal');
         }
 
         function confirmDelete(type, id) { 
-            Swal.fire({ title: 'Are you sure?', text: "This action cannot be undone!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Yes, delete it!' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_'+type+'=' + id; }); 
-        }
-
-        function confirmDeleteReporter(name) { 
-            Swal.fire({ title: 'Delete this person?', text: "All past reporter names will be cleared!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Yes, delete!' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
-        }
-
-        function confirmRejectTech(id) { 
-            Swal.fire({ 
-                title: 'ปฏิเสธคำขอ?', 
-                text: "คุณต้องการลบคำขอลงทะเบียนนี้ใช่หรือไม่", 
-                icon: 'warning', 
-                showCancelButton: true, 
-                confirmButtonColor: '#ef4444', 
-                confirmButtonText: 'ใช่, ปฏิเสธ!' 
-            }).then((r) => { 
-                if(r.isConfirmed) window.location.href = 'dashboard.php?reject_tech=' + id; 
+            Swal.fire({ title: 'ยืนยันการลบข้อมูล?', text: "เมื่อลบแล้วจะไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { 
+                if(r.isConfirmed) {
+                    if(type === 'tech') window.location.href = 'dashboard.php?delete_tech=' + id;
+                    else if(type === 'user') window.location.href = 'dashboard.php?delete_user=' + id;
+                    else if(type === 'asset') window.location.href = 'dashboard.php?delete_asset=' + id;
+                }
             }); 
         }
 
+        function confirmDeleteReporter(name) { 
+            Swal.fire({ title: 'ยืนยันลบผู้แจ้ง?', text: "ประวัติการแจ้งซ่อมทั้งหมดของบุคคลนี้จะถูกเคลียร์ชื่อออก!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
+        }
     </script>
 </body>
 </html>
