@@ -57,7 +57,6 @@ if($check_secret && $check_secret->num_rows == 0) {
     $conn->query("ALTER TABLE technicians ADD COLUMN secret_code VARCHAR(10) NULL AFTER avatar_url");
 }
 
-// อัปเดตรหัสให้ช่างเก่าที่ค้างอยู่ (ถ้ามี)
 $res_fix = $conn->query("SELECT id FROM technicians WHERE approval_status IN ('รออนุมัติ', 'รอผูกบัญชี') AND (secret_code IS NULL OR secret_code = '')");
 if ($res_fix && $res_fix->num_rows > 0) {
     while($rf = $res_fix->fetch_assoc()) {
@@ -118,6 +117,14 @@ if($td_res) {
 }
 $tech_dept_map_json = json_encode($tech_dept_map);
 
+$has_image_col = false;
+if($check_repairs_list && $check_repairs_list->num_rows > 0) {
+    $res_img = $conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'");
+    if($res_img && $res_img->num_rows > 0) {
+        $has_image_col = true;
+    }
+}
+
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
     $conn->query("DELETE FROM assets WHERE id = $del_id");
@@ -145,6 +152,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
 if (isset($_GET['delete_tech'])) {
     $del_id = intval($_GET['delete_tech']);
     $conn->query("DELETE FROM technicians WHERE id = $del_id");
+    echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
+}
+
+// 💡 เพิ่มระบบยกเลิกผูกบัญชี (แอดมินเตะช่างออกจาก LINE)
+if (isset($_GET['unlink_tech'])) {
+    $unlink_id = intval($_GET['unlink_tech']);
+    $new_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
+    $conn->query("UPDATE technicians SET line_user_id = NULL, approval_status = 'รอผูกบัญชี', secret_code = '$new_code' WHERE id = $unlink_id");
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
 
@@ -188,7 +203,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
         
         if (empty($user_id)) {
-            $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT); // สร้างรหัส 4 หลัก
+            $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
             $stmt = $conn->prepare("INSERT INTO technicians (full_name, phone, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, 'รอผูกบัญชี')");
             $stmt->bind_param("sssss", $full_name, $phone, $department, $avatar_url, $secret_code);
             $msg = "เพิ่มข้อมูลช่างสำเร็จ\\nรหัสผูกบัญชีไลน์คือ: " . $secret_code;
@@ -709,6 +724,11 @@ if($tech_list_res){
                                                 ? "<span class='px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700'><i class='fas fa-check-circle mr-1'></i> ผูกบัญชีแล้ว</span>" 
                                                 : "<span class='px-3 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 tracking-widest border border-amber-200'>รหัส: " . ($t['secret_code'] ? $t['secret_code'] : 'N/A') . "</span>";
 
+                                            // 💡 ปุ่มยกเลิกการผูกบัญชี (จะแสดงเฉพาะคนที่ผูกบัญชีแล้วเท่านั้น)
+                                            $unlinkBtn = ($t['approval_status'] == 'อนุมัติแล้ว') 
+                                                ? "<button onclick=\"confirmUnlink({$t['id']})\" class='w-8 h-8 rounded-lg bg-orange-50 text-orange-500 hover:text-white hover:bg-orange-500 transition-all flex items-center justify-center' title='ยกเลิกผูกบัญชี LINE'><i class='fas fa-unlink'></i></button>" 
+                                                : "";
+
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 text-slate-800 font-bold'>
                                                     <div class='flex items-center'>
@@ -722,6 +742,7 @@ if($tech_list_res){
                                                 <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
+                                                        {$unlinkBtn}
                                                         <button onclick=\"viewHistory('{$js_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
                                                         <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
@@ -1446,6 +1467,12 @@ if($tech_list_res){
             }
             document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + fullName;
             toggleModal('historyModal');
+        }
+
+        function confirmUnlink(id) { 
+            Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "ช่างจะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
+                if(r.isConfirmed) window.location.href = 'dashboard.php?unlink_tech=' + id; 
+            }); 
         }
 
         function confirmDelete(type, id) { 
