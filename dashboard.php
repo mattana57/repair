@@ -22,7 +22,10 @@ function thaiNum($num) {
     );
 }
 
-// ---------------- ตรวจสอบและอัปเดตตารางฐานข้อมูล ----------------
+// =====================================================================
+// 🛠️ ระบบซ่อมแซมและปรับปรุงฐานข้อมูลอัตโนมัติ (AUTO-FIX DB STRUCTURE)
+// =====================================================================
+
 $conn->query("CREATE TABLE IF NOT EXISTS assets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     asset_code VARCHAR(50) NOT NULL,
@@ -34,30 +37,28 @@ $conn->query("CREATE TABLE IF NOT EXISTS assets (
 
 $conn->query("CREATE TABLE IF NOT EXISTS technicians (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    line_user_id VARCHAR(100) NULL,
     full_name VARCHAR(100) NOT NULL,
-    department VARCHAR(100) NULL,
-    phone VARCHAR(50) NULL,
-    avatar_url VARCHAR(255) NULL,
-    secret_code VARCHAR(10) NULL,
-    approval_status VARCHAR(50) DEFAULT 'รอผูกบัญชี',
-    status VARCHAR(50) DEFAULT 'ว่าง',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
-$check_line_id = $conn->query("SHOW COLUMNS FROM technicians LIKE 'line_user_id'");
-if($check_line_id && $check_line_id->num_rows == 0) {
-    $conn->query("ALTER TABLE technicians ADD COLUMN line_user_id VARCHAR(100) NULL AFTER id");
-}
-$check_app_status = $conn->query("SHOW COLUMNS FROM technicians LIKE 'approval_status'");
-if($check_app_status && $check_app_status->num_rows == 0) {
-    $conn->query("ALTER TABLE technicians ADD COLUMN approval_status VARCHAR(50) DEFAULT 'รอผูกบัญชี' AFTER avatar_url");
-}
-$check_secret = $conn->query("SHOW COLUMNS FROM technicians LIKE 'secret_code'");
-if($check_secret && $check_secret->num_rows == 0) {
-    $conn->query("ALTER TABLE technicians ADD COLUMN secret_code VARCHAR(10) NULL AFTER avatar_url");
+// อัปเดตตารางช่าง (Technicians) ให้มีคอลัมน์ครบถ้วน
+$tech_cols = [
+    'line_user_id' => 'VARCHAR(100) NULL',
+    'department' => 'VARCHAR(100) NULL',
+    'phone' => 'VARCHAR(50) NULL',
+    'avatar_url' => 'VARCHAR(255) NULL',
+    'secret_code' => 'VARCHAR(10) NULL',
+    'approval_status' => "VARCHAR(50) DEFAULT 'รอผูกบัญชี'",
+    'status' => "VARCHAR(50) DEFAULT 'ว่าง'"
+];
+foreach ($tech_cols as $col => $def) {
+    $chk = $conn->query("SHOW COLUMNS FROM technicians LIKE '$col'");
+    if($chk && $chk->num_rows == 0) {
+        $conn->query("ALTER TABLE technicians ADD COLUMN $col $def");
+    }
 }
 
+// อัปเดตรหัสลับให้ช่างเก่าที่ค้างอยู่ในระบบ (ถ้ามี)
 $res_fix = $conn->query("SELECT id FROM technicians WHERE approval_status IN ('รออนุมัติ', 'รอผูกบัญชี') AND (secret_code IS NULL OR secret_code = '')");
 if ($res_fix && $res_fix->num_rows > 0) {
     while($rf = $res_fix->fetch_assoc()) {
@@ -69,13 +70,23 @@ if ($res_fix && $res_fix->num_rows > 0) {
 $conn->query("CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
-    password VARCHAR(255) NULL,
-    full_name VARCHAR(100) NULL,
-    phone VARCHAR(20) NULL,
-    department VARCHAR(100) NULL,
     role VARCHAR(50) DEFAULT 'User',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
+
+// อัปเดตตารางแอดมิน/ผู้ใช้งาน (Users) ให้มีคอลัมน์ครบถ้วน
+$users_cols = [
+    'password' => 'VARCHAR(255) NULL',
+    'full_name' => 'VARCHAR(100) NULL',
+    'phone' => 'VARCHAR(20) NULL',
+    'department' => 'VARCHAR(100) NULL'
+];
+foreach ($users_cols as $col => $def) {
+    $chk = $conn->query("SHOW COLUMNS FROM users LIKE '$col'");
+    if($chk && $chk->num_rows == 0) {
+        $conn->query("ALTER TABLE users ADD COLUMN $col $def");
+    }
+}
 
 $check_repairs_table = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs_table && $check_repairs_table->num_rows > 0) {
@@ -96,16 +107,18 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
                   GROUP BY reporter_name, phone_number");
 }
 
-// ---------------- ดึงข้อมูลต่างๆ ----------------
+// =====================================================================
+// ดึงข้อมูลเตรียมแสดงผล
+// =====================================================================
+
 $all_repairs_json = "[]";
-if($check_repairs_list = $conn->query("SHOW TABLES LIKE 'repairs'")) {
-    if($check_repairs_list->num_rows > 0) {
-        $rep_res = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC");
-        $reps = [];
-        if($rep_res) {
-            while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
-            $all_repairs_json = json_encode($reps);
-        }
+if($check_repairs_list && $check_repairs_list->num_rows > 0) {
+    $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
+    $rep_res = $conn->query($select_query);
+    $reps = [];
+    if($rep_res) {
+        while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
+        $all_repairs_json = json_encode($reps);
     }
 }
 
@@ -118,7 +131,10 @@ if($td_res) {
 }
 $tech_dept_map_json = json_encode($tech_dept_map);
 
-// ---------------- การจัดการ POST/GET ----------------
+// =====================================================================
+// ระบบบันทึกและลบข้อมูล
+// =====================================================================
+
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
     $conn->query("DELETE FROM assets WHERE id = $del_id");
@@ -162,6 +178,7 @@ if (isset($_GET['delete_user'])) {
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
 
+// 🛠️ ระบบบันทึกข้อมูลบุคลากร (กัน Error ไว้ทุกจุด)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $user_id = $_POST['user_id'];
     $role = $_POST['role']; 
@@ -169,7 +186,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $full_name = !empty($_POST['full_name']) ? $_POST['full_name'] : NULL;
     $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
     
-    // หากเพิ่ม/แก้ไข ช่าง
     if ($role === 'Technician') {
         $department = isset($_POST['department_select']) ? $_POST['department_select'] : NULL;
         if ($department === 'อื่นๆ' && !empty($_POST['department_custom'])) {
@@ -198,28 +214,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         if (empty($user_id)) {
             $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
             $stmt = $conn->prepare("INSERT INTO technicians (full_name, phone, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, 'รอผูกบัญชี')");
-            $stmt->bind_param("sssss", $full_name, $phone, $department, $avatar_url, $secret_code);
-            $msg = "เพิ่มข้อมูลช่างสำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
+            if ($stmt) {
+                $stmt->bind_param("sssss", $full_name, $phone, $department, $avatar_url, $secret_code);
+                if ($stmt->execute()) {
+                    $msg = "เพิ่มข้อมูลช่างสำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
+                    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg\", confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+                } else {
+                    $err = addslashes($stmt->error);
+                    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการบันทึก', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
+                }
+            } else {
+                $err = addslashes($conn->error);
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ฐานข้อมูลมีปัญหา', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
+            }
         } else {
             if ($avatar_url) {
                 $stmt = $conn->prepare("UPDATE technicians SET full_name=?, phone=?, department=?, avatar_url=? WHERE id=?");
-                $stmt->bind_param("ssssi", $full_name, $phone, $department, $avatar_url, $user_id);
+                if ($stmt) $stmt->bind_param("ssssi", $full_name, $phone, $department, $avatar_url, $user_id);
             } else {
                 $stmt = $conn->prepare("UPDATE technicians SET full_name=?, phone=?, department=? WHERE id=?");
-                $stmt->bind_param("sssi", $full_name, $phone, $department, $user_id);
+                if ($stmt) $stmt->bind_param("sssi", $full_name, $phone, $department, $user_id);
             }
-            $msg = 'อัปเดตข้อมูลช่างเทคนิคสำเร็จ!';
-        }
-        
-        if ($stmt->execute()) {
-            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg\", confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
-        } else {
-            $err = $stmt->error;
-            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถบันทึกได้: $err', confirmButtonColor: '#ef4444' }); });</script>";
+            
+            if ($stmt && $stmt->execute()) {
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+            } else {
+                $err = addslashes($stmt ? $stmt->error : $conn->error);
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการอัปเดต', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
+            }
         }
         
     } else {
-        // หากเพิ่ม/แก้ไข ผู้ดูแลระบบ
         $username = $_POST['username'];
         $password = $_POST['password']; 
         if (isset($_POST['admin_level'])) {
@@ -229,21 +254,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
 
         if (empty($user_id)) {
             $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, phone, department, role) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssss", $username, $password, $full_name, $phone, $department, $role);
-            $msg = 'เพิ่มข้อมูลผู้ดูแลระบบสำเร็จ!';
+            if ($stmt) {
+                $stmt->bind_param("ssssss", $username, $password, $full_name, $phone, $department, $role);
+                if ($stmt->execute()) {
+                    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'เพิ่มข้อมูลผู้ดูแลระบบสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+                } else {
+                    $err = addslashes($stmt->error);
+                    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการบันทึก', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
+                }
+            }
         } else {
             if (!empty($password)) {
                 $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
-                $stmt->bind_param("ssssssi", $username, $password, $full_name, $phone, $department, $role, $user_id);
+                if ($stmt) $stmt->bind_param("ssssssi", $username, $password, $full_name, $phone, $department, $role, $user_id);
             } else {
                 $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, phone=?, department=?, role=? WHERE id=?");
-                $stmt->bind_param("sssssi", $username, $full_name, $phone, $department, $role, $user_id);
+                if ($stmt) $stmt->bind_param("sssssi", $username, $full_name, $phone, $department, $role, $user_id);
             }
-            $msg = 'อัปเดตข้อมูลผู้ดูแลระบบสำเร็จ!';
-        }
-        
-        if ($stmt->execute()) {
-            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+            if ($stmt && $stmt->execute()) {
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+            } else {
+                $err = addslashes($stmt ? $stmt->error : $conn->error);
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
+            }
         }
     }
 }
@@ -623,7 +656,6 @@ if($tech_list_res){
                 </div>
             </div>
 
-            <!-- ทีมช่างตาราง (จัดกลุ่มตามแผนก) -->
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
@@ -779,7 +811,6 @@ if($tech_list_res){
                 </div>
             </div>
 
-            <!-- การ์ดช่าง -->
             <div id="team_cards" class="section hidden space-y-8 no-print">
                 <div>
                     <h2 class="text-xl md:text-2xl font-extrabold text-slate-800">Team Management (ทีมช่างผู้ดูแล)</h2>
@@ -864,7 +895,6 @@ if($tech_list_res){
                 <?php endforeach; ?>
             </div>
 
-            <!-- Assets Section -->
             <div id="assets" class="section hidden space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
@@ -914,7 +944,6 @@ if($tech_list_res){
                 </div>
             </div>
 
-            <!-- Users Section -->
             <div id="users" class="section hidden space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
@@ -970,7 +999,6 @@ if($tech_list_res){
                 </div>
             </div>
 
-            <!-- Reports Section -->
             <div id="reports" class="section hidden space-y-6 no-print">
                 <div class="modern-card p-6 md:p-8">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
