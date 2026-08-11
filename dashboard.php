@@ -14,7 +14,6 @@ if (strtolower($_SESSION['role']) === 'executive') {
 
 include 'db_connect.php';
 
-// บังคับให้ฐานข้อมูลคุยกันเป็นภาษาไทย (UTF-8) 100% ป้องกันอักขระเพี้ยนหรือล้น
 $conn->set_charset("utf8mb4");
 
 function thaiNum($num) {
@@ -44,7 +43,6 @@ $conn->query("CREATE TABLE IF NOT EXISTS technicians (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
-// เพิ่มคอลัมน์ใหม่ๆ ให้ตารางช่าง
 $tech_cols = [
     'line_user_id' => 'VARCHAR(100) NULL',
     'department' => 'VARCHAR(255) NULL',
@@ -61,12 +59,9 @@ foreach ($tech_cols as $col => $def) {
     }
 }
 
-// 💡 แก้ปัญหา Data Truncated: บังคับขยายขนาดคอลัมน์เดิมให้รองรับข้อความยาวๆ และภาษาไทย
+$conn->query("ALTER TABLE technicians CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 $conn->query("ALTER TABLE technicians MODIFY COLUMN department VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
-$conn->query("ALTER TABLE technicians MODIFY COLUMN full_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL");
-$conn->query("ALTER TABLE technicians MODIFY COLUMN phone VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 
-// อัปเดตรหัสลับให้ช่างเก่าที่ค้างอยู่ในระบบ
 $res_fix = $conn->query("SELECT id FROM technicians WHERE approval_status IN ('รออนุมัติ', 'รอผูกบัญชี') AND (secret_code IS NULL OR secret_code = '')");
 if ($res_fix && $res_fix->num_rows > 0) {
     while($rf = $res_fix->fetch_assoc()) {
@@ -82,7 +77,6 @@ $conn->query("CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
-// เพิ่มคอลัมน์ให้ตารางผู้ใช้งาน
 $users_cols = [
     'password' => 'VARCHAR(255) NULL',
     'full_name' => 'VARCHAR(255) NULL',
@@ -96,12 +90,14 @@ foreach ($users_cols as $col => $def) {
     }
 }
 
-// 💡 แก้ปัญหา Data Truncated ให้ตาราง User ด้วย
+$conn->query("ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 $conn->query("ALTER TABLE users MODIFY COLUMN department VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 $conn->query("ALTER TABLE users MODIFY COLUMN full_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 
 $check_repairs_table = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs_table && $check_repairs_table->num_rows > 0) {
+    $conn->query("ALTER TABLE repairs CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    
     $check_tech_name = $conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'");
     if($check_tech_name && $check_tech_name->num_rows == 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN technician_name VARCHAR(100) NULL");
@@ -130,7 +126,7 @@ if($check_repairs_list && $check_repairs_list->num_rows > 0) {
     $reps = [];
     if($rep_res) {
         while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
-        $all_repairs_json = json_encode($reps);
+        $all_repairs_json = json_encode($reps, JSON_UNESCAPED_UNICODE);
     }
 }
 
@@ -141,7 +137,16 @@ if($td_res) {
         $tech_dept_map[$tr['full_name']] = !empty($tr['department']) ? $tr['department'] : 'ฝ่ายงานทั่วไป';
     }
 }
-$tech_dept_map_json = json_encode($tech_dept_map);
+$tech_dept_map_json = json_encode($tech_dept_map, JSON_UNESCAPED_UNICODE);
+
+// ดึงรายชื่อเดือนทั้งหมดที่มีการแจ้งซ่อมสำหรับทำ Dropdown Filter
+$months_query = $conn->query("SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m') as m FROM repairs WHERE created_at IS NOT NULL ORDER BY m DESC");
+$month_options = [];
+if($months_query) { 
+    while($row = $months_query->fetch_assoc()) { 
+        if(!empty($row['m'])) $month_options[] = $row['m']; 
+    } 
+}
 
 // =====================================================================
 // ระบบบันทึกและลบข้อมูล
@@ -413,26 +418,50 @@ if($tech_list_res){
 
         <div class="flex-1 overflow-y-auto p-6 lg:p-8">
             
-            <div id="dash" class="section space-y-8 animate-fade-in no-print">
+            <!-- Dashboard Section -->
+            <div id="dash" class="section space-y-6 animate-fade-in no-print">
+                
+                <!-- 💡 แถบตัวกรองสถิติ (Filters) -->
+                <div class="modern-card p-5 mb-2 bg-white flex flex-col sm:flex-row gap-4 items-end">
+                    <div class="w-full sm:w-1/3">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"><i class="fas fa-calendar-alt text-indigo-500 mr-1"></i> Filter by Month</label>
+                        <select id="dashMonthFilter" onchange="updateDashboard()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium">
+                            <option value="all">ทุกเดือน (All Time)</option>
+                            <?php 
+                                foreach($month_options as $m) {
+                                    $m_display = date("F Y", strtotime($m."-01"));
+                                    echo "<option value='{$m}'>{$m_display}</option>";
+                                }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="w-full sm:w-1/3">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"><i class="fas fa-user-cog text-indigo-500 mr-1"></i> Filter by Technician</label>
+                        <select id="dashTechFilter" onchange="updateDashboard()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium">
+                            <option value="all">ทุกคน (All Technicians)</option>
+                            <?php 
+                                foreach($tech_options as $tech) {
+                                    echo "<option value=\"".htmlspecialchars($tech)."\">ช่าง: ".htmlspecialchars($tech)."</option>"; 
+                                }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="w-full sm:w-auto">
+                        <button onclick="updateDashboard()" class="w-full bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all">
+                            <i class="fas fa-filter mr-2"></i> Apply
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 💡 กล่องสรุปตัวเลข (รอข้อมูลจาก JS) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <?php 
-                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
-                        $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
-                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE status='รอรับเรื่อง'");
-                        $cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
-                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE status='กำลังดำเนินการ'");
-                        $cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
-                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
-                        $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
-                    ?>
-                    
                     <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('all')">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
                             <span class="text-xs font-bold text-slate-400">TOTAL</span>
                         </div>
                         <div>
-                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
+                            <h3 id="sum-total" class="text-3xl font-extrabold text-slate-800">0</h3>
                             <p class="text-sm font-medium text-slate-500 mt-1">Total Repairs</p>
                         </div>
                     </div>
@@ -443,7 +472,7 @@ if($tech_list_res){
                             <span class="text-xs font-bold text-slate-400">WAITING</span>
                         </div>
                         <div>
-                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
+                            <h3 id="sum-pending" class="text-3xl font-extrabold text-slate-800">0</h3>
                             <p class="text-sm font-medium text-slate-500 mt-1">Pending</p>
                         </div>
                     </div>
@@ -454,7 +483,7 @@ if($tech_list_res){
                             <span class="text-xs font-bold text-slate-400">ACTIVE</span>
                         </div>
                         <div>
-                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
+                            <h3 id="sum-progress" class="text-3xl font-extrabold text-slate-800">0</h3>
                             <p class="text-sm font-medium text-slate-500 mt-1">In Progress</p>
                         </div>
                     </div>
@@ -465,33 +494,55 @@ if($tech_list_res){
                             <span class="text-xs font-bold text-slate-400">DONE</span>
                         </div>
                         <div>
-                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
+                            <h3 id="sum-completed" class="text-3xl font-extrabold text-slate-800">0</h3>
                             <p class="text-sm font-medium text-slate-500 mt-1">Completed</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start mb-6">
-                            <div>
-                                <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">Frequency of reported broken assets</p>
-                            </div>
-                            <div class="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-500">Overview</div>
+                <!-- 💡 กราฟ 4 แบบ -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- กราฟอุปกรณ์ -->
+                    <div class="modern-card p-6 flex flex-col">
+                        <div class="mb-4">
+                            <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                         </div>
                         <div class="flex-1 relative w-full h-[280px]">
                             <canvas id="mainEquipChart"></canvas>
                         </div>
                     </div>
                     
+                    <!-- กราฟสถานะ -->
                     <div class="modern-card p-6 flex flex-col">
                         <div class="mb-4">
                             <h3 class="font-extrabold text-slate-800 text-lg">Work Status</h3>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">Distribution</p>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
                         </div>
-                        <div class="flex-1 relative w-full h-[220px] flex justify-center items-center">
+                        <div class="flex-1 relative w-full h-[280px] flex justify-center items-center">
                             <canvas id="mainStatusChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- กราฟสถานที่ (ใหม่) -->
+                    <div class="modern-card p-6 flex flex-col">
+                        <div class="mb-4">
+                            <h3 class="font-extrabold text-slate-800 text-lg">Top Locations</h3>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
+                        </div>
+                        <div class="flex-1 relative w-full h-[280px]">
+                            <canvas id="mainLocChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- กราฟงานของช่าง (ใหม่) -->
+                    <div class="modern-card p-6 flex flex-col">
+                        <div class="mb-4">
+                            <h3 class="font-extrabold text-slate-800 text-lg">Technician Workload</h3>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
+                        </div>
+                        <div class="flex-1 relative w-full h-[280px]">
+                            <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -556,6 +607,7 @@ if($tech_list_res){
                 </div>
             </div>
 
+            <!-- อื่นๆ ซ่อนไว้เหมือนเดิม -->
             <div id="repairs" class="section hidden space-y-6 no-print">
                 <div class="modern-card overflow-hidden">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
@@ -1044,6 +1096,8 @@ if($tech_list_res){
         </div>
     </main>
 
+    <!-- ================== MODALS ================== -->
+
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
@@ -1051,7 +1105,7 @@ if($tech_list_res){
                 <p class="text-lg font-extrabold text-slate-800" id="assetModalTitle">Add Asset</p>
                 <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            <form action="" method="POST" class="p-6">
+            <form action="dashboard.php?tab=assets" method="POST" class="p-6">
                 <input type="hidden" name="save_asset" value="1"><input type="hidden" name="asset_id" id="asset_id" value="">
                 <div class="space-y-5">
                     <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Code</label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
@@ -1071,7 +1125,7 @@ if($tech_list_res){
                 <p class="text-lg font-extrabold text-slate-800" id="techAdminModalTitle">Add Member</p>
                 <button onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            <form action="" method="POST" class="p-6" enctype="multipart/form-data">
+            <form action="dashboard.php?tab=technicians" method="POST" class="p-6" enctype="multipart/form-data">
                 <input type="hidden" name="save_user" value="1">
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
                 <input type="hidden" name="role" id="techAdmin_role" value="">
@@ -1143,7 +1197,7 @@ if($tech_list_res){
                 <p class="text-lg font-extrabold text-slate-800">Edit Reporter</p>
                 <button onclick="toggleModal('editReporterModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            <form action="" method="POST" class="p-6">
+            <form action="dashboard.php?tab=users" method="POST" class="p-6">
                 <input type="hidden" name="edit_reporter" value="1">
                 <input type="hidden" name="old_name" id="edit_rep_old_name" value="">
                 <div class="bg-indigo-50 text-indigo-700 text-xs p-4 rounded-xl mb-5 font-medium flex items-start">
@@ -1196,6 +1250,11 @@ if($tech_list_res){
         const allRepairs = <?php echo $all_repairs_json; ?>;
         const techDeptMap = <?php echo $tech_dept_map_json; ?>;
         
+        let chartEquipInstance = null;
+        let chartStatusInstance = null;
+        let chartLocInstance = null;
+        let chartTechInstance = null;
+        
         const pageTitles = {
             'dash': 'Dashboard Overview',
             'repairs': 'All Repairs List',
@@ -1228,9 +1287,8 @@ if($tech_list_res){
                 }
             }
 
-            if(id === 'dash' && !window.chartsRendered) {
-                renderCharts();
-                window.chartsRendered = true;
+            if(id === 'dash') {
+                updateDashboard();
             }
         }
 
@@ -1242,7 +1300,6 @@ if($tech_list_res){
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
-            window.chartsRendered = false;
             
             if(tab) { show(tab); } else { show('dash'); }
 
@@ -1264,6 +1321,185 @@ if($tech_list_res){
                 });
             }
         });
+
+        // 💡 ฟังก์ชันใหม่สำหรับวาดกราฟและอัปเดตตัวเลขตาม Filter
+        function updateDashboard() {
+            let selectedMonth = document.getElementById('dashMonthFilter') ? document.getElementById('dashMonthFilter').value : 'all';
+            let selectedTech = document.getElementById('dashTechFilter') ? document.getElementById('dashTechFilter').value : 'all';
+
+            // กรองข้อมูลจาก allRepairs
+            let filteredRepairs = allRepairs.filter(r => {
+                let matchMonth = true;
+                let matchTech = true;
+
+                if (selectedMonth !== 'all' && r.created_at) {
+                    let rMonth = r.created_at.substring(0, 7);
+                    if (rMonth !== selectedMonth) matchMonth = false;
+                }
+                
+                if (selectedTech !== 'all') {
+                    let rTech = r.technician_name ? r.technician_name : 'Unassigned';
+                    if (rTech !== selectedTech) matchTech = false;
+                }
+
+                return matchMonth && matchTech;
+            });
+
+            // อัปเดตตัวเลข 4 กล่องบนสุด
+            let pending = 0, progress = 0, completed = 0;
+            let equipCountMap = {};
+            let locCountMap = {};
+            let techCountMap = {};
+
+            filteredRepairs.forEach(r => {
+                if(r.status === 'รอรับเรื่อง') pending++;
+                else if(r.status === 'กำลังดำเนินการ') progress++;
+                else if(r.status === 'ซ่อมเสร็จแล้ว') completed++;
+
+                // นับอุปกรณ์
+                if(r.equipment_type) {
+                    equipCountMap[r.equipment_type] = (equipCountMap[r.equipment_type] || 0) + 1;
+                }
+                
+                // นับสถานที่
+                if(r.location && r.location !== 'ไม่ระบุสถานที่') {
+                    locCountMap[r.location] = (locCountMap[r.location] || 0) + 1;
+                }
+                
+                // นับผลงานช่าง
+                let tName = r.technician_name ? r.technician_name : 'ยังไม่ระบุช่าง';
+                techCountMap[tName] = (techCountMap[tName] || 0) + 1;
+            });
+
+            document.getElementById('sum-total').innerText = filteredRepairs.length;
+            document.getElementById('sum-pending').innerText = pending;
+            document.getElementById('sum-progress').innerText = progress;
+            document.getElementById('sum-completed').innerText = completed;
+
+            // ----------------- กราฟที่ 1: Equipment -----------------
+            let sortedEquip = Object.keys(equipCountMap).map(key => { return { name: key, count: equipCountMap[key] }; }).sort((a, b) => b.count - a.count).slice(0, 7);
+            let eLabels = sortedEquip.map(e => e.name);
+            let eCounts = sortedEquip.map(e => e.count);
+
+            const ctxEquip = document.getElementById('mainEquipChart').getContext('2d');
+            if(chartEquipInstance) chartEquipInstance.destroy();
+            
+            let gradientE = ctxEquip.createLinearGradient(0, 0, 0, 400);
+            gradientE.addColorStop(0, 'rgba(139, 92, 246, 0.5)');
+            gradientE.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
+            
+            chartEquipInstance = new Chart(ctxEquip, {
+                type: 'line', 
+                data: {
+                    labels: eLabels.length ? eLabels : ['ไม่มีข้อมูล'],
+                    datasets: [{ 
+                        label: 'จำนวน (ครั้ง)', 
+                        data: eCounts.length ? eCounts : [0], 
+                        borderColor: '#8b5cf6', 
+                        backgroundColor: gradientE, 
+                        borderWidth: 3, 
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#8b5cf6',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
+                        x: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
+                    } 
+                }
+            });
+
+            // ----------------- กราฟที่ 2: Status -----------------
+            const ctxStatus = document.getElementById('mainStatusChart').getContext('2d');
+            if(chartStatusInstance) chartStatusInstance.destroy();
+            
+            chartStatusInstance = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['รอดำเนินการ', 'กำลังแก้ไข', 'เสร็จสิ้น'],
+                    datasets: [{ 
+                        data: (pending+progress+completed === 0) ? [1] : [pending, progress, completed], 
+                        backgroundColor: (pending+progress+completed === 0) ? ['#f1f5f9'] : ['#f59e0b', '#38bdf8', '#10b981'],
+                        borderWidth: 0, 
+                        hoverOffset: 4 
+                    }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif", weight: '600' } } },
+                        tooltip: { callbacks: { label: function(context) { return (pending+progress+completed === 0) ? ' ไม่มีข้อมูล' : ' ' + context.formattedValue + ' งาน'; } } }
+                    }, 
+                    cutout: '75%' 
+                }
+            });
+
+            // ----------------- กราฟที่ 3: Top Locations (ใหม่) -----------------
+            let sortedLoc = Object.keys(locCountMap).map(key => { return { name: key, count: locCountMap[key] }; }).sort((a, b) => b.count - a.count).slice(0, 5);
+            let lLabels = sortedLoc.map(l => l.name);
+            let lCounts = sortedLoc.map(l => l.count);
+
+            const ctxLoc = document.getElementById('mainLocChart').getContext('2d');
+            if(chartLocInstance) chartLocInstance.destroy();
+            
+            chartLocInstance = new Chart(ctxLoc, {
+                type: 'bar', 
+                data: {
+                    labels: lLabels.length ? lLabels : ['ไม่มีข้อมูล'],
+                    datasets: [{ 
+                        label: 'แจ้งซ่อม (ครั้ง)', 
+                        data: lCounts.length ? lCounts : [0], 
+                        backgroundColor: '#f43f5e', 
+                        borderRadius: 6
+                    }]
+                },
+                options: { 
+                    indexAxis: 'y', // แนวนอน
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        x: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
+                        y: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
+                    } 
+                }
+            });
+
+            // ----------------- กราฟที่ 4: Technician Workload (ใหม่) -----------------
+            let sortedTech = Object.keys(techCountMap).map(key => { return { name: key, count: techCountMap[key] }; }).sort((a, b) => b.count - a.count).slice(0, 5);
+            let tLabels = sortedTech.map(t => t.name);
+            let tCounts = sortedTech.map(t => t.count);
+
+            const ctxTech = document.getElementById('mainTechChart').getContext('2d');
+            if(chartTechInstance) chartTechInstance.destroy();
+            
+            chartTechInstance = new Chart(ctxTech, {
+                type: 'bar', 
+                data: {
+                    labels: tLabels.length ? tLabels : ['ไม่มีข้อมูล'],
+                    datasets: [{ 
+                        label: 'รับผิดชอบ (งาน)', 
+                        data: tCounts.length ? tCounts : [0], 
+                        backgroundColor: '#6366f1', 
+                        borderRadius: 6
+                    }]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
+                        x: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
+                    } 
+                }
+            });
+        }
 
         function toggleModal(m) { 
             document.getElementById(m).classList.toggle('opacity-0'); 
@@ -1298,83 +1534,6 @@ if($tech_list_res){
                 printUrl += `&tech=${encodeURIComponent(filterValue)}`;
             }
             window.open(printUrl, '_blank');
-        }
-
-        function renderCharts() {
-            let pending = 0, progress = 0, completed = 0;
-            let equipCountMap = {};
-
-            allRepairs.forEach(r => {
-                if(r.status === 'รอรับเรื่อง') pending++;
-                else if(r.status === 'กำลังดำเนินการ') progress++;
-                else if(r.status === 'ซ่อมเสร็จแล้ว') completed++;
-
-                if(r.equipment_type) {
-                    equipCountMap[r.equipment_type] = (equipCountMap[r.equipment_type] || 0) + 1;
-                }
-            });
-
-            let sortedEquip = Object.keys(equipCountMap).map(key => {
-                return { name: key, count: equipCountMap[key] };
-            }).sort((a, b) => b.count - a.count).slice(0, 7);
-
-            let eLabels = sortedEquip.map(e => e.name);
-            let eCounts = sortedEquip.map(e => e.count);
-
-            const ctxStatus = document.getElementById('mainStatusChart').getContext('2d');
-            new Chart(ctxStatus, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Pending', 'In Progress', 'Completed'],
-                    datasets: [{ 
-                        data: [pending, progress, completed], 
-                        backgroundColor: ['#f59e0b', '#38bdf8', '#8b5cf6'],
-                        borderWidth: 0, 
-                        hoverOffset: 6 
-                    }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: "'Plus Jakarta Sans', sans-serif", weight: '600' } } } 
-                    }, 
-                    cutout: '75%' 
-                }
-            });
-
-            const ctxEquip = document.getElementById('mainEquipChart').getContext('2d');
-            let gradient = ctxEquip.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)');
-            gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
-            
-            new Chart(ctxEquip, {
-                type: 'line', 
-                data: {
-                    labels: eLabels,
-                    datasets: [{ 
-                        label: 'Repairs', 
-                        data: eCounts, 
-                        borderColor: '#8b5cf6', 
-                        backgroundColor: gradient, 
-                        borderWidth: 3, 
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#8b5cf6',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } }, 
-                    scales: { 
-                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
-                        x: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
-                    } 
-                }
-            });
         }
 
         function togglePasswordVisibility(inputId, iconId) {
