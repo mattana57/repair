@@ -126,7 +126,11 @@ if($check_repairs_list && $check_repairs_list->num_rows > 0) {
     $reps = [];
     if($rep_res) {
         while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
-        $all_repairs_json = json_encode($reps, JSON_UNESCAPED_UNICODE);
+        // กันเหนียวข้อมูลพังตอนเอาไปทำกราฟ
+        $encoded = json_encode($reps, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+        if ($encoded !== false) {
+            $all_repairs_json = $encoded;
+        }
     }
 }
 
@@ -139,7 +143,7 @@ if($td_res) {
 }
 $tech_dept_map_json = json_encode($tech_dept_map, JSON_UNESCAPED_UNICODE);
 
-// ดึงรายชื่อเดือนทั้งหมดที่มีการแจ้งซ่อมสำหรับทำ Dropdown Filter
+// ดึงรายชื่อเดือนทั้งหมดที่มีในระบบ เพื่อเอาไปทำ Dropdown ในกราฟ
 $months_query = $conn->query("SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m') as m FROM repairs WHERE created_at IS NOT NULL ORDER BY m DESC");
 $month_options = [];
 if($months_query) { 
@@ -420,48 +424,26 @@ if($tech_list_res){
             
             <!-- Dashboard Section -->
             <div id="dash" class="section space-y-6 animate-fade-in no-print">
-                
-                <!-- 💡 แถบตัวกรองสถิติ (Filters) -->
-                <div class="modern-card p-5 mb-2 bg-white flex flex-col sm:flex-row gap-4 items-end">
-                    <div class="w-full sm:w-1/3">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"><i class="fas fa-calendar-alt text-indigo-500 mr-1"></i> Filter by Month</label>
-                        <select id="dashMonthFilter" onchange="updateDashboard()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium">
-                            <option value="all">ทุกเดือน (All Time)</option>
-                            <?php 
-                                foreach($month_options as $m) {
-                                    $m_display = date("F Y", strtotime($m."-01"));
-                                    echo "<option value='{$m}'>{$m_display}</option>";
-                                }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="w-full sm:w-1/3">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"><i class="fas fa-user-cog text-indigo-500 mr-1"></i> Filter by Technician</label>
-                        <select id="dashTechFilter" onchange="updateDashboard()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium">
-                            <option value="all">ทุกคน (All Technicians)</option>
-                            <?php 
-                                foreach($tech_options as $tech) {
-                                    echo "<option value=\"".htmlspecialchars($tech)."\">ช่าง: ".htmlspecialchars($tech)."</option>"; 
-                                }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="w-full sm:w-auto">
-                        <button onclick="updateDashboard()" class="w-full bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all">
-                            <i class="fas fa-filter mr-2"></i> Apply
-                        </button>
-                    </div>
-                </div>
 
-                <!-- 💡 กล่องสรุปตัวเลข (รอข้อมูลจาก JS) -->
+                <!-- 💡 กล่องสรุปตัวเลข (ดึงจากฐานข้อมูลตรงๆ ป้องกันตัวเลขเป็น 0) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <?php 
+                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
+                        $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
+                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE status='รอรับเรื่อง'");
+                        $cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
+                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE status='กำลังดำเนินการ'");
+                        $cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
+                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
+                        $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
+                    ?>
                     <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('all')">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
                             <span class="text-xs font-bold text-slate-400">TOTAL</span>
                         </div>
                         <div>
-                            <h3 id="sum-total" class="text-3xl font-extrabold text-slate-800">0</h3>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
                             <p class="text-sm font-medium text-slate-500 mt-1">Total Repairs</p>
                         </div>
                     </div>
@@ -472,7 +454,7 @@ if($tech_list_res){
                             <span class="text-xs font-bold text-slate-400">WAITING</span>
                         </div>
                         <div>
-                            <h3 id="sum-pending" class="text-3xl font-extrabold text-slate-800">0</h3>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
                             <p class="text-sm font-medium text-slate-500 mt-1">Pending</p>
                         </div>
                     </div>
@@ -483,7 +465,7 @@ if($tech_list_res){
                             <span class="text-xs font-bold text-slate-400">ACTIVE</span>
                         </div>
                         <div>
-                            <h3 id="sum-progress" class="text-3xl font-extrabold text-slate-800">0</h3>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
                             <p class="text-sm font-medium text-slate-500 mt-1">In Progress</p>
                         </div>
                     </div>
@@ -494,57 +476,83 @@ if($tech_list_res){
                             <span class="text-xs font-bold text-slate-400">DONE</span>
                         </div>
                         <div>
-                            <h3 id="sum-completed" class="text-3xl font-extrabold text-slate-800">0</h3>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
                             <p class="text-sm font-medium text-slate-500 mt-1">Completed</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- 💡 กราฟ 4 แบบ -->
+                <!-- 💡 กราฟ 4 แบบ พร้อมฟิลเตอร์ฝังในตัว -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- กราฟอุปกรณ์ -->
+                    
+                    <!-- 1. กราฟอุปกรณ์ -->
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="mb-4">
-                            <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
+                            </div>
+                            <select onchange="renderEquipChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
+                                <option value="all">ทุกเดือน (All Time)</option>
+                                <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
+                            </select>
                         </div>
                         <div class="flex-1 relative w-full h-[280px]">
                             <canvas id="mainEquipChart"></canvas>
                         </div>
                     </div>
                     
-                    <!-- กราฟสถานะ -->
+                    <!-- 2. กราฟสถานะ -->
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="mb-4">
-                            <h3 class="font-extrabold text-slate-800 text-lg">Work Status</h3>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Work Status</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
+                            </div>
+                            <select onchange="renderStatusChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
+                                <option value="all">ทุกเดือน (All Time)</option>
+                                <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
+                            </select>
                         </div>
                         <div class="flex-1 relative w-full h-[280px] flex justify-center items-center">
                             <canvas id="mainStatusChart"></canvas>
                         </div>
                     </div>
                     
-                    <!-- กราฟสถานที่ (ใหม่) -->
+                    <!-- 3. กราฟสถานที่ (ใหม่) -->
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="mb-4">
-                            <h3 class="font-extrabold text-slate-800 text-lg">Top Locations</h3>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Top Locations</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
+                            </div>
+                            <select onchange="renderLocChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
+                                <option value="all">ทุกเดือน (All Time)</option>
+                                <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
+                            </select>
                         </div>
                         <div class="flex-1 relative w-full h-[280px]">
                             <canvas id="mainLocChart"></canvas>
                         </div>
                     </div>
                     
-                    <!-- กราฟงานของช่าง (ใหม่) -->
+                    <!-- 4. กราฟงานของช่าง (ใหม่) -->
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="mb-4">
-                            <h3 class="font-extrabold text-slate-800 text-lg">Technician Workload</h3>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Technician Workload</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
+                            </div>
+                            <select onchange="renderTechChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
+                                <option value="all">ทุกเดือน (All Time)</option>
+                                <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
+                            </select>
                         </div>
                         <div class="flex-1 relative w-full h-[280px]">
                             <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
+
                 </div>
 
                 <div class="grid grid-cols-1 gap-6">
@@ -1287,8 +1295,9 @@ if($tech_list_res){
                 }
             }
 
-            if(id === 'dash') {
-                updateDashboard();
+            if(id === 'dash' && !window.chartsRendered) {
+                renderAllCharts();
+                window.chartsRendered = true;
             }
         }
 
@@ -1300,6 +1309,7 @@ if($tech_list_res){
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
+            window.chartsRendered = false;
             
             if(tab) { show(tab); } else { show('dash'); }
 
@@ -1322,81 +1332,51 @@ if($tech_list_res){
             }
         });
 
-        // 💡 ฟังก์ชันใหม่สำหรับวาดกราฟและอัปเดตตัวเลขตาม Filter
-        function updateDashboard() {
-            let selectedMonth = document.getElementById('dashMonthFilter') ? document.getElementById('dashMonthFilter').value : 'all';
-            let selectedTech = document.getElementById('dashTechFilter') ? document.getElementById('dashTechFilter').value : 'all';
+        // ==========================================
+        // 📈 ระบบวาดกราฟและฟิลเตอร์อิสระแบบใหม่
+        // ==========================================
 
-            // กรองข้อมูลจาก allRepairs
-            let filteredRepairs = allRepairs.filter(r => {
-                let matchMonth = true;
-                let matchTech = true;
+        function safeString(val) {
+            return val ? String(val) : '';
+        }
 
-                if (selectedMonth !== 'all' && r.created_at) {
-                    let rMonth = r.created_at.substring(0, 7);
-                    if (rMonth !== selectedMonth) matchMonth = false;
-                }
-                
-                if (selectedTech !== 'all') {
-                    let rTech = r.technician_name ? r.technician_name : 'Unassigned';
-                    if (rTech !== selectedTech) matchTech = false;
-                }
+        function getFilteredRepairs(month) {
+            if (month === 'all') return allRepairs;
+            return allRepairs.filter(r => safeString(r.created_at).startsWith(month));
+        }
 
-                return matchMonth && matchTech;
+        function renderAllCharts() {
+            renderEquipChart('all');
+            renderStatusChart('all');
+            renderLocChart('all');
+            renderTechChart('all');
+        }
+
+        // 1. กราฟอุปกรณ์ (Line Chart)
+        function renderEquipChart(month) {
+            let data = getFilteredRepairs(month);
+            let map = {};
+            data.forEach(r => {
+                if(r.equipment_type) map[r.equipment_type] = (map[r.equipment_type] || 0) + 1;
             });
-
-            // อัปเดตตัวเลข 4 กล่องบนสุด
-            let pending = 0, progress = 0, completed = 0;
-            let equipCountMap = {};
-            let locCountMap = {};
-            let techCountMap = {};
-
-            filteredRepairs.forEach(r => {
-                if(r.status === 'รอรับเรื่อง') pending++;
-                else if(r.status === 'กำลังดำเนินการ') progress++;
-                else if(r.status === 'ซ่อมเสร็จแล้ว') completed++;
-
-                // นับอุปกรณ์
-                if(r.equipment_type) {
-                    equipCountMap[r.equipment_type] = (equipCountMap[r.equipment_type] || 0) + 1;
-                }
-                
-                // นับสถานที่
-                if(r.location && r.location !== 'ไม่ระบุสถานที่') {
-                    locCountMap[r.location] = (locCountMap[r.location] || 0) + 1;
-                }
-                
-                // นับผลงานช่าง
-                let tName = r.technician_name ? r.technician_name : 'ยังไม่ระบุช่าง';
-                techCountMap[tName] = (techCountMap[tName] || 0) + 1;
-            });
-
-            document.getElementById('sum-total').innerText = filteredRepairs.length;
-            document.getElementById('sum-pending').innerText = pending;
-            document.getElementById('sum-progress').innerText = progress;
-            document.getElementById('sum-completed').innerText = completed;
-
-            // ----------------- กราฟที่ 1: Equipment -----------------
-            let sortedEquip = Object.keys(equipCountMap).map(key => { return { name: key, count: equipCountMap[key] }; }).sort((a, b) => b.count - a.count).slice(0, 7);
-            let eLabels = sortedEquip.map(e => e.name);
-            let eCounts = sortedEquip.map(e => e.count);
-
-            const ctxEquip = document.getElementById('mainEquipChart').getContext('2d');
+            let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 7);
+            
+            const ctx = document.getElementById('mainEquipChart').getContext('2d');
             if(chartEquipInstance) chartEquipInstance.destroy();
             
-            let gradientE = ctxEquip.createLinearGradient(0, 0, 0, 400);
-            gradientE.addColorStop(0, 'rgba(139, 92, 246, 0.5)');
-            gradientE.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)');
+            gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
             
-            chartEquipInstance = new Chart(ctxEquip, {
+            chartEquipInstance = new Chart(ctx, {
                 type: 'line', 
                 data: {
-                    labels: eLabels.length ? eLabels : ['ไม่มีข้อมูล'],
+                    labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{ 
                         label: 'จำนวน (ครั้ง)', 
-                        data: eCounts.length ? eCounts : [0], 
+                        data: sorted.length ? sorted.map(e => e.count) : [0], 
                         borderColor: '#8b5cf6', 
-                        backgroundColor: gradientE, 
+                        backgroundColor: gradient, 
                         borderWidth: 3, 
                         pointBackgroundColor: '#ffffff',
                         pointBorderColor: '#8b5cf6',
@@ -1415,18 +1395,30 @@ if($tech_list_res){
                     } 
                 }
             });
+        }
 
-            // ----------------- กราฟที่ 2: Status -----------------
-            const ctxStatus = document.getElementById('mainStatusChart').getContext('2d');
+        // 2. กราฟสถานะ (Doughnut Chart)
+        function renderStatusChart(month) {
+            let data = getFilteredRepairs(month);
+            let pending = 0, progress = 0, completed = 0;
+            data.forEach(r => {
+                if(r.status === 'รอรับเรื่อง') pending++;
+                else if(r.status === 'กำลังดำเนินการ') progress++;
+                else if(r.status === 'ซ่อมเสร็จแล้ว') completed++;
+            });
+
+            const ctx = document.getElementById('mainStatusChart').getContext('2d');
             if(chartStatusInstance) chartStatusInstance.destroy();
             
-            chartStatusInstance = new Chart(ctxStatus, {
+            let isEmpty = (pending+progress+completed === 0);
+            
+            chartStatusInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['รอดำเนินการ', 'กำลังแก้ไข', 'เสร็จสิ้น'],
                     datasets: [{ 
-                        data: (pending+progress+completed === 0) ? [1] : [pending, progress, completed], 
-                        backgroundColor: (pending+progress+completed === 0) ? ['#f1f5f9'] : ['#f59e0b', '#38bdf8', '#10b981'],
+                        data: isEmpty ? [1] : [pending, progress, completed], 
+                        backgroundColor: isEmpty ? ['#f1f5f9'] : ['#f59e0b', '#38bdf8', '#10b981'],
                         borderWidth: 0, 
                         hoverOffset: 4 
                     }]
@@ -1435,57 +1427,68 @@ if($tech_list_res){
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { 
                         legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif", weight: '600' } } },
-                        tooltip: { callbacks: { label: function(context) { return (pending+progress+completed === 0) ? ' ไม่มีข้อมูล' : ' ' + context.formattedValue + ' งาน'; } } }
+                        tooltip: { callbacks: { label: function(context) { return isEmpty ? ' ไม่มีข้อมูล' : ' ' + context.formattedValue + ' งาน'; } } }
                     }, 
                     cutout: '75%' 
                 }
             });
+        }
 
-            // ----------------- กราฟที่ 3: Top Locations (ใหม่) -----------------
-            let sortedLoc = Object.keys(locCountMap).map(key => { return { name: key, count: locCountMap[key] }; }).sort((a, b) => b.count - a.count).slice(0, 5);
-            let lLabels = sortedLoc.map(l => l.name);
-            let lCounts = sortedLoc.map(l => l.count);
+        // 3. กราฟสถานที่ (Bar Chart - Horizontal)
+        function renderLocChart(month) {
+            let data = getFilteredRepairs(month);
+            let map = {};
+            data.forEach(r => {
+                if(r.location && r.location !== 'ไม่ระบุสถานที่') map[r.location] = (map[r.location] || 0) + 1;
+            });
+            let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            const ctxLoc = document.getElementById('mainLocChart').getContext('2d');
+            const ctx = document.getElementById('mainLocChart').getContext('2d');
             if(chartLocInstance) chartLocInstance.destroy();
             
-            chartLocInstance = new Chart(ctxLoc, {
+            chartLocInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: lLabels.length ? lLabels : ['ไม่มีข้อมูล'],
+                    labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{ 
                         label: 'แจ้งซ่อม (ครั้ง)', 
-                        data: lCounts.length ? lCounts : [0], 
+                        data: sorted.length ? sorted.map(e => e.count) : [0], 
                         backgroundColor: '#f43f5e', 
                         borderRadius: 6
                     }]
                 },
                 options: { 
-                    indexAxis: 'y', // แนวนอน
+                    indexAxis: 'y',
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
-                        x: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
+                        x: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
                         y: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
                     } 
                 }
             });
+        }
 
-            // ----------------- กราฟที่ 4: Technician Workload (ใหม่) -----------------
-            let sortedTech = Object.keys(techCountMap).map(key => { return { name: key, count: techCountMap[key] }; }).sort((a, b) => b.count - a.count).slice(0, 5);
-            let tLabels = sortedTech.map(t => t.name);
-            let tCounts = sortedTech.map(t => t.count);
+        // 4. กราฟช่าง (Bar Chart - Vertical)
+        function renderTechChart(month) {
+            let data = getFilteredRepairs(month);
+            let map = {};
+            data.forEach(r => {
+                let tName = r.technician_name ? r.technician_name : 'ไม่ระบุช่าง';
+                map[tName] = (map[tName] || 0) + 1;
+            });
+            let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            const ctxTech = document.getElementById('mainTechChart').getContext('2d');
+            const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
             
-            chartTechInstance = new Chart(ctxTech, {
+            chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: tLabels.length ? tLabels : ['ไม่มีข้อมูล'],
+                    labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{ 
                         label: 'รับผิดชอบ (งาน)', 
-                        data: tCounts.length ? tCounts : [0], 
+                        data: sorted.length ? sorted.map(e => e.count) : [0], 
                         backgroundColor: '#6366f1', 
                         borderRadius: 6
                     }]
@@ -1494,12 +1497,14 @@ if($tech_list_res){
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
-                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
                         x: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
                     } 
                 }
             });
         }
+
+        // ==========================================
 
         function toggleModal(m) { 
             document.getElementById(m).classList.toggle('opacity-0'); 
