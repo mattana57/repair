@@ -22,6 +22,7 @@ function thaiNum($num) {
     );
 }
 
+// สร้างตารางและปรับปรุงโครงสร้าง (Auto-Fix DB)
 $conn->query("CREATE TABLE IF NOT EXISTS assets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     asset_code VARCHAR(50) NOT NULL,
@@ -117,14 +118,6 @@ if($td_res) {
 }
 $tech_dept_map_json = json_encode($tech_dept_map);
 
-$has_image_col = false;
-if($check_repairs_list && $check_repairs_list->num_rows > 0) {
-    $res_img = $conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'");
-    if($res_img && $res_img->num_rows > 0) {
-        $has_image_col = true;
-    }
-}
-
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
     $conn->query("DELETE FROM assets WHERE id = $del_id");
@@ -155,7 +148,6 @@ if (isset($_GET['delete_tech'])) {
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
 
-// 💡 เพิ่มระบบยกเลิกผูกบัญชี (แอดมินเตะช่างออกจาก LINE)
 if (isset($_GET['unlink_tech'])) {
     $unlink_id = intval($_GET['unlink_tech']);
     $new_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
@@ -185,17 +177,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         $avatar_url = NULL;
         $upload_dir = 'uploads/';
         if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
+            @mkdir($upload_dir, 0777, true);
         }
 
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
             $file_extension = strtolower(pathinfo($_FILES["avatar"]["name"], PATHINFO_EXTENSION));
-            $allowed_extensions = array("jpg", "jpeg", "png", "webp");
+            $allowed_extensions = array("jpg", "jpeg", "png", "webp", "gif");
             
             if (in_array($file_extension, $allowed_extensions)) {
                 $file_name = time() . '_' . uniqid() . '.' . $file_extension;
                 $target_path = $upload_dir . $file_name;
-                
                 if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_path)) {
                     $avatar_url = $target_path;
                 }
@@ -206,7 +197,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
             $stmt = $conn->prepare("INSERT INTO technicians (full_name, phone, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, 'รอผูกบัญชี')");
             $stmt->bind_param("sssss", $full_name, $phone, $department, $avatar_url, $secret_code);
-            $msg = "เพิ่มข้อมูลช่างสำเร็จ\\nรหัสผูกบัญชีไลน์คือ: " . $secret_code;
+            $msg = "เพิ่มข้อมูลช่างสำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
         } else {
             if ($avatar_url) {
                 $stmt = $conn->prepare("UPDATE technicians SET full_name=?, phone=?, department=?, avatar_url=? WHERE id=?");
@@ -219,7 +210,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
         
         if ($stmt->execute()) {
-            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: '$msg', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg\", confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+        } else {
+            $err = $stmt->error;
+            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถบันทึกได้: $err', confirmButtonColor: '#ef4444' }); });</script>";
         }
         
     } else {
@@ -246,7 +240,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
         
         if ($stmt->execute()) {
-            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: '$msg', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
         }
     }
 }
@@ -724,7 +718,6 @@ if($tech_list_res){
                                                 ? "<span class='px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700'><i class='fas fa-check-circle mr-1'></i> ผูกบัญชีแล้ว</span>" 
                                                 : "<span class='px-3 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 tracking-widest border border-amber-200'>รหัส: " . ($t['secret_code'] ? $t['secret_code'] : 'N/A') . "</span>";
 
-                                            // 💡 ปุ่มยกเลิกการผูกบัญชี (จะแสดงเฉพาะคนที่ผูกบัญชีแล้วเท่านั้น)
                                             $unlinkBtn = ($t['approval_status'] == 'อนุมัติแล้ว') 
                                                 ? "<button onclick=\"confirmUnlink({$t['id']})\" class='w-8 h-8 rounded-lg bg-orange-50 text-orange-500 hover:text-white hover:bg-orange-500 transition-all flex items-center justify-center' title='ยกเลิกผูกบัญชี LINE'><i class='fas fa-unlink'></i></button>" 
                                                 : "";
@@ -795,7 +788,7 @@ if($tech_list_res){
                 ];
 
                 if(empty($departments_data)) {
-                    echo "<div class='modern-card p-12 text-center flex flex-col items-center justify-center'><i class='fas fa-user-slash text-4xl text-slate-300 mb-4'></i><p class='text-slate-500 font-bold'>ยังไม่มีช่างในระบบ หรือยังไม่มีช่างที่ได้รับการอนุมัติ</p></div>";
+                    echo "<div class='modern-card p-12 text-center flex flex-col items-center justify-center'><i class='fas fa-user-slash text-4xl text-slate-300 mb-4'></i><p class='text-slate-500 font-bold'>ยังไม่มีช่างในระบบ หรือยังไม่มีช่างที่ผูกบัญชีสำเร็จ</p></div>";
                 }
 
                 foreach ($departments_data as $dept_name => $techs):
@@ -811,7 +804,7 @@ if($tech_list_res){
                         <div class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs hover:border-indigo-300 hover:shadow-md transition-all flex flex-col">
                             <div class="bg-slate-100 aspect-[4/5] overflow-hidden relative">
                                 <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
-                                     onerror="this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
+                                     onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
                                      alt="<?php echo htmlspecialchars($tech['th']); ?>" 
                                      class="w-full h-full object-cover">
                             </div>
@@ -981,6 +974,8 @@ if($tech_list_res){
         </div>
     </main>
 
+    <!-- ================== MODALS ================== -->
+
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
@@ -1128,6 +1123,7 @@ if($tech_list_res){
         </div>
     </div>
 
+    <!-- ================== JAVASCRIPT ================== -->
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
         const techDeptMap = <?php echo $tech_dept_map_json; ?>;
