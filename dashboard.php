@@ -14,6 +14,9 @@ if (strtolower($_SESSION['role']) === 'executive') {
 
 include 'db_connect.php';
 
+// บังคับให้ฐานข้อมูลคุยกันเป็นภาษาไทย (UTF-8) 100% ป้องกันอักขระเพี้ยนหรือล้น
+$conn->set_charset("utf8mb4");
+
 function thaiNum($num) {
     return str_replace(
         array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
@@ -37,15 +40,15 @@ $conn->query("CREATE TABLE IF NOT EXISTS assets (
 
 $conn->query("CREATE TABLE IF NOT EXISTS technicians (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    full_name VARCHAR(100) NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
-// อัปเดตตารางช่าง (Technicians) ให้มีคอลัมน์ครบถ้วน
+// เพิ่มคอลัมน์ใหม่ๆ ให้ตารางช่าง
 $tech_cols = [
     'line_user_id' => 'VARCHAR(100) NULL',
-    'department' => 'VARCHAR(100) NULL',
-    'phone' => 'VARCHAR(50) NULL',
+    'department' => 'VARCHAR(255) NULL',
+    'phone' => 'VARCHAR(100) NULL',
     'avatar_url' => 'VARCHAR(255) NULL',
     'secret_code' => 'VARCHAR(10) NULL',
     'approval_status' => "VARCHAR(50) DEFAULT 'รอผูกบัญชี'",
@@ -58,7 +61,12 @@ foreach ($tech_cols as $col => $def) {
     }
 }
 
-// อัปเดตรหัสลับให้ช่างเก่าที่ค้างอยู่ในระบบ (ถ้ามี)
+// 💡 แก้ปัญหา Data Truncated: บังคับขยายขนาดคอลัมน์เดิมให้รองรับข้อความยาวๆ และภาษาไทย
+$conn->query("ALTER TABLE technicians MODIFY COLUMN department VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+$conn->query("ALTER TABLE technicians MODIFY COLUMN full_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL");
+$conn->query("ALTER TABLE technicians MODIFY COLUMN phone VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+
+// อัปเดตรหัสลับให้ช่างเก่าที่ค้างอยู่ในระบบ
 $res_fix = $conn->query("SELECT id FROM technicians WHERE approval_status IN ('รออนุมัติ', 'รอผูกบัญชี') AND (secret_code IS NULL OR secret_code = '')");
 if ($res_fix && $res_fix->num_rows > 0) {
     while($rf = $res_fix->fetch_assoc()) {
@@ -74,12 +82,12 @@ $conn->query("CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
-// อัปเดตตารางแอดมิน/ผู้ใช้งาน (Users) ให้มีคอลัมน์ครบถ้วน
+// เพิ่มคอลัมน์ให้ตารางผู้ใช้งาน
 $users_cols = [
     'password' => 'VARCHAR(255) NULL',
-    'full_name' => 'VARCHAR(100) NULL',
-    'phone' => 'VARCHAR(20) NULL',
-    'department' => 'VARCHAR(100) NULL'
+    'full_name' => 'VARCHAR(255) NULL',
+    'phone' => 'VARCHAR(100) NULL',
+    'department' => 'VARCHAR(255) NULL'
 ];
 foreach ($users_cols as $col => $def) {
     $chk = $conn->query("SHOW COLUMNS FROM users LIKE '$col'");
@@ -87,6 +95,10 @@ foreach ($users_cols as $col => $def) {
         $conn->query("ALTER TABLE users ADD COLUMN $col $def");
     }
 }
+
+// 💡 แก้ปัญหา Data Truncated ให้ตาราง User ด้วย
+$conn->query("ALTER TABLE users MODIFY COLUMN department VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+$conn->query("ALTER TABLE users MODIFY COLUMN full_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 
 $check_repairs_table = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs_table && $check_repairs_table->num_rows > 0) {
@@ -178,7 +190,6 @@ if (isset($_GET['delete_user'])) {
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
 
-// 🛠️ ระบบบันทึกข้อมูลบุคลากร (กัน Error ไว้ทุกจุด)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $user_id = $_POST['user_id'];
     $role = $_POST['role']; 
@@ -1032,8 +1043,6 @@ if($tech_list_res){
 
         </div>
     </main>
-
-    <!-- ================== MODALS ================== -->
 
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
