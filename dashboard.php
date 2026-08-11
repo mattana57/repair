@@ -38,7 +38,8 @@ $conn->query("CREATE TABLE IF NOT EXISTS technicians (
     department VARCHAR(100) NULL,
     phone VARCHAR(50) NULL,
     avatar_url VARCHAR(255) NULL,
-    approval_status VARCHAR(50) DEFAULT 'รออนุมัติ',
+    secret_code VARCHAR(10) NULL,
+    approval_status VARCHAR(50) DEFAULT 'รอผูกบัญชี',
     status VARCHAR(50) DEFAULT 'ว่าง',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
@@ -49,7 +50,20 @@ if($check_line_id && $check_line_id->num_rows == 0) {
 }
 $check_app_status = $conn->query("SHOW COLUMNS FROM technicians LIKE 'approval_status'");
 if($check_app_status && $check_app_status->num_rows == 0) {
-    $conn->query("ALTER TABLE technicians ADD COLUMN approval_status VARCHAR(50) DEFAULT 'รออนุมัติ' AFTER avatar_url");
+    $conn->query("ALTER TABLE technicians ADD COLUMN approval_status VARCHAR(50) DEFAULT 'รอผูกบัญชี' AFTER avatar_url");
+}
+$check_secret = $conn->query("SHOW COLUMNS FROM technicians LIKE 'secret_code'");
+if($check_secret && $check_secret->num_rows == 0) {
+    $conn->query("ALTER TABLE technicians ADD COLUMN secret_code VARCHAR(10) NULL AFTER avatar_url");
+}
+
+// อัปเดตรหัสให้ช่างเก่าที่ค้างอยู่ (ถ้ามี)
+$res_fix = $conn->query("SELECT id FROM technicians WHERE approval_status IN ('รออนุมัติ', 'รอผูกบัญชี') AND (secret_code IS NULL OR secret_code = '')");
+if ($res_fix && $res_fix->num_rows > 0) {
+    while($rf = $res_fix->fetch_assoc()) {
+        $code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
+        $conn->query("UPDATE technicians SET secret_code = '$code', approval_status = 'รอผูกบัญชี' WHERE id = " . $rf['id']);
+    }
 }
 
 $conn->query("CREATE TABLE IF NOT EXISTS users (
@@ -104,14 +118,6 @@ if($td_res) {
 }
 $tech_dept_map_json = json_encode($tech_dept_map);
 
-$has_image_col = false;
-if($check_repairs_list && $check_repairs_list->num_rows > 0) {
-    $res_img = $conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'");
-    if($res_img && $res_img->num_rows > 0) {
-        $has_image_col = true;
-    }
-}
-
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
     $conn->query("DELETE FROM assets WHERE id = $del_id");
@@ -141,11 +147,6 @@ if (isset($_GET['delete_tech'])) {
     $conn->query("DELETE FROM technicians WHERE id = $del_id");
     echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
 }
-if (isset($_GET['approve_tech'])) {
-    $app_id = intval($_GET['approve_tech']);
-    $conn->query("UPDATE technicians SET approval_status = 'อนุมัติแล้ว' WHERE id = $app_id");
-    echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
-}
 
 if (isset($_GET['delete_user'])) {
     $del_id = intval($_GET['delete_user']);
@@ -166,11 +167,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             $department = $_POST['department_custom'];
         }
 
-        // ระบบอัปโหลดรูปภาพช่าง
         $avatar_url = NULL;
         $upload_dir = 'uploads/';
         if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true); // สร้างโฟลเดอร์ถ้ายังไม่มี
+            mkdir($upload_dir, 0777, true);
         }
 
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
@@ -188,16 +188,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
         
         if (empty($user_id)) {
-            $stmt = $conn->prepare("INSERT INTO technicians (full_name, phone, department, avatar_url, approval_status) VALUES (?, ?, ?, ?, 'อนุมัติแล้ว')");
-            $stmt->bind_param("ssss", $full_name, $phone, $department, $avatar_url);
-            $msg = 'เพิ่มข้อมูลช่างเทคนิคสำเร็จ!';
+            $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT); // สร้างรหัส 4 หลัก
+            $stmt = $conn->prepare("INSERT INTO technicians (full_name, phone, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, 'รอผูกบัญชี')");
+            $stmt->bind_param("sssss", $full_name, $phone, $department, $avatar_url, $secret_code);
+            $msg = "เพิ่มข้อมูลช่างสำเร็จ\\nรหัสผูกบัญชีไลน์คือ: " . $secret_code;
         } else {
             if ($avatar_url) {
-                // ถ้ามีการอัปโหลดรูปใหม่ ให้บันทึกทับด้วย
                 $stmt = $conn->prepare("UPDATE technicians SET full_name=?, phone=?, department=?, avatar_url=? WHERE id=?");
                 $stmt->bind_param("ssssi", $full_name, $phone, $department, $avatar_url, $user_id);
             } else {
-                // ถ้าไม่ได้อัปโหลดรูปใหม่ ใช้รูปเดิม
                 $stmt = $conn->prepare("UPDATE technicians SET full_name=?, phone=?, department=? WHERE id=?");
                 $stmt->bind_param("sssi", $full_name, $phone, $department, $user_id);
             }
@@ -205,7 +204,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
         
         if ($stmt->execute()) {
-            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: '$msg', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: '$msg', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
         }
         
     } else {
@@ -686,7 +685,7 @@ if($tech_list_res){
                                         <th class="px-6 py-4">Name</th>
                                         <th class="px-6 py-4">Contact</th> 
                                         <th class="px-6 py-4">Department</th>
-                                        <th class="px-6 py-4 text-center">Status</th>
+                                        <th class="px-6 py-4 text-center">Status / Code</th>
                                         <th class="px-6 py-4 text-center">Jobs</th>
                                         <th class="px-6 py-4 text-right">Action</th>
                                     </tr>
@@ -706,8 +705,9 @@ if($tech_list_res){
                                                 if($job_res) $total_jobs = $job_res->fetch_assoc()['c'];
                                             }
 
-                                            $statusBadge = ($t['approval_status'] == 'อนุมัติแล้ว') ? "<span class='px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700'>อนุมัติแล้ว</span>" : "<span class='px-3 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700'>รออนุมัติ</span>";
-                                            $approveBtn = ($t['approval_status'] == 'รออนุมัติ') ? "<button onclick=\"window.location.href='dashboard.php?approve_tech={$t['id']}'\" class='w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:text-white hover:bg-emerald-500 transition-all flex items-center justify-center' title='อนุมัติสิทธิ์ช่าง'><i class='fas fa-check'></i></button>" : "";
+                                            $statusBadge = ($t['approval_status'] == 'อนุมัติแล้ว') 
+                                                ? "<span class='px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700'><i class='fas fa-check-circle mr-1'></i> ผูกบัญชีแล้ว</span>" 
+                                                : "<span class='px-3 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 tracking-widest border border-amber-200'>รหัส: " . ($t['secret_code'] ? $t['secret_code'] : 'N/A') . "</span>";
 
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 text-slate-800 font-bold'>
@@ -722,7 +722,6 @@ if($tech_list_res){
                                                 <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        {$approveBtn}
                                                         <button onclick=\"viewHistory('{$js_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
                                                         <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_phone', '$js_dept')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
@@ -981,7 +980,6 @@ if($tech_list_res){
         </div>
     </div>
 
-    <!-- ฟอร์มเพิ่ม/แก้ไขช่างและแอดมิน (เพิ่มระบบอัปโหลดรูป) -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
@@ -989,7 +987,6 @@ if($tech_list_res){
                 <p class="text-lg font-extrabold text-slate-800" id="techAdminModalTitle">Add Member</p>
                 <button onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            <!-- เพิ่ม enctype multipart เพื่อรองรับการอัปโหลดไฟล์ -->
             <form action="" method="POST" class="p-6" enctype="multipart/form-data">
                 <input type="hidden" name="save_user" value="1">
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
@@ -1022,7 +1019,6 @@ if($tech_list_res){
                         </select>
                     </div>
 
-                    <!-- ช่องอัปโหลดรูปภาพช่าง -->
                     <div id="avatarDiv" class="hidden">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Profile Picture (รูปช่าง)</label>
                         <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">

@@ -8,7 +8,6 @@ function extract_repair_info($text) {
     $category = "ไม่ระบุปัญหา";
     $location = "ไม่ระบุสถานที่";
     
-    // 💡 อัปเดต: เพิ่มคีย์เวิร์ดสารพัดสัตว์และสิ่งของทั่วไป
     $keywords = [
         'แอร์', 'คอม', 'เครื่องปริ้น', 'printer', 'projector', 'เครื่องฉาย', 
         'จอ', 'ทีวี', 'ไมค์', 'หลอดไฟ', 'ไฟดับ', 'สายไฟ', 'ปลั๊ก', 'ไฟ', 'หลอด', 'พัดลม', 'เน็ต', 
@@ -46,38 +45,36 @@ if (!is_null($events['events'])) {
             $text = trim($event['message']['text']);
             $message_id = $event['message']['id']; 
 
-            if (mb_strpos($text, 'ลงทะเบียนช่าง') === 0) {
-                $raw_data = trim(mb_substr($text, 13)); 
+            if (mb_strpos($text, 'ผูกบัญชี') === 0) {
+                $code = trim(str_replace('ผูกบัญชี', '', $text));
                 
-                preg_match('/[0-9]{9,10}$/', $raw_data, $phone_matches);
-                $phone = !empty($phone_matches[0]) ? $phone_matches[0] : '';
-                $full_name = trim(str_replace($phone, '', $raw_data));
-
-                if(empty($full_name) || empty($phone)) {
-                    send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รูปแบบไม่ถูกต้องค่ะ\nกรุณาพิมพ์: ลงทะเบียนช่าง [ชื่อ-นามสกุล] [เบอร์โทร]"], $channelAccessToken);
-                } else {
-                    $stmt_check = $conn->prepare("SELECT approval_status FROM technicians WHERE line_user_id = ?");
-                    $stmt_check->bind_param("s", $userId);
+                if (preg_match('/^[0-9]{4}$/', $code)) {
+                    $stmt_check = $conn->prepare("SELECT id, full_name, department FROM technicians WHERE secret_code = ? AND approval_status = 'รอผูกบัญชี'");
+                    $stmt_check->bind_param("s", $code);
                     $stmt_check->execute();
                     $res = $stmt_check->get_result()->fetch_assoc();
 
-                    if($res) {
-                        if($res['approval_status'] == 'รออนุมัติ') {
-                            $msg = "⏳ ข้อมูลของคุณอยู่ในระบบแล้ว กรุณารอแอดมินตรวจสอบและอนุมัติค่ะ";
+                    if ($res) {
+                        $tech_id = $res['id'];
+                        $tech_name = $res['full_name'];
+                        $tech_dept = !empty($res['department']) ? $res['department'] : 'ฝ่ายงานทั่วไป';
+
+                        $stmt_update = $conn->prepare("UPDATE technicians SET line_user_id = ?, approval_status = 'อนุมัติแล้ว', secret_code = NULL WHERE id = ?");
+                        $stmt_update->bind_param("si", $userId, $tech_id);
+                        
+                        if ($stmt_update->execute()) {
+                            $msg = "✅ ยืนยันตัวตนสำเร็จ\n\nยินดีต้อนรับ ช่าง$tech_name\n($tech_dept)\n\nคุณสามารถเริ่มรับงานซ่อมได้เลยค่ะ 🛠️";
                         } else {
-                            $msg = "✅ บัญชีนี้ได้รับการอนุมัติเรียบร้อยแล้ว คุณสามารถรับงานได้เลยค่ะ";
+                            $msg = "🚨 เกิดข้อผิดพลาดในการบันทึกข้อมูล";
                         }
                     } else {
-                        $stmt_insert = $conn->prepare("INSERT INTO technicians (line_user_id, full_name, phone) VALUES (?, ?, ?)");
-                        $stmt_insert->bind_param("sss", $userId, $full_name, $phone);
-                        if($stmt_insert->execute()) {
-                            $msg = "📝 ส่งข้อมูลลงทะเบียนเรียบร้อย!\nชื่อ: $full_name\nเบอร์: $phone\n\nกรุณารอแอดมินตรวจสอบและอนุมัติในระบบสักครู่นะคะ ⏳";
-                        } else {
-                            $msg = "🚨 เกิดข้อผิดพลาดในการบันทึกข้อมูล: " . $stmt_insert->error;
-                        }
+                        $msg = "⚠️ รหัสลับไม่ถูกต้อง หรือรหัสนี้ถูกใช้งานไปแล้วค่ะ\nกรุณาติดต่อแอดมินเพื่อขอรหัสใหม่นะคะ";
                     }
-                    send_reply($replyToken, ['type' => 'text', 'text' => $msg], $channelAccessToken);
+                } else {
+                    $msg = "⚠️ รูปแบบไม่ถูกต้อง\nกรุณาพิมพ์: ผูกบัญชี [รหัส 4 หลัก]\nเช่น: ผูกบัญชี 1234";
                 }
+                
+                send_reply($replyToken, ['type' => 'text', 'text' => $msg], $channelAccessToken);
                 continue; 
             }
 
@@ -100,10 +97,8 @@ if (!is_null($events['events'])) {
 
             list($category, $location) = extract_repair_info($text);
 
-            // 💡 อัปเดตตรรกะใหม่: ถ้าเจอชื่อปัญหา "หรือ" เจอสถานที่อย่างใดอย่างหนึ่ง ให้ถือเป็นการแจ้งซ่อมใหม่ทันที!
             if ($category !== "ไม่ระบุปัญหา" || $location !== "ไม่ระบุสถานที่") {
                 
-                // ถ้าระบุสถานที่มา แต่หาคีย์เวิร์ดปัญหาไม่เจอ ให้จัดเป็นหมวดหมู่อื่นๆ
                 if ($category === "ไม่ระบุปัญหา") {
                     $category = "อื่น ๆ (รอตรวจสอบ)";
                 }
@@ -170,7 +165,6 @@ if (!is_null($events['events'])) {
                 }
             }
             else {
-                // เข้าลูปบันทึกรีวิว เฉพาะตอนที่หาทั้ง "ชื่อปัญหา" และ "สถานที่" ไม่เจอจริงๆ เท่านั้น
                 $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
                 
                 if ($stmt_check_review) {
@@ -216,7 +210,7 @@ if (!is_null($events['events'])) {
                                 $tech_phone = !empty($tech_result['phone']) ? $tech_result['phone'] : "-"; 
                                 $tech_dept = isset($tech_result['department']) && !empty($tech_result['department']) ? $tech_result['department'] : "ทีมช่าง";
                             } else {
-                                send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: คุณยังไม่ได้รับการอนุมัติสิทธิ์ช่างค่ะ"], $channelAccessToken);
+                                send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: คุณยังไม่ได้ผูกบัญชีช่างเทคนิคค่ะ\nกรุณาพิมพ์ 'ผูกบัญชี [รหัส 4 หลัก]' เพื่อใช้งานนะคะ"], $channelAccessToken);
                                 continue;
                             }
 
