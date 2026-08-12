@@ -43,11 +43,12 @@ function splitThaiEngName($fullName, $engName) {
 // ฟังก์ชันจัดฟอร์แมตเบอร์โทร (เพิ่มลูกน้ำต่อท้ายอัตโนมัติ)
 function formatPhoneHtml($phone_str) {
     if (empty(trim((string)$phone_str)) || $phone_str == '-') return '-';
+    // แยกด้วยลูกน้ำ ลบช่องว่าง และตัดอันที่ว่างทิ้ง
     $phones = array_values(array_filter(array_map('trim', explode(',', $phone_str))));
     $html = '<div class="space-y-1">';
     $count = count($phones);
     foreach($phones as $index => $p) {
-        $comma = ($index < $count - 1) ? ',' : '';
+        $comma = ($index < $count - 1) ? ',' : ''; // ถ้าไม่ใช่อันสุดท้าย ให้เติมลูกน้ำ
         $html .= "<div class='whitespace-nowrap'>".htmlspecialchars($p).$comma."</div>";
     }
     $html .= '</div>';
@@ -763,7 +764,7 @@ if($tech_list_res){
                         <p class="text-sm font-medium text-slate-500 mt-0.5">Manage administrators and technicians</p>
                     </div>
                     <div class="flex w-full md:w-auto gap-3">
-                        <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-all"><i class="fas fa-shield-alt mr-2 text-slate-400"></i> Add Admin</button>
+                        <!-- ✨ ลบปุ่ม Add Admin ออกเรียบร้อยแล้ว ✨ -->
                         <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
                     </div>
                 </div>
