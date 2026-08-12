@@ -40,7 +40,7 @@ function splitThaiEngName($fullName, $engName) {
     return array($th, $en);
 }
 
-// ✨ ฟังก์ชันกำหนดตำแหน่งงานอัตโนมัติ ✨
+// ฟังก์ชันกำหนดตำแหน่งงานอัตโนมัติ
 function getAutoPosition($th_name) {
     $map = [
         'สมพร วงษ์จำปา' => 'นักวิชาการคอมพิวเตอร์',
@@ -105,7 +105,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS technicians (
 $tech_cols = [
     'line_user_id' => 'VARCHAR(100) NULL',
     'department' => 'VARCHAR(255) NULL',
-    'position' => 'VARCHAR(255) NULL', // เพิ่มคอลัมน์ตำแหน่ง
+    'position' => 'VARCHAR(255) NULL',
     'phone' => 'VARCHAR(100) NULL',
     'avatar_url' => 'VARCHAR(255) NULL',
     'secret_code' => 'VARCHAR(10) NULL',
@@ -144,7 +144,7 @@ $users_cols = [
     'password' => 'VARCHAR(255) NULL',
     'full_name' => 'VARCHAR(255) NULL',
     'english_name' => 'VARCHAR(255) NULL',
-    'position' => 'VARCHAR(255) NULL', // เพิ่มคอลัมน์ตำแหน่ง
+    'position' => 'VARCHAR(255) NULL',
     'phone' => 'VARCHAR(100) NULL',
     'department' => 'VARCHAR(255) NULL'
 ];
@@ -316,6 +316,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ฐานข้อมูลมีปัญหา', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
             }
         } else {
+            // ถ้าระบุ position ให้ทำการอัปเดต ถ้าไม่ระบุให้ดึงจากฐานข้อมูลเดิมไปอัปเดต (แต่เพื่อความชัวร์จะอัปเดต position ด้วยเสมอ)
             if ($avatar_url) {
                 $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=?, avatar_url=? WHERE id=?");
                 if ($stmt) $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $department, $avatar_url, $user_id);
@@ -797,6 +798,7 @@ if($tech_list_res){
                         <p class="text-sm font-medium text-slate-500 mt-0.5">Manage administrators and technicians</p>
                     </div>
                     <div class="flex w-full md:w-auto gap-3">
+                        <!-- ✨ ลบปุ่ม Add Admin ออกเรียบร้อยแล้ว ✨ -->
                         <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
                     </div>
                 </div>
@@ -830,15 +832,11 @@ if($tech_list_res){
                                             list($th_name, $en_name) = splitThaiEngName($u['full_name'], $u['english_name']);
                                             $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
-                                            
-                                            $pos = !empty($u['position']) ? $u['position'] : getAutoPosition($th_name);
-                                            $js_pos = htmlspecialchars($pos, ENT_QUOTES);
 
                                             $js_uid = $u['id']; $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES); $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
                                             
                                             $th_name_html = !empty($th_name) ? $th_name : '-';
-                                            $pos_html = !empty($pos) ? "<div class='text-indigo-600 font-semibold text-[11px] mt-0.5'>{$pos}</div>" : "";
-                                            $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[10px] mt-0.5'>{$en_name}</div>" : "";
+                                            $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
 
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
@@ -847,7 +845,6 @@ if($tech_list_res){
                                                         <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas {$icon} text-xs'></i></div>
                                                         <div>
                                                             <div class='text-slate-800 font-bold'>{$th_name_html}</div>
-                                                            {$pos_html}
                                                             {$en_name_html}
                                                         </div>
                                                     </div>
@@ -857,7 +854,7 @@ if($tech_list_res){
                                                 <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
@@ -939,8 +936,7 @@ if($tech_list_res){
                                                 $img_src = !empty($t['avatar_url']) ? htmlspecialchars($t['avatar_url']) : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0";
                                                 
                                                 $th_name_html = !empty($th_name) ? $th_name : '-';
-                                                $pos_html = !empty($pos) ? "<div class='text-indigo-600 font-semibold text-[11px] mt-0.5'>{$pos}</div>" : "";
-                                                $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[10px] mt-0.5'>{$en_name}</div>" : "";
+                                                $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
 
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                     <td class='px-6 py-4'>
@@ -948,7 +944,6 @@ if($tech_list_res){
                                                             <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                             <div>
                                                                 <div class='text-slate-800 font-bold'>{$th_name_html}</div>
-                                                                {$pos_html}
                                                                 {$en_name_html}
                                                             </div>
                                                         </div>
@@ -1043,12 +1038,6 @@ if($tech_list_res){
                                     <h5 class="font-bold text-slate-800 text-sm leading-snug">
                                         <?php echo htmlspecialchars($tech['th']); ?>
                                     </h5>
-                                    
-                                    <?php if (!empty($tech['pos'])): ?>
-                                    <p class="text-[11px] text-indigo-600 font-bold mt-1.5 bg-indigo-50 inline-block px-2 py-0.5 rounded-md">
-                                        <?php echo htmlspecialchars($tech['pos']); ?>
-                                    </p>
-                                    <?php endif; ?>
                                     
                                     <?php if (!empty($tech['eng'])): ?>
                                     <p class="text-xs text-slate-400 mt-1"><?php echo htmlspecialchars($tech['eng']); ?></p>
@@ -1303,7 +1292,8 @@ if($tech_list_res){
                     </div>
 
                     <div id="avatarDiv" class="hidden">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PROFILE PICTURE (รูปประจำตัว)</label>
+                        <!-- ✨ ปรับ Label ให้ตั้ง ID ไว้รับค่าจาก JS ✨ -->
+                        <label id="avatarLabel" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PROFILE PICTURE (รูปประจำตัว)</label>
                         <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
                             <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
@@ -1331,8 +1321,8 @@ if($tech_list_res){
                         <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
-                    <!-- เพิ่มช่องใส่ตำแหน่งงาน -->
-                    <div>
+                    <!-- ✨ ครอบช่อง POSITION ด้วย Div เพื่อสั่งซ่อนตอนแก้ไขข้อมูล ✨ -->
+                    <div id="positionDiv">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION (ตำแหน่ง)</label>
                         <input type="text" name="position" id="techAdmin_position" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น นักวิชาการคอมพิวเตอร์">
                     </div>
@@ -1763,16 +1753,30 @@ if($tech_list_res){
             const deptDiv = document.getElementById('deptDiv');
             const loginCredsDiv = document.getElementById('loginCredsDiv');
             const avatarDiv = document.getElementById('avatarDiv');
+            const avatarLabel = document.getElementById('avatarLabel');
+            const positionDiv = document.getElementById('positionDiv');
             
             if(isManagement) {
                 adminLevelDiv.classList.remove('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = false;
                 let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; document.getElementById('techAdmin_level').value = exactRole;
                 loginCredsDiv.classList.remove('hidden'); document.getElementById('techAdmin_username').required = true;
                 if(avatarDiv) avatarDiv.classList.add('hidden');
+                if(positionDiv) positionDiv.classList.add('hidden');
             } else {
                 adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
                 loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
+                
+                // ✨ เงื่อนไขจัดการป้ายกำกับรูปภาพและช่องกรอกตำแหน่ง ✨
+                if (id === '') {
+                    // กรณีเพิ่มช่างใหม่ (Add)
+                    if (avatarLabel) avatarLabel.innerText = 'PROFILE PICTURE (รูปประจำตัว)';
+                    if (positionDiv) positionDiv.classList.remove('hidden');
+                } else {
+                    // กรณีแก้ไขช่างเดิม (Edit)
+                    if (avatarLabel) avatarLabel.innerText = pos ? pos : 'PROFILE PICTURE (รูปประจำตัว)';
+                    if (positionDiv) positionDiv.classList.add('hidden');
+                }
             }
 
             document.getElementById('techAdmin_id').value = id; 
