@@ -120,6 +120,7 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
 // =====================================================================
 
 $all_repairs_json = "[]";
+$check_repairs_list = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs_list && $check_repairs_list->num_rows > 0) {
     $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
     $rep_res = $conn->query($select_query);
@@ -270,7 +271,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         if (isset($_POST['admin_level'])) {
             $role = $_POST['admin_level'];
         }
-        $department = NULL;
+        
+        // --- แก้ไข: ให้ Admin รับค่า Department ได้ด้วย ---
+        $department = isset($_POST['department_select']) ? $_POST['department_select'] : NULL;
+        if ($department === 'อื่นๆ' && !empty($_POST['department_custom'])) {
+            $department = $_POST['department_custom'];
+        }
+        // ------------------------------------------------
 
         if (empty($user_id)) {
             $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, phone, department, role) VALUES (?, ?, ?, ?, ?, ?)");
@@ -748,6 +755,7 @@ if($tech_list_res){
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
+                                        <th class="px-6 py-4">Department</th>
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -773,6 +781,7 @@ if($tech_list_res){
                                                         ".(!empty($u['full_name']) ? $u['full_name'] : '-')."
                                                     </div>
                                                 </td>
+                                                <td class='px-6 py-4 text-slate-600 font-medium'>".(!empty($u['department']) ? $u['department'] : '-')."</td>
                                                 <td class='px-6 py-4 text-slate-500 font-medium'>".(!empty($u['phone']) ? $u['phone'] : '-')."</td>
                                                 <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
@@ -783,7 +792,7 @@ if($tech_list_res){
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No admins found</td></tr>"; }
+                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>No admins found</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -821,6 +830,7 @@ if($tech_list_res){
                                         <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
                                             <tr>
                                                 <th class="px-6 py-4">Name</th>
+                                                <th class="px-6 py-4">Department</th>
                                                 <th class="px-6 py-4">Contact</th> 
                                                 <th class="px-6 py-4 text-center">Status / Code</th>
                                                 <th class="px-6 py-4 text-center">Jobs</th>
@@ -856,6 +866,7 @@ if($tech_list_res){
                                                             ".(!empty($t['full_name']) ? $t['full_name'] : '-')."
                                                         </div>
                                                     </td>
+                                                    <td class='px-6 py-4 text-slate-600 font-medium'>{$dept}</td>
                                                     <td class='px-6 py-4 text-slate-500 font-medium'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td> 
                                                     <td class='px-6 py-4 text-center'>{$statusBadge}</td>
                                                     <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
@@ -1591,7 +1602,8 @@ if($tech_list_res){
             const avatarDiv = document.getElementById('avatarDiv');
             
             if(isManagement) {
-                adminLevelDiv.classList.remove('hidden'); deptDiv.classList.add('hidden'); document.getElementById('techAdmin_department_select').required = false;
+                // ให้ Admin เห็นและใส่แผนกได้
+                adminLevelDiv.classList.remove('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = false;
                 let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; document.getElementById('techAdmin_level').value = exactRole;
                 loginCredsDiv.classList.remove('hidden'); document.getElementById('techAdmin_username').required = true;
                 if(avatarDiv) avatarDiv.classList.add('hidden');
