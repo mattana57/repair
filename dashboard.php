@@ -863,7 +863,7 @@ if($tech_list_res){
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                     <td class='px-6 py-4'>
                                                         <div class='flex items-center'>
-                                                            <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" class='w-9 h-9 rounded-full object-cover border border-slate-200 shadow-sm mr-3 shrink-0' alt='avatar'>
+                                                            <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-9 h-9 rounded-full object-cover border border-slate-200 shadow-sm mr-3 shrink-0 cursor-pointer hover:opacity-80 transition-opacity hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                             <div>
                                                                 <div class='text-slate-800 font-bold'>{$th_name}</div>
                                                                 {$en_name}
@@ -950,8 +950,9 @@ if($tech_list_res){
                             <div class="bg-slate-100 aspect-[4/5] overflow-hidden relative">
                                 <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
                                      onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
+                                     onclick="openImageModal(this.src)"
                                      alt="<?php echo htmlspecialchars($tech['th']); ?>" 
-                                     class="w-full h-full object-cover">
+                                     class="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300" title="คลิกเพื่อดูรูปขยาย">
                             </div>
                             <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
                                 <div>
@@ -1124,6 +1125,15 @@ if($tech_list_res){
     </main>
 
     <!-- ================== MODALS ================== -->
+    
+    <!-- Image Preview Modal -->
+    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[60] px-4">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/80 backdrop-blur-sm" onclick="toggleModal('imagePreviewModal')"></div>
+        <div class="modal-container relative z-[60] max-w-3xl w-full flex justify-center items-center pointer-events-none">
+            <button onclick="toggleModal('imagePreviewModal')" class="absolute -top-12 right-0 md:-right-12 text-white/70 hover:text-white transition-colors bg-transparent rounded-full w-10 h-10 flex items-center justify-center pointer-events-auto"><i class="fas fa-times text-2xl"></i></button>
+            <img id="fullSizeImage" src="" class="max-h-[85vh] max-w-full rounded-2xl shadow-2xl object-contain pointer-events-auto border-4 border-white/10 bg-white" alt="Full Preview">
+        </div>
+    </div>
 
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
@@ -1145,7 +1155,7 @@ if($tech_list_res){
         </div>
     </div>
 
-    <!-- ✨ MODAL Manage Technician ที่ถูกปรับปรุงแล้ว ✨ -->
+    <!-- ✨ MODAL Manage Technician ✨ -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
@@ -1329,6 +1339,12 @@ if($tech_list_res){
             } else {
                 document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
             }
+        }
+
+        // ฟังก์ชันใหม่สำหรับเปิดรูปภาพขยาย (Lightbox)
+        function openImageModal(imgSrc) {
+            document.getElementById('fullSizeImage').src = imgSrc;
+            toggleModal('imagePreviewModal');
         }
 
         function show(id) {
