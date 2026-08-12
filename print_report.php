@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 $selected_tech = isset($_GET['tech']) ? trim($_GET['tech']) : 'all';
 $selected_month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
 $selected_year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
-$report_type = isset($_GET['type']) ? $_GET['type'] : 'memo'; // หน้าพิมพ์ตั้งต้นเป็น memo
+$report_type = isset($_GET['type']) ? $_GET['type'] : 'table'; // ค่าเริ่มต้น
 
 // ฟังก์ชันแปลงตัวเลขเป็นเลขไทย
 function toThaiNumber($num) {
@@ -27,13 +27,50 @@ function getPrefixName($name) {
     if (strpos($name, 'นาย') === 0 || strpos($name, 'นางสาว') === 0 || strpos($name, 'นาง') === 0 || strpos($name, 'ดร.') === 0) {
         return $name;
     }
-    return 'นาย' . $name;
+    return 'นาย ' . $name;
 }
 
 $tech_formal_name = getPrefixName($selected_tech);
 
-// ดึงรายชื่อช่างทั้งหมดจาก DB
-$tech_list = $conn->query("SELECT DISTINCT TRIM(technician_name) as tech_name FROM repairs WHERE technician_name IS NOT NULL AND technician_name != ''");
+// ดึงข้อมูลช่างและแผนกจาก DB เพื่อสร้าง Dropdown แบบจัดกลุ่มอัตโนมัติ
+$grouped_techs = [];
+$tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE approval_status = 'อนุมัติแล้ว' ORDER BY department ASC, full_name ASC");
+if ($tech_res && $tech_res->num_rows > 0) {
+    while ($row = $tech_res->fetch_assoc()) {
+        $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป/อื่นๆ';
+        $grouped_techs[$dept][] = $row['full_name'];
+    }
+}
+
+// จัดเรียงลำดับแผนกตามที่ต้องการ
+$custom_dept_order = [
+    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
+    'ฝ่ายงานโสตทัศนูปกรณ์',
+    'ฝ่ายงานยานยนต์',
+    'แม่บ้าน',
+    'ฝ่ายงานทั่วไป/อื่นๆ'
+];
+
+uksort($grouped_techs, function($a, $b) use ($custom_dept_order) {
+    $pos_a = array_search($a, $custom_dept_order);
+    $pos_b = array_search($b, $custom_dept_order);
+    $pos_a = ($pos_a === false) ? 999 : $pos_a;
+    $pos_b = ($pos_b === false) ? 999 : $pos_b;
+    if ($pos_a == $pos_b) return strcmp($a, $b);
+    return $pos_a - $pos_b;
+});
+
+// หาระบุฝ่ายงานของช่างที่ถูกเลือก
+$tech_department = 'ไม่ระบุฝ่ายงาน';
+if ($selected_tech === 'all') {
+    $tech_department = 'ทุกฝ่ายงาน';
+} else {
+    $td_query = $conn->query("SELECT department FROM technicians WHERE full_name = '".$conn->real_escape_string($selected_tech)."' LIMIT 1");
+    if ($td_query && $td_query->num_rows > 0) {
+        $td_row = $td_query->fetch_assoc();
+        $tech_department = !empty($td_row['department']) ? $td_row['department'] : 'ไม่ระบุฝ่ายงาน';
+    }
+}
 
 // เงื่อนไขการค้นหา SQL
 $where_conditions = [];
@@ -82,7 +119,7 @@ $thai_year = $selected_year + 543;
 $reporter_name = isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'นางสาวมัทนา รัตนแสง';
 
 if ($selected_tech !== 'all' && !empty($selected_tech)) {
-    $report_title = "รายงานสรุปผลการปฏิบัติงานรายบุคคล ของ " . htmlspecialchars($tech_formal_name);
+    $report_title = "รายงานสรุปผลการปฏิบัติงานรายบุคคล ของ " . htmlspecialchars($tech_formal_name) . " (สังกัด: " . htmlspecialchars($tech_department) . ")";
     $sign_role = "ผู้รับผิดชอบงานซ่อม / เจ้าหน้าที่ช่าง";
     $doc_purpose = "ข้อมูลดังกล่าวสามารถนำไปใช้เป็นหลักฐานประกอบการประเมินผลการปฏิบัติงาน และกำหนดแนวทางการบำรุงรักษาในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น";
 } else {
@@ -98,7 +135,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เอกสารรายงานสรุป - MBS REPAIR</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 🟢 ใช้ฟอนต์ Sarabun ของ Google Fonts แบบที่ 100% เหมือน generate_report.php -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
@@ -138,7 +174,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             }
         }
 
-        /* 🟢 คงค่า Layout ของหนังสือราชการตาม generate_report เดิมเป๊ะๆ */
         .memo-head-box { position: relative; height: 2.2cm; margin-bottom: 0.8rem; }
         .garuda-img { width: 1.8cm; height: auto; position: absolute; left: 0; top: 0; }
         .memo-head-title { 
@@ -183,26 +218,27 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
             
             <div class="flex items-center space-x-3">
-                <a href="dashboard.php" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all backdrop-blur-sm">
+                <a href="dashboard.php?tab=reports" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all backdrop-blur-sm">
                     ← Dashboard
                 </a>
-                <h1 class="font-bold text-sm border-l border-white/30 pl-3 text-white tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
+                <h1 class="font-bold text-sm border-l border-white/30 pl-3 text-white tracking-wide">ระบบออกเอกสารรายงาน</h1>
             </div>
 
             <!-- ฟอร์มเลือกกรองข้อมูล -->
-            <form method="GET" action="" class="flex flex-wrap items-center gap-2.5">
+            <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5">
                 <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                 
                 <div>
                     <select name="tech" class="bg-white text-[#033495] font-semibold text-xs rounded-xl px-3 py-1.5 border border-sky-200 shadow-sm focus:outline-none">
-                        <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>-- ช่างทุกคน (ภาพรวมคณะ) --</option>
+                        <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>🌟 ช่างทุกคน (ภาพรวมคณะ)</option>
                         <?php 
-                        if($tech_list) {
-                            while($t = $tech_list->fetch_assoc()) {
-                                $t_name = $t['tech_name'];
+                        foreach($grouped_techs as $dept => $techs) {
+                            echo "<optgroup label='🏢 ".htmlspecialchars($dept)."' style='background-color: #e0e7ff; color: #3730a3; font-weight: bold;'>";
+                            foreach($techs as $t_name) {
                                 $selected = ($selected_tech === $t_name) ? 'selected' : '';
-                                echo "<option value='".htmlspecialchars($t_name)."' $selected>".htmlspecialchars($t_name)."</option>";
+                                echo "<option value='".htmlspecialchars($t_name)."' $selected style='background-color: #ffffff; color: #1e293b;'>&nbsp;&nbsp;&nbsp;• ".htmlspecialchars($t_name)."</option>";
                             }
+                            echo "</optgroup>";
                         }
                         ?>
                     </select>
@@ -224,13 +260,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </button>
             </form>
 
-            <!-- ปุ่มสลับรูปแบบเอกสาร และปุ่มพิมพ์ -->
             <div class="flex items-center space-x-2">
-                <a href="?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
+                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm <?php echo $report_type === 'table' ? 'btn-palette-active' : 'btn-palette-inactive'; ?>">
                     📊 ตารางรายงาน
                 </a>
-                <a href="?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
+                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm <?php echo $report_type === 'memo' ? 'btn-palette-active' : 'btn-palette-inactive'; ?>">
                     📜 บันทึกข้อความ
                 </a>
@@ -242,7 +277,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         </div>
     </div>
 
-    <!-- หน้ากระดาษเอกสาร A4 -->
     <div class="a4-container">
 
         <?php if ($report_type === 'memo'): ?>
@@ -251,14 +285,11 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
              ========================================== -->
         <div class="text-black pb-10">
             
-            <!-- หัวตราครุฑชิดซ้าย + บันทึกข้อความ -->
             <div class="memo-head-box">
-                <!-- 🟢 อ้างอิงรูปตราครุฑตรงๆ ตามไฟล์ generate_report.php -->
-                <img src="ตราครุฑ.jpg" alt="ตราครุฑ" class="garuda-img" onerror="this.src='uploads/garuda.png'">
+                <img src="img/garuda.jpg" alt="ตราครุฑ" class="garuda-img" onerror="this.src='ตราครุฑ.jpg'; this.onerror=null;">
                 <div class="memo-head-title">บันทึกข้อความ</div>
             </div>
 
-            <!-- รายละเอียดส่วนหัว -->
             <table class="memo-table pb-1">
                 <tr>
                     <td class="memo-lbl">ส่วนราชการ</td>
@@ -280,7 +311,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </tr>
             </table>
 
-            <!-- เนื้อหาหนังสือ -->
             <div class="pt-1">
                 <p class="gov-p gov-indent">
                     ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น
@@ -329,12 +359,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </p>
             </div>
 
-            <!-- ส่วนลงชื่อ -->
-            <div class="mt-8 flex justify-end">
-                <div class="w-72 text-center space-y-1.5 text-[15px]">
-                    <p>(ลงชื่อ).................................................................</p>
-                    <p class="font-bold mt-2">( <?php echo $reporter_name; ?> )</p>
-                    <p class="text-slate-700 text-sm">ตำแหน่ง <?php echo $sign_role; ?></p>
+            <!-- ส่วนลายเซ็น: บันทึกข้อความ -->
+            <div style="margin-top: 60px; text-align: right; padding-right: 20px;">
+                <div style="display: inline-block; text-align: center; font-size: 15px; color: #000; line-height: 1.8;">
+                    <div style="margin-bottom: 10px;">(ลงชื่อ)........................................................................</div>
+                    <div style="font-weight: bold; margin-bottom: 2px;">( <?php echo $reporter_name; ?> )</div>
+                    <div>ตำแหน่ง <?php echo $sign_role; ?></div>
                 </div>
             </div>
 
@@ -349,8 +379,15 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 <h2 class="text-xl font-bold text-slate-900">รายงานสรุปผลการปฏิบัติงานซ่อมบำรุงครุภัณฑ์</h2>
                 <p class="text-sm font-semibold text-slate-700 mt-1">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
                 <p class="text-xs text-slate-600 mt-1">
-                    <strong>ประจำเดือน:</strong> <?php echo $thai_months[$selected_month]; ?> พ.ศ. <?php echo $selected_year + 543; ?> 
-                    | <strong>ช่างผู้รับผิดชอบ:</strong> <?php echo ($selected_tech === 'all') ? 'เจ้าหน้าที่ช่างทุกคน (ภาพรวมคณะ)' : htmlspecialchars($tech_formal_name); ?>
+                    <strong>ประจำเดือน:</strong> <?php echo $thai_months[$selected_month]; ?> พ.ศ. <?php echo $selected_year + 543; ?> <br>
+                    <strong>ช่างผู้รับผิดชอบ:</strong> 
+                    <?php 
+                        if ($selected_tech === 'all') {
+                            echo 'เจ้าหน้าที่ช่างทุกคน (ภาพรวมคณะ)';
+                        } else {
+                            echo htmlspecialchars($tech_formal_name) . " <strong>| สังกัด:</strong> " . htmlspecialchars($tech_department);
+                        }
+                    ?>
                 </p>
             </div>
 
@@ -403,7 +440,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                                 $date = date("d/m/Y H:i", strtotime($row['created_at']));
                                 $ticket = $row['ticket_no'] ?? ('#REP-'.$row['id']);
                                 $eq = htmlspecialchars($row['equipment_type'] ?? ($row['device_name'] ?? 'ไม่ระบุ'));
-                                $loc = htmlspecialchars($row['location'] ?? 'ไม่ระบุ');
+                                $loc = htmlspecialchars($row['location_room'] ?? ($row['location'] ?? 'ไม่ระบุ'));
                                 $tech = htmlspecialchars($row['technician_name'] ?? 'ยังไม่จัดสรร');
                                 $st = $row['status'] ?? 'ไม่ระบุ';
 
@@ -426,13 +463,15 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </table>
             </div>
 
-            <div class="mt-8 flex justify-end">
-                <div class="w-72 text-center space-y-1.5 text-xs">
-                    <p class="mb-8">ลงชื่อ..........................................................ผู้รายงาน</p>
-                    <p class="font-bold text-slate-800">( <?php echo $reporter_name; ?> )</p>
-                    <p class="text-slate-600">ตำแหน่ง <?php echo $sign_role; ?></p>
+            <!-- ส่วนลายเซ็น: ตารางรายงาน -->
+            <div style="margin-top: 60px; text-align: right; padding-right: 20px;">
+                <div style="display: inline-block; text-align: center; font-size: 15px; color: #000; line-height: 1.8;">
+                    <div style="margin-bottom: 10px;">ลงชื่อ..........................................................ผู้รายงาน</div>
+                    <div style="font-weight: bold; margin-bottom: 2px;">( <?php echo $reporter_name; ?> )</div>
+                    <div>ตำแหน่ง <?php echo $sign_role; ?></div>
                 </div>
             </div>
+
         </div>
         <?php endif; ?>
 
@@ -441,7 +480,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
             <span>วันที่พิมพ์เอกสาร: <?php echo date('d/m/Y H:i'); ?> น.</span>
         </div>
-
+        
     </div>
 
 </body>
