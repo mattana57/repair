@@ -877,11 +877,9 @@ $custom_dept_order = [
                 </div>
 
                 <div class="mt-8 space-y-6">
-                    <!-- ✨ เพิ่มปุ่ม Filter Pills ✨ -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-wrap gap-2">
-                            <!-- ✨ สลับตำแหน่งปุ่มตามที่ขอ ✨ -->
                             <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-indigo-600 text-white shadow-md transition-all">ทั้งหมด</button>
                             <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">บริการเทคโนโลยีดิจิทัล</button>
                             <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">โสตทัศนูปกรณ์</button>
@@ -900,7 +898,6 @@ $custom_dept_order = [
                         }
                     }
                     
-                    // ✨ จัดเรียงลำดับการแสดงผลของแผนก ✨
                     uksort($techs_by_dept, function($a, $b) use ($custom_dept_order) {
                         $pos_a = array_search($a, $custom_dept_order);
                         $pos_b = array_search($b, $custom_dept_order);
@@ -1039,7 +1036,6 @@ $custom_dept_order = [
                     'แม่บ้าน' => 'fas fa-broom'
                 ];
                 
-                // ✨ จัดเรียงลำดับการแสดงผลของแผนกในการ์ดช่าง ✨
                 uksort($departments_data, function($a, $b) use ($custom_dept_order) {
                     $pos_a = array_search($a, $custom_dept_order);
                     $pos_b = array_search($b, $custom_dept_order);
@@ -1494,7 +1490,6 @@ $custom_dept_order = [
             toggleModal('imagePreviewModal');
         }
 
-        // ✨ ระบบ Inline Edit สำหรับแก้ไขตำแหน่งงาน ✨
         function enableInlineEdit() {
             const label = document.getElementById('displayPositionLabel');
             const input = document.getElementById('avatarPositionInput');
@@ -1789,11 +1784,12 @@ $custom_dept_order = [
             }
         }
 
+        // ✨ แก้ไขฟังก์ชันพิมพ์ให้ไปที่ไฟล์ print_report.php ✨
         function printOfficialReport() {
             const filterValue = document.getElementById('techFilter').value;
-            let printUrl = 'generate_report.php?type=table';
+            let printUrl = 'print_report.php'; // เปลี่ยนจาก generate_report.php
             if (filterValue !== 'all') {
-                printUrl += `&tech=${encodeURIComponent(filterValue)}`;
+                printUrl += `?tech=${encodeURIComponent(filterValue)}`;
             }
             window.open(printUrl, '_blank');
         }
@@ -1865,18 +1861,15 @@ $custom_dept_order = [
                 loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 
-                // ✨ ระบบสลับโหมด Add กับ Edit ของตำแหน่ง ✨
                 if (id === '') {
-                    // กรณีเพิ่มช่างใหม่ (Add Mode) - โชว์ Label ปกติ และโชว์ช่อง Position ด้านล่าง
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
                     if (avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
                     if (positionDiv) positionDiv.classList.remove('hidden');
                     
-                    avatarPositionInput.name = ''; // ไม่ให้ค่าจากช่องบนถูกส่งไป
-                    techAdminPosition.name = 'position'; // ใช้ค่าจากช่องล่าง
+                    avatarPositionInput.name = ''; 
+                    techAdminPosition.name = 'position'; 
                     techAdminPosition.value = ''; 
                 } else {
-                    // กรณีแก้ไขช่างเดิม (Edit Mode) - ซ่อน Label, ซ่อนช่องล่าง และโชว์ข้อความแก้ได้ (Inline Edit)
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
                     if (avatarPositionWrapper) avatarPositionWrapper.classList.remove('hidden');
                     if (positionDiv) positionDiv.classList.add('hidden');
@@ -1884,8 +1877,8 @@ $custom_dept_order = [
                     let displayPosText = pos ? pos : 'ระบุตำแหน่งงาน';
                     displayPositionLabel.innerText = displayPosText;
                     avatarPositionInput.value = pos;
-                    avatarPositionInput.name = 'position'; // ส่งค่าตำแหน่งจากตรงนี้แทน
-                    techAdminPosition.name = ''; // ตัดการส่งค่าช่องล่าง
+                    avatarPositionInput.name = 'position'; 
+                    techAdminPosition.name = ''; 
                 }
             }
 
