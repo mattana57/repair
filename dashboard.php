@@ -40,7 +40,7 @@ function splitThaiEngName($fullName, $engName) {
     return array($th, $en);
 }
 
-// ✨ ฟังก์ชันจัดฟอร์แมตเบอร์โทร (เพิ่มลูกน้ำต่อท้ายอัตโนมัติ) ✨
+// ฟังก์ชันจัดฟอร์แมตเบอร์โทร (เพิ่มลูกน้ำต่อท้ายอัตโนมัติ)
 function formatPhoneHtml($phone_str) {
     if (empty(trim((string)$phone_str)) || $phone_str == '-') return '-';
     // แยกด้วยลูกน้ำ ลบช่องว่าง และตัดอันที่ว่างทิ้ง
@@ -967,13 +967,10 @@ if($tech_list_res){
                 }
 
                 $dept_icons = [
-                    'แผนกช่าง' => 'fas fa-tools',
-                    'แผนกไฟฟ้า' => 'fas fa-bolt',
-                    'แผนกโสต' => 'fas fa-tv',
-                    'แม่บ้าน' => 'fas fa-broom',
                     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
+                    'ฝ่ายงานยานยนต์' => 'fas fa-car',
                     'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
-                    'ฝ่ายงานยานยนต์' => 'fas fa-car'
+                    'แม่บ้าน' => 'fas fa-broom'
                 ];
 
                 if(empty($departments_data)) {
@@ -1018,7 +1015,7 @@ if($tech_list_res){
                                         ?>
                                             <p class="text-xs text-indigo-600 font-semibold flex items-center">
                                                 <i class="fas fa-phone text-[10px] mr-2 opacity-70"></i> 
-                                                <?php echo htmlspecialchars($p) . $comma; ?>
+                                                <?php echo htmlspecialchars(trim($p)) . $comma; ?>
                                             </p>
                                         <?php endforeach; ?>
                                         </div>
