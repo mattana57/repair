@@ -40,15 +40,16 @@ function splitThaiEngName($fullName, $engName) {
     return array($th, $en);
 }
 
-// ✨ ฟังก์ชันจัดฟอร์แมตเบอร์โทร (แยกบรรทัดด้วยลูกน้ำ) ✨
+// ✨ ฟังก์ชันจัดฟอร์แมตเบอร์โทร (เพิ่มลูกน้ำต่อท้ายอัตโนมัติ) ✨
 function formatPhoneHtml($phone_str) {
     if (empty(trim((string)$phone_str)) || $phone_str == '-') return '-';
-    $phones = explode(',', $phone_str);
+    // แยกด้วยลูกน้ำ ลบช่องว่าง และตัดอันที่ว่างทิ้ง
+    $phones = array_values(array_filter(array_map('trim', explode(',', $phone_str))));
     $html = '<div class="space-y-1">';
-    foreach($phones as $p) {
-        if(trim($p) !== '') {
-            $html .= "<div class='whitespace-nowrap'>".htmlspecialchars(trim($p))."</div>";
-        }
+    $count = count($phones);
+    foreach($phones as $index => $p) {
+        $comma = ($index < $count - 1) ? ',' : ''; // ถ้าไม่ใช่อันสุดท้าย ให้เติมลูกน้ำ
+        $html .= "<div class='whitespace-nowrap'>".htmlspecialchars($p).$comma."</div>";
     }
     $html .= '</div>';
     return $html;
@@ -1008,20 +1009,18 @@ if($tech_list_res){
                                     
                                     <?php 
                                     if (!empty($tech['phone']) && $tech['phone'] !== '-'): 
-                                        $phone_parts = explode(',', $tech['phone']);
+                                        $phone_parts = array_values(array_filter(array_map('trim', explode(',', $tech['phone']))));
+                                        $count_p = count($phone_parts);
                                     ?>
                                         <div class="mt-2.5 space-y-1">
-                                        <?php foreach($phone_parts as $p): 
-                                            if(trim($p) !== '') {
+                                        <?php foreach($phone_parts as $idx => $p): 
+                                            $comma = ($idx < $count_p - 1) ? ',' : '';
                                         ?>
                                             <p class="text-xs text-indigo-600 font-semibold flex items-center">
                                                 <i class="fas fa-phone text-[10px] mr-2 opacity-70"></i> 
-                                                <?php echo htmlspecialchars(trim($p)); ?>
+                                                <?php echo htmlspecialchars($p) . $comma; ?>
                                             </p>
-                                        <?php 
-                                            }
-                                        endforeach; 
-                                        ?>
+                                        <?php endforeach; ?>
                                         </div>
                                     <?php else: ?>
                                         <p class="text-xs text-slate-400 font-medium mt-2.5 flex items-center">
