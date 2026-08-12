@@ -863,7 +863,8 @@ if($tech_list_res){
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                     <td class='px-6 py-4'>
                                                         <div class='flex items-center'>
-                                                            <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-9 h-9 rounded-full object-cover border border-slate-200 shadow-sm mr-3 shrink-0 cursor-pointer hover:opacity-80 transition-opacity hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
+                                                            <!-- ✨ เปลี่ยนรูปทรงขยายขนาด และเพิ่มเอฟเฟกต์การกดที่นี่ ✨ -->
+                                                            <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                             <div>
                                                                 <div class='text-slate-800 font-bold'>{$th_name}</div>
                                                                 {$en_name}
@@ -1128,15 +1129,12 @@ if($tech_list_res){
     
     <!-- Image Preview Modal -->
     <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <!-- พื้นหลังสีดำ กดเพื่อปิด -->
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
         
-        <!-- ปุ่มกากบาท (ยึดติดมุมขวาบนของหน้าจอ) -->
         <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
             <i class="fas fa-times text-xl"></i>
         </button>
 
-        <!-- รูปภาพ -->
         <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
     </div>
 
@@ -1160,7 +1158,6 @@ if($tech_list_res){
         </div>
     </div>
 
-    <!-- ✨ MODAL Manage Technician ✨ -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
@@ -1205,8 +1202,8 @@ if($tech_list_res){
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PROFILE PICTURE (รูปภาพ)</label>
                         <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
                             <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
-                                <!-- ✨ เพิ่ม onclick และ hover effect ให้รูปสามารถกดดูได้ ✨ -->
-                                <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
+                                <!-- ✨ เพิ่มเอฟเฟกต์คลิกและเรียกใช้ modal ดูรูปขยาย ✨ -->
+                                <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-3 mb-2">
