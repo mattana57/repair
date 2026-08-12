@@ -1205,7 +1205,8 @@ if($tech_list_res){
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PROFILE PICTURE (รูปภาพ)</label>
                         <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
                             <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
-                                <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover">
+                                <!-- ✨ เพิ่ม onclick และ hover effect ให้รูปสามารถกดดูได้ ✨ -->
+                                <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-3 mb-2">
