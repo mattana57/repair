@@ -867,7 +867,6 @@ if($tech_list_res){
                 </div>
 
                 <div class="mt-8 space-y-6">
-                    <!-- ✨ เพิ่มปุ่ม Filter Pills ✨ -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-wrap gap-2">
@@ -1003,6 +1002,7 @@ if($tech_list_res){
                         $departments_data[$dept][] = [
                             'th' => $th_name,
                             'eng' => $en_name, 
+                            'pos' => !empty($row['position']) ? $row['position'] : getAutoPosition($th_name),
                             'phone' => $row['phone'],
                             'img' => $img,
                             'raw_name' => $row['full_name']
@@ -1298,13 +1298,16 @@ if($tech_list_res){
                     </div>
 
                     <div id="avatarDiv" class="hidden">
-                        <!-- ✨ สลับแสดง Label ปกติ กับ Input Inline สำหรับคลิกแก้ตำแหน่ง ✨ -->
+                        <!-- ✨ สลับแสดง Label ปกติ กับ ข้อความที่แก้ได้ (Inline Edit) ✨ -->
                         <div id="avatarLabelWrapper" class="mb-3">
-                             <label id="avatarLabel" class="block text-sm font-extrabold text-slate-500 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
+                             <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
                         </div>
-                        <div id="avatarPositionWrapper" class="hidden mb-3 relative group">
-                             <input type="text" id="avatarPositionInput" class="w-full text-sm font-extrabold text-indigo-600 uppercase tracking-wider bg-transparent border-b-2 border-dashed border-slate-200 focus:border-indigo-500 outline-none pb-1 transition-colors cursor-text" placeholder="ระบุตำแหน่ง..." title="คลิกเพื่อแก้ไขตำแหน่ง">
-                             <i class="fas fa-pencil-alt absolute right-2 top-1 text-slate-300 text-xs pointer-events-none group-hover:text-indigo-400 transition-colors"></i>
+                        <div id="avatarPositionWrapper" class="hidden mb-3 relative group w-max">
+                             <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="enableInlineEdit()">
+                                 <span id="displayPositionLabel">ตำแหน่งงาน</span>
+                                 <i class="fas fa-pencil-alt ml-2 text-slate-400 text-xs group-hover:text-indigo-400"></i>
+                             </div>
+                             <input type="text" id="avatarPositionInput" class="hidden w-full text-sm font-extrabold text-indigo-600 uppercase tracking-wider bg-transparent border-b-2 border-indigo-400 focus:border-indigo-600 outline-none pb-1 transition-colors mt-1" onblur="disableInlineEdit()" onkeypress="if(event.key === 'Enter') { event.preventDefault(); disableInlineEdit(); }">
                         </div>
                         
                         <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
@@ -1460,6 +1463,32 @@ if($tech_list_res){
         function openImageModal(imgSrc) {
             document.getElementById('fullSizeImage').src = imgSrc;
             toggleModal('imagePreviewModal');
+        }
+
+        // ✨ ระบบ Inline Edit สำหรับแก้ไขตำแหน่งงาน ✨
+        function enableInlineEdit() {
+            const label = document.getElementById('displayPositionLabel');
+            const input = document.getElementById('avatarPositionInput');
+            const icon = label.nextElementSibling;
+            
+            label.style.display = 'none';
+            icon.style.display = 'none';
+            input.classList.remove('hidden');
+            input.focus();
+        }
+
+        function disableInlineEdit() {
+            const label = document.getElementById('displayPositionLabel');
+            const input = document.getElementById('avatarPositionInput');
+            const icon = label.nextElementSibling;
+            
+            if(input.value.trim() !== '') {
+                label.innerText = input.value.trim();
+            }
+            
+            input.classList.add('hidden');
+            label.style.display = 'inline';
+            icon.style.display = 'inline';
         }
 
         // ฟังก์ชันกรองแผนก (Filter Pills)
@@ -1794,6 +1823,7 @@ if($tech_list_res){
             const avatarPositionWrapper = document.getElementById('avatarPositionWrapper');
             const positionDiv = document.getElementById('positionDiv');
             const avatarPositionInput = document.getElementById('avatarPositionInput');
+            const displayPositionLabel = document.getElementById('displayPositionLabel');
             const techAdminPosition = document.getElementById('techAdmin_position');
             
             if(isManagement) {
@@ -1807,7 +1837,7 @@ if($tech_list_res){
                 loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 
-                // ✨ ระบบสลับ Input สำหรับแก้ตำแหน่ง ✨
+                // ✨ ระบบสลับโหมด Add กับ Edit ของตำแหน่ง ✨
                 if (id === '') {
                     // กรณีเพิ่มช่างใหม่ (Add Mode) - โชว์ Label ปกติ และโชว์ช่อง Position ด้านล่าง
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
@@ -1818,11 +1848,13 @@ if($tech_list_res){
                     techAdminPosition.name = 'position'; // ใช้ค่าจากช่องล่าง
                     techAdminPosition.value = ''; 
                 } else {
-                    // กรณีแก้ไขช่างเดิม (Edit Mode) - ซ่อน Label, ซ่อนช่องล่าง และเปลี่ยนเป็น "ข้อความแบบพิมพ์ได้ (Inline Edit)" แทน!
+                    // กรณีแก้ไขช่างเดิม (Edit Mode) - ซ่อน Label, ซ่อนช่องล่าง และโชว์ข้อความแก้ได้ (Inline Edit)
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
                     if (avatarPositionWrapper) avatarPositionWrapper.classList.remove('hidden');
                     if (positionDiv) positionDiv.classList.add('hidden');
                     
+                    let displayPosText = pos ? pos : 'ระบุตำแหน่งงาน';
+                    displayPositionLabel.innerText = displayPosText;
                     avatarPositionInput.value = pos;
                     avatarPositionInput.name = 'position'; // ส่งค่าตำแหน่งจากตรงนี้แทน
                     techAdminPosition.name = ''; // ตัดการส่งค่าช่องล่าง
