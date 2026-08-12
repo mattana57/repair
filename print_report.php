@@ -221,7 +221,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 <a href="dashboard.php?tab=reports" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all backdrop-blur-sm">
                     ← Dashboard
                 </a>
-                <h1 class="font-bold text-sm border-l border-white/30 pl-3 text-white tracking-wide">ระบบออกเอกสารรายงาน</h1>
+                <h1 class="font-bold text-sm border-l border-white/30 pl-3 text-white tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
             </div>
 
             <!-- ฟอร์มเลือกกรองข้อมูล -->
@@ -230,7 +230,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 
                 <div>
                     <select name="tech" class="bg-white text-[#033495] font-semibold text-xs rounded-xl px-3 py-1.5 border border-sky-200 shadow-sm focus:outline-none">
-                        <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>🌟 ช่างทุกคน (ภาพรวมคณะ)</option>
+                        <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>-- ช่างทุกคน (ภาพรวมคณะ) --</option>
                         <?php 
                         foreach($grouped_techs as $dept => $techs) {
                             echo "<optgroup label='🏢 ".htmlspecialchars($dept)."' style='background-color: #e0e7ff; color: #3730a3; font-weight: bold;'>";
@@ -286,7 +286,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         <div class="text-black pb-10">
             
             <div class="memo-head-box">
-                <img src="img/garuda.jpg" alt="ตราครุฑ" class="garuda-img" onerror="this.src='ตราครุฑ.jpg'; this.onerror=null;">
+                <!-- ✨ แก้ไขที่อยู่ไฟล์รูปครุฑตรงนี้ให้ชี้ไปที่ uploads/garuda.png ✨ -->
+                <img src="uploads/garuda.png" alt="ตราครุฑ" class="garuda-img">
                 <div class="memo-head-title">บันทึกข้อความ</div>
             </div>
 
@@ -440,7 +441,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                                 $date = date("d/m/Y H:i", strtotime($row['created_at']));
                                 $ticket = $row['ticket_no'] ?? ('#REP-'.$row['id']);
                                 $eq = htmlspecialchars($row['equipment_type'] ?? ($row['device_name'] ?? 'ไม่ระบุ'));
-                                $loc = htmlspecialchars($row['location_room'] ?? ($row['location'] ?? 'ไม่ระบุ'));
+                                $loc = htmlspecialchars($row['location'] ?? 'ไม่ระบุ');
                                 $tech = htmlspecialchars($row['technician_name'] ?? 'ยังไม่จัดสรร');
                                 $st = $row['status'] ?? 'ไม่ระบุ';
 
