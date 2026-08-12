@@ -1127,12 +1127,17 @@ if($tech_list_res){
     <!-- ================== MODALS ================== -->
     
     <!-- Image Preview Modal -->
-    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-[60] px-4">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/80 backdrop-blur-sm" onclick="toggleModal('imagePreviewModal')"></div>
-        <div class="modal-container relative z-[60] max-w-3xl w-full flex justify-center items-center pointer-events-none">
-            <button onclick="toggleModal('imagePreviewModal')" class="absolute -top-12 right-0 md:-right-12 text-white/70 hover:text-white transition-colors bg-transparent rounded-full w-10 h-10 flex items-center justify-center pointer-events-auto"><i class="fas fa-times text-2xl"></i></button>
-            <img id="fullSizeImage" src="" class="max-h-[85vh] max-w-full rounded-2xl shadow-2xl object-contain pointer-events-auto border-4 border-white/10 bg-white" alt="Full Preview">
-        </div>
+    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <!-- พื้นหลังสีดำ กดเพื่อปิด -->
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
+        
+        <!-- ปุ่มกากบาท (ยึดติดมุมขวาบนของหน้าจอ) -->
+        <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+
+        <!-- รูปภาพ -->
+        <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
     </div>
 
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
