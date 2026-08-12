@@ -43,12 +43,11 @@ function splitThaiEngName($fullName, $engName) {
 // ฟังก์ชันจัดฟอร์แมตเบอร์โทร (เพิ่มลูกน้ำต่อท้ายอัตโนมัติ)
 function formatPhoneHtml($phone_str) {
     if (empty(trim((string)$phone_str)) || $phone_str == '-') return '-';
-    // แยกด้วยลูกน้ำ ลบช่องว่าง และตัดอันที่ว่างทิ้ง
     $phones = array_values(array_filter(array_map('trim', explode(',', $phone_str))));
     $html = '<div class="space-y-1">';
     $count = count($phones);
     foreach($phones as $index => $p) {
-        $comma = ($index < $count - 1) ? ',' : ''; // ถ้าไม่ใช่อันสุดท้าย ให้เติมลูกน้ำ
+        $comma = ($index < $count - 1) ? ',' : '';
         $html .= "<div class='whitespace-nowrap'>".htmlspecialchars($p).$comma."</div>";
     }
     $html .= '</div>';
@@ -1290,9 +1289,9 @@ if($tech_list_res){
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">DEPARTMENT</label>
                         <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomDept(this, 'techAdmin_department_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
                             <option value="" disabled selected>-- Select Department --</option>
-                            <option value="แผนกช่าง">แผนกช่าง</option>
-                            <option value="แผนกไฟฟ้า">แผนกไฟฟ้า</option>
-                            <option value="แผนกโสต">แผนกโสต</option>
+                            <option value="ฝ่ายงานบริการเทคโนโลยีดิจิทัล">ฝ่ายงานบริการเทคโนโลยีดิจิทัล</option>
+                            <option value="ฝ่ายงานยานยนต์">ฝ่ายงานยานยนต์</option>
+                            <option value="ฝ่ายงานโสตทัศนูปกรณ์">ฝ่ายงานโสตทัศนูปกรณ์</option>
                             <option value="แม่บ้าน">แม่บ้าน</option>
                             <option value="อื่นๆ">อื่นๆ (Custom)</option>
                         </select>
