@@ -1787,7 +1787,7 @@ $custom_dept_order = [
         // ✨ แก้ไขฟังก์ชันพิมพ์ให้ไปที่ไฟล์ print_report.php ✨
         function printOfficialReport() {
             const filterValue = document.getElementById('techFilter').value;
-            let printUrl = 'print_report.php'; // เปลี่ยนจาก generate_report.php
+            let printUrl = 'print_report.php';
             if (filterValue !== 'all') {
                 printUrl += `?tech=${encodeURIComponent(filterValue)}`;
             }
