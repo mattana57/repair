@@ -399,6 +399,16 @@ if($tech_list_res){
         $tech_options[] = $t['full_name'];
     }
 }
+
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก (Sorting Order) ให้ตรงกันทุกส่วน
+$custom_dept_order = [
+    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
+    'ฝ่ายงานโสตทัศนูปกรณ์',
+    'ฝ่ายงานยานยนต์',
+    'แม่บ้าน',
+    'ฝ่ายงานทั่วไป',
+    'อื่นๆ'
+];
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -867,13 +877,15 @@ if($tech_list_res){
                 </div>
 
                 <div class="mt-8 space-y-6">
+                    <!-- ✨ เพิ่มปุ่ม Filter Pills ✨ -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-wrap gap-2">
+                            <!-- ✨ สลับตำแหน่งปุ่มตามที่ขอ ✨ -->
                             <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-indigo-600 text-white shadow-md transition-all">ทั้งหมด</button>
                             <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">ยานยนต์</button>
                             <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">โสตทัศนูปกรณ์</button>
+                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">ยานยนต์</button>
                         </div>
                     </div>
                     
@@ -887,6 +899,16 @@ if($tech_list_res){
                             $techs_by_dept[$dept][] = $t;
                         }
                     }
+                    
+                    // ✨ จัดเรียงลำดับการแสดงผลของแผนก ✨
+                    uksort($techs_by_dept, function($a, $b) use ($custom_dept_order) {
+                        $pos_a = array_search($a, $custom_dept_order);
+                        $pos_b = array_search($b, $custom_dept_order);
+                        $pos_a = ($pos_a === false) ? 999 : $pos_a;
+                        $pos_b = ($pos_b === false) ? 999 : $pos_b;
+                        if ($pos_a == $pos_b) return strcmp($a, $b);
+                        return $pos_a - $pos_b;
+                    });
                     
                     if (empty($techs_by_dept)) {
                         echo "<div class='modern-card p-8 text-center text-slate-400 font-medium'>No technicians found</div>";
@@ -1016,6 +1038,16 @@ if($tech_list_res){
                     'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
                     'แม่บ้าน' => 'fas fa-broom'
                 ];
+                
+                // ✨ จัดเรียงลำดับการแสดงผลของแผนกในการ์ดช่าง ✨
+                uksort($departments_data, function($a, $b) use ($custom_dept_order) {
+                    $pos_a = array_search($a, $custom_dept_order);
+                    $pos_b = array_search($b, $custom_dept_order);
+                    $pos_a = ($pos_a === false) ? 999 : $pos_a;
+                    $pos_b = ($pos_b === false) ? 999 : $pos_b;
+                    if ($pos_a == $pos_b) return strcmp($a, $b);
+                    return $pos_a - $pos_b;
+                });
 
                 if(empty($departments_data)) {
                     echo "<div class='modern-card p-12 text-center flex flex-col items-center justify-center'><i class='fas fa-user-slash text-4xl text-slate-300 mb-4'></i><p class='text-slate-500 font-bold'>ยังไม่มีช่างในระบบ หรือยังไม่มีช่างที่ผูกบัญชีสำเร็จ</p></div>";
@@ -1298,7 +1330,6 @@ if($tech_list_res){
                     </div>
 
                     <div id="avatarDiv" class="hidden">
-                        <!-- ✨ สลับแสดง Label ปกติ กับ ข้อความที่แก้ได้ (Inline Edit) ✨ -->
                         <div id="avatarLabelWrapper" class="mb-3">
                              <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
                         </div>
@@ -1337,7 +1368,6 @@ if($tech_list_res){
                         <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
-                    <!-- ซ่อนทั้งหมดถ้ากด Edit -->
                     <div id="positionDiv">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION (ตำแหน่ง)</label>
                         <input type="text" name="position" id="techAdmin_position" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น นักวิชาการคอมพิวเตอร์">
@@ -1459,7 +1489,6 @@ if($tech_list_res){
             }
         }
 
-        // ฟังก์ชันใหม่สำหรับเปิดรูปภาพขยาย (Lightbox)
         function openImageModal(imgSrc) {
             document.getElementById('fullSizeImage').src = imgSrc;
             toggleModal('imagePreviewModal');
@@ -1491,7 +1520,6 @@ if($tech_list_res){
             icon.style.display = 'inline';
         }
 
-        // ฟังก์ชันกรองแผนก (Filter Pills)
         function filterDept(dept) {
             document.querySelectorAll('.dept-filter-btn').forEach(btn => {
                 btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
@@ -1865,6 +1893,7 @@ if($tech_list_res){
             document.getElementById('techAdmin_username').value = u; 
             document.getElementById('techAdmin_fullname').value = f; 
             document.getElementById('techAdmin_englishname').value = en;
+            document.getElementById('techAdmin_position').value = pos; 
             document.getElementById('techAdmin_phone').value = p; 
             
             const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(f || 'admin') + '&backgroundColor=e2e8f0';
