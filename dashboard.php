@@ -24,6 +24,25 @@ function thaiNum($num) {
     );
 }
 
+// ฟังก์ชันแยกชื่อไทย-อังกฤษ อัตโนมัติ (สำหรับคนที่ขี้เกียจแก้ทีละช่อง)
+function splitThaiEngName($fullName, $engName) {
+    $th = trim((string)$fullName);
+    $en = trim((string)$engName);
+    if (empty($en) && !empty($th)) {
+        // รูปแบบ: นาย สมพร วงษ์จำปา (Mr. Somporn Wongchampa)
+        if (preg_match('/^(.*?)\s*\((.*?)\)$/', $th, $matches)) {
+            $th = trim($matches[1]);
+            $en = trim($matches[2]);
+        } 
+        // รูปแบบ: นาย ธีรศักดิ์ พาโคกทม Mr. Teerasak Pakhokthom
+        elseif (preg_match('/^(.*?)\s+(Mr\.|Mrs\.|Miss|Ms\.)\s*(.*)$/i', $th, $matches)) {
+            $th = trim($matches[1]);
+            $en = trim($matches[2]) . ' ' . trim($matches[3]);
+        }
+    }
+    return array($th, $en);
+}
+
 // =====================================================================
 // 🛠️ ระบบซ่อมแซมและปรับปรุงฐานข้อมูลอัตโนมัติ (AUTO-FIX DB STRUCTURE)
 // =====================================================================
@@ -763,10 +782,15 @@ if($tech_list_res){
                                             $roleClass = ($r_lower == 'executive') ? "bg-amber-100 text-amber-700" : "bg-purple-100 text-purple-700";
                                             $icon = ($r_lower == 'executive') ? "fa-user-tie text-amber-500" : "fa-shield-alt text-purple-500";
                                             
-                                            $js_uid = $u['id']; $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); $js_fname = htmlspecialchars($u['full_name'] ?? '', ENT_QUOTES); $js_ename = htmlspecialchars($u['english_name'] ?? '', ENT_QUOTES); $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES); $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
+                                            $js_raw_fname = htmlspecialchars($u['full_name'] ?? '', ENT_QUOTES);
+                                            list($th_name, $en_name) = splitThaiEngName($u['full_name'], $u['english_name']);
+                                            $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
+                                            $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
+
+                                            $js_uid = $u['id']; $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES); $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
                                             
-                                            $th_name = !empty($u['full_name']) ? $u['full_name'] : '-';
-                                            $en_name = !empty($u['english_name']) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$u['english_name']}</div>" : "";
+                                            $th_name_html = !empty($th_name) ? $th_name : '-';
+                                            $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
 
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
@@ -774,8 +798,8 @@ if($tech_list_res){
                                                     <div class='flex items-center'>
                                                         <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas {$icon} text-xs'></i></div>
                                                         <div>
-                                                            <div class='text-slate-800 font-bold'>{$th_name}</div>
-                                                            {$en_name}
+                                                            <div class='text-slate-800 font-bold'>{$th_name_html}</div>
+                                                            {$en_name_html}
                                                         </div>
                                                     </div>
                                                 </td>
@@ -838,7 +862,12 @@ if($tech_list_res){
                                         <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                             <?php
                                             foreach($techs as $t) {
-                                                $js_uid = $t['id']; $js_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES); $js_ename = htmlspecialchars($t['english_name'] ?? '', ENT_QUOTES); $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES); $js_role = 'Technician';
+                                                $js_raw_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES);
+                                                list($th_name, $en_name) = splitThaiEngName($t['full_name'], $t['english_name']);
+                                                $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
+                                                $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
+
+                                                $js_uid = $t['id']; $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES); $js_role = 'Technician';
                                                 
                                                 $total_jobs = 0;
                                                 if(!empty($t['full_name'])) {
@@ -857,17 +886,16 @@ if($tech_list_res){
 
                                                 $img_src = !empty($t['avatar_url']) ? htmlspecialchars($t['avatar_url']) : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0";
                                                 
-                                                $th_name = !empty($t['full_name']) ? $t['full_name'] : '-';
-                                                $en_name = !empty($t['english_name']) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$t['english_name']}</div>" : "";
+                                                $th_name_html = !empty($th_name) ? $th_name : '-';
+                                                $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
 
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                     <td class='px-6 py-4'>
                                                         <div class='flex items-center'>
-                                                            <!-- ✨ เปลี่ยนรูปทรงขยายขนาด และเพิ่มเอฟเฟกต์การกดที่นี่ ✨ -->
                                                             <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                             <div>
-                                                                <div class='text-slate-800 font-bold'>{$th_name}</div>
-                                                                {$en_name}
+                                                                <div class='text-slate-800 font-bold'>{$th_name_html}</div>
+                                                                {$en_name_html}
                                                             </div>
                                                         </div>
                                                     </td>
@@ -878,7 +906,7 @@ if($tech_list_res){
                                                     <td class='px-6 py-4 text-right'>
                                                         <div class='flex items-center justify-end space-x-2'>
                                                             {$unlinkBtn}
-                                                            <button onclick=\"viewHistory('{$js_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                                                            <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
                                                             <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_phone', '$js_dept', '{$img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                             <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:text-white hover:bg-rose-500 transition-all flex items-center justify-center shadow-xs'><i class='fas fa-trash-alt'></i></button>
                                                         </div>
@@ -913,12 +941,15 @@ if($tech_list_res){
                         if(!isset($departments_data[$dept])) $departments_data[$dept] = [];
                         
                         $img = !empty($row['avatar_url']) ? $row['avatar_url'] : '';
+                        
+                        list($th_name, $en_name) = splitThaiEngName($row['full_name'], $row['english_name']);
 
                         $departments_data[$dept][] = [
-                            'th' => $row['full_name'],
-                            'eng' => $row['english_name'], 
+                            'th' => $th_name,
+                            'eng' => $en_name, 
                             'phone' => $row['phone'],
-                            'img' => $img
+                            'img' => $img,
+                            'raw_name' => $row['full_name']
                         ];
                     }
                 }
@@ -976,7 +1007,7 @@ if($tech_list_res){
                                     </p>
                                     <?php endif; ?>
                                 </div>
-                                <button onclick="viewHistory('<?php echo htmlspecialchars($tech['th']); ?>', 'technician')" class="w-full text-xs font-bold text-slate-600 hover:text-white bg-slate-50 hover:bg-indigo-600 border border-slate-200 hover:border-indigo-600 py-2.5 rounded-xl transition-all shadow-2xs">
+                                <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" class="w-full text-xs font-bold text-slate-600 hover:text-white bg-slate-50 hover:bg-indigo-600 border border-slate-200 hover:border-indigo-600 py-2.5 rounded-xl transition-all shadow-2xs">
                                     <i class="fas fa-history mr-1.5"></i> ประวัติงาน
                                 </button>
                             </div>
@@ -1129,12 +1160,15 @@ if($tech_list_res){
     
     <!-- Image Preview Modal -->
     <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <!-- พื้นหลังสีดำ กดเพื่อปิด -->
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
         
+        <!-- ปุ่มกากบาท (ยึดติดมุมขวาบนของหน้าจอ) -->
         <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
             <i class="fas fa-times text-xl"></i>
         </button>
 
+        <!-- รูปภาพ -->
         <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
     </div>
 
@@ -1158,6 +1192,7 @@ if($tech_list_res){
         </div>
     </div>
 
+    <!-- ✨ MODAL Manage Technician ✨ -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
