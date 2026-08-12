@@ -32,43 +32,43 @@ function getPrefixName($name) {
 
 $tech_formal_name = getPrefixName($selected_tech);
 
-// ดึงข้อมูลช่างและแผนกจาก DB เพื่อสร้าง Dropdown แบบจัดกลุ่มอัตโนมัติ
-$grouped_techs = [];
-$tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE approval_status = 'อนุมัติแล้ว' ORDER BY department ASC, full_name ASC");
-if ($tech_res && $tech_res->num_rows > 0) {
-    while ($row = $tech_res->fetch_assoc()) {
-        $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป/อื่นๆ';
-        $grouped_techs[$dept][] = $row['full_name'];
-    }
-}
-
-// จัดเรียงลำดับแผนกตามที่ต้องการ
-$custom_dept_order = [
-    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
-    'ฝ่ายงานโสตทัศนูปกรณ์',
-    'ฝ่ายงานยานยนต์',
-    'แม่บ้าน',
-    'ฝ่ายงานทั่วไป/อื่นๆ'
+// ✨ แก้ไข: กำหนดรายชื่อช่างและจัดกลุ่มตามฝ่ายงานที่คุณระบุไว้เป๊ะๆ ✨
+$grouped_techs = [
+    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => [
+        'นาย สมพร วงษ์จำปา',
+        'นาย ปริญญา จันทรภา',
+        'นาย ทองสน พลมีศักดิ์',
+        'นาย ธีรศักดิ์ พาโคกทม'
+    ],
+    'ฝ่ายงานโสตทัศนูปกรณ์' => [
+        'นาย จิตรณรงค์ นาใจคง',
+        'นาย ลำไพร ทองบ่อ',
+        'นาย รักชาติ แดงเทโพธิ์',
+        'นาย ปิยะสันต์ บุญพระ',
+        'นาย จตุพล ฤทธิสิงห์',
+        'นาย อาทิตย์ บรรเทา'
+    ],
+    'ฝ่ายงานยานยนต์' => [
+        'นาย ธวัชชัย รัสสมบัติ',
+        'นาย ทรงภพ จันทร์ลอย',
+        'นาย รนภักดี ลิงลม',
+        'นาย กิตติภณ รัดถา',
+        'นาย ทิวา เนื่องทะบาล',
+        'นาย นิรุตติ์ กองเงิน',
+        'นาย อุทัย หาหอม'
+    ]
 ];
 
-uksort($grouped_techs, function($a, $b) use ($custom_dept_order) {
-    $pos_a = array_search($a, $custom_dept_order);
-    $pos_b = array_search($b, $custom_dept_order);
-    $pos_a = ($pos_a === false) ? 999 : $pos_a;
-    $pos_b = ($pos_b === false) ? 999 : $pos_b;
-    if ($pos_a == $pos_b) return strcmp($a, $b);
-    return $pos_a - $pos_b;
-});
-
-// หาระบุฝ่ายงานของช่างที่ถูกเลือก
+// หาระบุฝ่ายงานของช่างที่ถูกเลือก เพื่อแสดงในเอกสาร
 $tech_department = 'ไม่ระบุฝ่ายงาน';
 if ($selected_tech === 'all') {
     $tech_department = 'ทุกฝ่ายงาน';
 } else {
-    $td_query = $conn->query("SELECT department FROM technicians WHERE full_name = '".$conn->real_escape_string($selected_tech)."' LIMIT 1");
-    if ($td_query && $td_query->num_rows > 0) {
-        $td_row = $td_query->fetch_assoc();
-        $tech_department = !empty($td_row['department']) ? $td_row['department'] : 'ไม่ระบุฝ่ายงาน';
+    foreach ($grouped_techs as $dept => $techs) {
+        if (in_array($selected_tech, $techs)) {
+            $tech_department = $dept;
+            break;
+        }
     }
 }
 
@@ -230,7 +230,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 
                 <div>
                     <select name="tech" class="bg-white text-[#033495] font-semibold text-xs rounded-xl px-3 py-1.5 border border-sky-200 shadow-sm focus:outline-none">
-                        <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>-- ช่างทุกคน (ภาพรวมคณะ) --</option>
+                        <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>🌟 ช่างทุกคน (ภาพรวมคณะ)</option>
                         <?php 
                         foreach($grouped_techs as $dept => $techs) {
                             echo "<optgroup label='🏢 ".htmlspecialchars($dept)."' style='background-color: #e0e7ff; color: #3730a3; font-weight: bold;'>";
@@ -286,7 +286,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         <div class="text-black pb-10">
             
             <div class="memo-head-box">
-                <!-- ✨ แก้ไขที่อยู่ไฟล์รูปครุฑตรงนี้ให้ชี้ไปที่ uploads/garuda.png ✨ -->
                 <img src="uploads/garuda.png" alt="ตราครุฑ" class="garuda-img">
                 <div class="memo-head-title">บันทึกข้อความ</div>
             </div>
@@ -441,7 +440,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                                 $date = date("d/m/Y H:i", strtotime($row['created_at']));
                                 $ticket = $row['ticket_no'] ?? ('#REP-'.$row['id']);
                                 $eq = htmlspecialchars($row['equipment_type'] ?? ($row['device_name'] ?? 'ไม่ระบุ'));
-                                $loc = htmlspecialchars($row['location'] ?? 'ไม่ระบุ');
+                                $loc = htmlspecialchars($row['location_room'] ?? ($row['location'] ?? 'ไม่ระบุ'));
                                 $tech = htmlspecialchars($row['technician_name'] ?? 'ยังไม่จัดสรร');
                                 $st = $row['status'] ?? 'ไม่ระบุ';
 
