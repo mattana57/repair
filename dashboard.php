@@ -24,23 +24,34 @@ function thaiNum($num) {
     );
 }
 
-// ฟังก์ชันแยกชื่อไทย-อังกฤษ อัตโนมัติ (สำหรับคนที่ขี้เกียจแก้ทีละช่อง)
+// ฟังก์ชันแยกชื่อไทย-อังกฤษ อัตโนมัติ
 function splitThaiEngName($fullName, $engName) {
     $th = trim((string)$fullName);
     $en = trim((string)$engName);
     if (empty($en) && !empty($th)) {
-        // รูปแบบ: นาย สมพร วงษ์จำปา (Mr. Somporn Wongchampa)
         if (preg_match('/^(.*?)\s*\((.*?)\)$/', $th, $matches)) {
             $th = trim($matches[1]);
             $en = trim($matches[2]);
-        } 
-        // รูปแบบ: นาย ธีรศักดิ์ พาโคกทม Mr. Teerasak Pakhokthom
-        elseif (preg_match('/^(.*?)\s+(Mr\.|Mrs\.|Miss|Ms\.)\s*(.*)$/i', $th, $matches)) {
+        } elseif (preg_match('/^(.*?)\s+(Mr\.|Mrs\.|Miss|Ms\.)\s*(.*)$/i', $th, $matches)) {
             $th = trim($matches[1]);
             $en = trim($matches[2]) . ' ' . trim($matches[3]);
         }
     }
     return array($th, $en);
+}
+
+// ✨ ฟังก์ชันจัดฟอร์แมตเบอร์โทร (แยกบรรทัดด้วยลูกน้ำ) ✨
+function formatPhoneHtml($phone_str) {
+    if (empty(trim((string)$phone_str)) || $phone_str == '-') return '-';
+    $phones = explode(',', $phone_str);
+    $html = '<div class="space-y-1">';
+    foreach($phones as $p) {
+        if(trim($p) !== '') {
+            $html .= "<div class='whitespace-nowrap'>".htmlspecialchars(trim($p))."</div>";
+        }
+    }
+    $html .= '</div>';
+    return $html;
 }
 
 // =====================================================================
@@ -804,7 +815,7 @@ if($tech_list_res){
                                                     </div>
                                                 </td>
                                                 <td class='px-6 py-4 text-slate-600 font-medium'>".(!empty($u['department']) ? $u['department'] : '-')."</td>
-                                                <td class='px-6 py-4 text-slate-500 font-medium'>".(!empty($u['phone']) ? $u['phone'] : '-')."</td>
+                                                <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($u['phone'])."</td>
                                                 <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
@@ -900,7 +911,7 @@ if($tech_list_res){
                                                         </div>
                                                     </td>
                                                     <td class='px-6 py-4 text-slate-600 font-medium'>{$dept}</td>
-                                                    <td class='px-6 py-4 text-slate-500 font-medium'>".(!empty($t['phone']) ? $t['phone'] : '-')."</td> 
+                                                    <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td> 
                                                     <td class='px-6 py-4 text-center'>{$statusBadge}</td>
                                                     <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
                                                     <td class='px-6 py-4 text-right'>
@@ -995,16 +1006,28 @@ if($tech_list_res){
                                     <p class="text-xs text-slate-500 mt-0.5"><?php echo htmlspecialchars($tech['eng']); ?></p>
                                     <?php endif; ?>
                                     
-                                    <?php if (!empty($tech['phone'])): ?>
-                                    <p class="text-xs text-indigo-600 font-semibold mt-2.5 flex items-center">
-                                        <i class="fas fa-phone text-[10px] mr-2 opacity-70"></i> 
-                                        <?php echo htmlspecialchars($tech['phone']); ?>
-                                    </p>
+                                    <?php 
+                                    if (!empty($tech['phone']) && $tech['phone'] !== '-'): 
+                                        $phone_parts = explode(',', $tech['phone']);
+                                    ?>
+                                        <div class="mt-2.5 space-y-1">
+                                        <?php foreach($phone_parts as $p): 
+                                            if(trim($p) !== '') {
+                                        ?>
+                                            <p class="text-xs text-indigo-600 font-semibold flex items-center">
+                                                <i class="fas fa-phone text-[10px] mr-2 opacity-70"></i> 
+                                                <?php echo htmlspecialchars(trim($p)); ?>
+                                            </p>
+                                        <?php 
+                                            }
+                                        endforeach; 
+                                        ?>
+                                        </div>
                                     <?php else: ?>
-                                    <p class="text-xs text-slate-400 font-medium mt-2.5 flex items-center">
-                                        <i class="fas fa-phone-slash text-[10px] mr-2 opacity-50"></i> 
-                                        ไม่มีเบอร์ติดต่อ
-                                    </p>
+                                        <p class="text-xs text-slate-400 font-medium mt-2.5 flex items-center">
+                                            <i class="fas fa-phone-slash text-[10px] mr-2 opacity-50"></i> 
+                                            ไม่มีเบอร์ติดต่อ
+                                        </p>
                                     <?php endif; ?>
                                 </div>
                                 <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" class="w-full text-xs font-bold text-slate-600 hover:text-white bg-slate-50 hover:bg-indigo-600 border border-slate-200 hover:border-indigo-600 py-2.5 rounded-xl transition-all shadow-2xs">
@@ -1237,7 +1260,6 @@ if($tech_list_res){
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PROFILE PICTURE (รูปภาพ)</label>
                         <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
                             <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
-                                <!-- ✨ เพิ่มเอฟเฟกต์คลิกและเรียกใช้ modal ดูรูปขยาย ✨ -->
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
                             </div>
                             <div class="flex-1 min-w-0">
