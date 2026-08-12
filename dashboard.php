@@ -316,7 +316,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ฐานข้อมูลมีปัญหา', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
             }
         } else {
-            // ถ้าระบุ position ให้ทำการอัปเดต ถ้าไม่ระบุให้ดึงจากฐานข้อมูลเดิมไปอัปเดต (แต่เพื่อความชัวร์จะอัปเดต position ด้วยเสมอ)
             if ($avatar_url) {
                 $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=?, avatar_url=? WHERE id=?");
                 if ($stmt) $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $department, $avatar_url, $user_id);
@@ -798,7 +797,6 @@ if($tech_list_res){
                         <p class="text-sm font-medium text-slate-500 mt-0.5">Manage administrators and technicians</p>
                     </div>
                     <div class="flex w-full md:w-auto gap-3">
-                        <!-- ✨ ลบปุ่ม Add Admin ออกเรียบร้อยแล้ว ✨ -->
                         <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
                     </div>
                 </div>
@@ -996,7 +994,6 @@ if($tech_list_res){
                         $departments_data[$dept][] = [
                             'th' => $th_name,
                             'eng' => $en_name, 
-                            'pos' => !empty($row['position']) ? $row['position'] : getAutoPosition($th_name),
                             'phone' => $row['phone'],
                             'img' => $img,
                             'raw_name' => $row['full_name']
@@ -1292,8 +1289,8 @@ if($tech_list_res){
                     </div>
 
                     <div id="avatarDiv" class="hidden">
-                        <!-- ✨ ปรับ Label ให้ตั้ง ID ไว้รับค่าจาก JS ✨ -->
-                        <label id="avatarLabel" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PROFILE PICTURE (รูปประจำตัว)</label>
+                        <!-- ✨ ปรับ Label ให้โดดเด่นและใหญ่ขึ้น ✨ -->
+                        <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider mb-3">PROFILE PICTURE (รูปประจำตัว)</label>
                         <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
                             <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
@@ -1301,12 +1298,12 @@ if($tech_list_res){
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-3 mb-2">
                                     <label for="techAdmin_avatar" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl text-sm font-bold transition-colors whitespace-nowrap">
-                                        เลือกไฟล์
+                                        เลือกไฟล์รูปภาพ
                                     </label>
                                     <span id="fileNameDisplay" class="text-sm text-slate-500 truncate">ไม่ได้เลือกไฟล์ใด</span>
                                 </div>
                                 <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="hidden" onchange="previewAvatar(event)">
-                                <p class="text-[11px] text-slate-400 mt-2">แนะนำขนาด 1:1 หรือ 4:5 (JPG, PNG)</p>
+                                <p class="text-[11px] text-slate-400 mt-2">แนะนำรูปภาพขนาด 1:1 หรือ 4:5 (JPG, PNG)</p>
                             </div>
                         </div>
                     </div>
@@ -1321,7 +1318,6 @@ if($tech_list_res){
                         <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
-                    <!-- ✨ ครอบช่อง POSITION ด้วย Div เพื่อสั่งซ่อนตอนแก้ไขข้อมูล ✨ -->
                     <div id="positionDiv">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION (ตำแหน่ง)</label>
                         <input type="text" name="position" id="techAdmin_position" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น นักวิชาการคอมพิวเตอร์">
@@ -1767,7 +1763,6 @@ if($tech_list_res){
                 loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 
-                // ✨ เงื่อนไขจัดการป้ายกำกับรูปภาพและช่องกรอกตำแหน่ง ✨
                 if (id === '') {
                     // กรณีเพิ่มช่างใหม่ (Add)
                     if (avatarLabel) avatarLabel.innerText = 'PROFILE PICTURE (รูปประจำตัว)';
