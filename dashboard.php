@@ -40,15 +40,43 @@ function splitThaiEngName($fullName, $engName) {
     return array($th, $en);
 }
 
-// ฟังก์ชันจัดฟอร์แมตเบอร์โทร (เพิ่มลูกน้ำต่อท้ายอัตโนมัติ)
+// ✨ ฟังก์ชันกำหนดตำแหน่งงานอัตโนมัติ ✨
+function getAutoPosition($th_name) {
+    $map = [
+        'สมพร วงษ์จำปา' => 'นักวิชาการคอมพิวเตอร์',
+        'ปริญญา จันทรภา' => 'นักวิชาการคอมพิวเตอร์',
+        'ทองสน พลมีศักดิ์' => 'นักวิชาการคอมพิวเตอร์',
+        'ธีรศักดิ์ พาโคกทม' => 'นักวิชาการคอมพิวเตอร์',
+        
+        'จิตรณรงค์ นาใจคง' => 'นักวิชาการโสตทัศนศึกษา',
+        'ลำไพร ทองบ่อ' => 'นักวิชาการโสตทัศนศึกษา',
+        'รักชาติ แดงเทโพธิ์' => 'นักวิชาการโสตทัศนศึกษา',
+        'ปิยะสันต์ บุญพระ' => 'นักวิชาการโสตทัศนศึกษา',
+        'จตุพล ฤทธิสิงห์' => 'เจ้าหน้าที่บริหารงานทั่วไป',
+        'อาทิตย์ บรรเทา' => 'เจ้าหน้าที่บริหารงานทั่วไป',
+        
+        'ธวัชชัย รัสสมบัติ' => 'เจ้าหน้าที่บริหารงานทั่วไป',
+        'ทรงภพ จันทร์ลอย' => 'เจ้าหน้าที่บริหารงานทั่วไป',
+        'รนภักดี ลิงลม' => 'พนักงานขับรถยนต์',
+        'กิตติภณ รัดถา' => 'พนักงานขับรถยนต์',
+        'ทิวา เนื่องทะบาล' => 'พนักงานขับรถยนต์',
+        'นิรุตติ์ กองเงิน' => 'พนักงานขับรถยนต์',
+        'อุทัย หาหอม' => 'พนักงานขับรถยนต์'
+    ];
+    foreach($map as $key => $val) {
+        if(mb_strpos($th_name, $key) !== false) return $val;
+    }
+    return '';
+}
+
+// ฟังก์ชันจัดฟอร์แมตเบอร์โทร
 function formatPhoneHtml($phone_str) {
     if (empty(trim((string)$phone_str)) || $phone_str == '-') return '-';
-    // แยกด้วยลูกน้ำ ลบช่องว่าง และตัดอันที่ว่างทิ้ง
     $phones = array_values(array_filter(array_map('trim', explode(',', $phone_str))));
     $html = '<div class="space-y-1">';
     $count = count($phones);
     foreach($phones as $index => $p) {
-        $comma = ($index < $count - 1) ? ',' : ''; // ถ้าไม่ใช่อันสุดท้าย ให้เติมลูกน้ำ
+        $comma = ($index < $count - 1) ? ',' : '';
         $html .= "<div class='whitespace-nowrap'>".htmlspecialchars($p).$comma."</div>";
     }
     $html .= '</div>';
@@ -77,6 +105,7 @@ $conn->query("CREATE TABLE IF NOT EXISTS technicians (
 $tech_cols = [
     'line_user_id' => 'VARCHAR(100) NULL',
     'department' => 'VARCHAR(255) NULL',
+    'position' => 'VARCHAR(255) NULL', // เพิ่มคอลัมน์ตำแหน่ง
     'phone' => 'VARCHAR(100) NULL',
     'avatar_url' => 'VARCHAR(255) NULL',
     'secret_code' => 'VARCHAR(10) NULL',
@@ -94,6 +123,7 @@ foreach ($tech_cols as $col => $def) {
 $conn->query("ALTER TABLE technicians CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 $conn->query("ALTER TABLE technicians MODIFY COLUMN department VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 $conn->query("ALTER TABLE technicians MODIFY COLUMN english_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+$conn->query("ALTER TABLE technicians MODIFY COLUMN position VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 
 $res_fix = $conn->query("SELECT id FROM technicians WHERE approval_status IN ('รออนุมัติ', 'รอผูกบัญชี') AND (secret_code IS NULL OR secret_code = '')");
 if ($res_fix && $res_fix->num_rows > 0) {
@@ -114,6 +144,7 @@ $users_cols = [
     'password' => 'VARCHAR(255) NULL',
     'full_name' => 'VARCHAR(255) NULL',
     'english_name' => 'VARCHAR(255) NULL',
+    'position' => 'VARCHAR(255) NULL', // เพิ่มคอลัมน์ตำแหน่ง
     'phone' => 'VARCHAR(100) NULL',
     'department' => 'VARCHAR(255) NULL'
 ];
@@ -128,6 +159,7 @@ $conn->query("ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4
 $conn->query("ALTER TABLE users MODIFY COLUMN department VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 $conn->query("ALTER TABLE users MODIFY COLUMN full_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 $conn->query("ALTER TABLE users MODIFY COLUMN english_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+$conn->query("ALTER TABLE users MODIFY COLUMN position VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 
 $check_repairs_table = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs_table && $check_repairs_table->num_rows > 0) {
@@ -239,6 +271,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     
     $full_name = !empty($_POST['full_name']) ? $_POST['full_name'] : NULL;
     $english_name = !empty($_POST['english_name']) ? $_POST['english_name'] : NULL;
+    $position = !empty($_POST['position']) ? $_POST['position'] : NULL;
     $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
     
     if ($role === 'Technician') {
@@ -268,9 +301,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         
         if (empty($user_id)) {
             $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
-            $stmt = $conn->prepare("INSERT INTO technicians (full_name, english_name, phone, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, ?, 'รอผูกบัญชี')");
+            $stmt = $conn->prepare("INSERT INTO technicians (full_name, english_name, position, phone, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, 'รอผูกบัญชี')");
             if ($stmt) {
-                $stmt->bind_param("ssssss", $full_name, $english_name, $phone, $department, $avatar_url, $secret_code);
+                $stmt->bind_param("sssssss", $full_name, $english_name, $position, $phone, $department, $avatar_url, $secret_code);
                 if ($stmt->execute()) {
                     $msg = "เพิ่มข้อมูลช่างสำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
                     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg\", confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
@@ -284,11 +317,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             }
         } else {
             if ($avatar_url) {
-                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, phone=?, department=?, avatar_url=? WHERE id=?");
-                if ($stmt) $stmt->bind_param("sssssi", $full_name, $english_name, $phone, $department, $avatar_url, $user_id);
+                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=?, avatar_url=? WHERE id=?");
+                if ($stmt) $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $department, $avatar_url, $user_id);
             } else {
-                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, phone=?, department=? WHERE id=?");
-                if ($stmt) $stmt->bind_param("ssssi", $full_name, $english_name, $phone, $department, $user_id);
+                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=? WHERE id=?");
+                if ($stmt) $stmt->bind_param("sssssi", $full_name, $english_name, $position, $phone, $department, $user_id);
             }
             
             if ($stmt && $stmt->execute()) {
@@ -312,9 +345,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
 
         if (empty($user_id)) {
-            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, english_name, phone, department, role) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, english_name, position, phone, department, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             if ($stmt) {
-                $stmt->bind_param("sssssss", $username, $password, $full_name, $english_name, $phone, $department, $role);
+                $stmt->bind_param("ssssssss", $username, $password, $full_name, $english_name, $position, $phone, $department, $role);
                 if ($stmt->execute()) {
                     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'เพิ่มข้อมูลผู้ดูแลระบบสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
                 } else {
@@ -324,11 +357,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             }
         } else {
             if (!empty($password)) {
-                $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, phone=?, department=?, role=? WHERE id=?");
-                if ($stmt) $stmt->bind_param("sssssssi", $username, $password, $full_name, $english_name, $phone, $department, $role, $user_id);
+                $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=? WHERE id=?");
+                if ($stmt) $stmt->bind_param("ssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
             } else {
-                $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, phone=?, department=?, role=? WHERE id=?");
-                if ($stmt) $stmt->bind_param("ssssssi", $username, $full_name, $english_name, $phone, $department, $role, $user_id);
+                $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=? WHERE id=?");
+                if ($stmt) $stmt->bind_param("sssssssi", $username, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
             }
             if ($stmt && $stmt->execute()) {
                 echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
@@ -764,7 +797,6 @@ if($tech_list_res){
                         <p class="text-sm font-medium text-slate-500 mt-0.5">Manage administrators and technicians</p>
                     </div>
                     <div class="flex w-full md:w-auto gap-3">
-                        <!-- ✨ ลบปุ่ม Add Admin ออกเรียบร้อยแล้ว ✨ -->
                         <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
                     </div>
                 </div>
@@ -798,11 +830,15 @@ if($tech_list_res){
                                             list($th_name, $en_name) = splitThaiEngName($u['full_name'], $u['english_name']);
                                             $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
+                                            
+                                            $pos = !empty($u['position']) ? $u['position'] : getAutoPosition($th_name);
+                                            $js_pos = htmlspecialchars($pos, ENT_QUOTES);
 
                                             $js_uid = $u['id']; $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES); $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
                                             
                                             $th_name_html = !empty($th_name) ? $th_name : '-';
-                                            $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
+                                            $pos_html = !empty($pos) ? "<div class='text-indigo-600 font-semibold text-[11px] mt-0.5'>{$pos}</div>" : "";
+                                            $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[10px] mt-0.5'>{$en_name}</div>" : "";
 
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
@@ -811,6 +847,7 @@ if($tech_list_res){
                                                         <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas {$icon} text-xs'></i></div>
                                                         <div>
                                                             <div class='text-slate-800 font-bold'>{$th_name_html}</div>
+                                                            {$pos_html}
                                                             {$en_name_html}
                                                         </div>
                                                     </div>
@@ -820,7 +857,7 @@ if($tech_list_res){
                                                 <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '$js_phone', '$js_dept', '')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
@@ -878,6 +915,9 @@ if($tech_list_res){
                                                 list($th_name, $en_name) = splitThaiEngName($t['full_name'], $t['english_name']);
                                                 $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
                                                 $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
+                                                
+                                                $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
+                                                $js_pos = htmlspecialchars($pos, ENT_QUOTES);
 
                                                 $js_uid = $t['id']; $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES); $js_role = 'Technician';
                                                 
@@ -899,7 +939,8 @@ if($tech_list_res){
                                                 $img_src = !empty($t['avatar_url']) ? htmlspecialchars($t['avatar_url']) : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0";
                                                 
                                                 $th_name_html = !empty($th_name) ? $th_name : '-';
-                                                $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
+                                                $pos_html = !empty($pos) ? "<div class='text-indigo-600 font-semibold text-[11px] mt-0.5'>{$pos}</div>" : "";
+                                                $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[10px] mt-0.5'>{$en_name}</div>" : "";
 
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                     <td class='px-6 py-4'>
@@ -907,6 +948,7 @@ if($tech_list_res){
                                                             <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                             <div>
                                                                 <div class='text-slate-800 font-bold'>{$th_name_html}</div>
+                                                                {$pos_html}
                                                                 {$en_name_html}
                                                             </div>
                                                         </div>
@@ -919,7 +961,7 @@ if($tech_list_res){
                                                         <div class='flex items-center justify-end space-x-2'>
                                                             {$unlinkBtn}
                                                             <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                            <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_phone', '$js_dept', '{$img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                            <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                             <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:text-white hover:bg-rose-500 transition-all flex items-center justify-center shadow-xs'><i class='fas fa-trash-alt'></i></button>
                                                         </div>
                                                     </td>
@@ -959,6 +1001,7 @@ if($tech_list_res){
                         $departments_data[$dept][] = [
                             'th' => $th_name,
                             'eng' => $en_name, 
+                            'pos' => !empty($row['position']) ? $row['position'] : getAutoPosition($th_name),
                             'phone' => $row['phone'],
                             'img' => $img,
                             'raw_name' => $row['full_name']
@@ -1000,8 +1043,15 @@ if($tech_list_res){
                                     <h5 class="font-bold text-slate-800 text-sm leading-snug">
                                         <?php echo htmlspecialchars($tech['th']); ?>
                                     </h5>
+                                    
+                                    <?php if (!empty($tech['pos'])): ?>
+                                    <p class="text-[11px] text-indigo-600 font-bold mt-1.5 bg-indigo-50 inline-block px-2 py-0.5 rounded-md">
+                                        <?php echo htmlspecialchars($tech['pos']); ?>
+                                    </p>
+                                    <?php endif; ?>
+                                    
                                     <?php if (!empty($tech['eng'])): ?>
-                                    <p class="text-xs text-slate-500 mt-0.5"><?php echo htmlspecialchars($tech['eng']); ?></p>
+                                    <p class="text-xs text-slate-400 mt-1"><?php echo htmlspecialchars($tech['eng']); ?></p>
                                     <?php endif; ?>
                                     
                                     <?php 
@@ -1009,18 +1059,18 @@ if($tech_list_res){
                                         $phone_parts = array_values(array_filter(array_map('trim', explode(',', $tech['phone']))));
                                         $count_p = count($phone_parts);
                                     ?>
-                                        <div class="mt-2.5 space-y-1">
+                                        <div class="mt-3 space-y-1 pt-3 border-t border-slate-50">
                                         <?php foreach($phone_parts as $idx => $p): 
                                             $comma = ($idx < $count_p - 1) ? ',' : '';
                                         ?>
-                                            <p class="text-xs text-indigo-600 font-semibold flex items-center">
-                                                <i class="fas fa-phone text-[10px] mr-2 opacity-70"></i> 
+                                            <p class="text-xs text-slate-600 font-medium flex items-center">
+                                                <i class="fas fa-phone text-[10px] mr-2 text-indigo-400"></i> 
                                                 <?php echo htmlspecialchars(trim($p)) . $comma; ?>
                                             </p>
                                         <?php endforeach; ?>
                                         </div>
                                     <?php else: ?>
-                                        <p class="text-xs text-slate-400 font-medium mt-2.5 flex items-center">
+                                        <p class="text-xs text-slate-400 font-medium mt-3 pt-3 border-t border-slate-50 flex items-center">
                                             <i class="fas fa-phone-slash text-[10px] mr-2 opacity-50"></i> 
                                             ไม่มีเบอร์ติดต่อ
                                         </p>
@@ -1253,7 +1303,7 @@ if($tech_list_res){
                     </div>
 
                     <div id="avatarDiv" class="hidden">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PROFILE PICTURE (รูปภาพ)</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PROFILE PICTURE (รูปประจำตัว)</label>
                         <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
                             <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
@@ -1279,6 +1329,12 @@ if($tech_list_res){
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ENGLISH NAME</label>
                         <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
+                    </div>
+
+                    <!-- เพิ่มช่องใส่ตำแหน่งงาน -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION (ตำแหน่ง)</label>
+                        <input type="text" name="position" id="techAdmin_position" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น นักวิชาการคอมพิวเตอร์">
                     </div>
                     
                     <div>
@@ -1696,7 +1752,7 @@ if($tech_list_res){
             document.getElementById('asset_id').value = id; document.getElementById('asset_code').value = c; document.getElementById('asset_name').value = n; document.getElementById('asset_category').value = cat; document.getElementById('asset_status').value = s; toggleModal('assetModal'); 
         }
 
-        function openTechAdminModal(role, id='', u='', f='', en='', p='', d='', avatarUrl='') { 
+        function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='') { 
             let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
             let baseRole = isManagement ? 'Admin' : 'Technician';
             let title = isManagement ? 'Manage Administrator' : 'Manage Technician';
@@ -1723,6 +1779,7 @@ if($tech_list_res){
             document.getElementById('techAdmin_username').value = u; 
             document.getElementById('techAdmin_fullname').value = f; 
             document.getElementById('techAdmin_englishname').value = en;
+            document.getElementById('techAdmin_position').value = pos; 
             document.getElementById('techAdmin_phone').value = p; 
             
             const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(f || 'admin') + '&backgroundColor=e2e8f0';
