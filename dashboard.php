@@ -867,7 +867,16 @@ if($tech_list_res){
                 </div>
 
                 <div class="mt-8 space-y-6">
-                    <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
+                    <!-- ✨ เพิ่มปุ่ม Filter Pills ✨ -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-indigo-600 text-white shadow-md transition-all">ทั้งหมด</button>
+                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">บริการเทคโนโลยีดิจิทัล</button>
+                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">ยานยนต์</button>
+                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">โสตทัศนูปกรณ์</button>
+                        </div>
+                    </div>
                     
                     <?php 
                     $techs_by_dept = [];
@@ -885,7 +894,7 @@ if($tech_list_res){
                     } else {
                         foreach ($techs_by_dept as $dept => $techs) {
                     ?>
-                        <div class="mb-6">
+                        <div class="mb-6 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept); ?>">
                             <div class="flex items-center mb-3 ml-2">
                                 <span class="w-2 h-2 rounded-full bg-indigo-500 mr-2 shadow-sm shadow-indigo-300"></span>
                                 <h4 class="text-sm font-bold text-slate-700"><?php echo htmlspecialchars($dept); ?></h4>
@@ -1289,8 +1298,15 @@ if($tech_list_res){
                     </div>
 
                     <div id="avatarDiv" class="hidden">
-                        <!-- ✨ ปรับ Label ให้โดดเด่นและใหญ่ขึ้น ✨ -->
-                        <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider mb-3">PROFILE PICTURE (รูปประจำตัว)</label>
+                        <!-- ✨ สลับแสดง Label ปกติ กับ Input Inline สำหรับคลิกแก้ตำแหน่ง ✨ -->
+                        <div id="avatarLabelWrapper" class="mb-3">
+                             <label id="avatarLabel" class="block text-sm font-extrabold text-slate-500 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
+                        </div>
+                        <div id="avatarPositionWrapper" class="hidden mb-3 relative group">
+                             <input type="text" id="avatarPositionInput" class="w-full text-sm font-extrabold text-indigo-600 uppercase tracking-wider bg-transparent border-b-2 border-dashed border-slate-200 focus:border-indigo-500 outline-none pb-1 transition-colors cursor-text" placeholder="ระบุตำแหน่ง..." title="คลิกเพื่อแก้ไขตำแหน่ง">
+                             <i class="fas fa-pencil-alt absolute right-2 top-1 text-slate-300 text-xs pointer-events-none group-hover:text-indigo-400 transition-colors"></i>
+                        </div>
+                        
                         <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
                             <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
@@ -1318,6 +1334,7 @@ if($tech_list_res){
                         <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
+                    <!-- ซ่อนทั้งหมดถ้ากด Edit -->
                     <div id="positionDiv">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION (ตำแหน่ง)</label>
                         <input type="text" name="position" id="techAdmin_position" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น นักวิชาการคอมพิวเตอร์">
@@ -1443,6 +1460,30 @@ if($tech_list_res){
         function openImageModal(imgSrc) {
             document.getElementById('fullSizeImage').src = imgSrc;
             toggleModal('imagePreviewModal');
+        }
+
+        // ฟังก์ชันกรองแผนก (Filter Pills)
+        function filterDept(dept) {
+            document.querySelectorAll('.dept-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+                btn.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+            });
+            
+            let activeBtn = document.getElementById(dept === 'all' ? 'btn-filter-all' : 
+                            (dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' ? 'btn-filter-digital' : 
+                            (dept === 'ฝ่ายงานยานยนต์' ? 'btn-filter-auto' : 'btn-filter-av')));
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+            }
+
+            document.querySelectorAll('.tech-dept-section').forEach(sec => {
+                if (dept === 'all' || sec.getAttribute('data-dept') === dept) {
+                    sec.style.display = '';
+                } else {
+                    sec.style.display = 'none';
+                }
+            });
         }
 
         function show(id) {
@@ -1749,8 +1790,11 @@ if($tech_list_res){
             const deptDiv = document.getElementById('deptDiv');
             const loginCredsDiv = document.getElementById('loginCredsDiv');
             const avatarDiv = document.getElementById('avatarDiv');
-            const avatarLabel = document.getElementById('avatarLabel');
+            const avatarLabelWrapper = document.getElementById('avatarLabelWrapper');
+            const avatarPositionWrapper = document.getElementById('avatarPositionWrapper');
             const positionDiv = document.getElementById('positionDiv');
+            const avatarPositionInput = document.getElementById('avatarPositionInput');
+            const techAdminPosition = document.getElementById('techAdmin_position');
             
             if(isManagement) {
                 adminLevelDiv.classList.remove('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = false;
@@ -1763,14 +1807,25 @@ if($tech_list_res){
                 loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 
+                // ✨ ระบบสลับ Input สำหรับแก้ตำแหน่ง ✨
                 if (id === '') {
-                    // กรณีเพิ่มช่างใหม่ (Add)
-                    if (avatarLabel) avatarLabel.innerText = 'PROFILE PICTURE (รูปประจำตัว)';
+                    // กรณีเพิ่มช่างใหม่ (Add Mode) - โชว์ Label ปกติ และโชว์ช่อง Position ด้านล่าง
+                    if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
+                    if (avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
                     if (positionDiv) positionDiv.classList.remove('hidden');
+                    
+                    avatarPositionInput.name = ''; // ไม่ให้ค่าจากช่องบนถูกส่งไป
+                    techAdminPosition.name = 'position'; // ใช้ค่าจากช่องล่าง
+                    techAdminPosition.value = ''; 
                 } else {
-                    // กรณีแก้ไขช่างเดิม (Edit)
-                    if (avatarLabel) avatarLabel.innerText = pos ? pos : 'PROFILE PICTURE (รูปประจำตัว)';
+                    // กรณีแก้ไขช่างเดิม (Edit Mode) - ซ่อน Label, ซ่อนช่องล่าง และเปลี่ยนเป็น "ข้อความแบบพิมพ์ได้ (Inline Edit)" แทน!
+                    if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
+                    if (avatarPositionWrapper) avatarPositionWrapper.classList.remove('hidden');
                     if (positionDiv) positionDiv.classList.add('hidden');
+                    
+                    avatarPositionInput.value = pos;
+                    avatarPositionInput.name = 'position'; // ส่งค่าตำแหน่งจากตรงนี้แทน
+                    techAdminPosition.name = ''; // ตัดการส่งค่าช่องล่าง
                 }
             }
 
@@ -1778,7 +1833,6 @@ if($tech_list_res){
             document.getElementById('techAdmin_username').value = u; 
             document.getElementById('techAdmin_fullname').value = f; 
             document.getElementById('techAdmin_englishname').value = en;
-            document.getElementById('techAdmin_position').value = pos; 
             document.getElementById('techAdmin_phone').value = p; 
             
             const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(f || 'admin') + '&backgroundColor=e2e8f0';
