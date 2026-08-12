@@ -765,17 +765,18 @@ if($tech_list_res){
                                             
                                             $js_uid = $u['id']; $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); $js_fname = htmlspecialchars($u['full_name'] ?? '', ENT_QUOTES); $js_ename = htmlspecialchars($u['english_name'] ?? '', ENT_QUOTES); $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES); $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
                                             
-                                            $displayName = !empty($u['full_name']) ? $u['full_name'] : '-';
-                                            if (!empty($u['english_name'])) {
-                                                $displayName .= " <span class='text-slate-400 font-normal text-xs ml-1'>({$u['english_name']})</span>";
-                                            }
+                                            $th_name = !empty($u['full_name']) ? $u['full_name'] : '-';
+                                            $en_name = !empty($u['english_name']) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$u['english_name']}</div>" : "";
 
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 font-bold text-slate-700'>{$u['username']}</td>
-                                                <td class='px-6 py-4 text-slate-800 font-bold'>
+                                                <td class='px-6 py-4'>
                                                     <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3'><i class='fas {$icon} text-xs'></i></div>
-                                                        {$displayName}
+                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas {$icon} text-xs'></i></div>
+                                                        <div>
+                                                            <div class='text-slate-800 font-bold'>{$th_name}</div>
+                                                            {$en_name}
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td class='px-6 py-4 text-slate-600 font-medium'>".(!empty($u['department']) ? $u['department'] : '-')."</td>
@@ -856,16 +857,17 @@ if($tech_list_res){
 
                                                 $img_src = !empty($t['avatar_url']) ? htmlspecialchars($t['avatar_url']) : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0";
                                                 
-                                                $displayName = !empty($t['full_name']) ? $t['full_name'] : '-';
-                                                if (!empty($t['english_name'])) {
-                                                    $displayName .= " <span class='text-slate-400 font-normal text-xs ml-1'>({$t['english_name']})</span>";
-                                                }
+                                                $th_name = !empty($t['full_name']) ? $t['full_name'] : '-';
+                                                $en_name = !empty($t['english_name']) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$t['english_name']}</div>" : "";
 
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                                    <td class='px-6 py-4 text-slate-800 font-bold'>
+                                                    <td class='px-6 py-4'>
                                                         <div class='flex items-center'>
-                                                            <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" class='w-9 h-9 rounded-full object-cover border border-slate-200 shadow-sm mr-3' alt='avatar'>
-                                                            {$displayName}
+                                                            <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" class='w-9 h-9 rounded-full object-cover border border-slate-200 shadow-sm mr-3 shrink-0' alt='avatar'>
+                                                            <div>
+                                                                <div class='text-slate-800 font-bold'>{$th_name}</div>
+                                                                {$en_name}
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td class='px-6 py-4 text-slate-600 font-medium'>{$dept}</td>
@@ -1187,7 +1189,6 @@ if($tech_list_res){
                     <div id="avatarDiv" class="hidden">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PROFILE PICTURE (รูปภาพ)</label>
                         <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
-                            <!-- ปรับขนาดกรอบรูปเป็น 110x110 ให้ออกมาเหมือนภาพตัวอย่าง -->
                             <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover">
                             </div>
