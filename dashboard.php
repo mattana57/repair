@@ -889,10 +889,10 @@ $custom_dept_order = [
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-wrap gap-2.5">
-                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200">ทั้งหมด</button>
-                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm">โสตทัศนูปกรณ์</button>
-                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm">ยานยนต์</button>
+                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
+                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
+                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
+                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
                         </div>
                     </div>
                     
@@ -1089,6 +1089,11 @@ $custom_dept_order = [
                                     
                                     <?php if (!empty($tech['eng'])): ?>
                                     <p class="text-xs text-slate-400 mt-1"><?php echo htmlspecialchars($tech['eng']); ?></p>
+                                    <?php endif; ?>
+
+                                    <!-- ✨ เพิ่มตำแหน่งงานตรงนี้ ✨ -->
+                                    <?php if (!empty($tech['pos'])): ?>
+                                    <p class="text-[11px] font-bold text-indigo-600 mt-1.5"><?php echo htmlspecialchars($tech['pos']); ?></p>
                                     <?php endif; ?>
                                     
                                     <?php 
@@ -1293,7 +1298,7 @@ $custom_dept_order = [
         </div>
     </div>
 
-    <!-- ✨ MODAL Manage Technician ✨ -->
+    <!-- MODAL Manage Technician -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
@@ -1339,7 +1344,6 @@ $custom_dept_order = [
                              <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
                         </div>
                         
-                        <!-- ✨ ส่วนที่แก้ไข: Dropdown สำหรับเลือก และ ดินสอสำหรับ Pop-up พิมพ์เอง ✨ -->
                         <div id="avatarPositionWrapper" class="hidden mb-3 w-max">
                              <div id="positionDisplayGroup" class="flex items-center gap-2">
                                  <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="enableDropdownEdit()" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
@@ -1522,7 +1526,6 @@ $custom_dept_order = [
             toggleModal('imagePreviewModal');
         }
 
-        // ✨ ระบบ Inline Edit แบบผสมผสาน: Dropdown + Pencil Pop-up ✨
         function enableDropdownEdit() {
             document.getElementById('positionDisplayGroup').classList.add('hidden');
             const selectEl = document.getElementById('avatarPositionSelect');
@@ -1595,7 +1598,7 @@ $custom_dept_order = [
                 hiddenInput = document.createElement('input');
                 hiddenInput.type = 'hidden';
                 hiddenInput.id = 'final_avatar_position';
-                hiddenInput.name = 'position'; // ส่งค่าเข้าฐานข้อมูลในชื่อ position
+                hiddenInput.name = 'position';
                 document.querySelector('form[action="dashboard.php?tab=technicians"]').appendChild(hiddenInput);
             }
             hiddenInput.value = val;
