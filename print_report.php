@@ -32,7 +32,7 @@ function getPrefixName($name) {
 
 $tech_formal_name = getPrefixName($selected_tech);
 
-// ✨ แก้ไข: กำหนดรายชื่อช่างและจัดกลุ่มตามฝ่ายงานที่คุณระบุไว้เป๊ะๆ ✨
+// ✨ กำหนดรายชื่อช่างและจัดกลุ่มตามฝ่ายงาน
 $grouped_techs = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => [
         'นาย สมพร วงษ์จำปา',
@@ -213,23 +213,39 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 </head>
 <body>
 
-    <!-- แถบเมนูควบคุม ด้านบน -->
-    <div class="no-print bg-palette-header text-white p-3.5 sticky top-0 z-50 shadow-md">
-        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
+    <!-- ✨ แถบเมนูควบคุม ด้านบน (แก้ไข Layout ให้เหมือนรูปที่ 3 เป๊ะๆ) ✨ -->
+    <div class="no-print bg-palette-header text-white py-4 px-6 sticky top-0 z-50 shadow-md">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-start gap-4">
             
-            <div class="flex items-center space-x-3">
-                <a href="dashboard.php?tab=reports" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all backdrop-blur-sm">
-                    ← Dashboard
-                </a>
-                <h1 class="font-bold text-sm border-l border-white/30 pl-3 text-white tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
+            <!-- ฝั่งซ้าย: ปุ่มกลับ และกลุ่มปุ่มสลับมุมมอง (แบ่งเป็น 2 บรรทัด) -->
+            <div class="flex flex-col space-y-4">
+                <div class="flex items-center space-x-3">
+                    <a href="dashboard.php?tab=reports" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-xs font-bold text-white transition-all backdrop-blur-sm shadow-sm">
+                        ← Dashboard
+                    </a>
+                    <h1 class="font-bold text-sm border-l-2 border-white/30 pl-3 text-white tracking-wide">ระบบออกเอกสารรายงาน</h1>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
+                       class="px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm flex items-center <?php echo $report_type === 'table' ? 'btn-palette-active' : 'btn-palette-inactive'; ?>">
+                        📊 ตารางรายงาน
+                    </a>
+                    <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
+                       class="px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm flex items-center <?php echo $report_type === 'memo' ? 'btn-palette-active' : 'btn-palette-inactive'; ?>">
+                        📜 บันทึกข้อความ
+                    </a>
+                    <button type="button" onclick="window.print()" class="bg-[#AEE4FF] hover:bg-[#8CD8FF] text-[#033495] text-xs px-4 py-2 rounded-full font-bold shadow-md transition-all flex items-center">
+                        🖨️ พิมพ์ / โหลด PDF
+                    </button>
+                </div>
             </div>
 
-            <!-- ฟอร์มเลือกกรองข้อมูล -->
-            <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5">
+            <!-- ฝั่งขวา: ฟอร์มเลือกกรองข้อมูล -->
+            <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 pt-1">
                 <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                 
                 <div>
-                    <select name="tech" class="bg-white text-[#033495] font-semibold text-xs rounded-xl px-3 py-1.5 border border-sky-200 shadow-sm focus:outline-none">
+                    <select name="tech" class="bg-white text-[#033495] font-bold text-xs rounded-full px-4 py-2 border-none shadow-sm focus:outline-none appearance-none pr-8 cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23033495%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
                         <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>🌟 ช่างทุกคน (ภาพรวมคณะ)</option>
                         <?php 
                         foreach($grouped_techs as $dept => $techs) {
@@ -245,7 +261,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </div>
 
                 <div>
-                    <select name="month" class="bg-white text-[#033495] font-semibold text-xs rounded-xl px-3 py-1.5 border border-sky-200 shadow-sm focus:outline-none">
+                    <select name="month" class="bg-white text-[#033495] font-bold text-xs rounded-full px-4 py-2 border-none shadow-sm focus:outline-none appearance-none pr-8 cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23033495%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
                         <?php 
                         for($m=1; $m<=12; $m++) {
                             $sel = ($selected_month === $m) ? 'selected' : '';
@@ -255,24 +271,10 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </select>
                 </div>
 
-                <button type="submit" class="bg-[#033495] hover:bg-[#022578] text-white text-xs px-3.5 py-1.5 rounded-xl font-bold transition-all shadow-sm">
+                <button type="submit" class="bg-[#033495] hover:bg-[#022578] text-white text-xs px-4 py-2 rounded-full font-bold transition-all shadow-sm">
                     ค้นหา
                 </button>
             </form>
-
-            <div class="flex items-center space-x-2">
-                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                   class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm <?php echo $report_type === 'table' ? 'btn-palette-active' : 'btn-palette-inactive'; ?>">
-                    📊 ตารางรายงาน
-                </a>
-                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                   class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm <?php echo $report_type === 'memo' ? 'btn-palette-active' : 'btn-palette-inactive'; ?>">
-                    📜 บันทึกข้อความ
-                </a>
-                <button type="button" onclick="window.print()" class="bg-[#AEE4FF] hover:bg-[#8CD8FF] text-[#033495] text-xs px-3.5 py-1.5 rounded-xl font-bold shadow-md transition-all">
-                    🖨️ พิมพ์ / โหลด PDF
-                </button>
-            </div>
 
         </div>
     </div>
@@ -477,7 +479,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
         <!-- ท้ายกระดาษ: ซ่อนเมื่อสั่งพิมพ์ -->
         <div class="page-footer no-print border-t border-slate-200 pt-2 text-[10px] text-slate-400 flex justify-between">
-            <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม </span>
+            <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
             <span>วันที่พิมพ์เอกสาร: <?php echo date('d/m/Y H:i'); ?> น.</span>
         </div>
         
