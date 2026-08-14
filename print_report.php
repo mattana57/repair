@@ -135,20 +135,21 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เอกสารรายงานสรุป - MBS REPAIR</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; background-color: #f1f5f9; color: #1e293b; margin: 0; padding: 0; }
+        /* พื้นหลังหน้าเว็บใช้สีเทาหม่น เพื่อให้เอกสารสีขาวโดดเด่นขึ้นมา */
+        body { font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; background-color: #e2e8f0; color: #1e293b; margin: 0; padding: 0; }
         
         .a4-container {
             font-family: 'Sarabun', sans-serif;
             width: 210mm;
             min-height: 297mm;
             padding: 20mm 20mm 20mm 25mm;
-            margin: 30px auto;
+            margin: 30px auto 50px auto;
             background: white;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             position: relative;
             color: #000;
         }
@@ -201,44 +202,45 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 </head>
 <body>
 
-    <!-- ✨ แถบเมนูควบคุม ด้านบน (สีน้ำเงินเข้มแบบเดิม แต่ปุ่มและ Dropdown ทรงใหม่สวยๆ) ✨ -->
-    <div class="no-print bg-gradient-to-r from-[#033495] to-blue-600 py-4 px-6 sticky top-0 z-50 shadow-md">
+    <!-- ✨ แถบเมนูควบคุม ธีม Dashboard (Indigo Gradient) ✨ -->
+    <div class="no-print bg-gradient-to-r from-indigo-700 to-violet-600 text-white py-4 px-6 sticky top-0 z-50 shadow-lg">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             
             <!-- ฝั่งซ้าย: ปุ่มกลับ และกลุ่มปุ่มสลับมุมมอง -->
-            <div class="flex flex-col space-y-4">
+            <div class="flex flex-col space-y-3.5">
                 <div class="flex items-center space-x-4">
-                    <a href="dashboard.php?tab=reports" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center backdrop-blur-sm">
+                    <a href="dashboard.php?tab=reports" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center backdrop-blur-sm border border-white/10">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </a>
-                    <h1 class="font-extrabold text-base border-l-2 border-white/30 pl-4 text-white tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
+                    <h1 class="font-extrabold text-sm border-l-2 border-indigo-400 pl-4 text-white tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2.5">
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center shadow-sm border <?php echo $report_type === 'table' ? 'bg-[#FFB8D0] text-[#033495] border-[#FFB8D0]' : 'bg-white/10 text-white hover:bg-white/20 border-white/10 backdrop-blur-sm'; ?>">
-                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-[#033495]' : 'text-white/80'; ?>"></i> ตารางรายงาน
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center shadow-sm <?php echo $report_type === 'table' ? 'bg-white text-indigo-700' : 'bg-indigo-800/40 text-indigo-100 hover:bg-indigo-800/60 border border-indigo-500/30'; ?>">
+                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-500' : 'text-indigo-300'; ?>"></i> ตารางรายงาน
                     </a>
                     <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center shadow-sm border <?php echo $report_type === 'memo' ? 'bg-[#FFB8D0] text-[#033495] border-[#FFB8D0]' : 'bg-white/10 text-white hover:bg-white/20 border-white/10 backdrop-blur-sm'; ?>">
-                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-[#033495]' : 'text-white/80'; ?>"></i> บันทึกข้อความ
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center shadow-sm <?php echo $report_type === 'memo' ? 'bg-white text-indigo-700' : 'bg-indigo-800/40 text-indigo-100 hover:bg-indigo-800/60 border border-indigo-500/30'; ?>">
+                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-500' : 'text-indigo-300'; ?>"></i> บันทึกข้อความ
                     </a>
-                    <button type="button" onclick="window.print()" class="bg-[#AEE4FF] hover:bg-[#8CD8FF] text-[#033495] text-xs px-4 py-2 rounded-xl font-bold shadow-md transition-all flex items-center border border-[#AEE4FF]">
-                        <i class="fas fa-print mr-1.5"></i> พิมพ์ / โหลด PDF
+                    <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-md transition-all flex items-center border border-slate-700 ml-2">
+                        <i class="fas fa-print mr-1.5 text-slate-300"></i> พิมพ์ / โหลด PDF
                     </button>
                 </div>
             </div>
 
-            <!-- ฝั่งขวา: ฟอร์มเลือกกรองข้อมูล -->
-            <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 mt-2 md:mt-0">
+            <!-- ฝั่งขวา: ฟอร์มเลือกกรองข้อมูล แบบคลีนๆ -->
+            <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 mt-2 md:mt-0 bg-white/10 p-2 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner">
                 <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                 
-                <!-- ✨ Dropdown เลือกช่าง (คลีนๆ ไม่มี Emoji) ✨ -->
                 <div class="relative">
-                    <select name="tech" class="bg-white text-slate-800 font-bold text-xs rounded-xl px-4 py-2.5 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-300 appearance-none pr-8 cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23033495%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
-                        <option value="all" class="font-bold text-blue-600" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>-- แสดงช่างทุกคน (ภาพรวม) --</option>
+                    <select name="tech" class="bg-white text-slate-800 font-bold text-xs rounded-xl px-4 py-2 border-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
+                        <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>รวมทุกฝ่ายงาน (ทั้งหมด)</option>
+                        
                         <?php 
                         foreach($grouped_techs as $dept => $techs) {
+                            // ✨ ใช้ optgroup ธรรมดาแบบคลีนๆ ไม่อิโมจิ ✨
                             echo "<optgroup label='--- ".htmlspecialchars($dept)." ---'>";
                             foreach($techs as $t_name) {
                                 $selected = ($selected_tech === $t_name) ? 'selected' : '';
@@ -251,7 +253,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </div>
 
                 <div class="relative">
-                    <select name="month" class="bg-white text-slate-800 font-bold text-xs rounded-xl px-4 py-2.5 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-300 appearance-none pr-8 cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23033495%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
+                    <select name="month" class="bg-white text-slate-800 font-bold text-xs rounded-xl px-4 py-2 border-0 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
                         <?php 
                         for($m=1; $m<=12; $m++) {
                             $sel = ($selected_month === $m) ? 'selected' : '';
@@ -261,7 +263,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </select>
                 </div>
 
-                <button type="submit" class="bg-[#1e293b] hover:bg-black text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all shadow-md">
+                <button type="submit" class="bg-indigo-900 hover:bg-slate-900 text-white text-xs px-5 py-2 rounded-xl font-bold transition-all shadow-md border border-indigo-800">
                     ค้นหา
                 </button>
             </form>
