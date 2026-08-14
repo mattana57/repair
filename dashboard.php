@@ -889,11 +889,11 @@ $custom_dept_order = [
                     <!-- ✨ ปุ่มกรองฝ่ายงานดีไซน์โดดเด่นและมีขนาดใหญ่ขึ้น ✨ -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
-                        <div class="flex flex-wrap gap-2.5">
-                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-extrabold transition-all duration-200 border-2 bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105 cursor-pointer">ทั้งหมด</button>
-                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 border-2 bg-white text-slate-700 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 shadow-xs cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 border-2 bg-white text-slate-700 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 shadow-xs cursor-pointer">โสตทัศนูปกรณ์</button>
-                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 border-2 bg-white text-slate-700 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 shadow-xs cursor-pointer">ยานยนต์</button>
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-6 py-3 rounded-full text-base font-extrabold transition-all duration-300 border-2 bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-300 transform scale-105 cursor-pointer ring-4 ring-indigo-100">ทั้งหมด</button>
+                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-6 py-3 rounded-full text-base font-bold transition-all duration-300 border-2 bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 shadow-sm hover:shadow-md cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
+                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-6 py-3 rounded-full text-base font-bold transition-all duration-300 border-2 bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 shadow-sm hover:shadow-md cursor-pointer">โสตทัศนูปกรณ์</button>
+                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-6 py-3 rounded-full text-base font-bold transition-all duration-300 border-2 bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 shadow-sm hover:shadow-md cursor-pointer">ยานยนต์</button>
                         </div>
                     </div>
                     
@@ -1528,10 +1528,10 @@ $custom_dept_order = [
             icon.style.display = 'inline';
         }
 
-        // ✨ ปรับปรุงฟังก์ชัน filterDept ให้จัดการสไตล์ปุ่มแคปซูลอย่างสมบูรณ์ ✨
+        // ✨ อัปเดตฟังก์ชัน filterDept ให้ใช้ Style ของปุ่มแบบใหม่ที่ใหญ่ขึ้น ✨
         function filterDept(dept) {
-            const defaultStyle = "dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 border-2 bg-white text-slate-700 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 shadow-xs cursor-pointer";
-            const activeStyle = "dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-extrabold transition-all duration-200 border-2 bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105 cursor-pointer";
+            const defaultStyle = "dept-filter-btn px-6 py-3 rounded-full text-base font-bold transition-all duration-300 border-2 bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 shadow-sm hover:shadow-md cursor-pointer";
+            const activeStyle = "dept-filter-btn px-6 py-3 rounded-full text-base font-extrabold transition-all duration-300 border-2 bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-300 transform scale-105 cursor-pointer ring-4 ring-indigo-100";
 
             document.querySelectorAll('.dept-filter-btn').forEach(btn => {
                 btn.className = defaultStyle;
