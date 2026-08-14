@@ -273,7 +273,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $english_name = !empty($_POST['english_name']) ? $_POST['english_name'] : NULL;
     $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
     
-    // จัดการข้อมูล Position ที่รับมาจากฟอร์ม
     $position = !empty($_POST['position']) ? $_POST['position'] : NULL;
     if (isset($_POST['position_select'])) {
         $pos_val = $_POST['position_select'];
@@ -889,11 +888,11 @@ $custom_dept_order = [
                 <div class="mt-8 space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-indigo-600 text-white shadow-md transition-all">ทั้งหมด</button>
-                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">โสตทัศนูปกรณ์</button>
-                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-1.5 rounded-full text-[11px] font-bold bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-all">ยานยนต์</button>
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 border-2 bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105">ทั้งหมด</button>
+                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 border-2 bg-white text-slate-600 border-slate-200 shadow-sm hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50">บริการเทคโนโลยีดิจิทัล</button>
+                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 border-2 bg-white text-slate-600 border-slate-200 shadow-sm hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50">โสตทัศนูปกรณ์</button>
+                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 border-2 bg-white text-slate-600 border-slate-200 shadow-sm hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50">ยานยนต์</button>
                         </div>
                     </div>
                     
@@ -1374,7 +1373,7 @@ $custom_dept_order = [
                         <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
-                    <!-- ✨ เปลี่ยนช่อง POSITION เป็น Dropdown ✨ -->
+                    <!-- ✨ เปลี่ยนช่อง POSITION เป็น Dropdown สวยๆ เหมือน Department ✨ -->
                     <div id="positionDiv">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION</label>
                         <select name="position_select" id="techAdmin_position_select" onchange="toggleCustomInput(this, 'techAdmin_position_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
@@ -1822,7 +1821,7 @@ $custom_dept_order = [
             }
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับ Input ของ Position และ Department ✨
+        // ✨ ฟังก์ชันจัดการ Dropdown และ Input Custom ✨
         function toggleCustomInput(selectElement, customInputId) {
             const customInput = document.getElementById(customInputId);
             if(selectElement.value === 'อื่นๆ') { 
@@ -1885,8 +1884,9 @@ $custom_dept_order = [
                 loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 
+                // ✨ สลับโหมดแก้ไขและเพิ่มช่าง ✨
                 if (id === '') {
-                    // โหมดเพิ่มช่าง (Add Mode) - แสดงช่องเลือกตำแหน่ง
+                    // โหมดเพิ่มช่าง (Add Mode) - แสดงช่องเลือกตำแหน่งแบบ Dropdown
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
                     if (avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
                     if (positionDiv) positionDiv.classList.remove('hidden');
@@ -1897,7 +1897,7 @@ $custom_dept_order = [
                     
                     setDropdownOrCustom('techAdmin_position_select', 'techAdmin_position_custom', '');
                 } else {
-                    // โหมดแก้ไขช่าง (Edit Mode) - ซ่อนช่องเลือกตำแหน่ง แต่ให้แก้ด้านบน
+                    // โหมดแก้ไขช่าง (Edit Mode) - ซ่อน Dropdown โชว์ Inline Edit บนรูป
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
                     if (avatarPositionWrapper) avatarPositionWrapper.classList.remove('hidden');
                     if (positionDiv) positionDiv.classList.add('hidden');
