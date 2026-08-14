@@ -477,7 +477,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
         <!-- ท้ายกระดาษ: ซ่อนเมื่อสั่งพิมพ์ -->
         <div class="page-footer no-print border-t border-slate-200 pt-2 text-[10px] text-slate-400 flex justify-between">
-            <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
+            <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม </span>
             <span>วันที่พิมพ์เอกสาร: <?php echo date('d/m/Y H:i'); ?> น.</span>
         </div>
         
