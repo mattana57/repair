@@ -271,8 +271,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     
     $full_name = !empty($_POST['full_name']) ? $_POST['full_name'] : NULL;
     $english_name = !empty($_POST['english_name']) ? $_POST['english_name'] : NULL;
-    $position = !empty($_POST['position']) ? $_POST['position'] : NULL;
     $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
+    
+    // จัดการข้อมูล Position ที่รับมาจากฟอร์ม
+    $position = !empty($_POST['position']) ? $_POST['position'] : NULL;
+    if (isset($_POST['position_select'])) {
+        $pos_val = $_POST['position_select'];
+        if ($pos_val === 'อื่นๆ' && !empty($_POST['position_custom'])) {
+            $position = $_POST['position_custom'];
+        } elseif (!empty($pos_val)) {
+            $position = $pos_val;
+        }
+    }
     
     if ($role === 'Technician') {
         $department = isset($_POST['department_select']) ? $_POST['department_select'] : NULL;
@@ -1364,9 +1374,18 @@ $custom_dept_order = [
                         <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
+                    <!-- ✨ เปลี่ยนช่อง POSITION เป็น Dropdown ✨ -->
                     <div id="positionDiv">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION (ตำแหน่ง)</label>
-                        <input type="text" name="position" id="techAdmin_position" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น นักวิชาการคอมพิวเตอร์">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION</label>
+                        <select name="position_select" id="techAdmin_position_select" onchange="toggleCustomInput(this, 'techAdmin_position_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
+                            <option value="" disabled selected>-- Select Position --</option>
+                            <option value="นักวิชาการคอมพิวเตอร์">นักวิชาการคอมพิวเตอร์</option>
+                            <option value="นักวิชาการโสตทัศนศึกษา">นักวิชาการโสตทัศนศึกษา</option>
+                            <option value="เจ้าหน้าที่บริหารงานทั่วไป">เจ้าหน้าที่บริหารงานทั่วไป</option>
+                            <option value="พนักงานขับรถยนต์">พนักงานขับรถยนต์</option>
+                            <option value="อื่นๆ">อื่นๆ (Custom)</option>
+                        </select>
+                        <input type="text" name="position_custom" id="techAdmin_position_custom" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="Specify position">
                     </div>
                     
                     <div>
@@ -1376,7 +1395,7 @@ $custom_dept_order = [
                     
                     <div id="deptDiv">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">DEPARTMENT</label>
-                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomDept(this, 'techAdmin_department_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
+                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomInput(this, 'techAdmin_department_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
                             <option value="" disabled selected>-- Select Department --</option>
                             <option value="ฝ่ายงานบริการเทคโนโลยีดิจิทัล">ฝ่ายงานบริการเทคโนโลยีดิจิทัล</option>
                             <option value="ฝ่ายงานยานยนต์">ฝ่ายงานยานยนต์</option>
@@ -1784,12 +1803,11 @@ $custom_dept_order = [
             }
         }
 
-        // ✨ แก้ไขฟังก์ชันพิมพ์ให้ไปที่ไฟล์ print_report.php ✨
         function printOfficialReport() {
             const filterValue = document.getElementById('techFilter').value;
-            let printUrl = 'print_report.php';
+            let printUrl = 'print_report.php?type=table';
             if (filterValue !== 'all') {
-                printUrl += `?tech=${encodeURIComponent(filterValue)}`;
+                printUrl += `&tech=${encodeURIComponent(filterValue)}`;
             }
             window.open(printUrl, '_blank');
         }
@@ -1804,10 +1822,14 @@ $custom_dept_order = [
             }
         }
 
-        function toggleCustomDept(selectElement, customInputId) {
+        // ✨ ฟังก์ชันสำหรับสลับ Input ของ Position และ Department ✨
+        function toggleCustomInput(selectElement, customInputId) {
             const customInput = document.getElementById(customInputId);
-            if(selectElement.value === 'อื่นๆ') { customInput.classList.remove('hidden'); customInput.required = true;
-            } else { customInput.classList.add('hidden'); customInput.required = false; }
+            if(selectElement.value === 'อื่นๆ') { 
+                customInput.classList.remove('hidden'); customInput.required = true;
+            } else { 
+                customInput.classList.add('hidden'); customInput.required = false; 
+            }
         }
 
         function setDropdownOrCustom(selectId, customInputId, val) {
@@ -1848,7 +1870,9 @@ $custom_dept_order = [
             const positionDiv = document.getElementById('positionDiv');
             const avatarPositionInput = document.getElementById('avatarPositionInput');
             const displayPositionLabel = document.getElementById('displayPositionLabel');
-            const techAdminPosition = document.getElementById('techAdmin_position');
+            
+            const techAdminPosSelect = document.getElementById('techAdmin_position_select');
+            const techAdminPosCustom = document.getElementById('techAdmin_position_custom');
             
             if(isManagement) {
                 adminLevelDiv.classList.remove('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = false;
@@ -1862,14 +1886,18 @@ $custom_dept_order = [
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 
                 if (id === '') {
+                    // โหมดเพิ่มช่าง (Add Mode) - แสดงช่องเลือกตำแหน่ง
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
                     if (avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
                     if (positionDiv) positionDiv.classList.remove('hidden');
                     
                     avatarPositionInput.name = ''; 
-                    techAdminPosition.name = 'position'; 
-                    techAdminPosition.value = ''; 
+                    if(techAdminPosSelect) techAdminPosSelect.name = 'position_select';
+                    if(techAdminPosCustom) techAdminPosCustom.name = 'position_custom';
+                    
+                    setDropdownOrCustom('techAdmin_position_select', 'techAdmin_position_custom', '');
                 } else {
+                    // โหมดแก้ไขช่าง (Edit Mode) - ซ่อนช่องเลือกตำแหน่ง แต่ให้แก้ด้านบน
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
                     if (avatarPositionWrapper) avatarPositionWrapper.classList.remove('hidden');
                     if (positionDiv) positionDiv.classList.add('hidden');
@@ -1878,7 +1906,9 @@ $custom_dept_order = [
                     displayPositionLabel.innerText = displayPosText;
                     avatarPositionInput.value = pos;
                     avatarPositionInput.name = 'position'; 
-                    techAdminPosition.name = ''; 
+                    
+                    if(techAdminPosSelect) techAdminPosSelect.name = '';
+                    if(techAdminPosCustom) techAdminPosCustom.name = '';
                 }
             }
 
@@ -1886,7 +1916,6 @@ $custom_dept_order = [
             document.getElementById('techAdmin_username').value = u; 
             document.getElementById('techAdmin_fullname').value = f; 
             document.getElementById('techAdmin_englishname').value = en;
-            document.getElementById('techAdmin_position').value = pos; 
             document.getElementById('techAdmin_phone').value = p; 
             
             const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(f || 'admin') + '&backgroundColor=e2e8f0';
