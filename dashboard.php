@@ -273,11 +273,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $english_name = !empty($_POST['english_name']) ? $_POST['english_name'] : NULL;
     $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
     
+    // ✨ รับค่า Position จากทั้งสองทาง (โหมด Add และ โหมด Edit) ✨
     $position = !empty($_POST['position']) ? $_POST['position'] : NULL;
+    
     if (isset($_POST['position_select'])) {
         $pos_val = $_POST['position_select'];
         if ($pos_val === 'อื่นๆ' && !empty($_POST['position_custom'])) {
             $position = $_POST['position_custom'];
+        } elseif (!empty($pos_val)) {
+            $position = $pos_val;
+        }
+    }
+
+    if (isset($_POST['avatar_position_select'])) {
+        $pos_val = $_POST['avatar_position_select'];
+        if ($pos_val === 'อื่นๆ' && !empty($_POST['avatar_position_custom'])) {
+            $position = $_POST['avatar_position_custom'];
         } elseif (!empty($pos_val)) {
             $position = $pos_val;
         }
@@ -886,14 +897,13 @@ $custom_dept_order = [
                 </div>
 
                 <div class="mt-8 space-y-6">
-                    <!-- ✨ ปุ่มกรองฝ่ายงาน: ขนาดพอดี ตัวอักษรสีเข้มชัดเจน ✨ -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-wrap gap-2.5">
-                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-sm">ทั้งหมด</button>
-                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 shadow-sm">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 shadow-sm">โสตทัศนูปกรณ์</button>
-                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 shadow-sm">ยานยนต์</button>
+                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer ring-2 ring-indigo-100">ทั้งหมด</button>
+                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
+                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
+                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
                         </div>
                     </div>
                     
@@ -973,7 +983,6 @@ $custom_dept_order = [
                                                 $th_name_html = !empty($th_name) ? $th_name : '-';
                                                 $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
                                                 
-                                                // ✨ ส่วนที่แก้ไข: เพิ่มตำแหน่งงานให้โชว์อยู่ใต้ชื่อฝ่ายงาน ✨
                                                 $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
@@ -1340,15 +1349,31 @@ $custom_dept_order = [
                         <div id="avatarLabelWrapper" class="mb-3">
                              <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
                         </div>
+                        
+                        <!-- ✨ แก้ไข: เปลี่ยนจาก Inline Input เป็น Dropdown Menu สำหรับแก้ไขตำแหน่ง ✨ -->
                         <div id="avatarPositionWrapper" class="hidden mb-3 relative group w-max">
                              <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="enableInlineEdit()">
                                  <span id="displayPositionLabel">ตำแหน่งงาน</span>
                                  <i class="fas fa-pencil-alt ml-2 text-slate-400 text-xs group-hover:text-indigo-400"></i>
                              </div>
-                             <input type="text" id="avatarPositionInput" class="hidden w-full text-sm font-extrabold text-indigo-600 uppercase tracking-wider bg-transparent border-b-2 border-indigo-400 focus:border-indigo-600 outline-none pb-1 transition-colors mt-1" onblur="disableInlineEdit()" onkeypress="if(event.key === 'Enter') { event.preventDefault(); disableInlineEdit(); }">
+                             
+                             <div id="avatarPositionEditBox" class="hidden mt-1 w-64 bg-white rounded-lg shadow-lg border border-slate-200 p-2 z-10">
+                                 <select id="avatarPositionInput" class="w-full text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-2 outline-none cursor-pointer" onchange="checkCustomAvatarPosition(this.value)">
+                                    <option value="นักวิชาการคอมพิวเตอร์">นักวิชาการคอมพิวเตอร์</option>
+                                    <option value="นักวิชาการโสตทัศนศึกษา">นักวิชาการโสตทัศนศึกษา</option>
+                                    <option value="เจ้าหน้าที่บริหารงานทั่วไป">เจ้าหน้าที่บริหารงานทั่วไป</option>
+                                    <option value="พนักงานขับรถยนต์">พนักงานขับรถยนต์</option>
+                                    <option value="อื่นๆ">อื่นๆ (Custom)</option>
+                                 </select>
+                                 <input type="text" id="avatarPositionCustomInput" class="hidden w-full text-sm mt-2 font-bold text-slate-700 bg-white border border-slate-300 rounded-md p-2 outline-none" placeholder="พิมพ์ตำแหน่งใหม่...">
+                                 <div class="flex justify-end gap-2 mt-2">
+                                     <button type="button" onclick="disableInlineEdit(false)" class="text-xs px-2 py-1 bg-slate-100 text-slate-600 rounded hover:bg-slate-200">ยกเลิก</button>
+                                     <button type="button" onclick="disableInlineEdit(true)" class="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700">ตกลง</button>
+                                 </div>
+                             </div>
                         </div>
                         
-                        <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
+                        <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm mt-2">
                             <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
                             </div>
@@ -1509,32 +1534,51 @@ $custom_dept_order = [
             toggleModal('imagePreviewModal');
         }
 
+        // ✨ ระบบสลับแสดงผล Dropdown ให้แก้ไขตำแหน่งได้ ✨
         function enableInlineEdit() {
-            const label = document.getElementById('displayPositionLabel');
-            const input = document.getElementById('avatarPositionInput');
-            const icon = label.nextElementSibling;
-            
-            label.style.display = 'none';
-            icon.style.display = 'none';
-            input.classList.remove('hidden');
-            input.focus();
+            document.getElementById('displayPositionLabel').parentElement.style.display = 'none';
+            document.getElementById('avatarPositionEditBox').classList.remove('hidden');
+            document.getElementById('avatarPositionInput').focus();
         }
 
-        function disableInlineEdit() {
+        function disableInlineEdit(save = false) {
             const label = document.getElementById('displayPositionLabel');
-            const input = document.getElementById('avatarPositionInput');
-            const icon = label.nextElementSibling;
+            const selectBox = document.getElementById('avatarPositionInput');
+            const customBox = document.getElementById('avatarPositionCustomInput');
+            const editBox = document.getElementById('avatarPositionEditBox');
             
-            if(input.value.trim() !== '') {
-                label.innerText = input.value.trim();
+            if (save) {
+                let finalVal = selectBox.value === 'อื่นๆ' ? customBox.value.trim() : selectBox.value;
+                if (finalVal !== '') {
+                    label.innerText = finalVal;
+                    // สร้าง input hidden ซ่อนไว้เพื่อส่งค่ากลับไป PHP ตอนกด Save
+                    let hiddenInput = document.getElementById('final_avatar_position');
+                    if (!hiddenInput) {
+                        hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.id = 'final_avatar_position';
+                        hiddenInput.name = 'position';
+                        document.querySelector('form[action="dashboard.php?tab=technicians"]').appendChild(hiddenInput);
+                    }
+                    hiddenInput.value = finalVal;
+                }
             }
             
-            input.classList.add('hidden');
-            label.style.display = 'inline';
-            icon.style.display = 'inline';
+            editBox.classList.add('hidden');
+            label.parentElement.style.display = 'flex';
         }
 
-        // ✨ อัปเดตฟังก์ชัน filterDept กลับมาใช้ปุ่มขนาดกลาง และเอา Active jump ออก ✨
+        function checkCustomAvatarPosition(val) {
+            const customInput = document.getElementById('avatarPositionCustomInput');
+            if(val === 'อื่นๆ') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+                customInput.value = '';
+            }
+        }
+
         function filterDept(dept) {
             const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm";
             const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100";
@@ -1872,11 +1916,11 @@ $custom_dept_order = [
             const avatarLabelWrapper = document.getElementById('avatarLabelWrapper');
             const avatarPositionWrapper = document.getElementById('avatarPositionWrapper');
             const positionDiv = document.getElementById('positionDiv');
-            const avatarPositionInput = document.getElementById('avatarPositionInput');
             const displayPositionLabel = document.getElementById('displayPositionLabel');
             
-            const techAdminPosSelect = document.getElementById('techAdmin_position_select');
-            const techAdminPosCustom = document.getElementById('techAdmin_position_custom');
+            // ยกเลิก input hidden ก่อนหน้าถ้ามี
+            let oldHidden = document.getElementById('final_avatar_position');
+            if(oldHidden) oldHidden.remove();
             
             if(isManagement) {
                 adminLevelDiv.classList.remove('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = false;
@@ -1894,10 +1938,8 @@ $custom_dept_order = [
                     if (avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
                     if (positionDiv) positionDiv.classList.remove('hidden');
                     
-                    avatarPositionInput.name = ''; 
-                    if(techAdminPosSelect) techAdminPosSelect.name = 'position_select';
-                    if(techAdminPosCustom) techAdminPosCustom.name = 'position_custom';
-                    
+                    document.getElementById('techAdmin_position_select').name = 'position_select';
+                    document.getElementById('techAdmin_position_custom').name = 'position_custom';
                     setDropdownOrCustom('techAdmin_position_select', 'techAdmin_position_custom', '');
                 } else {
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
@@ -1906,11 +1948,19 @@ $custom_dept_order = [
                     
                     let displayPosText = pos ? pos : 'ระบุตำแหน่งงาน';
                     displayPositionLabel.innerText = displayPosText;
-                    avatarPositionInput.value = pos;
-                    avatarPositionInput.name = 'position'; 
+                    document.getElementById('techAdmin_position_select').name = '';
+                    document.getElementById('techAdmin_position_custom').name = '';
                     
-                    if(techAdminPosSelect) techAdminPosSelect.name = '';
-                    if(techAdminPosCustom) techAdminPosCustom.name = '';
+                    // Set dropdown in inline edit
+                    setDropdownOrCustom('avatarPositionInput', 'avatarPositionCustomInput', pos);
+                    
+                    // Create default hidden input for position when editing
+                    let hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = 'final_avatar_position';
+                    hiddenInput.name = 'position';
+                    hiddenInput.value = pos;
+                    document.querySelector('form[action="dashboard.php?tab=technicians"]').appendChild(hiddenInput);
                 }
             }
 
