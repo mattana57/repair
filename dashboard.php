@@ -886,14 +886,14 @@ $custom_dept_order = [
                 </div>
 
                 <div class="mt-8 space-y-6">
-                    <!-- ✨ ปุ่มกรองฝ่ายงาน: ปรับให้ขนาดพอดี ไม่ใหญ่เกินไป แต่ยังคงความชัดเจน ✨ -->
+                    <!-- ✨ ปุ่มกรองฝ่ายงาน: ขนาดพอดี ตัวอักษรสีเข้มชัดเจน ✨ -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-wrap gap-2.5">
-                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200">ทั้งหมด</button>
-                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm">โสตทัศนูปกรณ์</button>
-                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm">ยานยนต์</button>
+                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-sm">ทั้งหมด</button>
+                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 shadow-sm">บริการเทคโนโลยีดิจิทัล</button>
+                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 shadow-sm">โสตทัศนูปกรณ์</button>
+                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 shadow-sm">ยานยนต์</button>
                         </div>
                     </div>
                     
@@ -972,6 +972,9 @@ $custom_dept_order = [
                                                 
                                                 $th_name_html = !empty($th_name) ? $th_name : '-';
                                                 $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
+                                                
+                                                // ✨ ส่วนที่แก้ไข: เพิ่มตำแหน่งงานให้โชว์อยู่ใต้ชื่อฝ่ายงาน ✨
+                                                $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                     <td class='px-6 py-4'>
@@ -983,7 +986,10 @@ $custom_dept_order = [
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td class='px-6 py-4 text-slate-600 font-medium'>{$dept}</td>
+                                                    <td class='px-6 py-4'>
+                                                        <div class='text-slate-600 font-medium'>{$dept}</div>
+                                                        {$pos_html}
+                                                    </td>
                                                     <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td> 
                                                     <td class='px-6 py-4 text-center'>{$statusBadge}</td>
                                                     <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
@@ -1528,11 +1534,10 @@ $custom_dept_order = [
             icon.style.display = 'inline';
         }
 
-        // ✨ อัปเดตขนาดและเอฟเฟกต์ของปุ่ม Filter ✨
+        // ✨ อัปเดตฟังก์ชัน filterDept กลับมาใช้ปุ่มขนาดกลาง และเอา Active jump ออก ✨
         function filterDept(dept) {
-            // ขนาดพอดีๆ ไม่อึดอัด ไม่กระโดด (ลดจากขยาย scale และเปลี่ยนความหนา เป็นแค่เปลี่ยนสี)
             const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm";
-            const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200";
+            const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100";
 
             document.querySelectorAll('.dept-filter-btn').forEach(btn => {
                 btn.className = defaultStyle;
