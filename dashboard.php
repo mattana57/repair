@@ -409,7 +409,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก (Sorting Order) ให้ตรงกันทุกส่วน
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -886,13 +886,14 @@ $custom_dept_order = [
                 </div>
 
                 <div class="mt-8 space-y-6">
+                    <!-- ✨ ปุ่มกรองฝ่ายงานดีไซน์โดดเด่นและมีขนาดใหญ่ขึ้น ✨ -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
-                        <div class="flex flex-wrap gap-3">
-                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 border-2 bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105">ทั้งหมด</button>
-                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 border-2 bg-white text-slate-600 border-slate-200 shadow-sm hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 border-2 bg-white text-slate-600 border-slate-200 shadow-sm hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50">โสตทัศนูปกรณ์</button>
-                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition-all duration-300 border-2 bg-white text-slate-600 border-slate-200 shadow-sm hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50">ยานยนต์</button>
+                        <div class="flex flex-wrap gap-2.5">
+                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-extrabold transition-all duration-200 border-2 bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105 cursor-pointer">ทั้งหมด</button>
+                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 border-2 bg-white text-slate-700 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 shadow-xs cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
+                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 border-2 bg-white text-slate-700 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 shadow-xs cursor-pointer">โสตทัศนูปกรณ์</button>
+                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 border-2 bg-white text-slate-700 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 shadow-xs cursor-pointer">ยานยนต์</button>
                         </div>
                     </div>
                     
@@ -1261,15 +1262,10 @@ $custom_dept_order = [
     
     <!-- Image Preview Modal -->
     <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <!-- พื้นหลังสีดำ กดเพื่อปิด -->
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
-        
-        <!-- ปุ่มกากบาท (ยึดติดมุมขวาบนของหน้าจอ) -->
         <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
             <i class="fas fa-times text-xl"></i>
         </button>
-
-        <!-- รูปภาพ -->
         <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
     </div>
 
@@ -1293,7 +1289,7 @@ $custom_dept_order = [
         </div>
     </div>
 
-    <!-- ✨ MODAL Manage Technician ✨ -->
+    <!-- MODAL Manage Technician -->
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
@@ -1373,7 +1369,6 @@ $custom_dept_order = [
                         <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
-                    <!-- ✨ เปลี่ยนช่อง POSITION เป็น Dropdown สวยๆ เหมือน Department ✨ -->
                     <div id="positionDiv">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION</label>
                         <select name="position_select" id="techAdmin_position_select" onchange="toggleCustomInput(this, 'techAdmin_position_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
@@ -1533,18 +1528,23 @@ $custom_dept_order = [
             icon.style.display = 'inline';
         }
 
+        // ✨ ปรับปรุงฟังก์ชัน filterDept ให้จัดการสไตล์ปุ่มแคปซูลอย่างสมบูรณ์ ✨
         function filterDept(dept) {
+            const defaultStyle = "dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 border-2 bg-white text-slate-700 border-slate-200 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 shadow-xs cursor-pointer";
+            const activeStyle = "dept-filter-btn px-5 py-2.5 rounded-2xl text-sm font-extrabold transition-all duration-200 border-2 bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200 scale-105 cursor-pointer";
+
             document.querySelectorAll('.dept-filter-btn').forEach(btn => {
-                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
-                btn.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+                btn.className = defaultStyle;
             });
             
-            let activeBtn = document.getElementById(dept === 'all' ? 'btn-filter-all' : 
-                            (dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' ? 'btn-filter-digital' : 
-                            (dept === 'ฝ่ายงานยานยนต์' ? 'btn-filter-auto' : 'btn-filter-av')));
+            let activeBtnId = 'btn-filter-all';
+            if (dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล') activeBtnId = 'btn-filter-digital';
+            else if (dept === 'ฝ่ายงานโสตทัศนูปกรณ์') activeBtnId = 'btn-filter-av';
+            else if (dept === 'ฝ่ายงานยานยนต์') activeBtnId = 'btn-filter-auto';
+
+            let activeBtn = document.getElementById(activeBtnId);
             if(activeBtn) {
-                activeBtn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
-                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+                activeBtn.className = activeStyle;
             }
 
             document.querySelectorAll('.tech-dept-section').forEach(sec => {
@@ -1821,7 +1821,6 @@ $custom_dept_order = [
             }
         }
 
-        // ✨ ฟังก์ชันจัดการ Dropdown และ Input Custom ✨
         function toggleCustomInput(selectElement, customInputId) {
             const customInput = document.getElementById(customInputId);
             if(selectElement.value === 'อื่นๆ') { 
@@ -1884,9 +1883,7 @@ $custom_dept_order = [
                 loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 
-                // ✨ สลับโหมดแก้ไขและเพิ่มช่าง ✨
                 if (id === '') {
-                    // โหมดเพิ่มช่าง (Add Mode) - แสดงช่องเลือกตำแหน่งแบบ Dropdown
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
                     if (avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
                     if (positionDiv) positionDiv.classList.remove('hidden');
@@ -1897,7 +1894,6 @@ $custom_dept_order = [
                     
                     setDropdownOrCustom('techAdmin_position_select', 'techAdmin_position_custom', '');
                 } else {
-                    // โหมดแก้ไขช่าง (Edit Mode) - ซ่อน Dropdown โชว์ Inline Edit บนรูป
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
                     if (avatarPositionWrapper) avatarPositionWrapper.classList.remove('hidden');
                     if (positionDiv) positionDiv.classList.add('hidden');
