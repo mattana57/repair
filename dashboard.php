@@ -418,6 +418,15 @@ $custom_dept_order = [
     'ฝ่ายงานทั่วไป',
     'อื่นๆ'
 ];
+
+// ✨ ไอคอนสำหรับแต่ละแผนก (ใช้ร่วมกันทั้งหน้า Tech และ Team) ✨
+$dept_icons = [
+    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
+    'ฝ่ายงานยานยนต์' => 'fas fa-car',
+    'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
+    'แม่บ้าน' => 'fas fa-broom',
+    'ฝ่ายงานทั่วไป' => 'fas fa-users-cog'
+];
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -809,6 +818,9 @@ $custom_dept_order = [
                 </div>
             </div>
 
+            <!-- ===================================================================================
+                 ✨ ส่วนที่มีการเปลี่ยนแปลงธีม: Team Management (ทำเนียบช่าง) ✨
+                 =================================================================================== -->
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
@@ -915,16 +927,30 @@ $custom_dept_order = [
                         if ($pos_a == $pos_b) return strcmp($a, $b);
                         return $pos_a - $pos_b;
                     });
+
+                    // ไอคอนสำหรับ Header แผนก
+                    $dept_icons = [
+                        'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
+                        'ฝ่ายงานยานยนต์' => 'fas fa-car',
+                        'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
+                        'แม่บ้าน' => 'fas fa-broom',
+                        'ฝ่ายงานทั่วไป' => 'fas fa-users-cog'
+                    ];
                     
                     if (empty($techs_by_dept)) {
                         echo "<div class='modern-card p-8 text-center text-slate-400 font-medium'>No technicians found</div>";
                     } else {
                         foreach ($techs_by_dept as $dept => $techs) {
+                            $icon_class = $dept_icons[$dept] ?? 'fas fa-users';
                     ?>
-                        <div class="mb-6 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept); ?>">
-                            <div class="flex items-center mb-3 ml-2">
-                                <span class="w-2 h-2 rounded-full bg-indigo-500 mr-2 shadow-sm shadow-indigo-300"></span>
-                                <h4 class="text-sm font-bold text-slate-700"><?php echo htmlspecialchars($dept); ?></h4>
+                        <div class="mb-8 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept); ?>">
+                            <!-- ✨ Header ของแผนก ดีไซน์ใหม่ให้ดูโดดเด่น ✨ -->
+                            <div class="flex items-center mb-4 ml-1">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 flex items-center justify-center text-indigo-600 mr-3 shadow-sm border border-indigo-100/50">
+                                    <i class="<?php echo $icon_class; ?> text-lg"></i>
+                                </div>
+                                <h3 class="font-extrabold text-lg text-slate-800"><?php echo htmlspecialchars($dept); ?></h3>
+                                <div class="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent ml-5"></div>
                             </div>
                             <div class="modern-card overflow-hidden border border-slate-200/60 shadow-xs">
                                 <div class="overflow-x-auto w-full">
@@ -1014,9 +1040,6 @@ $custom_dept_order = [
                 </div>
             </div>
 
-            <!-- ===================================================================================
-                 ✨ ส่วนการแสดงผล Team Management (ทำเนียบช่าง) ✨
-                 =================================================================================== -->
             <div id="team_cards" class="section hidden animate-fade-in no-print">
                 <div class="mb-8">
                     <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Team Management</h2>
@@ -1024,44 +1047,6 @@ $custom_dept_order = [
                 </div>
 
                 <?php 
-                $departments_data = [];
-                $res_techs = $conn->query("SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว'");
-                if($res_techs && $res_techs->num_rows > 0) {
-                    while($row = $res_techs->fetch_assoc()) {
-                        $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป';
-                        if(!isset($departments_data[$dept])) $departments_data[$dept] = [];
-                        
-                        $img = !empty($row['avatar_url']) ? $row['avatar_url'] : '';
-                        
-                        list($th_name, $en_name) = splitThaiEngName($row['full_name'], $row['english_name']);
-
-                        $departments_data[$dept][] = [
-                            'th' => $th_name,
-                            'eng' => $en_name, 
-                            'pos' => !empty($row['position']) ? $row['position'] : getAutoPosition($th_name),
-                            'phone' => $row['phone'],
-                            'img' => $img,
-                            'raw_name' => $row['full_name']
-                        ];
-                    }
-                }
-
-                $dept_icons = [
-                    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
-                    'ฝ่ายงานยานยนต์' => 'fas fa-car',
-                    'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
-                    'แม่บ้าน' => 'fas fa-broom'
-                ];
-                
-                uksort($departments_data, function($a, $b) use ($custom_dept_order) {
-                    $pos_a = array_search($a, $custom_dept_order);
-                    $pos_b = array_search($b, $custom_dept_order);
-                    $pos_a = ($pos_a === false) ? 999 : $pos_a;
-                    $pos_b = ($pos_b === false) ? 999 : $pos_b;
-                    if ($pos_a == $pos_b) return strcmp($a, $b);
-                    return $pos_a - $pos_b;
-                });
-
                 if(empty($departments_data)) {
                     echo "<div class='modern-card p-12 text-center flex flex-col items-center justify-center'><i class='fas fa-user-slash text-4xl text-slate-300 mb-4'></i><p class='text-slate-500 font-bold'>ยังไม่มีช่างในระบบ หรือยังไม่มีช่างที่ผูกบัญชีสำเร็จ</p></div>";
                 }
@@ -1078,13 +1063,10 @@ $custom_dept_order = [
                         <div class="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent ml-6"></div>
                     </div>
                     
-                    <!-- ✨ เปลี่ยน Grid ให้ความกว้างการ์ดยึดตามเนื้อหา/รูปภาพ ไม่บีบจนผอมสูง ✨ -->
                     <div class="flex flex-wrap gap-6 items-start">
                         <?php foreach ($techs as $tech): ?>
-                        <!-- ✨ อัปเดตการ์ด: ใส่ Glow Effect และล็อคความกว้างขั้นต่ำให้อ้วนสมส่วน ✨ -->
                         <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px]">
                             
-                            <!-- รูปภาพ (สัดส่วน 4/5 อ้วนๆ แบบดั้งเดิม) -->
                             <div class="relative w-full aspect-[4/5] bg-slate-100 overflow-hidden">
                                 <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
                                      onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
@@ -1149,7 +1131,6 @@ $custom_dept_order = [
                 </div>
                 <?php endforeach; ?>
             </div>
-            <!-- =================================================================================== -->
 
             <div id="assets" class="section hidden space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col">
