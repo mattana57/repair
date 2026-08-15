@@ -420,7 +420,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอน
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -881,7 +881,6 @@ $dept_icons = [
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
-                                        <!-- ลบคอลัมน์ Department ออก -->
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -936,8 +935,8 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <!-- ✨ เพิ่มช่องค้นหาหน้าตาราง Team (แยกอิสระ) ✨ -->
-                <div class="mt-10 space-y-6">
+                <!-- ✨ เพิ่มระยะห่าง mt-16 ให้ส่วน Technicians และจัดโครงสร้างการค้นหาใหม่ ✨ -->
+                <div class="mt-16 space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full sm:w-auto">
@@ -956,10 +955,10 @@ $dept_icons = [
                         </div>
                     </div>
                     
-                    <div id="techniciansTableContainer" class="modern-card overflow-hidden border border-slate-200/60 shadow-xs">
+                    <div id="techniciansTableContainer" class="modern-card overflow-hidden border border-slate-200/60 shadow-xs bg-white">
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                                <!-- ✨ รื้อโครงสร้าง: เอาหัวคอลัมน์ออกไปไว้ใต้แถบแผนก ✨ -->
+                                <!-- ✨ รื้อโครงสร้าง: เอาหัวคอลัมน์ออกไปไว้ใต้แถบแผนก และจัดให้พอดีไม่มีขอบเกิน ✨ -->
                                 <tbody class="text-sm bg-white" id="techniciansTableBody">
                                 <?php 
                                 $techs_by_dept = [];
@@ -994,10 +993,10 @@ $dept_icons = [
                                     foreach ($techs_by_dept as $dept => $techs) {
                                         $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                         
-                                        // ✨ 1. แถบสีม่วงของฝ่ายงาน (Ribbon Header) เพิ่มระยะห่าง mt-10 ✨
+                                        // ✨ 1. แถบสีม่วงของฝ่ายงาน (Ribbon Header) ลบขอบให้ชนพอดี ✨
                                         echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                                 <td colspan='6' class='p-0 bg-white border-0'>
-                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 shadow-md shadow-indigo-200/50 mx-4 mt-10 mb-0 rounded-t-2xl'>
+                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-4 shadow-sm rounded-t-xl mb-[2px]'>
                                                         <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                         <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
                                                         
@@ -1022,14 +1021,14 @@ $dept_icons = [
                                                 </td>
                                               </tr>";
 
-                                        // ✨ 2. หัวคอลัมน์สีเหลืองเข้ม อยู่ใต้แถบแผนก ✨
-                                        echo "<tr class='bg-amber-400 text-slate-900 text-[11px] uppercase tracking-widest font-extrabold tech-col-header border-y border-amber-500 shadow-sm' data-dept='".htmlspecialchars($dept)."'>
-                                                <th class='px-6 py-3.5'>Name</th>
-                                                <th class='px-6 py-3.5'>Department</th>
-                                                <th class='px-6 py-3.5'>Contact</th> 
-                                                <th class='px-6 py-3.5 text-center'>Status / Code</th>
-                                                <th class='px-6 py-3.5 text-center'>Jobs</th>
-                                                <th class='px-6 py-3.5 text-right'>Action</th>
+                                        // ✨ 2. หัวคอลัมน์สีเหลือง (amber-200) อยู่ใต้แถบแผนก ✨
+                                        echo "<tr class='bg-[#fef08a] text-[#854d0e] text-[11px] uppercase tracking-widest font-extrabold tech-col-header' data-dept='".htmlspecialchars($dept)."'>
+                                                <th class='px-6 py-4 border-0'>Name</th>
+                                                <th class='px-6 py-4 border-0'>Department</th>
+                                                <th class='px-6 py-4 border-0'>Contact</th> 
+                                                <th class='px-6 py-4 text-center border-0'>Status / Code</th>
+                                                <th class='px-6 py-4 text-center border-0'>Jobs</th>
+                                                <th class='px-6 py-4 text-right border-0'>Action</th>
                                             </tr>";
 
                                         // ✨ 3. รายชื่อช่างในแผนกนั้น ✨
@@ -1070,7 +1069,7 @@ $dept_icons = [
                                             
                                             $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
-                                            echo "<tr class='hover:bg-slate-50/50 transition-colors border-b border-slate-50 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                                 <td class='px-6 py-4'>
                                                     <div class='flex items-center'>
                                                         <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
@@ -1098,8 +1097,8 @@ $dept_icons = [
                                             </tr>";
                                         }
                                         
-                                        // เติมช่องว่างด้านล่างแผนกให้สวยงาม
-                                        echo "<tr class='tech-dept-spacer' data-dept='".htmlspecialchars($dept)."'><td colspan='6' class='h-4 bg-white border-0'></td></tr>";
+                                        // ✨ เติมช่องว่างด้านล่างแผนกให้เป็นระเบียบ เท่ากันทุกแผนก ✨
+                                        echo "<tr class='tech-dept-spacer' data-dept='".htmlspecialchars($dept)."'><td colspan='6' class='h-8 bg-white border-0'></td></tr>";
                                     }
                                 } 
                                 ?>
@@ -1855,6 +1854,12 @@ $dept_icons = [
                 let colHeader = document.querySelector(`#technicians .tech-col-header[data-dept="${secDept}"]`);
                 if (colHeader) {
                     colHeader.style.display = hasVisibleRow ? '' : 'none';
+                }
+
+                // สั่งซ่อน/แสดง Spacer ให้ทำงานพร้อมกับแถบชื่อฝ่ายงาน
+                let spacer = document.querySelector(`#technicians .tech-dept-spacer[data-dept="${secDept}"]`);
+                if (spacer) {
+                    spacer.style.display = hasVisibleRow ? '' : 'none';
                 }
             });
 
