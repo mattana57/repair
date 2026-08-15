@@ -233,8 +233,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 <!-- พื้นหลังโหมดมืดเป็น slate-800 -->
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
 
-    <!-- แถบเมนูโหมดมืด (slate-700) -->
-    <div class="no-print bg-white dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
+    <!-- แถบเมนูโหมดมืด (slate-900 สีดำทึบ) -->
+    <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             
             <!-- ฝั่งซ้าย -->
@@ -245,19 +245,19 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <a href="dashboard.php?tab=reports" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </a>
-                    <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
+                    <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-600 pl-4 text-slate-800 dark:text-slate-100 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
                 <!-- บรรทัดล่าง -->
                 <div class="flex flex-wrap items-center gap-2.5">
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
-                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'; ?>">
+                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-500'; ?>"></i> ตารางรายงาน
                     </a>
                     
                     <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
-                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'; ?>">
+                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-500'; ?>"></i> บันทึกข้อความ
                     </a>
                     
                     <!-- ปุ่ม Print -->
@@ -270,10 +270,10 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
             <!-- ฝั่งขวา: ฟอร์มค้นหา + สลับธีม -->
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto pb-0.5">
-                <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-600 shadow-inner">
+                <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
                     <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                     
-                    <select name="tech" class="bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors">
+                    <select name="tech" class="bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors">
                         <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>รวมทุกฝ่ายงาน (ทั้งหมด)</option>
                         
                         <?php 
@@ -281,14 +281,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             echo "<optgroup label='--- ".htmlspecialchars($dept)." ---' class='bg-slate-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold'>";
                             foreach($techs as $t_name) {
                                 $selected = ($selected_tech === $t_name) ? 'selected' : '';
-                                echo "<option value='".htmlspecialchars($t_name)."' $selected class='bg-white dark:bg-slate-600 text-slate-800 dark:text-slate-100'>".htmlspecialchars($t_name)."</option>";
+                                echo "<option value='".htmlspecialchars($t_name)."' $selected class='bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100'>".htmlspecialchars($t_name)."</option>";
                             }
                             echo "</optgroup>";
                         }
                         ?>
                     </select>
 
-                    <select name="month" class="bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors">
+                    <select name="month" class="bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors">
                         <?php 
                         for($m=1; $m<=12; $m++) {
                             $sel = ($selected_month === $m) ? 'selected' : '';
@@ -303,7 +303,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </form>
 
                 <!-- ปุ่มสลับ Theme ระยะห่างกำลังสวย -->
-                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-600 border-2 border-slate-200 dark:border-slate-500 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-4">
+                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-4">
                     <i id="theme-toggle-icon" class="fas fa-moon"></i>
                 </button>
             </div>
@@ -495,11 +495,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </h3>
             <?php else: ?>
                 <!-- ================= หน้าที่ 2 เป็นต้นไป ================= -->
-                <div class="mt-4 mb-4">
-                    <h3 class="font-bold text-sm text-slate-800">
-                        บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง (ต่อ) - หน้า <?php echo $page_index + 1; ?>/<?php echo $total_pages; ?>
-                    </h3>
-                </div>
+                <!-- นำคำว่า (ต่อ) - หน้า... ออกตามคำขอ -->
+                <div class="pt-4"></div>
             <?php endif; ?>
 
             <!-- ส่วนของตารางข้อมูล (มีทุกหน้า) -->
