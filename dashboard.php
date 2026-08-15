@@ -420,7 +420,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอน
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -783,15 +783,13 @@ $dept_icons = [
                                             $techName = "<span class='text-slate-400'>Unassigned</span>";
                                         }
 
-                                        // ✨ อัปเดตตาราง: จัดการ Padding และ สีตัวอักษรให้ตรงกันเป๊ะ ✨
                                         $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                // ใส่ ml-2.5 เพื่อชดเชย px-2.5 ของกรอบด้านบน ทำให้ตัวหนังสือตรงกัน
-                                                $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
+                                                $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5'>{$t_pos}</div>";
                                             }
                                         }
 
@@ -883,7 +881,6 @@ $dept_icons = [
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
-                                        <!-- ลบคอลัมน์ Department ออก -->
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -938,7 +935,7 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <!-- ✨ เพิ่มช่องค้นหาที่หน้าตาราง (Team View) ✨ -->
+                <!-- ✨ เพิ่มช่องค้นหาหน้าตาราง Team (แยกอิสระ) ✨ -->
                 <div class="mt-10 space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
@@ -946,7 +943,7 @@ $dept_icons = [
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
                             <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="search-tech-table" oninput="searchTeamTable(this.value)" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="search-tech-table" oninput="searchTeamTable()" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
                             
                             <div class="flex flex-wrap gap-2.5">
@@ -1038,8 +1035,8 @@ $dept_icons = [
                                             $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
                                             
-                                            // ✨ ซ่อนชื่อสำหรับการค้นหา (เก็บทั้งไทยและอังกฤษ) ✨
-                                            $search_name = strtolower($js_fname . ' ' . $js_ename);
+                                            // ✨ เพิ่มการผสานชื่อไทย-อังกฤษ ไว้สำหรับการค้นหาให้ตารางหาเจอ ✨
+                                            $search_name = $t['full_name'] . ' ' . $en_name . ' ' . $th_name;
                                             $js_search_name = htmlspecialchars($search_name, ENT_QUOTES);
                                             
                                             $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
@@ -1069,6 +1066,7 @@ $dept_icons = [
                                             
                                             $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
+                                            // ✨ ใส่ data-tech-name ให้สามารถหาชื่อช่างเจอเวลาค้นหา ✨
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                                 <td class='px-6 py-4'>
                                                     <div class='flex items-center'>
@@ -1104,7 +1102,7 @@ $dept_icons = [
                         </div>
                     </div>
                     <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ✨ -->
-                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-6 border border-slate-200/60 shadow-xs bg-white text-center">
+                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border border-slate-200/60 shadow-xs bg-white text-center">
                         <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 mx-auto">
                             <i class="fas fa-search text-2xl text-slate-300"></i>
                         </div>
@@ -1129,7 +1127,7 @@ $dept_icons = [
                         <!-- ช่องค้นหา -->
                         <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="search-tech-card" oninput="searchTechCards(this.value)" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            <input type="text" id="search-tech-card" oninput="searchTechCards()" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                         </div>
 
                         <div class="flex flex-wrap gap-2.5">
@@ -1214,7 +1212,7 @@ $dept_icons = [
                     
                     <div class="flex flex-wrap gap-6 items-start">
                         <?php foreach ($techs as $tech): 
-                            $search_name = strtolower($tech['th'] . ' ' . $tech['eng']);
+                            $search_name = $tech['raw_name'] . ' ' . $tech['eng'] . ' ' . $tech['th'];
                         ?>
                         <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
@@ -1282,12 +1280,12 @@ $dept_icons = [
                     </div>
                 </div>
                 <?php endforeach; ?>
-                <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card ✨ -->
+                <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card (เปลี่ยนสีคำตามขอ) ✨ -->
                 <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-indigo-100 bg-indigo-50/30 text-center rounded-3xl">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
                         <i class="fas fa-user-lock text-3xl text-indigo-300"></i>
                     </div>
-                    <h3 class="text-indigo-800 font-extrabold text-xl mb-2">ไม่พบรายชื่อช่าง (ที่ผูกบัญชีแล้ว)</h3>
+                    <h3 class="font-extrabold text-xl mb-2"><span class="text-rose-500">ไม่พบรายชื่อช่าง</span> <span class="text-emerald-500">(ที่ผูกบัญชีแล้ว)</span></h3>
                     <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
                         อาจสะกดชื่อผิด หรือ <strong class="text-indigo-600">ช่างท่านนี้ยังไม่ได้ทำการ "ผูกบัญชี LINE"</strong><br>
                         <span class="text-xs text-slate-400 mt-2 block">(สามารถดูรายชื่อช่างทั้งหมดและจัดการช่างใหม่ได้ที่เมนู "Team")</span>
@@ -1799,126 +1797,125 @@ $dept_icons = [
         }
 
         // แยกการกรองแผนกของหน้าตาราง (Team)
+        let activeDeptTable = 'all';
         function filterDeptTable(dept) {
+            activeDeptTable = dept;
             const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm";
             const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100";
 
             let container = document.getElementById('technicians');
             if (!container) return;
 
-            container.querySelectorAll('.dept-filter-btn').forEach(btn => btn.className = defaultStyle);
-            
-            let activeBtnId = 'btn-filter-all';
-            if (dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล') activeBtnId = 'btn-filter-digital';
-            else if (dept === 'ฝ่ายงานโสตทัศนูปกรณ์') activeBtnId = 'btn-filter-av';
-            else if (dept === 'ฝ่ายงานยานยนต์') activeBtnId = 'btn-filter-auto';
-
-            let activeBtn = document.getElementById(activeBtnId);
-            if(activeBtn) activeBtn.className = activeStyle;
+            container.querySelectorAll('.dept-filter-btn').forEach(btn => {
+                btn.className = defaultStyle;
+                let onClickAttr = btn.getAttribute('onclick');
+                if (onClickAttr && (onClickAttr.includes(`'${dept}'`) || onClickAttr.includes(`"${dept}"`))) {
+                    btn.className = activeStyle;
+                }
+            });
 
             let searchInput = document.getElementById('search-tech-table');
-            let currentSearchValue = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '') : '';
+            let currentSearchValue = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, ' ').trim() : '';
+            let hasAnyVisibleTable = false;
 
-            container.querySelectorAll('.tech-dept-section').forEach(sec => {
-                let secDept = sec.getAttribute('data-dept');
+            document.querySelectorAll('#technicians .tech-dept-header').forEach(header => {
+                let secDept = header.getAttribute('data-dept');
                 let deptMatch = (dept === 'all' || secDept === dept);
+                let hasVisibleRow = false;
                 
-                if (deptMatch) {
-                    let hasVisible = false;
-                    
-                    sec.querySelectorAll('.tech-dept-row').forEach(row => {
-                        let name = (row.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, '');
+                document.querySelectorAll(`#technicians .tech-dept-row[data-dept="${secDept}"]`).forEach(row => {
+                    if (deptMatch) {
+                        let name = (row.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, ' ');
                         if (name.includes(currentSearchValue)) {
                             row.style.display = '';
-                            hasVisible = true;
+                            hasVisibleRow = true;
+                            hasAnyVisibleTable = true;
                         } else {
                             row.style.display = 'none';
                         }
-                    });
-                    
-                    sec.querySelectorAll('.tech-dept-header').forEach(header => {
-                        header.style.display = hasVisible ? '' : 'none';
-                    });
-                    
-                    sec.style.display = hasVisible ? '' : 'none';
-                } else {
-                    sec.style.display = 'none';
-                }
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                header.style.display = hasVisibleRow ? '' : 'none';
             });
-            
-            updateTechVisibility();
+
+            let tableContainer = document.querySelector('#technicians .modern-card.overflow-hidden.border');
+            let emptyState = document.querySelector('#technicians .tech-empty-state');
+            if (hasAnyVisibleTable) {
+                if(tableContainer) tableContainer.style.display = '';
+                if(emptyState) { emptyState.classList.add('hidden'); emptyState.classList.remove('flex'); }
+            } else {
+                if(tableContainer) tableContainer.style.display = 'none';
+                if(emptyState) { emptyState.classList.remove('hidden'); emptyState.classList.add('flex'); }
+            }
         }
 
         // ค้นหาเฉพาะในหน้าตาราง (Team)
-        function searchTeamTable(val) {
-            let currentDept = 'all';
-            document.querySelectorAll('#technicians .dept-filter-btn').forEach(btn => {
-                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('digital')) currentDept = 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล';
-                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('av')) currentDept = 'ฝ่ายงานโสตทัศนูปกรณ์';
-                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('auto')) currentDept = 'ฝ่ายงานยานยนต์';
-            });
-            filterDeptTable(currentDept);
+        function searchTeamTable() {
+            filterDeptTable(activeDeptTable);
         }
 
         // แยกการกรองแผนกของหน้าการ์ด (Technician)
+        let activeDeptCard = 'all';
         function filterDeptCard(dept) {
+            activeDeptCard = dept;
             const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm";
             const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100";
 
             let container = document.getElementById('team_cards');
             if (!container) return;
 
-            container.querySelectorAll('.dept-filter-btn').forEach(btn => btn.className = defaultStyle);
-            
-            let activeBtnId = 'btn-filter-all-2';
-            if (dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล') activeBtnId = 'btn-filter-digital-2';
-            else if (dept === 'ฝ่ายงานโสตทัศนูปกรณ์') activeBtnId = 'btn-filter-av-2';
-            else if (dept === 'ฝ่ายงานยานยนต์') activeBtnId = 'btn-filter-auto-2';
-
-            let activeBtn = document.getElementById(activeBtnId);
-            if(activeBtn) activeBtn.className = activeStyle;
+            container.querySelectorAll('.dept-filter-btn').forEach(btn => {
+                btn.className = defaultStyle;
+                let onClickAttr = btn.getAttribute('onclick');
+                if (onClickAttr && (onClickAttr.includes(`'${dept}'`) || onClickAttr.includes(`"${dept}"`))) {
+                    btn.className = activeStyle;
+                }
+            });
 
             let searchInput = document.getElementById('search-tech-card');
-            let currentSearchValue = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '') : '';
+            let currentSearchValue = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, ' ').trim() : '';
+            let hasAnyVisibleCard = false;
 
-            container.querySelectorAll('.tech-dept-section').forEach(sec => {
+            document.querySelectorAll('#team_cards .tech-dept-section').forEach(sec => {
                 let secDept = sec.getAttribute('data-dept');
                 let deptMatch = (dept === 'all' || secDept === dept);
+                let hasVisibleCard = false;
                 
                 if (deptMatch) {
-                    let hasVisible = false;
-                    
                     sec.querySelectorAll('.tech-card-item').forEach(item => {
-                        let name = (item.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, '');
+                        let name = (item.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, ' ');
                         if (name.includes(currentSearchValue)) {
                             item.style.display = '';
-                            hasVisible = true;
+                            hasVisibleCard = true;
+                            hasAnyVisibleCard = true;
                         } else {
                             item.style.display = 'none';
                         }
                     });
                     
-                    sec.style.display = hasVisible ? '' : 'none';
+                    sec.style.display = hasVisibleCard ? '' : 'none';
                 } else {
                     sec.style.display = 'none';
                 }
             });
-            
-            updateTechVisibility();
+
+            let emptyState = document.querySelector('#team_cards .tech-empty-state');
+            if (hasAnyVisibleCard) {
+                if(emptyState) { emptyState.classList.add('hidden'); emptyState.classList.remove('flex'); }
+            } else {
+                if(emptyState) { emptyState.classList.remove('hidden'); emptyState.classList.add('flex'); }
+            }
         }
 
         // ค้นหาเฉพาะในหน้าการ์ด (Technician)
-        function searchTechCards(val) {
-            let currentDept = 'all';
-            document.querySelectorAll('#team_cards .dept-filter-btn').forEach(btn => {
-                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('digital')) currentDept = 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล';
-                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('av')) currentDept = 'ฝ่ายงานโสตทัศนูปกรณ์';
-                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('auto')) currentDept = 'ฝ่ายงานยานยนต์';
-            });
-            filterDeptCard(currentDept);
+        function searchTechCards() {
+            filterDeptCard(activeDeptCard);
         }
 
-        // ฟังก์ชันเดิม เพื่อไม่ให้ปุ่มเก่าพังตอนโหลดแรก (ให้ชี้ไปที่ table ก่อน)
+        // ฟังก์ชันเดิม เผื่อมีบางจุดเรียกใช้ (ให้ชี้ไปที่ table ก่อน)
         function filterDept(dept) {
             filterDeptTable(dept);
             filterDeptCard(dept);
@@ -1942,7 +1939,7 @@ $dept_icons = [
                 searchInput.value = '';
                 let activeSection = document.getElementById(id);
                 if(activeSection && id === 'repairs') {
-                    activeSection.querySelectorAll('table tbody tr').forEach(row => row.style.display = '');
+                    activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)').forEach(row => row.style.display = '');
                 }
             }
 
