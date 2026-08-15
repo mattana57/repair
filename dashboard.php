@@ -420,7 +420,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอน
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -739,7 +739,7 @@ $dept_icons = [
                                     <th class="px-6 py-4">Ticket No.</th>
                                     <th class="px-6 py-4">Reporter</th>
                                     <th class="px-6 py-4">Equipment</th>
-                                    <th class="px-6 py-4">Department</th>
+                                    <th class="px-6 py-4 bg-amber-100 text-amber-800 rounded-lg m-1 shadow-inner">Department</th>
                                     <th class="px-6 py-4">Technician</th>
                                     <th class="px-6 py-4">Root Cause</th>
                                     <th class="px-6 py-4">Received At</th>
@@ -822,7 +822,7 @@ $dept_icons = [
                                                 <div class='text-slate-800 font-bold'>{$row['equipment_type']} {$imageIcon}</div>
                                                 <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='{$row['problem_desc']}'>{$row['problem_desc']}</div>
                                             </td>
-                                            <td class='px-6 py-4'>{$deptEng}</td>
+                                            <td class='px-6 py-4 bg-amber-50/30'>{$deptEng}</td>
                                             <td class='px-6 py-4'>{$techName}</td>
                                             <td class='px-6 py-4'>{$rootCause}</td>
                                             <td class='px-6 py-4 text-xs whitespace-nowrap'>";
@@ -994,10 +994,10 @@ $dept_icons = [
                                     foreach ($techs_by_dept as $dept => $techs) {
                                         $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                         
-                                        // ✨ 1. แถบสีม่วงของฝ่ายงาน (Ribbon Header) ✨
+                                        // ✨ 1. แถบสีม่วงของฝ่ายงาน (Ribbon Header) เพิ่มระยะห่าง mt-10 ✨
                                         echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
-                                                <td colspan='6' class='p-0 bg-slate-50'>
-                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 shadow-md shadow-indigo-200/50 m-3 mb-0 rounded-t-xl'>
+                                                <td colspan='6' class='p-0 bg-white border-0'>
+                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 shadow-md shadow-indigo-200/50 mx-4 mt-10 mb-0 rounded-t-2xl'>
                                                         <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                         <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
                                                         
@@ -1022,14 +1022,14 @@ $dept_icons = [
                                                 </td>
                                               </tr>";
 
-                                        // ✨ 2. หัวคอลัมน์สีเหลือง อยู่ใต้แถบแผนก (Yellow Column Header) ✨
-                                        echo "<tr class='bg-amber-50 border-b border-amber-100 text-amber-700 text-xs uppercase tracking-widest font-bold tech-col-header' data-dept='".htmlspecialchars($dept)."'>
-                                                <th class='px-6 py-3 border-l-[12px] border-white'>Name</th>
-                                                <th class='px-6 py-3'>Department</th>
-                                                <th class='px-6 py-3'>Contact</th> 
-                                                <th class='px-6 py-3 text-center'>Status / Code</th>
-                                                <th class='px-6 py-3 text-center'>Jobs</th>
-                                                <th class='px-6 py-3 text-right border-r-[12px] border-white'>Action</th>
+                                        // ✨ 2. หัวคอลัมน์สีเหลืองเข้ม อยู่ใต้แถบแผนก ✨
+                                        echo "<tr class='bg-amber-400 text-slate-900 text-[11px] uppercase tracking-widest font-extrabold tech-col-header border-y border-amber-500 shadow-sm' data-dept='".htmlspecialchars($dept)."'>
+                                                <th class='px-6 py-3.5'>Name</th>
+                                                <th class='px-6 py-3.5'>Department</th>
+                                                <th class='px-6 py-3.5'>Contact</th> 
+                                                <th class='px-6 py-3.5 text-center'>Status / Code</th>
+                                                <th class='px-6 py-3.5 text-center'>Jobs</th>
+                                                <th class='px-6 py-3.5 text-right'>Action</th>
                                             </tr>";
 
                                         // ✨ 3. รายชื่อช่างในแผนกนั้น ✨
@@ -1099,7 +1099,7 @@ $dept_icons = [
                                         }
                                         
                                         // เติมช่องว่างด้านล่างแผนกให้สวยงาม
-                                        echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'><td colspan='6' class='p-1.5 bg-slate-50'></td></tr>";
+                                        echo "<tr class='tech-dept-spacer' data-dept='".htmlspecialchars($dept)."'><td colspan='6' class='h-4 bg-white border-0'></td></tr>";
                                     }
                                 } 
                                 ?>
@@ -1290,14 +1290,15 @@ $dept_icons = [
                     </div>
                 </div>
                 <?php endforeach; ?>
-                <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card ✨ -->
+                <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card (เปลี่ยนสีคำตามขอ) ✨ -->
                 <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-indigo-100 bg-indigo-50/30 text-center rounded-3xl">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
                         <i class="fas fa-user-lock text-3xl text-indigo-300"></i>
                     </div>
                     <h3 class="font-extrabold text-xl mb-2"><span class="text-rose-500">ไม่พบรายชื่อช่าง</span> <span class="text-emerald-500">(ที่ผูกบัญชีแล้ว)</span></h3>
                     <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
-                        อาจสะกดชื่อผิด หรือ <strong class="text-indigo-600">ช่างท่านนี้ยังไม่ได้ทำการ "ผูกบัญชี LINE"</strong><br>
+                        ไม่มีช่างชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">ช่างท่านนี้ยังไม่ได้ทำการ "ผูกบัญชี LINE"</strong><br>
+                        ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
                         <span class="text-xs text-slate-400 mt-2 block">(สามารถดูรายชื่อช่างทั้งหมดและจัดการช่างใหม่ได้ที่เมนู "Team")</span>
                     </p>
                 </div>
@@ -1778,6 +1779,32 @@ $dept_icons = [
                 document.querySelector('form[action="dashboard.php?tab=technicians"]').appendChild(hiddenInput);
             }
             hiddenInput.value = val;
+        }
+
+        // ✨ ฟังก์ชันจัดการหน้าว่าง (Empty State) เมื่อค้นหาไม่เจอ ✨
+        function updateTechVisibility() {
+            ['technicians', 'team_cards'].forEach(containerId => {
+                let container = document.getElementById(containerId);
+                if (!container) return;
+                
+                let hasAnyVisible = false;
+                container.querySelectorAll('.tech-dept-section').forEach(sec => {
+                    if (sec.style.display !== 'none') {
+                        hasAnyVisible = true;
+                    }
+                });
+                
+                let emptyState = container.querySelector('.tech-empty-state');
+                if (emptyState) {
+                    if (!hasAnyVisible) {
+                        emptyState.classList.remove('hidden');
+                        emptyState.classList.add('flex');
+                    } else {
+                        emptyState.classList.add('hidden');
+                        emptyState.classList.remove('flex');
+                    }
+                }
+            });
         }
 
         // แยกการกรองแผนกของหน้าตาราง (Team)
@@ -2336,6 +2363,7 @@ $dept_icons = [
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : '-';
                     let completed_time = has_completed ? r.completed_at.split(' ')[1].substring(0, 5) : '';
                     
+                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal สีเทา-indigo ให้ตรงกัน ✨
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
                     let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-800 text-white rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
                     if (r.technician_name) {
