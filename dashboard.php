@@ -420,7 +420,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอน
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -783,14 +783,14 @@ $dept_icons = [
                                             $techName = "<span class='text-slate-400'>Unassigned</span>";
                                         }
 
-                                        // ✨ อัปเดตตาราง: ปรับขนาดอักษรและระยะชิดซ้ายให้ตรงกันเป๊ะ ✨
+                                        // ✨ อัปเดตตาราง: ใช้สีส้ม-โรส และปรับระยะให้ชิดซ้ายตรงกันเป๊ะ ✨
                                         $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
-                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-600 rounded-lg text-[11px] font-bold tracking-wider mb-1'>{$dept_str}</div>";
+                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-orange-50 text-orange-700 border border-orange-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                $deptEng .= "<div class='text-slate-500 font-medium text-[11px] ml-2.5'>{$t_pos}</div>";
+                                                $deptEng .= "<div class='text-rose-500 font-bold text-[11px] ml-2.5'>{$t_pos}</div>";
                                             }
                                         }
 
@@ -882,7 +882,6 @@ $dept_icons = [
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
-                                        <!-- ลบคอลัมน์ Department ออก -->
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -2195,13 +2194,13 @@ $dept_icons = [
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : '-';
                     let completed_time = has_completed ? r.completed_at.split(' ')[1].substring(0, 5) : '';
                     
-                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal พร้อมแก้ขนาดอักษรและ Alignment ✨
+                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal สีส้ม-โรส ✨
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
-                    let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-600 rounded-lg text-[11px] font-bold tracking-wider mb-1'>${dName}</div>`;
+                    let deptEng = `<div class='px-2.5 py-1 inline-block bg-orange-50 text-orange-700 border border-orange-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
                     if (r.technician_name) {
                         let info = techInfoMap[r.technician_name];
                         if (info && info.pos) {
-                            deptEng += `<div class='text-slate-500 font-medium text-[11px] ml-2.5'>${info.pos}</div>`;
+                            deptEng += `<div class='text-rose-500 font-bold text-[11px] ml-2.5'>${info.pos}</div>`;
                         }
                     }
 
