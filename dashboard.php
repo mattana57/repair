@@ -816,9 +816,6 @@ $dept_icons = [
                 </div>
             </div>
 
-            <!-- ===================================================================================
-                 ✨ ส่วนที่มีการเปลี่ยนแปลงธีม: Team Management (ตารางรายชื่อช่าง) ✨
-                 =================================================================================== -->
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
@@ -839,7 +836,7 @@ $dept_icons = [
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
-                                        <th class="px-6 py-4">Department</th>
+                                        <!-- ลบคอลัมน์ Department ออกตามที่ขอ -->
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -876,7 +873,7 @@ $dept_icons = [
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600 font-medium'>".(!empty($u['department']) ? $u['department'] : '-')."</td>
+                                                <!-- ลบ td Department ออกตามที่ขอ -->
                                                 <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($u['phone'])."</td>
                                                 <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
@@ -887,7 +884,7 @@ $dept_icons = [
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>No admins found</td></tr>"; }
+                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No admins found</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
