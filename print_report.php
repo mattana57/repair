@@ -134,24 +134,45 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เอกสารรายงานสรุป - MBS REPAIR</title>
+    <!-- ตั้งค่าให้ Tailwind รองรับ Dark Mode ผ่าน class -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
-        /* พื้นหลังหน้าเว็บใช้สีเทาอ่อน เพื่อให้เอกสารสีขาวโดดเด่นขึ้นมา */
-        body { font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; }
         
+        /* พื้นหลังหน้าเว็บเปลี่ยนสีตามโหมดมืด/สว่าง แต่มี Transition นุ่มๆ */
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; 
+            margin: 0; padding: 0; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* กระดาษ A4 ต้องเป็นสีขาวตัวหนังสือสีดำเสมอ แม้ใน Dark Mode */
         .a4-container {
             font-family: 'Sarabun', sans-serif;
             width: 210mm;
             min-height: 297mm;
             padding: 20mm 20mm 20mm 25mm;
             margin: 30px auto 50px auto;
-            background: white;
+            background: #ffffff;
+            color: #000000;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             position: relative;
-            color: #000;
+        }
+
+        .dark .a4-container {
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5); /* ให้เงาเข้มขึ้นในโหมดมืดเพื่อให้กระดาษลอยเด่น */
+        }
+
+        /* เปลี่ยนสีลูกศรใน select เวลาเป็น Dark mode */
+        .dark select {
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') !important;
         }
 
         .page-footer {
@@ -200,88 +221,95 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         .gov-sub { padding-left: 1.2cm; }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
 
-    <!-- ✨ แถบเมนูควบคุม ธีม 60-30-10 (สว่างคลีน + Glassmorphism) ✨ -->
-    <div class="no-print bg-white/90 backdrop-blur-lg border-b border-indigo-100 py-4 px-6 sticky top-0 z-50 shadow-sm">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <!-- ✨ แถบเมนูควบคุม (รองรับ Dark Mode & โทนสี 60-30-10) ✨ -->
+    <div class="no-print bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-indigo-100 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-sm transition-colors duration-300">
+        <div class="max-w-7xl mx-auto flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
             
             <!-- ฝั่งซ้าย: ปุ่มกลับ และกลุ่มปุ่มสลับมุมมอง -->
-            <div class="flex flex-col space-y-3.5">
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
                 <div class="flex items-center space-x-4">
-                    <!-- ปุ่มกลับ Dashboard -->
-                    <a href="dashboard.php?tab=reports" class="bg-white hover:bg-slate-50 text-slate-600 px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center border border-slate-200">
+                    <!-- ✨ เพิ่มสี Analogous (Violet/Indigo) ให้ปุ่ม Dashboard ตามที่รีเควส ✨ -->
+                    <a href="dashboard.php?tab=reports" class="bg-violet-100 hover:bg-violet-200 text-violet-700 dark:bg-violet-900/30 dark:hover:bg-violet-900/50 dark:text-violet-300 px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center border border-violet-200 dark:border-violet-800/50">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </a>
-                    <h1 class="font-extrabold text-sm border-l-2 border-indigo-200 pl-4 text-slate-800 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
+                    <h1 class="font-extrabold text-sm border-l-2 border-indigo-200 dark:border-slate-700 pl-4 text-slate-800 dark:text-slate-200 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
                 <div class="flex items-center space-x-2.5">
-                    <!-- 30% Analogous: ใช้สี Indigo/Violet แบ่งแยกความแตกต่างของปุ่ม -->
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center shadow-sm <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'; ?>">
-                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600' : 'text-slate-400'; ?>"></i> ตารางรายงาน
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-200 dark:border-indigo-700 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'; ?>">
+                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> ตารางรายงาน
                     </a>
                     <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center shadow-sm <?php echo $report_type === 'memo' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'; ?>">
-                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600' : 'text-slate-400'; ?>"></i> บันทึกข้อความ
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border <?php echo $report_type === 'memo' ? 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-200 dark:border-indigo-700 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'; ?>">
+                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> บันทึกข้อความ
                     </a>
                     
                     <!-- ปุ่ม Print โดดเด่นด้วย Violet (30%) -->
-                    <button type="button" onclick="window.print()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-md shadow-violet-200 transition-all flex items-center border border-violet-500 ml-2">
+                    <button type="button" onclick="window.print()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-md shadow-violet-200 dark:shadow-none transition-all flex items-center border border-violet-500 ml-2">
                         <i class="fas fa-print mr-1.5 text-violet-200"></i> พิมพ์ / โหลด PDF
                     </button>
                 </div>
             </div>
 
-            <!-- ฝั่งขวา: ฟอร์มเลือกกรองข้อมูล พร้อมกรอบ Glassmorphism สีฟ้าอ่อนๆ -->
-            <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 mt-2 md:mt-0 bg-indigo-50/50 p-2.5 rounded-2xl backdrop-blur-md border border-indigo-100 shadow-sm">
-                <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
-                
-                <div class="relative">
-                    <select name="tech" class="bg-white text-slate-800 font-bold text-xs rounded-xl px-4 py-2 border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
-                        <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>รวมทุกฝ่ายงาน (ทั้งหมด)</option>
-                        
-                        <?php 
-                        foreach($grouped_techs as $dept => $techs) {
-                            echo "<optgroup label='--- ".htmlspecialchars($dept)." ---' style='background-color: #f8fafc; color: #4f46e5; font-weight: bold;'>";
-                            foreach($techs as $t_name) {
-                                $selected = ($selected_tech === $t_name) ? 'selected' : '';
-                                echo "<option value='".htmlspecialchars($t_name)."' $selected style='background-color: #ffffff; color: #1e293b;'>".htmlspecialchars($t_name)."</option>";
+            <!-- ฝั่งขวา: ฟอร์มเลือกกรองข้อมูล + ปุ่มเปลี่ยนธีม -->
+            <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto mt-2 xl:mt-0">
+                <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-indigo-50/50 dark:bg-slate-800/50 p-2.5 rounded-2xl backdrop-blur-md border border-indigo-100 dark:border-slate-700 shadow-sm transition-colors duration-300 flex-1 xl:flex-none">
+                    <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
+                    
+                    <div class="relative flex-1 sm:flex-none">
+                        <select name="tech" class="w-full sm:w-auto bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl px-4 py-2 border border-slate-200 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
+                            <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>รวมทุกฝ่ายงาน (ทั้งหมด)</option>
+                            
+                            <?php 
+                            foreach($grouped_techs as $dept => $techs) {
+                                echo "<optgroup label='--- ".htmlspecialchars($dept)." ---' class='bg-slate-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold'>";
+                                foreach($techs as $t_name) {
+                                    $selected = ($selected_tech === $t_name) ? 'selected' : '';
+                                    echo "<option value='".htmlspecialchars($t_name)."' $selected class='bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200'>".htmlspecialchars($t_name)."</option>";
+                                }
+                                echo "</optgroup>";
                             }
-                            echo "</optgroup>";
-                        }
-                        ?>
-                    </select>
-                </div>
+                            ?>
+                        </select>
+                    </div>
 
-                <div class="relative">
-                    <select name="month" class="bg-white text-slate-800 font-bold text-xs rounded-xl px-4 py-2 border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
-                        <?php 
-                        for($m=1; $m<=12; $m++) {
-                            $sel = ($selected_month === $m) ? 'selected' : '';
-                            echo "<option value='$m' $sel>{$thai_months[$m]}</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
+                    <div class="relative flex-1 sm:flex-none">
+                        <select name="month" class="w-full sm:w-auto bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl px-4 py-2 border border-slate-200 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
+                            <?php 
+                            for($m=1; $m<=12; $m++) {
+                                $sel = ($selected_month === $m) ? 'selected' : '';
+                                echo "<option value='$m' $sel>{$thai_months[$m]}</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
 
-                <!-- 10% Complementary: สีเหลืองส้ม (Amber) ดึงดูดสายตาให้กดค้นหา -->
-                <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-5 py-2 rounded-xl font-extrabold transition-all shadow-md shadow-amber-200">
-                    ค้นหา
+                    <!-- 10% Complementary: สีเหลืองส้ม (Amber) ดึงดูดสายตาให้กดค้นหา -->
+                    <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-5 py-2 rounded-xl font-extrabold transition-all shadow-md shadow-amber-200 dark:shadow-none w-full sm:w-auto">
+                        ค้นหา
+                    </button>
+                </form>
+
+                <!-- ✨ ปุ่มสลับ Theme (Dark/Light Mode) ตามที่รีเควส ✨ -->
+                <button id="theme-toggle" type="button" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0">
+                    <i id="theme-toggle-icon" class="fas fa-moon"></i>
                 </button>
-            </form>
+            </div>
 
         </div>
     </div>
 
+    <!-- ส่วนของกระดาษ A4 (จะคงเป็นสีขาวเสมอแม้เปิด Dark Mode) -->
     <div class="a4-container">
 
         <?php if ($report_type === 'memo'): ?>
         <!-- ==========================================
              รูปแบบที่ 1: บันทึกข้อความ
              ========================================== -->
-        <div class="text-black pb-10">
+        <div class="pb-10">
             
             <div class="memo-head-box">
                 <img src="uploads/garuda.png" alt="ตราครุฑ" class="garuda-img">
@@ -481,5 +509,41 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         
     </div>
 
+    <!-- ✨ JavaScript สำหรับระบบ Dark/Light Mode ✨ -->
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+        // ฟังก์ชันอัปเดตไอคอน
+        function updateIcon() {
+            if (document.documentElement.classList.contains('dark')) {
+                themeToggleIcon.classList.remove('fa-moon');
+                themeToggleIcon.classList.add('fa-sun');
+            } else {
+                themeToggleIcon.classList.remove('fa-sun');
+                themeToggleIcon.classList.add('fa-moon');
+            }
+        }
+
+        // เช็คการตั้งค่าเดิมใน Local Storage หรือ System Preferences ตอนเปิดหน้าเว็บ
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        updateIcon();
+
+        // เมื่อกดปุ่มสลับ Theme
+        themeToggleBtn.addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            
+            if (document.documentElement.classList.contains('dark')) {
+                localStorage.setItem('color-theme', 'dark');
+            } else {
+                localStorage.setItem('color-theme', 'light');
+            }
+            updateIcon();
+        });
+    </script>
 </body>
 </html>
