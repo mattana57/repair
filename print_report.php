@@ -167,10 +167,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         }
 
         .dark .a4-container {
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5); /* ให้เงาเข้มขึ้นในโหมดมืดเพื่อให้กระดาษลอยเด่น */
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
         }
 
-        /* เปลี่ยนสีลูกศรใน select เวลาเป็น Dark mode */
         .dark select {
             background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') !important;
         }
@@ -223,59 +222,62 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
 
-    <!-- ✨ แถบเมนูควบคุมแบบคลีน (เหมือนรูปที่ 2) + Dark mode (รูปที่ 1) ✨ -->
-    <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-3 px-6 sticky top-0 z-50 shadow-sm transition-colors duration-300">
-        <div class="max-w-7xl mx-auto flex flex-col xl:flex-row justify-between items-center gap-4">
+    <!-- ✨ แถบเมนูควบคุมแบบคลีน (จัดแบ่ง 2 บรรทัดแบบเป็นระเบียบ) ✨ -->
+    <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-sm transition-colors duration-300">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             
-            <!-- ฝั่งซ้าย: กลุ่มปุ่มเครื่องมือ -->
-            <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+            <!-- ฝั่งซ้าย: แบ่ง 2 บรรทัดชัดเจน -->
+            <div class="flex flex-col space-y-4">
                 
-                <!-- ปุ่ม Dashboard สีขาวคลีนๆ แบบรูปที่ 2 -->
-                <a href="dashboard.php?tab=reports" class="bg-white hover:bg-slate-50 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm flex items-center border border-slate-200 dark:border-slate-700">
-                    <i class="fas fa-arrow-left mr-2"></i> Dashboard
-                </a>
+                <!-- บรรทัดบน: ปุ่ม Dashboard + ชื่อระบบ -->
+                <div class="flex items-center space-x-4">
+                    <a href="dashboard.php?tab=reports" class="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i> Dashboard
+                    </a>
+                    <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-700 pl-4 text-slate-800 dark:text-slate-200 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
+                </div>
+                
+                <!-- บรรทัดล่าง: แท็บสลับหน้า + ปุ่มพิมพ์ PDF -->
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'; ?>">
+                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> ตารางรายงาน
+                    </a>
+                    
+                    <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'; ?>">
+                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> บันทึกข้อความ
+                    </a>
+                    
+                    <!-- ปุ่ม Print โดดเด่นด้วย Violet (30%) -->
+                    <button type="button" onclick="window.print()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md shadow-violet-200 dark:shadow-none transition-all flex items-center ml-1 border border-violet-500">
+                        <i class="fas fa-print mr-1.5 text-violet-200"></i> พิมพ์ / โหลด PDF
+                    </button>
+                </div>
 
-                <!-- เส้นคั่นและชื่อหัวข้อ -->
-                <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block mx-1"></div>
-                <h1 class="font-extrabold text-sm text-slate-800 dark:text-slate-200 tracking-wide hidden sm:block mr-2">ระบบพิมพ์เอกสารรายงาน</h1>
-                
-                <!-- แท็บเมนู -->
-                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                   class="px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center border shadow-sm <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-700' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'; ?>">
-                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> ตารางรายงาน
-                </a>
-                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                   class="px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center border shadow-sm <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-700' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'; ?>">
-                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> บันทึกข้อความ
-                </a>
-                
-                <!-- ปุ่ม Print สีม่วง Violet ให้เป็นเอกลักษณ์ -->
-                <button type="button" onclick="window.print()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs px-4 py-2 rounded-full font-bold shadow-md shadow-violet-200 dark:shadow-none transition-all flex items-center border border-violet-500">
-                    <i class="fas fa-print mr-1.5 text-violet-200"></i> พิมพ์ / โหลด PDF
-                </button>
             </div>
 
-            <!-- ฝั่งขวา: ฟอร์มค้นหา + สลับธีม (เรียงต่อกันคลีนๆ) -->
-            <div class="flex flex-wrap items-center gap-2.5 w-full xl:w-auto justify-end">
-                <form method="GET" action="print_report.php" class="flex items-center gap-2.5">
+            <!-- ฝั่งขวา: ฟอร์มค้นหา + สลับธีม (อยู่บรรทัดเดียวกับแท็บในจอใหญ่) -->
+            <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto pb-0.5">
+                <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800/50 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
                     <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                     
-                    <select name="tech" class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-full px-4 py-2 border border-slate-200 dark:border-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
+                    <select name="tech" class="bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.6rem top 50%; background-size: 0.65rem auto;">
                         <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>รวมทุกฝ่ายงาน (ทั้งหมด)</option>
                         
                         <?php 
                         foreach($grouped_techs as $dept => $techs) {
-                            echo "<optgroup label='--- ".htmlspecialchars($dept)." ---' class='bg-slate-50 dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 font-bold'>";
+                            echo "<optgroup label='--- ".htmlspecialchars($dept)." ---' class='bg-slate-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold'>";
                             foreach($techs as $t_name) {
                                 $selected = ($selected_tech === $t_name) ? 'selected' : '';
-                                echo "<option value='".htmlspecialchars($t_name)."' $selected class='bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200'>".htmlspecialchars($t_name)."</option>";
+                                echo "<option value='".htmlspecialchars($t_name)."' $selected class='bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200'>".htmlspecialchars($t_name)."</option>";
                             }
                             echo "</optgroup>";
                         }
                         ?>
                     </select>
 
-                    <select name="month" class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-full px-4 py-2 border border-slate-200 dark:border-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.8rem top 50%; background-size: 0.65rem auto;">
+                    <select name="month" class="bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 0.6rem top 50%; background-size: 0.65rem auto;">
                         <?php 
                         for($m=1; $m<=12; $m++) {
                             $sel = ($selected_month === $m) ? 'selected' : '';
@@ -284,14 +286,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         ?>
                     </select>
 
-                    <!-- ปุ่มค้นหาสีเหลืองส้ม (Amber) -->
-                    <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-5 py-2 rounded-full font-extrabold transition-all shadow-sm">
+                    <!-- 10% Complementary: สีเหลืองส้ม (Amber) ดึงดูดสายตาให้กดค้นหา -->
+                    <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-2 rounded-xl font-extrabold transition-all shadow-sm">
                         ค้นหา
                     </button>
                 </form>
 
-                <!-- ปุ่มสลับ Theme วางอยู่ขวาสุด -->
-                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-1">
+                <!-- ✨ ปุ่มสลับ Theme วางอยู่ขวาสุด ✨ -->
+                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-1">
                     <i id="theme-toggle-icon" class="fas fa-moon"></i>
                 </button>
             </div>
