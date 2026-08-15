@@ -420,7 +420,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอน
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -739,8 +739,7 @@ $dept_icons = [
                                     <th class="px-6 py-4">Ticket No.</th>
                                     <th class="px-6 py-4">Reporter</th>
                                     <th class="px-6 py-4">Equipment</th>
-                                    <!-- ✨ เพิ่มสีเหลืองให้คอลัมน์ Department แบบที่คุณขอ ✨ -->
-                                    <th class="px-6 py-4 bg-amber-100 text-amber-800 rounded-lg m-1 shadow-inner">Department</th>
+                                    <th class="px-6 py-4">Department</th>
                                     <th class="px-6 py-4">Technician</th>
                                     <th class="px-6 py-4">Root Cause</th>
                                     <th class="px-6 py-4">Received At</th>
@@ -788,9 +787,9 @@ $dept_icons = [
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
-                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-800 text-white rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>{$dept_str}</div>";
+                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5'>{$t_pos}</div>";
+                                                $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
 
@@ -823,7 +822,7 @@ $dept_icons = [
                                                 <div class='text-slate-800 font-bold'>{$row['equipment_type']} {$imageIcon}</div>
                                                 <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='{$row['problem_desc']}'>{$row['problem_desc']}</div>
                                             </td>
-                                            <td class='px-6 py-4 bg-amber-50/30'>{$deptEng}</td>
+                                            <td class='px-6 py-4'>{$deptEng}</td>
                                             <td class='px-6 py-4'>{$techName}</td>
                                             <td class='px-6 py-4'>{$rootCause}</td>
                                             <td class='px-6 py-4 text-xs whitespace-nowrap'>";
@@ -960,8 +959,8 @@ $dept_icons = [
                     <div id="techniciansTableContainer" class="modern-card overflow-hidden border border-slate-200/60 shadow-xs">
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                                <!-- ✨ ย้ายแถบฝ่ายงานมาไว้เหนือหัวคอลัมน์ ✨ -->
-                                <tbody class="text-sm divide-y divide-slate-100 bg-white" id="techniciansTableBody">
+                                <!-- ✨ รื้อโครงสร้าง: เอาหัวคอลัมน์ออกไปไว้ใต้แถบแผนก ✨ -->
+                                <tbody class="text-sm bg-white" id="techniciansTableBody">
                                 <?php 
                                 $techs_by_dept = [];
                                 $tech_res = $conn->query("SELECT * FROM technicians ORDER BY department ASC, id DESC");
@@ -995,10 +994,10 @@ $dept_icons = [
                                     foreach ($techs_by_dept as $dept => $techs) {
                                         $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                         
-                                        // ✨ Header ของแผนก (ครอบทั้งตาราง) ✨
+                                        // ✨ 1. แถบสีม่วงของฝ่ายงาน (Ribbon Header) ✨
                                         echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                                 <td colspan='6' class='p-0 bg-slate-50'>
-                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 shadow-md shadow-indigo-200/50 m-3 rounded-xl'>
+                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 shadow-md shadow-indigo-200/50 m-3 mb-0 rounded-t-xl'>
                                                         <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                         <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
                                                         
@@ -1023,24 +1022,25 @@ $dept_icons = [
                                                 </td>
                                               </tr>";
 
-                                        // ✨ หัวคอลัมน์ของแต่ละตารางแผนก ✨
-                                        echo "<tr class='bg-white border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name=''>
-                                                <th class='px-6 py-4'>Name</th>
-                                                <th class='px-6 py-4'>Department</th>
-                                                <th class='px-6 py-4'>Contact</th> 
-                                                <th class='px-6 py-4 text-center'>Status / Code</th>
-                                                <th class='px-6 py-4 text-center'>Jobs</th>
-                                                <th class='px-6 py-4 text-right'>Action</th>
+                                        // ✨ 2. หัวคอลัมน์สีเหลือง อยู่ใต้แถบแผนก (Yellow Column Header) ✨
+                                        echo "<tr class='bg-amber-50 border-b border-amber-100 text-amber-700 text-xs uppercase tracking-widest font-bold tech-col-header' data-dept='".htmlspecialchars($dept)."'>
+                                                <th class='px-6 py-3 border-l-[12px] border-white'>Name</th>
+                                                <th class='px-6 py-3'>Department</th>
+                                                <th class='px-6 py-3'>Contact</th> 
+                                                <th class='px-6 py-3 text-center'>Status / Code</th>
+                                                <th class='px-6 py-3 text-center'>Jobs</th>
+                                                <th class='px-6 py-3 text-right border-r-[12px] border-white'>Action</th>
                                             </tr>";
 
+                                        // ✨ 3. รายชื่อช่างในแผนกนั้น ✨
                                         foreach($techs as $t) {
                                             $js_raw_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES);
                                             list($th_name, $en_name) = splitThaiEngName($t['full_name'], $t['english_name']);
                                             $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
                                             
-                                            // ✨ เพิ่มการผสานชื่อไทย-อังกฤษ ไว้สำหรับการค้นหาให้ตารางหาเจอ ✨
-                                            $search_name = $t['full_name'] . ' ' . $en_name . ' ' . $th_name;
+                                            // ตัดช่องว่างทุกชนิดออก เพื่อให้ค้นหาเจอแม่นยำขึ้น
+                                            $search_name = preg_replace('/\s+/', '', strtolower($t['full_name'] . $en_name . $th_name));
                                             $js_search_name = htmlspecialchars($search_name, ENT_QUOTES);
                                             
                                             $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
@@ -1070,7 +1070,7 @@ $dept_icons = [
                                             
                                             $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
-                                            echo "<tr class='hover:bg-slate-50/50 transition-colors tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors border-b border-slate-50 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                                 <td class='px-6 py-4'>
                                                     <div class='flex items-center'>
                                                         <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
@@ -1097,6 +1097,9 @@ $dept_icons = [
                                                 </td>
                                             </tr>";
                                         }
+                                        
+                                        // เติมช่องว่างด้านล่างแผนกให้สวยงาม
+                                        echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'><td colspan='6' class='p-1.5 bg-slate-50'></td></tr>";
                                     }
                                 } 
                                 ?>
@@ -1104,14 +1107,14 @@ $dept_icons = [
                             </table>
                         </div>
                     </div>
-                    <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ✨ -->
+                    <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ตามที่บรีฟ ✨ -->
                     <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border-2 border-dashed border-rose-100 bg-rose-50/30 text-center rounded-3xl">
                         <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-rose-50">
                             <i class="fas fa-user-times text-3xl text-rose-300"></i>
                         </div>
                         <h3 class="font-extrabold text-xl mb-2 text-rose-500">ไม่พบรายชื่อช่างในระบบ</h3>
                         <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
-                            ไม่มีช่างชื่อนี้อยู่ในระบบ ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษดูอีกครั้งนะครับ<br>
+                            ไม่มีช่างชื่อนี้อยู่ในระบบ ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
                             <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องทำการ <strong class="text-indigo-600">"Add Technician"</strong> เพิ่มเข้าสู่ระบบก่อน</span>
                         </p>
                     </div>
@@ -1218,8 +1221,8 @@ $dept_icons = [
                     
                     <div class="flex flex-wrap gap-6 items-start">
                         <?php foreach ($techs as $tech): 
-                            // ✨ ซ่อนชื่อสำหรับการค้นหา ✨
-                            $search_name = $tech['raw_name'] . ' ' . $tech['eng'] . ' ' . $tech['th'];
+                            // ตัดช่องว่างทุกชนิดออก เพื่อให้ค้นหาเจอแม่นยำขึ้น
+                            $search_name = preg_replace('/\s+/', '', strtolower($tech['raw_name'] . $tech['eng'] . $tech['th']));
                         ?>
                         <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
@@ -1287,7 +1290,7 @@ $dept_icons = [
                     </div>
                 </div>
                 <?php endforeach; ?>
-                <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card (เปลี่ยนสีคำตามขอ) ✨ -->
+                <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card ✨ -->
                 <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-indigo-100 bg-indigo-50/30 text-center rounded-3xl">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
                         <i class="fas fa-user-lock text-3xl text-indigo-300"></i>
@@ -1777,32 +1780,6 @@ $dept_icons = [
             hiddenInput.value = val;
         }
 
-        // ✨ ฟังก์ชันจัดการหน้าว่าง (Empty State) เมื่อค้นหาไม่เจอ ✨
-        function updateTechVisibility() {
-            ['technicians', 'team_cards'].forEach(containerId => {
-                let container = document.getElementById(containerId);
-                if (!container) return;
-                
-                let hasAnyVisible = false;
-                container.querySelectorAll('.tech-dept-section').forEach(sec => {
-                    if (sec.style.display !== 'none') {
-                        hasAnyVisible = true;
-                    }
-                });
-                
-                let emptyState = container.querySelector('.tech-empty-state');
-                if (emptyState) {
-                    if (!hasAnyVisible) {
-                        emptyState.classList.remove('hidden');
-                        emptyState.classList.add('flex');
-                    } else {
-                        emptyState.classList.add('hidden');
-                        emptyState.classList.remove('flex');
-                    }
-                }
-            });
-        }
-
         // แยกการกรองแผนกของหน้าตาราง (Team)
         let activeDeptTable = 'all';
         function filterDeptTable(dept) {
@@ -1846,9 +1823,15 @@ $dept_icons = [
                 });
                 
                 header.style.display = hasVisibleRow ? '' : 'none';
+                
+                // สั่งซ่อน/แสดง หัวคอลัมน์สีเหลือง ให้ทำงานพร้อมกับแถบชื่อฝ่ายงาน
+                let colHeader = document.querySelector(`#technicians .tech-col-header[data-dept="${secDept}"]`);
+                if (colHeader) {
+                    colHeader.style.display = hasVisibleRow ? '' : 'none';
+                }
             });
 
-            let tableContainer = document.querySelector('#technicians .modern-card.overflow-hidden.border');
+            let tableContainer = document.querySelector('#techniciansTableContainer');
             let emptyState = document.querySelector('#technicians .tech-empty-state');
             if (hasAnyVisibleTable) {
                 if(tableContainer) tableContainer.style.display = '';
@@ -2353,7 +2336,6 @@ $dept_icons = [
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : '-';
                     let completed_time = has_completed ? r.completed_at.split(' ')[1].substring(0, 5) : '';
                     
-                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal สีเทา-indigo ให้ตรงกัน ✨
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
                     let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-800 text-white rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
                     if (r.technician_name) {
