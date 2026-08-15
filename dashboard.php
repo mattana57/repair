@@ -1015,7 +1015,7 @@ $custom_dept_order = [
             </div>
 
             <!-- ===================================================================================
-                 ✨ ส่วนที่มีการเปลี่ยนแปลงธีม: Team Management (ทำเนียบช่าง) ✨
+                 ✨ ส่วนการแสดงผล Team Management (ทำเนียบช่าง) ✨
                  =================================================================================== -->
             <div id="team_cards" class="section hidden animate-fade-in no-print">
                 <div class="mb-8">
@@ -1070,7 +1070,6 @@ $custom_dept_order = [
                     $icon_class = $dept_icons[$dept_name] ?? 'fas fa-users';
                 ?>
                 <div class="mb-10">
-                    <!-- ✨ Header ของแผนก ดีไซน์ใหม่ ✨ -->
                     <div class="flex items-center mb-6">
                         <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 flex items-center justify-center text-indigo-600 mr-4 shadow-sm border border-indigo-100/50">
                             <i class="<?php echo $icon_class; ?> text-xl"></i>
@@ -1079,24 +1078,20 @@ $custom_dept_order = [
                         <div class="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent ml-6"></div>
                     </div>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 items-start">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-start">
                         <?php foreach ($techs as $tech): ?>
-                        <!-- ✨ การ์ดโปรไฟล์ ดีไซน์ใหม่ ✨ -->
                         <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col group">
                             
-                            <!-- รูปภาพ (สัดส่วน 3/4) -->
-                            <div class="relative w-full aspect-[3/4] bg-slate-100 overflow-hidden">
+                            <!-- ✨ ปรับรูปภาพกลับมาใช้สัดส่วน 4/5 เหมือนเดิม (อ้วนขึ้น ไม่ผอมสูง) ✨ -->
+                            <div class="relative w-full aspect-[4/5] bg-slate-100 overflow-hidden">
                                 <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
                                      onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
                                      onclick="openImageModal(this.src)"
                                      alt="<?php echo htmlspecialchars($tech['th']); ?>" 
                                      class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out cursor-pointer" title="คลิกเพื่อดูรูปขยาย">
-                                
-                                <!-- เงาดำไล่ระดับด้านล่างรูป (ทำให้ดูหรูขึ้น) -->
                                 <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                             </div>
 
-                            <!-- ข้อมูลช่าง -->
                             <div class="p-5 flex-1 flex flex-col justify-between relative z-10 bg-white">
                                 <div>
                                     <h5 class="font-extrabold text-slate-800 text-base leading-tight group-hover:text-indigo-600 transition-colors">
@@ -1107,7 +1102,6 @@ $custom_dept_order = [
                                     <p class="text-[11px] font-semibold text-slate-400 mt-1 uppercase tracking-wider"><?php echo htmlspecialchars($tech['eng']); ?></p>
                                     <?php endif; ?>
 
-                                    <!-- ป้ายตำแหน่ง (Badge) -->
                                     <?php if (!empty($tech['pos'])): ?>
                                     <div class="mt-3 inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50/80 border border-indigo-100/50">
                                         <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span>
@@ -1115,7 +1109,6 @@ $custom_dept_order = [
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!-- เบอร์โทร (Pill Design) -->
                                     <?php 
                                     if (!empty($tech['phone']) && $tech['phone'] !== '-'): 
                                         $phone_parts = array_values(array_filter(array_map('trim', explode(',', $tech['phone']))));
@@ -1142,7 +1135,6 @@ $custom_dept_order = [
                                     <?php endif; ?>
                                 </div>
 
-                                <!-- ปุ่มดูประวัติ -->
                                 <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" 
                                         class="mt-5 w-full text-xs font-bold text-slate-600 bg-white border-2 border-slate-100 hover:border-indigo-600 hover:bg-indigo-600 hover:text-white py-2.5 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-indigo-200 flex items-center justify-center group/btn">
                                     <i class="fas fa-history mr-2 text-slate-400 group-hover/btn:text-indigo-200 transition-colors"></i> 
