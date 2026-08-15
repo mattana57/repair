@@ -167,9 +167,10 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         }
 
         .dark .a4-container {
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5); /* ให้เงาเข้มขึ้นในโหมดมืดเพื่อให้กระดาษลอยเด่น */
         }
 
+        /* เปลี่ยนสีลูกศรใน select เวลาเป็น Dark mode */
         .dark select {
             background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') !important;
         }
@@ -222,22 +223,22 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
 
-    <!-- ✨ แถบเมนูควบคุมแบบคลีน (จัดแบ่ง 2 บรรทัดแบบเป็นระเบียบ) ✨ -->
+    <!-- ✨ แถบเมนูควบคุม (แบบ 2 บรรทัดคลีนๆ ตามรูปที่ 2) ✨ -->
     <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-sm transition-colors duration-300">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             
             <!-- ฝั่งซ้าย: แบ่ง 2 บรรทัดชัดเจน -->
             <div class="flex flex-col space-y-4">
                 
-                <!-- บรรทัดบน: ปุ่ม Dashboard + ชื่อระบบ -->
+                <!-- บรรทัดบน: ปุ่ม Dashboard (สีม่วงอ่อน) + ชื่อระบบ -->
                 <div class="flex items-center space-x-4">
-                    <a href="dashboard.php?tab=reports" class="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center">
+                    <a href="dashboard.php?tab=reports" class="bg-violet-50 dark:bg-violet-900/20 border-2 border-violet-200 dark:border-violet-800 hover:bg-violet-100 dark:hover:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </a>
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-700 pl-4 text-slate-800 dark:text-slate-200 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
-                <!-- บรรทัดล่าง: แท็บสลับหน้า + ปุ่มพิมพ์ PDF -->
+                <!-- บรรทัดล่าง: แท็บสลับหน้า + ปุ่มพิมพ์ PDF (สีดำ) -->
                 <div class="flex flex-wrap items-center gap-2.5">
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
                        class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'; ?>">
@@ -249,9 +250,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> บันทึกข้อความ
                     </a>
                     
-                    <!-- ปุ่ม Print โดดเด่นด้วย Violet (30%) -->
-                    <button type="button" onclick="window.print()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md shadow-violet-200 dark:shadow-none transition-all flex items-center ml-1 border border-violet-500">
-                        <i class="fas fa-print mr-1.5 text-violet-200"></i> พิมพ์ / โหลด PDF
+                    <!-- ปุ่ม Print โดดเด่นด้วยสีดำ/เทาเข้มสุด -->
+                    <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black text-white text-xs px-5 py-2 rounded-full font-bold shadow-md dark:shadow-none transition-all flex items-center ml-1 border border-slate-900 dark:border-slate-600">
+                        <i class="fas fa-print mr-1.5 text-slate-300"></i> พิมพ์ / โหลด PDF
                     </button>
                 </div>
 
@@ -286,14 +287,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         ?>
                     </select>
 
-                    <!-- 10% Complementary: สีเหลืองส้ม (Amber) ดึงดูดสายตาให้กดค้นหา -->
+                    <!-- ปุ่มค้นหาสีเหลืองส้ม (Amber) -->
                     <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-2 rounded-xl font-extrabold transition-all shadow-sm">
                         ค้นหา
                     </button>
                 </form>
 
-                <!-- ✨ ปุ่มสลับ Theme วางอยู่ขวาสุด ✨ -->
-                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-1">
+                <!-- ✨ ปุ่มสลับ Theme ถอยห่างออกมาด้วย ml-6 ✨ -->
+                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-6">
                     <i id="theme-toggle-icon" class="fas fa-moon"></i>
                 </button>
             </div>
@@ -503,7 +504,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         <!-- ท้ายกระดาษ: ซ่อนเมื่อสั่งพิมพ์ -->
         <div class="page-footer no-print border-t border-slate-200 pt-2 text-[10px] text-slate-400 flex justify-between">
             <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
-            <span>วันที่พิมพ์เอกสาร : <?php echo date('d/m/Y H:i'); ?> น.</span>
+            <span>วันที่พิมพ์เอกสาร: <?php echo date('d/m/Y H:i'); ?> น.</span>
         </div>
         
     </div>
@@ -544,6 +545,5 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             updateIcon();
         });
     </script>
-
 </body>
 </html>
