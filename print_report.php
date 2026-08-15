@@ -83,7 +83,7 @@ if($years_query && $years_query->num_rows > 0) {
     $available_years[] = date('Y'); // ถ้าไม่มีข้อมูลเลย ให้ใช้ปีปัจจุบัน
 }
 
-// เงื่อนไขการค้นหา SQL (เพิ่มการกรองด้วยปี)
+// เงื่อนไขการค้นหา SQL
 $where_conditions = [];
 if ($selected_year > 0) {
     $where_conditions[] = "YEAR(created_at) = $selected_year";
@@ -172,18 +172,21 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* ✨ สร้างคลาสลูกศร Dropdown ขึ้นมาใหม่ ✨ */
+        /* ✨ สร้างคลาสลูกศร Dropdown แบบ "สามเหลี่ยมคว่ำทึบ" ✨ */
         .custom-select {
             appearance: none;
             -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            /* ใช้ path รูปสามเหลี่ยมทึบ (d='M7 10l5 5 5-5z') */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1rem;
-            padding-right: 2.25rem !important;
+            /* ขยับตำแหน่งลูกศรให้ชิดตัวหนังสือมากขึ้น และลดขนาดลงนิดหน่อยให้สมส่วน */
+            background-position: right 0.5rem center; 
+            background-size: 1.25rem;
+            /* ลด padding ขวาลงเพื่อไม่ให้ดูห่างเกินไป */
+            padding-right: 1.75rem !important; 
         }
         .dark .custom-select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
         }
         
         /* กระดาษ A4 ต้องเป็นสีขาวตัวหนังสือสีดำเสมอ แม้ใน Dark Mode */
@@ -289,7 +292,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
                     <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                     
-                    <!-- ✨ เพิ่มคลาส custom-select ให้ทุก Dropdown เพื่อแสดงลูกศร ✨ -->
                     <select name="tech" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
                         <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>รวมทุกฝ่ายงาน (ทั้งหมด)</option>
                         
@@ -341,6 +343,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <!-- ================== ส่วนแสดงผลรายงาน ================== -->
 
     <?php if ($report_type === 'memo'): ?>
+        <!-- รูปแบบที่ 1: บันทึกข้อความ -->
         <div class="a4-container">
             <div class="flex-1 flex flex-col">
                 <div class="memo-head-box">
