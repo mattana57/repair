@@ -783,13 +783,14 @@ $dept_icons = [
                                             $techName = "<span class='text-slate-400'>Unassigned</span>";
                                         }
 
-                                        // ✨ อัปเดตตาราง: จัดการ Padding และ สีตัวอักษรให้ตรงกันเป๊ะ ✨
+                                        // ✨ อัปเดตการแสดงผล: จัด Padding ขอบซ้ายให้เท่ากันเป๊ะ ✨
                                         $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
+                                                // ใส่ ml-2.5 เพื่อชดเชย px-2.5 ของกรอบด้านบน ทำให้ตัวหนังสือตรงกัน
                                                 $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5'>{$t_pos}</div>";
                                             }
                                         }
@@ -937,14 +938,23 @@ $dept_icons = [
                     </div>
                 </div>
 
+                <!-- ✨ เพิ่มช่องค้นหาที่หน้าตาราง (Team View) ✨ -->
                 <div class="mt-10 space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
-                        <div class="flex flex-wrap gap-2.5">
-                            <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
-                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
-                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full sm:w-auto">
+                            <!-- ช่องค้นหา -->
+                            <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="search-tech-table" oninput="searchTechs(this.value)" placeholder="ค้นหาชื่อช่าง..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-2.5">
+                                <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
+                                <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
+                                <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
+                                <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                            </div>
                         </div>
                     </div>
                     
@@ -1028,6 +1038,10 @@ $dept_icons = [
                                             $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
                                             
+                                            // ✨ ซ่อนชื่อสำหรับการค้นหา (เก็บทั้งไทยและอังกฤษ) ✨
+                                            $search_name = strtolower($js_fname . ' ' . $js_ename);
+                                            $js_search_name = htmlspecialchars($search_name, ENT_QUOTES);
+                                            
                                             $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
                                             $js_pos = htmlspecialchars($pos, ENT_QUOTES);
 
@@ -1055,7 +1069,7 @@ $dept_icons = [
                                             
                                             $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
-                                            echo "<tr class='hover:bg-slate-50/50 transition-colors tech-dept-row' data-dept='".htmlspecialchars($dept)."'>
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                                 <td class='px-6 py-4'>
                                                     <div class='flex items-center'>
                                                         <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
@@ -1097,16 +1111,25 @@ $dept_icons = [
                  =================================================================================== -->
             <div id="team_cards" class="section hidden animate-fade-in no-print">
                 
+                <!-- ✨ เพิ่มช่องค้นหาที่หน้าการ์ด (Card View) ✨ -->
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
                         <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Team Management</h2>
                         <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
-                    <div class="flex flex-wrap gap-2.5">
-                        <button onclick="filterDept('all')" id="btn-filter-all-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
-                        <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
-                        <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
-                        <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                    <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
+                        <!-- ช่องค้นหา -->
+                        <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="search-tech-card" oninput="searchTechs(this.value)" placeholder="ค้นหาชื่อช่าง..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        </div>
+
+                        <div class="flex flex-wrap gap-2.5">
+                            <button onclick="filterDept('all')" id="btn-filter-all-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
+                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
+                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
+                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                        </div>
                     </div>
                 </div>
 
@@ -1158,7 +1181,7 @@ $dept_icons = [
                 ?>
                 <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
                     
-                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 rounded-2xl shadow-md shadow-indigo-200/50">
+                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 rounded-2xl shadow-md shadow-indigo-200/50 tech-dept-header">
                         <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                         <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
                         
@@ -1182,8 +1205,11 @@ $dept_icons = [
                     </div>
                     
                     <div class="flex flex-wrap gap-6 items-start">
-                        <?php foreach ($techs as $tech): ?>
-                        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px]">
+                        <?php foreach ($techs as $tech): 
+                            // ✨ ซ่อนชื่อสำหรับการค้นหา ✨
+                            $search_name = strtolower($tech['th'] . ' ' . $tech['eng']);
+                        ?>
+                        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
                             <div class="relative w-full aspect-[4/5] bg-slate-100 overflow-hidden">
                                 <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
@@ -1747,19 +1773,77 @@ $dept_icons = [
             if(activeBtn1) activeBtn1.className = activeStyle;
             if(activeBtn2) activeBtn2.className = activeStyle;
 
+            let currentSearchValue = '';
+            let searchInput1 = document.getElementById('search-tech-table');
+            if(searchInput1) currentSearchValue = searchInput1.value.toLowerCase();
+
             document.querySelectorAll('.tech-dept-section').forEach(sec => {
-                if (dept === 'all' || sec.getAttribute('data-dept') === dept) {
-                    sec.style.display = '';
+                let secDept = sec.getAttribute('data-dept');
+                let deptMatch = (dept === 'all' || secDept === dept);
+                
+                if (deptMatch) {
+                    let hasVisible = false;
+                    
+                    sec.querySelectorAll('.tech-dept-row, .tech-card-item').forEach(item => {
+                        let name = item.getAttribute('data-tech-name') || '';
+                        if (name.includes(currentSearchValue)) {
+                            item.style.display = '';
+                            hasVisible = true;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    
+                    sec.querySelectorAll('.tech-dept-header').forEach(header => {
+                        header.style.display = hasVisible ? '' : 'none';
+                    });
+                    
+                    sec.style.display = hasVisible ? '' : 'none';
                 } else {
                     sec.style.display = 'none';
                 }
             });
+        }
+
+        function searchTechs(val) {
+            let searchLower = val.toLowerCase();
             
-            document.querySelectorAll('.tech-dept-header, .tech-dept-row').forEach(row => {
-                if (dept === 'all' || row.getAttribute('data-dept') === dept) {
-                    row.style.display = '';
+            let inp1 = document.getElementById('search-tech-table');
+            let inp2 = document.getElementById('search-tech-card');
+            if(inp1 && inp1.value !== val) inp1.value = val;
+            if(inp2 && inp2.value !== val) inp2.value = val;
+            
+            let currentDept = 'all';
+            document.querySelectorAll('.dept-filter-btn').forEach(btn => {
+                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('digital')) currentDept = 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล';
+                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('av')) currentDept = 'ฝ่ายงานโสตทัศนูปกรณ์';
+                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('auto')) currentDept = 'ฝ่ายงานยานยนต์';
+            });
+            
+            document.querySelectorAll('.tech-dept-section').forEach(sec => {
+                let secDept = sec.getAttribute('data-dept');
+                let deptMatch = (currentDept === 'all' || secDept === currentDept);
+                
+                if (deptMatch) {
+                    let hasVisible = false;
+                    
+                    sec.querySelectorAll('.tech-dept-row, .tech-card-item').forEach(item => {
+                        let name = item.getAttribute('data-tech-name') || '';
+                        if (name.includes(searchLower)) {
+                            item.style.display = '';
+                            hasVisible = true;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    
+                    sec.querySelectorAll('.tech-dept-header').forEach(header => {
+                        header.style.display = hasVisible ? '' : 'none';
+                    });
+                    
+                    sec.style.display = hasVisible ? '' : 'none';
                 } else {
-                    row.style.display = 'none';
+                    sec.style.display = 'none';
                 }
             });
         }
@@ -1781,8 +1865,8 @@ $dept_icons = [
             if(searchInput) {
                 searchInput.value = '';
                 let activeSection = document.getElementById(id);
-                if(activeSection) {
-                    activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)').forEach(row => row.style.display = '');
+                if(activeSection && id === 'repairs') {
+                    activeSection.querySelectorAll('table tbody tr').forEach(row => row.style.display = '');
                 }
             }
 
@@ -1811,7 +1895,7 @@ $dept_icons = [
                     let activeSection = document.querySelector('.section:not(.hidden)');
                     if (!activeSection) return;
                     
-                    let rows = activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)');
+                    let rows = activeSection.querySelectorAll('table tbody tr');
                     rows.forEach(row => {
                         if (row.innerText.toLowerCase().includes(filter)) {
                             row.style.display = '';
@@ -1988,17 +2072,6 @@ $dept_icons = [
             document.getElementById(m).classList.toggle('opacity-0'); 
             document.getElementById(m).classList.toggle('pointer-events-none'); 
             document.body.classList.toggle('modal-active'); 
-        }
-
-        function filterRepairs(statusStr) {
-            show('repairs');
-            setTimeout(() => {
-                let searchInput = document.getElementById('searchInput');
-                if(searchInput) {
-                    searchInput.value = statusStr === 'all' ? '' : statusStr;
-                    searchInput.dispatchEvent(new Event('input'));
-                }
-            }, 50);
         }
 
         function updateExcelLink() {
@@ -2197,7 +2270,7 @@ $dept_icons = [
                     
                     // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal สีเทา-indigo ให้ตรงกัน ✨
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
-                    let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>${dName}</div>`;
+                    let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-800 text-white rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
                     if (r.technician_name) {
                         let info = techInfoMap[r.technician_name];
                         if (info && info.pos) {
