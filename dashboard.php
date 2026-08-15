@@ -739,7 +739,8 @@ $dept_icons = [
                                     <th class="px-6 py-4">Ticket No.</th>
                                     <th class="px-6 py-4">Reporter</th>
                                     <th class="px-6 py-4">Equipment</th>
-                                    <th class="px-6 py-4">Department</th>
+                                    <!-- ✨ เพิ่มสีเหลืองให้คอลัมน์ Department แบบที่คุณขอ ✨ -->
+                                    <th class="px-6 py-4 bg-amber-100 text-amber-800 rounded-lg m-1 shadow-inner">Department</th>
                                     <th class="px-6 py-4">Technician</th>
                                     <th class="px-6 py-4">Root Cause</th>
                                     <th class="px-6 py-4">Received At</th>
@@ -787,7 +788,7 @@ $dept_icons = [
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
-                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
+                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-800 text-white rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
                                                 $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5'>{$t_pos}</div>";
                                             }
@@ -822,7 +823,7 @@ $dept_icons = [
                                                 <div class='text-slate-800 font-bold'>{$row['equipment_type']} {$imageIcon}</div>
                                                 <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='{$row['problem_desc']}'>{$row['problem_desc']}</div>
                                             </td>
-                                            <td class='px-6 py-4'>{$deptEng}</td>
+                                            <td class='px-6 py-4 bg-amber-50/30'>{$deptEng}</td>
                                             <td class='px-6 py-4'>{$techName}</td>
                                             <td class='px-6 py-4'>{$rootCause}</td>
                                             <td class='px-6 py-4 text-xs whitespace-nowrap'>";
@@ -959,17 +960,8 @@ $dept_icons = [
                     <div id="techniciansTableContainer" class="modern-card overflow-hidden border border-slate-200/60 shadow-xs">
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
-                                    <tr>
-                                        <th class="px-6 py-4">Name</th>
-                                        <th class="px-6 py-4">Department</th>
-                                        <th class="px-6 py-4">Contact</th> 
-                                        <th class="px-6 py-4 text-center">Status / Code</th>
-                                        <th class="px-6 py-4 text-center">Jobs</th>
-                                        <th class="px-6 py-4 text-right">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <!-- ✨ ย้ายแถบฝ่ายงานมาไว้เหนือหัวคอลัมน์ ✨ -->
+                                <tbody class="text-sm divide-y divide-slate-100 bg-white" id="techniciansTableBody">
                                 <?php 
                                 $techs_by_dept = [];
                                 $tech_res = $conn->query("SELECT * FROM technicians ORDER BY department ASC, id DESC");
@@ -1003,9 +995,10 @@ $dept_icons = [
                                     foreach ($techs_by_dept as $dept => $techs) {
                                         $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                         
-                                        echo "<tr class='bg-slate-50 border-b border-slate-200 tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
-                                                <td colspan='6' class='p-0'>
-                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 shadow-md shadow-indigo-200/50 m-2 rounded-xl'>
+                                        // ✨ Header ของแผนก (ครอบทั้งตาราง) ✨
+                                        echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
+                                                <td colspan='6' class='p-0 bg-slate-50'>
+                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 shadow-md shadow-indigo-200/50 m-3 rounded-xl'>
                                                         <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                         <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
                                                         
@@ -1030,6 +1023,16 @@ $dept_icons = [
                                                 </td>
                                               </tr>";
 
+                                        // ✨ หัวคอลัมน์ของแต่ละตารางแผนก ✨
+                                        echo "<tr class='bg-white border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name=''>
+                                                <th class='px-6 py-4'>Name</th>
+                                                <th class='px-6 py-4'>Department</th>
+                                                <th class='px-6 py-4'>Contact</th> 
+                                                <th class='px-6 py-4 text-center'>Status / Code</th>
+                                                <th class='px-6 py-4 text-center'>Jobs</th>
+                                                <th class='px-6 py-4 text-right'>Action</th>
+                                            </tr>";
+
                                         foreach($techs as $t) {
                                             $js_raw_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES);
                                             list($th_name, $en_name) = splitThaiEngName($t['full_name'], $t['english_name']);
@@ -1037,7 +1040,7 @@ $dept_icons = [
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
                                             
                                             // ✨ เพิ่มการผสานชื่อไทย-อังกฤษ ไว้สำหรับการค้นหาให้ตารางหาเจอ ✨
-                                            $search_name = $t['full_name'] . ' ' . $en_name;
+                                            $search_name = $t['full_name'] . ' ' . $en_name . ' ' . $th_name;
                                             $js_search_name = htmlspecialchars($search_name, ENT_QUOTES);
                                             
                                             $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
@@ -1067,7 +1070,6 @@ $dept_icons = [
                                             
                                             $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
-                                            // ✨ ใส่ data-tech-name ให้สามารถหาชื่อช่างเจอเวลาค้นหา ✨
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                                 <td class='px-6 py-4'>
                                                     <div class='flex items-center'>
@@ -1102,8 +1104,8 @@ $dept_icons = [
                             </table>
                         </div>
                     </div>
-                    <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ตามที่บรีฟ ✨ -->
-                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-6 border-2 border-dashed border-rose-100 bg-rose-50/30 text-center rounded-3xl">
+                    <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ✨ -->
+                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border-2 border-dashed border-rose-100 bg-rose-50/30 text-center rounded-3xl">
                         <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-rose-50">
                             <i class="fas fa-user-times text-3xl text-rose-300"></i>
                         </div>
@@ -1217,7 +1219,7 @@ $dept_icons = [
                     <div class="flex flex-wrap gap-6 items-start">
                         <?php foreach ($techs as $tech): 
                             // ✨ ซ่อนชื่อสำหรับการค้นหา ✨
-                            $search_name = $tech['raw_name'] . ' ' . $tech['eng'];
+                            $search_name = $tech['raw_name'] . ' ' . $tech['eng'] . ' ' . $tech['th'];
                         ?>
                         <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
