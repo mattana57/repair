@@ -420,7 +420,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอน
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -881,6 +881,7 @@ $dept_icons = [
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
+                                        <!-- ลบคอลัมน์ Department ออก -->
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -955,7 +956,7 @@ $dept_icons = [
                         </div>
                     </div>
                     
-                    <div class="modern-card overflow-hidden border border-slate-200/60 shadow-xs">
+                    <div id="techniciansTableContainer" class="modern-card overflow-hidden border border-slate-200/60 shadow-xs">
                         <div class="overflow-x-auto w-full">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
                                 <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
@@ -1036,7 +1037,7 @@ $dept_icons = [
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
                                             
                                             // ✨ เพิ่มการผสานชื่อไทย-อังกฤษ ไว้สำหรับการค้นหาให้ตารางหาเจอ ✨
-                                            $search_name = $t['full_name'] . ' ' . $en_name . ' ' . $th_name;
+                                            $search_name = $t['full_name'] . ' ' . $en_name;
                                             $js_search_name = htmlspecialchars($search_name, ENT_QUOTES);
                                             
                                             $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
@@ -1101,13 +1102,16 @@ $dept_icons = [
                             </table>
                         </div>
                     </div>
-                    <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ✨ -->
-                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border border-slate-200/60 shadow-xs bg-white text-center">
-                        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 mx-auto">
-                            <i class="fas fa-search text-2xl text-slate-300"></i>
+                    <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ตามที่บรีฟ ✨ -->
+                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-6 border-2 border-dashed border-rose-100 bg-rose-50/30 text-center rounded-3xl">
+                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-rose-50">
+                            <i class="fas fa-user-times text-3xl text-rose-300"></i>
                         </div>
-                        <h3 class="text-slate-700 font-extrabold text-lg mb-1">ไม่พบรายชื่อช่างในระบบ</h3>
-                        <p class="text-slate-400 text-sm font-medium">ไม่มีช่างชื่อนี้อยู่ในฐานข้อมูล ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษดูอีกครั้งนะครับ</p>
+                        <h3 class="font-extrabold text-xl mb-2 text-rose-500">ไม่พบรายชื่อช่างในระบบ</h3>
+                        <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
+                            ไม่มีช่างชื่อนี้อยู่ในระบบ ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษดูอีกครั้งนะครับ<br>
+                            <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องทำการ <strong class="text-indigo-600">"Add Technician"</strong> เพิ่มเข้าสู่ระบบก่อน</span>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -1212,7 +1216,8 @@ $dept_icons = [
                     
                     <div class="flex flex-wrap gap-6 items-start">
                         <?php foreach ($techs as $tech): 
-                            $search_name = $tech['raw_name'] . ' ' . $tech['eng'] . ' ' . $tech['th'];
+                            // ✨ ซ่อนชื่อสำหรับการค้นหา ✨
+                            $search_name = $tech['raw_name'] . ' ' . $tech['eng'];
                         ?>
                         <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
@@ -1815,7 +1820,7 @@ $dept_icons = [
             });
 
             let searchInput = document.getElementById('search-tech-table');
-            let currentSearchValue = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, ' ').trim() : '';
+            let currentSearchValue = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '').trim() : '';
             let hasAnyVisibleTable = false;
 
             document.querySelectorAll('#technicians .tech-dept-header').forEach(header => {
@@ -1825,7 +1830,7 @@ $dept_icons = [
                 
                 document.querySelectorAll(`#technicians .tech-dept-row[data-dept="${secDept}"]`).forEach(row => {
                     if (deptMatch) {
-                        let name = (row.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, ' ');
+                        let name = (row.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, '');
                         if (name.includes(currentSearchValue)) {
                             row.style.display = '';
                             hasVisibleRow = true;
@@ -1876,7 +1881,7 @@ $dept_icons = [
             });
 
             let searchInput = document.getElementById('search-tech-card');
-            let currentSearchValue = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, ' ').trim() : '';
+            let currentSearchValue = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '').trim() : '';
             let hasAnyVisibleCard = false;
 
             document.querySelectorAll('#team_cards .tech-dept-section').forEach(sec => {
@@ -1886,7 +1891,7 @@ $dept_icons = [
                 
                 if (deptMatch) {
                     sec.querySelectorAll('.tech-card-item').forEach(item => {
-                        let name = (item.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, ' ');
+                        let name = (item.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, '');
                         if (name.includes(currentSearchValue)) {
                             item.style.display = '';
                             hasVisibleCard = true;
@@ -1895,6 +1900,11 @@ $dept_icons = [
                             item.style.display = 'none';
                         }
                     });
+                    
+                    let header = sec.querySelector('.tech-dept-header');
+                    if (header) {
+                        header.style.display = hasVisibleCard ? '' : 'none';
+                    }
                     
                     sec.style.display = hasVisibleCard ? '' : 'none';
                 } else {
