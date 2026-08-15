@@ -146,7 +146,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <style>
         * { box-sizing: border-box; }
         
-        /* พื้นหลังหน้าเว็บเปลี่ยนสีตามโหมดมืด/สว่าง (ลดความเข้มของ Dark Mode ลงมาหน่อย) */
+        /* พื้นหลังหน้าเว็บเปลี่ยนสีตามโหมดมืด/สว่าง */
         body { 
             font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; 
             margin: 0; padding: 0; 
@@ -167,9 +167,10 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         }
 
         .dark .a4-container {
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5); /* ให้เงาเข้มขึ้นในโหมดมืดเพื่อให้กระดาษลอยเด่น */
         }
 
+        /* เปลี่ยนสีลูกศรใน select เวลาเป็น Dark mode */
         .dark select {
             background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') !important;
         }
@@ -220,10 +221,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         .gov-sub { padding-left: 1.2cm; }
     </style>
 </head>
-<!-- ปรับพื้นหลังโหมดมืดให้ซอฟต์ลงเป็น slate-800 แทน slate-900 -->
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
 
-    <!-- ✨ แถบเมนูควบคุม (ปรับพื้นหลัง Dark mode เป็น slate-800) ✨ -->
+    <!-- ✨ แถบเมนูควบคุม (ปรับการไล่สีให้ปุ่มในโหมดมืดเด่นชัดขึ้น) ✨ -->
     <div class="no-print bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 py-4 px-6 sticky top-0 z-50 shadow-sm transition-colors duration-300">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             
@@ -232,7 +232,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 
                 <!-- บรรทัดบน: ปุ่ม Dashboard + ชื่อระบบ -->
                 <div class="flex items-center space-x-4">
-                    <a href="dashboard.php?tab=reports" class="bg-violet-50 dark:bg-violet-900/30 border-2 border-violet-200 dark:border-violet-700 hover:bg-violet-100 dark:hover:bg-violet-900/50 text-violet-700 dark:text-violet-300 px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center">
+                    <!-- ✨ เปลี่ยนปุ่ม Dashboard โหมดมืดเป็นสีทึบชัดเจน (Violet) ✨ -->
+                    <a href="dashboard.php?tab=reports" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-500 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </a>
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-600 pl-4 text-slate-800 dark:text-slate-200 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
@@ -240,19 +241,20 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 
                 <!-- บรรทัดล่าง: แท็บสลับหน้า + ปุ่มพิมพ์ PDF -->
                 <div class="flex flex-wrap items-center gap-2.5">
+                    <!-- ✨ แท็บโหมดมืด: ถ้าเปิดอยู่ให้เป็นสีทึบ (Indigo) ชัดเจน ✨ -->
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600/30 dark:text-indigo-300 dark:border-indigo-500 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'; ?>">
-                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-500 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-600'; ?>">
+                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
                     </a>
                     
                     <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600/30 dark:text-indigo-300 dark:border-indigo-500 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'; ?>">
-                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-500 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-600'; ?>">
+                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
                     </a>
                     
-                    <!-- ✨ ปุ่ม Print: โหมดสว่างเป็นสีดำ, โหมดมืดเป็นสีแดง ✨ -->
-                    <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-red-600 dark:hover:bg-red-700 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md dark:shadow-sm transition-all flex items-center ml-1 border border-slate-900 dark:border-red-500">
-                        <i class="fas fa-print mr-1.5 text-slate-300 dark:text-white"></i> พิมพ์ / โหลด PDF
+                    <!-- ✨ ปุ่ม Print: โหมดสว่างเป็นสีดำ, โหมดมืดเป็นสีแดงไวน์ (red-800) ✨ -->
+                    <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-red-800 dark:hover:bg-red-900 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md dark:shadow-sm transition-all flex items-center ml-1 border border-slate-900 dark:border-red-700">
+                        <i class="fas fa-print mr-1.5 text-slate-300 dark:text-red-200"></i> พิมพ์ / โหลด PDF
                     </button>
                 </div>
 
