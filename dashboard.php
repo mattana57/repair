@@ -816,6 +816,9 @@ $dept_icons = [
                 </div>
             </div>
 
+            <!-- ===================================================================================
+                 ✨ ส่วนที่มีการเปลี่ยนแปลงธีม: Team Management (ตารางรายชื่อช่าง) ✨
+                 =================================================================================== -->
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
@@ -836,7 +839,6 @@ $dept_icons = [
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
-                                        <!-- ลบคอลัมน์ Department ออกตามที่ขอ -->
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -873,7 +875,6 @@ $dept_icons = [
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <!-- ลบ td Department ออกตามที่ขอ -->
                                                 <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($u['phone'])."</td>
                                                 <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 text-right'>
@@ -893,6 +894,7 @@ $dept_icons = [
                 </div>
 
                 <div class="mt-10 space-y-6">
+                    <!-- ปุ่มฟิลเตอร์ที่มีอยู่ในหน้า Team Management (ตาราง) -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-wrap gap-2.5">
@@ -937,25 +939,27 @@ $dept_icons = [
                             $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                     ?>
                         <div class="mb-8 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept); ?>">
-                            <!-- ✨ แถบหัวข้อฝ่ายงานแบบใหม่ (Gradient Ribbon) ที่ปรับให้เล็กลง ✨ -->
-                            <div class="relative overflow-hidden flex items-center justify-between mb-4 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 sm:p-4 rounded-2xl shadow-md shadow-indigo-200/50">
+                            
+                            <!-- ✨ แถบ Gradient Ribbon ขนาดกะทัดรัด พร้อมปุ่มบอกจำนวน "คน" ✨ -->
+                            <div class="relative overflow-hidden flex items-center justify-between mb-4 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 rounded-2xl shadow-md shadow-indigo-200/50">
                                 <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                                 <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
                                 
-                                <div class="flex items-center relative z-10">
-                                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0">
-                                        <i class="<?php echo $tbl_icon; ?> text-lg sm:text-xl drop-shadow-md"></i>
+                                <div class="flex items-center relative z-10 pl-1">
+                                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-4 border border-white/30 shadow-inner shrink-0">
+                                        <i class="<?php echo $tbl_icon; ?> text-lg drop-shadow-md"></i>
                                     </div>
                                     <div>
-                                        <h3 class="font-extrabold text-base sm:text-lg text-white tracking-wide drop-shadow-md leading-tight">
+                                        <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
                                             <?php echo htmlspecialchars($dept); ?>
                                         </h3>
-                                        <p class="text-indigo-100 text-[10px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                        <p class="text-indigo-100 text-[10px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                                     </div>
                                 </div>
                                 
-                                <div class="relative z-10 hidden sm:flex items-center">
-                                    <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                                <!-- ✨ เปลี่ยนจาก "ท่าน" เป็น "คน" ✨ -->
+                                <div class="relative z-10 hidden sm:flex items-center pr-1">
+                                    <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                         <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                                     </span>
                                 </div>
@@ -1053,9 +1057,19 @@ $dept_icons = [
                  ✨ ส่วนการแสดงผล Team Management (ทำเนียบช่าง - Card View) ✨
                  =================================================================================== -->
             <div id="team_cards" class="section hidden animate-fade-in no-print">
-                <div class="mb-8">
-                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Team Management</h2>
-                    <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
+                
+                <!-- ✨ เพิ่มปุ่มฟิลเตอร์เชื่อมโยง 2 หน้า ✨ -->
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Team Management</h2>
+                        <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2.5">
+                        <button onclick="filterDept('all')" id="btn-filter-all-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
+                        <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
+                        <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
+                        <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                    </div>
                 </div>
 
                 <?php 
@@ -1104,26 +1118,27 @@ $dept_icons = [
                 foreach ($departments_data as $dept_name => $techs):
                     $icon_class = $dept_icons[$dept_name] ?? 'fas fa-users';
                 ?>
-                <div class="mb-10">
-                    <!-- ✨ แถบหัวข้อฝ่ายงานแบบใหม่ (Gradient Ribbon) ที่ปรับให้เล็กลง ✨ -->
-                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 sm:p-4 rounded-2xl shadow-md shadow-indigo-200/50">
+                <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
+                    <!-- ✨ แถบ Gradient Ribbon ขนาดกะทัดรัด ✨ -->
+                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 rounded-2xl shadow-md shadow-indigo-200/50">
                         <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                         <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
                         
-                        <div class="flex items-center relative z-10">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0">
-                                <i class="<?php echo $icon_class; ?> text-lg sm:text-xl drop-shadow-md"></i>
+                        <div class="flex items-center relative z-10 pl-1">
+                            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-4 border border-white/30 shadow-inner shrink-0">
+                                <i class="<?php echo $icon_class; ?> text-lg drop-shadow-md"></i>
                             </div>
                             <div>
-                                <h3 class="font-extrabold text-base sm:text-lg text-white tracking-wide drop-shadow-md leading-tight">
+                                <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
                                     <?php echo htmlspecialchars($dept_name); ?>
                                 </h3>
-                                <p class="text-indigo-100 text-[10px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                <p class="text-indigo-100 text-[10px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                             </div>
                         </div>
                         
-                        <div class="relative z-10 hidden sm:flex items-center">
-                            <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                        <!-- ✨ เปลี่ยนจาก "ท่าน" เป็น "คน" ✨ -->
+                        <div class="relative z-10 hidden sm:flex items-center pr-1">
+                            <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                 <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                             </span>
                         </div>
