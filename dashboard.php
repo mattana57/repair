@@ -420,7 +420,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอน
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -783,14 +783,12 @@ $dept_icons = [
                                             $techName = "<span class='text-slate-400'>Unassigned</span>";
                                         }
 
-                                        // ✨ อัปเดตการแสดงผล: จัด Padding ขอบซ้ายให้เท่ากันเป๊ะ ✨
                                         $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                // ใส่ ml-2.5 เพื่อชดเชย px-2.5 ของกรอบด้านบน ทำให้ตัวหนังสือตรงกัน
                                                 $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5'>{$t_pos}</div>";
                                             }
                                         }
@@ -938,8 +936,8 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <!-- ✨ เพิ่มช่องค้นหาที่หน้าตาราง (Team View) ✨ -->
                 <div class="mt-10 space-y-6">
+                    <!-- ✨ เพิ่มช่องค้นหาหน้าตาราง Team ✨ -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full sm:w-auto">
@@ -948,7 +946,7 @@ $dept_icons = [
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="search-tech-table" oninput="searchTechs(this.value)" placeholder="ค้นหาชื่อช่าง..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
-                            
+
                             <div class="flex flex-wrap gap-2.5">
                                 <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
                                 <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
@@ -1038,8 +1036,8 @@ $dept_icons = [
                                             $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
                                             
-                                            // ✨ ซ่อนชื่อสำหรับการค้นหา (เก็บทั้งไทยและอังกฤษ) ✨
-                                            $search_name = strtolower($js_fname . ' ' . $js_ename);
+                                            // ✨ เพิ่มการผสานชื่อไทย-อังกฤษ ไว้สำหรับการค้นหา ✨
+                                            $search_name = $t['full_name'] . ' ' . $en_name . ' ' . $th_name;
                                             $js_search_name = htmlspecialchars($search_name, ENT_QUOTES);
                                             
                                             $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
@@ -1069,6 +1067,7 @@ $dept_icons = [
                                             
                                             $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
+                                            // ✨ ใส่ data-tech-name ให้สามารถหาชื่อช่างเจอเวลาค้นหา ✨
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                                 <td class='px-6 py-4'>
                                                     <div class='flex items-center'>
@@ -1103,6 +1102,14 @@ $dept_icons = [
                             </table>
                         </div>
                     </div>
+                    <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ✨ -->
+                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border border-slate-200/60 shadow-xs bg-white text-center">
+                        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 mx-auto">
+                            <i class="fas fa-search text-2xl text-slate-300"></i>
+                        </div>
+                        <h3 class="text-slate-700 font-extrabold text-lg mb-1">ไม่พบข้อมูลที่ค้นหา</h3>
+                        <p class="text-slate-400 text-sm font-medium">ลองตรวจสอบตัวสะกด หรือเปลี่ยนแผนกดูอีกครั้ง</p>
+                    </div>
                 </div>
             </div>
 
@@ -1111,7 +1118,6 @@ $dept_icons = [
                  =================================================================================== -->
             <div id="team_cards" class="section hidden animate-fade-in no-print">
                 
-                <!-- ✨ เพิ่มช่องค้นหาที่หน้าการ์ด (Card View) ✨ -->
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
                         <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Team Management</h2>
@@ -1206,8 +1212,7 @@ $dept_icons = [
                     
                     <div class="flex flex-wrap gap-6 items-start">
                         <?php foreach ($techs as $tech): 
-                            // ✨ ซ่อนชื่อสำหรับการค้นหา ✨
-                            $search_name = strtolower($tech['th'] . ' ' . $tech['eng']);
+                            $search_name = $tech['raw_name'] . ' ' . $tech['eng'] . ' ' . $tech['th'];
                         ?>
                         <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
@@ -1275,6 +1280,14 @@ $dept_icons = [
                     </div>
                 </div>
                 <?php endforeach; ?>
+                <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card ✨ -->
+                <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border border-slate-200/60 shadow-xs bg-white text-center">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <i class="fas fa-search text-2xl text-slate-300"></i>
+                    </div>
+                    <h3 class="text-slate-700 font-extrabold text-lg mb-1">ไม่พบข้อมูลที่ค้นหา</h3>
+                    <p class="text-slate-400 text-sm font-medium">ลองตรวจสอบตัวสะกด หรือเปลี่ยนแผนกดูอีกครั้ง</p>
+                </div>
             </div>
             <!-- =================================================================================== -->
 
@@ -1754,6 +1767,32 @@ $dept_icons = [
             hiddenInput.value = val;
         }
 
+        // ✨ ฟังก์ชันจัดการหน้าว่าง (Empty State) เมื่อค้นหาไม่เจอ ✨
+        function updateTechVisibility() {
+            ['technicians', 'team_cards'].forEach(containerId => {
+                let container = document.getElementById(containerId);
+                if (!container) return;
+                
+                let hasAnyVisible = false;
+                container.querySelectorAll('.tech-dept-section').forEach(sec => {
+                    if (sec.style.display !== 'none') {
+                        hasAnyVisible = true;
+                    }
+                });
+                
+                let emptyState = container.querySelector('.tech-empty-state');
+                if (emptyState) {
+                    if (!hasAnyVisible) {
+                        emptyState.classList.remove('hidden');
+                        emptyState.classList.add('flex');
+                    } else {
+                        emptyState.classList.add('hidden');
+                        emptyState.classList.remove('flex');
+                    }
+                }
+            });
+        }
+
         function filterDept(dept) {
             const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm";
             const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100";
@@ -1775,7 +1814,7 @@ $dept_icons = [
 
             let currentSearchValue = '';
             let searchInput1 = document.getElementById('search-tech-table');
-            if(searchInput1) currentSearchValue = searchInput1.value.toLowerCase();
+            if(searchInput1) currentSearchValue = searchInput1.value.toLowerCase().replace(/\s+/g, ' ').trim();
 
             document.querySelectorAll('.tech-dept-section').forEach(sec => {
                 let secDept = sec.getAttribute('data-dept');
@@ -1785,7 +1824,7 @@ $dept_icons = [
                     let hasVisible = false;
                     
                     sec.querySelectorAll('.tech-dept-row, .tech-card-item').forEach(item => {
-                        let name = item.getAttribute('data-tech-name') || '';
+                        let name = (item.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, ' ');
                         if (name.includes(currentSearchValue)) {
                             item.style.display = '';
                             hasVisible = true;
@@ -1803,10 +1842,12 @@ $dept_icons = [
                     sec.style.display = 'none';
                 }
             });
+            
+            updateTechVisibility();
         }
 
         function searchTechs(val) {
-            let searchLower = val.toLowerCase();
+            let searchClean = val.toLowerCase().replace(/\s+/g, ' ').trim();
             
             let inp1 = document.getElementById('search-tech-table');
             let inp2 = document.getElementById('search-tech-card');
@@ -1828,8 +1869,8 @@ $dept_icons = [
                     let hasVisible = false;
                     
                     sec.querySelectorAll('.tech-dept-row, .tech-card-item').forEach(item => {
-                        let name = item.getAttribute('data-tech-name') || '';
-                        if (name.includes(searchLower)) {
+                        let name = (item.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, ' ');
+                        if (name.includes(searchClean)) {
                             item.style.display = '';
                             hasVisible = true;
                         } else {
@@ -1846,6 +1887,8 @@ $dept_icons = [
                     sec.style.display = 'none';
                 }
             });
+            
+            updateTechVisibility();
         }
 
         function show(id) {
@@ -1895,7 +1938,7 @@ $dept_icons = [
                     let activeSection = document.querySelector('.section:not(.hidden)');
                     if (!activeSection) return;
                     
-                    let rows = activeSection.querySelectorAll('table tbody tr');
+                    let rows = activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)');
                     rows.forEach(row => {
                         if (row.innerText.toLowerCase().includes(filter)) {
                             row.style.display = '';
@@ -2268,7 +2311,6 @@ $dept_icons = [
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : '-';
                     let completed_time = has_completed ? r.completed_at.split(' ')[1].substring(0, 5) : '';
                     
-                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal สีเทา-indigo ให้ตรงกัน ✨
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
                     let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-800 text-white rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
                     if (r.technician_name) {
