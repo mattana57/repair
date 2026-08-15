@@ -134,6 +134,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เอกสารรายงานสรุป - MBS REPAIR</title>
+    <!-- ตั้งค่าให้ Tailwind รองรับ Dark Mode ผ่าน class -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -145,12 +146,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <style>
         * { box-sizing: border-box; }
         
+        /* พื้นหลังหน้าเว็บเปลี่ยนสีตามโหมดมืด/สว่าง */
         body { 
             font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; 
             margin: 0; padding: 0; 
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         
+        /* กระดาษ A4 ต้องเป็นสีขาวตัวหนังสือสีดำเสมอ แม้ใน Dark Mode */
         .a4-container {
             font-family: 'Sarabun', sans-serif;
             width: 210mm;
@@ -217,37 +220,37 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         .gov-sub { padding-left: 1.2cm; }
     </style>
 </head>
-<!-- ปรับบอดี้โหมดมืดเป็น slate-800 -->
+<!-- ✨ ปรับพื้นหลังหน้าเว็บ (รอบๆ กระดาษ) เป็นสีเทาเข้ม (slate-800) ในโหมดมืด ✨ -->
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
 
-    <!-- ✨ แถบเมนูโหมดมืดสว่างขึ้น (slate-700) เพื่อสร้างมิติแยกจากพื้นหลัง ✨ -->
-    <div class="no-print bg-white dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
+    <!-- ✨ แถบเมนูด้านบน เป็นสีดำทึบ (slate-900) ในโหมดมืด ✨ -->
+    <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             
-            <!-- ฝั่งซ้าย -->
+            <!-- ฝั่งซ้าย: แบ่ง 2 บรรทัดชัดเจน -->
             <div class="flex flex-col space-y-4">
                 
+                <!-- บรรทัดบน: ปุ่ม Dashboard + ชื่อระบบ -->
                 <div class="flex items-center space-x-4">
-                    <!-- ✨ เปลี่ยนปุ่ม Dashboard โหมดมืดเป็นสีทึบ Violet ให้โดดเด่น ✨ -->
                     <a href="dashboard.php?tab=reports" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </a>
-                    <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
+                    <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-700 pl-4 text-slate-800 dark:text-slate-200 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
+                <!-- บรรทัดล่าง: แท็บสลับหน้า + ปุ่มพิมพ์ PDF -->
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <!-- ✨ แท็บโหมดมืด: ใช้สีทึบ Indigo ให้โดดเด้ง ✨ -->
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
-                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'; ?>">
+                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-500'; ?>"></i> ตารางรายงาน
                     </a>
                     
                     <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
-                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'; ?>">
+                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-500'; ?>"></i> บันทึกข้อความ
                     </a>
                     
-                    <!-- ✨ ปุ่ม Print: โหมดสว่างดำ, โหมดมืดแดงไวน์ (rose-800) ให้ดูพรีเมียมไม่แสบตา ✨ -->
+                    <!-- ปุ่ม Print: โหมดสว่างดำ, โหมดมืดแดงไวน์ (rose-800) -->
                     <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md transition-all flex items-center ml-1 border border-slate-900 dark:border-rose-800">
                         <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
                     </button>
@@ -257,12 +260,10 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
             <!-- ฝั่งขวา: ฟอร์มค้นหา + สลับธีม -->
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto pb-0.5">
-                <!-- กรอบฟอร์มโหมดมืดปรับให้เข้มกว่าเมนู (slate-800) เพื่อสร้างมิติเว้าลงไป -->
-                <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-600 shadow-inner">
+                <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
                     <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                     
-                    <!-- Select boxes โหมดมืดให้สีสว่างขึ้นมานิด (slate-600) เพื่อให้นูนขึ้นจากกรอบฟอร์ม -->
-                    <select name="tech" class="bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors">
+                    <select name="tech" class="bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors">
                         <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>รวมทุกฝ่ายงาน (ทั้งหมด)</option>
                         
                         <?php 
@@ -270,14 +271,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             echo "<optgroup label='--- ".htmlspecialchars($dept)." ---' class='bg-slate-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold'>";
                             foreach($techs as $t_name) {
                                 $selected = ($selected_tech === $t_name) ? 'selected' : '';
-                                echo "<option value='".htmlspecialchars($t_name)."' $selected class='bg-white dark:bg-slate-600 text-slate-800 dark:text-slate-100'>".htmlspecialchars($t_name)."</option>";
+                                echo "<option value='".htmlspecialchars($t_name)."' $selected class='bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100'>".htmlspecialchars($t_name)."</option>";
                             }
                             echo "</optgroup>";
                         }
                         ?>
                     </select>
 
-                    <select name="month" class="bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors">
+                    <select name="month" class="bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors">
                         <?php 
                         for($m=1; $m<=12; $m++) {
                             $sel = ($selected_month === $m) ? 'selected' : '';
@@ -291,8 +292,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </button>
                 </form>
 
-                <!-- ปุ่มสลับ Theme ระยะห่างกำลังสวย -->
-                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-600 border-2 border-slate-200 dark:border-slate-500 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-4">
+                <!-- ปุ่มสลับ Theme ระยะห่างกำลังดี (ml-4) -->
+                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-4">
                     <i id="theme-toggle-icon" class="fas fa-moon"></i>
                 </button>
             </div>
@@ -502,7 +503,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         <!-- ท้ายกระดาษ: ซ่อนเมื่อสั่งพิมพ์ -->
         <div class="page-footer no-print border-t border-slate-200 pt-2 text-[10px] text-slate-400 flex justify-between">
             <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
-            <span>วันที่พิมพ์เอกสาร : <?php echo date('d/m/Y H:i'); ?> น.</span>
+            <span>วันที่พิมพ์เอกสาร: <?php echo date('d/m/Y H:i'); ?> น.</span>
         </div>
         
     </div>
