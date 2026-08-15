@@ -544,5 +544,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             updateIcon();
         });
     </script>
+
 </body>
 </html>
