@@ -1078,19 +1078,19 @@ $custom_dept_order = [
                         <div class="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent ml-6"></div>
                     </div>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 items-start">
+                    <!-- ✨ เปลี่ยน Grid ให้ความกว้างการ์ดยึดตามเนื้อหา/รูปภาพ ไม่บีบจนผอมสูง ✨ -->
+                    <div class="flex flex-wrap gap-6 items-start">
                         <?php foreach ($techs as $tech): ?>
-                        <!-- ✨ อัปเดตการ์ด: ใส่ Glow Effect เวลานำเมาส์ไปชี้ ✨ -->
-                        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative">
+                        <!-- ✨ อัปเดตการ์ด: ใส่ Glow Effect และล็อคความกว้างขั้นต่ำให้อ้วนสมส่วน ✨ -->
+                        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px]">
                             
-                            <!-- รูปภาพสัดส่วนเดิม (4/5) -->
+                            <!-- รูปภาพ (สัดส่วน 4/5 อ้วนๆ แบบดั้งเดิม) -->
                             <div class="relative w-full aspect-[4/5] bg-slate-100 overflow-hidden">
                                 <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
                                      onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
                                      onclick="openImageModal(this.src)"
                                      alt="<?php echo htmlspecialchars($tech['th']); ?>" 
                                      class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out cursor-pointer" title="คลิกเพื่อดูรูปขยาย">
-                                
                                 <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                             </div>
 
