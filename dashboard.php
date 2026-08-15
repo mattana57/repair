@@ -757,9 +757,6 @@ $dept_icons = [
                                     while($row = $res->fetch_assoc()) {
                                         $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                         
-                                        // -------------------------------------------------------------
-                                        // ดึงข้อมูลช่างและแผนก
-                                        // -------------------------------------------------------------
                                         $t_pos = ''; 
                                         $t_eng = '';
                                         $t_th = '';
@@ -777,7 +774,6 @@ $dept_icons = [
                                                 $t_pos = htmlspecialchars(getAutoPosition($th_name));
                                             }
                                             
-                                            // ✨ ให้โชว์แค่ชื่อไทย กับ อังกฤษ ในช่องช่าง ✨
                                             $techHtml = "<div class='text-indigo-600 font-bold'>{$t_th}</div>";
                                             if (!empty($t_eng)) {
                                                 $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
@@ -787,14 +783,14 @@ $dept_icons = [
                                             $techName = "<span class='text-slate-400'>Unassigned</span>";
                                         }
 
-                                        // ✨ ให้โชว์ชื่อแผนก และ ตำแหน่งงาน(ถ้ามี) ในช่อง Department ✨
+                                        // ✨ อัปเดตตาราง: ปรับขนาดอักษรและระยะชิดซ้ายให้ตรงกันเป๊ะ ✨
                                         $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
-                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider mb-1'>{$dept_str}</div>";
+                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-600 rounded-lg text-[11px] font-bold tracking-wider mb-1'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                $deptEng .= "<div class='text-slate-500 font-medium text-[11px] ml-1'>{$t_pos}</div>";
+                                                $deptEng .= "<div class='text-slate-500 font-medium text-[11px] ml-2.5'>{$t_pos}</div>";
                                             }
                                         }
 
@@ -2199,13 +2195,13 @@ $dept_icons = [
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : '-';
                     let completed_time = has_completed ? r.completed_at.split(' ')[1].substring(0, 5) : '';
                     
-                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal ✨
+                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal พร้อมแก้ขนาดอักษรและ Alignment ✨
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
-                    let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider mb-1'>${dName}</div>`;
+                    let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-600 rounded-lg text-[11px] font-bold tracking-wider mb-1'>${dName}</div>`;
                     if (r.technician_name) {
                         let info = techInfoMap[r.technician_name];
                         if (info && info.pos) {
-                            deptEng += `<div class='text-slate-500 font-medium text-[11px] ml-1'>${info.pos}</div>`;
+                            deptEng += `<div class='text-slate-500 font-medium text-[11px] ml-2.5'>${info.pos}</div>`;
                         }
                     }
 
