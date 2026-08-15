@@ -72,8 +72,22 @@ if ($selected_tech === 'all') {
     }
 }
 
-// เงื่อนไขการค้นหา SQL
+// ✨ ดึงรายการปีทั้งหมดที่มีอยู่ในฐานข้อมูลมาแสดงใน Dropdown ✨
+$years_query = $conn->query("SELECT DISTINCT YEAR(created_at) as y FROM repairs WHERE created_at IS NOT NULL ORDER BY y DESC");
+$available_years = [];
+if($years_query && $years_query->num_rows > 0) {
+    while($y_row = $years_query->fetch_assoc()) {
+        if(!empty($y_row['y'])) $available_years[] = $y_row['y'];
+    }
+} else {
+    $available_years[] = date('Y'); // ถ้าไม่มีข้อมูลเลย ให้ใช้ปีปัจจุบัน
+}
+
+// เงื่อนไขการค้นหา SQL (เพิ่มการกรองด้วยปี)
 $where_conditions = [];
+if ($selected_year > 0) {
+    $where_conditions[] = "YEAR(created_at) = $selected_year";
+}
 if ($selected_month > 0) {
     $where_conditions[] = "MONTH(created_at) = $selected_month";
 }
@@ -140,7 +154,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เอกสารรายงานสรุป - MBS REPAIR</title>
-    <!-- ตั้งค่าให้ Tailwind รองรับ Dark Mode ผ่าน class -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -158,7 +171,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         
-        /* ✨ ปรับโครงสร้าง A4 ให้เป็น Flex เพื่อดัน Footer ลงล่างสุดเสมอ ✨ */
         .a4-container {
             font-family: 'Sarabun', sans-serif;
             width: 210mm;
@@ -181,19 +193,18 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23cbd5e1%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') !important;
         }
 
-        /* ✨ ตั้งค่าตอนสั่งพิมพ์ให้สมส่วน ขอบเท่ากันเป๊ะ ✨ */
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; font-size: 14px; color: black !important; }
             
             @page { 
                 size: A4 portrait; 
-                margin: 20mm; /* บังคับระยะขอบทุกด้านให้เท่ากันเป๊ะที่ 20mm */
+                margin: 20mm; 
             }
 
             .a4-container { 
                 width: 100% !important; 
-                height: 256mm !important; /* ล็อคความสูง (297 - ขอบบนล่าง 40 = 257) เพื่อดัน Footer */
+                height: 256mm !important; 
                 min-height: 256mm !important;
                 padding: 0 !important; 
                 margin: 0 !important; 
@@ -233,14 +244,11 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
 
-    <!-- แถบเมนูโหมดมืด (slate-900 สีดำทึบ) -->
+    <!-- แถบเมนูควบคุม -->
     <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             
-            <!-- ฝั่งซ้าย -->
             <div class="flex flex-col space-y-4">
-                
-                <!-- บรรทัดบน -->
                 <div class="flex items-center space-x-4">
                     <a href="dashboard.php?tab=reports" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
@@ -248,27 +256,23 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
-                <!-- บรรทัดล่าง -->
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
+                    <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                        class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
                         <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
                     </a>
                     
-                    <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
+                    <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                        class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
                         <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
                     </a>
                     
-                    <!-- ปุ่ม Print -->
                     <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md transition-all flex items-center ml-1 border border-slate-900 dark:border-rose-800">
                         <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
                     </button>
                 </div>
-
             </div>
 
-            <!-- ฝั่งขวา: ฟอร์มค้นหา + สลับธีม -->
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto pb-0.5">
                 <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
                     <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
@@ -297,12 +301,22 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         ?>
                     </select>
 
+                    <!-- ✨ เพิ่ม Dropdown ให้เลือกปี พ.ศ. ✨ -->
+                    <select name="year" class="bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors">
+                        <?php 
+                        foreach($available_years as $y) {
+                            $sel = ($selected_year == $y) ? 'selected' : '';
+                            $thai_y = $y + 543;
+                            echo "<option value='$y' $sel>พ.ศ. $thai_y</option>";
+                        }
+                        ?>
+                    </select>
+
                     <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-2 rounded-xl font-extrabold transition-all shadow-sm">
                         ค้นหา
                     </button>
                 </form>
 
-                <!-- ปุ่มสลับ Theme ระยะห่างกำลังสวย -->
                 <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-600 border-2 border-slate-200 dark:border-slate-500 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-4">
                     <i id="theme-toggle-icon" class="fas fa-moon"></i>
                 </button>
@@ -317,7 +331,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <?php if ($report_type === 'memo'): ?>
         <!-- รูปแบบที่ 1: บันทึกข้อความ -->
         <div class="a4-container">
-            <!-- ส่วนเนื้อหาหลัก จะยืด (flex-1) เพื่อดัน Footer ลงไปล่างสุด -->
             <div class="flex-1 flex flex-col">
                 <div class="memo-head-box">
                     <img src="uploads/garuda.png" alt="ตราครุฑ" class="garuda-img">
@@ -354,7 +367,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </p>
 
                     <div class="mb-2">
-                        <p class="gov-p font-bold mb-1">๑. สรุปภาพรวมสถานะการดำเนินงาน</p>
+                        <p class="gov-p font-bold mb-1">สรุปภาพรวมสถานะการดำเนินงาน</p>
                         <p class="gov-p gov-indent mb-1">
                             มีจำนวนการแจ้งซ่อมในระบบทั้งสิ้น <strong class="font-bold"><?php echo toThaiNumber($total_jobs); ?></strong> รายการ โดยแบ่งตามสถานะการดำเนินงาน ดังนี้
                         </p>
@@ -366,7 +379,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </div>
 
                     <div class="mb-2">
-                        <p class="gov-p font-bold mb-1">๒. สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
+                        <p class="gov-p font-bold mb-1">สถิติอุปกรณ์ที่พบปัญหาความชำรุดบกพร่องสูงสุด</p>
                         <p class="gov-p gov-indent mb-1">
                             ข้อมูลประเภทครุภัณฑ์และอุปกรณ์ที่มีสถิติการแจ้งซ่อมสูงสุด ประกอบด้วย
                         </p>
@@ -393,7 +406,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </p>
                 </div>
 
-                <!-- ✨ ส่วนลายเซ็น ใช้ mt-auto เพื่อดันตัวเองไปล่างสุดเสมอ ✨ -->
                 <div class="mt-auto pt-10 text-right pr-5">
                     <div class="inline-block text-center text-[15px] text-black leading-relaxed">
                         <div class="mb-3">ลงชื่อ..........................................................ผู้รายงาน</div>
@@ -403,7 +415,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </div>
             </div>
 
-            <!-- ท้ายกระดาษ (ของบันทึกข้อความ) จัดให้อยู่ล่างสุดเสมอด้วย Flexbox -->
             <div class="border-t border-slate-200 pt-2 pb-1 mt-4 text-[10px] text-slate-400 flex justify-between">
                 <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
                 <span>วันที่พิมพ์เอกสาร: <?php echo date('d/m/Y H:i'); ?> น.</span>
@@ -412,23 +423,19 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
     <?php else: ?>
         <!-- ==========================================
-             รูปแบบที่ 2: ตารางรายงานทางการ (ทำระบบตัดแบ่งหน้า A4 ให้สมส่วน)
+             รูปแบบที่ 2: ตารางรายงานทางการ
              ========================================== -->
         <?php
-        // ✨ ปรับลดตัวเลขให้ตารางลงตัวพอดีหน้ากระดาษ ✨
-        $first_page_limit = 14; // หน้าแรกมีหัวข้อ เลยใส่ได้น้อย
-        $other_page_limit = 25; // หน้าถัดๆ ไปใส่ได้เยอะขึ้น
+        $first_page_limit = 14; 
+        $other_page_limit = 25; 
         $pages = [];
         
         $total_records = count($all_rows);
         if ($total_records > 0) {
             if ($total_records <= $first_page_limit) {
-                // ถ้าข้อมูลน้อย ก็ให้อยู่หน้าเดียวจบ
                 $pages[] = $all_rows;
             } else {
-                // หน้าแรก 
                 $pages[] = array_slice($all_rows, 0, $first_page_limit);
-                // ข้อมูลที่เหลือ เอามาหั่น
                 $remaining = array_slice($all_rows, $first_page_limit);
                 $chunks = array_chunk($remaining, $other_page_limit);
                 foreach ($chunks as $chunk) {
@@ -436,22 +443,19 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 }
             }
         } else {
-            $pages[] = []; // ไม่มีข้อมูลเลย ก็สร้างหน้าเปล่า 1 หน้า
+            $pages[] = [];
         }
         
         $total_pages = count($pages);
-        $global_i = 1; // ลำดับแถวแบบนับต่อยาวๆ
+        $global_i = 1; 
         
-        // วนลูปสร้างกระดาษ A4 ตามจำนวนหน้าที่คำนวณได้
         foreach ($pages as $page_index => $page_rows):
         ?>
         
         <div class="a4-container">
-            <!-- ส่วนเนื้อหาหลัก จะยืด (flex-1) เพื่อดัน Footer ลงไปล่างสุดของหน้ากระดาษ A4 เสมอ -->
             <div class="flex-1 flex flex-col">
                 
                 <?php if ($page_index === 0): ?>
-                    <!-- ================= หน้าที่ 1 (มีหัวเอกสารเต็มรูปแบบ) ================= -->
                     <div class="text-center border-b-2 border-slate-900 pb-3 mb-5">
                         <h2 class="text-xl font-bold text-slate-900">รายงานสรุปผลการปฏิบัติงานซ่อมบำรุงครุภัณฑ์</h2>
                         <p class="text-sm font-semibold text-slate-700 mt-1">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
@@ -498,7 +502,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <?php if($selected_tech !== 'all') echo " (เฉพาะ: ".htmlspecialchars($tech_formal_name).")"; ?>
                         </h3>
                 <?php else: ?>
-                    <!-- ================= หน้าที่ 2 เป็นต้นไป (มีแค่หัวข้อสั้นๆ) ================= -->
                     <div class="pt-2 mb-2">
                         <h3 class="font-bold text-sm text-slate-800">
                             บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง
@@ -507,7 +510,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </div>
                 <?php endif; ?>
 
-                <!-- ส่วนของตารางข้อมูล (แสดงในทุกหน้า) -->
                 <table class="w-full text-xs border-collapse border border-slate-300">
                     <thead class="bg-slate-100 font-bold text-slate-700 border-b border-slate-300">
                         <tr>
@@ -550,10 +552,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </table>
                 
                 <?php if ($page_index === 0): ?>
-                    </div> <!-- ปิด div class="mb-3" ของหน้าแรก -->
+                    </div> 
                 <?php endif; ?>
 
-                <!-- ✨ เฉพาะหน้าสุดท้าย ให้แสดงลายเซ็น (ใช้ mt-auto เพื่อดันลงไปเกือบล่างสุด) ✨ -->
                 <?php if ($page_index === $total_pages - 1): ?>
                     <div class="mt-auto pt-10 text-right pr-5">
                         <div class="inline-block text-center text-[15px] text-black leading-relaxed">
@@ -564,26 +565,23 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </div>
                 <?php endif; ?>
 
-            </div> <!-- ปิด .flex-1 content wrapper -->
+            </div> 
 
-            <!-- ท้ายกระดาษ (แสดงทุกหน้า ดันติดขอบล่างเสมอเพราะ Flexbox) -->
             <div class="border-t border-slate-200 pt-2 pb-1 mt-4 text-[10px] text-slate-400 flex justify-between">
                 <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
                 <span>หน้าที่ <?php echo $page_index + 1; ?>/<?php echo $total_pages; ?> | วันที่พิมพ์: <?php echo date('d/m/Y H:i'); ?> น.</span>
             </div>
             
-        </div> <!-- ปิด .a4-container ของแต่ละหน้า -->
+        </div> 
         
         <?php endforeach; ?>
 
     <?php endif; ?>
 
-    <!-- ✨ JavaScript สำหรับระบบ Dark/Light Mode ✨ -->
     <script>
         const themeToggleBtn = document.getElementById('theme-toggle');
         const themeToggleIcon = document.getElementById('theme-toggle-icon');
 
-        // ฟังก์ชันอัปเดตไอคอน
         function updateIcon() {
             if (document.documentElement.classList.contains('dark')) {
                 themeToggleIcon.classList.remove('fa-moon');
@@ -594,7 +592,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             }
         }
 
-        // เช็คการตั้งค่าเดิมใน Local Storage หรือ System Preferences ตอนเปิดหน้าเว็บ
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -602,7 +599,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         }
         updateIcon();
 
-        // เมื่อกดปุ่มสลับ Theme
         themeToggleBtn.addEventListener('click', function() {
             document.documentElement.classList.toggle('dark');
             
