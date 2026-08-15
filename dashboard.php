@@ -839,6 +839,7 @@ $dept_icons = [
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
+                                        <!-- ลบคอลัมน์ Department ออก -->
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -894,7 +895,6 @@ $dept_icons = [
                 </div>
 
                 <div class="mt-10 space-y-6">
-                    <!-- ปุ่มฟิลเตอร์ที่มีอยู่ในหน้า Team Management (ตาราง) -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-wrap gap-2.5">
@@ -940,7 +940,7 @@ $dept_icons = [
                     ?>
                         <div class="mb-8 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept); ?>">
                             
-                            <!-- ✨ แถบ Gradient Ribbon ขนาดกะทัดรัด พร้อมปุ่มบอกจำนวน "คน" ✨ -->
+                            <!-- ✨ แถบ Gradient Ribbon แทรกเหนือตารางของแต่ละฝ่ายงาน ✨ -->
                             <div class="relative overflow-hidden flex items-center justify-between mb-4 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 rounded-2xl shadow-md shadow-indigo-200/50">
                                 <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                                 <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
@@ -957,7 +957,6 @@ $dept_icons = [
                                     </div>
                                 </div>
                                 
-                                <!-- ✨ เปลี่ยนจาก "ท่าน" เป็น "คน" ✨ -->
                                 <div class="relative z-10 hidden sm:flex items-center pr-1">
                                     <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                         <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
@@ -1011,6 +1010,7 @@ $dept_icons = [
                                                 $th_name_html = !empty($th_name) ? $th_name : '-';
                                                 $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
                                                 
+                                                <!-- ✨ เพิ่มการแสดงตำแหน่งใต้ชื่อฝ่ายงาน ✨ -->
                                                 $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
                                                 echo "<tr class='hover:bg-slate-50/50 transition-colors'>
@@ -1058,7 +1058,6 @@ $dept_icons = [
                  =================================================================================== -->
             <div id="team_cards" class="section hidden animate-fade-in no-print">
                 
-                <!-- ✨ เพิ่มปุ่มฟิลเตอร์เชื่อมโยง 2 หน้า ✨ -->
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
                         <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Team Management</h2>
@@ -1119,7 +1118,7 @@ $dept_icons = [
                     $icon_class = $dept_icons[$dept_name] ?? 'fas fa-users';
                 ?>
                 <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
-                    <!-- ✨ แถบ Gradient Ribbon ขนาดกะทัดรัด ✨ -->
+                    <!-- ✨ แถบ Gradient Ribbon แบบใหม่ ✨ -->
                     <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 rounded-2xl shadow-md shadow-indigo-200/50">
                         <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                         <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
@@ -1136,7 +1135,6 @@ $dept_icons = [
                             </div>
                         </div>
                         
-                        <!-- ✨ เปลี่ยนจาก "ท่าน" เป็น "คน" ✨ -->
                         <div class="relative z-10 hidden sm:flex items-center pr-1">
                             <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                 <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
