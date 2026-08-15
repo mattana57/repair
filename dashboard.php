@@ -409,7 +409,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอนแผนก
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอน
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -929,38 +929,41 @@ $dept_icons = [
                     if (empty($techs_by_dept)) {
                         echo "<div class='modern-card p-8 text-center text-slate-400 font-medium'>No technicians found</div>";
                     } else {
+                        $tbl_dept_icons = [
+                            'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
+                            'ฝ่ายงานยานยนต์' => 'fas fa-car',
+                            'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
+                            'แม่บ้าน' => 'fas fa-broom'
+                        ];
+
                         foreach ($techs_by_dept as $dept => $techs) {
-                            $icon_class = $dept_icons[$dept] ?? 'fas fa-users';
+                            $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                     ?>
-                        <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept); ?>">
-                            
-                            <!-- ✨ แถบหัวข้อฝ่ายงานแบบใหม่ (Gradient Ribbon) โดดเด่นและมีมิติ ✨ -->
-                            <div class="relative overflow-hidden flex items-center justify-between mb-6 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-4 sm:p-5 rounded-2xl shadow-lg shadow-indigo-200/50">
-                                <!-- ลูกเล่นแสงสะท้อนเบาๆ เป็น Background -->
-                                <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
-                                <div class="absolute bottom-0 right-1/4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
+                        <div class="mb-8 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept); ?>">
+                            <!-- ✨ แถบหัวข้อฝ่ายงานแบบใหม่ (Gradient Ribbon) ที่ปรับให้เล็กลง ✨ -->
+                            <div class="relative overflow-hidden flex items-center justify-between mb-4 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 sm:p-4 rounded-2xl shadow-md shadow-indigo-200/50">
+                                <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
+                                <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
                                 
                                 <div class="flex items-center relative z-10">
-                                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-4 border border-white/30 shadow-inner shrink-0">
-                                        <i class="<?php echo $icon_class; ?> text-xl sm:text-2xl drop-shadow-md"></i>
+                                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0">
+                                        <i class="<?php echo $tbl_icon; ?> text-lg sm:text-xl drop-shadow-md"></i>
                                     </div>
                                     <div>
-                                        <h3 class="font-extrabold text-lg sm:text-xl text-white tracking-wide drop-shadow-md">
+                                        <h3 class="font-extrabold text-base sm:text-lg text-white tracking-wide drop-shadow-md leading-tight">
                                             <?php echo htmlspecialchars($dept); ?>
                                         </h3>
-                                        <p class="text-indigo-100 text-xs sm:text-sm font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                        <p class="text-indigo-100 text-[10px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                                     </div>
                                 </div>
                                 
-                                <!-- ป้ายนับจำนวนคน (โชว์เฉพาะหน้าจอใหญ่ขึ้นไป) -->
                                 <div class="relative z-10 hidden sm:flex items-center">
-                                    <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold px-4 py-2 rounded-full shadow-sm flex items-center">
-                                        <i class="fas fa-user-check mr-2 opacity-80"></i> <?php echo count($techs); ?> ท่าน
+                                    <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                                        <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                                     </span>
                                 </div>
                             </div>
-                            
-                            <!-- ตารางรายชื่อช่าง -->
+
                             <div class="modern-card overflow-hidden border border-slate-200/60 shadow-xs">
                                 <div class="overflow-x-auto w-full">
                                     <table class="w-full text-left whitespace-nowrap min-w-[700px]">
@@ -1049,6 +1052,155 @@ $dept_icons = [
                 </div>
             </div>
 
+            <!-- ===================================================================================
+                 ✨ ส่วนการแสดงผล Team Management (ทำเนียบช่าง - Card View) ✨
+                 =================================================================================== -->
+            <div id="team_cards" class="section hidden animate-fade-in no-print">
+                <div class="mb-8">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Team Management</h2>
+                    <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
+                </div>
+
+                <?php 
+                $departments_data = [];
+                $res_techs = $conn->query("SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว'");
+                if($res_techs && $res_techs->num_rows > 0) {
+                    while($row = $res_techs->fetch_assoc()) {
+                        $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป';
+                        if(!isset($departments_data[$dept])) $departments_data[$dept] = [];
+                        
+                        $img = !empty($row['avatar_url']) ? $row['avatar_url'] : '';
+                        
+                        list($th_name, $en_name) = splitThaiEngName($row['full_name'], $row['english_name']);
+
+                        $departments_data[$dept][] = [
+                            'th' => $th_name,
+                            'eng' => $en_name, 
+                            'pos' => !empty($row['position']) ? $row['position'] : getAutoPosition($th_name),
+                            'phone' => $row['phone'],
+                            'img' => $img,
+                            'raw_name' => $row['full_name']
+                        ];
+                    }
+                }
+
+                $dept_icons = [
+                    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
+                    'ฝ่ายงานยานยนต์' => 'fas fa-car',
+                    'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
+                    'แม่บ้าน' => 'fas fa-broom'
+                ];
+                
+                uksort($departments_data, function($a, $b) use ($custom_dept_order) {
+                    $pos_a = array_search($a, $custom_dept_order);
+                    $pos_b = array_search($b, $custom_dept_order);
+                    $pos_a = ($pos_a === false) ? 999 : $pos_a;
+                    $pos_b = ($pos_b === false) ? 999 : $pos_b;
+                    if ($pos_a == $pos_b) return strcmp($a, $b);
+                    return $pos_a - $pos_b;
+                });
+
+                if(empty($departments_data)) {
+                    echo "<div class='modern-card p-12 text-center flex flex-col items-center justify-center'><i class='fas fa-user-slash text-4xl text-slate-300 mb-4'></i><p class='text-slate-500 font-bold'>ยังไม่มีช่างในระบบ หรือยังไม่มีช่างที่ผูกบัญชีสำเร็จ</p></div>";
+                }
+
+                foreach ($departments_data as $dept_name => $techs):
+                    $icon_class = $dept_icons[$dept_name] ?? 'fas fa-users';
+                ?>
+                <div class="mb-10">
+                    <!-- ✨ แถบหัวข้อฝ่ายงานแบบใหม่ (Gradient Ribbon) ที่ปรับให้เล็กลง ✨ -->
+                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 sm:p-4 rounded-2xl shadow-md shadow-indigo-200/50">
+                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
+                        
+                        <div class="flex items-center relative z-10">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0">
+                                <i class="<?php echo $icon_class; ?> text-lg sm:text-xl drop-shadow-md"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-base sm:text-lg text-white tracking-wide drop-shadow-md leading-tight">
+                                    <?php echo htmlspecialchars($dept_name); ?>
+                                </h3>
+                                <p class="text-indigo-100 text-[10px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                            </div>
+                        </div>
+                        
+                        <div class="relative z-10 hidden sm:flex items-center">
+                            <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                                <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-6 items-start">
+                        <?php foreach ($techs as $tech): ?>
+                        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px]">
+                            
+                            <div class="relative w-full aspect-[4/5] bg-slate-100 overflow-hidden">
+                                <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
+                                     onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
+                                     onclick="openImageModal(this.src)"
+                                     alt="<?php echo htmlspecialchars($tech['th']); ?>" 
+                                     class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out cursor-pointer" title="คลิกเพื่อดูรูปขยาย">
+                                
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                            </div>
+
+                            <div class="p-5 flex-1 flex flex-col justify-between relative z-10 bg-white">
+                                <div>
+                                    <h5 class="font-extrabold text-slate-800 text-base leading-tight group-hover:text-indigo-600 transition-colors">
+                                        <?php echo htmlspecialchars($tech['th']); ?>
+                                    </h5>
+                                    
+                                    <?php if (!empty($tech['eng'])): ?>
+                                    <p class="text-[11px] font-semibold text-slate-400 mt-1 uppercase tracking-wider"><?php echo htmlspecialchars($tech['eng']); ?></p>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($tech['pos'])): ?>
+                                    <div class="mt-3 inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50/80 border border-indigo-100/50">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span>
+                                        <span class="text-[10px] font-bold text-indigo-700"><?php echo htmlspecialchars($tech['pos']); ?></span>
+                                    </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php 
+                                    if (!empty($tech['phone']) && $tech['phone'] !== '-'): 
+                                        $phone_parts = array_values(array_filter(array_map('trim', explode(',', $tech['phone']))));
+                                    ?>
+                                        <div class="mt-4 pt-4 border-t border-slate-100/80 space-y-2">
+                                        <?php foreach($phone_parts as $p): ?>
+                                            <div class="flex items-center text-slate-600 bg-slate-50/50 rounded-lg p-2 border border-slate-100">
+                                                <div class="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm mr-2 shrink-0">
+                                                    <i class="fas fa-phone-alt text-[9px] text-emerald-500"></i> 
+                                                </div>
+                                                <span class="text-xs font-semibold tracking-wide"><?php echo htmlspecialchars(trim($p)); ?></span>
+                                            </div>
+                                        <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="mt-4 pt-4 border-t border-slate-100/80">
+                                            <div class="flex items-center text-slate-400 bg-slate-50/50 rounded-lg p-2 border border-slate-100">
+                                                <div class="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm mr-2 shrink-0 opacity-50">
+                                                    <i class="fas fa-phone-slash text-[9px]"></i> 
+                                                </div>
+                                                <span class="text-xs font-medium">ไม่มีเบอร์ติดต่อ</span>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" 
+                                        class="mt-5 w-full text-xs font-bold text-slate-600 bg-white border-2 border-slate-100 hover:border-indigo-600 hover:bg-indigo-600 hover:text-white py-2.5 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-indigo-200 flex items-center justify-center group/btn">
+                                    <i class="fas fa-history mr-2 text-slate-400 group-hover/btn:text-indigo-200 transition-colors"></i> 
+                                    ดูประวัติงาน
+                                </button>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
             <!-- =================================================================================== -->
 
             <div id="assets" class="section hidden space-y-6 no-print">
