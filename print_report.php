@@ -139,8 +139,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
-        /* พื้นหลังหน้าเว็บใช้สีเทาหม่น เพื่อให้เอกสารสีขาวโดดเด่นขึ้นมา */
-        body { font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; background-color: #e2e8f0; color: #1e293b; margin: 0; padding: 0; }
+        /* พื้นหลังหน้าเว็บใช้สีเทาอ่อน เพื่อให้เอกสารสีขาวโดดเด่นขึ้นมา */
+        body { font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 0; }
         
         .a4-container {
             font-family: 'Sarabun', sans-serif;
@@ -202,8 +202,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 </head>
 <body>
 
-    <!-- ✨ แถบเมนูควบคุม ธีม Dashboard (Indigo Gradient) ✨ -->
-    <div class="no-print bg-gradient-to-r from-indigo-700 to-violet-600 text-white py-4 px-6 sticky top-0 z-50 shadow-lg">
+    <!-- ✨ แถบเมนูควบคุม ธีม 60-30-10 (Indigo, Blue, Violet, Amber) + Glassmorphism ✨ -->
+    <!-- 60% Dominant: ไล่สีน้ำเงินอมม่วงไปหาน้ำเงินสว่าง ไม่มืดมน -->
+    <div class="no-print bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-500 text-white py-4 px-6 sticky top-0 z-50 shadow-md">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             
             <!-- ฝั่งซ้าย: ปุ่มกลับ และกลุ่มปุ่มสลับมุมมอง -->
@@ -212,26 +213,28 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <a href="dashboard.php?tab=reports" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center backdrop-blur-sm border border-white/10">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </a>
-                    <h1 class="font-extrabold text-sm border-l-2 border-indigo-400 pl-4 text-white tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
+                    <h1 class="font-extrabold text-sm border-l-2 border-indigo-200 pl-4 text-white tracking-wide drop-shadow-sm">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
                 <div class="flex items-center space-x-2.5">
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center shadow-sm <?php echo $report_type === 'table' ? 'bg-white text-indigo-700' : 'bg-indigo-800/40 text-indigo-100 hover:bg-indigo-800/60 border border-indigo-500/30'; ?>">
-                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-500' : 'text-indigo-300'; ?>"></i> ตารางรายงาน
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center shadow-sm <?php echo $report_type === 'table' ? 'bg-white text-indigo-700' : 'bg-indigo-900/20 text-indigo-50 hover:bg-indigo-900/40 border border-white/10'; ?>">
+                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-500' : 'text-indigo-200'; ?>"></i> ตารางรายงาน
                     </a>
                     <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center shadow-sm <?php echo $report_type === 'memo' ? 'bg-white text-indigo-700' : 'bg-indigo-800/40 text-indigo-100 hover:bg-indigo-800/60 border border-indigo-500/30'; ?>">
-                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-500' : 'text-indigo-300'; ?>"></i> บันทึกข้อความ
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center shadow-sm <?php echo $report_type === 'memo' ? 'bg-white text-indigo-700' : 'bg-indigo-900/20 text-indigo-50 hover:bg-indigo-900/40 border border-white/10'; ?>">
+                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-500' : 'text-indigo-200'; ?>"></i> บันทึกข้อความ
                     </a>
-                    <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-md transition-all flex items-center border border-slate-700 ml-2">
-                        <i class="fas fa-print mr-1.5 text-slate-300"></i> พิมพ์ / โหลด PDF
+                    
+                    <!-- 30% Analogous: ใช้สีม่วง (Violet) ให้ปุ่มมีมิติที่แตกต่าง -->
+                    <button type="button" onclick="window.print()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-md transition-all flex items-center border border-violet-500 ml-2">
+                        <i class="fas fa-print mr-1.5 text-violet-200"></i> พิมพ์ / โหลด PDF
                     </button>
                 </div>
             </div>
 
-            <!-- ฝั่งขวา: ฟอร์มเลือกกรองข้อมูล แบบคลีนๆ -->
-            <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 mt-2 md:mt-0 bg-white/10 p-2 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner">
+            <!-- ฝั่งขวา: ฟอร์มเลือกกรองข้อมูล พร้อมกรอบจางๆ (Glassmorphism) แบบที่คุณชอบ -->
+            <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 mt-2 md:mt-0 bg-white/15 p-2.5 rounded-2xl backdrop-blur-md border border-white/30 shadow-inner">
                 <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                 
                 <div class="relative">
@@ -240,7 +243,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         
                         <?php 
                         foreach($grouped_techs as $dept => $techs) {
-                            // ✨ ใช้ optgroup ธรรมดาแบบคลีนๆ ไม่อิโมจิ ✨
+                            // ใช้ optgroup คลีนๆ ไม่อิโมจิ เพื่อให้มันดึงสายตาอ่านง่าย
                             echo "<optgroup label='--- ".htmlspecialchars($dept)." ---'>";
                             foreach($techs as $t_name) {
                                 $selected = ($selected_tech === $t_name) ? 'selected' : '';
@@ -263,7 +266,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </select>
                 </div>
 
-                <button type="submit" class="bg-indigo-900 hover:bg-slate-900 text-white text-xs px-5 py-2 rounded-xl font-bold transition-all shadow-md border border-indigo-800">
+                <!-- 10% Complementary: สีเหลืองส้ม (Amber) ตัดกับน้ำเงินม่วง ดึงดูดสายตาให้กดค้นหา -->
+                <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-5 py-2 rounded-xl font-extrabold transition-all shadow-md shadow-amber-500/20">
                     ค้นหา
                 </button>
             </form>
