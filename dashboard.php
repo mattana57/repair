@@ -201,14 +201,26 @@ if($check_repairs_list && $check_repairs_list->num_rows > 0) {
     }
 }
 
+// ✨ เตรียม Map ข้อมูลช่างทั้งหมด (แผนก, ภาษาอังกฤษ, ตำแหน่ง) ✨
 $tech_dept_map = [];
-$td_res = $conn->query("SELECT full_name, department FROM technicians");
+$tech_info_map = [];
+$td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians");
 if($td_res) {
     while($tr = $td_res->fetch_assoc()) {
         $tech_dept_map[$tr['full_name']] = !empty($tr['department']) ? $tr['department'] : 'ฝ่ายงานทั่วไป';
+        
+        list($th_name, $en_name) = splitThaiEngName($tr['full_name'], $tr['english_name']);
+        $pos = !empty($tr['position']) ? $tr['position'] : getAutoPosition($th_name);
+        
+        $tech_info_map[$tr['full_name']] = [
+            'th' => $th_name,
+            'eng' => $en_name,
+            'pos' => $pos
+        ];
     }
 }
 $tech_dept_map_json = json_encode($tech_dept_map, JSON_UNESCAPED_UNICODE);
+$tech_info_map_json = json_encode($tech_info_map, JSON_UNESCAPED_UNICODE);
 
 $months_query = $conn->query("SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m') as m FROM repairs WHERE created_at IS NOT NULL ORDER BY m DESC");
 $month_options = [];
@@ -705,6 +717,9 @@ $dept_icons = [
                 </div>
             </div>
 
+            <!-- ===================================================================================
+                 ✨ ส่วน All Repairs List (ตารางแจ้งซ่อม) ✨ 
+                 =================================================================================== -->
             <div id="repairs" class="section hidden space-y-6 no-print">
                 <div class="modern-card overflow-hidden">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
@@ -742,7 +757,32 @@ $dept_icons = [
                                 if($res && $res->num_rows > 0){
                                     while($row = $res->fetch_assoc()) {
                                         $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
-                                        $techName = !empty($row['technician_name']) ? "<div class='text-indigo-600 font-bold'>{$row['technician_name']}</div>" : "<span class='text-slate-400'>Unassigned</span>";
+                                        
+                                        // ✨ อัปเดตตาราง: แสดงชื่อภาษาอังกฤษและตำแหน่งงานใต้ชื่อช่าง ✨
+                                        if (!empty($row['technician_name'])) {
+                                            $t_raw = $row['technician_name'];
+                                            if (isset($tech_info_map[$t_raw])) {
+                                                $t_th = htmlspecialchars($tech_info_map[$t_raw]['th']);
+                                                $t_eng = htmlspecialchars($tech_info_map[$t_raw]['eng']);
+                                                $t_pos = htmlspecialchars($tech_info_map[$t_raw]['pos']);
+                                            } else {
+                                                list($th_name, $en_name) = splitThaiEngName($t_raw, '');
+                                                $t_th = htmlspecialchars($th_name);
+                                                $t_eng = htmlspecialchars($en_name);
+                                                $t_pos = htmlspecialchars(getAutoPosition($th_name));
+                                            }
+                                            
+                                            $techHtml = "<div class='text-indigo-600 font-bold'>{$t_th}</div>";
+                                            if (!empty($t_eng)) {
+                                                $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
+                                            }
+                                            if (!empty($t_pos)) {
+                                                $techHtml .= "<div class='text-slate-500 font-medium text-[11px] mt-0.5'>{$t_pos}</div>";
+                                            }
+                                            $techName = $techHtml;
+                                        } else {
+                                            $techName = "<span class='text-slate-400'>Unassigned</span>";
+                                        }
 
                                         $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
                                         if (empty($row['technician_name'])) {
@@ -839,6 +879,7 @@ $dept_icons = [
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
+                                        <!-- ลบคอลัมน์ Department ออก -->
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -951,7 +992,6 @@ $dept_icons = [
                                     foreach ($techs_by_dept as $dept => $techs) {
                                         $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                         
-                                        // ✨ แทรกแถบหัวข้อ Gradient Ribbon ในตาราง (ลบคลาส tech-dept-section ออกจากตรงนี้ แล้วไปครอบที่ tr ของข้อมูลแทน) ✨
                                         echo "<tr class='bg-slate-50 border-b border-slate-200 tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                                 <td colspan='6' class='p-0'>
                                                     <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 shadow-md shadow-indigo-200/50 m-2 rounded-xl'>
@@ -1012,7 +1052,6 @@ $dept_icons = [
                                             
                                             $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
-                                            // ✨ เพิ่มคลาส tech-dept-row เพื่อให้ JS Filter ทำงานได้ถูกต้อง ✨
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors tech-dept-row' data-dept='".htmlspecialchars($dept)."'>
                                                 <td class='px-6 py-4'>
                                                     <div class='flex items-center'>
@@ -1572,6 +1611,7 @@ $dept_icons = [
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
         const techDeptMap = <?php echo $tech_dept_map_json; ?>;
+        const techInfoMap = <?php echo $tech_info_map_json; ?>; // ส่งข้อมูลช่างทั้งหมดไปให้ JS ด้วย
         
         let chartEquipInstance = null;
         let chartStatusInstance = null;
@@ -1704,7 +1744,6 @@ $dept_icons = [
             if(activeBtn1) activeBtn1.className = activeStyle;
             if(activeBtn2) activeBtn2.className = activeStyle;
 
-            // กรองทั้งส่วน Card และส่วน Table
             document.querySelectorAll('.tech-dept-section').forEach(sec => {
                 if (dept === 'all' || sec.getAttribute('data-dept') === dept) {
                     sec.style.display = '';
@@ -1713,7 +1752,6 @@ $dept_icons = [
                 }
             });
             
-            // กรองแถวในตารางด้วย
             document.querySelectorAll('.tech-dept-header, .tech-dept-row').forEach(row => {
                 if (dept === 'all' || row.getAttribute('data-dept') === dept) {
                     row.style.display = '';
@@ -2107,6 +2145,7 @@ $dept_icons = [
             document.getElementById('edit_rep_old_name').value = old_name; document.getElementById('edit_rep_new_name').value = old_name; document.getElementById('edit_rep_new_phone').value = old_phone; toggleModal('editReporterModal');
         }
 
+        // ✨ อัปเดตฟังก์ชันเพื่อแสดงผล "ชื่อภาษาอังกฤษ" และ "ตำแหน่งงาน" ใน Modal History ✨
         function viewHistory(fullName, type) {
             const tbody = document.getElementById('historyTableBody'); 
             tbody.innerHTML = '';
@@ -2131,8 +2170,19 @@ $dept_icons = [
                         createdDate = parts[0] || '-';
                         createdTime = parts[1] ? parts[1].substring(0, 5) : '';
                     }
+                    
+                    // ส่วนปรับปรุงการแสดงผลช่อง TECHNICIAN 
+                    let techNameHtml = "<span class='text-slate-400'>Unassigned</span>";
+                    if (r.technician_name) {
+                        // ดึงข้อมูลจาก Map ที่เราเตรียมไว้จาก PHP
+                        let info = techInfoMap[r.technician_name] || { th: r.technician_name, eng: '', pos: '' };
+                        
+                        techNameHtml = `<div class='text-indigo-600 font-bold'>${info.th}</div>`;
+                        if(info.eng) techNameHtml += `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${info.eng}</div>`;
+                        if(info.pos) techNameHtml += `<div class='text-slate-500 font-medium text-[11px] mt-0.5'>${info.pos}</div>`;
+                    }
+                    let techName = techNameHtml;
 
-                    let techName = r.technician_name ? `<div class='text-indigo-600 font-bold'>${r.technician_name}</div>` : "<span class='text-slate-400'>Unassigned</span>";
                     let rootCause = r.root_cause ? `<span class='text-slate-700 font-medium'>${r.root_cause}</span>` : "<span class='text-rose-500 font-bold'>-</span>";
 
                     let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
