@@ -839,7 +839,6 @@ $dept_icons = [
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
-                                        <!-- ลบคอลัมน์ Department ออก -->
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -905,151 +904,149 @@ $dept_icons = [
                         </div>
                     </div>
                     
-                    <?php 
-                    $techs_by_dept = [];
-                    $tech_res = $conn->query("SELECT * FROM technicians ORDER BY department ASC, id DESC");
-                    
-                    if($tech_res && $tech_res->num_rows > 0){
-                        while($t = $tech_res->fetch_assoc()) {
-                            $dept = !empty($t['department']) ? $t['department'] : 'ฝ่ายงานทั่วไป';
-                            $techs_by_dept[$dept][] = $t;
-                        }
-                    }
-                    
-                    uksort($techs_by_dept, function($a, $b) use ($custom_dept_order) {
-                        $pos_a = array_search($a, $custom_dept_order);
-                        $pos_b = array_search($b, $custom_dept_order);
-                        $pos_a = ($pos_a === false) ? 999 : $pos_a;
-                        $pos_b = ($pos_b === false) ? 999 : $pos_b;
-                        if ($pos_a == $pos_b) return strcmp($a, $b);
-                        return $pos_a - $pos_b;
-                    });
-                    
-                    if (empty($techs_by_dept)) {
-                        echo "<div class='modern-card p-8 text-center text-slate-400 font-medium'>No technicians found</div>";
-                    } else {
-                        $tbl_dept_icons = [
-                            'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
-                            'ฝ่ายงานยานยนต์' => 'fas fa-car',
-                            'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
-                            'แม่บ้าน' => 'fas fa-broom'
-                        ];
-
-                        foreach ($techs_by_dept as $dept => $techs) {
-                            $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
-                    ?>
-                        <div class="mb-8 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept); ?>">
-                            
-                            <!-- ✨ แถบ Gradient Ribbon แทรกเหนือตารางของแต่ละฝ่ายงาน ✨ -->
-                            <div class="relative overflow-hidden flex items-center justify-between mb-4 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 rounded-2xl shadow-md shadow-indigo-200/50">
-                                <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
-                                <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
+                    <div class="modern-card overflow-hidden border border-slate-200/60 shadow-xs">
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left whitespace-nowrap min-w-[700px]">
+                                <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
+                                    <tr>
+                                        <th class="px-6 py-4">Name</th>
+                                        <th class="px-6 py-4">Department</th>
+                                        <th class="px-6 py-4">Contact</th> 
+                                        <th class="px-6 py-4 text-center">Status / Code</th>
+                                        <th class="px-6 py-4 text-center">Jobs</th>
+                                        <th class="px-6 py-4 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <?php 
+                                $techs_by_dept = [];
+                                $tech_res = $conn->query("SELECT * FROM technicians ORDER BY department ASC, id DESC");
                                 
-                                <div class="flex items-center relative z-10 pl-1">
-                                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-4 border border-white/30 shadow-inner shrink-0">
-                                        <i class="<?php echo $tbl_icon; ?> text-lg drop-shadow-md"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
-                                            <?php echo htmlspecialchars($dept); ?>
-                                        </h3>
-                                        <p class="text-indigo-100 text-[10px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
-                                    </div>
-                                </div>
+                                if($tech_res && $tech_res->num_rows > 0){
+                                    while($t = $tech_res->fetch_assoc()) {
+                                        $dept = !empty($t['department']) ? $t['department'] : 'ฝ่ายงานทั่วไป';
+                                        $techs_by_dept[$dept][] = $t;
+                                    }
+                                }
                                 
-                                <div class="relative z-10 hidden sm:flex items-center pr-1">
-                                    <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
-                                        <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
-                                    </span>
-                                </div>
-                            </div>
+                                uksort($techs_by_dept, function($a, $b) use ($custom_dept_order) {
+                                    $pos_a = array_search($a, $custom_dept_order);
+                                    $pos_b = array_search($b, $custom_dept_order);
+                                    $pos_a = ($pos_a === false) ? 999 : $pos_a;
+                                    $pos_b = ($pos_b === false) ? 999 : $pos_b;
+                                    if ($pos_a == $pos_b) return strcmp($a, $b);
+                                    return $pos_a - $pos_b;
+                                });
+                                
+                                if (empty($techs_by_dept)) {
+                                    echo "<tr><td colspan='6' class='px-6 py-12 text-center text-slate-400 font-medium'>No technicians found</td></tr>";
+                                } else {
+                                    $tbl_dept_icons = [
+                                        'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
+                                        'ฝ่ายงานยานยนต์' => 'fas fa-car',
+                                        'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
+                                        'แม่บ้าน' => 'fas fa-broom'
+                                    ];
 
-                            <div class="modern-card overflow-hidden border border-slate-200/60 shadow-xs">
-                                <div class="overflow-x-auto w-full">
-                                    <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                                        <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 text-xs uppercase tracking-widest font-bold">
-                                            <tr>
-                                                <th class="px-6 py-4">Name</th>
-                                                <th class="px-6 py-4">Department</th>
-                                                <th class="px-6 py-4">Contact</th> 
-                                                <th class="px-6 py-4 text-center">Status / Code</th>
-                                                <th class="px-6 py-4 text-center">Jobs</th>
-                                                <th class="px-6 py-4 text-right">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="text-sm divide-y divide-slate-100 bg-white">
-                                            <?php
-                                            foreach($techs as $t) {
-                                                $js_raw_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES);
-                                                list($th_name, $en_name) = splitThaiEngName($t['full_name'], $t['english_name']);
-                                                $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
-                                                $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
-                                                
-                                                $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
-                                                $js_pos = htmlspecialchars($pos, ENT_QUOTES);
-
-                                                $js_uid = $t['id']; $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES); $js_role = 'Technician';
-                                                
-                                                $total_jobs = 0;
-                                                if(!empty($t['full_name'])) {
-                                                    $safe_tech_name = $conn->real_escape_string($t['full_name']);
-                                                    $job_res = $conn->query("SELECT COUNT(id) as c FROM repairs WHERE technician_name = '{$safe_tech_name}'");
-                                                    if($job_res) $total_jobs = $job_res->fetch_assoc()['c'];
-                                                }
-
-                                                $statusBadge = ($t['approval_status'] == 'อนุมัติแล้ว') 
-                                                    ? "<span class='px-3 py-1.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100'><i class='fas fa-check-circle mr-1'></i> ผูกบัญชีแล้ว</span>" 
-                                                    : "<span class='px-3 py-1.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 tracking-widest border border-amber-200'>รหัส: " . ($t['secret_code'] ? $t['secret_code'] : 'N/A') . "</span>";
-
-                                                $unlinkBtn = ($t['approval_status'] == 'อนุมัติแล้ว') 
-                                                    ? "<button onclick=\"confirmUnlink({$t['id']})\" class='w-8 h-8 rounded-lg bg-orange-50 text-orange-500 hover:text-white hover:bg-orange-500 transition-all flex items-center justify-center shadow-xs' title='ยกเลิกผูกบัญชี LINE'><i class='fas fa-unlink'></i></button>" 
-                                                    : "";
-
-                                                $img_src = !empty($t['avatar_url']) ? htmlspecialchars($t['avatar_url']) : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0";
-                                                
-                                                $th_name_html = !empty($th_name) ? $th_name : '-';
-                                                $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
-                                                
-                                                <!-- ✨ เพิ่มการแสดงตำแหน่งใต้ชื่อฝ่ายงาน ✨ -->
-                                                $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
-
-                                                echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                                    <td class='px-6 py-4'>
-                                                        <div class='flex items-center'>
-                                                            <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
+                                    foreach ($techs_by_dept as $dept => $techs) {
+                                        $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
+                                        
+                                        // ✨ แทรกแถบหัวข้อ Gradient Ribbon ในตาราง (ลบคลาส tech-dept-section ออกจากตรงนี้ แล้วไปครอบที่ tr ของข้อมูลแทน) ✨
+                                        echo "<tr class='bg-slate-50 border-b border-slate-200 tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
+                                                <td colspan='6' class='p-0'>
+                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 shadow-md shadow-indigo-200/50 m-2 rounded-xl'>
+                                                        <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
+                                                        <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
+                                                        
+                                                        <div class='flex items-center relative z-10 pl-1'>
+                                                            <div class='w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0'>
+                                                                <i class='{$tbl_icon} text-base sm:text-lg drop-shadow-md'></i>
+                                                            </div>
                                                             <div>
-                                                                <div class='text-slate-800 font-bold'>{$th_name_html}</div>
-                                                                {$en_name_html}
+                                                                <h3 class='font-extrabold text-sm sm:text-base text-white tracking-wide drop-shadow-md leading-tight'>
+                                                                    ".htmlspecialchars($dept)."
+                                                                </h3>
+                                                                <p class='text-indigo-100 text-[9px] sm:text-[10px] font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                                                             </div>
                                                         </div>
-                                                    </td>
-                                                    <td class='px-6 py-4'>
-                                                        <div class='text-slate-600 font-medium'>{$dept}</div>
-                                                        {$pos_html}
-                                                    </td>
-                                                    <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td> 
-                                                    <td class='px-6 py-4 text-center'>{$statusBadge}</td>
-                                                    <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
-                                                    <td class='px-6 py-4 text-right'>
-                                                        <div class='flex items-center justify-end space-x-2'>
-                                                            {$unlinkBtn}
-                                                            <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                            <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
-                                                            <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:text-white hover:bg-rose-500 transition-all flex items-center justify-center shadow-xs'><i class='fas fa-trash-alt'></i></button>
+                                                        
+                                                        <div class='relative z-10 hidden sm:flex items-center pr-1'>
+                                                            <span class='bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center'>
+                                                                <i class='fas fa-user-check mr-1.5 opacity-80'></i> ".count($techs)." คน
+                                                            </span>
                                                         </div>
-                                                    </td>
-                                                </tr>";
+                                                    </div>
+                                                </td>
+                                              </tr>";
+
+                                        foreach($techs as $t) {
+                                            $js_raw_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES);
+                                            list($th_name, $en_name) = splitThaiEngName($t['full_name'], $t['english_name']);
+                                            $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
+                                            $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
+                                            
+                                            $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
+                                            $js_pos = htmlspecialchars($pos, ENT_QUOTES);
+
+                                            $js_uid = $t['id']; $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES); $js_role = 'Technician';
+                                            
+                                            $total_jobs = 0;
+                                            if(!empty($t['full_name'])) {
+                                                $safe_tech_name = $conn->real_escape_string($t['full_name']);
+                                                $job_res = $conn->query("SELECT COUNT(id) as c FROM repairs WHERE technician_name = '{$safe_tech_name}'");
+                                                if($job_res) $total_jobs = $job_res->fetch_assoc()['c'];
                                             }
-                                            ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+
+                                            $statusBadge = ($t['approval_status'] == 'อนุมัติแล้ว') 
+                                                ? "<span class='px-3 py-1.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100'><i class='fas fa-check-circle mr-1'></i> ผูกบัญชีแล้ว</span>" 
+                                                : "<span class='px-3 py-1.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 tracking-widest border border-amber-200'>รหัส: " . ($t['secret_code'] ? $t['secret_code'] : 'N/A') . "</span>";
+
+                                            $unlinkBtn = ($t['approval_status'] == 'อนุมัติแล้ว') 
+                                                ? "<button onclick=\"confirmUnlink({$t['id']})\" class='w-8 h-8 rounded-lg bg-orange-50 text-orange-500 hover:text-white hover:bg-orange-500 transition-all flex items-center justify-center shadow-xs' title='ยกเลิกผูกบัญชี LINE'><i class='fas fa-unlink'></i></button>" 
+                                                : "";
+
+                                            $img_src = !empty($t['avatar_url']) ? htmlspecialchars($t['avatar_url']) : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0";
+                                            
+                                            $th_name_html = !empty($th_name) ? $th_name : '-';
+                                            $en_name_html = !empty($en_name) ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>{$en_name}</div>" : "";
+                                            
+                                            $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
+
+                                            // ✨ เพิ่มคลาส tech-dept-row เพื่อให้ JS Filter ทำงานได้ถูกต้อง ✨
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors tech-dept-row' data-dept='".htmlspecialchars($dept)."'>
+                                                <td class='px-6 py-4'>
+                                                    <div class='flex items-center'>
+                                                        <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
+                                                        <div>
+                                                            <div class='text-slate-800 font-bold'>{$th_name_html}</div>
+                                                            {$en_name_html}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class='px-6 py-4'>
+                                                    <div class='text-slate-600 font-bold'>{$dept}</div>
+                                                    {$pos_html}
+                                                </td>
+                                                <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td> 
+                                                <td class='px-6 py-4 text-center'>{$statusBadge}</td>
+                                                <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
+                                                <td class='px-6 py-4 text-right'>
+                                                    <div class='flex items-center justify-end space-x-2'>
+                                                        {$unlinkBtn}
+                                                        <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:text-white hover:bg-rose-500 transition-all flex items-center justify-center shadow-xs'><i class='fas fa-trash-alt'></i></button>
+                                                    </div>
+                                                </td>
+                                            </tr>";
+                                        }
+                                    }
+                                } 
+                                ?>
+                                </tbody>
+                            </table>
                         </div>
-                    <?php 
-                        }
-                    } 
-                    ?>
+                    </div>
                 </div>
             </div>
 
@@ -1118,7 +1115,7 @@ $dept_icons = [
                     $icon_class = $dept_icons[$dept_name] ?? 'fas fa-users';
                 ?>
                 <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
-                    <!-- ✨ แถบ Gradient Ribbon แบบใหม่ ✨ -->
+                    
                     <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 rounded-2xl shadow-md shadow-indigo-200/50">
                         <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                         <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
@@ -1701,16 +1698,27 @@ $dept_icons = [
             else if (dept === 'ฝ่ายงานโสตทัศนูปกรณ์') activeBtnId = 'btn-filter-av';
             else if (dept === 'ฝ่ายงานยานยนต์') activeBtnId = 'btn-filter-auto';
 
-            let activeBtn = document.getElementById(activeBtnId);
-            if(activeBtn) {
-                activeBtn.className = activeStyle;
-            }
+            let activeBtn1 = document.getElementById(activeBtnId);
+            let activeBtn2 = document.getElementById(activeBtnId + '-2');
+            
+            if(activeBtn1) activeBtn1.className = activeStyle;
+            if(activeBtn2) activeBtn2.className = activeStyle;
 
+            // กรองทั้งส่วน Card และส่วน Table
             document.querySelectorAll('.tech-dept-section').forEach(sec => {
                 if (dept === 'all' || sec.getAttribute('data-dept') === dept) {
                     sec.style.display = '';
                 } else {
                     sec.style.display = 'none';
+                }
+            });
+            
+            // กรองแถวในตารางด้วย
+            document.querySelectorAll('.tech-dept-header, .tech-dept-row').forEach(row => {
+                if (dept === 'all' || row.getAttribute('data-dept') === dept) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
                 }
             });
         }
@@ -1733,7 +1741,7 @@ $dept_icons = [
                 searchInput.value = '';
                 let activeSection = document.getElementById(id);
                 if(activeSection) {
-                    activeSection.querySelectorAll('table tbody tr').forEach(row => row.style.display = '');
+                    activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)').forEach(row => row.style.display = '');
                 }
             }
 
@@ -1762,7 +1770,7 @@ $dept_icons = [
                     let activeSection = document.querySelector('.section:not(.hidden)');
                     if (!activeSection) return;
                     
-                    let rows = activeSection.querySelectorAll('table tbody tr');
+                    let rows = activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)');
                     rows.forEach(row => {
                         if (row.innerText.toLowerCase().includes(filter)) {
                             row.style.display = '';
