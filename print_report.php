@@ -158,17 +158,19 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         
-        /* กระดาษ A4 ต้องเป็นสีขาวตัวหนังสือสีดำเสมอ แม้ใน Dark Mode */
+        /* ✨ ปรับโครงสร้าง A4 ให้เป็น Flex เพื่อดัน Footer ลงล่างสุดเสมอ ✨ */
         .a4-container {
             font-family: 'Sarabun', sans-serif;
             width: 210mm;
             min-height: 297mm;
-            padding: 20mm 20mm 20mm 25mm;
+            padding: 20mm;
             margin: 30px auto 50px auto;
             background: #ffffff;
             color: #000000;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         .dark .a4-container {
@@ -179,34 +181,29 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23cbd5e1%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') !important;
         }
 
-        .page-footer {
-            position: absolute;
-            bottom: 10mm;
-            left: 25mm;
-            right: 20mm;
-        }
-
-        /* ✨ ตั้งค่าตอนสั่งพิมพ์ให้เป๊ะขึ้น ✨ */
+        /* ✨ ตั้งค่าตอนสั่งพิมพ์ให้สมส่วน ขอบเท่ากันเป๊ะ ✨ */
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; font-size: 14px; color: black !important; }
+            
+            @page { 
+                size: A4 portrait; 
+                margin: 20mm; /* บังคับระยะขอบทุกด้านให้เท่ากันเป๊ะที่ 20mm */
+            }
+
             .a4-container { 
-                box-shadow: none !important; 
-                border: none !important; 
+                width: 100% !important; 
+                height: 256mm !important; /* ล็อคความสูง (297 - ขอบบนล่าง 40 = 257) เพื่อดัน Footer */
+                min-height: 256mm !important;
                 padding: 0 !important; 
                 margin: 0 !important; 
-                width: 100% !important; 
-                min-height: auto !important;
-                page-break-after: always; 
+                box-shadow: none !important; 
+                page-break-after: always;
+                page-break-inside: avoid;
             }
             .a4-container:last-child {
                 page-break-after: auto; 
             }
-            @page { 
-                size: A4 portrait; 
-                margin: 15mm 20mm; /* ลดขอบตอนปริ้นท์ลงนิดนึงเพื่อให้มีพื้นที่เยอะขึ้น */
-            }
-            /* บังคับไม่ให้ตารางขาดครึ่งบรรทัด */
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; page-break-after: auto; }
             thead { display: table-header-group; }
@@ -236,7 +233,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
 
-    <!-- แถบเมนูโหมดมืด (slate-900) -->
+    <!-- แถบเมนูโหมดมืด (slate-900 สีดำทึบ) -->
     <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             
@@ -318,9 +315,10 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <!-- ================== ส่วนแสดงผลรายงาน ================== -->
 
     <?php if ($report_type === 'memo'): ?>
-        <!-- รูปแบบที่ 1: บันทึกข้อความ (มักจะอยู่ใน 1 หน้าเสมอ จึงใช้ 1 Container) -->
+        <!-- รูปแบบที่ 1: บันทึกข้อความ -->
         <div class="a4-container">
-            <div class="pb-10">
+            <!-- ส่วนเนื้อหาหลัก จะยืด (flex-1) เพื่อดัน Footer ลงไปล่างสุด -->
+            <div class="flex-1 flex flex-col">
                 <div class="memo-head-box">
                     <img src="uploads/garuda.png" alt="ตราครุฑ" class="garuda-img">
                     <div class="memo-head-title">บันทึกข้อความ</div>
@@ -395,17 +393,18 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </p>
                 </div>
 
-                <div style="margin-top: 60px; text-align: right; padding-right: 20px;">
-                    <div style="display: inline-block; text-align: center; font-size: 15px; color: #000; line-height: 1.8;">
-                        <div style="margin-bottom: 10px;">(ลงชื่อ)........................................................................</div>
-                        <div style="font-weight: bold; margin-bottom: 2px;">( <?php echo $reporter_name; ?> )</div>
+                <!-- ✨ ส่วนลายเซ็น ใช้ mt-auto เพื่อดันตัวเองไปล่างสุดเสมอ ✨ -->
+                <div class="mt-auto pt-10 text-right pr-5">
+                    <div class="inline-block text-center text-[15px] text-black leading-relaxed">
+                        <div class="mb-3">ลงชื่อ..........................................................ผู้รายงาน</div>
+                        <div class="font-bold mb-1">( <?php echo $reporter_name; ?> )</div>
                         <div>ตำแหน่ง <?php echo $sign_role; ?></div>
                     </div>
                 </div>
             </div>
 
-            <!-- ท้ายกระดาษ (ของบันทึกข้อความ) -->
-            <div class="page-footer no-print border-t border-slate-200 pt-2 text-[10px] text-slate-400 flex justify-between">
+            <!-- ท้ายกระดาษ (ของบันทึกข้อความ) จัดให้อยู่ล่างสุดเสมอด้วย Flexbox -->
+            <div class="border-t border-slate-200 pt-2 pb-1 mt-4 text-[10px] text-slate-400 flex justify-between">
                 <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
                 <span>วันที่พิมพ์เอกสาร: <?php echo date('d/m/Y H:i'); ?> น.</span>
             </div>
@@ -413,18 +412,18 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
     <?php else: ?>
         <!-- ==========================================
-             รูปแบบที่ 2: ตารางรายงานทางการ (ทำระบบตัดแบ่งหน้า A4)
+             รูปแบบที่ 2: ตารางรายงานทางการ (ทำระบบตัดแบ่งหน้า A4 ให้สมส่วน)
              ========================================== -->
         <?php
-        // ✨ ปรับลดตัวเลขแถวลงมาเพื่อเว้น Margin ป้องกันตารางฉีกขาดเวลาสั่งพิมพ์ ✨
-        $first_page_limit = 10; // หน้าแรกมีหัวข้อและตารางสรุป เลยใส่ได้น้อยลง
-        $other_page_limit = 18; // หน้าถัดๆ ไปใส่ได้น้อยลงเพื่อความชัวร์ว่าไม่ล้นกระดาษ
+        // ✨ ปรับลดตัวเลขให้ตารางลงตัวพอดีหน้ากระดาษ ✨
+        $first_page_limit = 14; // หน้าแรกมีหัวข้อ เลยใส่ได้น้อย
+        $other_page_limit = 25; // หน้าถัดๆ ไปใส่ได้เยอะขึ้น
         $pages = [];
         
         $total_records = count($all_rows);
         if ($total_records > 0) {
             if ($total_records <= $first_page_limit) {
-                // ถ้าข้อมูลน้อยกว่ากำหนด ก็ให้อยู่หน้าเดียวจบ
+                // ถ้าข้อมูลน้อย ก็ให้อยู่หน้าเดียวจบ
                 $pages[] = $all_rows;
             } else {
                 // หน้าแรก 
@@ -448,123 +447,127 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         ?>
         
         <div class="a4-container">
-            
-            <?php if ($page_index === 0): ?>
-                <!-- ================= หน้าที่ 1 (มีหัวเอกสาร) ================= -->
-                <div class="text-center border-b-2 border-slate-900 pb-3 mb-5">
-                    <h2 class="text-xl font-bold text-slate-900">รายงานสรุปผลการปฏิบัติงานซ่อมบำรุงครุภัณฑ์</h2>
-                    <p class="text-sm font-semibold text-slate-700 mt-1">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
-                    <p class="text-xs text-slate-600 mt-1">
-                        <strong>ประจำเดือน:</strong> <?php echo $thai_months[$selected_month]; ?> พ.ศ. <?php echo $selected_year + 543; ?> <br>
-                        <strong>ช่างผู้รับผิดชอบ:</strong> 
-                        <?php 
-                            if ($selected_tech === 'all') {
-                                echo 'เจ้าหน้าที่ช่างทุกคน (ภาพรวมคณะ)';
-                            } else {
-                                echo htmlspecialchars($tech_formal_name) . " <strong>| สังกัด:</strong> " . htmlspecialchars($tech_department);
-                            }
-                        ?>
-                    </p>
-                </div>
-
-                <div class="mb-5">
-                    <h3 class="font-bold text-sm text-slate-800 mb-2">สรุปภาพรวมการซ่อมบำรุง (KPI Summary)</h3>
-                    <table class="w-full text-xs text-center border-collapse border border-slate-300">
-                        <thead class="bg-slate-100 font-bold border-b border-slate-300">
-                            <tr>
-                                <th class="p-2 border-r border-slate-300">จำนวนรับแจ้งทั้งหมด</th>
-                                <th class="p-2 border-r border-slate-300">ดำเนินการเสร็จสิ้น</th>
-                                <th class="p-2 border-r border-slate-300">กำลังดำเนินการ</th>
-                                <th class="p-2 border-r border-slate-300">รอดำเนินการ / จัดสรรช่าง</th>
-                                <th class="p-2">อัตราความสำเร็จ (Success Rate)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="p-2 font-bold text-sm border-r border-slate-300"><?php echo $total_jobs; ?> รายการ</td>
-                                <td class="p-2 font-bold text-sm text-emerald-700 border-r border-slate-300"><?php echo $done_jobs; ?> รายการ</td>
-                                <td class="p-2 font-bold text-sm text-sky-700 border-r border-slate-300"><?php echo $in_progress_jobs; ?> รายการ</td>
-                                <td class="p-2 font-bold text-sm text-amber-700 border-r border-slate-300"><?php echo $pending_jobs; ?> รายการ</td>
-                                <td class="p-2 font-bold text-sm text-blue-700"><?php echo number_format($success_rate, 2); ?>%</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="mb-3">
-                    <h3 class="font-bold text-sm text-slate-800 mb-2">
-                        บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง
-                        <?php if($selected_tech !== 'all') echo " (เฉพาะ: ".htmlspecialchars($tech_formal_name).")"; ?>
-                    </h3>
-            <?php else: ?>
-                <!-- ================= หน้าที่ 2 เป็นต้นไป ================= -->
-                <div class="pt-2 mb-2">
-                    <h3 class="font-bold text-sm text-slate-800">
-                        บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง
-                        <?php if($selected_tech !== 'all') echo " (เฉพาะ: ".htmlspecialchars($tech_formal_name).")"; ?>
-                    </h3>
-                </div>
-            <?php endif; ?>
-
-            <!-- ส่วนของตารางข้อมูล (มีทุกหน้า) -->
-            <table class="w-full text-xs border-collapse border border-slate-300">
-                <thead class="bg-slate-100 font-bold text-slate-700 border-b border-slate-300">
-                    <tr>
-                        <th class="p-1.5 w-8 text-center border-r border-slate-300">ลำดับ</th>
-                        <th class="p-1.5 w-24 text-center border-r border-slate-300">วัน/เวลา รับแจ้ง</th>
-                        <th class="p-1.5 w-28 text-center border-r border-slate-300">เลขที่ใบงาน</th>
-                        <th class="p-1.5 border-r border-slate-300">ประเภทอุปกรณ์/ครุภัณฑ์</th>
-                        <th class="p-1.5 border-r border-slate-300">สถานที่/ห้อง</th>
-                        <th class="p-1.5 w-24 border-r border-slate-300">ช่างผู้ดูแล</th>
-                        <th class="p-1.5 w-20 text-center">สถานะ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php 
-                    if(count($page_rows) > 0) {
-                        foreach($page_rows as $row) {
-                            $date = date("d/m/Y H:i", strtotime($row['created_at']));
-                            $ticket = $row['ticket_no'] ?? ('#REP-'.$row['id']);
-                            $eq = htmlspecialchars($row['equipment_type'] ?? ($row['device_name'] ?? 'ไม่ระบุ'));
-                            $loc = htmlspecialchars($row['location_room'] ?? ($row['location'] ?? 'ไม่ระบุ'));
-                            $tech = htmlspecialchars($row['technician_name'] ?? 'ยังไม่จัดสรร');
-                            $st = $row['status'] ?? 'ไม่ระบุ';
-
-                            echo "<tr class='border-b border-slate-200'>
-                                <td class='p-1.5 text-center border-r border-slate-200'>{$global_i}</td>
-                                <td class='p-1.5 text-center border-r border-slate-200'>{$date}</td>
-                                <td class='p-1.5 text-center font-semibold border-r border-slate-200'>{$ticket}</td>
-                                <td class='p-1.5 border-r border-slate-200'>{$eq}</td>
-                                <td class='p-1.5 border-r border-slate-200'>{$loc}</td>
-                                <td class='p-1.5 font-semibold text-slate-800 border-r border-slate-200'>{$tech}</td>
-                                <td class='p-1.5 text-center font-semibold'>{$st}</td>
-                            </tr>";
-                            $global_i++;
-                        }
-                    } else {
-                        echo "<tr><td colspan='7' class='p-8 text-center text-slate-400 italic bg-slate-50'>ไม่พบข้อมูลการแจ้งซ่อมของช่างหรือเดือนที่เลือก</td></tr>";
-                    }
-                    ?>
-                </tbody>
-            </table>
-            
-            <?php if ($page_index === 0): ?>
-                </div> <!-- ปิด div class="mb-5" ของหน้าแรก -->
-            <?php endif; ?>
-
-            <!-- เฉพาะหน้าสุดท้าย ให้แสดงลายเซ็น -->
-            <?php if ($page_index === $total_pages - 1): ?>
-                <div style="margin-top: 50px; text-align: right; padding-right: 20px;">
-                    <div style="display: inline-block; text-align: center; font-size: 15px; color: #000; line-height: 1.8;">
-                        <div style="margin-bottom: 10px;">ลงชื่อ..........................................................ผู้รายงาน</div>
-                        <div style="font-weight: bold; margin-bottom: 2px;">( <?php echo $reporter_name; ?> )</div>
-                        <div>ตำแหน่ง <?php echo $sign_role; ?></div>
+            <!-- ส่วนเนื้อหาหลัก จะยืด (flex-1) เพื่อดัน Footer ลงไปล่างสุดของหน้ากระดาษ A4 เสมอ -->
+            <div class="flex-1 flex flex-col">
+                
+                <?php if ($page_index === 0): ?>
+                    <!-- ================= หน้าที่ 1 (มีหัวเอกสารเต็มรูปแบบ) ================= -->
+                    <div class="text-center border-b-2 border-slate-900 pb-3 mb-5">
+                        <h2 class="text-xl font-bold text-slate-900">รายงานสรุปผลการปฏิบัติงานซ่อมบำรุงครุภัณฑ์</h2>
+                        <p class="text-sm font-semibold text-slate-700 mt-1">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
+                        <p class="text-xs text-slate-600 mt-1">
+                            <strong>ประจำเดือน:</strong> <?php echo $thai_months[$selected_month]; ?> พ.ศ. <?php echo $selected_year + 543; ?> <br>
+                            <strong>ช่างผู้รับผิดชอบ:</strong> 
+                            <?php 
+                                if ($selected_tech === 'all') {
+                                    echo 'เจ้าหน้าที่ช่างทุกคน (ภาพรวมคณะ)';
+                                } else {
+                                    echo htmlspecialchars($tech_formal_name) . " <strong>| สังกัด:</strong> " . htmlspecialchars($tech_department);
+                                }
+                            ?>
+                        </p>
                     </div>
-                </div>
-            <?php endif; ?>
 
-            <!-- ท้ายกระดาษ (แสดงทุกหน้า) -->
-            <div class="page-footer no-print border-t border-slate-200 pt-2 text-[10px] text-slate-400 flex justify-between">
+                    <div class="mb-5">
+                        <h3 class="font-bold text-sm text-slate-800 mb-2">สรุปภาพรวมการซ่อมบำรุง (KPI Summary)</h3>
+                        <table class="w-full text-xs text-center border-collapse border border-slate-300">
+                            <thead class="bg-slate-100 font-bold border-b border-slate-300">
+                                <tr>
+                                    <th class="p-2 border-r border-slate-300">จำนวนรับแจ้งทั้งหมด</th>
+                                    <th class="p-2 border-r border-slate-300">ดำเนินการเสร็จสิ้น</th>
+                                    <th class="p-2 border-r border-slate-300">กำลังดำเนินการ</th>
+                                    <th class="p-2 border-r border-slate-300">รอดำเนินการ / จัดสรรช่าง</th>
+                                    <th class="p-2">อัตราความสำเร็จ (Success Rate)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="p-2 font-bold text-sm border-r border-slate-300"><?php echo $total_jobs; ?> รายการ</td>
+                                    <td class="p-2 font-bold text-sm text-emerald-700 border-r border-slate-300"><?php echo $done_jobs; ?> รายการ</td>
+                                    <td class="p-2 font-bold text-sm text-sky-700 border-r border-slate-300"><?php echo $in_progress_jobs; ?> รายการ</td>
+                                    <td class="p-2 font-bold text-sm text-amber-700 border-r border-slate-300"><?php echo $pending_jobs; ?> รายการ</td>
+                                    <td class="p-2 font-bold text-sm text-blue-700"><?php echo number_format($success_rate, 2); ?>%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mb-3">
+                        <h3 class="font-bold text-sm text-slate-800 mb-2">
+                            บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง
+                            <?php if($selected_tech !== 'all') echo " (เฉพาะ: ".htmlspecialchars($tech_formal_name).")"; ?>
+                        </h3>
+                <?php else: ?>
+                    <!-- ================= หน้าที่ 2 เป็นต้นไป (มีแค่หัวข้อสั้นๆ) ================= -->
+                    <div class="pt-2 mb-2">
+                        <h3 class="font-bold text-sm text-slate-800">
+                            บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง
+                            <?php if($selected_tech !== 'all') echo " (เฉพาะ: ".htmlspecialchars($tech_formal_name).")"; ?>
+                        </h3>
+                    </div>
+                <?php endif; ?>
+
+                <!-- ส่วนของตารางข้อมูล (แสดงในทุกหน้า) -->
+                <table class="w-full text-xs border-collapse border border-slate-300">
+                    <thead class="bg-slate-100 font-bold text-slate-700 border-b border-slate-300">
+                        <tr>
+                            <th class="p-1.5 w-8 text-center border-r border-slate-300">ลำดับ</th>
+                            <th class="p-1.5 w-24 text-center border-r border-slate-300">วัน/เวลา รับแจ้ง</th>
+                            <th class="p-1.5 w-28 text-center border-r border-slate-300">เลขที่ใบงาน</th>
+                            <th class="p-1.5 border-r border-slate-300">ประเภทอุปกรณ์/ครุภัณฑ์</th>
+                            <th class="p-1.5 border-r border-slate-300">สถานที่/ห้อง</th>
+                            <th class="p-1.5 w-24 border-r border-slate-300">ช่างผู้ดูแล</th>
+                            <th class="p-1.5 w-20 text-center">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        if(count($page_rows) > 0) {
+                            foreach($page_rows as $row) {
+                                $date = date("d/m/Y H:i", strtotime($row['created_at']));
+                                $ticket = $row['ticket_no'] ?? ('#REP-'.$row['id']);
+                                $eq = htmlspecialchars($row['equipment_type'] ?? ($row['device_name'] ?? 'ไม่ระบุ'));
+                                $loc = htmlspecialchars($row['location_room'] ?? ($row['location'] ?? 'ไม่ระบุ'));
+                                $tech = htmlspecialchars($row['technician_name'] ?? 'ยังไม่จัดสรร');
+                                $st = $row['status'] ?? 'ไม่ระบุ';
+
+                                echo "<tr class='border-b border-slate-200'>
+                                    <td class='p-1.5 text-center border-r border-slate-200'>{$global_i}</td>
+                                    <td class='p-1.5 text-center border-r border-slate-200'>{$date}</td>
+                                    <td class='p-1.5 text-center font-semibold border-r border-slate-200'>{$ticket}</td>
+                                    <td class='p-1.5 border-r border-slate-200'>{$eq}</td>
+                                    <td class='p-1.5 border-r border-slate-200'>{$loc}</td>
+                                    <td class='p-1.5 font-semibold text-slate-800 border-r border-slate-200'>{$tech}</td>
+                                    <td class='p-1.5 text-center font-semibold'>{$st}</td>
+                                </tr>";
+                                $global_i++;
+                            }
+                        } else {
+                            echo "<tr><td colspan='7' class='p-8 text-center text-slate-400 italic bg-slate-50'>ไม่พบข้อมูลการแจ้งซ่อมของช่างหรือเดือนที่เลือก</td></tr>";
+                        }
+                        ?>
+                    </tbody>
+                </table>
+                
+                <?php if ($page_index === 0): ?>
+                    </div> <!-- ปิด div class="mb-3" ของหน้าแรก -->
+                <?php endif; ?>
+
+                <!-- ✨ เฉพาะหน้าสุดท้าย ให้แสดงลายเซ็น (ใช้ mt-auto เพื่อดันลงไปเกือบล่างสุด) ✨ -->
+                <?php if ($page_index === $total_pages - 1): ?>
+                    <div class="mt-auto pt-10 text-right pr-5">
+                        <div class="inline-block text-center text-[15px] text-black leading-relaxed">
+                            <div class="mb-3">ลงชื่อ..........................................................ผู้รายงาน</div>
+                            <div class="font-bold mb-1">( <?php echo $reporter_name; ?> )</div>
+                            <div>ตำแหน่ง <?php echo $sign_role; ?></div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+            </div> <!-- ปิด .flex-1 content wrapper -->
+
+            <!-- ท้ายกระดาษ (แสดงทุกหน้า ดันติดขอบล่างเสมอเพราะ Flexbox) -->
+            <div class="border-t border-slate-200 pt-2 pb-1 mt-4 text-[10px] text-slate-400 flex justify-between">
                 <span>ระบบสารสนเทศ MBS REPAIR - คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</span>
                 <span>หน้าที่ <?php echo $page_index + 1; ?>/<?php echo $total_pages; ?> | วันที่พิมพ์: <?php echo date('d/m/Y H:i'); ?> น.</span>
             </div>
