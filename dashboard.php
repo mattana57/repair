@@ -201,7 +201,6 @@ if($check_repairs_list && $check_repairs_list->num_rows > 0) {
     }
 }
 
-// ✨ เตรียม Map ข้อมูลช่างทั้งหมด (แผนก, ภาษาอังกฤษ, ตำแหน่ง) ✨
 $tech_dept_map = [];
 $tech_info_map = [];
 $td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians");
@@ -421,7 +420,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอน
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -758,7 +757,13 @@ $dept_icons = [
                                     while($row = $res->fetch_assoc()) {
                                         $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                         
-                                        // ✨ อัปเดตตาราง: แสดงชื่อภาษาอังกฤษและตำแหน่งงานใต้ชื่อช่าง ✨
+                                        // -------------------------------------------------------------
+                                        // ดึงข้อมูลช่างและแผนก
+                                        // -------------------------------------------------------------
+                                        $t_pos = ''; 
+                                        $t_eng = '';
+                                        $t_th = '';
+                                        
                                         if (!empty($row['technician_name'])) {
                                             $t_raw = $row['technician_name'];
                                             if (isset($tech_info_map[$t_raw])) {
@@ -772,23 +777,25 @@ $dept_icons = [
                                                 $t_pos = htmlspecialchars(getAutoPosition($th_name));
                                             }
                                             
+                                            // ✨ ให้โชว์แค่ชื่อไทย กับ อังกฤษ ในช่องช่าง ✨
                                             $techHtml = "<div class='text-indigo-600 font-bold'>{$t_th}</div>";
                                             if (!empty($t_eng)) {
                                                 $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
-                                            }
-                                            if (!empty($t_pos)) {
-                                                $techHtml .= "<div class='text-slate-500 font-medium text-[11px] mt-0.5'>{$t_pos}</div>";
                                             }
                                             $techName = $techHtml;
                                         } else {
                                             $techName = "<span class='text-slate-400'>Unassigned</span>";
                                         }
 
+                                        // ✨ ให้โชว์ชื่อแผนก และ ตำแหน่งงาน(ถ้ามี) ในช่อง Department ✨
                                         $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
-                                            $deptEng = "<span class='px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider'>{$dept_str}</span>";
+                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider mb-1'>{$dept_str}</div>";
+                                            if (!empty($t_pos)) {
+                                                $deptEng .= "<div class='text-slate-500 font-medium text-[11px] ml-1'>{$t_pos}</div>";
+                                            }
                                         }
 
                                         $created_date = !empty($row['created_at']) ? date('Y-m-d', strtotime($row['created_at'])) : '-';
@@ -2179,7 +2186,6 @@ $dept_icons = [
                         
                         techNameHtml = `<div class='text-indigo-600 font-bold'>${info.th}</div>`;
                         if(info.eng) techNameHtml += `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${info.eng}</div>`;
-                        if(info.pos) techNameHtml += `<div class='text-slate-500 font-medium text-[11px] mt-0.5'>${info.pos}</div>`;
                     }
                     let techName = techNameHtml;
 
@@ -2193,8 +2199,15 @@ $dept_icons = [
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : '-';
                     let completed_time = has_completed ? r.completed_at.split(' ')[1].substring(0, 5) : '';
                     
+                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal ✨
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
-                    let deptEng = `<span class='px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider'>${dName}</span>`;
+                    let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider mb-1'>${dName}</div>`;
+                    if (r.technician_name) {
+                        let info = techInfoMap[r.technician_name];
+                        if (info && info.pos) {
+                            deptEng += `<div class='text-slate-500 font-medium text-[11px] ml-1'>${info.pos}</div>`;
+                        }
+                    }
 
                     tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
                         <td class="px-5 py-4 text-xs whitespace-nowrap">
