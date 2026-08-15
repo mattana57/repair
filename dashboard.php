@@ -420,7 +420,7 @@ if($tech_list_res){
     }
 }
 
-// ประกาศตัวแปรสำหรับเรียงลำดับแผนก และไอคอน
+// ประกาศตัวแปรสำหรับเรียงลำดับแผนก
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
     'ฝ่ายงานโสตทัศนูปกรณ์',
@@ -783,13 +783,15 @@ $dept_icons = [
                                             $techName = "<span class='text-slate-400'>Unassigned</span>";
                                         }
 
+                                        // ✨ อัปเดตตาราง: จัดการ Padding และ สีตัวอักษรให้ตรงกันเป๊ะ ✨
                                         $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5'>{$t_pos}</div>";
+                                                // ใส่ ml-2.5 เพื่อชดเชย px-2.5 ของกรอบด้านบน ทำให้ตัวหนังสือตรงกัน
+                                                $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
 
@@ -936,22 +938,22 @@ $dept_icons = [
                     </div>
                 </div>
 
+                <!-- ✨ เพิ่มช่องค้นหาที่หน้าตาราง (Team View) ✨ -->
                 <div class="mt-10 space-y-6">
-                    <!-- ✨ เพิ่มช่องค้นหาหน้าตาราง Team ✨ -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h3 class="text-base font-extrabold text-slate-700 flex items-center">Technicians</h3>
                         <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full sm:w-auto">
-                            <!-- ช่องค้นหา -->
+                            <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
                             <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="search-tech-table" oninput="searchTechs(this.value)" placeholder="ค้นหาชื่อช่าง..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="search-tech-table" oninput="searchTeamTable(this.value)" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
-
+                            
                             <div class="flex flex-wrap gap-2.5">
-                                <button onclick="filterDept('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
-                                <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
-                                <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
-                                <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                                <button onclick="filterDeptTable('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
+                                <button onclick="filterDeptTable('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
+                                <button onclick="filterDeptTable('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
+                                <button onclick="filterDeptTable('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
                             </div>
                         </div>
                     </div>
@@ -1036,8 +1038,8 @@ $dept_icons = [
                                             $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
                                             
-                                            // ✨ เพิ่มการผสานชื่อไทย-อังกฤษ ไว้สำหรับการค้นหา ✨
-                                            $search_name = $t['full_name'] . ' ' . $en_name . ' ' . $th_name;
+                                            // ✨ ซ่อนชื่อสำหรับการค้นหา (เก็บทั้งไทยและอังกฤษ) ✨
+                                            $search_name = strtolower($js_fname . ' ' . $js_ename);
                                             $js_search_name = htmlspecialchars($search_name, ENT_QUOTES);
                                             
                                             $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
@@ -1067,7 +1069,6 @@ $dept_icons = [
                                             
                                             $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
-                                            // ✨ ใส่ data-tech-name ให้สามารถหาชื่อช่างเจอเวลาค้นหา ✨
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                                 <td class='px-6 py-4'>
                                                     <div class='flex items-center'>
@@ -1103,12 +1104,12 @@ $dept_icons = [
                         </div>
                     </div>
                     <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ✨ -->
-                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border border-slate-200/60 shadow-xs bg-white text-center">
+                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-6 border border-slate-200/60 shadow-xs bg-white text-center">
                         <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 mx-auto">
                             <i class="fas fa-search text-2xl text-slate-300"></i>
                         </div>
-                        <h3 class="text-slate-700 font-extrabold text-lg mb-1">ไม่พบข้อมูลที่ค้นหา</h3>
-                        <p class="text-slate-400 text-sm font-medium">ลองตรวจสอบตัวสะกด หรือเปลี่ยนแผนกดูอีกครั้ง</p>
+                        <h3 class="text-slate-700 font-extrabold text-lg mb-1">ไม่พบรายชื่อช่างในระบบ</h3>
+                        <p class="text-slate-400 text-sm font-medium">ไม่มีช่างชื่อนี้อยู่ในฐานข้อมูล ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษดูอีกครั้งนะครับ</p>
                     </div>
                 </div>
             </div>
@@ -1118,6 +1119,7 @@ $dept_icons = [
                  =================================================================================== -->
             <div id="team_cards" class="section hidden animate-fade-in no-print">
                 
+                <!-- ✨ เพิ่มช่องค้นหาที่หน้าการ์ด (Card View) แยกการทำงานอิสระ ✨ -->
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
                         <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Team Management</h2>
@@ -1127,14 +1129,14 @@ $dept_icons = [
                         <!-- ช่องค้นหา -->
                         <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="search-tech-card" oninput="searchTechs(this.value)" placeholder="ค้นหาชื่อช่าง..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            <input type="text" id="search-tech-card" oninput="searchTechCards(this.value)" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                         </div>
 
                         <div class="flex flex-wrap gap-2.5">
-                            <button onclick="filterDept('all')" id="btn-filter-all-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
-                            <button onclick="filterDept('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDept('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
-                            <button onclick="filterDept('ฝ่ายงานยานยนต์')" id="btn-filter-auto-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                            <button onclick="filterDeptCard('all')" id="btn-filter-all-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
+                            <button onclick="filterDeptCard('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
+                            <button onclick="filterDeptCard('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
+                            <button onclick="filterDeptCard('ฝ่ายงานยานยนต์')" id="btn-filter-auto-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
                         </div>
                     </div>
                 </div>
@@ -1212,7 +1214,7 @@ $dept_icons = [
                     
                     <div class="flex flex-wrap gap-6 items-start">
                         <?php foreach ($techs as $tech): 
-                            $search_name = $tech['raw_name'] . ' ' . $tech['eng'] . ' ' . $tech['th'];
+                            $search_name = strtolower($tech['th'] . ' ' . $tech['eng']);
                         ?>
                         <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
@@ -1281,12 +1283,15 @@ $dept_icons = [
                 </div>
                 <?php endforeach; ?>
                 <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card ✨ -->
-                <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border border-slate-200/60 shadow-xs bg-white text-center">
-                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 mx-auto">
-                        <i class="fas fa-search text-2xl text-slate-300"></i>
+                <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-indigo-100 bg-indigo-50/30 text-center rounded-3xl">
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
+                        <i class="fas fa-user-lock text-3xl text-indigo-300"></i>
                     </div>
-                    <h3 class="text-slate-700 font-extrabold text-lg mb-1">ไม่พบข้อมูลที่ค้นหา</h3>
-                    <p class="text-slate-400 text-sm font-medium">ลองตรวจสอบตัวสะกด หรือเปลี่ยนแผนกดูอีกครั้ง</p>
+                    <h3 class="text-indigo-800 font-extrabold text-xl mb-2">ไม่พบรายชื่อช่าง (ที่ผูกบัญชีแล้ว)</h3>
+                    <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
+                        อาจสะกดชื่อผิด หรือ <strong class="text-indigo-600">ช่างท่านนี้ยังไม่ได้ทำการ "ผูกบัญชี LINE"</strong><br>
+                        <span class="text-xs text-slate-400 mt-2 block">(สามารถดูรายชื่อช่างทั้งหมดและจัดการช่างใหม่ได้ที่เมนู "Team")</span>
+                    </p>
                 </div>
             </div>
             <!-- =================================================================================== -->
@@ -1793,43 +1798,41 @@ $dept_icons = [
             });
         }
 
-        function filterDept(dept) {
+        // แยกการกรองแผนกของหน้าตาราง (Team)
+        function filterDeptTable(dept) {
             const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm";
             const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100";
 
-            document.querySelectorAll('.dept-filter-btn').forEach(btn => {
-                btn.className = defaultStyle;
-            });
+            let container = document.getElementById('technicians');
+            if (!container) return;
+
+            container.querySelectorAll('.dept-filter-btn').forEach(btn => btn.className = defaultStyle);
             
             let activeBtnId = 'btn-filter-all';
             if (dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล') activeBtnId = 'btn-filter-digital';
             else if (dept === 'ฝ่ายงานโสตทัศนูปกรณ์') activeBtnId = 'btn-filter-av';
             else if (dept === 'ฝ่ายงานยานยนต์') activeBtnId = 'btn-filter-auto';
 
-            let activeBtn1 = document.getElementById(activeBtnId);
-            let activeBtn2 = document.getElementById(activeBtnId + '-2');
-            
-            if(activeBtn1) activeBtn1.className = activeStyle;
-            if(activeBtn2) activeBtn2.className = activeStyle;
+            let activeBtn = document.getElementById(activeBtnId);
+            if(activeBtn) activeBtn.className = activeStyle;
 
-            let currentSearchValue = '';
-            let searchInput1 = document.getElementById('search-tech-table');
-            if(searchInput1) currentSearchValue = searchInput1.value.toLowerCase().replace(/\s+/g, ' ').trim();
+            let searchInput = document.getElementById('search-tech-table');
+            let currentSearchValue = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '') : '';
 
-            document.querySelectorAll('.tech-dept-section').forEach(sec => {
+            container.querySelectorAll('.tech-dept-section').forEach(sec => {
                 let secDept = sec.getAttribute('data-dept');
                 let deptMatch = (dept === 'all' || secDept === dept);
                 
                 if (deptMatch) {
                     let hasVisible = false;
                     
-                    sec.querySelectorAll('.tech-dept-row, .tech-card-item').forEach(item => {
-                        let name = (item.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, ' ');
+                    sec.querySelectorAll('.tech-dept-row').forEach(row => {
+                        let name = (row.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, '');
                         if (name.includes(currentSearchValue)) {
-                            item.style.display = '';
+                            row.style.display = '';
                             hasVisible = true;
                         } else {
-                            item.style.display = 'none';
+                            row.style.display = 'none';
                         }
                     });
                     
@@ -1846,40 +1849,53 @@ $dept_icons = [
             updateTechVisibility();
         }
 
-        function searchTechs(val) {
-            let searchClean = val.toLowerCase().replace(/\s+/g, ' ').trim();
-            
-            let inp1 = document.getElementById('search-tech-table');
-            let inp2 = document.getElementById('search-tech-card');
-            if(inp1 && inp1.value !== val) inp1.value = val;
-            if(inp2 && inp2.value !== val) inp2.value = val;
-            
+        // ค้นหาเฉพาะในหน้าตาราง (Team)
+        function searchTeamTable(val) {
             let currentDept = 'all';
-            document.querySelectorAll('.dept-filter-btn').forEach(btn => {
+            document.querySelectorAll('#technicians .dept-filter-btn').forEach(btn => {
                 if(btn.classList.contains('bg-indigo-600') && btn.id.includes('digital')) currentDept = 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล';
                 if(btn.classList.contains('bg-indigo-600') && btn.id.includes('av')) currentDept = 'ฝ่ายงานโสตทัศนูปกรณ์';
                 if(btn.classList.contains('bg-indigo-600') && btn.id.includes('auto')) currentDept = 'ฝ่ายงานยานยนต์';
             });
+            filterDeptTable(currentDept);
+        }
+
+        // แยกการกรองแผนกของหน้าการ์ด (Technician)
+        function filterDeptCard(dept) {
+            const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm";
+            const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100";
+
+            let container = document.getElementById('team_cards');
+            if (!container) return;
+
+            container.querySelectorAll('.dept-filter-btn').forEach(btn => btn.className = defaultStyle);
             
-            document.querySelectorAll('.tech-dept-section').forEach(sec => {
+            let activeBtnId = 'btn-filter-all-2';
+            if (dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล') activeBtnId = 'btn-filter-digital-2';
+            else if (dept === 'ฝ่ายงานโสตทัศนูปกรณ์') activeBtnId = 'btn-filter-av-2';
+            else if (dept === 'ฝ่ายงานยานยนต์') activeBtnId = 'btn-filter-auto-2';
+
+            let activeBtn = document.getElementById(activeBtnId);
+            if(activeBtn) activeBtn.className = activeStyle;
+
+            let searchInput = document.getElementById('search-tech-card');
+            let currentSearchValue = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '') : '';
+
+            container.querySelectorAll('.tech-dept-section').forEach(sec => {
                 let secDept = sec.getAttribute('data-dept');
-                let deptMatch = (currentDept === 'all' || secDept === currentDept);
+                let deptMatch = (dept === 'all' || secDept === dept);
                 
                 if (deptMatch) {
                     let hasVisible = false;
                     
-                    sec.querySelectorAll('.tech-dept-row, .tech-card-item').forEach(item => {
-                        let name = (item.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, ' ');
-                        if (name.includes(searchClean)) {
+                    sec.querySelectorAll('.tech-card-item').forEach(item => {
+                        let name = (item.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, '');
+                        if (name.includes(currentSearchValue)) {
                             item.style.display = '';
                             hasVisible = true;
                         } else {
                             item.style.display = 'none';
                         }
-                    });
-                    
-                    sec.querySelectorAll('.tech-dept-header').forEach(header => {
-                        header.style.display = hasVisible ? '' : 'none';
                     });
                     
                     sec.style.display = hasVisible ? '' : 'none';
@@ -1889,6 +1905,23 @@ $dept_icons = [
             });
             
             updateTechVisibility();
+        }
+
+        // ค้นหาเฉพาะในหน้าการ์ด (Technician)
+        function searchTechCards(val) {
+            let currentDept = 'all';
+            document.querySelectorAll('#team_cards .dept-filter-btn').forEach(btn => {
+                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('digital')) currentDept = 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล';
+                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('av')) currentDept = 'ฝ่ายงานโสตทัศนูปกรณ์';
+                if(btn.classList.contains('bg-indigo-600') && btn.id.includes('auto')) currentDept = 'ฝ่ายงานยานยนต์';
+            });
+            filterDeptCard(currentDept);
+        }
+
+        // ฟังก์ชันเดิม เพื่อไม่ให้ปุ่มเก่าพังตอนโหลดแรก (ให้ชี้ไปที่ table ก่อน)
+        function filterDept(dept) {
+            filterDeptTable(dept);
+            filterDeptCard(dept);
         }
 
         function show(id) {
@@ -2311,6 +2344,7 @@ $dept_icons = [
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : '-';
                     let completed_time = has_completed ? r.completed_at.split(' ')[1].substring(0, 5) : '';
                     
+                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal สีเทา-indigo ให้ตรงกัน ✨
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
                     let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-800 text-white rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
                     if (r.technician_name) {
