@@ -152,7 +152,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <style>
         * { box-sizing: border-box; }
         
-        /* พื้นหลังหน้าเว็บเปลี่ยนสีตามโหมดมืด/สว่าง */
         body { 
             font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; 
             margin: 0; padding: 0; 
@@ -187,10 +186,10 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             right: 20mm;
         }
 
-        /* ตั้งค่าการแบ่งหน้าเมื่อกดพิมพ์ */
+        /* ✨ ตั้งค่าตอนสั่งพิมพ์ให้เป๊ะขึ้น ✨ */
         @media print {
             .no-print { display: none !important; }
-            body { background: white !important; font-size: 15px; color: black !important; }
+            body { background: white !important; font-size: 14px; color: black !important; }
             .a4-container { 
                 box-shadow: none !important; 
                 border: none !important; 
@@ -198,15 +197,19 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 margin: 0 !important; 
                 width: 100% !important; 
                 min-height: auto !important;
-                page-break-after: always; /* บังคับให้ขึ้นหน้าใหม่ */
+                page-break-after: always; 
             }
             .a4-container:last-child {
-                page-break-after: auto; /* หน้าสุดท้ายไม่ต้องบังคับ */
+                page-break-after: auto; 
             }
             @page { 
                 size: A4 portrait; 
-                margin: 20mm 20mm 20mm 25mm; 
+                margin: 15mm 20mm; /* ลดขอบตอนปริ้นท์ลงนิดนึงเพื่อให้มีพื้นที่เยอะขึ้น */
             }
+            /* บังคับไม่ให้ตารางขาดครึ่งบรรทัด */
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
         }
 
         .memo-head-box { position: relative; height: 2.2cm; margin-bottom: 0.8rem; }
@@ -231,7 +234,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         .gov-sub { padding-left: 1.2cm; }
     </style>
 </head>
-<!-- พื้นหลังโหมดมืดเป็น slate-800 -->
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
 
     <!-- แถบเมนูโหมดมืด (slate-900) -->
@@ -271,7 +273,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
             <!-- ฝั่งขวา: ฟอร์มค้นหา + สลับธีม -->
             <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto pb-0.5">
-                <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-600 shadow-inner">
+                <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
                     <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                     
                     <select name="tech" class="bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8 cursor-pointer transition-colors">
@@ -414,20 +416,20 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
              รูปแบบที่ 2: ตารางรายงานทางการ (ทำระบบตัดแบ่งหน้า A4)
              ========================================== -->
         <?php
-        // ตั้งค่าการแบ่งจำนวนแถว (Rows Per Page)
-        $first_page_limit = 12; // หน้าแรกมีหัวข้อและตารางสรุป เลยใส่ได้น้อย
-        $other_page_limit = 22; // หน้าถัดๆ ไปใส่ได้เต็มที่
+        // ✨ ปรับลดตัวเลขแถวลงมาเพื่อเว้น Margin ป้องกันตารางฉีกขาดเวลาสั่งพิมพ์ ✨
+        $first_page_limit = 10; // หน้าแรกมีหัวข้อและตารางสรุป เลยใส่ได้น้อยลง
+        $other_page_limit = 18; // หน้าถัดๆ ไปใส่ได้น้อยลงเพื่อความชัวร์ว่าไม่ล้นกระดาษ
         $pages = [];
         
         $total_records = count($all_rows);
         if ($total_records > 0) {
             if ($total_records <= $first_page_limit) {
-                // ถ้าข้อมูลน้อยกว่า 12 แถว ก็ให้อยู่หน้าเดียวจบ
+                // ถ้าข้อมูลน้อยกว่ากำหนด ก็ให้อยู่หน้าเดียวจบ
                 $pages[] = $all_rows;
             } else {
-                // หน้าแรก 12 แถว
+                // หน้าแรก 
                 $pages[] = array_slice($all_rows, 0, $first_page_limit);
-                // ข้อมูลที่เหลือ เอามาหั่นทีละ 22 แถว
+                // ข้อมูลที่เหลือ เอามาหั่น
                 $remaining = array_slice($all_rows, $first_page_limit);
                 $chunks = array_chunk($remaining, $other_page_limit);
                 foreach ($chunks as $chunk) {
@@ -466,7 +468,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </div>
 
                 <div class="mb-5">
-                    <!-- ลบตัวเลข 1. ออก -->
                     <h3 class="font-bold text-sm text-slate-800 mb-2">สรุปภาพรวมการซ่อมบำรุง (KPI Summary)</h3>
                     <table class="w-full text-xs text-center border-collapse border border-slate-300">
                         <thead class="bg-slate-100 font-bold border-b border-slate-300">
@@ -490,16 +491,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </table>
                 </div>
 
-                <div class="mb-5">
-                    <!-- ลบตัวเลข 2. ออก -->
+                <div class="mb-3">
                     <h3 class="font-bold text-sm text-slate-800 mb-2">
                         บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง
                         <?php if($selected_tech !== 'all') echo " (เฉพาะ: ".htmlspecialchars($tech_formal_name).")"; ?>
                     </h3>
             <?php else: ?>
                 <!-- ================= หน้าที่ 2 เป็นต้นไป ================= -->
-                <!-- เพิ่มหัวข้อให้ทุกหน้าที่ยาวถึง โดยไม่มีคำว่า (ต่อ) และเลขหน้า -->
-                <div class="pt-6 mb-2">
+                <div class="pt-2 mb-2">
                     <h3 class="font-bold text-sm text-slate-800">
                         บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง
                         <?php if($selected_tech !== 'all') echo " (เฉพาะ: ".htmlspecialchars($tech_formal_name).")"; ?>
