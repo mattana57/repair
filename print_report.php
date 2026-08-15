@@ -162,7 +162,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             margin: 30px auto 50px auto;
             background: #ffffff;
             color: #000000;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             position: relative;
         }
 
@@ -223,15 +223,15 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
 
-    <!-- ✨ แถบเมนูควบคุม (60-30-10 แบบคลีนตามรูปที่ 2 + มี Dark mode รูปที่ 1) ✨ -->
+    <!-- ✨ แถบเมนูควบคุมแบบคลีน (เหมือนรูปที่ 2) + Dark mode (รูปที่ 1) ✨ -->
     <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-3 px-6 sticky top-0 z-50 shadow-sm transition-colors duration-300">
         <div class="max-w-7xl mx-auto flex flex-col xl:flex-row justify-between items-center gap-4">
             
             <!-- ฝั่งซ้าย: กลุ่มปุ่มเครื่องมือ -->
             <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
                 
-                <!-- 30% Analogous: ปุ่ม Dashboard โทน Indigo ให้ไม่กลืนไปกับพื้นขาว -->
-                <a href="dashboard.php?tab=reports" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center border border-indigo-200 dark:border-indigo-700/50">
+                <!-- ปุ่ม Dashboard สีขาวคลีนๆ แบบรูปที่ 2 -->
+                <a href="dashboard.php?tab=reports" class="bg-white hover:bg-slate-50 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm flex items-center border border-slate-200 dark:border-slate-700">
                     <i class="fas fa-arrow-left mr-2"></i> Dashboard
                 </a>
 
@@ -239,23 +239,23 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block mx-1"></div>
                 <h1 class="font-extrabold text-sm text-slate-800 dark:text-slate-200 tracking-wide hidden sm:block mr-2">ระบบพิมพ์เอกสารรายงาน</h1>
                 
-                <!-- 30% Analogous: แท็บเมนู โทน Violet -->
+                <!-- แท็บเมนู -->
                 <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                   class="px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center border <?php echo $report_type === 'table' ? 'bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-900/50 dark:text-violet-200 dark:border-violet-700' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'; ?>">
-                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> ตารางรายงาน
+                   class="px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center border shadow-sm <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-700' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'; ?>">
+                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> ตารางรายงาน
                 </a>
                 <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>" 
-                   class="px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center border <?php echo $report_type === 'memo' ? 'bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-900/50 dark:text-violet-200 dark:border-violet-700' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'; ?>">
-                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> บันทึกข้อความ
+                   class="px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center border shadow-sm <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-700' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700'; ?>">
+                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'; ?>"></i> บันทึกข้อความ
                 </a>
                 
-                <!-- 30% Analogous: ปุ่ม Print เน้นความทึบแสง -->
+                <!-- ปุ่ม Print สีม่วง Violet ให้เป็นเอกลักษณ์ -->
                 <button type="button" onclick="window.print()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs px-4 py-2 rounded-full font-bold shadow-md shadow-violet-200 dark:shadow-none transition-all flex items-center border border-violet-500">
                     <i class="fas fa-print mr-1.5 text-violet-200"></i> พิมพ์ / โหลด PDF
                 </button>
             </div>
 
-            <!-- ฝั่งขวา: ฟอร์มค้นหา + สลับธีม -->
+            <!-- ฝั่งขวา: ฟอร์มค้นหา + สลับธีม (เรียงต่อกันคลีนๆ) -->
             <div class="flex flex-wrap items-center gap-2.5 w-full xl:w-auto justify-end">
                 <form method="GET" action="print_report.php" class="flex items-center gap-2.5">
                     <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
@@ -284,14 +284,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         ?>
                     </select>
 
-                    <!-- 10% Complementary: สีเหลืองส้ม (Amber) ดึงดูดสายตาให้กดค้นหา -->
+                    <!-- ปุ่มค้นหาสีเหลืองส้ม (Amber) -->
                     <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-5 py-2 rounded-full font-extrabold transition-all shadow-sm">
                         ค้นหา
                     </button>
                 </form>
 
-                <!-- ✨ ปุ่มสลับ Theme วางอยู่ขวาสุด ✨ -->
-                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-1">
+                <!-- ปุ่มสลับ Theme วางอยู่ขวาสุด -->
+                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-1">
                     <i id="theme-toggle-icon" class="fas fa-moon"></i>
                 </button>
             </div>
