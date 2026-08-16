@@ -1027,7 +1027,7 @@ $dept_icons = [
                                     
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                             <td colspan='6' class='p-0 border-0 bg-transparent'>
-                                                <div class='relative overflow-hidden flex items-center justify-between bg-blue-500 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
+                                                <div class='relative overflow-hidden flex items-center justify-between bg-blue-600 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
                                                     <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                     <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
                                                     
@@ -1220,8 +1220,7 @@ $dept_icons = [
                 ?>
                 <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
                     
-                    <!-- ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นน้ำเงิน (Point 2) ✨ -->
-                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-blue-500 p-3 rounded-2xl shadow-md shadow-blue-200/50 tech-dept-header">
+                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-blue-600 p-3 rounded-2xl shadow-md shadow-blue-200/50 tech-dept-header">
                         <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                         <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
                         
@@ -1238,7 +1237,7 @@ $dept_icons = [
                         </div>
                         
                         <div class="relative z-10 hidden sm:flex items-center pr-1">
-                            <span class="bg-white/20 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                            <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                 <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                             </span>
                         </div>
@@ -1312,9 +1311,9 @@ $dept_icons = [
                     </div>
                     <h3 class="font-extrabold text-xl mb-2"><span class="text-rose-500">ไม่พบรายชื่อช่าง</span> <span class="text-emerald-500">(ที่ผูกบัญชีแล้ว)</span></h3>
                     <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
-                        ไม่มีช่างชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">ช่างท่านนี้ยังไม่ได้ทำการ "ผูกบัญชี LINE"</strong><br>
+                        ไม่มีช่างชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">ช่างท่านนี้ยังไม่ได้ทำการ <span class="text-emerald-500">"ผูกบัญชี LINE"</span></strong><br>
                         ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
-                        <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องทำการ <span onclick="openTechAdminModal('Technician')" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 hover:underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
+                        <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องไปที่หน้าเมนู <strong>"Team"</strong> เพื่อทำการ <span onclick="show('technicians'); setTimeout(() => openTechAdminModal('Technician'), 200);" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 hover:underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
                     </p>
                 </div>
             </div>
@@ -1465,18 +1464,31 @@ $dept_icons = [
                                 </button>
                             </div>
                             
-                            <div id="reportDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] max-h-80 overflow-y-auto hidden flex-col py-2 custom-scrollbar">
-                                <div class="report-dropdown-item px-5 py-3 text-sm font-bold text-indigo-600 hover:bg-blue-50 cursor-pointer transition-colors" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onmousedown="selectReportTech('all', 'Overall System (All Technicians)')">
-                                    <i class="fas fa-globe mr-2 text-blue-500"></i> Overall System (All Technicians)
+                            <!-- ✨ แก้ไข: ดีไซน์หน้าต่าง Dropdown ใหม่ให้สวยงาม ไม่มีเส้นกั้นรกตา ลบชื่อภาษาอังกฤษออก และมี Hover แบบมนๆ ✨ -->
+                            <div id="reportDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
+                                <div class="report-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 cursor-pointer transition-colors flex items-center" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onmousedown="selectReportTech('all', 'Overall System (All Technicians)')">
+                                    <div class="w-8 h-8 rounded-full bg-blue-200/50 flex items-center justify-center mr-3 text-blue-600">
+                                        <i class="fas fa-globe"></i>
+                                    </div>
+                                    Overall System (All Technicians)
                                 </div>
                                 <?php 
                                     foreach ($techs_by_dept as $dept => $techs) {
-                                        echo "<div class='dropdown-dept-header px-5 py-2 mt-2 mb-1 text-[11px] font-extrabold text-blue-400 tracking-wider' data-dept=\"".htmlspecialchars($dept)."\">{$dept}</div>";
+                                        echo "<div class='dropdown-dept-header px-6 pt-4 pb-2 mt-2 text-[11px] font-extrabold text-slate-400 tracking-wide' data-dept=\"".htmlspecialchars($dept)."\">{$dept}</div>";
                                         foreach($techs as $t) {
                                             $tName = htmlspecialchars($t['full_name']);
-                                            $searchStr = preg_replace('/\s+/', '', strtolower($tName . $dept));
-                                            echo "<div class='report-dropdown-item px-5 py-2.5 text-sm text-slate-700 font-bold hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex items-center transition-colors mx-2 rounded-lg' data-value=\"{$tName}\" data-search=\"{$searchStr}\" data-dept=\"".htmlspecialchars($dept)."\" onmousedown=\"selectReportTech('{$tName}', '{$tName}')\">
-                                                    <i class='fas fa-user-circle text-slate-300 mr-2 text-lg group-hover:text-blue-400'></i> <span>{$tName}</span>
+                                            $tEng = htmlspecialchars($t['english_name']);
+                                            $searchStr = preg_replace('/\s+/', '', strtolower($tName . $tEng . $dept));
+                                            
+                                            // ปรับดีไซน์: โชว์แค่ชื่อไทย มีไอคอนรูปคนวงกลม และ Hover สีฟ้ามีขอบมน 
+                                            echo "<div class='report-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex justify-between items-center transition-all group' data-value=\"{$tName}\" data-search=\"{$searchStr}\" data-dept=\"".htmlspecialchars($dept)."\" onmousedown=\"selectReportTech('{$tName}', '{$tName}')\">
+                                                    <div class='flex items-center'>
+                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500 transition-colors'>
+                                                            <i class='fas fa-user text-xs'></i>
+                                                        </div>
+                                                        <span>{$tName}</span>
+                                                    </div>
+                                                    <i class='fas fa-check text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity'></i>
                                                   </div>";
                                         }
                                     }
@@ -2391,7 +2403,6 @@ $dept_icons = [
             document.getElementById('edit_rep_old_name').value = old_name; document.getElementById('edit_rep_new_name').value = old_name; document.getElementById('edit_rep_new_phone').value = old_phone; toggleModal('editReporterModal');
         }
 
-        // ✨ อัปเดตฟังก์ชันเพื่อแสดงผล "ชื่อภาษาอังกฤษ" และ "ตำแหน่งงาน" ใน Modal History ✨
         function viewHistory(fullName, type) {
             const tbody = document.getElementById('historyTableBody'); 
             tbody.innerHTML = '';
