@@ -185,8 +185,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> ระบบจัดการใบงานแจ้งซ่อม</h1>
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
-            <a href="dashboard.php" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-sky-600 px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm w-full sm:w-auto text-center">
-                <i class="fas fa-arrow-left mr-2"></i> กลับหน้าหลัก
+            <!-- ✨ แก้ไขปุ่มและลิงก์ตรงนี้ครับ ✨ -->
+            <a href="dashboard.php?tab=repairs" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-sky-600 px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm w-full sm:w-auto text-center">
+                <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
         </div>
 
