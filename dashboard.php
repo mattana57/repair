@@ -747,7 +747,7 @@ $dept_icons = [
                  ✨ ส่วน All Repairs List (ตารางแจ้งซ่อม) ✨ 
                  =================================================================================== -->
             <div id="repairs" class="section hidden space-y-6 no-print">
-                <div class="modern-card overflow-hidden flex flex-col">
+                <div class="modern-card overflow-hidden">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
@@ -807,8 +807,7 @@ $dept_icons = [
                                                 $t_pos = htmlspecialchars(getAutoPosition($th_name));
                                             }
                                             
-                                            // ✨ แก้ไข: ชื่อช่างในตารางเอา hover ออกเป็นสีดำปกติ และโฮเวอร์เป็นสีฟ้า ✨
-                                            $techHtml = "<div class='text-slate-800 font-bold hover:text-blue-500 transition-colors cursor-default'>{$t_th}</div>";
+                                            $techHtml = "<div class='text-indigo-600 font-bold hover:text-blue-500 transition-colors cursor-default'>{$t_th}</div>";
                                             if (!empty($t_eng)) {
                                                 $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
                                             }
@@ -821,10 +820,10 @@ $dept_icons = [
                                         if (empty($row['technician_name']) || $row['technician_name'] === '-') {
                                             $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
                                         } else {
-                                            // ✨ แก้ไข: สีฝ่ายงานในตาราง Repairs กลับมาเป็นสีเทา (Point 1) ✨
+                                            // ✨ แก้ไข: เปลี่ยนสีฝ่ายงานหน้า Repairs เป็นสีเทาเดิม (Point 1) ✨
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                // ✨ ตำแหน่งในตาราง Repairs เป็นสีเทาเข้ม (Point 1) ✨
+                                                // ✨ สีตำแหน่งในตาราง Repairs เป็นสีเทาเข้ม (Point 1) ✨
                                                 $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
@@ -1028,24 +1027,27 @@ $dept_icons = [
                                 foreach ($techs_by_dept as $dept => $techs) {
                                     $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                     
-                                    // ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นม่วงพาสเทลอ่อนสุด (purple-100) ตัดกับเหลือง และขอบตรงกันเป๊ะ ✨
+                                    // ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นน้ำเงิน (Point 2) ขอบตรงกันเป๊ะ ✨
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                             <td colspan='6' class='p-0 border-0 bg-transparent'>
-                                                <div class='flex items-center justify-between bg-purple-100 border-b border-purple-200 p-4 rounded-t-xl mb-[2px] mt-6'>
-                                                    <div class='flex items-center pl-1'>
-                                                        <div class='w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white text-purple-600 flex items-center justify-center mr-3 sm:mr-4 border border-purple-200 shadow-sm shrink-0'>
+                                                <div class='relative overflow-hidden flex items-center justify-between bg-blue-600 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
+                                                    <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
+                                                    <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
+                                                    
+                                                    <div class='flex items-center relative z-10 pl-1'>
+                                                        <div class='w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 backdrop-blur-md text-white flex items-center justify-center mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0'>
                                                             <i class='{$tbl_icon} text-base sm:text-lg'></i>
                                                         </div>
                                                         <div>
-                                                            <h3 class='font-extrabold text-sm sm:text-base text-purple-900 tracking-wide leading-tight'>
+                                                            <h3 class='font-extrabold text-sm sm:text-base text-white tracking-wide drop-shadow-md leading-tight'>
                                                                 ".htmlspecialchars($dept)."
                                                             </h3>
-                                                            <p class='text-purple-600 text-[9px] sm:text-[10px] font-medium mt-0.5 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                                            <p class='text-blue-100 text-[9px] sm:text-[10px] font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                                                         </div>
                                                     </div>
                                                     
-                                                    <div class='hidden sm:flex items-center pr-1'>
-                                                        <span class='bg-white text-purple-700 text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm border border-purple-200 flex items-center'>
+                                                    <div class='hidden sm:flex items-center pr-1 relative z-10'>
+                                                        <span class='bg-white/20 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm border border-white/30 flex items-center'>
                                                             <i class='fas fa-user-check mr-1.5 opacity-80'></i> ".count($techs)." คน
                                                         </span>
                                                     </div>
@@ -1093,10 +1095,10 @@ $dept_icons = [
 
                                         $img_src = !empty($t['avatar_url']) ? htmlspecialchars($t['avatar_url']) : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0";
                                         
-                                        $th_name_html = (!empty($th_name) && $th_name !== '-') ? "<div class='text-slate-800 font-bold hover:text-blue-500 transition-colors cursor-default'>".htmlspecialchars($th_name)."</div>" : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $en_name_html = (!empty($en_name) && $en_name !== '-') ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>".htmlspecialchars($en_name)."</div>" : "";
                                         
-                                        // ✨ แก้ไข: ตำแหน่งในตารางหน้า Team กลับมาเป็นสีเทาเข้ม (Point 1) ✨
+                                        // ✨ ตำแหน่งในตารางหน้า Team เป็นสีเทาเข้ม (Point 1) ✨
                                         $pos_html = (!empty($pos) && $pos !== '-') ? "<div class='text-[11px] text-slate-500 font-medium mt-0.5'>".htmlspecialchars($pos)."</div>" : "";
 
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
@@ -1104,7 +1106,7 @@ $dept_icons = [
                                                 <div class='flex items-center'>
                                                     <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                     <div>
-                                                        {$th_name_html}
+                                                        <div class='text-slate-800 font-bold'>{$th_name_html}</div>
                                                         {$en_name_html}
                                                     </div>
                                                 </div>
@@ -1272,6 +1274,7 @@ $dept_icons = [
                                 <?php endif; ?>
 
                                 <?php if (!empty($tech['pos'])): ?>
+                                <!-- ✨ ป้ายตำแหน่งงานเป็นสีน้ำเงินตามรีเควสต์ ✨ -->
                                 <div class="mt-4 inline-flex items-center px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100">
                                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
                                     <span class="text-[11px] font-bold text-blue-700"><?php echo htmlspecialchars($tech['pos']); ?></span>
@@ -2417,7 +2420,7 @@ $dept_icons = [
                     if(r.created_at) {
                         let parts = r.created_at.split(' ');
                         createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
-                        createdTime = parts[1] ? `<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
+                        createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
                     } else {
                         createdDate = "<span class='text-rose-500 font-bold'>-</span>";
                     }
@@ -2434,11 +2437,11 @@ $dept_icons = [
 
                     let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
                     let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
-                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
+                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
 
                     let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
+                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
                     
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
                     let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
@@ -2446,7 +2449,7 @@ $dept_icons = [
                         deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
                         let info = techInfoMap[r.technician_name];
                         if (info && info.pos) {
-                            // ✨ แก้ไข: ตำแหน่งงานในประวัติกลับเป็นสีเทาเข้ม (Point 3) ✨
+                            // ✨ จุดที่ 3 (History Modal): สีตำแหน่งงานกลับเป็นสีเทาเข้ม ✨
                             deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
                         }
                     }
