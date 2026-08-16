@@ -807,7 +807,7 @@ $dept_icons = [
                                                 $t_pos = htmlspecialchars(getAutoPosition($th_name));
                                             }
                                             
-                                            $techHtml = "<div class='text-indigo-600 font-bold hover:text-blue-500 transition-colors cursor-default'>{$t_th}</div>";
+                                            $techHtml = "<div class='text-blue-600 font-bold hover:text-blue-500 transition-colors cursor-default'>{$t_th}</div>";
                                             if (!empty($t_eng)) {
                                                 $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
                                             }
@@ -822,7 +822,6 @@ $dept_icons = [
                                         } else {
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                // ✨ สีตำแหน่งในตาราง Repairs เป็นสีเทาเข้ม ✨
                                                 $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
@@ -1026,7 +1025,6 @@ $dept_icons = [
                                 foreach ($techs_by_dept as $dept => $techs) {
                                     $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                     
-                                    // ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นน้ำเงิน (Point 2) ขอบตรงกันเป๊ะ ✨
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                             <td colspan='6' class='p-0 border-0 bg-transparent'>
                                                 <div class='relative overflow-hidden flex items-center justify-between bg-blue-600 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
@@ -1097,7 +1095,6 @@ $dept_icons = [
                                         $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $en_name_html = (!empty($en_name) && $en_name !== '-') ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>".htmlspecialchars($en_name)."</div>" : "";
                                         
-                                        // ✨ ตำแหน่งในตารางหน้า Team เป็นสีเทาเข้ม (Point 1) ✨
                                         $pos_html = (!empty($pos) && $pos !== '-') ? "<div class='text-[11px] text-slate-500 font-medium mt-0.5'>".htmlspecialchars($pos)."</div>" : "";
 
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
@@ -1236,7 +1233,7 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
                                     <?php echo htmlspecialchars($dept_name); ?>
                                 </h3>
-                                <p class="text-blue-100 text-[10px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                <p class="text-blue-100 text-[9px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                             </div>
                         </div>
                         
@@ -2447,7 +2444,6 @@ $dept_icons = [
                         deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
                         let info = techInfoMap[r.technician_name];
                         if (info && info.pos) {
-                            // ✨ จุดที่ 3 (History Modal): สีตำแหน่งงานกลับเป็นสีเทาเข้ม ✨
                             deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
                         }
                     }
