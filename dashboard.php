@@ -683,9 +683,9 @@ $dept_icons = [
                                 See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
                             </button>
                         </div>
-                        <div class="overflow-x-auto pb-4 custom-scrollbar">
-                            <table class="w-full text-left whitespace-nowrap">
-                                <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
+                        <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
+                            <table class="w-full text-left whitespace-nowrap min-w-[700px]">
+                                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
                                     <tr>
                                         <th class="px-6 py-4">Ticket No.</th>
                                         <th class="px-6 py-4">Reporter</th>
@@ -706,8 +706,10 @@ $dept_icons = [
                                             $reporter_name = formatEmptyOrDash($rd['reporter_name']);
                                             $equipment_type = formatEmptyOrDash($rd['equipment_type']);
                                             
-                                            $date_fmt = date("Y-m-d", strtotime($rd['created_at']));
-                                            $time_fmt = date("H:i", strtotime($rd['created_at']));
+                                            $has_created = (!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00');
+                                            $date_fmt = $has_created ? date("Y-m-d", strtotime($rd['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                            $time_fmt = $has_created ? date("H:i", strtotime($rd['created_at'])) : '';
+                                            $time_html = $time_fmt ? "<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>{$time_fmt}</div>" : "";
                                             
                                             $imageIcon = "";
                                             if(isset($rd['image_path']) && !empty($rd['image_path'])) {
@@ -726,7 +728,7 @@ $dept_icons = [
                                                 <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$statusText}</span></td>
                                                 <td class='px-6 py-4 text-right whitespace-nowrap'>
                                                     <div class='font-medium text-slate-700'>{$date_fmt}</div>
-                                                    <div class='text-[11px] text-indigo-500 font-bold mt-0.5'>{$time_fmt}</div>
+                                                    {$time_html}
                                                 </td>
                                             </tr>";
                                         }
@@ -745,7 +747,7 @@ $dept_icons = [
                  ✨ ส่วน All Repairs List (ตารางแจ้งซ่อม) ✨ 
                  =================================================================================== -->
             <div id="repairs" class="section hidden space-y-6 no-print">
-                <div class="modern-card overflow-hidden">
+                <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
@@ -805,7 +807,7 @@ $dept_icons = [
                                                 $t_pos = htmlspecialchars(getAutoPosition($th_name));
                                             }
                                             
-                                            $techHtml = "<div class='text-indigo-600 font-bold'>{$t_th}</div>";
+                                            $techHtml = "<div class='text-indigo-600 font-bold hover:text-blue-500 transition-colors cursor-default'>{$t_th}</div>";
                                             if (!empty($t_eng)) {
                                                 $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
                                             }
@@ -820,7 +822,7 @@ $dept_icons = [
                                         } else {
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
+                                                $deptEng .= "<div class='text-purple-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
 
@@ -1023,7 +1025,7 @@ $dept_icons = [
                                 foreach ($techs_by_dept as $dept => $techs) {
                                     $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                     
-                                    // ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นพาสเทลอ่อน (purple-100) ตัดกับคอลัมน์สีเหลือง และขอบตรงกันเป๊ะ ✨
+                                    // ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นพาสเทลอ่อน (purple-100) ตัดกับคอลัมน์สีเหลือง ขอบตรงกันเป๊ะ ✨
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                             <td colspan='6' class='p-0 border-0 bg-transparent'>
                                                 <div class='flex items-center justify-between bg-purple-100 border-b border-purple-200 p-4 rounded-t-xl mb-[2px] mt-6'>
@@ -1088,16 +1090,16 @@ $dept_icons = [
 
                                         $img_src = !empty($t['avatar_url']) ? htmlspecialchars($t['avatar_url']) : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0";
                                         
-                                        $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $th_name_html = (!empty($th_name) && $th_name !== '-') ? "<div class='text-slate-800 font-bold hover:text-blue-500 transition-colors cursor-default'>".htmlspecialchars($th_name)."</div>" : "<span class='text-rose-500 font-bold'>-</span>";
                                         $en_name_html = (!empty($en_name) && $en_name !== '-') ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>".htmlspecialchars($en_name)."</div>" : "";
-                                        $pos_html = (!empty($pos) && $pos !== '-') ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>".htmlspecialchars($pos)."</div>" : "";
+                                        $pos_html = (!empty($pos) && $pos !== '-') ? "<div class='text-[11px] text-purple-500 font-bold mt-0.5'>".htmlspecialchars($pos)."</div>" : "";
 
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                             <td class='px-6 py-4'>
                                                 <div class='flex items-center'>
                                                     <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                     <div>
-                                                        <div class='text-slate-800 font-bold'>{$th_name_html}</div>
+                                                        {$th_name_html}
                                                         {$en_name_html}
                                                     </div>
                                                 </div>
@@ -1152,6 +1154,7 @@ $dept_icons = [
                         <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
                     <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
+                        <!-- ช่องค้นหา -->
                         <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                             <input type="text" id="search-tech-card" oninput="searchTechCards()" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
@@ -1214,24 +1217,21 @@ $dept_icons = [
                 ?>
                 <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
                     
-                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-purple-500 p-3 rounded-2xl shadow-md shadow-purple-200/50 tech-dept-header">
-                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
-                        <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
-                        
+                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-indigo-50 border border-indigo-100 p-3 rounded-2xl shadow-sm tech-dept-header">
                         <div class="flex items-center relative z-10 pl-1">
-                            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-4 border border-white/30 shadow-inner shrink-0">
-                                <i class="<?php echo $icon_class; ?> text-lg drop-shadow-md"></i>
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-600 mr-4 border border-indigo-100 shadow-sm shrink-0">
+                                <i class="<?php echo $icon_class; ?> text-lg"></i>
                             </div>
                             <div>
-                                <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
+                                <h3 class="font-extrabold text-base text-indigo-900 tracking-wide leading-tight">
                                     <?php echo htmlspecialchars($dept_name); ?>
                                 </h3>
-                                <p class="text-purple-100 text-[10px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                <p class="text-indigo-500 text-[10px] font-medium mt-0.5 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                             </div>
                         </div>
                         
                         <div class="relative z-10 hidden sm:flex items-center pr-1">
-                            <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                            <span class="bg-white border border-indigo-100 text-indigo-600 text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                 <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                             </span>
                         </div>
@@ -1239,7 +1239,6 @@ $dept_icons = [
                     
                     <div class="flex flex-wrap gap-6 items-start justify-center sm:justify-start">
                         <?php foreach ($techs as $tech): 
-                            // ตัดช่องว่างทุกชนิดออก เพื่อให้ค้นหาเจอแม่นยำขึ้น
                             $search_name = preg_replace('/\s+/', '', strtolower($tech['raw_name'] . $tech['eng'] . $tech['th']));
                         ?>
                         <!-- ✨ แก้ไข: เปลี่ยนแสงเงาเวลาเอาเมาส์ชี้การ์ด เป็นสีฟ้า (sky-300) ✨ -->
@@ -1251,7 +1250,6 @@ $dept_icons = [
                                      onclick="openImageModal(this.src)"
                                      alt="<?php echo htmlspecialchars($tech['th']); ?>" 
                                      class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out cursor-pointer" title="คลิกเพื่อดูรูปขยาย">
-                                
                                 <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                             </div>
 
@@ -1265,6 +1263,7 @@ $dept_icons = [
                                 <?php endif; ?>
 
                                 <?php if (!empty($tech['pos'])): ?>
+                                <!-- ✨ ป้ายตำแหน่งงานเป็นสีน้ำเงินตามรีเควสต์ ✨ -->
                                 <div class="mt-4 inline-flex items-center px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100">
                                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
                                     <span class="text-[11px] font-bold text-blue-700"><?php echo htmlspecialchars($tech['pos']); ?></span>
@@ -1282,9 +1281,9 @@ $dept_icons = [
                                         </div>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <div class="flex items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl p-2 border border-slate-100 opacity-70">
+                                    <div class="flex items-center justify-center text-rose-500 font-bold bg-rose-50/50 rounded-xl p-2 border border-rose-100">
                                         <i class="fas fa-phone-slash text-[10px] mr-2"></i> 
-                                        <span class="text-sm font-medium">ไม่มีเบอร์ติดต่อ</span>
+                                        <span class="text-sm">ไม่มีเบอร์ติดต่อ</span>
                                     </div>
                                 <?php endif; ?>
                                 </div>
@@ -1300,7 +1299,7 @@ $dept_icons = [
                     </div>
                 </div>
                 <?php endforeach; ?>
-                
+                <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card ✨ -->
                 <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-indigo-100 bg-indigo-50/30 text-center rounded-3xl">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
                         <i class="fas fa-user-lock text-3xl text-indigo-300"></i>
@@ -1449,31 +1448,33 @@ $dept_icons = [
                         </div>
                     </div>
 
+                    <!-- ✨ อัปเดต: ทำ Dropdown ใหม่ให้ดีไซน์โปร่งตาขึ้น (Point 5) ✨ -->
                     <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-4 relative">
                         <label class="font-bold text-slate-700 text-sm flex items-center shrink-0"><i class="fas fa-filter text-indigo-500 mr-2"></i> Filter Data by Technician:</label>
                         
-                        <div class="relative w-full md:w-[400px]" id="reportDropdownContainer">
-                            <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-100 transition-all cursor-text shadow-sm" onclick="toggleReportDropdown(event)">
+                        <div class="relative w-full md:w-[450px]" id="reportDropdownContainer">
+                            <div class="flex items-center w-full bg-white border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-100 transition-all cursor-text shadow-sm" onclick="toggleReportDropdown(event)">
                                 <i class="fas fa-search text-slate-400 pl-4"></i>
-                                <input type="text" id="reportSearchInput" oninput="filterReportDropdown()" onfocus="toggleReportDropdown(event, true)" autocomplete="off" class="w-full bg-transparent px-3 py-2.5 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="พิมพ์ค้นหาชื่อช่าง, แผนก...">
-                                <button type="button" class="px-4 py-2.5 text-slate-400 hover:text-indigo-600 bg-slate-100/50 border-l border-slate-200 focus:outline-none">
-                                    <i class="fas fa-caret-down"></i>
+                                <input type="text" id="reportSearchInput" oninput="filterReportDropdown()" onfocus="toggleReportDropdown(event, true)" autocomplete="off" class="w-full bg-transparent px-3 py-3 text-sm text-slate-700 focus:outline-none font-bold placeholder-slate-400" placeholder="พิมพ์ค้นหาชื่อช่าง, แผนก...">
+                                <button type="button" class="px-4 py-3 text-slate-400 hover:text-indigo-600 focus:outline-none">
+                                    <i class="fas fa-caret-down text-lg"></i>
                                 </button>
                             </div>
                             
-                            <div id="reportDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-xl shadow-xl max-h-72 overflow-y-auto hidden flex-col py-2">
-                                <div class="report-dropdown-item px-4 py-2.5 text-sm font-bold text-indigo-600 hover:bg-indigo-50 cursor-pointer border-b border-slate-50" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onclick="selectReportTech('all', 'Overall System (All Technicians)')">
+                            <div id="reportDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] max-h-80 overflow-y-auto hidden flex-col py-2 custom-scrollbar">
+                                <div class="report-dropdown-item px-5 py-3 text-sm font-bold text-indigo-600 hover:bg-indigo-50 cursor-pointer" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onclick="selectReportTech('all', 'Overall System (All Technicians)')">
                                     <i class="fas fa-globe mr-2"></i> Overall System (All Technicians)
                                 </div>
                                 <?php 
                                     foreach ($techs_by_dept as $dept => $techs) {
-                                        echo "<div class='px-4 py-1.5 mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100'>{$dept}</div>";
+                                        echo "<div class='px-5 py-2 mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest bg-slate-50/50'>{$dept}</div>";
                                         foreach($techs as $t) {
                                             $tName = htmlspecialchars($t['full_name']);
                                             $tEng = htmlspecialchars($t['english_name']);
+                                            // ตัดช่องว่างเพื่อให้ค้นหาได้ง่ายขึ้น
                                             $searchStr = preg_replace('/\s+/', '', strtolower($tName . $tEng . $dept));
-                                            echo "<div class='report-dropdown-item px-4 py-2.5 text-sm text-slate-700 font-medium hover:bg-indigo-50 cursor-pointer flex justify-between items-center' data-value=\"{$tName}\" data-search=\"{$searchStr}\" onclick=\"selectReportTech('{$tName}', '{$tName}')\">
-                                                    <span>{$tName} <span class='text-slate-400 text-xs ml-1'>{$tEng}</span></span>
+                                            echo "<div class='report-dropdown-item px-5 py-3 text-sm text-slate-700 font-bold hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer flex justify-between items-center transition-colors' data-value=\"{$tName}\" data-search=\"{$searchStr}\" onclick=\"selectReportTech('{$tName}', '{$tName}')\">
+                                                    <span>{$tName} <span class='text-slate-400 text-xs ml-2 font-medium'>{$tEng}</span></span>
                                                   </div>";
                                         }
                                     }
@@ -1490,6 +1491,7 @@ $dept_icons = [
 
     <!-- ================== MODALS ================== -->
     
+    <!-- Image Preview Modal -->
     <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
         <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
@@ -1683,7 +1685,6 @@ $dept_icons = [
            <div class="p-6 overflow-y-auto flex-1 bg-white">
                 <div class="w-full overflow-x-auto rounded-2xl border border-slate-100 shadow-sm max-h-[65vh] overflow-y-auto custom-scrollbar relative">
                     <table class="w-full text-left whitespace-nowrap min-w-[1100px]">
-                        <!-- ✨ แก้ไข: หัวคอลัมน์สีเหลืองพาสเทลเหมือนหน้าอื่น ✨ -->
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
                                 <th class="px-5 py-4">Date / Time</th>
