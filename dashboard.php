@@ -461,9 +461,17 @@ $dept_icons = [
         .nav-btn:hover i { color: #4f46e5 !important; }
         .active-btn { background-color: #eef2ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
         .active-btn i { color: #4f46e5 !important; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* ✨ อัปเดต: ปรับแต่ง Scrollbar ใหม่ให้คลิกลากง่ายขึ้นบน PC (หนา 12px) ✨ */
+        ::-webkit-scrollbar { width: 8px; height: 12px; } 
+        ::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid #f8fafc; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Custom Scrollbar สำหรับ Table โดยเฉพาะ */
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; margin: 0 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { border: 2px solid #f1f5f9; }
+        
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         .badge-pending { background-color: #fef3c7; color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
@@ -506,7 +514,6 @@ $dept_icons = [
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
-        <!-- ✨ แก้ไข: ดึงแถบ Header ด้านบนสุดให้กลับมาเป็นสีม่วงไล่สีแบบเดิม (รูป 1) ✨ -->
         <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-10 sticky top-0 no-print shadow-md shadow-indigo-200/50">
             <div class="flex items-center">
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
@@ -668,10 +675,10 @@ $dept_icons = [
                                 See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
                             </button>
                         </div>
-                        <div class="overflow-x-auto">
+                        <!-- ✨ อัปเดต: เพิ่ม Scrollbar พิเศษแนวนอนให้ตาราง 길 ✨ -->
+                        <div class="overflow-x-auto pb-2 custom-scrollbar">
                             <table class="w-full text-left whitespace-nowrap">
-                                <!-- ✨ อัปเดต: เปลี่ยนหัวคอลัมน์เป็นสีพาสเทลเหลืองแบบเดียวกันทุกตาราง ✨ -->
-                                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
+                                <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
                                     <tr>
                                         <th class="px-6 py-4">Ticket No.</th>
                                         <th class="px-6 py-4">Reporter</th>
@@ -733,10 +740,11 @@ $dept_icons = [
                             <input type="text" id="searchInput" placeholder="Search ticket or status..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
                         </div>
                     </div>
-                    <div class="overflow-x-auto w-full">
+                    <!-- ✨ อัปเดต: เพิ่มการจำกัดความสูง (max-h) และเลื่อนซ้ายขวา (overflow-x/y-auto) พร้อม Custom Scrollbar ✨ -->
+                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative">
                         <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
-                            <!-- ✨ อัปเดต: เปลี่ยนหัวคอลัมน์เป็นสีพาสเทลเหลือง ✨ -->
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
+                            <!-- ✨ อัปเดต: ให้หัวคอลัมน์ Sticky ติดขอบบนตอนเลื่อนหน้าจอลง ✨ -->
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-4">Date / Time</th>
                                     <th class="px-6 py-4">Ticket No.</th>
@@ -790,7 +798,6 @@ $dept_icons = [
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
-                                            // ✨ แก้ไข: นำสีม่วงออก กลับไปใช้สีเทาเหมือนเดิม (Point 1 & 2) ✨
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
                                                 $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
@@ -871,7 +878,6 @@ $dept_icons = [
                         <h2 class="text-xl md:text-2xl font-extrabold text-slate-800">Team Management</h2>
                         <p class="text-sm font-medium text-slate-500 mt-0.5">Manage administrators and technicians</p>
                     </div>
-                    <!-- ✨ เพิ่มปุ่ม Add Admin กลับมา (Point 3) ✨ -->
                     <div class="flex flex-col md:flex-row w-full md:w-auto gap-3">
                         <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> Add Admin</button>
                         <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
@@ -881,9 +887,9 @@ $dept_icons = [
                 <div>
                     <h3 class="text-base font-extrabold text-slate-700 mb-3 flex items-center">Administrators</h3>
                     <div class="modern-card overflow-hidden">
-                        <div class="overflow-x-auto w-full">
+                        <!-- ✨ อัปเดต: เพิ่มการปรับ Scrollbar ✨ -->
+                        <div class="overflow-x-auto w-full pb-2 custom-scrollbar">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                                <!-- ✨ อัปเดต: เปลี่ยนหัวคอลัมน์เป็นสีพาสเทลเหลือง ✨ -->
                                 <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
@@ -961,10 +967,10 @@ $dept_icons = [
                         </div>
                     </div>
                     
-                    <div id="techniciansTableContainer" class="modern-card overflow-hidden border border-slate-200/60 shadow-xs bg-white">
-                        <div class="overflow-x-auto w-full">
-                            <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                                <!-- ✨ รื้อโครงสร้าง: เอาหัวคอลัมน์ออกไปไว้ใต้แถบแผนก และจัดให้พอดีไม่มีขอบเกิน ✨ -->
+                    <!-- ✨ อัปเดต: เพิ่มการจำกัดความสูง (max-h) และเลื่อนซ้ายขวา (overflow-x/y-auto) พร้อม Custom Scrollbar ✨ -->
+                    <div id="techniciansTableContainer" class="modern-card border border-slate-200/60 shadow-xs bg-white w-full max-h-[70vh] overflow-y-auto overflow-x-auto custom-scrollbar relative">
+                        <div class="w-full min-w-[700px]">
+                            <table class="w-full text-left whitespace-nowrap">
                                 <tbody class="text-sm bg-white" id="techniciansTableBody">
                                 <?php 
                                 $techs_by_dept = [];
@@ -999,10 +1005,9 @@ $dept_icons = [
                                     foreach ($techs_by_dept as $dept => $techs) {
                                         $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                         
-                                        // ✨ 1. แถบสีม่วงของฝ่ายงาน (Ribbon Header) เปลี่ยนสีม่วงเป็นสีม่วงแบบสว่าง (purple-500) และลบขอบส่วนเกิน ✨
                                         echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                                 <td colspan='6' class='p-0 bg-white border-0'>
-                                                    <div class='relative overflow-hidden flex items-center justify-between bg-[#a855f7] p-4 shadow-sm rounded-t-xl mb-[2px] mt-8'>
+                                                    <div class='relative overflow-hidden flex items-center justify-between bg-[#a855f7] p-4 shadow-sm mb-[2px] mt-8'>
                                                         <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                         <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
                                                         
@@ -1027,7 +1032,6 @@ $dept_icons = [
                                                 </td>
                                               </tr>";
 
-                                        // ✨ 2. หัวคอลัมน์สีเหลืองพาสเทล อยู่ใต้แถบแผนก ไร้ขอบล้นกวนใจ ✨
                                         echo "<tr class='bg-[#fef9c3] text-[#854d0e] text-[11px] uppercase tracking-widest font-extrabold tech-col-header' data-dept='".htmlspecialchars($dept)."'>
                                                 <th class='px-6 py-4 border-0'>Name</th>
                                                 <th class='px-6 py-4 border-0'>Department</th>
@@ -1037,14 +1041,12 @@ $dept_icons = [
                                                 <th class='px-6 py-4 text-right border-0'>Action</th>
                                             </tr>";
 
-                                        // ✨ 3. รายชื่อช่างในแผนกนั้น ✨
                                         foreach($techs as $t) {
                                             $js_raw_fname = htmlspecialchars($t['full_name'] ?? '', ENT_QUOTES);
                                             list($th_name, $en_name) = splitThaiEngName($t['full_name'], $t['english_name']);
                                             $js_fname = htmlspecialchars($th_name, ENT_QUOTES); 
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
                                             
-                                            // ตัดช่องว่างทุกชนิดออก เพื่อให้ค้นหาเจอแม่นยำขึ้น
                                             $search_name = preg_replace('/\s+/', '', strtolower($t['full_name'] . $en_name . $th_name));
                                             $js_search_name = htmlspecialchars($search_name, ENT_QUOTES);
                                             
@@ -1112,7 +1114,7 @@ $dept_icons = [
                             </table>
                         </div>
                     </div>
-                    <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ✨ -->
+                    <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Team ตามที่บรีฟ ✨ -->
                     <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border-2 border-dashed border-rose-100 bg-rose-50/30 text-center rounded-3xl">
                         <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-rose-50">
                             <i class="fas fa-user-times text-3xl text-rose-300"></i>
@@ -1320,10 +1322,11 @@ $dept_icons = [
                         </div>
                         <button onclick="openAddAssetModal()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Asset</button>
                     </div>
-                    <div class="overflow-x-auto w-full">
+                    <!-- ✨ อัปเดต: เพิ่มการจำกัดความสูง (max-h) และเลื่อนซ้ายขวา (overflow-x/y-auto) พร้อม Custom Scrollbar ✨ -->
+                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative">
                         <table class="w-full text-left whitespace-nowrap min-w-[600px]">
-                            <!-- ✨ อัปเดต: เปลี่ยนหัวคอลัมน์เป็นสีพาสเทลเหลืองแบบเดียวกันทุกตาราง ✨ -->
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
+                            <!-- ✨ อัปเดต: เปลี่ยนหัวคอลัมน์เป็นสีพาสเทลเหลืองแบบเดียวกันทุกตาราง และให้ Sticky ✨ -->
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-4">Code</th>
                                     <th class="px-6 py-4">Name</th>
@@ -1369,10 +1372,11 @@ $dept_icons = [
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Database of personnel who reported issues</p>
                         </div>
                     </div>
-                    <div class="overflow-x-auto w-full">
+                    <!-- ✨ อัปเดต: เพิ่มการจำกัดความสูง (max-h) และเลื่อนซ้ายขวา (overflow-x/y-auto) พร้อม Custom Scrollbar ✨ -->
+                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative">
                         <table class="w-full text-left whitespace-nowrap min-w-[700px]">
-                            <!-- ✨ อัปเดต: เปลี่ยนหัวคอลัมน์เป็นสีพาสเทลเหลืองแบบเดียวกันทุกตาราง ✨ -->
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
+                            <!-- ✨ อัปเดต: เปลี่ยนหัวคอลัมน์เป็นสีพาสเทลเหลืองแบบเดียวกันทุกตาราง และให้ Sticky ✨ -->
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-4">Name</th>
                                     <th class="px-6 py-4">Contact</th>
@@ -1670,10 +1674,11 @@ $dept_icons = [
                 <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
             </div>
            <div class="p-6 overflow-y-auto flex-1 bg-white">
-                <div class="w-full overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
+                <!-- ✨ อัปเดต: เพิ่มการจำกัดความสูงและ Scrollbar แนวนอน/แนวตั้งให้ Modal ด้วย ✨ -->
+                <div class="w-full overflow-x-auto rounded-2xl border border-slate-100 shadow-sm max-h-[65vh] overflow-y-auto custom-scrollbar relative">
                     <table class="w-full text-left whitespace-nowrap min-w-[1100px]">
-                        <!-- ✨ อัปเดต: เปลี่ยนหัวคอลัมน์เป็นสีพาสเทลเหลืองแบบเดียวกันทุกตาราง ✨ -->
-                        <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
+                        <!-- ✨ อัปเดต: เปลี่ยนหัวคอลัมน์เป็นสีพาสเทลเหลือง และให้ Sticky ✨ -->
+                        <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
                                 <th class="px-5 py-4">Date / Time</th>
                                 <th class="px-5 py-4">Ticket No.</th>
@@ -2416,7 +2421,7 @@ $dept_icons = [
                     if (r.technician_name) {
                         let info = techInfoMap[r.technician_name];
                         if (info && info.pos) {
-                            deptEng += `<div class='text-indigo-600 font-bold text-[11px] ml-2.5'>${info.pos}</div>`;
+                            deptEng += `<div class='text-indigo-600 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
                         }
                     }
 
