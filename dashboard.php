@@ -717,16 +717,16 @@ $dept_icons = [
                                             }
                                             
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                                <td class='px-6 py-4 text-slate-500 font-mono font-semibold'>{$ticket_no}</td>
-                                                <td class='px-6 py-4 text-slate-800 font-bold'>
+                                                <td class='px-6 py-4 align-top text-slate-500 font-mono font-semibold'>{$ticket_no}</td>
+                                                <td class='px-6 py-4 align-top text-slate-800 font-bold'>
                                                     <div class='flex items-center'>
                                                         <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mr-3 text-xs'><i class='fas fa-user'></i></div>
                                                         {$reporter_name}
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-600 font-medium'>{$equipment_type} {$imageIcon}</td>
-                                                <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$statusText}</span></td>
-                                                <td class='px-6 py-4 text-right whitespace-nowrap'>
+                                                <td class='px-6 py-4 align-top text-slate-600 font-medium'>{$equipment_type} {$imageIcon}</td>
+                                                <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$statusText}</span></td>
+                                                <td class='px-6 py-4 align-top text-right whitespace-nowrap'>
                                                     <div class='font-medium text-slate-700'>{$date_fmt}</div>
                                                     {$time_html}
                                                 </td>
@@ -768,7 +768,6 @@ $dept_icons = [
                                     <th class="px-6 py-4">Equipment</th>
                                     <th class="px-6 py-4">Department</th>
                                     <th class="px-6 py-4">Technician</th>
-                                    <!-- ✨ สลับหัวคอลัมน์: Received At, Root Cause, Status, Completed At ✨ -->
                                     <th class="px-6 py-4">Received At</th>
                                     <th class="px-6 py-4">Root Cause</th>
                                     <th class="px-6 py-4 text-center">Status</th>
@@ -849,31 +848,31 @@ $dept_icons = [
                                             $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
                                         }
 
+                                        // ✨ เติม align-top ให้ตารางตรงกัน และให้ Status กับ Action อยู่ตรงกลาง (align-middle) ✨
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
-                                            <td class='px-6 py-4 text-xs whitespace-nowrap'>
+                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-slate-700'>{$created_date}</div>
                                                 {$created_time_html}
                                             </td>
-                                            <td class='px-6 py-4 font-mono font-semibold text-slate-600'>{$ticket_no}</td>
-                                            <td class='px-6 py-4'><div class='text-slate-800 font-bold'>{$reporter_name}</div><div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div></td>
-                                            <td class='px-6 py-4'>
+                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
+                                            <td class='px-6 py-4 align-top'><div class='text-slate-800 font-bold'>{$reporter_name}</div><div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div></td>
+                                            <td class='px-6 py-4 align-top'>
                                                 <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
                                                 <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='".strip_tags($problem_desc)."'>{$problem_desc}</div>
                                             </td>
-                                            <td class='px-6 py-4'>{$deptEng}</td>
-                                            <td class='px-6 py-4'>{$techName}</td>
-                                            <!-- ✨ สลับข้อมูลตามคอลัมน์: Received At, Root Cause, Status, Completed At ✨ -->
-                                            <td class='px-6 py-4 text-xs whitespace-nowrap'>
+                                            <td class='px-6 py-4 align-top'>{$deptEng}</td>
+                                            <td class='px-6 py-4 align-top'>{$techName}</td>
+                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-slate-700'>{$received_date}</div>
                                                 {$received_time_html}
                                             </td>
-                                            <td class='px-6 py-4'>{$rootCause}</td>
-                                            <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$row['status']}</span></td>
-                                            <td class='px-6 py-4 text-xs whitespace-nowrap'>
+                                            <td class='px-6 py-4 align-top'>{$rootCause}</td>
+                                            <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
+                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-emerald-700'>{$completed_date}</div>
                                                 {$completed_time_html}
                                             </td>
-                                            <td class='px-6 py-4 text-right'>
+                                            <td class='px-6 py-4 align-middle text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     <a href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
                                                     <a href='view_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
@@ -944,8 +943,8 @@ $dept_icons = [
                                             $en_name_html = (!empty($en_name) && $en_name !== '-') ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>".htmlspecialchars($en_name)."</div>" : "";
 
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                                <td class='px-6 py-4 font-bold text-slate-700'>{$u_username}</td>
-                                                <td class='px-6 py-4'>
+                                                <td class='px-6 py-4 align-top font-bold text-slate-700'>{$u_username}</td>
+                                                <td class='px-6 py-4 align-top'>
                                                     <div class='flex items-center'>
                                                         <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas {$icon} text-xs'></i></div>
                                                         <div>
@@ -954,9 +953,9 @@ $dept_icons = [
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($u['phone'])."</td>
-                                                <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
-                                                <td class='px-6 py-4 text-right'>
+                                                <td class='px-6 py-4 align-top text-slate-500 font-medium'>".formatPhoneHtml($u['phone'])."</td>
+                                                <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
+                                                <td class='px-6 py-4 align-middle text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
                                                         <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
@@ -1046,7 +1045,7 @@ $dept_icons = [
                                                     </div>
                                                     
                                                     <div class='hidden sm:flex items-center pr-1 relative z-10'>
-                                                        <span class='bg-white/20 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm border border-white/30 flex items-center'>
+                                                        <span class='bg-white/20 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center'>
                                                             <i class='fas fa-user-check mr-1.5 opacity-80'></i> ".count($techs)." คน
                                                         </span>
                                                     </div>
@@ -1100,7 +1099,7 @@ $dept_icons = [
                                         $pos_html = (!empty($pos) && $pos !== '-') ? "<div class='text-[11px] text-slate-500 font-medium mt-0.5'>".htmlspecialchars($pos)."</div>" : "";
 
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
-                                            <td class='px-6 py-4'>
+                                            <td class='px-6 py-4 align-top'>
                                                 <div class='flex items-center'>
                                                     <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                     <div>
@@ -1109,14 +1108,14 @@ $dept_icons = [
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class='px-6 py-4'>
+                                            <td class='px-6 py-4 align-top'>
                                                 <div class='text-slate-700 font-bold'>{$dept}</div>
                                                 {$pos_html}
                                             </td>
-                                            <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td> 
-                                            <td class='px-6 py-4 text-center'>{$statusBadge}</td>
-                                            <td class='px-6 py-4 text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
-                                            <td class='px-6 py-4 text-right'>
+                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td> 
+                                            <td class='px-6 py-4 align-middle text-center'>{$statusBadge}</td>
+                                            <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
+                                            <td class='px-6 py-4 align-middle text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     {$unlinkBtn}
                                                     <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
@@ -1239,7 +1238,7 @@ $dept_icons = [
                         </div>
                         
                         <div class="relative z-10 hidden sm:flex items-center pr-1">
-                            <span class="bg-white/20 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                            <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                 <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                             </span>
                         </div>
@@ -1355,11 +1354,11 @@ $dept_icons = [
                                         $js_id = $a['id']; $js_code = htmlspecialchars($a['asset_code'], ENT_QUOTES); $js_name = htmlspecialchars($a['asset_name'], ENT_QUOTES); $js_cat = htmlspecialchars($a['category'], ENT_QUOTES); $js_status = htmlspecialchars($a['status'], ENT_QUOTES);
 
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                            <td class='px-6 py-4 font-mono font-semibold text-slate-500'>{$a_code}</td>
-                                            <td class='px-6 py-4 text-slate-800 font-bold'>{$a_name}</td>
-                                            <td class='px-6 py-4 text-slate-500 font-medium'>{$a_cat}</td>
-                                            <td class='px-6 py-4 text-center'><span class='{$a_statusClass}'>{$a['status']}</span></td>
-                                            <td class='px-6 py-4 text-right'>
+                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-500'>{$a_code}</td>
+                                            <td class='px-6 py-4 align-top text-slate-800 font-bold'>{$a_name}</td>
+                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>{$a_cat}</td>
+                                            <td class='px-6 py-4 align-middle text-center'><span class='{$a_statusClass}'>{$a['status']}</span></td>
+                                            <td class='px-6 py-4 align-middle text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                     <button onclick=\"confirmDelete('asset', {$a['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
@@ -1410,17 +1409,17 @@ $dept_icons = [
                                         $rep_phone = formatEmptyOrDash($r['phone_number']);
                                         
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors user-row'>
-                                            <td class='px-6 py-4 text-slate-800 font-bold'>
+                                            <td class='px-6 py-4 align-top text-slate-800 font-bold'>
                                                 <div class='flex items-center'>
                                                     <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3'><i class='fas fa-user text-xs'></i></div>
                                                     {$rep_name}
                                                 </div>
                                             </td>
-                                            <td class='px-6 py-4 text-slate-500 font-medium'>{$rep_phone}</td>
-                                            <td class='px-6 py-4 text-center'>
+                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>{$rep_phone}</td>
+                                            <td class='px-6 py-4 align-middle text-center'>
                                                 <span class='px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600'>{$r['total_repairs']}</span>
                                             </td>
-                                            <td class='px-6 py-4 text-right'>
+                                            <td class='px-6 py-4 align-middle text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     <button onclick=\"viewHistory('{$js_old_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
                                                     <button onclick=\"openEditReporterModal('{$js_old_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
@@ -1466,7 +1465,6 @@ $dept_icons = [
                                 </button>
                             </div>
                             
-                            <!-- ✨ แก้ไข: ดีไซน์หน้าต่าง Dropdown ใหม่ให้สวยงาม ไม่มีเส้นกั้นรกตา ลบชื่อภาษาอังกฤษออก และมี Hover แบบมนๆ ✨ -->
                             <div id="reportDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
                                 <div class="report-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 cursor-pointer transition-colors flex items-center" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onmousedown="selectReportTech('all', 'Overall System (All Technicians)')">
                                     <div class="w-8 h-8 rounded-full bg-blue-200/50 flex items-center justify-center mr-3 text-blue-600">
@@ -1482,7 +1480,6 @@ $dept_icons = [
                                             $tEng = htmlspecialchars($t['english_name']);
                                             $searchStr = preg_replace('/\s+/', '', strtolower($tName . $tEng . $dept));
                                             
-                                            // ปรับดีไซน์: โชว์แค่ชื่อไทย มีไอคอนรูปคนวงกลม และ Hover สีฟ้ามีขอบมน 
                                             echo "<div class='report-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex justify-between items-center transition-all group' data-value=\"{$tName}\" data-search=\"{$searchStr}\" data-dept=\"".htmlspecialchars($dept)."\" onmousedown=\"selectReportTech('{$tName}', '{$tName}')\">
                                                     <div class='flex items-center'>
                                                         <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500 transition-colors'>
@@ -2468,33 +2465,32 @@ $dept_icons = [
                     let pDesc = formatValJS(r.problem_desc);
 
                     tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-5 py-4 text-xs whitespace-nowrap">
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
                             ${createdTime}
                         </td>
-                        <td class="px-5 py-4 font-mono font-semibold text-slate-600">${tNo}</td>
-                        <td class="px-5 py-4">
+                        <td class="px-5 py-4 align-top font-mono font-semibold text-slate-600">${tNo}</td>
+                        <td class="px-5 py-4 align-top">
                             <div class="text-slate-800 font-bold">${rName}</div>
                             <div class="text-slate-500 text-[11px] font-medium mt-0.5">${rPhone}</div>
                         </td>
-                        <td class="px-5 py-4">
+                        <td class="px-5 py-4 align-top">
                             <div class="text-slate-800 font-bold">${eqType}</div>
                             <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${pDesc.replace(/<[^>]*>?/gm, '')}">${pDesc}</div>
                         </td>
-                        <td class="px-5 py-4">${deptEng}</td>
-                        <td class="px-5 py-4">${techName}</td>
-                        <!-- ✨ สลับคอลัมน์เหมือนหน้าตารางหลัก ✨ -->
-                        <td class="px-5 py-4 text-xs whitespace-nowrap">
+                        <td class="px-5 py-4 align-top">${deptEng}</td>
+                        <td class="px-5 py-4 align-top">${techName}</td>
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
                             <div class='font-medium text-slate-700'>${received_date}</div>
                             ${received_time}
                         </td>
-                        <td class="px-5 py-4">${rootCause}</td>
-                        <td class="px-5 py-4 text-center"><span class="${statusClass}">${statusText}</span></td>
-                        <td class="px-5 py-4 text-xs whitespace-nowrap">
+                        <td class="px-5 py-4 align-top">${rootCause}</td>
+                        <td class="px-5 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
                             <div class='font-medium text-emerald-700'>${completed_date}</div>
                             ${completed_time}
                         </td>
-                        <td class="px-5 py-4 text-right">
+                        <td class="px-5 py-4 align-middle text-right">
                             <div class='flex items-center justify-end space-x-2'>
                                 <a href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
                                 <a href='view_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
