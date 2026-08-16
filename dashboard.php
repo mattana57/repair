@@ -709,7 +709,6 @@ $dept_icons = [
                                             $has_created = (!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00');
                                             $date_fmt = $has_created ? date("Y-m-d", strtotime($rd['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
                                             $time_fmt = $has_created ? date("H:i", strtotime($rd['created_at'])) : '';
-                                            // ✨ แก้ไขสีเวลา (Point 2) ✨
                                             $time_html = $time_fmt ? "<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>{$time_fmt}</div>" : "";
                                             
                                             $imageIcon = "";
@@ -821,18 +820,17 @@ $dept_icons = [
                                         if (empty($row['technician_name']) || $row['technician_name'] === '-') {
                                             $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
                                         } else {
-                                            // ✨ แก้ไข: เปลี่ยนสีฝ่ายงานหน้า Repairs เป็นสีฟ้า (Point 3) ✨
-                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
+                                            // ✨ แก้ไข: เปลี่ยนสีฝ่ายงานกลับเป็นสีเทา (Point 1) ✨
+                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                // ✨ สีตำแหน่งในตาราง Repairs กลับเป็นสีน้ำเงิน (Point 2) ✨
-                                                $deptEng .= "<div class='text-blue-600 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
+                                                // ✨ ตำแหน่งในตาราง Repairs กลับเป็นสีเทา (Point 1) ✨
+                                                $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
 
                                         $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
                                         $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
-                                        // ✨ เปลี่ยนสีเวลาเป็นน้ำเงินอมม่วง (Point 2) ✨
                                         $created_time_html = $created_time ? "<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>{$created_time}</div>" : "";
 
                                         $has_received = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
@@ -1029,24 +1027,27 @@ $dept_icons = [
                                 foreach ($techs_by_dept as $dept => $techs) {
                                     $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                     
-                                    // ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นม่วงพาสเทลอ่อน (purple-100) ตัดกับเหลือง และขอบตรงกันเป๊ะ ✨
+                                    // ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นน้ำเงิน (Point 2) ขอบตรงกันเป๊ะ ✨
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                             <td colspan='6' class='p-0 border-0 bg-transparent'>
-                                                <div class='flex items-center justify-between bg-purple-100 border-b border-purple-200 p-4 rounded-t-xl mb-[2px] mt-6'>
-                                                    <div class='flex items-center pl-1'>
-                                                        <div class='w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white text-purple-600 flex items-center justify-center mr-3 sm:mr-4 border border-purple-200 shadow-sm shrink-0'>
+                                                <div class='flex items-center justify-between bg-blue-600 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm overflow-hidden relative'>
+                                                    <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
+                                                    <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
+                                                    
+                                                    <div class='flex items-center relative z-10 pl-1'>
+                                                        <div class='w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 backdrop-blur-md text-white flex items-center justify-center mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0'>
                                                             <i class='{$tbl_icon} text-base sm:text-lg'></i>
                                                         </div>
                                                         <div>
-                                                            <h3 class='font-extrabold text-sm sm:text-base text-purple-900 tracking-wide leading-tight'>
+                                                            <h3 class='font-extrabold text-sm sm:text-base text-white tracking-wide drop-shadow-md leading-tight'>
                                                                 ".htmlspecialchars($dept)."
                                                             </h3>
-                                                            <p class='text-purple-600 text-[9px] sm:text-[10px] font-medium mt-0.5 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                                            <p class='text-blue-100 text-[9px] sm:text-[10px] font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                                                         </div>
                                                     </div>
                                                     
-                                                    <div class='hidden sm:flex items-center pr-1'>
-                                                        <span class='bg-white text-purple-700 text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm border border-purple-200 flex items-center'>
+                                                    <div class='hidden sm:flex items-center pr-1 relative z-10'>
+                                                        <span class='bg-white/20 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm border border-white/30 flex items-center'>
                                                             <i class='fas fa-user-check mr-1.5 opacity-80'></i> ".count($techs)." คน
                                                         </span>
                                                     </div>
@@ -1097,7 +1098,7 @@ $dept_icons = [
                                         $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $en_name_html = (!empty($en_name) && $en_name !== '-') ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>".htmlspecialchars($en_name)."</div>" : "";
                                         
-                                        // ✨ แก้ไข: เปลี่ยนสีตำแหน่งงานให้เป็นสีเทาเข้ม (Point 1) ✨
+                                        // ✨ ตำแหน่งในตารางหน้า Team เป็นสีเทาเข้ม (Point 1) ✨
                                         $pos_html = (!empty($pos) && $pos !== '-') ? "<div class='text-[11px] text-slate-500 font-medium mt-0.5'>".htmlspecialchars($pos)."</div>" : "";
 
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
@@ -1223,21 +1224,25 @@ $dept_icons = [
                 ?>
                 <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
                     
-                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-purple-100 p-3 rounded-2xl shadow-sm border border-purple-200 tech-dept-header">
+                    <!-- ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นน้ำเงิน (Point 2) ✨ -->
+                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-blue-600 p-3 rounded-2xl shadow-md shadow-blue-200/50 tech-dept-header">
+                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
+                        
                         <div class="flex items-center relative z-10 pl-1">
-                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-purple-600 mr-4 border border-purple-200 shadow-sm shrink-0">
-                                <i class="<?php echo $icon_class; ?> text-lg"></i>
+                            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-4 border border-white/30 shadow-inner shrink-0">
+                                <i class="<?php echo $icon_class; ?> text-lg drop-shadow-md"></i>
                             </div>
                             <div>
-                                <h3 class="font-extrabold text-base text-purple-900 tracking-wide leading-tight">
+                                <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
                                     <?php echo htmlspecialchars($dept_name); ?>
                                 </h3>
-                                <p class="text-purple-600 text-[10px] font-medium mt-0.5 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                <p class="text-blue-100 text-[10px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                             </div>
                         </div>
                         
                         <div class="relative z-10 hidden sm:flex items-center pr-1">
-                            <span class="bg-white border border-purple-200 text-purple-700 text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                            <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                 <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                             </span>
                         </div>
@@ -1380,7 +1385,6 @@ $dept_icons = [
                             <h2 class="text-xl font-extrabold text-slate-800">Reporter History</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Database of personnel who reported issues</p>
                         </div>
-                        <!-- ✨ แก้ไข: เพิ่มช่องค้นหาหน้า Reporter History (Point 2) ✨ -->
                         <div class="w-full md:w-auto relative">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                             <input type="text" id="searchHistoryInput" oninput="searchHistoryTable()" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
@@ -1453,32 +1457,31 @@ $dept_icons = [
                         </div>
                     </div>
 
-                    <!-- ✨ อัปเดต: ทำ Dropdown ค้นหาใหม่ให้ใช้งานง่าย พิมพ์ได้ทันที (Point 4) ✨ -->
                     <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-4 relative">
                         <label class="font-bold text-slate-700 text-sm flex items-center shrink-0"><i class="fas fa-filter text-indigo-500 mr-2"></i> Filter Data by Technician:</label>
                         
                         <div class="relative w-full md:w-[450px]" id="reportDropdownContainer">
-                            <div class="flex items-center w-full bg-white border border-slate-300 rounded-xl overflow-hidden focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all cursor-text shadow-sm" onclick="toggleReportDropdown(event, true)">
+                            <div class="flex items-center w-full bg-white border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100 transition-all cursor-text shadow-sm" onclick="toggleReportDropdown(event, true)">
                                 <i class="fas fa-search text-slate-400 pl-4"></i>
-                                <input type="text" id="reportSearchInput" oninput="filterReportDropdown()" onfocus="focusReportSearch(event)" onblur="blurReportSearch(event)" autocomplete="off" class="w-full bg-transparent px-3 py-2.5 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="พิมพ์ค้นหาชื่อช่าง, แผนก...">
-                                <button type="button" class="px-4 py-2.5 text-slate-400 hover:text-blue-600 bg-slate-50 border-l border-slate-200 focus:outline-none" onclick="toggleReportDropdown(event)">
-                                    <i class="fas fa-chevron-down"></i>
+                                <input type="text" id="reportSearchInput" oninput="filterReportDropdown()" onfocus="focusReportSearch(event)" onblur="blurReportSearch(event)" autocomplete="off" class="w-full bg-transparent px-3 py-3 text-sm text-slate-700 focus:outline-none font-bold placeholder-slate-400" placeholder="พิมพ์ค้นหาชื่อช่าง, แผนก...">
+                                <button type="button" class="px-4 py-3 text-slate-400 hover:text-blue-600 focus:outline-none" onclick="toggleReportDropdown(event)">
+                                    <i class="fas fa-caret-down text-lg"></i>
                                 </button>
                             </div>
                             
-                            <div id="reportDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-xl shadow-lg max-h-72 overflow-y-auto hidden flex-col py-1 custom-scrollbar">
-                                <div class="report-dropdown-item px-4 py-2 text-sm font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onmousedown="selectReportTech('all', 'Overall System (All Technicians)')">
+                            <div id="reportDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] max-h-80 overflow-y-auto hidden flex-col py-2 custom-scrollbar">
+                                <div class="report-dropdown-item px-5 py-3 text-sm font-bold text-indigo-600 hover:bg-blue-50 cursor-pointer transition-colors" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onmousedown="selectReportTech('all', 'Overall System (All Technicians)')">
                                     <i class="fas fa-globe mr-2 text-blue-500"></i> Overall System (All Technicians)
                                 </div>
                                 <?php 
                                     foreach ($techs_by_dept as $dept => $techs) {
-                                        echo "<div class='px-4 py-1.5 mt-2 mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100'>{$dept}</div>";
+                                        echo "<div class='px-5 py-2 mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest bg-slate-50/50'>{$dept}</div>";
                                         foreach($techs as $t) {
                                             $tName = htmlspecialchars($t['full_name']);
                                             $tEng = htmlspecialchars($t['english_name']);
                                             $searchStr = preg_replace('/\s+/', '', strtolower($tName . $tEng . $dept));
-                                            echo "<div class='report-dropdown-item px-4 py-2.5 text-sm text-slate-700 font-medium hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex justify-between items-center transition-colors' data-value=\"{$tName}\" data-search=\"{$searchStr}\" onmousedown=\"selectReportTech('{$tName}', '{$tName}')\">
-                                                    <span>{$tName} <span class='text-slate-400 text-xs ml-1'>{$tEng}</span></span>
+                                            echo "<div class='report-dropdown-item px-5 py-3 text-sm text-slate-700 font-bold hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex justify-between items-center transition-colors' data-value=\"{$tName}\" data-search=\"{$searchStr}\" onmousedown=\"selectReportTech('{$tName}', '{$tName}')\">
+                                                    <span>{$tName} <span class='text-slate-400 text-xs ml-2 font-medium'>{$tEng}</span></span>
                                                   </div>";
                                         }
                                     }
@@ -2053,6 +2056,9 @@ $dept_icons = [
                     });
                 });
             }
+            
+            const reportInput = document.getElementById('reportSearchInput');
+            if(reportInput) reportInput.value = 'Overall System (All Technicians)';
         });
         
         function searchHistoryTable() {
@@ -2413,7 +2419,6 @@ $dept_icons = [
                     if(r.created_at) {
                         let parts = r.created_at.split(' ');
                         createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
-                        // ✨ เปลี่ยนเวลาเป็นสีน้ำเงิน (Point 2) ✨
                         createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
                     } else {
                         createdDate = "<span class='text-rose-500 font-bold'>-</span>";
@@ -2431,23 +2436,20 @@ $dept_icons = [
 
                     let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
                     let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
-                    // ✨ เปลี่ยนเวลาเป็นสีน้ำเงิน (Point 2) ✨
                     let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
 
                     let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    // ✨ เปลี่ยนเวลาเป็นสีน้ำเงิน (Point 2) ✨
                     let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
                     
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
                     let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
                     if (r.technician_name && r.technician_name !== '-') {
-                        // ป้ายฝ่ายงานสีเทาเดิม
                         deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
                         let info = techInfoMap[r.technician_name];
                         if (info && info.pos) {
-                            // ✨ เปลี่ยนตำแหน่งงานเป็นสีน้ำเงิน (Point 2) ✨
-                            deptEng += `<div class='text-blue-600 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
+                            // ✨ จุดที่ 3 (History Modal): สีตำแหน่งงานกลับเป็นสีเทาเข้ม ✨
+                            deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
                         }
                     }
                     
@@ -2516,7 +2518,7 @@ $dept_icons = [
             Swal.fire({ title: 'ยืนยันลบผู้แจ้ง?', text: "ประวัติการแจ้งซ่อมทั้งหมดของบุคคลนี้จะถูกเคลียร์ชื่อออก!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
         }
 
-        // ✨ ฟังก์ชันจัดการ Dropdown ค้นหาแบบ Custom ให้ทำงานทันที ไม่ต้องลบ (Point 4) ✨
+        // ✨ ฟังก์ชันจัดการ Dropdown ค้นหาแบบ Custom ให้ทำงานทันที ไม่ต้องลบ ✨
         let currentSelectedName = 'Overall System (All Technicians)';
 
         function focusReportSearch(e) {
