@@ -462,13 +462,11 @@ $dept_icons = [
         .active-btn { background-color: #eef2ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
         .active-btn i { color: #4f46e5 !important; }
         
-        /* ✨ อัปเดต: ปรับแต่ง Scrollbar ใหม่ให้คลิกลากง่ายขึ้นบน PC (หนา 12px) ✨ */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 12px; } 
         ::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid #f8fafc; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* Custom Scrollbar สำหรับ Table โดยเฉพาะ */
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; margin: 0 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { border: 2px solid #f1f5f9; }
         
@@ -514,6 +512,7 @@ $dept_icons = [
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
+        <!-- ✨ แก้ไข: ดึงแถบ Header ด้านบนสุดให้เป็นสีม่วงแบบเดิม ✨ -->
         <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-10 sticky top-0 no-print shadow-md shadow-indigo-200/50">
             <div class="flex items-center">
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
@@ -675,10 +674,9 @@ $dept_icons = [
                                 See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
                             </button>
                         </div>
-                        <!-- ✨ อัปเดต: นำกรอบจำกัดความสูงออก และเพิ่มคลาสเลื่อนตารางซ้ายขวาอย่างอิสระ ✨ -->
-                        <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
-                            <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
-                                <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
                                     <tr>
                                         <th class="px-6 py-4">Ticket No.</th>
                                         <th class="px-6 py-4">Reporter</th>
@@ -740,10 +738,10 @@ $dept_icons = [
                             <input type="text" id="searchInput" placeholder="Search ticket or status..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
                         </div>
                     </div>
-                    <!-- ✨ อัปเดต: นำกรอบจำกัดความสูงออก และเพิ่มคลาสเลื่อนตารางซ้ายขวาอย่างอิสระ ✨ -->
-                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
+                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative">
                         <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
+                            <!-- ✨ แก้ไข: หัวคอลัมน์สีเหลืองพาสเทลเหมือนหน้าอื่น ✨ -->
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-4">Date / Time</th>
                                     <th class="px-6 py-4">Ticket No.</th>
@@ -797,7 +795,8 @@ $dept_icons = [
                                         if (empty($row['technician_name'])) {
                                             $deptEng = "<span class='text-slate-400'>-</span>";
                                         } else {
-                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-[#a855f7] text-white rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>{$dept_str}</div>";
+                                            // ✨ แก้ไข: เปลี่ยนสีฝ่ายงานกลับเป็นสีเทา (Point 1) ✨
+                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
                                                 $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
@@ -877,6 +876,7 @@ $dept_icons = [
                         <h2 class="text-xl md:text-2xl font-extrabold text-slate-800">Team Management</h2>
                         <p class="text-sm font-medium text-slate-500 mt-0.5">Manage administrators and technicians</p>
                     </div>
+                    <!-- ✨ เพิ่มปุ่ม Add Admin กลับมา (Point 3) ✨ -->
                     <div class="flex flex-col md:flex-row w-full md:w-auto gap-3">
                         <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> Add Admin</button>
                         <button onclick="openTechAdminModal('Technician')" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
@@ -886,7 +886,6 @@ $dept_icons = [
                 <div>
                     <h3 class="text-base font-extrabold text-slate-700 mb-3 flex items-center">Administrators</h3>
                     <div class="modern-card overflow-hidden">
-                        <!-- ✨ อัปเดต: นำกรอบจำกัดความสูงออก และเพิ่มคลาสเลื่อนตารางซ้ายขวาอย่างอิสระ ✨ -->
                         <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
                                 <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
@@ -1003,33 +1002,32 @@ $dept_icons = [
                                 foreach ($techs_by_dept as $dept => $techs) {
                                     $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                     
+                                    // ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นสีอ่อนสบายตา (Point 5) ขอบไม่ล้น ✨
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                             <td colspan='6' class='p-0 border-0 bg-transparent'>
-                                                <div class='relative overflow-hidden flex items-center justify-between bg-[#a855f7] p-4 shadow-sm rounded-t-xl mb-[2px] mt-6'>
-                                                    <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
-                                                    <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
-                                                    
-                                                    <div class='flex items-center relative z-10 pl-1'>
-                                                        <div class='w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0'>
-                                                            <i class='{$tbl_icon} text-base sm:text-lg drop-shadow-md'></i>
+                                                <div class='flex items-center justify-between bg-indigo-50 border-b border-indigo-100 p-4 rounded-t-xl mb-[0px] mt-6'>
+                                                    <div class='flex items-center pl-1'>
+                                                        <div class='w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white text-indigo-600 flex items-center justify-center mr-3 sm:mr-4 border border-indigo-100 shadow-sm shrink-0'>
+                                                            <i class='{$tbl_icon} text-base sm:text-lg'></i>
                                                         </div>
                                                         <div>
-                                                            <h3 class='font-extrabold text-sm sm:text-base text-white tracking-wide drop-shadow-md leading-tight'>
+                                                            <h3 class='font-extrabold text-sm sm:text-base text-indigo-900 tracking-wide leading-tight'>
                                                                 ".htmlspecialchars($dept)."
                                                             </h3>
-                                                            <p class='text-purple-100 text-[9px] sm:text-[10px] font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                                            <p class='text-indigo-500 text-[9px] sm:text-[10px] font-medium mt-0.5 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                                                         </div>
                                                     </div>
                                                     
-                                                    <div class='relative z-10 hidden sm:flex items-center pr-1'>
-                                                        <span class='bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center'>
-                                                            <i class='fas fa-user-check mr-1.5 opacity-80'></i> ".count($techs)." คน
+                                                    <div class='hidden sm:flex items-center pr-1'>
+                                                        <span class='bg-white text-indigo-600 text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm border border-indigo-100 flex items-center'>
+                                                            <i class='fas fa-user-check mr-1.5'></i> ".count($techs)." คน
                                                         </span>
                                                     </div>
                                                 </div>
                                             </td>
                                           </tr>";
 
+                                    // ✨ หัวคอลัมน์สีเหลืองพาสเทล ไร้ขอบล้นกวนใจ ✨
                                     echo "<tr class='bg-[#fef9c3] text-[#854d0e] text-[11px] uppercase tracking-widest font-extrabold tech-col-header' data-dept='".htmlspecialchars($dept)."'>
                                             <th class='px-6 py-4 border-0'>Name</th>
                                             <th class='px-6 py-4 border-0'>Department</th>
@@ -1200,93 +1198,81 @@ $dept_icons = [
                 ?>
                 <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
                     
-                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-[#a855f7] p-3 rounded-2xl shadow-md shadow-purple-200/50 tech-dept-header">
-                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
-                        <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
-                        
+                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-indigo-50 border border-indigo-100 p-3 rounded-2xl shadow-sm tech-dept-header">
                         <div class="flex items-center relative z-10 pl-1">
-                            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-4 border border-white/30 shadow-inner shrink-0">
-                                <i class="<?php echo $icon_class; ?> text-lg drop-shadow-md"></i>
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-indigo-600 mr-4 border border-indigo-100 shadow-sm shrink-0">
+                                <i class="<?php echo $icon_class; ?> text-lg"></i>
                             </div>
                             <div>
-                                <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
+                                <h3 class="font-extrabold text-base text-indigo-900 tracking-wide leading-tight">
                                     <?php echo htmlspecialchars($dept_name); ?>
                                 </h3>
-                                <p class="text-purple-100 text-[10px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                <p class="text-indigo-500 text-[10px] font-medium mt-0.5 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                             </div>
                         </div>
                         
                         <div class="relative z-10 hidden sm:flex items-center pr-1">
-                            <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                            <span class="bg-white border border-indigo-100 text-indigo-600 text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                 <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                             </span>
                         </div>
                     </div>
                     
-                    <div class="flex flex-wrap gap-6 items-start">
+                    <div class="flex flex-wrap gap-6 items-start justify-center sm:justify-start">
                         <?php foreach ($techs as $tech): 
                             // ตัดช่องว่างทุกชนิดออก เพื่อให้ค้นหาเจอแม่นยำขึ้น
                             $search_name = preg_replace('/\s+/', '', strtolower($tech['raw_name'] . $tech['eng'] . $tech['th']));
                         ?>
-                        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
+                        <!-- ✨ แก้ไข: ดีไซน์บัตรช่างใหม่ให้ละมุนและแสงเงาสีฟ้า (Point 3 & 4) ✨ -->
+                        <div class="bg-white rounded-[24px] overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-sky-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[260px] w-full sm:w-[260px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
-                            <div class="relative w-full aspect-[4/5] bg-slate-100 overflow-hidden">
+                            <div class="relative w-full aspect-square bg-slate-50 overflow-hidden">
                                 <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
                                      onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
                                      onclick="openImageModal(this.src)"
                                      alt="<?php echo htmlspecialchars($tech['th']); ?>" 
                                      class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out cursor-pointer" title="คลิกเพื่อดูรูปขยาย">
-                                
-                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                             </div>
 
-                            <div class="p-5 flex-1 flex flex-col justify-between relative z-10 bg-white">
-                                <div>
-                                    <h5 class="font-extrabold text-slate-800 text-base leading-tight group-hover:text-indigo-600 transition-colors">
-                                        <?php echo htmlspecialchars($tech['th']); ?>
-                                    </h5>
-                                    
-                                    <?php if (!empty($tech['eng'])): ?>
-                                    <p class="text-[11px] font-semibold text-slate-400 mt-1 uppercase tracking-wider"><?php echo htmlspecialchars($tech['eng']); ?></p>
-                                    <?php endif; ?>
+                            <div class="p-6 flex-1 flex flex-col items-center text-center relative z-10 bg-white">
+                                <h5 class="font-extrabold text-slate-800 text-lg leading-tight group-hover:text-sky-600 transition-colors">
+                                    <?php echo htmlspecialchars($tech['th']); ?>
+                                </h5>
+                                
+                                <?php if (!empty($tech['eng'])): ?>
+                                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest"><?php echo htmlspecialchars($tech['eng']); ?></p>
+                                <?php endif; ?>
 
-                                    <?php if (!empty($tech['pos'])): ?>
-                                    <!-- ✨ ปรับสีตำแหน่งงานให้เป็นสีน้ำเงิน (Indigo) ตามบรีฟ ✨ -->
-                                    <div class="mt-3 inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50/80 border border-indigo-100/50">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span>
-                                        <span class="text-[10px] font-bold text-indigo-700"><?php echo htmlspecialchars($tech['pos']); ?></span>
+                                <?php if (!empty($tech['pos'])): ?>
+                                <!-- ✨ ป้ายตำแหน่งงานเป็นสีน้ำเงินตามรีเควสต์ ✨ -->
+                                <div class="mt-4 inline-flex items-center px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
+                                    <span class="text-[11px] font-bold text-blue-700"><?php echo htmlspecialchars($tech['pos']); ?></span>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <div class="mt-5 w-full pt-4 border-t border-slate-100 flex flex-col gap-2">
+                                <?php 
+                                if (!empty($tech['phone']) && $tech['phone'] !== '-'): 
+                                    $phone_parts = array_values(array_filter(array_map('trim', explode(',', $tech['phone']))));
+                                    foreach($phone_parts as $p): ?>
+                                        <div class="flex items-center justify-center text-slate-600 bg-slate-50/50 rounded-xl p-2 border border-slate-100">
+                                            <i class="fas fa-phone-alt text-[10px] text-emerald-500 mr-2"></i> 
+                                            <span class="text-sm font-semibold tracking-wide"><?php echo htmlspecialchars(trim($p)); ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="flex items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl p-2 border border-slate-100 opacity-70">
+                                        <i class="fas fa-phone-slash text-[10px] mr-2"></i> 
+                                        <span class="text-sm font-medium">ไม่มีเบอร์ติดต่อ</span>
                                     </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php 
-                                    if (!empty($tech['phone']) && $tech['phone'] !== '-'): 
-                                        $phone_parts = array_values(array_filter(array_map('trim', explode(',', $tech['phone']))));
-                                    ?>
-                                        <div class="mt-4 pt-4 border-t border-slate-100/80 space-y-2">
-                                        <?php foreach($phone_parts as $p): ?>
-                                            <div class="flex items-center text-slate-600 bg-slate-50/50 rounded-lg p-2 border border-slate-100">
-                                                <div class="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm mr-2 shrink-0">
-                                                    <i class="fas fa-phone-alt text-[9px] text-emerald-500"></i> 
-                                                </div>
-                                                <span class="text-xs font-semibold tracking-wide"><?php echo htmlspecialchars(trim($p)); ?></span>
-                                            </div>
-                                        <?php endforeach; ?>
-                                        </div>
-                                    <?php else: ?>
-                                        <div class="mt-4 pt-4 border-t border-slate-100/80">
-                                            <div class="flex items-center text-slate-400 bg-slate-50/50 rounded-lg p-2 border border-slate-100">
-                                                <div class="w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm mr-2 shrink-0 opacity-50">
-                                                    <i class="fas fa-phone-slash text-[9px]"></i> 
-                                                </div>
-                                                <span class="text-xs font-medium">ไม่มีเบอร์ติดต่อ</span>
-                                            </div>
-                                        </div>
-                                    <?php endif; ?>
+                                <?php endif; ?>
                                 </div>
 
                                 <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" 
-                                        class="mt-5 w-full text-xs font-bold text-slate-600 bg-white border-2 border-slate-100 hover:border-indigo-600 hover:bg-indigo-600 hover:text-white py-2.5 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-indigo-200 flex items-center justify-center group/btn">
-                                    <i class="fas fa-history mr-2 text-slate-400 group-hover/btn:text-indigo-200 transition-colors"></i> 
+                                        class="mt-5 w-full text-xs font-bold text-slate-500 bg-white border-2 border-slate-100 hover:border-sky-500 hover:bg-sky-500 hover:text-white py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn">
+                                    <i class="fas fa-history mr-2 group-hover/btn:text-white transition-colors"></i> 
                                     ดูประวัติงาน
                                 </button>
                             </div>
@@ -1295,7 +1281,7 @@ $dept_icons = [
                     </div>
                 </div>
                 <?php endforeach; ?>
-                <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card (เปลี่ยนสีคำตามขอ) ✨ -->
+                <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card ✨ -->
                 <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-indigo-100 bg-indigo-50/30 text-center rounded-3xl">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
                         <i class="fas fa-user-lock text-3xl text-indigo-300"></i>
@@ -1368,10 +1354,15 @@ $dept_icons = [
                             <h2 class="text-xl font-extrabold text-slate-800">Reporter History</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Database of personnel who reported issues</p>
                         </div>
+                        <!-- ✨ แก้ไข: เพิ่มช่องค้นหาหน้า Reporter History ตามแบบฉบับเป๊ะๆ (Point 2) ✨ -->
+                        <div class="w-full md:w-auto relative">
+                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="searchHistoryInput" oninput="searchHistoryTable()" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
+                        </div>
                     </div>
                     <!-- ✨ อัปเดต: นำกรอบจำกัดความสูงออก และเพิ่มคลาสเลื่อนตารางซ้ายขวาอย่างอิสระ ✨ -->
                     <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
-                        <table class="w-full text-left whitespace-nowrap min-w-[700px]">
+                        <table class="w-full text-left whitespace-nowrap min-w-[700px]" id="usersTable">
                             <!-- ✨ อัปเดต: เปลี่ยนหัวคอลัมน์เป็นสีพาสเทลเหลืองแบบเดียวกันทุกตาราง ✨ -->
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
                                 <tr>
@@ -1390,7 +1381,7 @@ $dept_icons = [
                                         $js_old_name = htmlspecialchars($r['reporter_name'], ENT_QUOTES);
                                         $js_old_phone = htmlspecialchars($r['phone_number'], ENT_QUOTES);
                                         
-                                        echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                        echo "<tr class='hover:bg-slate-50/50 transition-colors user-row'>
                                             <td class='px-6 py-4 text-slate-800 font-bold'>
                                                 <div class='flex items-center'>
                                                     <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3'><i class='fas fa-user text-xs'></i></div>
@@ -1435,7 +1426,7 @@ $dept_icons = [
                         </div>
                     </div>
 
-                    <!-- ✨ อัปเดต: ทำ Dropdown ใหม่ให้ค้นหาชื่อ/แผนกได้แบบ Custom (Point 5) ✨ -->
+                    <!-- ✨ อัปเดต: ทำ Dropdown ใหม่ให้ค้นหาชื่อ/แผนกได้แบบ Custom ✨ -->
                     <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-4 relative">
                         <label class="font-bold text-slate-700 text-sm flex items-center shrink-0"><i class="fas fa-filter text-indigo-500 mr-2"></i> Filter Data by Technician:</label>
                         
@@ -2042,10 +2033,29 @@ $dept_icons = [
                 });
             }
             
-            // ✨ กำหนดค่าเริ่มต้นให้กับช่องค้นหา Dropdown (Point 5) ✨
+            // ✨ กำหนดค่าเริ่มต้นให้กับช่องค้นหา Dropdown ✨
             const reportInput = document.getElementById('reportSearchInput');
             if(reportInput) reportInput.value = 'Overall System (All Technicians)';
         });
+        
+        // ✨ ฟังก์ชันค้นหาในหน้า Reporter History (Point 2) ✨
+        function searchHistoryTable() {
+            let input = document.getElementById('searchHistoryInput');
+            if(!input) return;
+            let filter = input.value.toLowerCase().replace(/\s+/g, '');
+            let table = document.getElementById('usersTable');
+            if(!table) return;
+            let rows = table.querySelectorAll('tbody .user-row');
+            
+            rows.forEach(row => {
+                let text = row.innerText.toLowerCase().replace(/\s+/g, '');
+                if (text.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
 
         function safeString(val) { return val ? String(val) : ''; }
         function getFilteredRepairs(month) {
@@ -2418,7 +2428,7 @@ $dept_icons = [
                     if (r.technician_name) {
                         let info = techInfoMap[r.technician_name];
                         if (info && info.pos) {
-                            deptEng += `<div class='text-indigo-600 font-bold text-[11px] ml-2.5'>${info.pos}</div>`;
+                            deptEng += `<div class='text-indigo-600 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
                         }
                     }
 
@@ -2479,7 +2489,7 @@ $dept_icons = [
             Swal.fire({ title: 'ยืนยันลบผู้แจ้ง?', text: "ประวัติการแจ้งซ่อมทั้งหมดของบุคคลนี้จะถูกเคลียร์ชื่อออก!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
         }
 
-        // ✨ ฟังก์ชันจัดการ Dropdown ค้นหาแบบ Custom (Point 5) ✨
+        // ✨ ฟังก์ชันจัดการ Dropdown ค้นหาแบบ Custom ✨
         function toggleReportDropdown(e, forceOpen = false) {
             if(e) e.stopPropagation();
             const list = document.getElementById('reportDropdownList');
