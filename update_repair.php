@@ -43,7 +43,7 @@ if($check_root_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
 }
 
-// ✨ เช็คและสร้างฟิลด์ completed_at เพื่อบันทึกเวลาซ่อมเสร็จ ✨
+// เช็คและสร้างฟิลด์ completed_at
 $check_completed_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'completed_at'");
 if($check_completed_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN completed_at DATETIME NULL");
@@ -58,12 +58,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
     $update_id = $_POST['id'];
 
-    // ✨ เงื่อนไขการอัปเดตเวลาซ่อมเสร็จ (Completed At) ✨
     if ($status === 'ซ่อมเสร็จแล้ว') {
-        // ถ้าซ่อมเสร็จแล้ว ให้บันทึกเวลาปัจจุบัน (CURRENT_TIMESTAMP)
         $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?";
     } else {
-        // ถ้ายังไม่เสร็จ (หรือเปลี่ยนสถานะกลับ) ให้เคลียร์เวลาซ่อมเสร็จเป็น NULL
         $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, completed_at = NULL WHERE id = ?";
     }
     
@@ -73,7 +70,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($update_stmt->execute()) {
         $show_alert = true;
 
-        // 🟢 อัปเดตสถานะของอุปกรณ์ (Assets) ตามที่ช่างเลือกมาตรงๆ
         if (!empty($asset_code) && !empty($asset_status)) {
             $stmt_asset = $conn->prepare("UPDATE assets SET status = ? WHERE asset_code = ?");
             $stmt_asset->bind_param("ss", $asset_status, $asset_code);
@@ -114,9 +110,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $status_display = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';
         }
 
-        // ==========================================
-        // 1. ส่งแจ้งเตือนหา "ผู้แจ้งซ่อม" แบบส่วนตัว
-        // ==========================================
         if(!empty($repair['line_user_id'])) {
             $icon = "🔔";
             if($status == 'กำลังดำเนินการ') $icon = "🛠️";
@@ -147,9 +140,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             curl_close($ch);
         }
 
-        // ==========================================
-        // 2. ประกาศความคืบหน้าเข้า "กลุ่มช่าง" 
-        // ==========================================
         $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
 
         if(!empty($line_group_id) && $status == 'กำลังดำเนินการ') {
@@ -197,7 +187,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> ระบบจัดการใบงานแจ้งซ่อม</h1>
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
-            <a href="dashboard.php?tab=repairs" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-sky-600 px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm w-full sm:w-auto text-center">
+            <!-- ✨ เปลี่ยนสีปุ่มให้เป็นสีเข้มเหมือนใน view_repair.php ✨ -->
+            <a href="dashboard.php?tab=repairs" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
         </div>

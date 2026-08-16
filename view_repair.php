@@ -69,10 +69,6 @@ if (isset($_GET['id'])) {
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
             <div class="flex gap-3">
-                <button onclick="window.print()" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-sky-600 px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm flex items-center text-sm">
-                    <i class="fas fa-print mr-2"></i> พิมพ์
-                </button>
-                <!-- ✨ เปลี่ยนคำสั่งให้เป็นลิงก์กลับไปที่หน้า Transactions โดยตรง ✨ -->
                 <a href="dashboard.php?tab=repairs" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center text-sm">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
@@ -198,7 +194,7 @@ if (isset($_GET['id'])) {
                             </div>
                         </div>
                     </div>
-
+                    
                     <div class="p-6 flex-1 flex flex-col">
                         <div class="flex-1 <?php echo empty($repair['repair_note']) ? 'flex items-center justify-center' : ''; ?>">
                             <?php if(!empty($repair['repair_note'])): ?>
@@ -214,7 +210,7 @@ if (isset($_GET['id'])) {
                                 </div>
                             <?php endif; ?>
                         </div>
-
+                        
                         <?php if($repair['status'] == 'รอรับเรื่อง'): ?>
                         <div class="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start">
                             <i class="fas fa-info-circle text-amber-500 mt-0.5 mr-3"></i>
@@ -228,7 +224,7 @@ if (isset($_GET['id'])) {
                 </div>
 
             </div>
-
+            
         </div>
         <?php else: ?>
             <div class="modern-card p-16 text-center mt-10">
