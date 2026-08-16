@@ -72,8 +72,9 @@ if (isset($_GET['id'])) {
                 <button onclick="window.print()" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-sky-600 px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm flex items-center text-sm">
                     <i class="fas fa-print mr-2"></i> พิมพ์
                 </button>
-                <button onclick="window.close();" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md flex items-center text-sm">
-                    <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
+                <!-- ✨ เปลี่ยนคำสั่งและข้อความเป็น ย้อนกลับ ✨ -->
+                <button onclick="window.history.back();" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md flex items-center text-sm">
+                    <i class="fas fa-arrow-left mr-2"></i> ย้อนกลับ
                 </button>
             </div>
         </div>
