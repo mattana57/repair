@@ -37,10 +37,16 @@ if($check_asset_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN asset_code VARCHAR(50) NULL AFTER equipment_type");
 }
 
-// ✨ เช็คและสร้างฟิลด์ root_cause เพื่อให้ข้อมูลเชื่อมไปโชว์ที่ตารางหน้า Dashboard ✨
+// เช็คและสร้างฟิลด์ root_cause
 $check_root_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'root_cause'");
 if($check_root_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
+}
+
+// ✨ เช็คและสร้างฟิลด์ completed_at เพื่อบันทึกเวลาซ่อมเสร็จ ✨
+$check_completed_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'completed_at'");
+if($check_completed_col->num_rows == 0) {
+    $conn->query("ALTER TABLE repairs ADD COLUMN completed_at DATETIME NULL");
 }
 
 $show_alert = false;
@@ -49,12 +55,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $repair_note = $_POST['repair_note'];
     $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
     $asset_code = isset($_POST['asset_code']) && $_POST['asset_code'] !== '' ? $_POST['asset_code'] : null;
-    // 🟢 รับค่าสถานะครุภัณฑ์ที่ช่างเป็นคนเลือก
     $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
     $update_id = $_POST['id'];
 
-    // ✨ อัปเดตข้อมูลการแจ้งซ่อม (อัปเดตทั้ง repair_note และ root_cause พร้อมกันเลย) ✨
-    $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ? WHERE id = ?";
+    // ✨ เงื่อนไขการอัปเดตเวลาซ่อมเสร็จ (Completed At) ✨
+    if ($status === 'ซ่อมเสร็จแล้ว') {
+        // ถ้าซ่อมเสร็จแล้ว ให้บันทึกเวลาปัจจุบัน (CURRENT_TIMESTAMP)
+        $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+    } else {
+        // ถ้ายังไม่เสร็จ (หรือเปลี่ยนสถานะกลับ) ให้เคลียร์เวลาซ่อมเสร็จเป็น NULL
+        $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, completed_at = NULL WHERE id = ?";
+    }
+    
     $update_stmt = $conn->prepare($update_sql);
     $update_stmt->bind_param("sssssi", $status, $repair_note, $repair_note, $technician_name, $asset_code, $update_id);
 
@@ -185,7 +197,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> ระบบจัดการใบงานแจ้งซ่อม</h1>
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
-            <!-- ✨ แก้ไขปุ่มและลิงก์ตรงนี้ครับ ✨ -->
             <a href="dashboard.php?tab=repairs" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-sky-600 px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm w-full sm:w-auto text-center">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
@@ -340,7 +351,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <i class="fas fa-exclamation-triangle text-3xl text-slate-400"></i>
                 </div>
                 <h2 class="text-xl font-bold text-slate-700 mb-2">ไม่พบข้อมูลใบงาน</h2>
-                <a href="dashboard.php" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block mt-4">กลับหน้าหลัก</a>
+                <a href="dashboard.php?tab=repairs" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block mt-4">กลับหน้ารายการ</a>
             </div>
         <?php endif; ?>
     </div>
