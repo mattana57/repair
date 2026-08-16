@@ -709,7 +709,7 @@ $dept_icons = [
                                             $has_created = (!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00');
                                             $date_fmt = $has_created ? date("Y-m-d", strtotime($rd['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
                                             $time_fmt = $has_created ? date("H:i", strtotime($rd['created_at'])) : '';
-                                            $time_html = $time_fmt ? "<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>{$time_fmt}</div>" : "";
+                                            $time_html = $time_fmt ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$time_fmt}</div>" : "";
                                             
                                             $imageIcon = "";
                                             if(isset($rd['image_path']) && !empty($rd['image_path'])) {
@@ -747,7 +747,7 @@ $dept_icons = [
                  ✨ ส่วน All Repairs List (ตารางแจ้งซ่อม) ✨ 
                  =================================================================================== -->
             <div id="repairs" class="section hidden space-y-6 no-print">
-                <div class="modern-card overflow-hidden">
+                <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
@@ -820,10 +820,9 @@ $dept_icons = [
                                         if (empty($row['technician_name']) || $row['technician_name'] === '-') {
                                             $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
                                         } else {
-                                            // ✨ แก้ไข: เปลี่ยนสีฝ่ายงานหน้า Repairs เป็นสีเทาเดิม (Point 1) ✨
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                // ✨ สีตำแหน่งในตาราง Repairs เป็นสีเทาเข้ม (Point 1) ✨
+                                                // ✨ สีตำแหน่งในตาราง Repairs เป็นสีเทาเข้ม ✨
                                                 $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
@@ -831,17 +830,17 @@ $dept_icons = [
                                         $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
                                         $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
-                                        $created_time_html = $created_time ? "<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>{$created_time}</div>" : "";
+                                        $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
 
                                         $has_received = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
                                         $received_date = $has_received ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $received_time = $has_received ? date('H:i', strtotime($row['created_at'])) : '';
-                                        $received_time_html = $received_time ? "<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>{$received_time}</div>" : "";
+                                        $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
 
                                         $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
                                         $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
-                                        $completed_time_html = $completed_time ? "<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>{$completed_time}</div>" : "";
+                                        $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
 
                                         $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
 
@@ -1112,7 +1111,7 @@ $dept_icons = [
                                                 </div>
                                             </td>
                                             <td class='px-6 py-4'>
-                                                <div class='text-slate-600 font-bold'>{$dept}</div>
+                                                <div class='text-slate-700 font-bold'>{$dept}</div>
                                                 {$pos_html}
                                             </td>
                                             <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td> 
@@ -1274,7 +1273,6 @@ $dept_icons = [
                                 <?php endif; ?>
 
                                 <?php if (!empty($tech['pos'])): ?>
-                                <!-- ✨ ป้ายตำแหน่งงานเป็นสีน้ำเงินตามรีเควสต์ ✨ -->
                                 <div class="mt-4 inline-flex items-center px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100">
                                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
                                     <span class="text-[11px] font-bold text-blue-700"><?php echo htmlspecialchars($tech['pos']); ?></span>
