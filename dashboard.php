@@ -822,7 +822,6 @@ $dept_icons = [
                                         } else {
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                // ✨ สีตำแหน่งในตาราง Repairs กลับเป็นสีเทาเข้ม (Point 1) ✨
                                                 $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
@@ -1026,16 +1025,15 @@ $dept_icons = [
                                 foreach ($techs_by_dept as $dept => $techs) {
                                     $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                     
-                                    // ✨ แก้ไข: เปลี่ยนแถบชื่อฝ่ายงานเป็นสีน้ำเงิน (Point 2) ตามที่ย้ำมาครับ ✨
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                             <td colspan='6' class='p-0 border-0 bg-transparent'>
-                                                <div class='relative overflow-hidden flex items-center justify-between bg-blue-600 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
+                                                <div class='relative overflow-hidden flex items-center justify-between bg-blue-500 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
                                                     <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                     <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
                                                     
                                                     <div class='flex items-center relative z-10 pl-1'>
                                                         <div class='w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 backdrop-blur-md text-white flex items-center justify-center mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0'>
-                                                            <i class='{$tbl_icon} text-base sm:text-lg drop-shadow-md'></i>
+                                                            <i class='{$tbl_icon} text-base sm:text-lg'></i>
                                                         </div>
                                                         <div>
                                                             <h3 class='font-extrabold text-sm sm:text-base text-white tracking-wide drop-shadow-md leading-tight'>
@@ -1097,6 +1095,8 @@ $dept_icons = [
                                         $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $en_name_html = (!empty($en_name) && $en_name !== '-') ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>".htmlspecialchars($en_name)."</div>" : "";
                                         
+                                        $pos_html = (!empty($pos) && $pos !== '-') ? "<div class='text-[11px] text-slate-500 font-medium mt-0.5'>".htmlspecialchars($pos)."</div>" : "";
+
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                             <td class='px-6 py-4'>
                                                 <div class='flex items-center'>
@@ -1109,7 +1109,7 @@ $dept_icons = [
                                             </td>
                                             <td class='px-6 py-4'>
                                                 <div class='text-slate-700 font-bold'>{$dept}</div>
-                                                <div class='text-[11px] text-slate-500 font-medium mt-0.5'>".htmlspecialchars($pos)."</div>
+                                                {$pos_html}
                                             </td>
                                             <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td> 
                                             <td class='px-6 py-4 text-center'>{$statusBadge}</td>
@@ -1221,7 +1221,7 @@ $dept_icons = [
                 <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
                     
                     <!-- ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นน้ำเงิน (Point 2) ✨ -->
-                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-blue-600 p-3 rounded-2xl shadow-md shadow-blue-200/50 tech-dept-header">
+                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-blue-500 p-3 rounded-2xl shadow-md shadow-blue-200/50 tech-dept-header">
                         <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                         <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
                         
@@ -1238,7 +1238,7 @@ $dept_icons = [
                         </div>
                         
                         <div class="relative z-10 hidden sm:flex items-center pr-1">
-                            <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                            <span class="bg-white/20 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                 <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                             </span>
                         </div>
@@ -1471,13 +1471,12 @@ $dept_icons = [
                                 </div>
                                 <?php 
                                     foreach ($techs_by_dept as $dept => $techs) {
-                                        echo "<div class='px-5 py-2 mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest bg-slate-50/50'>{$dept}</div>";
+                                        echo "<div class='dropdown-dept-header px-5 py-2 mt-2 mb-1 text-[11px] font-extrabold text-blue-400 tracking-wider' data-dept=\"".htmlspecialchars($dept)."\">{$dept}</div>";
                                         foreach($techs as $t) {
                                             $tName = htmlspecialchars($t['full_name']);
-                                            $tEng = htmlspecialchars($t['english_name']);
-                                            $searchStr = preg_replace('/\s+/', '', strtolower($tName . $tEng . $dept));
-                                            echo "<div class='report-dropdown-item px-5 py-3 text-sm text-slate-700 font-bold hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex justify-between items-center transition-colors' data-value=\"{$tName}\" data-search=\"{$searchStr}\" onmousedown=\"selectReportTech('{$tName}', '{$tName}')\">
-                                                    <span>{$tName} <span class='text-slate-400 text-xs ml-2 font-medium'>{$tEng}</span></span>
+                                            $searchStr = preg_replace('/\s+/', '', strtolower($tName . $dept));
+                                            echo "<div class='report-dropdown-item px-5 py-2.5 text-sm text-slate-700 font-bold hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex items-center transition-colors mx-2 rounded-lg' data-value=\"{$tName}\" data-search=\"{$searchStr}\" data-dept=\"".htmlspecialchars($dept)."\" onmousedown=\"selectReportTech('{$tName}', '{$tName}')\">
+                                                    <i class='fas fa-user-circle text-slate-300 mr-2 text-lg group-hover:text-blue-400'></i> <span>{$tName}</span>
                                                   </div>";
                                         }
                                     }
@@ -2392,6 +2391,7 @@ $dept_icons = [
             document.getElementById('edit_rep_old_name').value = old_name; document.getElementById('edit_rep_new_name').value = old_name; document.getElementById('edit_rep_new_phone').value = old_phone; toggleModal('editReporterModal');
         }
 
+        // ✨ อัปเดตฟังก์ชันเพื่อแสดงผล "ชื่อภาษาอังกฤษ" และ "ตำแหน่งงาน" ใน Modal History ✨
         function viewHistory(fullName, type) {
             const tbody = document.getElementById('historyTableBody'); 
             tbody.innerHTML = '';
@@ -2543,13 +2543,46 @@ $dept_icons = [
         function filterReportDropdown() {
             toggleReportDropdown(null, true);
             const searchVal = document.getElementById('reportSearchInput').value.toLowerCase().replace(/\s+/g, '');
+            
+            // ✨ ซ่อน/แสดงหัวข้อแผนกถ้าไม่มีช่างตรงเงื่อนไข ✨
+            let deptVisibility = {};
+            
             const items = document.querySelectorAll('.report-dropdown-item');
             items.forEach(item => {
+                if (item.getAttribute('data-value') === 'all') return;
+                
                 const searchData = item.getAttribute('data-search') || '';
+                const dept = item.getAttribute('data-dept');
+                
+                if (!deptVisibility[dept]) deptVisibility[dept] = 0;
+                
                 if(searchData.includes(searchVal)) {
                     item.style.display = '';
+                    deptVisibility[dept]++;
                 } else {
                     item.style.display = 'none';
+                }
+            });
+
+            // ตรวจสอบการโชว์ Overall System
+            const allItem = document.querySelector('.report-dropdown-item[data-value="all"]');
+            if (allItem) {
+                const searchData = allItem.getAttribute('data-search') || '';
+                if (searchData.includes(searchVal)) {
+                    allItem.style.display = '';
+                } else {
+                    allItem.style.display = 'none';
+                }
+            }
+
+            // ซ่อน/แสดง แถบแผนก
+            const deptHeaders = document.querySelectorAll('.dropdown-dept-header');
+            deptHeaders.forEach(header => {
+                const dept = header.getAttribute('data-dept');
+                if (deptVisibility[dept] > 0) {
+                    header.style.display = '';
+                } else {
+                    header.style.display = 'none';
                 }
             });
         }
