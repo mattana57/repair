@@ -472,17 +472,17 @@ $dept_icons = [
         @media print { aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #team_cards, #assets, #users, #reports { display: none !important; } }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden selection:bg-indigo-100">
+<body class="flex h-screen overflow-hidden selection:bg-purple-100">
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
     <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
         <div class="sidebar-logo-box flex items-center border-b border-slate-50">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3 shrink-0">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-400 via-purple-400 to-fuchsia-400 flex items-center justify-center shadow-lg shadow-purple-200/50 mr-3 shrink-0">
                 <i class="fas fa-tools text-white text-lg"></i>
             </div>
             <div class="overflow-hidden">
-                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight">MBS<span class="text-indigo-600">Repair</span></h1>
+                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight">MBS<span class="text-purple-500">Repair</span></h1>
             </div>
         </div>
         
@@ -506,23 +506,24 @@ $dept_icons = [
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
-        <header class="top-header bg-white/80 backdrop-blur-md flex items-center justify-between z-10 sticky top-0 no-print border-b border-slate-100">
+        <!-- ✨ 1. เปลี่ยนสี Header ด้านบนเป็นสีม่วงพาสเทลให้เหมือนกับแถบฝ่ายงาน ✨ -->
+        <header class="top-header bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 flex items-center justify-between z-10 sticky top-0 no-print shadow-md shadow-purple-200/50">
             <div class="flex items-center">
-                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-slate-500 hover:text-indigo-600 focus:outline-none">
+                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-purple-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h2 class="text-2xl font-bold text-slate-800 tracking-tight" id="headerTitle">Dashboard Overview</h2>
+                <h2 class="text-2xl font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle">Dashboard Overview</h2>
             </div>
             
             <div class="flex items-center">
                 <div class="flex items-center gap-3 cursor-pointer group">
                     <div class="text-right hidden sm:block">
-                        <span class="block text-sm font-bold text-slate-700 leading-none mb-1 group-hover:text-indigo-600 transition-colors">
+                        <span class="block text-sm font-bold text-white drop-shadow-sm leading-none mb-1 group-hover:text-purple-100 transition-colors">
                             <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <span class="block text-[11px] text-slate-400 font-semibold">Administrator</span>
+                        <span class="block text-[11px] text-purple-100 font-semibold">Administrator</span>
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 overflow-hidden border border-slate-200 shadow-xs">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white overflow-hidden border border-white/30 shadow-inner backdrop-blur-sm">
                         <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
@@ -547,7 +548,7 @@ $dept_icons = [
                     ?>
                     <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('all')">
                         <div class="flex justify-between items-start mb-4">
-                            <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
+                            <div class="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-500 text-xl"><i class="fas fa-layer-group"></i></div>
                             <span class="text-xs font-bold text-slate-400">TOTAL</span>
                         </div>
                         <div>
@@ -597,7 +598,7 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
-                            <select onchange="renderEquipChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
+                            <select onchange="renderEquipChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-100 font-medium cursor-pointer">
                                 <option value="all">ทุกเดือน (All Time)</option>
                                 <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
                             </select>
@@ -613,7 +614,7 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-slate-800 text-lg">Work Status</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
                             </div>
-                            <select onchange="renderStatusChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
+                            <select onchange="renderStatusChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-100 font-medium cursor-pointer">
                                 <option value="all">ทุกเดือน (All Time)</option>
                                 <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
                             </select>
@@ -629,7 +630,7 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-slate-800 text-lg">Top Locations</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
                             </div>
-                            <select onchange="renderLocChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
+                            <select onchange="renderLocChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-100 font-medium cursor-pointer">
                                 <option value="all">ทุกเดือน (All Time)</option>
                                 <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
                             </select>
@@ -645,7 +646,7 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-slate-800 text-lg">Technician Workload</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
                             </div>
-                            <select onchange="renderTechChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
+                            <select onchange="renderTechChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-100 font-medium cursor-pointer">
                                 <option value="all">ทุกเดือน (All Time)</option>
                                 <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
                             </select>
@@ -663,8 +664,8 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">Latest 5 repairs in system</p>
                             </div>
-                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
-                                See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
+                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-purple-500 transition-colors group">
+                                See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-purple-500 transition-transform group-hover:translate-x-1"></i>
                             </button>
                         </div>
                         <div class="overflow-x-auto">
@@ -696,7 +697,7 @@ $dept_icons = [
                                                 <td class='px-6 py-4 text-slate-500 font-mono font-semibold'>{$rd['ticket_no']}</td>
                                                 <td class='px-6 py-4 text-slate-800 font-bold'>
                                                     <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mr-3 text-xs'><i class='fas fa-user'></i></div>
+                                                        <div class='w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 mr-3 text-xs'><i class='fas fa-user'></i></div>
                                                         {$rd['reporter_name']}
                                                     </div>
                                                 </td>
@@ -728,7 +729,7 @@ $dept_icons = [
                         </div>
                         <div class="w-full md:w-auto relative">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchInput" placeholder="Search ticket or status..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
+                            <input type="text" id="searchInput" placeholder="Search ticket or status..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all font-medium">
                         </div>
                     </div>
                     <div class="overflow-x-auto w-full">
@@ -774,7 +775,7 @@ $dept_icons = [
                                                 $t_pos = htmlspecialchars(getAutoPosition($th_name));
                                             }
                                             
-                                            $techHtml = "<div class='text-indigo-600 font-bold'>{$t_th}</div>";
+                                            $techHtml = "<div class='text-purple-500 font-bold'>{$t_th}</div>";
                                             if (!empty($t_eng)) {
                                                 $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
                                             }
@@ -789,7 +790,7 @@ $dept_icons = [
                                         } else {
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                $deptEng .= "<div class='text-indigo-600 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
+                                                $deptEng .= "<div class='text-purple-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
 
@@ -828,7 +829,7 @@ $dept_icons = [
                                             <td class='px-6 py-4 text-xs whitespace-nowrap'>";
                                         if($has_received) {
                                             echo "<div class='font-medium text-slate-700'>{$received_date}</div>
-                                                  <div class='text-[11px] text-indigo-600 font-semibold'>{$received_time}</div>";
+                                                  <div class='text-[11px] text-purple-500 font-semibold'>{$received_time}</div>";
                                         } else {
                                             echo "<span class='text-slate-400'>-</span>";
                                         }
@@ -844,7 +845,7 @@ $dept_icons = [
                                             <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$row['status']}</span></td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <a href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                                    <a href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
                                                     <a href='view_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
                                                 </div>
                                             </td>
@@ -881,6 +882,7 @@ $dept_icons = [
                                     <tr>
                                         <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
+                                        <!-- ลบคอลัมน์ Department ออก -->
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-right">Action</th>
@@ -943,7 +945,7 @@ $dept_icons = [
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
                             <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="search-tech-table" oninput="searchTeamTable()" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="search-tech-table" oninput="searchTeamTable()" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all font-medium shadow-sm">
                             </div>
                             
                             <div class="flex flex-wrap gap-2.5">
@@ -993,10 +995,10 @@ $dept_icons = [
                                     foreach ($techs_by_dept as $dept => $techs) {
                                         $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                         
-                                        // ✨ 1. แถบสีม่วงของฝ่ายงาน (Ribbon Header) ลบขอบให้ชนพอดี ✨
+                                        // ✨ 1. แถบสีม่วงพาสเทลของฝ่ายงาน (Ribbon Header) เพิ่มระยะห่าง mt-8 ✨
                                         echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                                 <td colspan='6' class='p-0 bg-white border-0'>
-                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-4 shadow-sm rounded-t-xl mb-[2px]'>
+                                                    <div class='relative overflow-hidden flex items-center justify-between bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 p-4 shadow-sm rounded-t-xl mx-4 mt-8 mb-[2px]'>
                                                         <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                         <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
                                                         
@@ -1008,7 +1010,7 @@ $dept_icons = [
                                                                 <h3 class='font-extrabold text-sm sm:text-base text-white tracking-wide drop-shadow-md leading-tight'>
                                                                     ".htmlspecialchars($dept)."
                                                                 </h3>
-                                                                <p class='text-indigo-100 text-[9px] sm:text-[10px] font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                                                <p class='text-purple-100 text-[9px] sm:text-[10px] font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                                                             </div>
                                                         </div>
                                                         
@@ -1021,14 +1023,14 @@ $dept_icons = [
                                                 </td>
                                               </tr>";
 
-                                        // ✨ 2. หัวคอลัมน์สีเหลือง (amber-200) อยู่ใต้แถบแผนก ✨
-                                        echo "<tr class='bg-[#fef08a] text-[#854d0e] text-[11px] uppercase tracking-widest font-extrabold tech-col-header' data-dept='".htmlspecialchars($dept)."'>
-                                                <th class='px-6 py-4 border-0'>Name</th>
-                                                <th class='px-6 py-4 border-0'>Department</th>
-                                                <th class='px-6 py-4 border-0'>Contact</th> 
-                                                <th class='px-6 py-4 text-center border-0'>Status / Code</th>
-                                                <th class='px-6 py-4 text-center border-0'>Jobs</th>
-                                                <th class='px-6 py-4 text-right border-0'>Action</th>
+                                        // ✨ 2. หัวคอลัมน์สีเหลือง (amber-400) อยู่ใต้แถบแผนก ✨
+                                        echo "<tr class='bg-[#fef08a] text-slate-900 text-[11px] uppercase tracking-widest font-extrabold tech-col-header' data-dept='".htmlspecialchars($dept)."'>
+                                                <th class='px-6 py-4 border-l-[16px] border-white'>Name</th>
+                                                <th class='px-6 py-4'>Department</th>
+                                                <th class='px-6 py-4'>Contact</th> 
+                                                <th class='px-6 py-4 text-center'>Status / Code</th>
+                                                <th class='px-6 py-4 text-center'>Jobs</th>
+                                                <th class='px-6 py-4 text-right border-r-[16px] border-white'>Action</th>
                                             </tr>";
 
                                         // ✨ 3. รายชื่อช่างในแผนกนั้น ✨
@@ -1069,10 +1071,10 @@ $dept_icons = [
                                             
                                             $pos_html = !empty($pos) ? "<div class='text-[11px] text-slate-400 font-medium mt-0.5'>{$pos}</div>" : "";
 
-                                            echo "<tr class='hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors border-b border-slate-50 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                                 <td class='px-6 py-4'>
                                                     <div class='flex items-center'>
-                                                        <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
+                                                        <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-purple-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                         <div>
                                                             <div class='text-slate-800 font-bold'>{$th_name_html}</div>
                                                             {$en_name_html}
@@ -1089,16 +1091,16 @@ $dept_icons = [
                                                 <td class='px-6 py-4 text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
                                                         {$unlinkBtn}
-                                                        <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-purple-600 hover:border-purple-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-purple-600 hover:bg-purple-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:text-white hover:bg-rose-500 transition-all flex items-center justify-center shadow-xs'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
                                             </tr>";
                                         }
                                         
-                                        // ✨ เติมช่องว่างด้านล่างแผนกให้เป็นระเบียบ เท่ากันทุกแผนก ✨
-                                        echo "<tr class='tech-dept-spacer' data-dept='".htmlspecialchars($dept)."'><td colspan='6' class='h-8 bg-white border-0'></td></tr>";
+                                        // เติมช่องว่างด้านล่างแผนกให้สวยงาม
+                                        echo "<tr class='tech-dept-spacer' data-dept='".htmlspecialchars($dept)."'><td colspan='6' class='h-4 bg-white border-0'></td></tr>";
                                     }
                                 } 
                                 ?>
@@ -1114,7 +1116,7 @@ $dept_icons = [
                         <h3 class="font-extrabold text-xl mb-2 text-rose-500">ไม่พบรายชื่อช่างในระบบ</h3>
                         <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
                             ไม่มีช่างชื่อนี้อยู่ในระบบ ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
-                            <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องทำการ <strong class="text-indigo-600">"Add Technician"</strong> เพิ่มเข้าสู่ระบบก่อน</span>
+                            <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องทำการ <strong class="text-purple-600">"Add Technician"</strong> เพิ่มเข้าสู่ระบบก่อน</span>
                         </p>
                     </div>
                 </div>
@@ -1135,7 +1137,7 @@ $dept_icons = [
                         <!-- ช่องค้นหา -->
                         <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="search-tech-card" oninput="searchTechCards()" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            <input type="text" id="search-tech-card" oninput="searchTechCards()" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all font-medium shadow-sm">
                         </div>
 
                         <div class="flex flex-wrap gap-2.5">
@@ -1195,7 +1197,7 @@ $dept_icons = [
                 ?>
                 <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
                     
-                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-3 rounded-2xl shadow-md shadow-indigo-200/50 tech-dept-header">
+                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 p-3 rounded-2xl shadow-md shadow-purple-200/50 tech-dept-header">
                         <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                         <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
                         
@@ -1207,7 +1209,7 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
                                     <?php echo htmlspecialchars($dept_name); ?>
                                 </h3>
-                                <p class="text-indigo-100 text-[10px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                <p class="text-purple-100 text-[10px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                             </div>
                         </div>
                         
@@ -1223,7 +1225,7 @@ $dept_icons = [
                             // ตัดช่องว่างทุกชนิดออก เพื่อให้ค้นหาเจอแม่นยำขึ้น
                             $search_name = preg_replace('/\s+/', '', strtolower($tech['raw_name'] . $tech['eng'] . $tech['th']));
                         ?>
-                        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:border-indigo-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
+                        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_0_20px_rgba(192,132,252,0.3)] hover:border-purple-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[280px] w-full sm:w-[280px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
                             <div class="relative w-full aspect-[4/5] bg-slate-100 overflow-hidden">
                                 <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
@@ -1237,7 +1239,7 @@ $dept_icons = [
 
                             <div class="p-5 flex-1 flex flex-col justify-between relative z-10 bg-white">
                                 <div>
-                                    <h5 class="font-extrabold text-slate-800 text-base leading-tight group-hover:text-indigo-600 transition-colors">
+                                    <h5 class="font-extrabold text-slate-800 text-base leading-tight group-hover:text-purple-600 transition-colors">
                                         <?php echo htmlspecialchars($tech['th']); ?>
                                     </h5>
                                     
@@ -1246,9 +1248,9 @@ $dept_icons = [
                                     <?php endif; ?>
 
                                     <?php if (!empty($tech['pos'])): ?>
-                                    <div class="mt-3 inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50/80 border border-indigo-100/50">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span>
-                                        <span class="text-[10px] font-bold text-indigo-700"><?php echo htmlspecialchars($tech['pos']); ?></span>
+                                    <div class="mt-3 inline-flex items-center px-2.5 py-1 rounded-lg bg-purple-50/80 border border-purple-100/50">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5 animate-pulse"></span>
+                                        <span class="text-[10px] font-bold text-purple-700"><?php echo htmlspecialchars($tech['pos']); ?></span>
                                     </div>
                                     <?php endif; ?>
                                     
@@ -1279,8 +1281,8 @@ $dept_icons = [
                                 </div>
 
                                 <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" 
-                                        class="mt-5 w-full text-xs font-bold text-slate-600 bg-white border-2 border-slate-100 hover:border-indigo-600 hover:bg-indigo-600 hover:text-white py-2.5 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-indigo-200 flex items-center justify-center group/btn">
-                                    <i class="fas fa-history mr-2 text-slate-400 group-hover/btn:text-indigo-200 transition-colors"></i> 
+                                        class="mt-5 w-full text-xs font-bold text-slate-600 bg-white border-2 border-slate-100 hover:border-purple-600 hover:bg-purple-600 hover:text-white py-2.5 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-purple-200 flex items-center justify-center group/btn">
+                                    <i class="fas fa-history mr-2 text-slate-400 group-hover/btn:text-purple-200 transition-colors"></i> 
                                     ดูประวัติงาน
                                 </button>
                             </div>
@@ -1290,13 +1292,13 @@ $dept_icons = [
                 </div>
                 <?php endforeach; ?>
                 <!-- ✨ เพิ่มหน้าต่างแสดงผลเมื่อค้นหาไม่เจอ (Empty State) สำหรับหน้า Technician Card (เปลี่ยนสีคำตามขอ) ✨ -->
-                <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-indigo-100 bg-indigo-50/30 text-center rounded-3xl">
-                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
-                        <i class="fas fa-user-lock text-3xl text-indigo-300"></i>
+                <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-purple-100 bg-purple-50/30 text-center rounded-3xl">
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-purple-50">
+                        <i class="fas fa-user-lock text-3xl text-purple-300"></i>
                     </div>
                     <h3 class="font-extrabold text-xl mb-2"><span class="text-rose-500">ไม่พบรายชื่อช่าง</span> <span class="text-emerald-500">(ที่ผูกบัญชีแล้ว)</span></h3>
                     <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
-                        ไม่มีช่างชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">ช่างท่านนี้ยังไม่ได้ทำการ "ผูกบัญชี LINE"</strong><br>
+                        ไม่มีช่างชื่อนี้อยู่ในระบบ หรือ <strong class="text-purple-600">ช่างท่านนี้ยังไม่ได้ทำการ "ผูกบัญชี LINE"</strong><br>
                         ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
                         <span class="text-xs text-slate-400 mt-2 block">(สามารถดูรายชื่อช่างทั้งหมดและจัดการช่างใหม่ได้ที่เมนู "Team")</span>
                     </p>
@@ -1311,7 +1313,7 @@ $dept_icons = [
                             <h2 class="text-xl font-extrabold text-slate-800">Assets Database</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Manage all registered equipments</p>
                         </div>
-                        <button onclick="openAddAssetModal()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Asset</button>
+                        <button onclick="openAddAssetModal()" class="w-full md:w-auto bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-purple-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Asset</button>
                     </div>
                     <div class="overflow-x-auto w-full">
                         <table class="w-full text-left whitespace-nowrap min-w-[600px]">
@@ -1339,7 +1341,7 @@ $dept_icons = [
                                             <td class='px-6 py-4 text-center'><span class='{$a_statusClass}'>{$a['status']}</span></td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-purple-600 hover:bg-purple-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                     <button onclick=\"confirmDelete('asset', {$a['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
@@ -1393,8 +1395,8 @@ $dept_icons = [
                                             </td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"viewHistory('{$js_old_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                    <button onclick=\"openEditReporterModal('{$js_old_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"viewHistory('{$js_old_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-purple-600 hover:border-purple-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                                                    <button onclick=\"openEditReporterModal('{$js_old_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-purple-600 hover:bg-purple-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                     <button onclick=\"confirmDeleteReporter('{$js_old_name}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
@@ -1419,15 +1421,15 @@ $dept_icons = [
                             <a href="export_excel.php" id="exportExcelBtn" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-emerald-200 flex items-center justify-center transition-all">
                                 <i class="fas fa-file-excel mr-2 text-lg"></i> Export Excel
                             </a>
-                            <button onclick="printOfficialReport()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-all">
+                            <button onclick="printOfficialReport()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-purple-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-all">
                                 <i class="fas fa-print mr-2 text-lg"></i> Print Document
                             </button>
                         </div>
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <label class="font-bold text-slate-700 text-sm flex items-center"><i class="fas fa-filter text-indigo-500 mr-2"></i> Filter Data by Technician:</label>
-                        <select id="techFilter" onchange="updateExcelLink()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium min-w-[250px] w-full sm:w-auto cursor-pointer">
+                        <label class="font-bold text-slate-700 text-sm flex items-center"><i class="fas fa-filter text-purple-500 mr-2"></i> Filter Data by Technician:</label>
+                        <select id="techFilter" onchange="updateExcelLink()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all font-medium min-w-[250px] w-full sm:w-auto cursor-pointer">
                             <option value="all">Overall System (All Technicians)</option>
                             <?php 
                                 foreach($tech_options as $tech) {
@@ -1463,12 +1465,12 @@ $dept_icons = [
             <form action="dashboard.php?tab=assets" method="POST" class="p-6">
                 <input type="hidden" name="save_asset" value="1"><input type="hidden" name="asset_id" id="asset_id" value="">
                 <div class="space-y-5">
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Code</label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Name</label><input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label><select name="category" id="asset_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"><option value="IT Support">IT Support</option><option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option><option value="อาคารสถานที่">อาคารสถานที่</option><option value="อื่นๆ">อื่นๆ</option></select></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label><select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"><option value="ใช้งานปกติ">ใช้งานปกติ</option><option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option><option value="แทงจำหน่าย">แทงจำหน่าย</option></select></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Code</label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Name</label><input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label><select name="category" id="asset_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium"><option value="IT Support">IT Support</option><option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option><option value="อาคารสถานที่">อาคารสถานที่</option><option value="อื่นๆ">อื่นๆ</option></select></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label><select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium"><option value="ใช้งานปกติ">ใช้งานปกติ</option><option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option><option value="แทงจำหน่าย">แทงจำหน่าย</option></select></div>
                 </div>
-                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Asset</button></div>
+                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 shadow-md shadow-purple-200 transition-all">Save Asset</button></div>
             </form>
         </div>
     </div>
@@ -1493,13 +1495,13 @@ $dept_icons = [
                     <div id="loginCredsDiv" class="space-y-5">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
-                            <input type="text" name="username" id="techAdmin_username" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
+                            <input type="text" name="username" id="techAdmin_username" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium shadow-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span></label>
                             <div class="relative">
-                                <input type="password" name="password" id="techAdmin_password" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="••••••••">
-                                <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
+                                <input type="password" name="password" id="techAdmin_password" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium shadow-sm" placeholder="••••••••">
+                                <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-purple-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
                                     <i id="eyeIcon" class="fas fa-eye"></i>
                                 </button>
                             </div>
@@ -1508,7 +1510,7 @@ $dept_icons = [
 
                     <div id="adminLevelDiv" class="hidden">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Role Level</label>
-                        <select name="admin_level" id="techAdmin_level" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
+                        <select name="admin_level" id="techAdmin_level" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium shadow-sm">
                             <option value="Admin">Admin</option>
                             <option value="Executive">Executive</option>
                         </select>
@@ -1516,21 +1518,21 @@ $dept_icons = [
 
                     <div id="avatarDiv" class="hidden">
                         <div id="avatarLabelWrapper" class="mb-3">
-                             <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
+                             <label id="avatarLabel" class="block text-sm font-extrabold text-purple-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
                         </div>
                         
                         <div id="avatarPositionWrapper" class="hidden mb-3 w-max">
                              <div id="positionDisplayGroup" class="flex items-center gap-2">
-                                 <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="enableDropdownEdit()" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
+                                 <div class="flex items-center text-sm font-extrabold text-purple-600 uppercase tracking-wider cursor-pointer hover:text-purple-500 transition-colors" onclick="enableDropdownEdit()" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
                                      <span id="displayPositionLabel">ตำแหน่งงาน</span>
-                                     <i class="fas fa-caret-down ml-1.5 text-slate-400 text-xs group-hover:text-indigo-400 transition-colors"></i>
+                                     <i class="fas fa-caret-down ml-1.5 text-slate-400 text-xs group-hover:text-purple-400 transition-colors"></i>
                                  </div>
-                                 <button type="button" onclick="openCustomPositionPrompt()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors shadow-sm" title="พิมพ์ระบุตำแหน่งเอง">
+                                 <button type="button" onclick="openCustomPositionPrompt()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-purple-100 hover:text-purple-600 transition-colors shadow-sm" title="พิมพ์ระบุตำแหน่งเอง">
                                      <i class="fas fa-pencil-alt text-[10px]"></i>
                                  </button>
                              </div>
                              
-                             <select id="avatarPositionSelect" class="hidden w-full mt-1 text-sm font-extrabold text-indigo-600 uppercase tracking-wider bg-transparent border-b-2 border-indigo-400 focus:border-indigo-600 outline-none pb-1 transition-colors cursor-pointer appearance-none pr-6" onchange="handleDropdownChange(this)" onblur="cancelDropdownEdit()" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234f46e5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right top 50%; background-size: 0.65rem auto;">
+                             <select id="avatarPositionSelect" class="hidden w-full mt-1 text-sm font-extrabold text-purple-600 uppercase tracking-wider bg-transparent border-b-2 border-purple-400 focus:border-purple-600 outline-none pb-1 transition-colors cursor-pointer appearance-none pr-6" onchange="handleDropdownChange(this)" onblur="cancelDropdownEdit()" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239333ea%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right top 50%; background-size: 0.65rem auto;">
                                 <option value="" disabled selected>-- เลือกตำแหน่ง --</option>
                                 <option value="นักวิชาการคอมพิวเตอร์">นักวิชาการคอมพิวเตอร์</option>
                                 <option value="นักวิชาการโสตทัศนศึกษา">นักวิชาการโสตทัศนศึกษา</option>
@@ -1546,7 +1548,7 @@ $dept_icons = [
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-3 mb-2">
-                                    <label for="techAdmin_avatar" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl text-sm font-bold transition-colors whitespace-nowrap">
+                                    <label for="techAdmin_avatar" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-xl text-sm font-bold transition-colors whitespace-nowrap">
                                         เลือกไฟล์รูปภาพ
                                     </label>
                                     <span id="fileNameDisplay" class="text-sm text-slate-500 truncate">ไม่ได้เลือกไฟล์ใด</span>
@@ -1559,17 +1561,17 @@ $dept_icons = [
 
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">FULL NAME</label>
-                        <input type="text" name="full_name" id="techAdmin_fullname" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น นาย สมพร วงษ์จำปา">
+                        <input type="text" name="full_name" id="techAdmin_fullname" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น นาย สมพร วงษ์จำปา">
                     </div>
                     
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ENGLISH NAME</label>
-                        <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
+                        <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
                     <div id="positionDiv">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION</label>
-                        <select name="position_select" id="techAdmin_position_select" onchange="toggleCustomInput(this, 'techAdmin_position_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
+                        <select name="position_select" id="techAdmin_position_select" onchange="toggleCustomInput(this, 'techAdmin_position_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
                             <option value="" disabled selected>-- Select Position --</option>
                             <option value="นักวิชาการคอมพิวเตอร์">นักวิชาการคอมพิวเตอร์</option>
                             <option value="นักวิชาการโสตทัศนศึกษา">นักวิชาการโสตทัศนศึกษา</option>
@@ -1577,17 +1579,17 @@ $dept_icons = [
                             <option value="พนักงานขับรถยนต์">พนักงานขับรถยนต์</option>
                             <option value="อื่นๆ">อื่นๆ (Custom)</option>
                         </select>
-                        <input type="text" name="position_custom" id="techAdmin_position_custom" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="Specify position">
+                        <input type="text" name="position_custom" id="techAdmin_position_custom" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium shadow-sm" placeholder="Specify position">
                     </div>
                     
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PHONE</label>
-                        <input type="text" name="phone" id="techAdmin_phone" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
+                        <input type="text" name="phone" id="techAdmin_phone" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium shadow-sm">
                     </div>
                     
                     <div id="deptDiv">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">DEPARTMENT</label>
-                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomInput(this, 'techAdmin_department_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
+                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomInput(this, 'techAdmin_department_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
                             <option value="" disabled selected>-- Select Department --</option>
                             <option value="ฝ่ายงานบริการเทคโนโลยีดิจิทัล">ฝ่ายงานบริการเทคโนโลยีดิจิทัล</option>
                             <option value="ฝ่ายงานยานยนต์">ฝ่ายงานยานยนต์</option>
@@ -1595,13 +1597,13 @@ $dept_icons = [
                             <option value="แม่บ้าน">แม่บ้าน</option>
                             <option value="อื่นๆ">อื่นๆ (Custom)</option>
                         </select>
-                        <input type="text" name="department_custom" id="techAdmin_department_custom" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="Specify department">
+                        <input type="text" name="department_custom" id="techAdmin_department_custom" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium shadow-sm" placeholder="Specify department">
                     </div>
                 </div>
                 
                 <div class="mt-8 flex justify-end gap-3 pt-5 border-t border-slate-50">
                     <button type="button" onclick="toggleModal('techAdminModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Data</button>
+                    <button type="submit" class="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 shadow-md shadow-purple-200 transition-all">Save Data</button>
                 </div>
             </form>
         </div>
@@ -1617,14 +1619,14 @@ $dept_icons = [
             <form action="dashboard.php?tab=users" method="POST" class="p-6">
                 <input type="hidden" name="edit_reporter" value="1">
                 <input type="hidden" name="old_name" id="edit_rep_old_name" value="">
-                <div class="bg-indigo-50 text-indigo-700 text-xs p-4 rounded-xl mb-5 font-medium flex items-start">
+                <div class="bg-purple-50 text-purple-700 text-xs p-4 rounded-xl mb-5 font-medium flex items-start">
                     <i class="fas fa-info-circle mt-0.5 mr-2"></i> This will update all past repair records associated with this person.
                 </div>
                 <div class="space-y-5">
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label><input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label><input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label><input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label><input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-purple-100 focus:outline-none font-medium"></div>
                 </div>
-                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('editReporterModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Update</button></div>
+                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('editReporterModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 shadow-md shadow-purple-200 transition-all">Update</button></div>
             </form>
         </div>
     </div>
@@ -1810,8 +1812,8 @@ $dept_icons = [
         let activeDeptTable = 'all';
         function filterDeptTable(dept) {
             activeDeptTable = dept;
-            const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm";
-            const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100";
+            const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300 shadow-sm";
+            const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-purple-600 text-white shadow-md shadow-purple-200 ring-2 ring-purple-100";
 
             let container = document.getElementById('technicians');
             if (!container) return;
@@ -1883,8 +1885,8 @@ $dept_icons = [
         let activeDeptCard = 'all';
         function filterDeptCard(dept) {
             activeDeptCard = dept;
-            const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm";
-            const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-200 ring-2 ring-indigo-100";
+            const defaultStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-purple-50 hover:text-purple-600 hover:border-purple-300 shadow-sm";
+            const activeStyle = "dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-purple-600 text-white shadow-md shadow-purple-200 ring-2 ring-purple-100";
 
             let container = document.getElementById('team_cards');
             if (!container) return;
@@ -2353,7 +2355,7 @@ $dept_icons = [
                         // ดึงข้อมูลจาก Map ที่เราเตรียมไว้จาก PHP
                         let info = techInfoMap[r.technician_name] || { th: r.technician_name, eng: '', pos: '' };
                         
-                        techNameHtml = `<div class='text-indigo-600 font-bold'>${info.th}</div>`;
+                        techNameHtml = `<div class='text-purple-600 font-bold'>${info.th}</div>`;
                         if(info.eng) techNameHtml += `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${info.eng}</div>`;
                     }
                     let techName = techNameHtml;
@@ -2368,13 +2370,13 @@ $dept_icons = [
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : '-';
                     let completed_time = has_completed ? r.completed_at.split(' ')[1].substring(0, 5) : '';
                     
-                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal สีเทา-indigo ให้ตรงกัน ✨
+                    // ✨ นำตำแหน่งไปต่อท้ายฝ่ายงานใน History Modal สีม่วงพาสเทล ให้ตรงกัน ✨
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
-                    let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-800 text-white rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
+                    let deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
                     if (r.technician_name) {
                         let info = techInfoMap[r.technician_name];
                         if (info && info.pos) {
-                            deptEng += `<div class='text-indigo-600 font-bold text-[11px] ml-2.5'>${info.pos}</div>`;
+                            deptEng += `<div class='text-purple-600 font-bold text-[11px] ml-2.5'>${info.pos}</div>`;
                         }
                     }
 
@@ -2396,7 +2398,7 @@ $dept_icons = [
                         <td class="px-5 py-4">${techName}</td>
                         <td class="px-5 py-4">${rootCause}</td>
                         <td class="px-5 py-4 text-xs whitespace-nowrap">
-                            ${has_received ? `<div class='font-medium text-slate-700'>${received_date}</div><div class='text-[11px] text-indigo-600 font-semibold'>${received_time}</div>` : "<span class='text-slate-400'>-</span>"}
+                            ${has_received ? `<div class='font-medium text-slate-700'>${received_date}</div><div class='text-[11px] text-purple-600 font-semibold'>${received_time}</div>` : "<span class='text-slate-400'>-</span>"}
                         </td>
                         <td class="px-5 py-4 text-xs whitespace-nowrap">
                             ${has_completed ? `<div class='font-medium text-emerald-700'>${completed_date}</div><div class='text-[11px] text-emerald-500 font-semibold'>${completed_time}</div>` : "<span class='text-slate-400'>-</span>"}
@@ -2404,7 +2406,7 @@ $dept_icons = [
                         <td class="px-5 py-4 text-center"><span class="${statusClass}">${statusText}</span></td>
                         <td class="px-5 py-4 text-right">
                             <div class='flex items-center justify-end space-x-2'>
-                                <a href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                <a href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-purple-50 hover:text-purple-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
                                 <a href='view_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
                             </div>
                         </td>
