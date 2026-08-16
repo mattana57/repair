@@ -768,10 +768,11 @@ $dept_icons = [
                                     <th class="px-6 py-4">Equipment</th>
                                     <th class="px-6 py-4">Department</th>
                                     <th class="px-6 py-4">Technician</th>
-                                    <th class="px-6 py-4">Root Cause</th>
+                                    <!-- ✨ สลับหัวคอลัมน์: Received At, Root Cause, Status, Completed At ✨ -->
                                     <th class="px-6 py-4">Received At</th>
-                                    <th class="px-6 py-4">Completed At</th>
+                                    <th class="px-6 py-4">Root Cause</th>
                                     <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4">Completed At</th>
                                     <th class="px-6 py-4 text-right">Action</th>
                                 </tr>
                             </thead>
@@ -861,16 +862,17 @@ $dept_icons = [
                                             </td>
                                             <td class='px-6 py-4'>{$deptEng}</td>
                                             <td class='px-6 py-4'>{$techName}</td>
-                                            <td class='px-6 py-4'>{$rootCause}</td>
+                                            <!-- ✨ สลับข้อมูลตามคอลัมน์: Received At, Root Cause, Status, Completed At ✨ -->
                                             <td class='px-6 py-4 text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-slate-700'>{$received_date}</div>
                                                 {$received_time_html}
                                             </td>
+                                            <td class='px-6 py-4'>{$rootCause}</td>
+                                            <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$row['status']}</span></td>
                                             <td class='px-6 py-4 text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-emerald-700'>{$completed_date}</div>
                                                 {$completed_time_html}
                                             </td>
-                                            <td class='px-6 py-4 text-center'><span class='{$stClass}'>{$row['status']}</span></td>
                                             <td class='px-6 py-4 text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     <a href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
@@ -1027,7 +1029,7 @@ $dept_icons = [
                                     
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                             <td colspan='6' class='p-0 border-0 bg-transparent'>
-                                                <div class='relative overflow-hidden flex items-center justify-between bg-blue-600 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
+                                                <div class='relative overflow-hidden flex items-center justify-between bg-blue-500 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
                                                     <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                     <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
                                                     
@@ -1220,7 +1222,7 @@ $dept_icons = [
                 ?>
                 <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
                     
-                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-blue-600 p-3 rounded-2xl shadow-md shadow-blue-200/50 tech-dept-header">
+                    <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-blue-500 p-3 rounded-2xl shadow-md shadow-blue-200/50 tech-dept-header">
                         <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                         <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
                         
@@ -1237,7 +1239,7 @@ $dept_icons = [
                         </div>
                         
                         <div class="relative z-10 hidden sm:flex items-center pr-1">
-                            <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                            <span class="bg-white/20 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                 <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                             </span>
                         </div>
@@ -1706,10 +1708,11 @@ $dept_icons = [
                                 <th class="px-5 py-4">Equipment</th>
                                 <th class="px-5 py-4">Department</th>
                                 <th class="px-5 py-4">Technician</th>
-                                <th class="px-5 py-4">Root Cause</th>
+                                <!-- ✨ สลับคอลัมน์เหมือนหน้าตารางหลัก ✨ -->
                                 <th class="px-5 py-4">Received At</th>
-                                <th class="px-5 py-4">Completed At</th>
+                                <th class="px-5 py-4">Root Cause</th>
                                 <th class="px-5 py-4 text-center">Status</th>
+                                <th class="px-5 py-4">Completed At</th>
                                 <th class="px-5 py-4 text-right">Action</th>
                             </tr>
                         </thead>
@@ -2480,16 +2483,17 @@ $dept_icons = [
                         </td>
                         <td class="px-5 py-4">${deptEng}</td>
                         <td class="px-5 py-4">${techName}</td>
-                        <td class="px-5 py-4">${rootCause}</td>
+                        <!-- ✨ สลับคอลัมน์เหมือนหน้าตารางหลัก ✨ -->
                         <td class="px-5 py-4 text-xs whitespace-nowrap">
                             <div class='font-medium text-slate-700'>${received_date}</div>
                             ${received_time}
                         </td>
+                        <td class="px-5 py-4">${rootCause}</td>
+                        <td class="px-5 py-4 text-center"><span class="${statusClass}">${statusText}</span></td>
                         <td class="px-5 py-4 text-xs whitespace-nowrap">
                             <div class='font-medium text-emerald-700'>${completed_date}</div>
                             ${completed_time}
                         </td>
-                        <td class="px-5 py-4 text-center"><span class="${statusClass}">${statusText}</span></td>
                         <td class="px-5 py-4 text-right">
                             <div class='flex items-center justify-end space-x-2'>
                                 <a href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
