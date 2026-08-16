@@ -820,10 +820,10 @@ $dept_icons = [
                                         if (empty($row['technician_name']) || $row['technician_name'] === '-') {
                                             $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
                                         } else {
-                                            // ✨ แก้ไข: เปลี่ยนสีฝ่ายงานกลับเป็นสีเทา (Point 1) ✨
+                                            // ✨ แก้ไข: เปลี่ยนสีป้ายชื่อฝ่ายงานกลับมาเป็นสีเทา (Point 1) ✨
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
-                                                // ✨ ตำแหน่งในตาราง Repairs กลับเป็นสีเทา (Point 1) ✨
+                                                // ✨ แก้ไข: เปลี่ยนสีตำแหน่งเป็นสีเทาเข้ม (Point 1) ✨
                                                 $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
@@ -1030,13 +1030,13 @@ $dept_icons = [
                                     // ✨ แก้ไข: เปลี่ยนสีแถบฝ่ายงานเป็นน้ำเงิน (Point 2) ขอบตรงกันเป๊ะ ✨
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                             <td colspan='6' class='p-0 border-0 bg-transparent'>
-                                                <div class='flex items-center justify-between bg-blue-600 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm overflow-hidden relative'>
+                                                <div class='relative overflow-hidden flex items-center justify-between bg-blue-600 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
                                                     <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                     <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
                                                     
                                                     <div class='flex items-center relative z-10 pl-1'>
                                                         <div class='w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 backdrop-blur-md text-white flex items-center justify-center mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0'>
-                                                            <i class='{$tbl_icon} text-base sm:text-lg'></i>
+                                                            <i class='{$tbl_icon} text-base sm:text-lg drop-shadow-md'></i>
                                                         </div>
                                                         <div>
                                                             <h3 class='font-extrabold text-sm sm:text-base text-white tracking-wide drop-shadow-md leading-tight'>
@@ -2419,7 +2419,8 @@ $dept_icons = [
                     if(r.created_at) {
                         let parts = r.created_at.split(' ');
                         createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
-                        createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
+                        // ✨ เปลี่ยนเวลาเป็นสีน้ำเงิน (Point 2) ✨
+                        createdTime = parts[1] ? `<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
                     } else {
                         createdDate = "<span class='text-rose-500 font-bold'>-</span>";
                     }
@@ -2436,13 +2437,16 @@ $dept_icons = [
 
                     let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
                     let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
-                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
+                    // ✨ เปลี่ยนเวลาเป็นสีน้ำเงิน (Point 2) ✨
+                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
 
                     let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
+                    // ✨ เปลี่ยนเวลาเป็นสีน้ำเงิน (Point 2) ✨
+                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-indigo-500 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
                     
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
+                    // ✨ แก้ไข: เปลี่ยนป้ายฝ่ายงานในหน้าประวัติให้เป็นสีเทาเดิม ✨
                     let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
                     if (r.technician_name && r.technician_name !== '-') {
                         deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
