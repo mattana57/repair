@@ -6,7 +6,7 @@ function formatCensoredPhone($phone) {
     $phone = trim((string)$phone);
     // เอาขีดออกก่อนเพื่อเช็คความยาวที่แท้จริง
     $clean_phone = str_replace('-', '', $phone);
-    
+
     if (strlen($clean_phone) >= 9) {
         return substr($clean_phone, 0, 3) . '-XXX-' . substr($clean_phone, -4);
     } elseif (strlen($clean_phone) > 0) {
@@ -27,7 +27,7 @@ if (isset($_GET['id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $repair = $result->fetch_assoc();
-    
+
     // ดึงเบอร์โทรศัพท์ของช่างผู้รับผิดชอบจากตาราง users
     if (!empty($repair['technician_name'])) {
         $stmt_tech = $conn->prepare("SELECT phone FROM users WHERE full_name = ? LIMIT 1");
@@ -59,7 +59,7 @@ if (isset($_GET['id'])) {
     </style>
 </head>
 <body class="p-6 md:p-10 selection:bg-sky-200 relative">
-    
+
     <div class="absolute inset-0 bg-pattern opacity-50 -z-10"></div>
 
     <div class="max-w-4xl mx-auto">
@@ -72,10 +72,10 @@ if (isset($_GET['id'])) {
                 <button onclick="window.print()" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-sky-600 px-4 py-2.5 rounded-xl font-medium transition-all shadow-sm flex items-center text-sm">
                     <i class="fas fa-print mr-2"></i> พิมพ์
                 </button>
-                <!-- ✨ เปลี่ยนคำสั่งและข้อความเป็น ย้อนกลับ ✨ -->
-                <button onclick="window.history.back();" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md flex items-center text-sm">
-                    <i class="fas fa-arrow-left mr-2"></i> ย้อนกลับ
-                </button>
+                <!-- ✨ เปลี่ยนคำสั่งให้เป็นลิงก์กลับไปที่หน้า Transactions โดยตรง ✨ -->
+                <a href="dashboard.php?tab=repairs" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center text-sm">
+                    <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
+                </a>
             </div>
         </div>
 
@@ -86,9 +86,9 @@ if (isset($_GET['id'])) {
             elseif($repair['status'] == 'กำลังดำเนินการ') { $statusColor = "bg-sky-50 text-sky-600 border-sky-200"; $statusIcon = "fa-tools"; $repair['status'] = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';}
             elseif($repair['status'] == 'ซ่อมเสร็จแล้ว' || $repair['status'] == 'เสร็จสิ้น') { $statusColor = "bg-emerald-50 text-emerald-600 border-emerald-200"; $statusIcon = "fa-check-circle"; }
         ?>
-        
+
         <div class="space-y-6">
-            
+
             <div class="modern-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">รหัสใบงาน (Ticket No.)</p>
@@ -104,7 +104,7 @@ if (isset($_GET['id'])) {
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
+
                 <!-- ฝั่งซ้าย: ข้อมูลผู้แจ้ง -->
                 <div class="modern-card overflow-hidden">
                     <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center">
@@ -174,10 +174,10 @@ if (isset($_GET['id'])) {
                             </div>
                             <div>
                                 <h3 class="font-bold text-slate-800">บันทึกการปฏิบัติงาน (ฝ่ายช่าง)</h3>
-                                
+
                                 <div class="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
                                     <span>ผู้รับผิดชอบ: <span class="font-bold <?php echo !empty($repair['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>"><?php echo !empty($repair['technician_name']) ? htmlspecialchars($repair['technician_name']) : '- ยังไม่ระบุช่าง -'; ?></span></span>
-                                    
+
                                     <?php 
                                     // 🟢 บังคับโชว์เบอร์ช่างเฉพาะตอนกำลังดำเนินการเท่านั้น (สำหรับหน้าสาธารณะ)
                                     if(!empty($tech_phone)): 
@@ -198,7 +198,7 @@ if (isset($_GET['id'])) {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="p-6 flex-1 flex flex-col">
                         <div class="flex-1 <?php echo empty($repair['repair_note']) ? 'flex items-center justify-center' : ''; ?>">
                             <?php if(!empty($repair['repair_note'])): ?>
@@ -214,7 +214,7 @@ if (isset($_GET['id'])) {
                                 </div>
                             <?php endif; ?>
                         </div>
-                        
+
                         <?php if($repair['status'] == 'รอรับเรื่อง'): ?>
                         <div class="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start">
                             <i class="fas fa-info-circle text-amber-500 mt-0.5 mr-3"></i>
@@ -228,7 +228,7 @@ if (isset($_GET['id'])) {
                 </div>
 
             </div>
-            
+
         </div>
         <?php else: ?>
             <div class="modern-card p-16 text-center mt-10">

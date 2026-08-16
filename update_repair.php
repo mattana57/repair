@@ -37,6 +37,12 @@ if($check_asset_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN asset_code VARCHAR(50) NULL AFTER equipment_type");
 }
 
+// ✨ เช็คและสร้างฟิลด์ root_cause เพื่อให้ข้อมูลเชื่อมไปโชว์ที่ตารางหน้า Dashboard ✨
+$check_root_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'root_cause'");
+if($check_root_col->num_rows == 0) {
+    $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
+}
+
 $show_alert = false;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $status = $_POST['status'];
@@ -47,14 +53,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
     $update_id = $_POST['id'];
 
-    // อัปเดตข้อมูลการแจ้งซ่อม (รวม asset_code)
-    $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, technician_name = ?, asset_code = ? WHERE id = ?";
+    // ✨ อัปเดตข้อมูลการแจ้งซ่อม (อัปเดตทั้ง repair_note และ root_cause พร้อมกันเลย) ✨
+    $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ? WHERE id = ?";
     $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("ssssi", $status, $repair_note, $technician_name, $asset_code, $update_id);
-    
+    $update_stmt->bind_param("sssssi", $status, $repair_note, $repair_note, $technician_name, $asset_code, $update_id);
+
     if ($update_stmt->execute()) {
         $show_alert = true;
-        
+
         // 🟢 อัปเดตสถานะของอุปกรณ์ (Assets) ตามที่ช่างเลือกมาตรงๆ
         if (!empty($asset_code) && !empty($asset_status)) {
             $stmt_asset = $conn->prepare("UPDATE assets SET status = ? WHERE asset_code = ?");
@@ -62,16 +68,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt_asset->execute();
             $stmt_asset->close();
         }
-        
+
         $stmt->execute();
         $repair = $stmt->get_result()->fetch_assoc();
 
         // 🚨 นำ Channel Access Token ของคุณน้ำฝนมาใส่ตรงนี้
         $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
-        
+
         $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
         $note_display = !empty($repair_note) ? $repair_note : "-";
-        
+
         $current_time = date("d/m/Y H:i น.");
 
         $tech_phone = "- ไม่ระบุ -";
@@ -133,7 +139,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // 2. ประกาศความคืบหน้าเข้า "กลุ่มช่าง" 
         // ==========================================
         $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
-        
+
         if(!empty($line_group_id) && $status == 'กำลังดำเนินการ') {
             $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
                             "👨‍🔧 ช่าง: " . $tech_display . "\n" .
@@ -186,7 +192,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <?php if($repair): ?>
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            
+
             <div class="lg:col-span-2 space-y-6">
                 <div class="modern-card p-6 border-t-4 border-sky-500">
                     <div class="flex justify-between items-start mb-4">
@@ -195,7 +201,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <?php echo $repair['ticket_no']; ?>
                         </span>
                     </div>
-                    
+
                     <div class="space-y-4 text-sm">
                         <div>
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide">วัน/เวลาที่แจ้ง</p>
@@ -215,7 +221,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <p class="font-bold text-sky-700"><?php echo htmlspecialchars($repair['equipment_type']); ?></p>
                             <p class="text-slate-600 mt-1"><?php echo htmlspecialchars($repair['problem_desc']); ?></p>
                         </div>
-                        
+
                         <div>
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-2">ภาพประกอบ</p>
                             <?php 
@@ -243,10 +249,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="lg:col-span-3">
                 <div class="modern-card p-6 md:p-8 h-full">
                     <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-6">บันทึกการปฏิบัติงาน</h2>
-                    
+
                     <form id="updateForm" action="" method="POST" class="space-y-6">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
-                        
+
                         <!-- ผู้รับผิดชอบ -->
                         <div class="mb-4">
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
@@ -260,7 +266,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </select>
                         </div>
 
-                        <!-- 🟢 ข้อมูลครุภัณฑ์และสถานะครุภัณฑ์ (เพิ่มใหม่) -->
+                        <!-- 🟢 ข้อมูลครุภัณฑ์และสถานะครุภัณฑ์ -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 border border-slate-100 bg-slate-50/50 rounded-xl">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-barcode text-sky-500 mr-2"></i> รหัสครุภัณฑ์ (ที่ซ่อม)</label>
@@ -273,7 +279,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            
+
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
                                 <select name="asset_status" id="asset_status" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
@@ -325,7 +331,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </form>
                 </div>
             </div>
-            
+
         </div>
         <?php else: ?>
             <div class="modern-card p-12 text-center">
