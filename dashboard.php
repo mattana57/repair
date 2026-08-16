@@ -822,6 +822,7 @@ $dept_icons = [
                                         } else {
                                             $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
                                             if (!empty($t_pos)) {
+                                                // ✨ สีตำแหน่งในตาราง Repairs กลับเป็นสีเทาเข้ม (Point 1) ✨
                                                 $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                             }
                                         }
@@ -1025,6 +1026,7 @@ $dept_icons = [
                                 foreach ($techs_by_dept as $dept => $techs) {
                                     $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                     
+                                    // ✨ แก้ไข: เปลี่ยนแถบชื่อฝ่ายงานเป็นสีน้ำเงิน (Point 2) ตามที่ย้ำมาครับ ✨
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
                                             <td colspan='6' class='p-0 border-0 bg-transparent'>
                                                 <div class='relative overflow-hidden flex items-center justify-between bg-blue-600 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
@@ -1033,7 +1035,7 @@ $dept_icons = [
                                                     
                                                     <div class='flex items-center relative z-10 pl-1'>
                                                         <div class='w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 backdrop-blur-md text-white flex items-center justify-center mr-3 sm:mr-4 border border-white/30 shadow-inner shrink-0'>
-                                                            <i class='{$tbl_icon} text-base sm:text-lg'></i>
+                                                            <i class='{$tbl_icon} text-base sm:text-lg drop-shadow-md'></i>
                                                         </div>
                                                         <div>
                                                             <h3 class='font-extrabold text-sm sm:text-base text-white tracking-wide drop-shadow-md leading-tight'>
@@ -1095,8 +1097,6 @@ $dept_icons = [
                                         $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $en_name_html = (!empty($en_name) && $en_name !== '-') ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>".htmlspecialchars($en_name)."</div>" : "";
                                         
-                                        $pos_html = (!empty($pos) && $pos !== '-') ? "<div class='text-[11px] text-slate-500 font-medium mt-0.5'>".htmlspecialchars($pos)."</div>" : "";
-
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                             <td class='px-6 py-4'>
                                                 <div class='flex items-center'>
@@ -1109,7 +1109,7 @@ $dept_icons = [
                                             </td>
                                             <td class='px-6 py-4'>
                                                 <div class='text-slate-700 font-bold'>{$dept}</div>
-                                                {$pos_html}
+                                                <div class='text-[11px] text-slate-500 font-medium mt-0.5'>".htmlspecialchars($pos)."</div>
                                             </td>
                                             <td class='px-6 py-4 text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td> 
                                             <td class='px-6 py-4 text-center'>{$statusBadge}</td>
@@ -1140,7 +1140,7 @@ $dept_icons = [
                         <h3 class="font-extrabold text-xl mb-2 text-rose-500">ไม่พบรายชื่อช่างในระบบ</h3>
                         <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
                             ไม่มีช่างชื่อนี้อยู่ในระบบ ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
-                            <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องทำการ <strong class="text-indigo-600">"Add Technician"</strong> เพิ่มเข้าสู่ระบบก่อน</span>
+                            <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องทำการ <span onclick="openTechAdminModal('Technician')" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 hover:underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
                         </p>
                     </div>
                 </div>
@@ -1314,7 +1314,7 @@ $dept_icons = [
                     <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
                         ไม่มีช่างชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">ช่างท่านนี้ยังไม่ได้ทำการ "ผูกบัญชี LINE"</strong><br>
                         ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
-                        <span class="text-xs text-slate-400 mt-2 block">(สามารถดูรายชื่อช่างทั้งหมดและจัดการช่างใหม่ได้ที่เมนู "Team")</span>
+                        <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องทำการ <span onclick="openTechAdminModal('Technician')" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 hover:underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
                     </p>
                 </div>
             </div>
@@ -2392,7 +2392,6 @@ $dept_icons = [
             document.getElementById('edit_rep_old_name').value = old_name; document.getElementById('edit_rep_new_name').value = old_name; document.getElementById('edit_rep_new_phone').value = old_phone; toggleModal('editReporterModal');
         }
 
-        // ✨ อัปเดตฟังก์ชันเพื่อแสดงผล "ชื่อภาษาอังกฤษ" และ "ตำแหน่งงาน" ใน Modal History ✨
         function viewHistory(fullName, type) {
             const tbody = document.getElementById('historyTableBody'); 
             tbody.innerHTML = '';
@@ -2513,7 +2512,6 @@ $dept_icons = [
             Swal.fire({ title: 'ยืนยันลบผู้แจ้ง?', text: "ประวัติการแจ้งซ่อมทั้งหมดของบุคคลนี้จะถูกเคลียร์ชื่อออก!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
         }
 
-        // ✨ ฟังก์ชันจัดการ Dropdown ค้นหาแบบ Custom ให้ทำงานทันที ไม่ต้องลบ ✨
         let currentSelectedName = 'Overall System (All Technicians)';
 
         function focusReportSearch(e) {
