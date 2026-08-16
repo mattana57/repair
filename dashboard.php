@@ -2476,7 +2476,7 @@ $dept_icons = [
         }
 
         function confirmDelete(type, id) { 
-            Swal.fire({ title: 'ยืนยันการลบข้อมูล?', text: "เมื่อลบแล้วจะไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { 
+            Swal.fire({ title: 'ยืนยันการลบข้อมูล ?', text: "เมื่อลบแล้วจะไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { 
                 if(r.isConfirmed) {
                     if(type === 'tech') window.location.href = 'dashboard.php?delete_tech=' + id;
                     else if(type === 'user') window.location.href = 'dashboard.php?delete_user=' + id;
