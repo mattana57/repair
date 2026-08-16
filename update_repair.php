@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $status = $_POST['status'];
     $repair_note = $_POST['repair_note'];
     $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
-    $asset_code = isset($_POST['asset_code']) && $_POST['asset_code'] !== '' ? $_POST['asset_code'] : null;
+    $asset_code = isset($_POST['asset_code']) && $_POST['asset_code'] !== '' ? trim($_POST['asset_code']) : null;
     $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
     $update_id = $_POST['id'];
 
@@ -70,11 +70,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($update_stmt->execute()) {
         $show_alert = true;
 
+        // ✨ อัปเดตสถานะของอุปกรณ์ (Assets) หรือเพิ่มใหม่ถ้ารหัสไม่เคยมีในระบบมาก่อน ✨
         if (!empty($asset_code) && !empty($asset_status)) {
-            $stmt_asset = $conn->prepare("UPDATE assets SET status = ? WHERE asset_code = ?");
-            $stmt_asset->bind_param("ss", $asset_status, $asset_code);
-            $stmt_asset->execute();
-            $stmt_asset->close();
+            $check_asset = $conn->prepare("SELECT id FROM assets WHERE asset_code = ?");
+            $check_asset->bind_param("s", $asset_code);
+            $check_asset->execute();
+            $res_check = $check_asset->get_result();
+
+            if ($res_check->num_rows > 0) {
+                // มีข้อมูลในระบบแล้ว -> ให้อัปเดตแค่ Status
+                $stmt_asset = $conn->prepare("UPDATE assets SET status = ? WHERE asset_code = ?");
+                $stmt_asset->bind_param("ss", $asset_status, $asset_code);
+                $stmt_asset->execute();
+                $stmt_asset->close();
+            } else {
+                // ยังไม่เคยมีในระบบ -> ให้บันทึกเพิ่มเข้าไปใหม่เลย (ไปโผล่ในหน้า Assets Database ด้วย)
+                $new_asset_name = "ครุภัณฑ์จากใบงาน " . (!empty($repair['ticket_no']) ? $repair['ticket_no'] : "ล่าสุด");
+                $new_asset_category = "อื่นๆ"; // ตั้งค่าเริ่มต้นเป็นอื่นๆ ไปก่อน
+                $stmt_asset_insert = $conn->prepare("INSERT INTO assets (asset_code, asset_name, category, status) VALUES (?, ?, ?, ?)");
+                $stmt_asset_insert->bind_param("ssss", $asset_code, $new_asset_name, $new_asset_category, $asset_status);
+                $stmt_asset_insert->execute();
+                $stmt_asset_insert->close();
+            }
+            $check_asset->close();
         }
 
         $stmt->execute();
@@ -177,6 +195,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
+        
+        /* สไตล์สำหรับซ่อนลูกศร Dropdown ดั้งเดิมบางบราวเซอร์ ให้ดูสะอาดขึ้น */
+        input::-webkit-calendar-picker-indicator {
+            opacity: 100;
+            color: #94a3b8;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="p-4 md:p-10 selection:bg-sky-200">
@@ -187,7 +212,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> ระบบจัดการใบงานแจ้งซ่อม</h1>
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
-            <!-- ✨ เปลี่ยนสีปุ่มให้เป็นสีเข้มเหมือนใน view_repair.php ✨ -->
             <a href="dashboard.php?tab=repairs" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
@@ -273,14 +297,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 border border-slate-100 bg-slate-50/50 rounded-xl">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-barcode text-sky-500 mr-2"></i> รหัสครุภัณฑ์ (ที่ซ่อม)</label>
-                                <select name="asset_code" id="asset_code" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
-                                    <option value="">-- ไม่ระบุรหัสครุภัณฑ์ --</option>
+                                <!-- ✨ เปลี่ยนจาก <select> เป็น <input list="..."> (Combobox) เพื่อให้พิมพ์ได้และกดเลือกได้ ✨ -->
+                                <input type="text" name="asset_code" id="asset_code" list="asset_code_list" 
+                                       class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all" 
+                                       placeholder="-- เลือกรหัส หรือพิมพ์เพิ่มใหม่ --" 
+                                       value="<?php echo isset($repair['asset_code']) ? htmlspecialchars($repair['asset_code']) : ''; ?>">
+                                
+                                <datalist id="asset_code_list">
                                     <?php foreach($assets_list as $asset): ?>
-                                        <option value="<?php echo htmlspecialchars($asset['asset_code']); ?>" <?php echo (isset($repair['asset_code']) && $repair['asset_code'] == $asset['asset_code']) ? 'selected' : ''; ?>>
-                                            [<?php echo htmlspecialchars($asset['asset_code']); ?>] - <?php echo htmlspecialchars($asset['asset_name']); ?>
+                                        <option value="<?php echo htmlspecialchars($asset['asset_code']); ?>">
+                                            <?php echo htmlspecialchars($asset['asset_name']); ?>
                                         </option>
                                     <?php endforeach; ?>
-                                </select>
+                                </datalist>
                             </div>
 
                             <div>
