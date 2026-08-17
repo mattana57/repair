@@ -150,7 +150,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
                                "📋 เลขที่ใบงาน: " . $repair['ticket_no'] . "\n" .
-                           "🕒 เวลาอัปเดต: " . $current_time . "\n" .
+                               "🕒 เวลาอัปเดต: " . $current_time . "\n" .
                                "💻 อุปกรณ์: " . $repair['equipment_type'] . "\n" .
                                "⚠️ อาการ: " . $repair['problem_desc'] . "\n\n" .
                                "📌 สถานะใหม่: " . $status_display . "\n" .  
@@ -350,10 +350,11 @@ if($assets_res && $assets_res->num_rows > 0){
 
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
+                                <!-- ✨ ลบข้อความในวงเล็บออกตามที่คุณแจ้ง ✨ -->
                                 <select name="asset_status" id="asset_status" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm mt-0.5 md:mt-0">
-                                    <option value="ใช้งานปกติ">🟢 ใช้งานปกติ (ซ่อมผ่าน)</option>
-                                    <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม (ซ่อมไม่ผ่าน/รออะไหล่)</option>
-                                    <option value="แทงจำหน่าย">🔴 แทงจำหน่าย (พังเกินเยียวยา)</option>
+                                    <option value="ใช้งานปกติ">🟢 ใช้งานปกติ</option>
+                                    <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม</option>
+                                    <option value="แทงจำหน่าย">🔴 แทงจำหน่าย</option>
                                 </select>
                             </div>
                         </div>
@@ -442,7 +443,6 @@ if($assets_res && $assets_res->num_rows > 0){
                             <option value="อื่นๆ">อื่นๆ</option>
                         </select>
                     </div>
-                    <!-- ✨ ลบช่อง Status ออกตามคำขอ ✨ -->
                 </div>
                 <div class="mt-8 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">Cancel</button>
