@@ -14,8 +14,9 @@ if (isset($_GET['id'])) {
     $repair = $result->fetch_assoc();
 }
 
+// ✨ แก้ไข: ดึงรายชื่อช่างทุกคนจากตาราง technicians โดยตรง (รวมช่างที่เพิ่มใหม่ทั้งหมด) ✨
 $techs = [];
-$tech_res = $conn->query("SELECT full_name FROM users WHERE LOWER(role) = 'technician' ORDER BY full_name ASC");
+$tech_res = $conn->query("SELECT DISTINCT full_name FROM technicians WHERE full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
 if($tech_res && $tech_res->num_rows > 0){
     while($t = $tech_res->fetch_assoc()) {
         $techs[] = $t['full_name'];
@@ -153,7 +154,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $tech_phone = "- ไม่ระบุ -";
             if (!empty($technician_name)) {
-                $stmt_tech = $conn->prepare("SELECT phone FROM users WHERE full_name = ? AND LOWER(role) = 'technician' LIMIT 1");
+                // ✨ แก้ไข: ให้มาดึงข้อมูลเบอร์ติดต่อจากตาราง technicians โดยตรง ✨
+                $stmt_tech = $conn->prepare("SELECT phone FROM technicians WHERE full_name = ? LIMIT 1");
                 if ($stmt_tech) {
                     $stmt_tech->bind_param("s", $technician_name);
                     $stmt_tech->execute();
@@ -241,7 +243,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
-        input::-webkit-calendar-picker-indicator { opacity: 100; color: #94a3b8; cursor: pointer; }
+        
+        /* ซ่อนลูกศรปฏิทินที่อาจติดมากับ datalist ในบางบราวเซอร์ */
+        input::-webkit-calendar-picker-indicator {
+            opacity: 100;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
@@ -263,7 +272,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
             <div class="lg:col-span-2 space-y-6">
-                <!-- ส่วนของข้อมูลใบงานเหมือนเดิม -->
                 <div class="modern-card p-6 border-t-4 border-sky-500">
                     <div class="flex justify-between items-start mb-4">
                         <h2 class="text-lg font-bold text-slate-800">ข้อมูลใบงาน</h2>
@@ -358,7 +366,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             </option>
                                         <?php endforeach; ?>
                                     </datalist>
-                                    <p class="text-[10px] text-slate-400 mt-2 font-medium">กด <span class="text-indigo-600 font-bold">"เพิ่มใหม่"</span> หากไม่มีรหัสในระบบ</p>
                                 </div>
 
                                 <div>
@@ -384,6 +391,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
+                                        <!-- ✨ อัปเดต Category ให้เลือกจาก DB และพิมพ์เพิ่มได้ ✨ -->
                                         <select name="new_asset_category" id="new_asset_category" onchange="toggleCustomInput(this, 'new_asset_category_custom')" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
                                             <?php foreach($asset_categories as $cat): ?>
                                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
@@ -479,6 +487,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <?php endforeach; ?>
                             <option value="อื่นๆ">อื่นๆ (พิมพ์ระบุเอง)</option>
                         </select>
+                        <!-- ✨ แก้ไข: ให้เปิดขึ้นมาเพื่อให้กรอกตอนกดปุ่ม อื่นๆ ✨ -->
                         <input type="text" name="modal_category_custom" id="modal_category_custom" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="ระบุหมวดหมู่ใหม่">
                     </div>
                 </div>
