@@ -176,18 +176,21 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         .custom-select {
             appearance: none;
             -webkit-appearance: none;
-            /* ใช้ path รูปสามเหลี่ยมทึบ */
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            /* ✨ ปรับ background-position ให้อยู่ชิดขอบเสมอ จะได้ดูสม่ำเสมอ ✨ */
             background-position: right 0.75rem center; 
             background-size: 1.25rem;
-            /* ปรับ padding-right ให้พอดีกับตำแหน่งลูกศร */
             padding-right: 2.25rem !important; 
         }
         .dark .custom-select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
         }
+        
+        /* สกอร์บาร์ที่สวยงามสำหรับ Dropdown */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
         
         /* กระดาษ A4 ต้องเป็นสีขาวตัวหนังสือสีดำเสมอ แม้ใน Dark Mode */
         .a4-container {
@@ -292,21 +295,43 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
                     <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                     
-                    <!-- ✨ เพิ่มคลาส custom-select ให้ทุก Dropdown เพื่อแสดงลูกศร ✨ -->
-                    <select name="tech" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
-                        <option value="all" <?php echo $selected_tech === 'all' ? 'selected' : ''; ?>>รวมทุกฝ่ายงาน (ทั้งหมด)</option>
+                    <!-- ✨ เปลี่ยนมาใช้ Smart Searchable Dropdown สำหรับช่าง ✨ -->
+                    <div class="relative w-full md:w-56" id="techDropdownContainer">
+                        <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
+                            <input type="text" id="techSearchInput" class="w-full bg-transparent px-3 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
+                            <button type="button" class="pr-3 pl-1 text-slate-400 dark:text-slate-300 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
+                                <i class="fas fa-caret-down text-sm"></i>
+                            </button>
+                        </div>
                         
-                        <?php 
-                        foreach($grouped_techs as $dept => $techs) {
-                            echo "<optgroup label='--- ".htmlspecialchars($dept)." ---' class='bg-slate-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold'>";
-                            foreach($techs as $t_name) {
-                                $selected = ($selected_tech === $t_name) ? 'selected' : '';
-                                echo "<option value='".htmlspecialchars($t_name)."' $selected class='bg-white dark:bg-slate-600 text-slate-800 dark:text-slate-100'>".htmlspecialchars($t_name)."</option>";
+                        <div id="techDropdownList" class="absolute z-50 w-full md:w-72 mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar right-0 md:right-auto md:left-0">
+                            
+                            <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer transition-colors flex items-center" data-value="all" data-search="รวมทุกฝ่ายงานทั้งหมด" onmousedown="selectTech('all', 'รวมทุกฝ่ายงาน (ทั้งหมด)')">
+                                <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500 flex items-center justify-center mr-3 text-slate-400 dark:text-slate-300">
+                                    <i class="fas fa-globe text-[10px]"></i>
+                                </div>
+                                รวมทุกฝ่ายงาน (ทั้งหมด)
+                            </div>
+                            
+                            <?php 
+                            foreach($grouped_techs as $dept => $techs) {
+                                echo "<div class='px-5 pt-3 pb-1 mt-1 text-[10px] font-extrabold text-indigo-500 dark:text-indigo-400 tracking-wide dropdown-dept-header' data-dept=\"".htmlspecialchars($dept)."\">{$dept}</div>";
+                                foreach($techs as $t_name) {
+                                    $searchStr = preg_replace('/\s+/', '', strtolower($t_name . $dept));
+                                    echo "<div class='tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-xs text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300 cursor-pointer flex justify-between items-center transition-all group' data-value=\"".htmlspecialchars($t_name)."\" data-display=\"".htmlspecialchars($t_name)."\" data-search=\"{$searchStr}\" data-dept=\"".htmlspecialchars($dept)."\" onmousedown=\"selectTech('".htmlspecialchars($t_name, ENT_QUOTES)."', '".htmlspecialchars($t_name, ENT_QUOTES)."')\">
+                                            <div class='flex items-center pointer-events-none'>
+                                                <div class='w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500 flex items-center justify-center mr-3 text-slate-400 dark:text-slate-300 group-hover:bg-indigo-100 dark:group-hover:bg-slate-500 group-hover:text-indigo-500 transition-colors'>
+                                                    <i class='fas fa-user text-[10px]'></i>
+                                                </div>
+                                                <span>".htmlspecialchars($t_name)."</span>
+                                            </div>
+                                          </div>";
+                                }
                             }
-                            echo "</optgroup>";
-                        }
-                        ?>
-                    </select>
+                            ?>
+                        </div>
+                        <input type="hidden" name="tech" id="techHiddenInput" value="<?php echo htmlspecialchars($selected_tech); ?>">
+                    </div>
 
                     <select name="month" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
                         <?php 
@@ -593,7 +618,106 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
     <?php endif; ?>
 
+    <!-- ✨ JavaScript ควบคุม Dropdown แบบ Searchable ✨ -->
     <script>
+        let currentTechDisplay = '<?php echo $selected_tech === "all" ? "รวมทุกฝ่ายงาน (ทั้งหมด)" : addslashes($selected_tech); ?>';
+
+        function focusTechSearch(e) {
+            e.target.value = ''; 
+            filterTechDropdown(); 
+            toggleTechDropdown(e, true);
+        }
+
+        function blurTechSearch(e) {
+            setTimeout(() => {
+                if (document.getElementById('techSearchInput').value === '') {
+                    document.getElementById('techSearchInput').value = currentTechDisplay;
+                }
+            }, 200);
+        }
+
+        function toggleTechDropdown(e, forceOpen = false) {
+            if(e) e.stopPropagation();
+            const list = document.getElementById('techDropdownList');
+            if(forceOpen) {
+                list.classList.remove('hidden');
+                list.classList.add('flex');
+            } else {
+                list.classList.toggle('hidden');
+                list.classList.toggle('flex');
+            }
+        }
+
+        function filterTechDropdown() {
+            toggleTechDropdown(null, true);
+            const searchVal = document.getElementById('techSearchInput').value.toLowerCase().replace(/\s+/g, '');
+            let deptVisibility = {};
+
+            const items = document.querySelectorAll('.tech-dropdown-item');
+            items.forEach(item => {
+                if (item.getAttribute('data-value') === 'all') return;
+                
+                const searchData = item.getAttribute('data-search') || '';
+                const dept = item.getAttribute('data-dept');
+                
+                if (!deptVisibility[dept]) deptVisibility[dept] = 0;
+                
+                if(searchData.includes(searchVal)) {
+                    item.style.display = '';
+                    deptVisibility[dept]++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // เปิด/ปิด ตัวเลือก "ทั้งหมด"
+            const allItem = document.querySelector('.tech-dropdown-item[data-value="all"]');
+            if (allItem) {
+                const searchData = allItem.getAttribute('data-search') || '';
+                if (searchData.includes(searchVal) || searchVal === '') {
+                    allItem.style.display = '';
+                } else {
+                    allItem.style.display = 'none';
+                }
+            }
+
+            // เปิด/ปิด หัวข้อแผนก
+            const deptHeaders = document.querySelectorAll('.dropdown-dept-header');
+            deptHeaders.forEach(header => {
+                const dept = header.getAttribute('data-dept');
+                if (deptVisibility[dept] > 0) {
+                    header.style.display = '';
+                } else {
+                    header.style.display = 'none';
+                }
+            });
+        }
+
+        function selectTech(val, displayText) {
+            currentTechDisplay = displayText;
+            document.getElementById('techHiddenInput').value = val;
+            document.getElementById('techSearchInput').value = displayText;
+            document.getElementById('techDropdownList').classList.add('hidden');
+            document.getElementById('techDropdownList').classList.remove('flex');
+        }
+
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('techDropdownContainer');
+            if (container && !container.contains(e.target)) {
+                const list = document.getElementById('techDropdownList');
+                if(list) {
+                    list.classList.add('hidden');
+                    list.classList.remove('flex');
+                    document.getElementById('techSearchInput').value = currentTechDisplay;
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('techSearchInput').value = currentTechDisplay;
+        });
+
+        // ควบคุมระบบ Dark Mode
         const themeToggleBtn = document.getElementById('theme-toggle');
         const themeToggleIcon = document.getElementById('theme-toggle-icon');
 
