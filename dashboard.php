@@ -1457,44 +1457,49 @@ $dept_icons = [
                         <label class="font-bold text-slate-700 text-sm flex items-center shrink-0"><i class="fas fa-filter text-indigo-500 mr-2"></i> Filter Data by Technician:</label>
                         
                         <div class="relative w-full md:w-[450px]" id="reportDropdownContainer">
-                            <div class="flex items-center w-full bg-white border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100 transition-all cursor-text shadow-sm" onclick="toggleReportDropdown(event, true)">
+                            <div class="flex items-center w-full bg-white border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100 transition-all cursor-text shadow-sm" onclick="toggleReportDropdown(event, true)">
                                 <i class="fas fa-search text-slate-400 pl-4"></i>
                                 <input type="text" id="reportSearchInput" oninput="filterReportDropdown()" onfocus="focusReportSearch(event)" onblur="blurReportSearch(event)" autocomplete="off" class="w-full bg-transparent px-3 py-3 text-sm text-slate-700 focus:outline-none font-bold placeholder-slate-400" placeholder="พิมพ์ค้นหาชื่อช่าง, แผนก...">
-                                <button type="button" class="px-4 py-3 text-slate-400 hover:text-blue-600 focus:outline-none" onclick="toggleReportDropdown(event)">
+                                <button type="button" class="px-4 py-3 text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="toggleReportDropdown(event)">
                                     <i class="fas fa-caret-down text-lg"></i>
                                 </button>
                             </div>
                             
                             <div id="reportDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
-                                <div class="report-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 cursor-pointer transition-colors flex items-center" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onmousedown="selectReportTech('all', 'Overall System (All Technicians)')">
-                                    <div class="w-8 h-8 rounded-full bg-blue-200/50 flex items-center justify-center mr-3 text-blue-600">
+                                <div class="report-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 cursor-pointer transition-colors flex items-center" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onmousedown="selectReportTech('all', 'Overall System (All Technicians)')">
+                                    <div class="w-8 h-8 rounded-full bg-indigo-200/50 flex items-center justify-center mr-3 text-indigo-600">
                                         <i class="fas fa-globe"></i>
                                     </div>
                                     Overall System (All Technicians)
                                 </div>
                                 <?php 
                                     foreach ($techs_by_dept as $dept => $techs) {
-                                        echo "<div class='dropdown-dept-header px-6 pt-4 pb-2 mt-2 text-[11px] font-extrabold text-slate-400 tracking-wide' data-dept=\"".htmlspecialchars($dept)."\">{$dept}</div>";
+                                        // ✨ จุดที่ 2: ขนาดตัวอักษรชื่อฝ่ายงานเท่าชื่อช่าง (text-sm) และใส่แถบสีให้ดูเด่นแต่สบายตา ✨
+                                        echo "<div class='dropdown-dept-header flex items-center px-4 py-2.5 mt-2 mb-1 bg-indigo-50/60 border-y border-indigo-100' data-dept=\"".htmlspecialchars($dept)."\">
+                                                <span class='text-sm font-extrabold text-indigo-700 tracking-wide'><i class='fas fa-users mr-2 opacity-60 text-xs'></i>{$dept}</span>
+                                              </div>";
                                         foreach($techs as $t) {
-                                            $tName = htmlspecialchars($t['full_name']);
-                                            $tEng = htmlspecialchars($t['english_name']);
-                                            $searchStr = preg_replace('/\s+/', '', strtolower($tName . $tEng . $dept));
+                                            // ✨ จุดที่ 1: ลบภาษาอังกฤษออก (แสดงเฉพาะชื่อไทย) ✨
+                                            list($th_name, $en_name) = splitThaiEngName($t['full_name'], $t['english_name']);
+                                            $tNameOnly = htmlspecialchars($th_name);
+                                            $tValue = htmlspecialchars($t['full_name'], ENT_QUOTES);
+                                            $searchStr = preg_replace('/\s+/', '', strtolower($t['full_name'] . $en_name . $dept));
                                             
-                                            echo "<div class='report-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-blue-50 hover:text-blue-600 cursor-pointer flex justify-between items-center transition-all group' data-value=\"{$tName}\" data-search=\"{$searchStr}\" data-dept=\"".htmlspecialchars($dept)."\" onmousedown=\"selectReportTech('{$tName}', '{$tName}')\">
+                                            echo "<div class='report-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer flex justify-between items-center transition-all group' data-value=\"{$tValue}\" data-search=\"{$searchStr}\" data-dept=\"".htmlspecialchars($dept)."\" onmousedown=\"selectReportTech('{$tValue}', '{$tNameOnly}')\">
                                                     <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500 transition-colors'>
+                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'>
                                                             <i class='fas fa-user text-xs'></i>
                                                         </div>
-                                                        <span>{$tName}</span>
+                                                        <span>{$tNameOnly}</span>
                                                     </div>
-                                                    <i class='fas fa-check text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity'></i>
+                                                    <i class='fas fa-check text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity'></i>
                                                   </div>";
                                         }
                                     }
                                 ?>
                             </div>
+                            <input type="hidden" id="techFilter" value="all">
                         </div>
-                        <input type="hidden" id="techFilter" value="all">
                     </div>
                 </div>
             </div>
@@ -1512,7 +1517,7 @@ $dept_icons = [
         <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
     </div>
 
-    <!-- ✨ Modal สำหรับเพิ่มครุภัณฑ์ใหม่ (อัปเดตให้เหมือนกัน) ✨ -->
+    <!-- ✨ Modal สำหรับเพิ่มครุภัณฑ์ใหม่ ✨ -->
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
@@ -1527,7 +1532,6 @@ $dept_icons = [
                     <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Name</label><input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
-                        <!-- ✨ อัปเดต Category ให้เลือกจาก DB และพิมพ์เพิ่มได้ ✨ -->
                         <select name="category" id="asset_category" onchange="toggleCustomInput(this, 'asset_category_custom')" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
                             <?php 
                             // สร้างตัวแปรดึงหมวดหมู่ (เหมือนใน update_repair)
