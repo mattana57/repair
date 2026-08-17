@@ -613,10 +613,17 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
-                            <select onchange="renderEquipChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
-                                <option value="all">ทุกเดือน (All Time)</option>
-                                <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
-                            </select>
+                            <!-- ✨ ใส่ 2 Dropdown (เดือน, ปี) ให้ทุกกราฟในหน้า Dashboard Overview ✨ -->
+                            <div class="flex items-center gap-1.5">
+                                <select id="equipMonth" onchange="renderEquipChart()" class="custom-select bg-slate-50 border border-slate-200 text-[11px] text-slate-600 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors">
+                                    <option value="all">ทุกเดือน</option>
+                                    <?php foreach($thai_months as $num => $name) echo "<option value='{$num}'>{$name}</option>"; ?>
+                                </select>
+                                <select id="equipYear" onchange="renderEquipChart()" class="custom-select bg-slate-50 border border-slate-200 text-[11px] text-slate-600 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors">
+                                    <option value="all">ทุกปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>{$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
                         </div>
                         <div class="flex-1 relative w-full h-[280px]">
                             <canvas id="mainEquipChart"></canvas>
@@ -629,10 +636,16 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-slate-800 text-lg">Work Status</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
                             </div>
-                            <select onchange="renderStatusChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
-                                <option value="all">ทุกเดือน (All Time)</option>
-                                <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
-                            </select>
+                            <div class="flex items-center gap-1.5">
+                                <select id="statusMonth" onchange="renderStatusChart()" class="custom-select bg-slate-50 border border-slate-200 text-[11px] text-slate-600 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors">
+                                    <option value="all">ทุกเดือน</option>
+                                    <?php foreach($thai_months as $num => $name) echo "<option value='{$num}'>{$name}</option>"; ?>
+                                </select>
+                                <select id="statusYear" onchange="renderStatusChart()" class="custom-select bg-slate-50 border border-slate-200 text-[11px] text-slate-600 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors">
+                                    <option value="all">ทุกปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>{$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
                         </div>
                         <div class="flex-1 relative w-full h-[280px] flex justify-center items-center">
                             <canvas id="mainStatusChart"></canvas>
@@ -645,10 +658,16 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-slate-800 text-lg">Top Locations</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
                             </div>
-                            <select onchange="renderLocChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
-                                <option value="all">ทุกเดือน (All Time)</option>
-                                <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
-                            </select>
+                            <div class="flex items-center gap-1.5">
+                                <select id="locMonth" onchange="renderLocChart()" class="custom-select bg-slate-50 border border-slate-200 text-[11px] text-slate-600 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors">
+                                    <option value="all">ทุกเดือน</option>
+                                    <?php foreach($thai_months as $num => $name) echo "<option value='{$num}'>{$name}</option>"; ?>
+                                </select>
+                                <select id="locYear" onchange="renderLocChart()" class="custom-select bg-slate-50 border border-slate-200 text-[11px] text-slate-600 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors">
+                                    <option value="all">ทุกปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>{$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
                         </div>
                         <div class="flex-1 relative w-full h-[280px]">
                             <canvas id="mainLocChart"></canvas>
@@ -661,10 +680,16 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-slate-800 text-lg">Technician Workload</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
                             </div>
-                            <select onchange="renderTechChart(this.value)" class="bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium cursor-pointer">
-                                <option value="all">ทุกเดือน (All Time)</option>
-                                <?php foreach($month_options as $m) echo "<option value='{$m}'>{$m}</option>"; ?>
-                            </select>
+                            <div class="flex items-center gap-1.5">
+                                <select id="techMonth" onchange="renderTechChart()" class="custom-select bg-slate-50 border border-slate-200 text-[11px] text-slate-600 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors">
+                                    <option value="all">ทุกเดือน</option>
+                                    <?php foreach($thai_months as $num => $name) echo "<option value='{$num}'>{$name}</option>"; ?>
+                                </select>
+                                <select id="techYear" onchange="renderTechChart()" class="custom-select bg-slate-50 border border-slate-200 text-[11px] text-slate-600 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors">
+                                    <option value="all">ทุกปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>{$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
                         </div>
                         <div class="flex-1 relative w-full h-[280px]">
                             <canvas id="mainTechChart"></canvas>
@@ -848,6 +873,7 @@ $dept_icons = [
                                             $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
                                         }
 
+                                        // ✨ เติม align-top ให้ตารางตรงกัน และให้ Status กับ Action อยู่ตรงกลาง (align-middle) ✨
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
                                             <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-slate-700'>{$created_date}</div>
@@ -1259,7 +1285,7 @@ $dept_icons = [
                                 <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                             </div>
 
-                            <!-- ✨ ส่วนข้อมูลช่าง จัดเรียงใหม่ให้อ่านง่าย (ชิดซ้าย) ✨ -->
+                            <!-- ✨ ส่วนข้อมูลช่าง ปรับขนาดตำแหน่งงานให้ใหญ่ขึ้นเป็น text-[13px] ✨ -->
                             <div class="p-5 flex-1 flex flex-col relative z-10 bg-white text-left">
                                 
                                 <h5 class="font-extrabold text-slate-800 text-[17px] leading-tight group-hover:text-sky-500 transition-colors duration-300">
@@ -1274,12 +1300,12 @@ $dept_icons = [
 
                                 <?php if (!empty($tech['pos'])): ?>
                                 <div class="mt-3 mb-2">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-100 text-[13px] font-bold text-indigo-600">
                                         <i class="fas fa-id-badge mr-1.5 opacity-70"></i> <?php echo htmlspecialchars($tech['pos']); ?>
                                     </span>
                                 </div>
                                 <?php else: ?>
-                                <div class="mt-3 mb-2 h-[24px]"></div>
+                                <div class="mt-3 mb-2 h-[28px]"></div>
                                 <?php endif; ?>
                                 
                                 <div class="mt-3 w-full pt-4 border-t border-slate-100 flex flex-col gap-2.5">
@@ -1489,7 +1515,6 @@ $dept_icons = [
                                 <?php 
                                     foreach ($techs_by_dept as $dept => $techs) {
                                         $tech_count = count($techs);
-                                        // ✨ ย้ายสัญลักษณ์คนมาไว้ด้านขวาก่อนจำนวนคน ตามคำขอ ✨
                                         echo "<div class='dropdown-dept-header flex justify-between items-center px-4 py-2.5 mt-2 mb-1 bg-indigo-50/60 border-y border-indigo-100' data-dept=\"".htmlspecialchars($dept)."\">
                                                 <span class='text-sm font-extrabold text-indigo-700 tracking-wide'>{$dept}</span>
                                                 <span class='text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 shadow-sm px-2 py-0.5 rounded-md flex items-center'>
