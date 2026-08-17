@@ -848,7 +848,6 @@ $dept_icons = [
                                             $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
                                         }
 
-                                        // ✨ เติม align-top ให้ตารางตรงกัน และให้ Status กับ Action อยู่ตรงกลาง (align-middle) ✨
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
                                             <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-slate-700'>{$created_date}</div>
@@ -1260,54 +1259,61 @@ $dept_icons = [
                                 <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                             </div>
 
-                            <!-- ✨ ส่วนข้อมูลช่าง จัดเรียงใหม่ให้เป็นระเบียบ ✨ -->
-                            <div class="p-5 flex-1 flex flex-col items-center text-center relative z-10 bg-white">
+                            <!-- ✨ ส่วนข้อมูลช่าง จัดเรียงใหม่ให้อ่านง่าย (ชิดซ้าย) ✨ -->
+                            <div class="p-5 flex-1 flex flex-col relative z-10 bg-white text-left">
                                 
-                                <div class="flex flex-col items-center justify-center mb-1">
-                                    <h5 class="font-extrabold text-slate-800 text-[17px] leading-tight group-hover:text-sky-500 transition-colors duration-300">
-                                        <?php echo htmlspecialchars($tech['th']); ?>
-                                    </h5>
-                                    <?php if (!empty($tech['eng'])): ?>
-                                    <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest"><?php echo htmlspecialchars($tech['eng']); ?></p>
-                                    <?php endif; ?>
-                                </div>
+                                <h5 class="font-extrabold text-slate-800 text-[17px] leading-tight group-hover:text-sky-500 transition-colors duration-300">
+                                    <?php echo htmlspecialchars($tech['th']); ?>
+                                </h5>
+                                
+                                <?php if (!empty($tech['eng'])): ?>
+                                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate"><?php echo htmlspecialchars($tech['eng']); ?></p>
+                                <?php else: ?>
+                                <div class="mt-1 h-[15px]"></div>
+                                <?php endif; ?>
 
                                 <?php if (!empty($tech['pos'])): ?>
-                                <div class="mt-2 mb-4 inline-flex items-center px-3 py-1 rounded-full bg-blue-50/80 border border-blue-100">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 animate-pulse"></span>
-                                    <span class="text-[10px] font-bold text-blue-700"><?php echo htmlspecialchars($tech['pos']); ?></span>
+                                <div class="mt-3 mb-2">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600">
+                                        <i class="fas fa-id-badge mr-1.5 opacity-70"></i> <?php echo htmlspecialchars($tech['pos']); ?>
+                                    </span>
                                 </div>
                                 <?php else: ?>
-                                <div class="mt-2 mb-4 h-[24px]"></div>
+                                <div class="mt-3 mb-2 h-[24px]"></div>
                                 <?php endif; ?>
                                 
-                                <div class="mt-auto w-full pt-4 border-t border-slate-100 flex flex-col gap-2">
+                                <div class="mt-3 w-full pt-4 border-t border-slate-100 flex flex-col gap-2.5">
                                 <?php 
                                 if (!empty($tech['phone']) && $tech['phone'] !== '-'): 
                                     $phone_parts = array_values(array_filter(array_map('trim', explode(',', $tech['phone']))));
                                     foreach($phone_parts as $p): ?>
-                                        <div class="flex items-center justify-center text-slate-600 bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl py-2 px-3 border border-slate-100/80">
-                                            <div class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center mr-2 shrink-0">
-                                                <i class="fas fa-phone-alt text-[9px] text-emerald-600"></i>
+                                        <div class="flex items-center text-slate-600">
+                                            <div class="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center mr-3 shrink-0">
+                                                <i class="fas fa-phone-alt text-[10px] text-emerald-500"></i>
                                             </div>
                                             <span class="text-[13px] font-bold tracking-wide text-slate-700"><?php echo htmlspecialchars(trim($p)); ?></span>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php else: ?>
-                                    <div class="flex items-center justify-center text-rose-400 bg-rose-50/50 rounded-xl py-2.5 px-3 border border-rose-100">
-                                        <i class="fas fa-phone-slash text-[10px] mr-2"></i> 
-                                        <span class="text-[11px] font-bold text-rose-500">ไม่มีเบอร์ติดต่อ</span>
+                                    <div class="flex items-center text-rose-400">
+                                        <div class="w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center mr-3 shrink-0">
+                                            <i class="fas fa-phone-slash text-[10px] text-rose-500"></i>
+                                        </div>
+                                        <span class="text-[12px] font-bold text-rose-500">ไม่มีเบอร์ติดต่อ</span>
                                     </div>
                                 <?php endif; ?>
+                                </div>
 
-                                <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" 
-                                        class="mt-2 w-full text-[11px] font-bold text-slate-500 bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-600 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn">
-                                    <i class="fas fa-history mr-1.5 text-slate-400 group-hover/btn:text-sky-500 transition-colors"></i> 
-                                    ดูประวัติงาน
-                                </button>
+                                <div class="mt-auto pt-4">
+                                    <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" 
+                                            class="w-full text-[11px] font-bold text-sky-600 bg-white border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn">
+                                        <i class="fas fa-history mr-1.5 text-sky-400 group-hover/btn:text-white transition-colors"></i> 
+                                        ดูประวัติงาน
+                                    </button>
                                 </div>
                             </div>
                             <!-- ✨ สิ้นสุดส่วนข้อมูลช่าง ✨ -->
+
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -1483,7 +1489,7 @@ $dept_icons = [
                                 <?php 
                                     foreach ($techs_by_dept as $dept => $techs) {
                                         $tech_count = count($techs);
-                                        // ✨ จุดที่ร้องขอเพิ่มเติม: ย้ายไอคอนไปไว้หลังชื่อฝ่ายงาน ขวาสุดก่อนเลขจำนวนช่าง ✨
+                                        // ✨ ย้ายสัญลักษณ์คนมาไว้ด้านขวาก่อนจำนวนคน ตามคำขอ ✨
                                         echo "<div class='dropdown-dept-header flex justify-between items-center px-4 py-2.5 mt-2 mb-1 bg-indigo-50/60 border-y border-indigo-100' data-dept=\"".htmlspecialchars($dept)."\">
                                                 <span class='text-sm font-extrabold text-indigo-700 tracking-wide'>{$dept}</span>
                                                 <span class='text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 shadow-sm px-2 py-0.5 rounded-md flex items-center'>
