@@ -1512,6 +1512,7 @@ $dept_icons = [
         <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
     </div>
 
+    <!-- ✨ Modal สำหรับเพิ่มครุภัณฑ์ใหม่ (อัปเดตให้เหมือนกัน) ✨ -->
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
@@ -1524,7 +1525,29 @@ $dept_icons = [
                 <div class="space-y-5">
                     <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Code</label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
                     <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Name</label><input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label><select name="category" id="asset_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"><option value="IT Support">IT Support</option><option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option><option value="อาคารสถานที่">อาคารสถานที่</option><option value="อื่นๆ">อื่นๆ</option></select></div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
+                        <!-- ✨ อัปเดต Category ให้เลือกจาก DB และพิมพ์เพิ่มได้ ✨ -->
+                        <select name="category" id="asset_category" onchange="toggleCustomInput(this, 'asset_category_custom')" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
+                            <?php 
+                            // สร้างตัวแปรดึงหมวดหมู่ (เหมือนใน update_repair)
+                            $dash_categories = ['IT Support', 'ไฟฟ้า/แอร์', 'อาคารสถานที่'];
+                            $d_cat_res = $conn->query("SELECT DISTINCT category FROM assets WHERE category IS NOT NULL AND category != ''");
+                            if($d_cat_res && $d_cat_res->num_rows > 0){
+                                while($dc = $d_cat_res->fetch_assoc()){
+                                    if(!in_array($dc['category'], $dash_categories) && $dc['category'] !== 'อื่นๆ') {
+                                        $dash_categories[] = $dc['category'];
+                                    }
+                                }
+                            }
+                            ?>
+                            <?php foreach($dash_categories as $dcat): ?>
+                                <option value="<?php echo htmlspecialchars($dcat); ?>"><?php echo htmlspecialchars($dcat); ?></option>
+                            <?php endforeach; ?>
+                            <option value="อื่นๆ">อื่นๆ (พิมพ์ระบุเอง)</option>
+                        </select>
+                        <input type="text" name="category_custom" id="asset_category_custom" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="ระบุหมวดหมู่ใหม่">
+                    </div>
                     <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label><select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"><option value="ใช้งานปกติ">ใช้งานปกติ</option><option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option><option value="แทงจำหน่าย">แทงจำหน่าย</option></select></div>
                 </div>
                 <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Asset</button></div>
