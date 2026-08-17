@@ -22,6 +22,15 @@ if($tech_res && $tech_res->num_rows > 0){
     }
 }
 
+// 🟢 ดึงข้อมูล Assets Code สำหรับให้ช่างเลือก
+$assets_list = [];
+$assets_res = $conn->query("SELECT asset_code, asset_name FROM assets ORDER BY asset_code ASC");
+if($assets_res && $assets_res->num_rows > 0){
+    while($a = $assets_res->fetch_assoc()){
+        $assets_list[] = $a;
+    }
+}
+
 // ตรวจสอบว่าในตาราง repairs มีฟิลด์ต่างๆ หรือไม่
 $check_asset_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'asset_code'");
 if($check_asset_col->num_rows == 0) {
@@ -48,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $acode = trim($_POST['modal_asset_code']);
         $aname = trim($_POST['modal_asset_name']);
         $acat = $_POST['modal_category'];
-        $astat = $_POST['modal_status'];
+        $astat = 'ใช้งานปกติ'; // กำหนดค่าเริ่มต้นเป็นใช้งานปกติ (เพราะเอาช่อง Status ออกจากหน้าต่างแล้ว)
 
         // ตรวจสอบว่ารหัสนี้มีอยู่แล้วหรือไม่
         $chk = $conn->prepare("SELECT id FROM assets WHERE asset_code = ?");
@@ -141,7 +150,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
                                "📋 เลขที่ใบงาน: " . $repair['ticket_no'] . "\n" .
-                               "🕒 เวลาอัปเดต: " . $current_time . "\n" .
+                           "🕒 เวลาอัปเดต: " . $current_time . "\n" .
                                "💻 อุปกรณ์: " . $repair['equipment_type'] . "\n" .
                                "⚠️ อาการ: " . $repair['problem_desc'] . "\n\n" .
                                "📌 สถานะใหม่: " . $status_display . "\n" .  
@@ -320,7 +329,6 @@ if($assets_res && $assets_res->num_rows > 0){
                             <div>
                                 <div class="flex justify-between items-center mb-2">
                                     <label class="block text-sm font-semibold text-slate-700"><i class="fas fa-barcode text-sky-500 mr-1.5"></i> รหัสครุภัณฑ์ (ที่ซ่อม)</label>
-                                    <!-- ✨ ปุ่มเรียก Modal เพิ่มครุภัณฑ์ใหม่ ✨ -->
                                     <button type="button" onclick="openAssetModal()" class="text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg font-bold transition-all shadow-sm flex items-center shrink-0">
                                         <i class="fas fa-plus mr-1"></i> เพิ่มใหม่
                                     </button>
@@ -404,7 +412,7 @@ if($assets_res && $assets_res->num_rows > 0){
         <?php endif; ?>
     </div>
 
-    <!-- ✨ Modal สำหรับเพิ่มครุภัณฑ์ใหม่ (ซ่อนไว้ก่อน) ✨ -->
+    <!-- ✨ Modal สำหรับเพิ่มครุภัณฑ์ใหม่ ✨ -->
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
@@ -413,7 +421,7 @@ if($assets_res && $assets_res->num_rows > 0){
                 <button type="button" onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
             <form action="update_repair.php?id=<?php echo $id; ?>" method="POST" class="p-6">
-                <!-- ใส่ตัวแปร Hidden เพื่อให้รู้ว่ากดเซฟมาจาก Modal นี้ ไม่ใช่จากฟอร์มหลัก -->
+                <!-- ตัวแปร Hidden เพื่อให้รู้ว่ากดเซฟมาจาก Modal นี้ -->
                 <input type="hidden" name="save_asset_only" value="1">
                 
                 <div class="space-y-5">
@@ -434,14 +442,7 @@ if($assets_res && $assets_res->num_rows > 0){
                             <option value="อื่นๆ">อื่นๆ</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label>
-                        <select name="modal_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
-                            <option value="ใช้งานปกติ">ใช้งานปกติ</option>
-                            <option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option>
-                            <option value="แทงจำหน่าย">แทงจำหน่าย</option>
-                        </select>
-                    </div>
+                    <!-- ✨ ลบช่อง Status ออกตามคำขอ ✨ -->
                 </div>
                 <div class="mt-8 flex justify-end gap-3">
                     <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">Cancel</button>
@@ -459,7 +460,7 @@ if($assets_res && $assets_res->num_rows > 0){
             document.body.classList.toggle('modal-active'); 
         }
 
-        // ฟังก์ชันดึงค่าที่พิมพ์ค้างไว้มาใส่ใน Modal
+        // ฟังก์ชันเปิด Modal และดึงค่าที่พิมพ์ไว้มาแสดง
         function openAssetModal() {
             let typedVal = document.getElementById('asset_code').value;
             document.getElementById('modal_asset_code').value = typedVal;
