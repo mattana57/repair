@@ -88,8 +88,7 @@ if (isset($_GET['id'])) {
             <div class="modern-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">รหัสใบงาน (Ticket No.)</p>
-                    <!-- ✨ ปรับขนาดรหัสใบงานและเปลี่ยนเป็นสีเทาเข้ม ✨ -->
-                    <h2 class="text-4xl md:text-5xl font-extrabold text-slate-700 tracking-tight"><?php echo htmlspecialchars($repair['ticket_no']); ?></h2>
+                    <h2 class="text-3xl font-extrabold text-sky-600 tracking-tight"><?php echo htmlspecialchars($repair['ticket_no']); ?></h2>
                     <p class="text-slate-500 text-sm mt-2"><i class="far fa-calendar-alt mr-1"></i> แจ้งเมื่อ: <?php echo !empty($repair['created_at']) ? date("d/m/Y เวลา H:i น.", strtotime($repair['created_at'])) : "-"; ?></p>
                 </div>
                 <div class="text-right">
@@ -119,6 +118,7 @@ if (isset($_GET['id'])) {
                             <div>
                                 <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">เบอร์โทรศัพท์</p>
                                 <?php 
+                                    // 🟢 บังคับเซ็นเซอร์เบอร์โทรศัพท์ผู้แจ้งเสมอในหน้านี้ (สาธารณะ)
                                     $display_phone = formatCensoredPhone($repair['phone_number']);
                                 ?>
                                 <p class="font-medium text-slate-700"><?php echo htmlspecialchars($display_phone); ?></p>
@@ -127,7 +127,7 @@ if (isset($_GET['id'])) {
                         <hr class="border-slate-100">
                         <div>
                             <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">สถานที่ / ห้อง</p>
-                            <p class="font-medium text-slate-700"><i class="fas fa-map-marker-alt text-rose-400 mr-1.5"></i> <?php echo htmlspecialchars($repair['location']); ?></p>
+                            <p class="font-medium text-slate-700"><i class="fas fa-map-marker-alt text-sky-500 mr-1.5"></i> <?php echo htmlspecialchars($repair['location']); ?></p>
                         </div>
                         <div>
                             <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">อุปกรณ์</p>
@@ -170,11 +170,12 @@ if (isset($_GET['id'])) {
                             </div>
                             <div>
                                 <h3 class="font-bold text-slate-800">บันทึกการปฏิบัติงาน (ฝ่ายช่าง)</h3>
-                                
+
                                 <div class="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
                                     <span>ผู้รับผิดชอบ: <span class="font-bold <?php echo !empty($repair['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>"><?php echo !empty($repair['technician_name']) ? htmlspecialchars($repair['technician_name']) : '- ยังไม่ระบุช่าง -'; ?></span></span>
-                                    
+
                                     <?php 
+                                    // 🟢 บังคับโชว์เบอร์ช่างเฉพาะตอนกำลังดำเนินการเท่านั้น (สำหรับหน้าสาธารณะ)
                                     if(!empty($tech_phone)): 
                                         if ($repair['status'] == 'กำลังดำเนินการ' || $repair['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') {
                                             $display_tech_phone = $tech_phone;
