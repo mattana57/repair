@@ -294,6 +294,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
                     <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                     
+                    <!-- Dropdown สำหรับช่าง -->
                     <div class="relative w-full md:w-60" id="techDropdownContainer">
                         <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
                             <i class="fas fa-search pl-3 text-slate-400 dark:text-slate-300 opacity-80"></i>
@@ -315,8 +316,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <?php 
                             foreach($grouped_techs as $dept => $techs) {
                                 $tech_count = count($techs);
-                                // ✨ แก้ไข: เปลี่ยนแถบแผนกให้มีพื้นหลัง แยกระหว่างโหมดมืดและสว่างชัดเจน ✨
-                                echo "<div class='flex justify-between items-center px-4 py-2.5 mt-2 mb-1 bg-slate-100/80 dark:bg-slate-800/90 border-y border-slate-200/80 dark:border-slate-900/50 dropdown-dept-header' data-dept=\"".htmlspecialchars($dept)."\">
+                                // ✨ แก้ไข: เปลี่ยนสีพื้นหลังแถบฝ่ายงานให้แยกชัดเจนจากพื้นหลัก ทั้ง 2 โหมด ✨
+                                echo "<div class='flex justify-between items-center px-4 py-2 mt-2 mb-1 bg-blue-50/50 dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800 dropdown-dept-header' data-dept=\"".htmlspecialchars($dept)."\">
                                         <span class='text-xs font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wide'>{$dept}</span>
                                         <span class='text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 shadow-sm px-2 py-0.5 rounded-md flex items-center'>
                                             <i class='fas fa-user-friends mr-1 text-indigo-400 dark:text-indigo-400'></i> {$tech_count} คน
