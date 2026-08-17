@@ -22,15 +22,6 @@ if($tech_res && $tech_res->num_rows > 0){
     }
 }
 
-// 🟢 ดึงข้อมูล Assets Code สำหรับให้ช่างเลือก
-$assets_list = [];
-$assets_res = $conn->query("SELECT asset_code, asset_name FROM assets ORDER BY asset_code ASC");
-if($assets_res && $assets_res->num_rows > 0){
-    while($a = $assets_res->fetch_assoc()){
-        $assets_list[] = $a;
-    }
-}
-
 // ตรวจสอบว่าในตาราง repairs มีฟิลด์ต่างๆ หรือไม่
 $check_asset_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'asset_code'");
 if($check_asset_col->num_rows == 0) {
@@ -48,136 +39,165 @@ if($check_completed_col->num_rows == 0) {
 }
 
 $show_alert = false;
+$show_asset_alert = false; // ตัวแปรสำหรับแจ้งเตือนเพิ่มครุภัณฑ์ใหม่สำเร็จ
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $status = $_POST['status'];
-    $repair_note = $_POST['repair_note'];
-    $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
-    $asset_code = isset($_POST['asset_code']) && $_POST['asset_code'] !== '' ? trim($_POST['asset_code']) : null;
-    $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
-    $update_id = $_POST['id'];
-
-    if ($status === 'ซ่อมเสร็จแล้ว') {
-        $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?";
-    } else {
-        $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, completed_at = NULL WHERE id = ?";
-    }
     
-    $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("sssssi", $status, $repair_note, $repair_note, $technician_name, $asset_code, $update_id);
+    // ✨ ส่วนของการประมวลผลเมื่อกดปุ่ม "เพิ่มครุภัณฑ์ใหม่" จาก Modal ✨
+    if (isset($_POST['save_asset_only'])) {
+        $acode = trim($_POST['modal_asset_code']);
+        $aname = trim($_POST['modal_asset_name']);
+        $acat = $_POST['modal_category'];
+        $astat = $_POST['modal_status'];
 
-    if ($update_stmt->execute()) {
-        $show_alert = true;
+        // ตรวจสอบว่ารหัสนี้มีอยู่แล้วหรือไม่
+        $chk = $conn->prepare("SELECT id FROM assets WHERE asset_code = ?");
+        $chk->bind_param("s", $acode);
+        $chk->execute();
+        $res_chk = $chk->get_result();
+        
+        if ($res_chk->num_rows == 0) {
+            // ถ้ายังไม่มี ให้เพิ่มเข้าไปใหม่
+            $stmt_insert = $conn->prepare("INSERT INTO assets (asset_code, asset_name, category, status) VALUES (?, ?, ?, ?)");
+            $stmt_insert->bind_param("ssss", $acode, $aname, $acat, $astat);
+            $stmt_insert->execute();
+            $stmt_insert->close();
+            $show_asset_alert = true;
+            
+            // นำรหัสใหม่ไปใส่เป็นค่า Default ในช่องของฟอร์มหลักให้เลย
+            $repair['asset_code'] = $acode; 
+        }
+        $chk->close();
+        
+    } else {
+        // ✨ ส่วนของการอัปเดตใบงานแจ้งซ่อมตามปกติ ✨
+        $status = $_POST['status'];
+        $repair_note = $_POST['repair_note'];
+        $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
+        $asset_code = isset($_POST['asset_code']) && $_POST['asset_code'] !== '' ? trim($_POST['asset_code']) : null;
+        $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
+        $update_id = $_POST['id'];
 
-        // ✨ ระบบตรวจสอบและเพิ่มครุภัณฑ์ใหม่อัตโนมัติ ✨
-        if (!empty($asset_code) && !empty($asset_status)) {
-            $check_asset = $conn->prepare("SELECT id FROM assets WHERE asset_code = ?");
-            $check_asset->bind_param("s", $asset_code);
-            $check_asset->execute();
-            $res_check = $check_asset->get_result();
+        if ($status === 'ซ่อมเสร็จแล้ว') {
+            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+        } else {
+            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, completed_at = NULL WHERE id = ?";
+        }
+        
+        $update_stmt = $conn->prepare($update_sql);
+        $update_stmt->bind_param("sssssi", $status, $repair_note, $repair_note, $technician_name, $asset_code, $update_id);
 
-            if ($res_check->num_rows > 0) {
-                // มีข้อมูลในระบบแล้ว -> ให้อัปเดตแค่ Status
+        if ($update_stmt->execute()) {
+            $show_alert = true;
+
+            // 🟢 อัปเดตสถานะของอุปกรณ์ (Assets) ตามที่ช่างเลือกมา
+            if (!empty($asset_code) && !empty($asset_status)) {
                 $stmt_asset = $conn->prepare("UPDATE assets SET status = ? WHERE asset_code = ?");
                 $stmt_asset->bind_param("ss", $asset_status, $asset_code);
                 $stmt_asset->execute();
                 $stmt_asset->close();
-            } else {
-                // รหัสใหม่! -> บันทึกเพิ่มเข้าตาราง Assets ให้ทันที
-                $new_asset_name = isset($_POST['new_asset_name']) && trim($_POST['new_asset_name']) !== '' ? trim($_POST['new_asset_name']) : "ครุภัณฑ์จากใบงาน " . (!empty($repair['ticket_no']) ? $repair['ticket_no'] : "ล่าสุด");
-                $new_asset_category = isset($_POST['new_asset_category']) ? $_POST['new_asset_category'] : "อื่นๆ";
-                
-                $stmt_asset_insert = $conn->prepare("INSERT INTO assets (asset_code, asset_name, category, status) VALUES (?, ?, ?, ?)");
-                $stmt_asset_insert->bind_param("ssss", $asset_code, $new_asset_name, $new_asset_category, $asset_status);
-                $stmt_asset_insert->execute();
-                $stmt_asset_insert->close();
             }
-            $check_asset->close();
-        }
 
-        $stmt->execute();
-        $repair = $stmt->get_result()->fetch_assoc();
+            $stmt->execute();
+            $repair = $stmt->get_result()->fetch_assoc();
 
-        // 🚨 นำ Channel Access Token ของคุณน้ำฝนมาใส่ตรงนี้
-        $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
+            // 🚨 นำ Channel Access Token ของคุณน้ำฝนมาใส่ตรงนี้
+            $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
 
-        $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
-        $note_display = !empty($repair_note) ? $repair_note : "-";
+            $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
+            $note_display = !empty($repair_note) ? $repair_note : "-";
 
-        $current_time = date("d/m/Y H:i น.");
+            $current_time = date("d/m/Y H:i น.");
 
-        $tech_phone = "- ไม่ระบุ -";
-        if (!empty($technician_name)) {
-            $stmt_tech = $conn->prepare("SELECT phone FROM users WHERE full_name = ? AND LOWER(role) = 'technician' LIMIT 1");
-            if ($stmt_tech) {
-                $stmt_tech->bind_param("s", $technician_name);
-                $stmt_tech->execute();
-                $res_tech = $stmt_tech->get_result();
-                if ($res_tech->num_rows > 0) {
-                    $row_tech = $res_tech->fetch_assoc();
-                    if (!empty($row_tech['phone'])) {
-                        $tech_phone = $row_tech['phone'];
+            $tech_phone = "- ไม่ระบุ -";
+            if (!empty($technician_name)) {
+                $stmt_tech = $conn->prepare("SELECT phone FROM users WHERE full_name = ? AND LOWER(role) = 'technician' LIMIT 1");
+                if ($stmt_tech) {
+                    $stmt_tech->bind_param("s", $technician_name);
+                    $stmt_tech->execute();
+                    $res_tech = $stmt_tech->get_result();
+                    if ($res_tech->num_rows > 0) {
+                        $row_tech = $res_tech->fetch_assoc();
+                        if (!empty($row_tech['phone'])) {
+                            $tech_phone = $row_tech['phone'];
+                        }
                     }
+                    $stmt_tech->close();
                 }
-                $stmt_tech->close();
+            }
+
+            $status_display = $status;
+            if ($status == 'กำลังดำเนินการ') {
+                $status_display = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';
+            }
+
+            // ==========================================
+            // 1. ส่งแจ้งเตือนหา "ผู้แจ้งซ่อม" แบบส่วนตัว
+            // ==========================================
+            if(!empty($repair['line_user_id'])) {
+                $icon = "🔔";
+                if($status == 'กำลังดำเนินการ') $icon = "🛠️";
+                if($status == 'ซ่อมเสร็จแล้ว') $icon = "🎉";
+
+                $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
+                               "📋 เลขที่ใบงาน: " . $repair['ticket_no'] . "\n" .
+                               "🕒 เวลาอัปเดต: " . $current_time . "\n" .
+                               "💻 อุปกรณ์: " . $repair['equipment_type'] . "\n" .
+                               "⚠️ อาการ: " . $repair['problem_desc'] . "\n\n" .
+                               "📌 สถานะใหม่: " . $status_display . "\n" .  
+                               "👨‍🔧 ช่างผู้ดูแล: " . $tech_display . "\n" .
+                               "📱 เบอร์ติดต่อช่าง: " . $tech_phone . "\n" .
+                               "📝 หมายเหตุ: " . $note_display;
+
+                $postData = [
+                    'to' => $repair['line_user_id'],
+                    'messages' => [['type' => 'text', 'text' => $messageText]]
+                ];
+
+                $ch = curl_init('https://api.line.me/v2/bot/message/push');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+                curl_exec($ch);
+                curl_close($ch);
+            }
+
+            // ==========================================
+            // 2. ประกาศความคืบหน้าเข้า "กลุ่มช่าง" 
+            // ==========================================
+            $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
+
+            if(!empty($line_group_id) && $status == 'กำลังดำเนินการ') {
+                $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
+                                "👨‍🔧 ช่าง: " . $tech_display . "\n" .
+                                "💻 งาน: " . $repair['equipment_type'] . " (" . $repair['location'] . ")";
+
+                $postDataGroup = [
+                    'to' => $line_group_id,
+                    'messages' => [['type' => 'text', 'text' => $groupMessage]]
+                ];
+
+                $ch2 = curl_init('https://api.line.me/v2/bot/message/push');
+                curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch2, CURLOPT_POST, true);
+                curl_setopt($ch2, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
+                curl_setopt($ch2, CURLOPT_POSTFIELDS, json_encode($postDataGroup));
+                curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false); 
+                curl_exec($ch2);
+                curl_close($ch2);
             }
         }
+    }
+}
 
-        $status_display = $status;
-        if ($status == 'กำลังดำเนินการ') {
-            $status_display = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';
-        }
-
-        if(!empty($repair['line_user_id'])) {
-            $icon = "🔔";
-            if($status == 'กำลังดำเนินการ') $icon = "🛠️";
-            if($status == 'ซ่อมเสร็จแล้ว') $icon = "🎉";
-
-            $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
-                           "📋 เลขที่ใบงาน: " . $repair['ticket_no'] . "\n" .
-                           "🕒 เวลาอัปเดต: " . $current_time . "\n" .
-                           "💻 อุปกรณ์: " . $repair['equipment_type'] . "\n" .
-                           "⚠️ อาการ: " . $repair['problem_desc'] . "\n\n" .
-                           "📌 สถานะใหม่: " . $status_display . "\n" .  
-                           "👨‍🔧 ช่างผู้ดูแล: " . $tech_display . "\n" .
-                           "📱 เบอร์ติดต่อช่าง: " . $tech_phone . "\n" .
-                           "📝 หมายเหตุ: " . $note_display;
-
-            $postData = [
-                'to' => $repair['line_user_id'],
-                'messages' => [['type' => 'text', 'text' => $messageText]]
-            ];
-
-            $ch = curl_init('https://api.line.me/v2/bot/message/push');
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-            curl_exec($ch);
-            curl_close($ch);
-        }
-
-        $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
-
-        if(!empty($line_group_id) && $status == 'กำลังดำเนินการ') {
-            $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
-                            "👨‍🔧 ช่าง: " . $tech_display . "\n" .
-                            "💻 งาน: " . $repair['equipment_type'] . " (" . $repair['location'] . ")";
-
-            $postDataGroup = [
-                'to' => $line_group_id,
-                'messages' => [['type' => 'text', 'text' => $groupMessage]]
-            ];
-
-            $ch2 = curl_init('https://api.line.me/v2/bot/message/push');
-            curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch2, CURLOPT_POST, true);
-            curl_setopt($ch2, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
-            curl_setopt($ch2, CURLOPT_POSTFIELDS, json_encode($postDataGroup));
-            curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false); 
-            curl_exec($ch2);
-            curl_close($ch2);
-        }
+// 🟢 ดึงข้อมูล Assets Code ทั้งหมดเพื่อใช้ทำ Dropdown (อัปเดตข้อมูลล่าสุดเสมอ)
+$assets_list = [];
+$assets_res = $conn->query("SELECT asset_code, asset_name FROM assets ORDER BY asset_code ASC");
+if($assets_res && $assets_res->num_rows > 0){
+    while($a = $assets_res->fetch_assoc()){
+        $assets_list[] = $a;
     }
 }
 ?>
@@ -195,12 +215,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
         
-        /* ซ่อนปฏิทินที่ติดมากับ datalist ในบางบราวเซอร์ */
+        /* ซ่อนลูกศรปฏิทินที่อาจติดมากับ datalist ในบางบราวเซอร์ */
         input::-webkit-calendar-picker-indicator {
             opacity: 100;
             color: #94a3b8;
             cursor: pointer;
         }
+
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
 </head>
 <body class="p-4 md:p-10 selection:bg-sky-200">
@@ -293,54 +316,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
 
                         <!-- 🟢 ข้อมูลครุภัณฑ์และสถานะครุภัณฑ์ (อัปเกรดเป็นระบบ Smart Form) -->
-                        <div class="mb-4 p-5 border border-slate-200 bg-slate-50/50 rounded-2xl shadow-sm">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-barcode text-sky-500 mr-2"></i> รหัสครุภัณฑ์ (ที่ซ่อม)</label>
-                                    <input type="text" name="asset_code" id="asset_code" list="asset_code_list" 
-                                           class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all shadow-sm" 
-                                           placeholder="-- เลือกรหัส หรือพิมพ์เพิ่มใหม่ --" 
-                                           value="<?php echo isset($repair['asset_code']) ? htmlspecialchars($repair['asset_code']) : ''; ?>">
-                                    <datalist id="asset_code_list">
-                                        <?php foreach($assets_list as $asset): ?>
-                                            <option value="<?php echo htmlspecialchars($asset['asset_code']); ?>">
-                                                <?php echo htmlspecialchars($asset['asset_name']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </datalist>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 border border-slate-100 bg-slate-50/50 rounded-xl relative">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="block text-sm font-semibold text-slate-700"><i class="fas fa-barcode text-sky-500 mr-1.5"></i> รหัสครุภัณฑ์ (ที่ซ่อม)</label>
+                                    <!-- ✨ ปุ่มเรียก Modal เพิ่มครุภัณฑ์ใหม่ ✨ -->
+                                    <button type="button" onclick="openAssetModal()" class="text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg font-bold transition-all shadow-sm flex items-center shrink-0">
+                                        <i class="fas fa-plus mr-1"></i> เพิ่มใหม่
+                                    </button>
                                 </div>
-
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
-                                    <select name="asset_status" id="asset_status" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm">
-                                        <option value="ใช้งานปกติ">🟢 ใช้งานปกติ (ซ่อมผ่าน)</option>
-                                        <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม (ซ่อมไม่ผ่าน/รออะไหล่)</option>
-                                        <option value="แทงจำหน่าย">🔴 แทงจำหน่าย (พังเกินเยียวยา)</option>
-                                    </select>
-                                </div>
+                                <input type="text" name="asset_code" id="asset_code" list="asset_code_list" 
+                                       class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all shadow-sm" 
+                                       placeholder="-- เลือกรหัส หรือพิมพ์ค้นหา --" 
+                                       value="<?php echo isset($repair['asset_code']) ? htmlspecialchars($repair['asset_code']) : ''; ?>">
+                                
+                                <datalist id="asset_code_list">
+                                    <?php foreach($assets_list as $asset): ?>
+                                        <option value="<?php echo htmlspecialchars($asset['asset_code']); ?>">
+                                            <?php echo htmlspecialchars($asset['asset_name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </datalist>
+                                <p class="text-[10px] text-slate-400 mt-2 font-medium">กด <span class="text-indigo-600 font-bold">"เพิ่มใหม่"</span> หากไม่มีรหัสในระบบ</p>
                             </div>
 
-                            <!-- ✨ ส่วนกรอกข้อมูลครุภัณฑ์ใหม่ (ซ่อนไว้ จะโชว์อัตโนมัติเมื่อพิมพ์รหัสใหม่) ✨ -->
-                            <div id="new_asset_section" class="hidden mt-4 pt-4 border-t border-slate-200">
-                                <div class="flex items-center mb-3">
-                                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 mr-2"><i class="fas fa-plus text-xs"></i></span>
-                                    <p class="text-sm font-bold text-indigo-700">พบรหัสครุภัณฑ์ใหม่! กรุณาระบุข้อมูลเพื่อเพิ่มลงระบบ</p>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ชื่อครุภัณฑ์ <span class="text-red-500">*</span></label>
-                                        <input type="text" name="new_asset_name" id="new_asset_name" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น คอมพิวเตอร์ DELL">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
-                                        <select name="new_asset_category" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
-                                            <option value="IT Support">IT Support</option>
-                                            <option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option>
-                                            <option value="อาคารสถานที่">อาคารสถานที่</option>
-                                            <option value="อื่นๆ">อื่นๆ</option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
+                                <select name="asset_status" id="asset_status" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm mt-0.5 md:mt-0">
+                                    <option value="ใช้งานปกติ">🟢 ใช้งานปกติ (ซ่อมผ่าน)</option>
+                                    <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม (ซ่อมไม่ผ่าน/รออะไหล่)</option>
+                                    <option value="แทงจำหน่าย">🔴 แทงจำหน่าย (พังเกินเยียวยา)</option>
+                                </select>
                             </div>
                         </div>
 
@@ -355,14 +361,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="status" value="กำลังดำเนินการ" class="peer sr-only" <?php echo ($repair['status'] == 'กำลังดำเนินการ') ? 'checked' : ''; ?>>
+                                    <input type="radio" name="status" value="กำลังดำเนินการ" class="peer sr-only" <?php echo ($repair['status'] == 'กำลังดำเนินการ' || $repair['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') ? 'checked' : ''; ?>>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-sky-50 peer-checked:border-sky-300 peer-checked:text-sky-700 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-tools mb-1 text-lg"></i>
                                         <div class="text-sm font-medium">ช่างรับเรื่องแจ้งซ่อมแล้ว</div>
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="status" value="ซ่อมเสร็จแล้ว" class="peer sr-only" <?php echo ($repair['status'] == 'ซ่อมเสร็จแล้ว') ? 'checked' : ''; ?>>
+                                    <input type="radio" name="status" value="ซ่อมเสร็จแล้ว" class="peer sr-only" <?php echo ($repair['status'] == 'ซ่อมเสร็จแล้ว' || $repair['status'] == 'เสร็จสิ้น') ? 'checked' : ''; ?>>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-emerald-50 peer-checked:border-emerald-300 peer-checked:text-emerald-700 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-check-circle mb-1 text-lg"></i>
                                         <div class="text-sm font-medium">ซ่อมเสร็จแล้ว</div>
@@ -398,42 +404,76 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
     </div>
 
-    <!-- สคริปต์ตรวจสอบข้อมูลและเปิดฟอร์มเพิ่มครุภัณฑ์อัตโนมัติ -->
-    <script>
-        // ดึงรายการรหัสครุภัณฑ์ที่มีอยู่แล้วในระบบมาเก็บไว้เช็ค
-        const existingAssets = <?php echo json_encode(array_column($assets_list, 'asset_code')); ?>;
-        const assetCodeInput = document.getElementById('asset_code');
-        const newAssetSection = document.getElementById('new_asset_section');
-        const newAssetNameInput = document.getElementById('new_asset_name');
+    <!-- ✨ Modal สำหรับเพิ่มครุภัณฑ์ใหม่ (ซ่อนไว้ก่อน) ✨ -->
+    <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
+        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
+                <p class="text-lg font-extrabold text-slate-800">Add New Asset</p>
+                <button type="button" onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
+            </div>
+            <form action="update_repair.php?id=<?php echo $id; ?>" method="POST" class="p-6">
+                <!-- ใส่ตัวแปร Hidden เพื่อให้รู้ว่ากดเซฟมาจาก Modal นี้ ไม่ใช่จากฟอร์มหลัก -->
+                <input type="hidden" name="save_asset_only" value="1">
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Code <span class="text-red-500">*</span></label>
+                        <input type="text" name="modal_asset_code" id="modal_asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="modal_asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
+                        <select name="modal_category" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
+                            <option value="IT Support">IT Support</option>
+                            <option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option>
+                            <option value="อาคารสถานที่">อาคารสถานที่</option>
+                            <option value="อื่นๆ">อื่นๆ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label>
+                        <select name="modal_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
+                            <option value="ใช้งานปกติ">ใช้งานปกติ</option>
+                            <option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option>
+                            <option value="แทงจำหน่าย">แทงจำหน่าย</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end gap-3">
+                    <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Asset</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        function checkNewAsset() {
-            const val = assetCodeInput.value.trim();
-            // ถ้ารหัสที่พิมพ์ ไม่เคยมีในฐานข้อมูล ให้กางฟอร์มใหม่ลงมา
-            if (val !== '' && !existingAssets.includes(val)) {
-                newAssetSection.classList.remove('hidden');
-                newAssetSection.classList.add('block');
-                newAssetNameInput.required = true;
-            } else {
-                // ถ้าลบออก หรือเป็นรหัสเดิม ให้ซ่อนฟอร์มไป
-                newAssetSection.classList.add('hidden');
-                newAssetSection.classList.remove('block');
-                newAssetNameInput.required = false;
-            }
+    <!-- สคริปต์ควบคุม UI และการตรวจสอบข้อมูล -->
+    <script>
+        function toggleModal(m) { 
+            document.getElementById(m).classList.toggle('opacity-0'); 
+            document.getElementById(m).classList.toggle('pointer-events-none'); 
+            document.body.classList.toggle('modal-active'); 
         }
 
-        // ดักจับทุกครั้งที่ช่างพิมพ์ หรือเลือกรหัสครุภัณฑ์
-        assetCodeInput.addEventListener('input', checkNewAsset);
-        // ทำงานครั้งแรกเผื่อมีรหัสค้างอยู่
-        checkNewAsset();
+        // ฟังก์ชันดึงค่าที่พิมพ์ค้างไว้มาใส่ใน Modal
+        function openAssetModal() {
+            let typedVal = document.getElementById('asset_code').value;
+            document.getElementById('modal_asset_code').value = typedVal;
+            toggleModal('assetModal');
+        }
 
-        // แจ้งเตือนก่อนกดอัปเดต (ตรวจสอบว่าเลือกช่างหรือยัง)
+        // แจ้งเตือนก่อนกดอัปเดตงาน (ตรวจสอบว่าเลือกช่างหรือยัง)
         document.getElementById('updateForm').addEventListener('submit', function(e) {
             const statusChecked = document.querySelector('input[name="status"]:checked');
             const techName = document.getElementById('technician_name').value;
 
             if (statusChecked) {
                 const status = statusChecked.value;
-                if ((status === 'กำลังดำเนินการ' || status === 'ซ่อมเสร็จแล้ว') && techName === '') {
+                if ((status === 'กำลังดำเนินการ' || status === 'ซ่อมเสร็จแล้ว' || status === 'ช่างรับเรื่องแจ้งซ่อมแล้ว') && techName === '') {
                     e.preventDefault(); 
                     Swal.fire({
                         icon: 'warning',
@@ -447,12 +487,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         });
     </script>
 
+    <?php if($show_asset_alert): ?>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'เพิ่มครุภัณฑ์ใหม่สำเร็จ!',
+            text: 'รหัสครุภัณฑ์นี้ถูกเพิ่มเข้าสู่ระบบ และพร้อมเชื่อมโยงกับใบงานแล้ว',
+            confirmButtonColor: '#4f46e5',
+            confirmButtonText: 'ตกลง'
+        });
+    </script>
+    <?php endif; ?>
+
     <?php if($show_alert): ?>
     <script>
         Swal.fire({
             icon: 'success',
-            title: 'บันทึกสำเร็จ!',
-            text: 'อัปเดตสถานะและส่งแจ้งเตือนเรียบร้อยแล้ว',
+            title: 'บันทึกข้อมูลใบงานสำเร็จ!',
+            text: 'อัปเดตสถานะและส่งแจ้งเตือนผ่าน LINE เรียบร้อยแล้ว',
             confirmButtonColor: '#0284c7',
             confirmButtonText: 'ตกลง'
         }).then((result) => {
