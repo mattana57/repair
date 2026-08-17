@@ -258,12 +258,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
         
-        /* ซ่อนปฏิทินที่ติดมากับ datalist ในบางบราวเซอร์ */
+        /* ✨ CSS สำหรับเปลี่ยน Dropdown ทุกจุดให้เป็น "สามเหลี่ยมคว่ำทึบ" สีเทา ✨ */
+        .custom-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20512%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M31.3%20192h257.3c17.8%200%2026.7%2021.5%2014.1%2034.1L174.1%20354.8c-7.8%207.8-20.5%207.8-28.3%200L17.2%20226.1C4.6%20213.5%2013.5%20192%2031.3%20192z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 0.75em auto;
+            padding-right: 2.5rem;
+        }
+
+        /* ซ่อนลูกศรปฏิทินที่ติดมากับ datalist ในเบราว์เซอร์ Chrome/Edge */
         input::-webkit-calendar-picker-indicator {
             opacity: 100;
             color: #94a3b8;
             cursor: pointer;
         }
+
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
@@ -349,6 +362,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             $current_tech_full = $repair['technician_name'] ?? '';
                             $current_tech_display = '';
                             if ($current_tech_full) {
+                                // แยกชื่อภาษาไทยออกมาโชว์
                                 list($cth, $cen) = splitThaiEngName($current_tech_full, '');
                                 $current_tech_display = $cth;
                             }
@@ -358,8 +372,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             
                             <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 transition-all cursor-text shadow-sm" onclick="toggleTechDropdown(event, true)">
                                 <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="-- ค้นหาหรือเลือกช่าง --">
-                                <button type="button" class="px-4 py-3 text-slate-400 hover:text-sky-600 focus:outline-none" onclick="toggleTechDropdown(event)">
-                                    <i class="fas fa-chevron-down"></i>
+                                
+                                <!-- ✨ เปลี่ยนไอคอนให้เป็น สามเหลี่ยมคว่ำแบบทึบ ✨ -->
+                                <button type="button" class="px-4 py-3 text-slate-400 hover:text-sky-600 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
+                                    <i class="fas fa-caret-down text-lg"></i>
                                 </button>
                             </div>
                             
@@ -415,12 +431,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             </option>
                                         <?php endforeach; ?>
                                     </datalist>
+                                    
+                                    <!-- ✨ ล็อคประโยคนี้เอาไว้ให้ตามที่ขอครับ! ✨ -->
                                     <p class="text-[10px] text-slate-400 mt-2 font-medium">กด <span class="text-indigo-600 font-bold">"เพิ่มใหม่"</span> หากไม่มีรหัสในระบบ</p>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
-                                    <select name="asset_status" id="asset_status" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm mt-0.5 md:mt-0">
+                                    <!-- ✨ เพิ่มคลาส custom-select เพื่อใช้ไอคอนสามเหลี่ยมทึบ ✨ -->
+                                    <select name="asset_status" id="asset_status" class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm mt-0.5 md:mt-0">
                                         <option value="ใช้งานปกติ">🟢 ใช้งานปกติ</option>
                                         <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม</option>
                                         <option value="แทงจำหน่าย">🔴 แทงจำหน่าย</option>
@@ -441,7 +460,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
-                                        <select name="new_asset_category" id="new_asset_category" onchange="toggleCustomInput(this, 'new_asset_category_custom')" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
+                                        <!-- ✨ เพิ่มคลาส custom-select เพื่อใช้ไอคอนสามเหลี่ยมทึบ ✨ -->
+                                        <select name="new_asset_category" id="new_asset_category" onchange="toggleCustomInput(this, 'new_asset_category_custom')" class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
                                             <?php foreach($asset_categories as $cat): ?>
                                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
                                             <?php endforeach; ?>
@@ -516,7 +536,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <button type="button" onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
             <form action="update_repair.php?id=<?php echo $id; ?>" method="POST" class="p-6">
-                <!-- ตัวแปร Hidden เพื่อให้รู้ว่ากดเซฟมาจาก Modal นี้ -->
                 <input type="hidden" name="save_asset_only" value="1">
                 
                 <div class="space-y-5">
@@ -530,7 +549,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
-                        <select name="modal_category" id="modal_category" onchange="toggleCustomInput(this, 'modal_category_custom')" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
+                        <!-- ✨ เพิ่มคลาส custom-select เพื่อใช้ไอคอนสามเหลี่ยมทึบ ✨ -->
+                        <select name="modal_category" id="modal_category" onchange="toggleCustomInput(this, 'modal_category_custom')" required class="custom-select w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
                             <?php foreach($asset_categories as $cat): ?>
                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
                             <?php endforeach; ?>
