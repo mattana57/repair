@@ -31,6 +31,17 @@ if($assets_res && $assets_res->num_rows > 0){
     }
 }
 
+// 🟢 ดึงข้อมูลหมวดหมู่ครุภัณฑ์ (Category) ที่มีอยู่ในระบบมาสร้าง Dropdown
+$asset_categories = ['IT Support', 'ไฟฟ้า/แอร์', 'อาคารสถานที่'];
+$cat_res = $conn->query("SELECT DISTINCT category FROM assets WHERE category IS NOT NULL AND category != ''");
+if($cat_res && $cat_res->num_rows > 0){
+    while($c = $cat_res->fetch_assoc()){
+        if(!in_array($c['category'], $asset_categories) && $c['category'] !== 'อื่นๆ') {
+            $asset_categories[] = $c['category'];
+        }
+    }
+}
+
 // ตรวจสอบว่าในตาราง repairs มีฟิลด์ต่างๆ หรือไม่
 $check_asset_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'asset_code'");
 if($check_asset_col->num_rows == 0) {
@@ -45,17 +56,6 @@ if($check_root_col->num_rows == 0) {
 $check_completed_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'completed_at'");
 if($check_completed_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN completed_at DATETIME NULL");
-}
-
-// 🟢 ดึงข้อมูลหมวดหมู่ครุภัณฑ์ที่มีอยู่ในระบบมาสร้าง Dropdown
-$asset_categories = ['IT Support', 'ไฟฟ้า/แอร์', 'อาคารสถานที่'];
-$cat_res = $conn->query("SELECT DISTINCT category FROM assets WHERE category IS NOT NULL AND category != ''");
-if($cat_res && $cat_res->num_rows > 0){
-    while($c = $cat_res->fetch_assoc()){
-        if(!in_array($c['category'], $asset_categories) && $c['category'] !== 'อื่นๆ') {
-            $asset_categories[] = $c['category'];
-        }
-    }
 }
 
 $show_alert = false;
@@ -74,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $acat = trim($_POST['modal_category_custom']);
         }
         
-        $astat = 'ใช้งานปกติ'; // ค่าเริ่มต้นเพราะซ่อนช่อง Status ไปแล้ว
+        $astat = 'ใช้งานปกติ'; // ค่าเริ่มต้น
 
         $chk = $conn->prepare("SELECT id FROM assets WHERE asset_code = ?");
         $chk->bind_param("s", $acode);
@@ -144,7 +144,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->execute();
             $repair = $stmt->get_result()->fetch_assoc();
 
-            // 🚨 นำ Channel Access Token ของคุณน้ำฝนมาใส่ตรงนี้
             $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
 
             $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
@@ -242,13 +241,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
-        
-        /* ซ่อนปฏิทินที่ติดมากับ datalist ในบางบราวเซอร์ */
-        input::-webkit-calendar-picker-indicator {
-            opacity: 100;
-            color: #94a3b8;
-            cursor: pointer;
-        }
+        input::-webkit-calendar-picker-indicator { opacity: 100; color: #94a3b8; cursor: pointer; }
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
@@ -270,6 +263,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
             <div class="lg:col-span-2 space-y-6">
+                <!-- ส่วนของข้อมูลใบงานเหมือนเดิม -->
                 <div class="modern-card p-6 border-t-4 border-sky-500">
                     <div class="flex justify-between items-start mb-4">
                         <h2 class="text-lg font-bold text-slate-800">ข้อมูลใบงาน</h2>
@@ -364,14 +358,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             </option>
                                         <?php endforeach; ?>
                                     </datalist>
+                                    <p class="text-[10px] text-slate-400 mt-2 font-medium">กด <span class="text-indigo-600 font-bold">"เพิ่มใหม่"</span> หากไม่มีรหัสในระบบ</p>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
-                                    <select name="asset_status" id="asset_status" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm">
-                                        <option value="ใช้งานปกติ">🟢 ใช้งานปกติ (ซ่อมผ่าน)</option>
-                                        <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม (ซ่อมไม่ผ่าน/รออะไหล่)</option>
-                                        <option value="แทงจำหน่าย">🔴 แทงจำหน่าย (พังเกินเยียวยา)</option>
+                                    <select name="asset_status" id="asset_status" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm mt-0.5 md:mt-0">
+                                        <option value="ใช้งานปกติ">🟢 ใช้งานปกติ</option>
+                                        <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม</option>
+                                        <option value="แทงจำหน่าย">🔴 แทงจำหน่าย</option>
                                     </select>
                                 </div>
                             </div>
@@ -389,7 +384,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
-                                        <!-- ✨ อัปเดต Category ให้เลือกจาก DB และพิมพ์เพิ่มได้ ✨ -->
                                         <select name="new_asset_category" id="new_asset_category" onchange="toggleCustomInput(this, 'new_asset_category_custom')" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
                                             <?php foreach($asset_categories as $cat): ?>
                                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
@@ -456,7 +450,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
     </div>
 
-    <!-- ✨ Modal สำหรับเพิ่มครุภัณฑ์ใหม่ (อัปเดตช่องหมวดหมู่ให้พิมพ์เพิ่มได้) ✨ -->
+    <!-- ✨ Modal สำหรับเพิ่มครุภัณฑ์ใหม่ ✨ -->
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
@@ -479,7 +473,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
-                        <!-- ✨ อัปเดต Category ให้เลือกจาก DB และพิมพ์เพิ่มได้ ✨ -->
                         <select name="modal_category" id="modal_category" onchange="toggleCustomInput(this, 'modal_category_custom')" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
                             <?php foreach($asset_categories as $cat): ?>
                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
@@ -559,4 +552,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     e.preventDefault(); 
                     Swal.fire({
                         icon: 'warning',
-                        title: 'ลืมฉันไม่ได้รับการโปรแกรมมาให้ทำเรื่องนี้
+                        title: 'ลืมระบุชื่อช่างหรือเปล่าคะ?',
+                        text: 'กรุณาเลือก "ช่างผู้รับผิดชอบ" ก่อนอัปเดตสถานะรับงานหรือปิดงานค่ะ',
+                        confirmButtonColor: '#0284c7',
+                        confirmButtonText: 'ตกลงเข้าใจแล้ว'
+                    });
+                }
+            }
+        });
+    </script>
+
+    <?php if($show_asset_alert): ?>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'เพิ่มครุภัณฑ์ใหม่สำเร็จ!',
+            text: 'รหัสครุภัณฑ์นี้ถูกเพิ่มเข้าสู่ระบบ และพร้อมเชื่อมโยงกับใบงานแล้ว',
+            confirmButtonColor: '#4f46e5',
+            confirmButtonText: 'ตกลง'
+        });
+    </script>
+    <?php endif; ?>
+
+    <?php if($show_alert): ?>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'บันทึกข้อมูลใบงานสำเร็จ!',
+            text: 'อัปเดตสถานะและส่งแจ้งเตือนผ่าน LINE เรียบร้อยแล้ว',
+            confirmButtonColor: '#0284c7',
+            confirmButtonText: 'ตกลง'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'dashboard.php?tab=repairs';
+            }
+        });
+    </script>
+    <?php endif; ?>
+
+</body>
+</html>
