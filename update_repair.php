@@ -270,11 +270,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding-right: 2.5rem;
         }
 
-        /* ซ่อนลูกศรปฏิทินที่ติดมากับ datalist ในเบราว์เซอร์ Chrome/Edge */
-        input::-webkit-calendar-picker-indicator {
-            opacity: 100;
-            color: #94a3b8;
+        /* ✨ ซ่อนลูกศรแหลมๆ ของ datalist ให้ล่องหน แต่ยังกดได้ปกติ ✨ */
+        input[list]::-webkit-calendar-picker-indicator {
+            opacity: 0 !important;
             cursor: pointer;
+            width: 2rem;
+            height: 100%;
         }
 
         .modal { transition: opacity 0.25s ease; }
@@ -373,7 +374,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 transition-all cursor-text shadow-sm" onclick="toggleTechDropdown(event, true)">
                                 <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="-- ค้นหาหรือเลือกช่าง --">
                                 
-                                <!-- ✨ เปลี่ยนไอคอนให้เป็น สามเหลี่ยมคว่ำแบบทึบ ✨ -->
                                 <button type="button" class="px-4 py-3 text-slate-400 hover:text-sky-600 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
                                     <i class="fas fa-caret-down text-lg"></i>
                                 </button>
@@ -419,8 +419,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             <i class="fas fa-plus mr-1"></i> เพิ่มใหม่
                                         </button>
                                     </div>
+                                    <!-- ✨ ใส่คลาส custom-select ให้เป็นไอคอนสามเหลี่ยมทึบ และลบลูกศรเบราว์เซอร์ ✨ -->
                                     <input type="text" name="asset_code" id="asset_code" list="asset_code_list" 
-                                           class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all shadow-sm" 
+                                           class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all shadow-sm relative" 
                                            placeholder="-- เลือกรหัส หรือพิมพ์ค้นหา --" 
                                            value="<?php echo isset($repair['asset_code']) ? htmlspecialchars($repair['asset_code']) : ''; ?>">
                                     
@@ -432,8 +433,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <?php endforeach; ?>
                                     </datalist>
                                     
-                                    <!-- ✨ ล็อคประโยคนี้เอาไว้ให้ตามที่ขอครับ! ✨ -->
-                                    <p class="text-[10px] text-slate-400 mt-2 font-medium">กด <span class="text-indigo-600 font-bold">"เพิ่มใหม่"</span> หากไม่มีรหัสในระบบ</p>
+                                    <!-- ✨ นำข้อความกลับมา ใส่คลาสให้ตัวใหญ่ขึ้นนิดนึง ✨ -->
+                                    <p class="text-[11px] text-slate-500 mt-2 font-medium">กด <span class="text-indigo-600 font-bold">"เพิ่มใหม่"</span> หากไม่มีรหัสในระบบ</p>
                                 </div>
 
                                 <div>
@@ -536,6 +537,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <button type="button" onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
             <form action="update_repair.php?id=<?php echo $id; ?>" method="POST" class="p-6">
+                <!-- ตัวแปร Hidden เพื่อให้รู้ว่ากดเซฟมาจาก Modal นี้ -->
                 <input type="hidden" name="save_asset_only" value="1">
                 
                 <div class="space-y-5">
@@ -671,6 +673,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             toggleModal('assetModal');
         }
 
+        // ✨ ฟังก์ชันเพื่อเปิดช่องกรอกหมวดหมู่ใหม่ ✨
         function toggleCustomInput(selectElement, customInputId) {
             const customInput = document.getElementById(customInputId);
             if(selectElement.value === 'อื่นๆ') { 
