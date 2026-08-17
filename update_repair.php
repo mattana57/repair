@@ -31,19 +31,17 @@ if($assets_res && $assets_res->num_rows > 0){
     }
 }
 
-// ตรวจสอบว่าในตาราง repairs มีฟิลด์ asset_code หรือไม่
+// ตรวจสอบว่าในตาราง repairs มีฟิลด์ต่างๆ หรือไม่
 $check_asset_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'asset_code'");
 if($check_asset_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN asset_code VARCHAR(50) NULL AFTER equipment_type");
 }
 
-// เช็คและสร้างฟิลด์ root_cause
 $check_root_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'root_cause'");
 if($check_root_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
 }
 
-// เช็คและสร้างฟิลด์ completed_at
 $check_completed_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'completed_at'");
 if($check_completed_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN completed_at DATETIME NULL");
@@ -70,7 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($update_stmt->execute()) {
         $show_alert = true;
 
-        // ✨ อัปเดตสถานะของอุปกรณ์ (Assets) หรือเพิ่มใหม่ถ้ารหัสไม่เคยมีในระบบมาก่อน ✨
+        // ✨ ระบบตรวจสอบและเพิ่มครุภัณฑ์ใหม่อัตโนมัติ ✨
         if (!empty($asset_code) && !empty($asset_status)) {
             $check_asset = $conn->prepare("SELECT id FROM assets WHERE asset_code = ?");
             $check_asset->bind_param("s", $asset_code);
@@ -84,9 +82,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $stmt_asset->execute();
                 $stmt_asset->close();
             } else {
-                // ยังไม่เคยมีในระบบ -> ให้บันทึกเพิ่มเข้าไปใหม่เลย (ไปโผล่ในหน้า Assets Database ด้วย)
-                $new_asset_name = "ครุภัณฑ์จากใบงาน " . (!empty($repair['ticket_no']) ? $repair['ticket_no'] : "ล่าสุด");
-                $new_asset_category = "อื่นๆ"; // ตั้งค่าเริ่มต้นเป็นอื่นๆ ไปก่อน
+                // รหัสใหม่! -> บันทึกเพิ่มเข้าตาราง Assets ให้ทันที
+                $new_asset_name = isset($_POST['new_asset_name']) && trim($_POST['new_asset_name']) !== '' ? trim($_POST['new_asset_name']) : "ครุภัณฑ์จากใบงาน " . (!empty($repair['ticket_no']) ? $repair['ticket_no'] : "ล่าสุด");
+                $new_asset_category = isset($_POST['new_asset_category']) ? $_POST['new_asset_category'] : "อื่นๆ";
+                
                 $stmt_asset_insert = $conn->prepare("INSERT INTO assets (asset_code, asset_name, category, status) VALUES (?, ?, ?, ?)");
                 $stmt_asset_insert->bind_param("ssss", $asset_code, $new_asset_name, $new_asset_category, $asset_status);
                 $stmt_asset_insert->execute();
@@ -196,7 +195,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
         
-        /* สไตล์สำหรับซ่อนลูกศร Dropdown ดั้งเดิมบางบราวเซอร์ ให้ดูสะอาดขึ้น */
+        /* ซ่อนปฏิทินที่ติดมากับ datalist ในบางบราวเซอร์ */
         input::-webkit-calendar-picker-indicator {
             opacity: 100;
             color: #94a3b8;
@@ -293,32 +292,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </select>
                         </div>
 
-                        <!-- 🟢 ข้อมูลครุภัณฑ์และสถานะครุภัณฑ์ -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 border border-slate-100 bg-slate-50/50 rounded-xl">
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-barcode text-sky-500 mr-2"></i> รหัสครุภัณฑ์ (ที่ซ่อม)</label>
-                                <!-- ✨ เปลี่ยนจาก <select> เป็น <input list="..."> (Combobox) เพื่อให้พิมพ์ได้และกดเลือกได้ ✨ -->
-                                <input type="text" name="asset_code" id="asset_code" list="asset_code_list" 
-                                       class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all" 
-                                       placeholder="-- เลือกรหัส หรือพิมพ์เพิ่มใหม่ --" 
-                                       value="<?php echo isset($repair['asset_code']) ? htmlspecialchars($repair['asset_code']) : ''; ?>">
-                                
-                                <datalist id="asset_code_list">
-                                    <?php foreach($assets_list as $asset): ?>
-                                        <option value="<?php echo htmlspecialchars($asset['asset_code']); ?>">
-                                            <?php echo htmlspecialchars($asset['asset_name']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </datalist>
+                        <!-- 🟢 ข้อมูลครุภัณฑ์และสถานะครุภัณฑ์ (อัปเกรดเป็นระบบ Smart Form) -->
+                        <div class="mb-4 p-5 border border-slate-200 bg-slate-50/50 rounded-2xl shadow-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-barcode text-sky-500 mr-2"></i> รหัสครุภัณฑ์ (ที่ซ่อม)</label>
+                                    <input type="text" name="asset_code" id="asset_code" list="asset_code_list" 
+                                           class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all shadow-sm" 
+                                           placeholder="-- เลือกรหัส หรือพิมพ์เพิ่มใหม่ --" 
+                                           value="<?php echo isset($repair['asset_code']) ? htmlspecialchars($repair['asset_code']) : ''; ?>">
+                                    <datalist id="asset_code_list">
+                                        <?php foreach($assets_list as $asset): ?>
+                                            <option value="<?php echo htmlspecialchars($asset['asset_code']); ?>">
+                                                <?php echo htmlspecialchars($asset['asset_name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </datalist>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
+                                    <select name="asset_status" id="asset_status" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm">
+                                        <option value="ใช้งานปกติ">🟢 ใช้งานปกติ (ซ่อมผ่าน)</option>
+                                        <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม (ซ่อมไม่ผ่าน/รออะไหล่)</option>
+                                        <option value="แทงจำหน่าย">🔴 แทงจำหน่าย (พังเกินเยียวยา)</option>
+                                    </select>
+                                </div>
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
-                                <select name="asset_status" id="asset_status" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
-                                    <option value="ใช้งานปกติ">🟢 ใช้งานปกติ (ซ่อมผ่าน)</option>
-                                    <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม (ซ่อมไม่ผ่าน/รออะไหล่)</option>
-                                    <option value="แทงจำหน่าย">🔴 แทงจำหน่าย (พังเกินเยียวยา)</option>
-                                </select>
+                            <!-- ✨ ส่วนกรอกข้อมูลครุภัณฑ์ใหม่ (ซ่อนไว้ จะโชว์อัตโนมัติเมื่อพิมพ์รหัสใหม่) ✨ -->
+                            <div id="new_asset_section" class="hidden mt-4 pt-4 border-t border-slate-200">
+                                <div class="flex items-center mb-3">
+                                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 mr-2"><i class="fas fa-plus text-xs"></i></span>
+                                    <p class="text-sm font-bold text-indigo-700">พบรหัสครุภัณฑ์ใหม่! กรุณาระบุข้อมูลเพื่อเพิ่มลงระบบ</p>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ชื่อครุภัณฑ์ <span class="text-red-500">*</span></label>
+                                        <input type="text" name="new_asset_name" id="new_asset_name" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น คอมพิวเตอร์ DELL">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
+                                        <select name="new_asset_category" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
+                                            <option value="IT Support">IT Support</option>
+                                            <option value="ไฟฟ้า/แอร์">ไฟฟ้า/แอร์</option>
+                                            <option value="อาคารสถานที่">อาคารสถานที่</option>
+                                            <option value="อื่นๆ">อื่นๆ</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -376,8 +398,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
     </div>
 
-    <!-- สคริปต์สำหรับตรวจสอบการกรอกข้อมูลช่างก่อนบันทึก -->
+    <!-- สคริปต์ตรวจสอบข้อมูลและเปิดฟอร์มเพิ่มครุภัณฑ์อัตโนมัติ -->
     <script>
+        // ดึงรายการรหัสครุภัณฑ์ที่มีอยู่แล้วในระบบมาเก็บไว้เช็ค
+        const existingAssets = <?php echo json_encode(array_column($assets_list, 'asset_code')); ?>;
+        const assetCodeInput = document.getElementById('asset_code');
+        const newAssetSection = document.getElementById('new_asset_section');
+        const newAssetNameInput = document.getElementById('new_asset_name');
+
+        function checkNewAsset() {
+            const val = assetCodeInput.value.trim();
+            // ถ้ารหัสที่พิมพ์ ไม่เคยมีในฐานข้อมูล ให้กางฟอร์มใหม่ลงมา
+            if (val !== '' && !existingAssets.includes(val)) {
+                newAssetSection.classList.remove('hidden');
+                newAssetSection.classList.add('block');
+                newAssetNameInput.required = true;
+            } else {
+                // ถ้าลบออก หรือเป็นรหัสเดิม ให้ซ่อนฟอร์มไป
+                newAssetSection.classList.add('hidden');
+                newAssetSection.classList.remove('block');
+                newAssetNameInput.required = false;
+            }
+        }
+
+        // ดักจับทุกครั้งที่ช่างพิมพ์ หรือเลือกรหัสครุภัณฑ์
+        assetCodeInput.addEventListener('input', checkNewAsset);
+        // ทำงานครั้งแรกเผื่อมีรหัสค้างอยู่
+        checkNewAsset();
+
+        // แจ้งเตือนก่อนกดอัปเดต (ตรวจสอบว่าเลือกช่างหรือยัง)
         document.getElementById('updateForm').addEventListener('submit', function(e) {
             const statusChecked = document.querySelector('input[name="status"]:checked');
             const techName = document.getElementById('technician_name').value;
