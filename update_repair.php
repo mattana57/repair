@@ -258,7 +258,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
         
-        /* ✨ CSS สำหรับเปลี่ยน Dropdown ทุกจุดให้เป็น "สามเหลี่ยมคว่ำทึบ" สีเทา ✨ */
         .custom-select {
             appearance: none;
             -webkit-appearance: none;
@@ -270,7 +269,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding-right: 2.5rem;
         }
 
-        /* ✨ ซ่อนลูกศรแหลมๆ ของ datalist ให้ล่องหน แต่ยังกดได้ปกติ ✨ */
         input[list]::-webkit-calendar-picker-indicator {
             opacity: 0 !important;
             cursor: pointer;
@@ -300,10 +298,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="lg:col-span-2 space-y-6">
                 <div class="modern-card p-6 border-t-4 border-sky-500">
-                    <div class="flex justify-between items-start mb-4">
+                    <!-- ✨ เปลี่ยนสไตล์ รหัสใบงาน ให้ใหญ่และเป็นสีฟ้า ตรงเป๊ะตามคำขอ ✨ -->
+                    <div class="flex justify-between items-center mb-4">
                         <h2 class="text-lg font-bold text-slate-800">ข้อมูลใบงาน</h2>
-                        <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold border border-slate-200">
-                            <?php echo $repair['ticket_no']; ?>
+                        <span class="text-lg font-extrabold text-sky-600 tracking-tight">
+                            <?php echo htmlspecialchars($repair['ticket_no']); ?>
                         </span>
                     </div>
 
@@ -358,12 +357,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <form id="updateForm" action="" method="POST" class="space-y-6">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
 
-                        <!-- ✨ ระบบมอบหมายช่างผู้รับผิดชอบ (Smart Searchable Dropdown) ✨ -->
                         <?php
                             $current_tech_full = $repair['technician_name'] ?? '';
                             $current_tech_display = '';
                             if ($current_tech_full) {
-                                // แยกชื่อภาษาไทยออกมาโชว์
                                 list($cth, $cen) = splitThaiEngName($current_tech_full, '');
                                 $current_tech_display = $cth;
                             }
@@ -379,7 +376,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </button>
                             </div>
                             
-                            <!-- Dropdown List ที่ซ่อนชื่อภาษาอังกฤษไว้ -->
                             <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
                                 <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
                                     <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
@@ -409,7 +405,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($repair['technician_name'] ?? ''); ?>">
                         </div>
 
-                        <!-- 🟢 ข้อมูลครุภัณฑ์และสถานะครุภัณฑ์ (Smart Form) -->
                         <div class="mb-4 p-5 border border-slate-200 bg-slate-50/50 rounded-2xl shadow-sm">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -419,7 +414,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             <i class="fas fa-plus mr-1"></i> เพิ่มใหม่
                                         </button>
                                     </div>
-                                    <!-- ✨ ใส่คลาส custom-select ให้เป็นไอคอนสามเหลี่ยมทึบ และลบลูกศรเบราว์เซอร์ ✨ -->
                                     <input type="text" name="asset_code" id="asset_code" list="asset_code_list" 
                                            class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all shadow-sm relative" 
                                            placeholder="-- เลือกรหัส หรือพิมพ์ค้นหา --" 
@@ -432,14 +426,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             </option>
                                         <?php endforeach; ?>
                                     </datalist>
-                                    
-                                    <!-- ✨ นำข้อความกลับมา ใส่คลาสให้ตัวใหญ่ขึ้นนิดนึง ✨ -->
                                     <p class="text-[11px] text-slate-500 mt-2 font-medium">กด <span class="text-indigo-600 font-bold">"เพิ่มใหม่"</span> หากไม่มีรหัสในระบบ</p>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
-                                    <!-- ✨ เพิ่มคลาส custom-select เพื่อใช้ไอคอนสามเหลี่ยมทึบ ✨ -->
                                     <select name="asset_status" id="asset_status" class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm mt-0.5 md:mt-0">
                                         <option value="ใช้งานปกติ">🟢 ใช้งานปกติ</option>
                                         <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม</option>
@@ -448,7 +439,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                             </div>
 
-                            <!-- ✨ ส่วนกรอกข้อมูลครุภัณฑ์ใหม่ (ซ่อนไว้ จะโชว์อัตโนมัติเมื่อพิมพ์รหัสใหม่) ✨ -->
                             <div id="new_asset_section" class="hidden mt-4 pt-4 border-t border-slate-200">
                                 <div class="flex items-center mb-3">
                                     <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 mr-2"><i class="fas fa-plus text-xs"></i></span>
@@ -461,7 +451,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
-                                        <!-- ✨ เพิ่มคลาส custom-select เพื่อใช้ไอคอนสามเหลี่ยมทึบ ✨ -->
                                         <select name="new_asset_category" id="new_asset_category" onchange="toggleCustomInput(this, 'new_asset_category_custom')" class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
                                             <?php foreach($asset_categories as $cat): ?>
                                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
@@ -537,7 +526,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <button type="button" onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
             <form action="update_repair.php?id=<?php echo $id; ?>" method="POST" class="p-6">
-                <!-- ตัวแปร Hidden เพื่อให้รู้ว่ากดเซฟมาจาก Modal นี้ -->
                 <input type="hidden" name="save_asset_only" value="1">
                 
                 <div class="space-y-5">
@@ -551,7 +539,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
-                        <!-- ✨ เพิ่มคลาส custom-select เพื่อใช้ไอคอนสามเหลี่ยมทึบ ✨ -->
                         <select name="modal_category" id="modal_category" onchange="toggleCustomInput(this, 'modal_category_custom')" required class="custom-select w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
                             <?php foreach($asset_categories as $cat): ?>
                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
@@ -673,7 +660,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             toggleModal('assetModal');
         }
 
-        // ✨ ฟังก์ชันเพื่อเปิดช่องกรอกหมวดหมู่ใหม่ ✨
         function toggleCustomInput(selectElement, customInputId) {
             const customInput = document.getElementById(customInputId);
             if(selectElement.value === 'อื่นๆ') { 
