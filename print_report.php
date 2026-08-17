@@ -261,19 +261,105 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
 
-    <!-- แถบเมนูควบคุม -->
+    <!-- แถบเมนูควบคุม (จัดเรียง 2 บรรทัดตามแบบเป๊ะๆ) -->
     <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <!-- ✨ ใช้ max-w-7xl เหมือนเดิม ไม่กว้างติดขอบ ✨ -->
+        <div class="max-w-7xl mx-auto flex flex-col gap-4">
             
-            <div class="flex flex-col space-y-4">
-                <div class="flex items-center space-x-4">
+            <!-- ✨ บรรทัดที่ 1: Dashboard (ซ้าย) | กรองข้อมูล + โหมดมืด (ขวา) ✨ -->
+            <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
+                
+                <div class="flex items-center space-x-4 w-full lg:w-auto justify-center lg:justify-start shrink-0">
                     <a href="dashboard.php?tab=reports" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </a>
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
+
+                <div class="flex flex-wrap items-center justify-center lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5">
+                    <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                        <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
+                        
+                        <!-- Dropdown สำหรับช่าง -->
+                        <div class="relative w-full md:w-60" id="techDropdownContainer">
+                            <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
+                                <i class="fas fa-search pl-3 text-slate-400 dark:text-slate-300 opacity-80"></i>
+                                <input type="text" id="techSearchInput" class="w-full bg-transparent px-2 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
+                                <button type="button" class="pr-3 pl-1 text-slate-400 dark:text-slate-300 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
+                                    <i class="fas fa-caret-down text-sm"></i>
+                                </button>
+                            </div>
+                            
+                            <div id="techDropdownList" class="absolute z-50 w-full md:w-72 mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar right-0 md:right-auto md:left-0">
+                                
+                                <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer transition-colors flex items-center" data-value="all" data-search="รวมทุกฝ่ายงานทั้งหมด" onmousedown="selectTech('all', 'รวมทุกฝ่ายงาน (ทั้งหมด)')">
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500 flex items-center justify-center mr-3 text-slate-400 dark:text-slate-300">
+                                        <i class="fas fa-globe text-[10px]"></i>
+                                    </div>
+                                    รวมทุกฝ่ายงาน (ทั้งหมด)
+                                </div>
+                                
+                                <?php 
+                                foreach($grouped_techs as $dept => $techs) {
+                                    $tech_count = count($techs);
+                                    echo "<div class='flex justify-between items-center px-4 py-2 mt-2 mb-1 bg-blue-50/50 dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800 dropdown-dept-header' data-dept=\"".htmlspecialchars($dept)."\">
+                                            <span class='text-xs font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wide'>{$dept}</span>
+                                            <span class='text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 shadow-sm px-2 py-0.5 rounded-md flex items-center'>
+                                                <i class='fas fa-user-friends mr-1 text-indigo-400 dark:text-indigo-400'></i> {$tech_count} คน
+                                            </span>
+                                          </div>";
+
+                                    foreach($techs as $t_name) {
+                                        $searchStr = preg_replace('/\s+/', '', strtolower($t_name . $dept));
+                                        echo "<div class='tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-xs text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300 cursor-pointer flex justify-between items-center transition-all group' data-value=\"".htmlspecialchars($t_name)."\" data-display=\"".htmlspecialchars($t_name)."\" data-search=\"{$searchStr}\" data-dept=\"".htmlspecialchars($dept)."\" onmousedown=\"selectTech('".htmlspecialchars($t_name, ENT_QUOTES)."', '".htmlspecialchars($t_name, ENT_QUOTES)."')\">
+                                                <div class='flex items-center pointer-events-none'>
+                                                    <div class='w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500 flex items-center justify-center mr-3 text-slate-400 dark:text-slate-300 group-hover:bg-indigo-100 dark:group-hover:bg-slate-500 group-hover:text-indigo-500 transition-colors'>
+                                                        <i class='fas fa-user text-[10px]'></i>
+                                                    </div>
+                                                    <span>".htmlspecialchars($t_name)."</span>
+                                                </div>
+                                              </div>";
+                                    }
+                                }
+                                ?>
+                            </div>
+                            <input type="hidden" name="tech" id="techHiddenInput" value="<?php echo htmlspecialchars($selected_tech); ?>">
+                        </div>
+
+                        <select name="month" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
+                            <?php 
+                            for($m=1; $m<=12; $m++) {
+                                $sel = ($selected_month === $m) ? 'selected' : '';
+                                echo "<option value='$m' $sel>{$thai_months[$m]}</option>";
+                            }
+                            ?>
+                        </select>
+
+                        <select name="year" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
+                            <?php 
+                            foreach($available_years as $y) {
+                                $sel = ($selected_year == $y) ? 'selected' : '';
+                                $thai_y = $y + 543;
+                                echo "<option value='$y' $sel>พ.ศ. $thai_y</option>";
+                            }
+                            ?>
+                        </select>
+
+                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-2 rounded-xl font-extrabold transition-all shadow-sm">
+                            ค้นหา
+                        </button>
+                    </form>
+
+                    <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-600 border-2 border-slate-200 dark:border-slate-500 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-4">
+                        <i id="theme-toggle-icon" class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ✨ บรรทัดที่ 2: รูปแบบเอกสาร + พิมพ์ (ซ้าย) | สวิตช์ลายเซ็นพร้อมกรอบเหมือนเดิม (ขวา) ✨ -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 
-                <div class="flex flex-wrap items-center gap-2.5">
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 w-full sm:w-auto">
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                        class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
                         <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
@@ -287,9 +373,11 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md transition-all flex items-center ml-1 border border-slate-900 dark:border-rose-800">
                         <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
                     </button>
+                </div>
 
-                    <!-- ✨ ปุ่ม Toggle เปิด-ปิดลายเซ็นท้ายเอกสาร ✨ -->
-                    <div class="flex items-center ml-1 lg:ml-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1.5 shadow-sm">
+                <div class="flex items-center justify-center sm:justify-end w-full sm:w-auto pr-1">
+                    <!-- ✨ สวิตช์ลายเซ็น แบบมีกรอบ และปุ่มอยู่หน้าข้อความ ✨ -->
+                    <div class="flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1.5 shadow-sm">
                         <label for="toggleSignature" class="flex items-center cursor-pointer">
                             <div class="relative flex items-center">
                                 <input type="checkbox" id="toggleSignature" class="sr-only peer" checked onchange="toggleSignature()">
@@ -302,87 +390,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         </label>
                     </div>
                 </div>
+
             </div>
-
-            <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto pb-0.5">
-                <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
-                    <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
-                    
-                    <!-- Dropdown สำหรับช่าง -->
-                    <div class="relative w-full md:w-60" id="techDropdownContainer">
-                        <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
-                            <i class="fas fa-search pl-3 text-slate-400 dark:text-slate-300 opacity-80"></i>
-                            <input type="text" id="techSearchInput" class="w-full bg-transparent px-2 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
-                            <button type="button" class="pr-3 pl-1 text-slate-400 dark:text-slate-300 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
-                                <i class="fas fa-caret-down text-sm"></i>
-                            </button>
-                        </div>
-                        
-                        <div id="techDropdownList" class="absolute z-50 w-full md:w-72 mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar right-0 md:right-auto md:left-0">
-                            
-                            <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer transition-colors flex items-center" data-value="all" data-search="รวมทุกฝ่ายงานทั้งหมด" onmousedown="selectTech('all', 'รวมทุกฝ่ายงาน (ทั้งหมด)')">
-                                <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500 flex items-center justify-center mr-3 text-slate-400 dark:text-slate-300">
-                                    <i class="fas fa-globe text-[10px]"></i>
-                                </div>
-                                รวมทุกฝ่ายงาน (ทั้งหมด)
-                            </div>
-                            
-                            <?php 
-                            foreach($grouped_techs as $dept => $techs) {
-                                $tech_count = count($techs);
-                                echo "<div class='flex justify-between items-center px-4 py-2 mt-2 mb-1 bg-blue-50/50 dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800 dropdown-dept-header' data-dept=\"".htmlspecialchars($dept)."\">
-                                        <span class='text-xs font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wide'>{$dept}</span>
-                                        <span class='text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 shadow-sm px-2 py-0.5 rounded-md flex items-center'>
-                                            <i class='fas fa-user-friends mr-1 text-indigo-400 dark:text-indigo-400'></i> {$tech_count} คน
-                                        </span>
-                                      </div>";
-
-                                foreach($techs as $t_name) {
-                                    $searchStr = preg_replace('/\s+/', '', strtolower($t_name . $dept));
-                                    echo "<div class='tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-xs text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300 cursor-pointer flex justify-between items-center transition-all group' data-value=\"".htmlspecialchars($t_name)."\" data-display=\"".htmlspecialchars($t_name)."\" data-search=\"{$searchStr}\" data-dept=\"".htmlspecialchars($dept)."\" onmousedown=\"selectTech('".htmlspecialchars($t_name, ENT_QUOTES)."', '".htmlspecialchars($t_name, ENT_QUOTES)."')\">
-                                            <div class='flex items-center pointer-events-none'>
-                                                <div class='w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500 flex items-center justify-center mr-3 text-slate-400 dark:text-slate-300 group-hover:bg-indigo-100 dark:group-hover:bg-slate-500 group-hover:text-indigo-500 transition-colors'>
-                                                    <i class='fas fa-user text-[10px]'></i>
-                                                </div>
-                                                <span>".htmlspecialchars($t_name)."</span>
-                                            </div>
-                                          </div>";
-                                }
-                            }
-                            ?>
-                        </div>
-                        <input type="hidden" name="tech" id="techHiddenInput" value="<?php echo htmlspecialchars($selected_tech); ?>">
-                    </div>
-
-                    <select name="month" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
-                        <?php 
-                        for($m=1; $m<=12; $m++) {
-                            $sel = ($selected_month === $m) ? 'selected' : '';
-                            echo "<option value='$m' $sel>{$thai_months[$m]}</option>";
-                        }
-                        ?>
-                    </select>
-
-                    <select name="year" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
-                        <?php 
-                        foreach($available_years as $y) {
-                            $sel = ($selected_year == $y) ? 'selected' : '';
-                            $thai_y = $y + 543;
-                            echo "<option value='$y' $sel>พ.ศ. $thai_y</option>";
-                        }
-                        ?>
-                    </select>
-
-                    <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-2 rounded-xl font-extrabold transition-all shadow-sm">
-                        ค้นหา
-                    </button>
-                </form>
-
-                <button id="theme-toggle" type="button" class="w-9 h-9 rounded-full bg-white dark:bg-slate-600 border-2 border-slate-200 dark:border-slate-500 text-slate-500 dark:text-amber-400 shadow-sm hover:text-indigo-600 dark:hover:text-amber-300 transition-all flex items-center justify-center shrink-0 ml-4">
-                    <i id="theme-toggle-icon" class="fas fa-moon"></i>
-                </button>
-            </div>
-
         </div>
     </div>
 
@@ -467,7 +476,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </p>
                 </div>
 
-                <!-- ✨ เพิ่มคลาส signature-block ให้สามารถเปิดปิดผ่าน Javascript ได้ ✨ -->
                 <div class="mt-auto pt-10 text-right pr-5 signature-block">
                     <div class="inline-block text-center text-[15px] text-black leading-relaxed">
                         <div class="mb-3">ลงชื่อ..........................................................ผู้รายงาน</div>
@@ -576,7 +584,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <thead class="bg-slate-100 font-bold text-slate-700 border-b border-slate-300">
                         <tr>
                             <th class="p-1.5 w-8 text-center border-r border-slate-300">ลำดับ</th>
-                            <th class="p-1.5 w-24 text-center border-r border-slate-300">วัน/เวลา รับแจ้ง</th>
+                            <th class="p-1.5 w-24 text-center border-r border-slate-300">วัน/เวลา ที่รับแจ้ง</th>
                             <th class="p-1.5 w-28 text-center border-r border-slate-300">เลขที่ใบงาน</th>
                             <th class="p-1.5 border-r border-slate-300">ประเภทอุปกรณ์/ครุภัณฑ์</th>
                             <th class="p-1.5 border-r border-slate-300">สถานที่/ห้อง</th>
@@ -618,7 +626,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 <?php endif; ?>
 
                 <?php if ($page_index === $total_pages - 1): ?>
-                    <!-- ✨ เพิ่มคลาส signature-block ให้สามารถเปิดปิดผ่าน Javascript ได้ ✨ -->
+                    <!-- ✨ บล็อกลายเซ็นที่สามารถถูกควบคุมให้ซ่อน/แสดงได้ ✨ -->
                     <div class="mt-auto pt-10 text-right pr-5 signature-block">
                         <div class="inline-block text-center text-[15px] text-black leading-relaxed">
                             <div class="mb-3">ลงชื่อ..........................................................ผู้รายงาน</div>
@@ -717,7 +725,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             deptHeaders.forEach(header => {
                 const dept = header.getAttribute('data-dept');
                 if (deptVisibility[dept] > 0) {
-                    header.style.display = '';
+                    header.style.display = 'flex';
                 } else {
                     header.style.display = 'none';
                 }
