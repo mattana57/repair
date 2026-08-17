@@ -3,6 +3,22 @@
 date_default_timezone_set('Asia/Bangkok');
 include 'db_connect.php';
 
+// ✨ ฟังก์ชันแยกชื่อไทย-อังกฤษ อัตโนมัติ ✨
+function splitThaiEngName($fullName, $engName) {
+    $th = trim((string)$fullName);
+    $en = trim((string)$engName);
+    if (empty($en) && !empty($th)) {
+        if (preg_match('/^(.*?)\s*\((.*?)\)$/', $th, $matches)) {
+            $th = trim($matches[1]);
+            $en = trim($matches[2]);
+        } elseif (preg_match('/^(.*?)\s+(Mr\.|Mrs\.|Miss|Ms\.)\s*(.*)$/i', $th, $matches)) {
+            $th = trim($matches[1]);
+            $en = trim($matches[2]) . ' ' . trim($matches[3]);
+        }
+    }
+    return array($th, $en);
+}
+
 $repair = null;
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
@@ -14,7 +30,7 @@ if (isset($_GET['id'])) {
     $repair = $result->fetch_assoc();
 }
 
-// ✨ แก้ไข: ดึงรายชื่อช่างทุกคนจากตาราง technicians โดยตรง (รวมช่างที่เพิ่มใหม่ทั้งหมด) ✨
+// 🟢 ดึงข้อมูลช่างทั้งหมด
 $techs = [];
 $tech_res = $conn->query("SELECT DISTINCT full_name FROM technicians WHERE full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
 if($tech_res && $tech_res->num_rows > 0){
@@ -43,7 +59,7 @@ if($cat_res && $cat_res->num_rows > 0){
     }
 }
 
-// ตรวจสอบว่าในตาราง repairs มีฟิลด์ต่างๆ หรือไม่
+// ตรวจสอบฟิลด์ในฐานข้อมูล
 $check_asset_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'asset_code'");
 if($check_asset_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN asset_code VARCHAR(50) NULL AFTER equipment_type");
@@ -69,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $acode = trim($_POST['modal_asset_code']);
         $aname = trim($_POST['modal_asset_name']);
         
-        // รับค่าหมวดหมู่แบบไดนามิก (ถ้าระบุ 'อื่นๆ' ให้ดึงค่าจากช่องพิมพ์เอง)
+        // รับค่าหมวดหมู่แบบไดนามิก
         $acat = $_POST['modal_category'];
         if ($acat === 'อื่นๆ' && !empty($_POST['modal_category_custom'])) {
             $acat = trim($_POST['modal_category_custom']);
@@ -128,7 +144,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 } else {
                     $new_asset_name = isset($_POST['new_asset_name']) && trim($_POST['new_asset_name']) !== '' ? trim($_POST['new_asset_name']) : "ครุภัณฑ์จากใบงาน " . (!empty($repair['ticket_no']) ? $repair['ticket_no'] : "ล่าสุด");
                     
-                    // รับค่าหมวดหมู่แบบไดนามิกของหน้าฟอร์มหลัก
                     $new_asset_category = isset($_POST['new_asset_category']) ? $_POST['new_asset_category'] : "อื่นๆ";
                     if ($new_asset_category === 'อื่นๆ' && !empty($_POST['new_asset_category_custom'])) {
                         $new_asset_category = trim($_POST['new_asset_category_custom']);
@@ -154,7 +169,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $tech_phone = "- ไม่ระบุ -";
             if (!empty($technician_name)) {
-                // ✨ แก้ไข: ให้มาดึงข้อมูลเบอร์ติดต่อจากตาราง technicians โดยตรง ✨
                 $stmt_tech = $conn->prepare("SELECT phone FROM technicians WHERE full_name = ? LIMIT 1");
                 if ($stmt_tech) {
                     $stmt_tech->bind_param("s", $technician_name);
@@ -244,13 +258,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
         
-        /* ซ่อนลูกศรปฏิทินที่อาจติดมากับ datalist ในบางบราวเซอร์ */
+        /* ซ่อนปฏิทินที่ติดมากับ datalist ในบางบราวเซอร์ */
         input::-webkit-calendar-picker-indicator {
             opacity: 100;
             color: #94a3b8;
             cursor: pointer;
         }
-
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
@@ -331,17 +344,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <form id="updateForm" action="" method="POST" class="space-y-6">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
 
-                        <!-- ผู้รับผิดชอบ -->
-                        <div class="mb-4">
+                        <!-- ✨ ระบบมอบหมายช่างผู้รับผิดชอบ (Smart Searchable Dropdown) ✨ -->
+                        <?php
+                            $current_tech_full = $repair['technician_name'] ?? '';
+                            $current_tech_display = '';
+                            if ($current_tech_full) {
+                                list($cth, $cen) = splitThaiEngName($current_tech_full, '');
+                                $current_tech_display = $cth;
+                            }
+                        ?>
+                        <div class="mb-4 relative" id="techDropdownContainer">
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
-                            <select name="technician_name" id="technician_name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer">
-                                <option value="">-- ยังไม่ระบุผู้รับผิดชอบ --</option>
-                                <?php foreach($techs as $t): ?>
-                                    <option value="<?php echo htmlspecialchars($t); ?>" <?php echo (isset($repair['technician_name']) && $repair['technician_name'] == $t) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($t); ?>
-                                    </option>
+                            
+                            <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 transition-all cursor-text shadow-sm" onclick="toggleTechDropdown(event, true)">
+                                <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="-- ค้นหาหรือเลือกช่าง --">
+                                <button type="button" class="px-4 py-3 text-slate-400 hover:text-sky-600 focus:outline-none" onclick="toggleTechDropdown(event)">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Dropdown List ที่ซ่อนชื่อภาษาอังกฤษไว้ -->
+                            <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
+                                <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
+                                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
+                                        <i class="fas fa-user-slash text-xs"></i>
+                                    </div>
+                                    -- ยังไม่ระบุผู้รับผิดชอบ --
+                                </div>
+                                
+                                <div class="px-6 pt-4 pb-2 text-[11px] font-extrabold text-slate-400 tracking-wide">รายชื่อช่างในระบบ</div>
+                                
+                                <?php foreach($techs as $t): 
+                                    list($th_name, $en_name) = splitThaiEngName($t, '');
+                                    $searchStr = preg_replace('/\s+/', '', strtolower($th_name));
+                                ?>
+                                    <div class="tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-sky-50 hover:text-sky-600 cursor-pointer flex justify-between items-center transition-all group" data-value="<?php echo htmlspecialchars($t); ?>" data-display="<?php echo htmlspecialchars($th_name); ?>" data-search="<?php echo htmlspecialchars($searchStr); ?>" onmousedown="selectTech('<?php echo htmlspecialchars($t, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($th_name, ENT_QUOTES); ?>')">
+                                        <div class="flex items-center pointer-events-none">
+                                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-sky-100 group-hover:text-sky-500 transition-colors">
+                                                <i class="fas fa-user text-xs"></i>
+                                            </div>
+                                            <span><?php echo htmlspecialchars($th_name); ?></span>
+                                        </div>
+                                        <i class="fas fa-check text-sky-500 opacity-0 group-hover:opacity-100 transition-opacity check-icon pointer-events-none"></i>
+                                    </div>
                                 <?php endforeach; ?>
-                            </select>
+                            </div>
+                            
+                            <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($repair['technician_name'] ?? ''); ?>">
                         </div>
 
                         <!-- 🟢 ข้อมูลครุภัณฑ์และสถานะครุภัณฑ์ (Smart Form) -->
@@ -366,6 +415,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             </option>
                                         <?php endforeach; ?>
                                     </datalist>
+                                    <p class="text-[10px] text-slate-400 mt-2 font-medium">กด <span class="text-indigo-600 font-bold">"เพิ่มใหม่"</span> หากไม่มีรหัสในระบบ</p>
                                 </div>
 
                                 <div>
@@ -391,7 +441,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
-                                        <!-- ✨ อัปเดต Category ให้เลือกจาก DB และพิมพ์เพิ่มได้ ✨ -->
                                         <select name="new_asset_category" id="new_asset_category" onchange="toggleCustomInput(this, 'new_asset_category_custom')" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
                                             <?php foreach($asset_categories as $cat): ?>
                                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
@@ -487,7 +536,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <?php endforeach; ?>
                             <option value="อื่นๆ">อื่นๆ (พิมพ์ระบุเอง)</option>
                         </select>
-                        <!-- ✨ แก้ไข: ให้เปิดขึ้นมาเพื่อให้กรอกตอนกดปุ่ม อื่นๆ ✨ -->
                         <input type="text" name="modal_category_custom" id="modal_category_custom" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="ระบุหมวดหมู่ใหม่">
                     </div>
                 </div>
@@ -499,22 +547,110 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 
-    <!-- สคริปต์ตรวจสอบข้อมูลและเปิดฟอร์มเพิ่มครุภัณฑ์อัตโนมัติ -->
+    <!-- สคริปต์ควบคุม UI และการตรวจสอบข้อมูล -->
     <script>
+        // ✨ สคริปต์สำหรับจัดการ Dropdown ช่าง (ค้นหาได้) ✨
+        let currentTechDisplay = '<?php echo addslashes($current_tech_display); ?>';
+        let currentTechValue = '<?php echo addslashes($current_tech_full); ?>';
+
+        function focusTechSearch(e) {
+            e.target.value = ''; 
+            filterTechDropdown(); 
+            toggleTechDropdown(e, true);
+        }
+
+        function blurTechSearch(e) {
+            setTimeout(() => {
+                if (document.getElementById('techSearchInput').value === '') {
+                    document.getElementById('techSearchInput').value = currentTechDisplay || '-- ยังไม่ระบุผู้รับผิดชอบ --';
+                }
+            }, 200);
+        }
+
+        function toggleTechDropdown(e, forceOpen = false) {
+            if(e) e.stopPropagation();
+            const list = document.getElementById('techDropdownList');
+            if(forceOpen) {
+                list.classList.remove('hidden');
+                list.classList.add('flex');
+            } else {
+                list.classList.toggle('hidden');
+                list.classList.toggle('flex');
+            }
+            updateTechCheckmarks();
+        }
+
+        function filterTechDropdown() {
+            toggleTechDropdown(null, true);
+            const searchVal = document.getElementById('techSearchInput').value.toLowerCase().replace(/\s+/g, '');
+            const items = document.querySelectorAll('.tech-dropdown-item');
+            items.forEach(item => {
+                const searchData = item.getAttribute('data-search') || '';
+                const displayData = (item.getAttribute('data-display') || '').toLowerCase().replace(/\s+/g, '');
+                if(searchData.includes(searchVal) || displayData.includes(searchVal) || item.getAttribute('data-value') === '') {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function selectTech(val, displayText) {
+            currentTechValue = val;
+            currentTechDisplay = displayText;
+            document.getElementById('technician_name').value = val;
+            document.getElementById('techSearchInput').value = displayText;
+            document.getElementById('techDropdownList').classList.add('hidden');
+            document.getElementById('techDropdownList').classList.remove('flex');
+            updateTechCheckmarks();
+        }
+
+        function updateTechCheckmarks() {
+            document.querySelectorAll('.tech-dropdown-item').forEach(item => {
+                const icon = item.querySelector('.check-icon');
+                if(icon) {
+                    if(item.getAttribute('data-value') === currentTechValue && currentTechValue !== '') {
+                        icon.classList.remove('opacity-0');
+                        icon.classList.add('opacity-100');
+                    } else {
+                        icon.classList.add('opacity-0');
+                        icon.classList.remove('opacity-100');
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('techDropdownContainer');
+            if (container && !container.contains(e.target)) {
+                const list = document.getElementById('techDropdownList');
+                if(list) {
+                    list.classList.add('hidden');
+                    list.classList.remove('flex');
+                    document.getElementById('techSearchInput').value = currentTechDisplay || '-- ยังไม่ระบุผู้รับผิดชอบ --';
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('techSearchInput').value = currentTechDisplay || '-- ยังไม่ระบุผู้รับผิดชอบ --';
+            updateTechCheckmarks();
+        });
+
+
+        // ✨ สคริปต์ควบคุม Modal ของ Asset ✨
         function toggleModal(m) { 
             document.getElementById(m).classList.toggle('opacity-0'); 
             document.getElementById(m).classList.toggle('pointer-events-none'); 
             document.body.classList.toggle('modal-active'); 
         }
 
-        // ฟังก์ชันเปิด Modal และดึงค่าที่พิมพ์ไว้มาแสดง
         function openAssetModal() {
             let typedVal = document.getElementById('asset_code').value;
             document.getElementById('modal_asset_code').value = typedVal;
             toggleModal('assetModal');
         }
 
-        // ✨ ฟังก์ชันเพื่อเปิดช่องกรอกหมวดหมู่ใหม่ ✨
         function toggleCustomInput(selectElement, customInputId) {
             const customInput = document.getElementById(customInputId);
             if(selectElement.value === 'อื่นๆ') { 
@@ -524,7 +660,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
-        // ดึงรายการรหัสครุภัณฑ์ที่มีอยู่แล้วในระบบมาเก็บไว้เช็ค
         const existingAssets = <?php echo json_encode(array_column($assets_list, 'asset_code')); ?>;
         const assetCodeInput = document.getElementById('asset_code');
         const newAssetSection = document.getElementById('new_asset_section');
@@ -532,25 +667,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         function checkNewAsset() {
             const val = assetCodeInput.value.trim();
-            // ถ้ารหัสที่พิมพ์ ไม่เคยมีในฐานข้อมูล ให้กางฟอร์มใหม่ลงมา
             if (val !== '' && !existingAssets.includes(val)) {
                 newAssetSection.classList.remove('hidden');
                 newAssetSection.classList.add('block');
                 newAssetNameInput.required = true;
             } else {
-                // ถ้าลบออก หรือเป็นรหัสเดิม ให้ซ่อนฟอร์มไป
                 newAssetSection.classList.add('hidden');
                 newAssetSection.classList.remove('block');
                 newAssetNameInput.required = false;
             }
         }
 
-        // ดักจับทุกครั้งที่ช่างพิมพ์ หรือเลือกรหัสครุภัณฑ์
         assetCodeInput.addEventListener('input', checkNewAsset);
-        // ทำงานครั้งแรกเผื่อมีรหัสค้างอยู่
         checkNewAsset();
 
-        // แจ้งเตือนก่อนกดอัปเดต (ตรวจสอบว่าเลือกช่างหรือยัง)
         document.getElementById('updateForm').addEventListener('submit', function(e) {
             const statusChecked = document.querySelector('input[name="status"]:checked');
             const techName = document.getElementById('technician_name').value;
