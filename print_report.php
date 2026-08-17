@@ -287,6 +287,20 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md transition-all flex items-center ml-1 border border-slate-900 dark:border-rose-800">
                         <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
                     </button>
+
+                    <!-- ✨ ปุ่ม Toggle เปิด-ปิดลายเซ็นท้ายเอกสาร ✨ -->
+                    <div class="flex items-center ml-1 lg:ml-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1.5 shadow-sm">
+                        <label for="toggleSignature" class="flex items-center cursor-pointer">
+                            <div class="relative flex items-center">
+                                <input type="checkbox" id="toggleSignature" class="sr-only peer" checked onchange="toggleSignature()">
+                                <!-- Track -->
+                                <div class="w-7 h-4 bg-slate-300 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:bg-indigo-500 transition-colors duration-300"></div>
+                                <!-- Dot -->
+                                <div class="absolute left-[2px] top-[2px] bg-white border border-slate-300 rounded-full h-3 w-3 transition-transform duration-300 peer-checked:translate-x-[12px] peer-checked:border-white"></div>
+                            </div>
+                            <span class="ml-2 text-[11px] font-bold text-slate-600 dark:text-slate-300">ลายเซ็นท้ายเอกสาร</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -316,7 +330,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <?php 
                             foreach($grouped_techs as $dept => $techs) {
                                 $tech_count = count($techs);
-                                // ✨ แก้ไข: เปลี่ยนสีพื้นหลังแถบฝ่ายงานให้แยกชัดเจนจากพื้นหลัก ทั้ง 2 โหมด ✨
                                 echo "<div class='flex justify-between items-center px-4 py-2 mt-2 mb-1 bg-blue-50/50 dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800 dropdown-dept-header' data-dept=\"".htmlspecialchars($dept)."\">
                                         <span class='text-xs font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wide'>{$dept}</span>
                                         <span class='text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 shadow-sm px-2 py-0.5 rounded-md flex items-center'>
@@ -454,7 +467,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </p>
                 </div>
 
-                <div class="mt-auto pt-10 text-right pr-5">
+                <!-- ✨ เพิ่มคลาส signature-block ให้สามารถเปิดปิดผ่าน Javascript ได้ ✨ -->
+                <div class="mt-auto pt-10 text-right pr-5 signature-block">
                     <div class="inline-block text-center text-[15px] text-black leading-relaxed">
                         <div class="mb-3">ลงชื่อ..........................................................ผู้รายงาน</div>
                         <div class="font-bold mb-1">( <?php echo $reporter_name; ?> )</div>
@@ -604,7 +618,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 <?php endif; ?>
 
                 <?php if ($page_index === $total_pages - 1): ?>
-                    <div class="mt-auto pt-10 text-right pr-5">
+                    <!-- ✨ เพิ่มคลาส signature-block ให้สามารถเปิดปิดผ่าน Javascript ได้ ✨ -->
+                    <div class="mt-auto pt-10 text-right pr-5 signature-block">
                         <div class="inline-block text-center text-[15px] text-black leading-relaxed">
                             <div class="mb-3">ลงชื่อ..........................................................ผู้รายงาน</div>
                             <div class="font-bold mb-1">( <?php echo $reporter_name; ?> )</div>
@@ -627,6 +642,15 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <?php endif; ?>
 
     <script>
+        // ✨ ฟังก์ชันควบคุมการซ่อน/แสดง ลายเซ็นท้ายเอกสาร ✨
+        function toggleSignature() {
+            const checkbox = document.getElementById('toggleSignature');
+            const sigBlocks = document.querySelectorAll('.signature-block');
+            sigBlocks.forEach(b => {
+                b.style.display = checkbox.checked ? 'block' : 'none';
+            });
+        }
+
         let currentTechDisplay = '<?php echo $selected_tech === "all" ? "รวมทุกฝ่ายงาน (ทั้งหมด)" : addslashes($selected_tech); ?>';
 
         function focusTechSearch(e) {
