@@ -180,7 +180,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             background-position: right 0.75rem center; 
             background-size: 1.25rem;
             padding-right: 2.25rem !important; 
-            font-family: inherit; /* ✨ บังคับใช้ฟอนต์ตัวอักษรเดียวกับเว็บ ✨ */
         }
         .dark .custom-select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
@@ -211,9 +210,11 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.6); 
         }
 
+        /* ✨ จุดที่ 4: ลบหน้าว่างแผ่นสุดท้ายตอนพิมพ์ ✨ */
         @media print {
             .no-print { display: none !important; }
-            body { background: white !important; font-size: 14px; color: black !important; }
+            body { background: white !important; font-size: 14px; color: black !important; margin: 0; padding: 0; }
+            html { margin: 0; padding: 0; }
             
             @page { 
                 size: A4 portrait; 
@@ -228,11 +229,13 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 margin: 0 !important; 
                 box-shadow: none !important; 
                 page-break-after: always;
+                break-after: page;
                 page-break-inside: avoid;
             }
-            /* ✨ แก้ไขหน้ากระดาษว่างเกินมาตอนปริ้น ✨ */
+            /* บังคับไม่ให้หน้าสุดท้ายตัดหน้าใหม่ เพื่อกันแผ่นว่างๆ */
             .a4-container:last-of-type {
-                page-break-after: auto; 
+                page-break-after: auto !important; 
+                break-after: auto !important;
             }
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; page-break-after: auto; }
@@ -276,32 +279,32 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-2.5">
-                    <!-- ✨ เพิ่มกรอบสีเทาให้ปุ่มในโหมดมืด (ตอน Inactive) ✨ -->
+                    <!-- ✨ จุดที่ 3: ปุ่มที่ยังไม่กด ในโหมดมืด ปรับพื้นหลัง/ขอบเป็นสีเทาให้เห็นชัดเจน ✨ -->
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 border-slate-200 dark:border-slate-500 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-500'; ?>">
-                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-300'; ?>"></i> ตารางรายงาน
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600 shadow-sm'; ?>">
+                        <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
                     </a>
                     
                     <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 border-slate-200 dark:border-slate-500 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-500'; ?>">
-                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-300'; ?>"></i> บันทึกข้อความ
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-600 shadow-sm'; ?>">
+                        <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
                     </a>
                     
                     <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md transition-all flex items-center ml-1 border border-slate-900 dark:border-rose-800">
                         <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
                     </button>
 
-                    <!-- ✨ ปรับสีโหมดมืดให้เป็นกรอบสีเทา และมั่นใจว่าสวิตช์อยู่ด้านหน้าข้อความ ✨ -->
-                    <div class="flex items-center ml-1 lg:ml-2 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-full px-3 py-1.5 shadow-sm">
+                    <!-- ✨ จุดที่ 2: สวิตช์ลายเซ็น เพิ่มกรอบและสีในโหมดมืด (dark:bg-slate-700 dark:border-slate-600) ✨ -->
+                    <div class="flex items-center ml-1 lg:ml-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-full px-3 py-1.5 shadow-sm">
                         <label for="toggleSignature" class="flex items-center cursor-pointer">
                             <div class="relative flex items-center">
                                 <input type="checkbox" id="toggleSignature" class="sr-only peer" checked onchange="toggleSignature()">
                                 <!-- Track -->
-                                <div class="w-7 h-4 bg-slate-300 dark:bg-slate-400 peer-focus:outline-none rounded-full peer peer-checked:bg-indigo-500 transition-colors duration-300"></div>
+                                <div class="w-7 h-4 bg-slate-300 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:bg-indigo-500 transition-colors duration-300"></div>
                                 <!-- Dot -->
                                 <div class="absolute left-[2px] top-[2px] bg-white border border-slate-300 rounded-full h-3 w-3 transition-transform duration-300 peer-checked:translate-x-[12px] peer-checked:border-white"></div>
                             </div>
-                            <span class="ml-2 text-[11px] font-bold text-slate-700 dark:text-slate-100">ลายเซ็นท้ายเอกสาร</span>
+                            <span class="ml-2 text-[11px] font-bold text-slate-600 dark:text-slate-300">ลายเซ็นท้ายเอกสาร</span>
                         </label>
                     </div>
                 </div>
@@ -312,8 +315,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                     
                     <!-- Dropdown สำหรับช่าง -->
+                    <!-- ✨ จุดที่ 1: ช่องค้นหาช่าง ปรับเป็น rounded-full เหมือนช่องเดือน/ปี ✨ -->
                     <div class="relative w-full md:w-60" id="techDropdownContainer">
-                        <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
+                        <div class="flex items-center w-full bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full border border-slate-200 dark:border-slate-600 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
                             <i class="fas fa-search pl-3 text-slate-400 dark:text-slate-300 opacity-80"></i>
                             <input type="text" id="techSearchInput" class="w-full bg-transparent px-2 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
                             <button type="button" class="pr-3 pl-1 text-slate-400 dark:text-slate-300 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
@@ -357,8 +361,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         <input type="hidden" name="tech" id="techHiddenInput" value="<?php echo htmlspecialchars($selected_tech); ?>">
                     </div>
 
-                    <!-- ✨ แก้ไขให้เป็นขอบมน rounded-full เหมือนช่องค้นหาช่าง ✨ -->
-                    <select name="month" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
+                    <!-- ✨ จุดที่ 1: เดือน เปลี่ยนขอบมน (rounded-full) และกรอบพื้นหลังเหมือนกล่องค้นหา ✨ -->
+                    <select name="month" class="custom-select bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-4 py-2 border border-slate-200 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
                         <?php 
                         for($m=1; $m<=12; $m++) {
                             $sel = ($selected_month === $m) ? 'selected' : '';
@@ -367,8 +371,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         ?>
                     </select>
 
-                    <!-- ✨ แก้ไขให้เป็นขอบมน rounded-full เหมือนช่องค้นหาช่าง ✨ -->
-                    <select name="year" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
+                    <!-- ✨ จุดที่ 1: พ.ศ. เปลี่ยนขอบมน (rounded-full) และกรอบพื้นหลังเหมือนกล่องค้นหา ✨ -->
+                    <select name="year" class="custom-select bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-4 py-2 border border-slate-200 dark:border-slate-600 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors">
                         <?php 
                         foreach($available_years as $y) {
                             $sel = ($selected_year == $y) ? 'selected' : '';
