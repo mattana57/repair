@@ -258,6 +258,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         body { font-family: 'Kanit', sans-serif; background-color: #f0f4f8; color: #334155; }
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
         
+        /* ✨ CSS สำหรับเปลี่ยน Dropdown ทุกจุดให้เป็น "สามเหลี่ยมคว่ำทึบ" สีเทา ✨ */
         .custom-select {
             appearance: none;
             -webkit-appearance: none;
@@ -269,6 +270,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding-right: 2.5rem;
         }
 
+        /* ซ่อนลูกศรปฏิทินที่ติดมากับ datalist */
         input[list]::-webkit-calendar-picker-indicator {
             opacity: 0 !important;
             cursor: pointer;
@@ -298,10 +300,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="lg:col-span-2 space-y-6">
                 <div class="modern-card p-6 border-t-4 border-sky-500">
-                    <!-- ✨ เปลี่ยนสไตล์ รหัสใบงาน ให้ใหญ่และเป็นสีฟ้า ตรงเป๊ะตามคำขอ ✨ -->
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-lg font-bold text-slate-800">ข้อมูลใบงาน</h2>
-                        <span class="text-lg font-extrabold text-sky-600 tracking-tight">
+                        <!-- ✨ นำกรอบพื้นหลังกลับมา และตั้งขนาดเป็น text-lg ✨ -->
+                        <span class="bg-slate-100 border border-slate-200 px-3 py-1 rounded-lg text-lg font-extrabold text-sky-600 tracking-tight">
                             <?php echo htmlspecialchars($repair['ticket_no']); ?>
                         </span>
                     </div>
@@ -357,6 +359,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <form id="updateForm" action="" method="POST" class="space-y-6">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
 
+                        <!-- ผู้รับผิดชอบ -->
                         <?php
                             $current_tech_full = $repair['technician_name'] ?? '';
                             $current_tech_display = '';
@@ -376,6 +379,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </button>
                             </div>
                             
+                            <!-- Dropdown List ที่ซ่อนชื่อภาษาอังกฤษไว้ -->
                             <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
                                 <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
                                     <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
@@ -405,6 +409,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($repair['technician_name'] ?? ''); ?>">
                         </div>
 
+                        <!-- 🟢 ข้อมูลครุภัณฑ์และสถานะครุภัณฑ์ -->
                         <div class="mb-4 p-5 border border-slate-200 bg-slate-50/50 rounded-2xl shadow-sm">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -439,6 +444,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                             </div>
 
+                            <!-- ✨ ส่วนกรอกข้อมูลครุภัณฑ์ใหม่ (ซ่อนไว้) ✨ -->
                             <div id="new_asset_section" class="hidden mt-4 pt-4 border-t border-slate-200">
                                 <div class="flex items-center mb-3">
                                     <span class="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 mr-2"><i class="fas fa-plus text-xs"></i></span>
@@ -526,6 +532,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <button type="button" onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
             <form action="update_repair.php?id=<?php echo $id; ?>" method="POST" class="p-6">
+                <!-- ตัวแปร Hidden เพื่อให้รู้ว่ากดเซฟมาจาก Modal นี้ -->
                 <input type="hidden" name="save_asset_only" value="1">
                 
                 <div class="space-y-5">
@@ -660,6 +667,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             toggleModal('assetModal');
         }
 
+        // ✨ ฟังก์ชันเพื่อเปิดช่องกรอกหมวดหมู่ใหม่ ✨
         function toggleCustomInput(selectElement, customInputId) {
             const customInput = document.getElementById(customInputId);
             if(selectElement.value === 'อื่นๆ') { 
