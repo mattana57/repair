@@ -848,7 +848,6 @@ $dept_icons = [
                                             $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
                                         }
 
-                                        // ✨ เติม align-top ให้ตารางตรงกัน และให้ Status กับ Action อยู่ตรงกลาง (align-middle) ✨
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
                                             <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-slate-700'>{$created_date}</div>
@@ -1474,12 +1473,15 @@ $dept_icons = [
                                 </div>
                                 <?php 
                                     foreach ($techs_by_dept as $dept => $techs) {
-                                        // ✨ จุดที่ 2: ขนาดตัวอักษรชื่อฝ่ายงานเท่าชื่อช่าง (text-sm) และใส่แถบสีให้ดูเด่นแต่สบายตา ✨
-                                        echo "<div class='dropdown-dept-header flex items-center px-4 py-2.5 mt-2 mb-1 bg-indigo-50/60 border-y border-indigo-100' data-dept=\"".htmlspecialchars($dept)."\">
-                                                <span class='text-sm font-extrabold text-indigo-700 tracking-wide'><i class='fas fa-users mr-2 opacity-60 text-xs'></i>{$dept}</span>
+                                        $tech_count = count($techs);
+                                        // ✨ จุดที่ 1 และ 2: ขยายขนาดตัวอักษร, ใส่แถบสี, และโชว์ป้ายจำนวนคนอยู่ด้านขวาสุด ✨
+                                        echo "<div class='dropdown-dept-header flex justify-between items-center px-4 py-2.5 mt-2 mb-1 bg-indigo-50/60 border-y border-indigo-100' data-dept=\"".htmlspecialchars($dept)."\">
+                                                <span class='text-sm font-extrabold text-indigo-700 tracking-wide'>{$dept}</span>
+                                                <span class='text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 shadow-sm px-2 py-0.5 rounded-md flex items-center'>
+                                                    <i class='fas fa-users mr-1 opacity-70 text-[9px]'></i> {$tech_count} คน
+                                                </span>
                                               </div>";
                                         foreach($techs as $t) {
-                                            // ✨ จุดที่ 1: ลบภาษาอังกฤษออก (แสดงเฉพาะชื่อไทย) ✨
                                             list($th_name, $en_name) = splitThaiEngName($t['full_name'], $t['english_name']);
                                             $tNameOnly = htmlspecialchars($th_name);
                                             $tValue = htmlspecialchars($t['full_name'], ENT_QUOTES);
