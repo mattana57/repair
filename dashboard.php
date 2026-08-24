@@ -700,7 +700,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[280px]"> 
+                        <div class="flex-1 relative w-full h-[280px]"> <!-- เปลี่ยน h-[240px] เป็น h-[280px] -->
                             <canvas id="mainLocChart"></canvas>
                         </div>
                     </div>
@@ -722,7 +722,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[280px]"> 
+                        <div class="flex-1 relative w-full h-[280px]"> <!-- เปลี่ยน h-[240px] เป็น h-[280px] -->
                             <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
@@ -750,25 +750,25 @@ $dept_icons = [
                             </div>
                         </div>
                         
-                        <div class="flex flex-col md:flex-row items-center gap-6 w-full mt-2 flex-1">
-                            <!-- ✨ ลดขนาด Score Box ให้พอดีไม่อึดอัด ✨ -->
-                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-48 p-5 rounded-3xl border border-slate-100 shrink-0 h-[220px]">
-                                <div class="text-6xl font-black text-slate-800 tracking-tighter mb-1" id="avgRatingText">0.0</div>
-                                <div class="flex text-amber-400 text-lg gap-1 mb-3" id="avgRatingStars">
+                        <div class="flex flex-col md:flex-row items-center gap-8 w-full mt-2 flex-1">
+                            <!-- Score Box -->
+                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-56 p-6 rounded-3xl border border-slate-100 shrink-0 h-[280px]">
+                                <div class="text-5xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
+                                <div class="flex text-amber-400 text-xl gap-1 mb-4" id="avgRatingStars">
                                     <!-- stars injected by JS -->
                                 </div>
-                                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
+                                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-4 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
                             </div>
                             
-                            <!-- Chart Area -->
-                            <div class="relative flex-1 w-full min-w-0 h-[220px]">
+                            <!-- Chart Area (แก้บั๊กเพิ่ม min-w-0 แล้วเปลี่ยนเป็นแท่งแนวนอน) -->
+                            <div class="relative flex-1 w-full min-w-0 h-[280px]">
                                 <canvas id="mainRatingChart"></canvas>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Recent Reviews List -->
-                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-1 h-full">
+                    <!-- Recent Reviews List (มีแถบเลื่อน) -->
+                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-1">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Reviews</h3>
@@ -777,8 +777,8 @@ $dept_icons = [
                             <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg"><i class="fas fa-comment-dots"></i></div>
                         </div>
                         
-                        <!-- ✨ เลื่อน Scrollbar ให้พอดีกับกล่องฝั่งซ้าย ✨ -->
-                        <div class="overflow-y-auto p-0 custom-scrollbar flex-1 h-[280px]"> 
+                        <!-- ✨ ล็อคความสูงและใส่คำสั่งเลื่อน Scrollbar ให้พอดีกับกล่องฝั่งซ้าย ✨ -->
+                        <div class="overflow-y-auto p-0 custom-scrollbar h-[280px]"> <!-- เปลี่ยน h-[265px] เป็น h-[280px] -->
                             <div class="divide-y divide-slate-100">
                                 <?php
                                 $rev_res = $conn->query("SELECT reporter_name, rating, review_comment, completed_at FROM repairs WHERE rating > 0 ORDER BY completed_at DESC LIMIT 10");
@@ -2517,11 +2517,11 @@ $dept_icons = [
                 data: {
                     labels: ['5 ดาว', '4 ดาว', '3 ดาว', '2 ดาว', '1 ดาว'],
                     datasets: [{ 
-                        label: 'จำนวนรีวิว', 
+                        label: 'จำนวน (รีวิว)', 
                         data: dataCounts, 
                         backgroundColor: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'], // ไล่สีเขียวไปแดง
                         borderRadius: 100, // ขอบโค้งมนแบบ pill
-                        barThickness: 12, // <---- เปลี่ยนจาก 24 เป็น 12 ให้ดูพอดี
+                        barThickness: 24, // ความหนาพอดี ไม่อึดอัด
                         borderSkipped: false
                     }]
                 },
@@ -2545,7 +2545,7 @@ $dept_icons = [
                             beginAtZero: true 
                         }, 
                         y: { 
-                            ticks: { font: { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' }, color: '#475569' }, // ลดฟอนต์จาก 14 เป็น 12
+                            ticks: { font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
