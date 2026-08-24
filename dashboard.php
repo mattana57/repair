@@ -700,7 +700,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[260px]">
+                        <div class="flex-1 relative w-full h-[250px]">
                             <canvas id="mainLocChart"></canvas>
                         </div>
                     </div>
@@ -722,17 +722,17 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[260px]">
+                        <div class="flex-1 relative w-full h-[250px]">
                             <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
                 </div>
 
                 <!-- ✨ ส่วน Rating & Review ✨ -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
                     
                     <!-- Rating Chart -->
-                    <div class="modern-card p-6 flex flex-col lg:col-span-2 justify-between">
+                    <div class="modern-card p-6 flex flex-col lg:col-span-3 justify-between">
                         <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
@@ -752,7 +752,7 @@ $dept_icons = [
                         
                         <div class="flex flex-col md:flex-row items-center gap-8 w-full mt-2 flex-1">
                             <!-- Score Box -->
-                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-56 p-6 rounded-3xl border border-slate-100 shrink-0 h-[260px]">
+                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-56 p-6 rounded-3xl border border-slate-100 shrink-0 h-[250px]">
                                 <div class="text-5xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
                                 <div class="flex text-amber-400 text-xl gap-1 mb-4" id="avgRatingStars">
                                     <!-- stars injected by JS -->
@@ -761,14 +761,14 @@ $dept_icons = [
                             </div>
                             
                             <!-- Chart Area (แก้บั๊กเพิ่ม min-w-0 แล้วเปลี่ยนเป็นแท่งแนวนอน) -->
-                            <div class="relative flex-1 w-full min-w-0 h-[260px]">
+                            <div class="relative flex-1 w-full min-w-0 h-[250px]">
                                 <canvas id="mainRatingChart"></canvas>
                             </div>
                         </div>
                     </div>
 
                     <!-- Recent Reviews List (มีแถบเลื่อน) -->
-                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-1">
+                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-2">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Reviews</h3>
@@ -778,7 +778,7 @@ $dept_icons = [
                         </div>
                         
                         <!-- ✨ ล็อคความสูงและใส่คำสั่งเลื่อน Scrollbar ให้พอดีกับกล่องฝั่งซ้าย ✨ -->
-                        <div class="overflow-y-auto p-0 custom-scrollbar h-[260px]"> <!-- เปลี่ยน h-[265px] เป็น h-[260px] -->
+                        <div class="overflow-y-auto p-0 custom-scrollbar h-[250px]">
                             <div class="divide-y divide-slate-100">
                                 <?php
                                 $rev_res = $conn->query("SELECT reporter_name, rating, review_comment, completed_at FROM repairs WHERE rating > 0 ORDER BY completed_at DESC LIMIT 10");
