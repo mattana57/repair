@@ -185,7 +185,7 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
     }
 
-    // ✨ เพิ่มคอลัมน์สำหรับ Rating และ Review (ถ้ายังไม่มี) ✨
+    // ✨ ตรวจสอบและสร้างคอลัมน์สำหรับ Rating และ Review (ถ้ายังไม่มี) ✨
     $check_rating = $conn->query("SHOW COLUMNS FROM repairs LIKE 'rating'");
     if($check_rating && $check_rating->num_rows == 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN rating INT DEFAULT 0");
@@ -643,11 +643,11 @@ $dept_icons = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="equipMonth" onchange="renderEquipChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="equipMonth" onchange="renderEquipChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- เดือน --</option>
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
                                 </select>
-                                <select id="equipYear" onchange="renderEquipChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="equipYear" onchange="renderEquipChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- ปี --</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
@@ -665,11 +665,11 @@ $dept_icons = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="statusMonth" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="statusMonth" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- เดือน --</option>
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
                                 </select>
-                                <select id="statusYear" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="statusYear" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- ปี --</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
@@ -687,11 +687,11 @@ $dept_icons = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="locMonth" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="locMonth" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- เดือน --</option>
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
                                 </select>
-                                <select id="locYear" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="locYear" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- ปี --</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
@@ -709,11 +709,11 @@ $dept_icons = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="techMonth" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="techMonth" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- เดือน --</option>
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
                                 </select>
-                                <select id="techYear" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="techYear" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- ปี --</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
@@ -725,28 +725,29 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <!-- ✨ ส่วน Rating & Review ใหม่ ✨ -->
+                <!-- ✨ ส่วน Rating & Review ใหม่ที่แก้ไขให้พอดี ไม่เทอะทะ ✨ -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                    <!-- Rating Chart -->
-                    <div class="modern-card p-6 flex flex-col lg:col-span-2 justify-between">
-                        <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
+                    
+                    <!-- Rating Chart (แก้ไขส่วนของ Flex ให้ไม่ยืดบวม) -->
+                    <div class="modern-card p-6 flex flex-col lg:col-span-2">
+                        <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- เดือน --</option>
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
                                 </select>
-                                <select id="ratingYear" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="ratingYear" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- ปี --</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
                             </div>
                         </div>
                         
-                        <div class="flex flex-col md:flex-row items-center gap-8 flex-1">
+                        <div class="flex flex-col md:flex-row items-center gap-8 w-full mt-2">
                             <!-- Score Box -->
                             <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-auto md:min-w-[200px] p-6 rounded-3xl border border-slate-100 shrink-0">
                                 <div class="text-6xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
@@ -756,23 +757,25 @@ $dept_icons = [
                                 <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
                             </div>
                             
-                            <!-- Chart Area -->
-                            <div class="relative w-full h-[180px] flex-1 mt-4 md:mt-0">
+                            <!-- Chart Area (กำหนดความสูงคงที่ ไม่ให้บวมตามหน้าจอ) -->
+                            <div class="relative w-full flex-1" style="height: 200px;">
                                 <canvas id="mainRatingChart"></canvas>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Recent Reviews List -->
+                    <!-- Recent Reviews List (เพิ่มกำหนดความสูง เพื่อให้เกิดแถบ Scroll) -->
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-1">
-                        <div class="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center shrink-0">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Reviews</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ข้อความรีวิวล่าสุด</p>
                             </div>
                             <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg"><i class="fas fa-comment-dots"></i></div>
                         </div>
-                        <div class="overflow-y-auto flex-1 p-0 custom-scrollbar h-[300px]">
+                        
+                        <!-- ✨ ล็อคความสูงและใส่คำสั่งเลื่อน Scrollbar ให้พอดีกับกล่องฝั่งซ้าย ✨ -->
+                        <div class="overflow-y-auto p-0 custom-scrollbar h-[250px]">
                             <div class="divide-y divide-slate-100">
                                 <?php
                                 $rev_res = $conn->query("SELECT reporter_name, rating, review_comment, completed_at FROM repairs WHERE rating > 0 ORDER BY completed_at DESC LIMIT 10");
@@ -807,7 +810,7 @@ $dept_icons = [
                                               </div>";
                                     }
                                 } else {
-                                    echo "<div class='p-8 flex flex-col items-center justify-center text-center'>
+                                    echo "<div class='p-8 flex flex-col items-center justify-center text-center h-full'>
                                             <i class='far fa-star text-4xl text-slate-200 mb-3'></i>
                                             <p class='text-slate-400 font-medium text-sm'>ยังไม่มีการรีวิวจากผู้ใช้งาน</p>
                                           </div>";
@@ -2517,7 +2520,7 @@ $dept_icons = [
                         data: dataCounts, 
                         backgroundColor: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'], 
                         borderRadius: 100, // ปลายโค้งมนแบบ Pill shape
-                        barThickness: 12,  // กำหนดความหนาแท่งกราฟให้ไม่เทอะทะ
+                        barThickness: 16,  // กำหนดความหนาแท่งกราฟให้ไม่เทอะทะ
                         borderSkipped: false
                     }]
                 },
