@@ -250,7 +250,6 @@ if (!is_null($events['events'])) {
                                 continue;
                             }
 
-                            // 💡 อัปเดตสถานะเป็น "กำลังดำเนินการ" เพื่อให้ตรงกับโครงสร้างใน Dashboard
                             $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_name = ? WHERE ticket_no = ?");
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
@@ -298,7 +297,6 @@ if (!is_null($events['events'])) {
                             $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ\n📞 เบอร์ติดต่อ: $tech_phone\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ 🛠️"];
                             send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
 
-                            // 💡 นำข้อความแจ้งกลุ่ม ย้ายมาตรงนี้ (แสดงทันทีหลังกดปุ่มรับงาน)
                             if(!empty($line_group_id)) {
                                 $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
                                                 "👨‍🔧 ช่าง: " . $tech_name . "\n" .
@@ -324,7 +322,6 @@ if (!is_null($events['events'])) {
                     $job = $stmt_check->get_result()->fetch_assoc();
 
                     if ($job) {
-                        // 💡 แก้บั๊ก: รองรับทั้งสถานะ "กำลังดำเนินการ" และ "ช่างรับเรื่องแจ้งซ่อมแล้ว" เผื่อกรณีค้างในระบบเก่า
                         if ($job['status'] == 'กำลังดำเนินการ' || $job['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') {
                             
                             $stmt_tech = $conn->prepare("SELECT full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
@@ -337,15 +334,11 @@ if (!is_null($events['events'])) {
                                 
                                 if ($clicker_name === $job['technician_name']) {
                                     
-                                    // 💡 เพิ่มการเก็บข้อมูลเวลาที่กดปิดงานให้ตรงกับหน้าเว็บ
                                     $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว', completed_at = CURRENT_TIMESTAMP WHERE ticket_no = ?");
                                     $stmt->bind_param("s", $ticket_no);
                                     $stmt->execute();
 
-                                    $close_reply = "🎉 บันทึกปิดงานใบงาน $ticket_no เรียบร้อยค่ะ ระบบได้ส่งแบบประเมินให้ผู้แจ้งแล้ว\n\n" .
-                                                   "📝 หากต้องการเพิ่มหมายเหตุย้อนหลัง หรือตรวจสอบรายละเอียดใบงาน สามารถคลิกลิงก์ด้านล่างได้เลยค่ะ:\n" .
-                                                   "http://103.99.11.147/repair/update_repair.php?id=" . $job['id'];
-                                    
+                                    $close_reply = "🎉 บันทึกปิดงานใบงาน $ticket_no เรียบร้อยค่ะ ระบบได้ส่งแบบประเมินให้ผู้แจ้งแล้ว";
                                     send_reply($replyToken, ['type' => 'text', 'text' => $close_reply], $channelAccessToken);
 
                                     $review_msg = [

@@ -1,7 +1,10 @@
 <?php
+session_start();
+// ตั้งค่าโซนเวลาเป็นประเทศไทย
 date_default_timezone_set('Asia/Bangkok');
 include 'db_connect.php';
 
+// เช็คสิทธิ์ว่าเป็น Admin/Executive หรือไม่
 $is_admin = isset($_SESSION['role']) && in_array(strtolower($_SESSION['role']), ['admin', 'executive']);
 
 function splitThaiEngName($fullName, $engName) {
@@ -104,8 +107,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
     } else {
         // 💡 เก็บค่าเก่าไว้เทียบว่ามีการเปลี่ยนหมายเหตุหรือสถานะหรือไม่
-        $old_status = $repair['status'];
-        $old_note = $repair['repair_note'];
+        $old_status = isset($repair['status']) ? $repair['status'] : '';
+        $old_note = isset($repair['repair_note']) ? trim($repair['repair_note']) : '';
 
         $status = $_POST['status'];
         $repair_note = trim($_POST['repair_note']);
@@ -160,7 +163,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
             
-            // 💡 โลจิกแจ้งเตือนผู้แจ้งซ่อมโฉมใหม่ 💡
             if(!empty($repair['line_user_id'])) {
                 $messages = [];
                 
@@ -217,9 +219,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $review_msg
                     ];
                 } 
-                // กรณีที่ 2: กดเซฟเพื่อ "เพิ่มหมายเหตุ" เฉยๆ (ไม่มีการปิดงาน และหมายเหตุต้องถูกพิมพ์มาใหม่)
-                else if ($status === 'กำลังดำเนินการ' && !empty($repair_note) && $repair_note !== $old_note) {
-                    $textMsg = "📝 ช่างได้เพิ่มหมายเหตุในงานซ่อม\n\n" .
+                // 💡 กรณีที่ 2: มีการ "อัปเดตหมายเหตุ" เปลี่ยนไปจากเดิม (ส่งข้อความแจ้งเตือน ไม่ว่าสถานะของงานจะเป็นอะไรก็ตาม)
+                else if ($repair_note !== $old_note && $repair_note !== '') {
+                    $textMsg = "📝 ช่างได้อัปเดตหมายเหตุในงานซ่อม\n\n" .
                                "📋 ใบงาน: {$repair['ticket_no']}\n" .
                                "💻 ปัญหา: {$repair['equipment_type']} ({$repair['location']})\n" .
                                "👨‍🔧 ช่างดูแล: {$tech_display}\n" .
@@ -228,7 +230,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $messages = [['type' => 'text', 'text' => $textMsg]];
                 }
                 
-                // ส่งข้อความก็ต่อเมื่อมีเงื่อนไขตรงตาม 2 กรณีข้างบน
+                // ส่งข้อความถ้าเข้าเงื่อนไขด้านบน
                 if (!empty($messages)) {
                     $postData = [
                         'to' => $repair['line_user_id'],
@@ -375,7 +377,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
                             
                             <?php if (!empty($current_tech_full) && $current_tech_full !== '-' && !$is_admin): ?>
-                                <!-- โหมดช่างเปิดจาก LINE (ล็อกชื่อช่างเพื่อป้องกันการแก้ไขผิดพลาด) -->
                                 <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center shadow-sm">
                                     <div class="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center mr-4 text-sky-600 shrink-0">
                                         <i class="fas fa-user-check"></i>
@@ -387,7 +388,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                                 <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($current_tech_full); ?>">
                             <?php else: ?>
-                                <!-- โหมดแอดมินเปิดจาก Dashboard (มีสิทธิ์เปลี่ยนชื่อช่างได้) -->
                                 <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 transition-all cursor-text shadow-sm" onclick="toggleTechDropdown(event, true)">
                                     <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="-- ค้นหาหรือเลือกช่าง --">
                                     
@@ -494,7 +494,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <div class="text-sm font-medium">รอรับเรื่อง</div>
                                     </div>
                                 </label>
-                                <!-- 💡 ปรับ value ให้เป็น 'กำลังดำเนินการ' เพื่อให้ตรงกับฐานข้อมูลเป๊ะๆ -->
                                 <label class="cursor-pointer">
                                     <input type="radio" name="status" value="กำลังดำเนินการ" class="peer sr-only" <?php echo ($repair['status'] == 'กำลังดำเนินการ' || $repair['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') ? 'checked' : ''; ?>>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-sky-50 peer-checked:border-sky-300 peer-checked:text-sky-700 hover:bg-slate-50 transition-all">
@@ -757,7 +756,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php if($is_admin): ?>
                 window.location.href = 'dashboard.php?tab=repairs';
                 <?php else: ?>
-                window.close(); // โหมดช่างปิดหน้าต่างตัวเองเมื่อเสร็จ
+                window.close(); 
                 <?php endif; ?>
             }
         });
