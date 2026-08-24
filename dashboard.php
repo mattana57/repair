@@ -801,8 +801,8 @@ $dept_icons = [
                                         
                                         $stars_html = '';
                                         for($i=1; $i<=5; $i++) {
-                                            if($i <= $r_rating) $stars_html .= '<i class="fas fa-star text-amber-400 text-[10px]"></i>';
-                                            else $stars_html .= '<i class="far fa-star text-amber-200 text-[10px]"></i>';
+                                            if($i <= $r_rating) $stars_html += '<i class="fas fa-star text-amber-400 text-[10px]"></i>';
+                                            else $stars_html += '<i class="far fa-star text-amber-200 text-[10px]"></i>';
                                         }
 
                                         $has_completed = (!empty($rev['completed_at']) && $rev['completed_at'] != '0000-00-00 00:00:00');
@@ -1927,18 +1927,18 @@ $dept_icons = [
     <div id="techReviewsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techReviewsModal')"></div>
         <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[70vh] max-h-[700px]">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0 relative">
-                <div class="flex items-center gap-3 relative z-10 flex-1 min-w-0">
-                    <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-lg shrink-0"><i class="fas fa-star"></i></div>
-                    <p class="text-lg font-extrabold text-slate-800 truncate" id="techReviewsModalTitle">รีวิวของช่าง</p>
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
+                <div class="flex items-center gap-4 flex-1 min-w-0 pr-4">
+                    <div class="w-11 h-11 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-xl shrink-0"><i class="fas fa-star"></i></div>
+                    <div class="min-w-0">
+                        <p class="text-lg font-extrabold text-slate-800 truncate leading-tight" id="techReviewsModalTitle">รีวิวของช่าง</p>
+                        <p class="text-[11px] font-bold text-slate-500 truncate mt-1" id="techReviewsModalSubtitle"></p>
+                    </div>
                 </div>
                 
-                <div class="absolute left-1/2 -translate-x-1/2 flex justify-center pointer-events-none z-0">
-                     <span id="techReviewsModalCount" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full shadow-sm border border-indigo-100 whitespace-nowrap">0 รีวิว</span>
-                </div>
-                
-                <div class="flex-1 flex justify-end relative z-10">
-                    <button onclick="toggleModal('techReviewsModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
+                <div class="flex items-center gap-3 shrink-0 pl-2">
+                     <span id="techReviewsModalCount" class="text-[12px] font-bold text-indigo-600 bg-indigo-50 px-3.5 py-1.5 rounded-full shadow-sm border border-indigo-100 whitespace-nowrap">0 รีวิว</span>
+                     <button onclick="toggleModal('techReviewsModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm border border-slate-200"><i class="fas fa-times"></i></button>
                 </div>
             </div>
             <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar">
@@ -2527,17 +2527,42 @@ $dept_icons = [
             let y = document.getElementById('ratingYear').value;
             let data = getFilteredRepairsByMonthYear(m, y);
 
+            let totalScore = 0;
+            let totalReviews = 0;
             let techMap = {};
 
             data.forEach(r => {
                 let rating = parseFloat(r.rating);
                 if (!isNaN(rating) && rating > 0) {
+                    totalScore += rating;
+                    totalReviews++;
+                    
                     let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
                     if (!techMap[tName]) techMap[tName] = { sum: 0, count: 0 };
                     techMap[tName].sum += rating;
                     techMap[tName].count++;
                 }
             });
+
+            // อัปเดตกล่องคะแนนรวมซ้ายมือ
+            let avg = totalReviews > 0 ? (totalScore / totalReviews).toFixed(1) : "0.0";
+            document.getElementById('avgRatingText').innerText = avg;
+            document.getElementById('totalReviewsText').innerText = 'จาก ' + totalReviews + ' รีวิว';
+
+            let starsHtml = '';
+            let fullStars = Math.floor(avg);
+            let halfStar = (avg - fullStars) >= 0.5;
+            
+            for(let i=1; i<=5; i++) {
+                if(i <= fullStars) {
+                    starsHtml += '<i class="fas fa-star drop-shadow-sm"></i>';
+                } else if(i === fullStars + 1 && halfStar) {
+                    starsHtml += '<i class="fas fa-star-half-alt drop-shadow-sm"></i>';
+                } else {
+                    starsHtml += '<i class="far fa-star text-slate-200"></i>';
+                }
+            }
+            document.getElementById('avgRatingStars').innerHTML = starsHtml;
 
             // เตรียมข้อมูลลงกราฟแท่ง (ช่างแต่ละคน)
             let techArr = Object.keys(techMap).map(k => {
@@ -2576,12 +2601,12 @@ $dept_icons = [
                     // เปลี่ยน Label ให้เหลือแค่ 2 บรรทัด (ดาว และ ชื่อ)
                     labels: topTechs.length ? topTechs.map(t => ['⭐ ' + t.avg, t.name]) : [['ไม่มีข้อมูล']],
                     datasets: [{ 
-                        label: 'ช่าง', 
+                        label: 'คะแนนเฉลี่ย (ดาว)', 
                         data: topTechs.length ? topTechs.map(t => t.avg) : [0], 
                         backgroundColor: topTechs.length ? topTechs.map(t => getRatingColor(t.avg)) : ['#e2e8f0'], 
                         borderRadius: 6,
-                        barThickness: 24,
-                        maxBarThickness: 32,
+                        barThickness: 24, // กลับมาใช้ขนาดกำลังดี
+                        maxBarThickness: 32, // ป้องกันแท่งใหญ่เกินไปถ้ามีช่างแค่คนเดียว
                         borderSkipped: false
                     }]
                 },
@@ -2642,6 +2667,18 @@ $dept_icons = [
         // ✨ ฟังก์ชันเปิด Modal สำหรับดูรีวิวของช่างที่ถูกคลิก ✨
         function openTechReviewsModal(techName, month, year) {
             document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + techName;
+            
+            let dName = techDeptMap[techName] || 'ไม่มีสังกัด';
+            if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
+                dName = 'ฝ่ายงาน' + dName;
+            }
+            let posName = techInfoMap[techName] ? techInfoMap[techName].pos : '';
+            
+            let subtitleHtml = dName;
+            if (posName && posName !== '-') {
+                subtitleHtml += ' <span class="text-slate-300 mx-1.5">|</span> ' + posName;
+            }
+            document.getElementById('techReviewsModalSubtitle').innerHTML = subtitleHtml;
             
             let data = getFilteredRepairsByMonthYear(month, year);
             let techReviews = data.filter(r => {
