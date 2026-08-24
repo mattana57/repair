@@ -204,6 +204,7 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
     }
 
+    // ✨ ตรวจสอบและสร้างคอลัมน์สำหรับ Rating และ Review (ถ้ายังไม่มี) ✨
     $check_rating = $conn->query("SHOW COLUMNS FROM repairs LIKE 'rating'");
     if($check_rating && $check_rating->num_rows == 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN rating INT DEFAULT 0");
@@ -2541,7 +2542,10 @@ $dept_icons = [
             // เตรียมข้อมูลลงกราฟแท่ง (ช่างแต่ละคน)
             let techArr = Object.keys(techMap).map(k => {
                 let dName = techDeptMap[k] ? techDeptMap[k] : 'ไม่มีสังกัด';
-                dName = dName.replace('ฝ่ายงาน', ''); // ตัดคำว่าฝ่ายงานออกให้กระชับ
+                // ถ้าไม่ใช่แผนกแม่บ้าน/อื่นๆ และยังไม่มีคำว่าฝ่ายงาน ให้เติมเข้าไป (แต่ข้อมูลในฐานข้อมูลปกติจะมีมาให้อยู่แล้ว)
+                if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
+                    dName = 'ฝ่ายงาน' + dName;
+                }
                 return {
                     name: k,
                     dept: dName,
@@ -2569,7 +2573,7 @@ $dept_icons = [
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    // เปลี่ยน Label ให้เหลือแค่ ⭐ 4.4 กับ ชื่อ
+                    // เปลี่ยน Label ให้เหลือแค่ 2 บรรทัด (ดาว และ ชื่อ)
                     labels: topTechs.length ? topTechs.map(t => ['⭐ ' + t.avg, t.name]) : [['ไม่มีข้อมูล']],
                     datasets: [{ 
                         label: 'ช่าง', 
@@ -2637,7 +2641,7 @@ $dept_icons = [
 
         // ✨ ฟังก์ชันเปิด Modal สำหรับดูรีวิวของช่างที่ถูกคลิก ✨
         function openTechReviewsModal(techName, month, year) {
-            document.getElementById('techReviewsModalTitle').innerText = techName;
+            document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + techName;
             
             let data = getFilteredRepairsByMonthYear(month, year);
             let techReviews = data.filter(r => {
