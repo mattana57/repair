@@ -32,6 +32,25 @@ function thaiNum($num) {
     );
 }
 
+// ✨ ฟังก์ชันคำนวณเวลาที่ผ่านไป (Time Ago) สำหรับ PHP ✨
+function timeAgo($datetime) {
+    $time = strtotime($datetime);
+    $diff = time() - $time;
+    
+    if ($diff < 0) $diff = 0; 
+    
+    if ($diff < 60) return "เมื่อสักครู่";
+    if ($diff < 3600) return floor($diff / 60) . " นาทีที่แล้ว";
+    if ($diff < 86400) return floor($diff / 3600) . " ชั่วโมงที่แล้ว";
+    if ($diff < 604800) return floor($diff / 86400) . " วันที่แล้ว";
+    
+    $thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    $m = date('n', $time) - 1;
+    $y = date('Y', $time) + 543;
+    $d = date('j', $time);
+    return "$d " . $thaiMonths[$m] . " $y";
+}
+
 // ฟังก์ชันแยกชื่อไทย-อังกฤษ อัตโนมัติ
 function splitThaiEngName($fullName, $engName) {
     $th = trim((string)$fullName);
@@ -787,7 +806,7 @@ $dept_icons = [
                                         }
 
                                         $has_completed = (!empty($rev['completed_at']) && $rev['completed_at'] != '0000-00-00 00:00:00');
-                                        $date_str = $has_completed ? date("d/m/Y", strtotime($rev['completed_at'])) : "-";
+                                        $date_str = $has_completed ? timeAgo($rev['completed_at']) : "-";
 
                                         echo "<div class='p-5 hover:bg-slate-50 transition-colors group'>
                                                 <div class='flex justify-between items-start mb-2.5'>
@@ -1909,23 +1928,18 @@ $dept_icons = [
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techReviewsModal')"></div>
         <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[70vh] max-h-[700px]">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0 relative">
-                
-                <div class="flex items-center gap-3 w-1/3">
+                <div class="flex items-center gap-3 relative z-10 flex-1 min-w-0">
                     <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-lg shrink-0"><i class="fas fa-star"></i></div>
                     <p class="text-lg font-extrabold text-slate-800 truncate" id="techReviewsModalTitle">รีวิวของช่าง</p>
                 </div>
                 
-                <!-- จำนวนรีวิวอยู่กึ่งกลางเป๊ะๆ บนหน้าจอคอม -->
-                <div class="w-1/3 flex justify-center hidden sm:flex" id="techReviewsModalCountWrapper">
-                     <span id="techReviewsModalCount" class="bg-white text-amber-500 text-xs font-bold px-4 py-1.5 rounded-full border border-slate-200 shadow-sm whitespace-nowrap"><i class="fas fa-comment-dots mr-1.5"></i> <span id="countNumber">0</span> รีวิว</span>
+                <div class="absolute left-1/2 -translate-x-1/2 flex justify-center pointer-events-none z-0">
+                     <span id="techReviewsModalCount" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full shadow-sm border border-indigo-100 whitespace-nowrap">0 รีวิว</span>
                 </div>
                 
-                <div class="w-1/3 flex justify-end items-center gap-2">
-                    <!-- สำหรับจอมือถือจะมาอยู่ติดปุ่มกากบาท -->
-                    <span id="techReviewsModalCountMobile" class="sm:hidden bg-white text-amber-500 text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-200 shadow-sm whitespace-nowrap"><span id="countNumberMobile">0</span> รีวิว</span>
+                <div class="flex-1 flex justify-end relative z-10">
                     <button onclick="toggleModal('techReviewsModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
                 </div>
-                
             </div>
             <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar">
                 <div class="divide-y divide-slate-100" id="techReviewsList">
@@ -1962,6 +1976,24 @@ $dept_icons = [
             if (!val || String(val).trim() === '-' || String(val).trim() === '') return "<span class='text-rose-500 font-bold'>-</span>";
             if (String(val).trim() === 'ไม่ระบุ') return "<span class='text-rose-500 font-bold'>ไม่ระบุ</span>";
             return val;
+        }
+
+        // ✨ ฟังก์ชันคำนวณเวลาที่ผ่านไป (Time Ago) สำหรับ JS ✨
+        function timeAgoJS(dateString) {
+            if (!dateString || dateString === '0000-00-00 00:00:00') return "-";
+            const date = new Date(dateString.replace(/-/g, '/'));
+            const now = new Date();
+            let diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 0) diffInSeconds = 0;
+            
+            if (diffInSeconds < 60) return "เมื่อสักครู่";
+            if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + " นาทีที่แล้ว";
+            if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + " ชั่วโมงที่แล้ว";
+            if (diffInSeconds < 604800) return Math.floor(diffInSeconds / 86400) + " วันที่แล้ว"; 
+            
+            const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            return `${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
         }
         
         function previewAvatar(event) {
@@ -2495,42 +2527,17 @@ $dept_icons = [
             let y = document.getElementById('ratingYear').value;
             let data = getFilteredRepairsByMonthYear(m, y);
 
-            let totalScore = 0;
-            let totalReviews = 0;
             let techMap = {};
 
             data.forEach(r => {
                 let rating = parseFloat(r.rating);
                 if (!isNaN(rating) && rating > 0) {
-                    totalScore += rating;
-                    totalReviews++;
-                    
                     let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
                     if (!techMap[tName]) techMap[tName] = { sum: 0, count: 0 };
                     techMap[tName].sum += rating;
                     techMap[tName].count++;
                 }
             });
-
-            // อัปเดตกล่องคะแนนรวมซ้ายมือ
-            let avg = totalReviews > 0 ? (totalScore / totalReviews).toFixed(1) : "0.0";
-            document.getElementById('avgRatingText').innerText = avg;
-            document.getElementById('totalReviewsText').innerText = 'จาก ' + totalReviews + ' รีวิว';
-
-            let starsHtml = '';
-            let fullStars = Math.floor(avg);
-            let halfStar = (avg - fullStars) >= 0.5;
-            
-            for(let i=1; i<=5; i++) {
-                if(i <= fullStars) {
-                    starsHtml += '<i class="fas fa-star drop-shadow-sm"></i>';
-                } else if(i === fullStars + 1 && halfStar) {
-                    starsHtml += '<i class="fas fa-star-half-alt drop-shadow-sm"></i>';
-                } else {
-                    starsHtml += '<i class="far fa-star text-slate-200"></i>';
-                }
-            }
-            document.getElementById('avgRatingStars').innerHTML = starsHtml;
 
             // เตรียมข้อมูลลงกราฟแท่ง (ช่างแต่ละคน)
             let techArr = Object.keys(techMap).map(k => {
@@ -2615,7 +2622,7 @@ $dept_icons = [
 
         // ✨ ฟังก์ชันเปิด Modal สำหรับดูรีวิวของช่างที่ถูกคลิก ✨
         function openTechReviewsModal(techName, month, year) {
-            document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + techName;
+            document.getElementById('techReviewsModalTitle').innerText = techName;
             
             let data = getFilteredRepairsByMonthYear(month, year);
             let techReviews = data.filter(r => {
@@ -2623,12 +2630,11 @@ $dept_icons = [
                 return tName === techName && parseFloat(r.rating) > 0;
             });
 
-            // อัปเดตจำนวนรีวิวลงในหน้าต่าง Modal
-            document.getElementById('countNumber').innerText = techReviews.length;
-            document.getElementById('countNumberMobile').innerText = techReviews.length;
-
             // เรียงรีวิวล่าสุดขึ้นก่อน
             techReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+
+            // แสดงจำนวนรีวิวตรงกลาง Modal
+            document.getElementById('techReviewsModalCount').innerText = techReviews.length + ' รีวิว';
 
             const container = document.getElementById('techReviewsList');
             container.innerHTML = '';
@@ -2652,16 +2658,10 @@ $dept_icons = [
                         else stars_html += '<i class="far fa-star text-amber-200 text-[10px]"></i>';
                     }
 
+                    // ใช้เวลาที่ผ่านไป (Time Ago)
                     let date_str = "-";
                     if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
-                        let dtParts = rev.completed_at.split(' ');
-                        let dParts = dtParts[0].split('-');
-                        let tParts = dtParts[1] ? dtParts[1].split(':') : ['00', '00'];
-                        let thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-                        let mName = thaiMonths[parseInt(dParts[1], 10) - 1];
-                        let yThai = parseInt(dParts[0], 10) + 543;
-                        // เพิ่มเวลาต่อท้ายวันที่
-                        date_str = `${parseInt(dParts[2], 10)} ${mName} ${yThai} เวลา ${tParts[0]}:${tParts[1]} น.`; 
+                        date_str = timeAgoJS(rev.completed_at);
                     }
 
                     container.innerHTML += `<div class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0'>
