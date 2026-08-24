@@ -729,10 +729,10 @@ $dept_icons = [
                 </div>
 
                 <!-- ✨ ส่วน Rating & Review ✨ -->
-                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                     
                     <!-- Rating Chart -->
-                    <div class="modern-card p-6 flex flex-col lg:col-span-3 justify-between">
+                    <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
                         <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
@@ -752,7 +752,7 @@ $dept_icons = [
                         
                         <div class="flex flex-col md:flex-row items-center gap-8 w-full mt-2 flex-1">
                             <!-- Score Box -->
-                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-56 p-6 rounded-3xl border border-slate-100 shrink-0 h-[250px]">
+                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-48 p-6 rounded-3xl border border-slate-100 shrink-0 h-[250px]">
                                 <div class="text-5xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
                                 <div class="flex text-amber-400 text-xl gap-1 mb-4" id="avgRatingStars">
                                     <!-- stars injected by JS -->
@@ -768,7 +768,7 @@ $dept_icons = [
                     </div>
 
                     <!-- Recent Reviews List (มีแถบเลื่อน) -->
-                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-2">
+                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Reviews</h3>
@@ -2521,7 +2521,7 @@ $dept_icons = [
                         data: dataCounts, 
                         backgroundColor: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'], // ไล่สีเขียวไปแดง
                         borderRadius: 100, // ขอบโค้งมนแบบ pill
-                        barThickness: 12, // ✨ ปรับขนาดแท่งกราฟให้เล็กลง ดูมินิมอลพอดี
+                        barThickness: 24, // เปลี่ยนกลับเป็นขนาดปกติให้เท่า Top Locations
                         borderSkipped: false
                     }]
                 },
@@ -2530,7 +2530,7 @@ $dept_icons = [
                     responsive: true, 
                     maintainAspectRatio: false,
                     layout: {
-                        padding: { top: 35, bottom: 35, right: 20 } // ✨ บีบระยะห่างบน-ล่าง ให้กลุ่มแท่งกราฟดูชิดกันและมีขนาดรวมที่พอดีขึ้น
+                        padding: { right: 20 } // เอา padding บนล่างออก เพื่อให้กราฟขยายเต็มพื้นที่ความสูง 260px
                     },
                     plugins: { 
                         legend: { display: false },
@@ -2548,7 +2548,7 @@ $dept_icons = [
                             beginAtZero: true 
                         }, 
                         y: { 
-                            ticks: { font: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' }, color: '#475569' }, 
+                            ticks: { font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
