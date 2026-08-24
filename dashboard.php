@@ -2531,8 +2531,11 @@ $dept_icons = [
 
             // เตรียมข้อมูลลงกราฟแท่ง (ช่างแต่ละคน)
             let techArr = Object.keys(techMap).map(k => {
+                let dName = techDeptMap[k] ? techDeptMap[k] : 'ไม่มีสังกัด';
+                dName = dName.replace('ฝ่ายงาน', ''); // ตัดคำว่าฝ่ายงานออกให้กระชับ
                 return {
                     name: k,
+                    dept: dName,
                     avg: (techMap[k].sum / techMap[k].count).toFixed(1),
                     count: techMap[k].count
                 };
@@ -2548,14 +2551,15 @@ $dept_icons = [
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: topTechs.length ? topTechs.map(t => t.name) : ['ไม่มีข้อมูล'],
+                    labels: topTechs.length ? topTechs.map(t => [t.name, `(${t.dept})`]) : [['ไม่มีข้อมูล']], // ทำ Label 2 บรรทัด
                     datasets: [{ 
                         label: 'คะแนนเฉลี่ย (ดาว)', 
                         data: topTechs.length ? topTechs.map(t => t.avg) : [0], 
                         backgroundColor: topTechs.length ? topTechs.map(() => '#3b82f6') : ['#e2e8f0'], // สีฟ้า
                         hoverBackgroundColor: '#2563eb', // ฟ้าเข้มตอนชี้
                         borderRadius: 6,
-                        barThickness: 16,
+                        barThickness: 24, // กลับมาใช้ขนาดกำลังดี
+                        maxBarThickness: 32, // ป้องกันแท่งใหญ่เกินไปถ้ามีช่างแค่คนเดียว
                         borderSkipped: false
                     }]
                 },
@@ -2597,7 +2601,7 @@ $dept_icons = [
                             border: {display: false} 
                         }, 
                         y: { 
-                            ticks: { font: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' }, color: '#475569' }, 
+                            ticks: { font: { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
