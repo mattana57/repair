@@ -251,7 +251,7 @@ if($years_query && $years_query->num_rows > 0) {
 } else {
     $available_years[] = date('Y');
 }
-$thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
+$thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กร গঠন", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 
 // =====================================================================
 // ระบบบันทึกและลบข้อมูล
@@ -653,7 +653,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[260px]">
+                        <div class="flex-1 relative w-full h-[280px]">
                             <canvas id="mainEquipChart"></canvas>
                         </div>
                     </div>
@@ -675,7 +675,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[260px] flex justify-center items-center">
+                        <div class="flex-1 relative w-full h-[280px] flex justify-center items-center">
                             <canvas id="mainStatusChart"></canvas>
                         </div>
                     </div>
@@ -700,7 +700,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[260px]"> <!-- เปลี่ยน h-[240px] เป็น h-[280px] -->
+                        <div class="flex-1 relative w-full h-[280px]"> <!-- เปลี่ยน h-[240px] เป็น h-[280px] -->
                             <canvas id="mainLocChart"></canvas>
                         </div>
                     </div>
@@ -722,7 +722,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[260px]"> <!-- เปลี่ยน h-[240px] เป็น h-[280px] -->
+                        <div class="flex-1 relative w-full h-[280px]"> <!-- เปลี่ยน h-[240px] เป็น h-[280px] -->
                             <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
@@ -761,7 +761,7 @@ $dept_icons = [
                             </div>
                             
                             <!-- Chart Area (แก้บั๊กเพิ่ม min-w-0 แล้วเปลี่ยนเป็นแท่งแนวนอน) -->
-                            <div class="relative flex-1 w-full min-w-0 h-[260px]">
+                            <div class="relative flex-1 w-full min-w-0 h-[280px]">
                                 <canvas id="mainRatingChart"></canvas>
                             </div>
                         </div>
@@ -778,7 +778,7 @@ $dept_icons = [
                         </div>
                         
                         <!-- ✨ ล็อคความสูงและใส่คำสั่งเลื่อน Scrollbar ให้พอดีกับกล่องฝั่งซ้าย ✨ -->
-                        <div class="overflow-y-auto p-0 custom-scrollbar h-[260px]"> <!-- เปลี่ยน h-[265px] เป็น h-[280px] -->
+                        <div class="overflow-y-auto p-0 custom-scrollbar h-[280px]"> <!-- เปลี่ยน h-[265px] เป็น h-[280px] -->
                             <div class="divide-y divide-slate-100">
                                 <?php
                                 $rev_res = $conn->query("SELECT reporter_name, rating, review_comment, completed_at FROM repairs WHERE rating > 0 ORDER BY completed_at DESC LIMIT 10");
@@ -2521,14 +2521,17 @@ $dept_icons = [
                         data: dataCounts, 
                         backgroundColor: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'], // ไล่สีเขียวไปแดง
                         borderRadius: 100, // ขอบโค้งมนแบบ pill
-                        barThickness: 24, // ความหนาพอดี ไม่อึดอัด
+                        barThickness: 12, // ✨ ปรับขนาดแท่งกราฟให้เล็กลง ดูมินิมอลพอดี
                         borderSkipped: false
                     }]
                 },
                 options: { 
                     indexAxis: 'y', // กำหนดเป็นแนวนอน
                     responsive: true, 
-                    maintainAspectRatio: false, 
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: { top: 35, bottom: 35, right: 20 } // ✨ บีบระยะห่างบน-ล่าง ให้กลุ่มแท่งกราฟดูชิดกันและมีขนาดรวมที่พอดีขึ้น
+                    },
                     plugins: { 
                         legend: { display: false },
                         tooltip: {
@@ -2545,7 +2548,7 @@ $dept_icons = [
                             beginAtZero: true 
                         }, 
                         y: { 
-                            ticks: { font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' }, color: '#475569' }, 
+                            ticks: { font: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
