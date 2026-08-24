@@ -728,8 +728,8 @@ $dept_icons = [
                 <!-- ✨ ส่วน Rating & Review ใหม่ ✨ -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                     <!-- Rating Chart -->
-                    <div class="modern-card p-6 flex flex-col lg:col-span-2">
-                        <div class="flex justify-between items-start mb-4">
+                    <div class="modern-card p-6 flex flex-col lg:col-span-2 justify-between">
+                        <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ</p>
@@ -745,17 +745,21 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex items-center mb-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 inline-flex w-max">
-                            <div class="text-5xl font-black text-amber-500 mr-4 tracking-tighter" id="avgRatingText">0.0</div>
-                            <div class="flex flex-col justify-center">
-                                <div class="flex text-amber-400 text-lg gap-1" id="avgRatingStars">
+                        
+                        <div class="flex flex-col md:flex-row items-center gap-8 flex-1">
+                            <!-- Score Box -->
+                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-auto md:min-w-[200px] p-6 rounded-3xl border border-slate-100 shrink-0">
+                                <div class="text-6xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
+                                <div class="flex text-amber-400 text-xl gap-1 mb-3" id="avgRatingStars">
                                     <!-- stars injected by JS -->
                                 </div>
-                                <div class="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-widest" id="totalReviewsText">จาก 0 รีวิว</div>
+                                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
                             </div>
-                        </div>
-                        <div class="flex-1 relative w-full h-[220px]">
-                            <canvas id="mainRatingChart"></canvas>
+                            
+                            <!-- Chart Area -->
+                            <div class="relative w-full h-[180px] flex-1 mt-4 md:mt-0">
+                                <canvas id="mainRatingChart"></canvas>
+                            </div>
                         </div>
                     </div>
 
@@ -1416,12 +1420,12 @@ $dept_icons = [
 
                                 <?php if (!empty($tech['pos'])): ?>
                                 <div class="mt-3 mb-2">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-100 text-[13px] font-bold text-indigo-600">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600">
                                         <i class="fas fa-id-badge mr-1.5 opacity-70"></i> <?php echo htmlspecialchars($tech['pos']); ?>
                                     </span>
                                 </div>
                                 <?php else: ?>
-                                <div class="mt-3 mb-2 h-[28px]"></div>
+                                <div class="mt-3 mb-2 h-[24px]"></div>
                                 <?php endif; ?>
                                 
                                 <div class="mt-3 w-full pt-4 border-t border-slate-100 flex flex-col gap-2.5">
@@ -2458,7 +2462,7 @@ $dept_icons = [
             });
         }
 
-        // ✨ เพิ่มฟังก์ชันกราฟเรตติ้ง (Rating Chart) ✨
+        // ✨ เพิ่มฟังก์ชันกราฟเรตติ้ง (Rating Chart) ที่ปรับความหนาแท่งแล้ว ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2489,14 +2493,17 @@ $dept_icons = [
             
             for(let i=1; i<=5; i++) {
                 if(i <= fullStars) {
-                    starsHtml += '<i class="fas fa-star"></i>';
+                    starsHtml += '<i class="fas fa-star drop-shadow-sm"></i>';
                 } else if(i === fullStars + 1 && halfStar) {
-                    starsHtml += '<i class="fas fa-star-half-alt"></i>';
+                    starsHtml += '<i class="fas fa-star-half-alt drop-shadow-sm"></i>';
                 } else {
-                    starsHtml += '<i class="far fa-star"></i>';
+                    starsHtml += '<i class="far fa-star text-slate-200"></i>';
                 }
             }
             document.getElementById('avgRatingStars').innerHTML = starsHtml;
+
+            // เรียงลำดับใหม่จาก 5 ดาว -> 1 ดาว
+            let dataCounts = [counts[4], counts[3], counts[2], counts[1], counts[0]];
 
             const ctx = document.getElementById('mainRatingChart').getContext('2d');
             if(chartRatingInstance) chartRatingInstance.destroy();
@@ -2504,21 +2511,42 @@ $dept_icons = [
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: ['1 ดาว', '2 ดาว', '3 ดาว', '4 ดาว', '5 ดาว'],
+                    labels: ['5 ดาว', '4 ดาว', '3 ดาว', '2 ดาว', '1 ดาว'],
                     datasets: [{ 
-                        label: 'จำนวน (รีวิว)', 
-                        data: counts, 
-                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'], 
-                        borderRadius: 6
+                        label: 'จำนวนรีวิว', 
+                        data: dataCounts, 
+                        backgroundColor: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'], 
+                        borderRadius: 100, // ปลายโค้งมนแบบ Pill shape
+                        barThickness: 12,  // กำหนดความหนาแท่งกราฟให้ไม่เทอะทะ
+                        borderSkipped: false
                     }]
                 },
                 options: { 
                     indexAxis: 'y',
                     responsive: true, maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } }, 
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.formattedValue + ' รีวิว';
+                                }
+                            }
+                        }
+                    }, 
                     scales: { 
-                        x: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
-                        y: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
+                        x: { 
+                            display: false, // ซ่อนแกน x แนวนอนไปเลยให้ดูคลีน
+                            beginAtZero: true 
+                        }, 
+                        y: { 
+                            ticks: { 
+                                font: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' },
+                                color: '#475569'
+                            }, 
+                            grid: { display: false }, 
+                            border: {display: false} 
+                        } 
                     } 
                 }
             });
