@@ -679,7 +679,10 @@ $dept_icons = [
                             <canvas id="mainStatusChart"></canvas>
                         </div>
                     </div>
-                    
+                </div>
+
+                <!-- ✨ จุดที่ 1: นำกลับมาใช้รูปแบบแบ่งครึ่งหน้าจอ (grid-cols-2) แต่ลดความสูงเหลือ h-[240px] เพื่อให้สัดส่วนกว้างและไม่อึดอัด ✨ -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start mb-4">
                             <div>
@@ -697,7 +700,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[280px]">
+                        <div class="flex-1 relative w-full h-[240px]">
                             <canvas id="mainLocChart"></canvas>
                         </div>
                     </div>
@@ -719,18 +722,18 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[280px]">
+                        <div class="flex-1 relative w-full h-[240px]">
                             <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <!-- ✨ ส่วน Rating & Review ใหม่ที่แก้ไขให้พอดี ไม่เทอะทะ เปลี่ยนกราฟเป็นแบบ Area Line Chart ✨ -->
+                <!-- ✨ ส่วน Rating & Review (HTML Progress Bar) ✨ -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                     
                     <!-- Rating Chart -->
-                    <div class="modern-card p-6 flex flex-col lg:col-span-2">
-                        <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+                    <div class="modern-card p-6 flex flex-col lg:col-span-2 justify-between">
+                        <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ</p>
@@ -749,17 +752,17 @@ $dept_icons = [
                         
                         <div class="flex flex-col md:flex-row items-center gap-8 w-full mt-2">
                             <!-- Score Box -->
-                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-auto md:min-w-[200px] p-6 rounded-3xl border border-slate-100 shrink-0 h-[200px]">
-                                <div class="text-6xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
-                                <div class="flex text-amber-400 text-xl gap-1 mb-3" id="avgRatingStars">
+                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-56 p-6 rounded-3xl border border-slate-100 shrink-0 h-[210px]">
+                                <div class="text-7xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
+                                <div class="flex text-amber-400 text-xl gap-1 mb-3 drop-shadow-sm" id="avgRatingStars">
                                     <!-- stars injected by JS -->
                                 </div>
-                                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
+                                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-4 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
                             </div>
                             
-                            <!-- Chart Area -->
-                            <div class="relative w-full flex-1" style="height: 200px;">
-                                <canvas id="mainRatingChart"></canvas>
+                            <!-- แถบ Progress แบบ Native HTML/CSS (สวยงามและคลีนมาก) -->
+                            <div class="flex-1 w-full flex flex-col justify-center gap-3.5 py-2 px-2" id="ratingBarsContainer">
+                                <!-- JS fills this -->
                             </div>
                         </div>
                     </div>
@@ -775,7 +778,7 @@ $dept_icons = [
                         </div>
                         
                         <!-- ✨ ล็อคความสูงและใส่คำสั่งเลื่อน Scrollbar ให้พอดีกับกล่องฝั่งซ้าย ✨ -->
-                        <div class="overflow-y-auto p-0 custom-scrollbar h-[250px]">
+                        <div class="overflow-y-auto p-0 custom-scrollbar h-[265px]">
                             <div class="divide-y divide-slate-100">
                                 <?php
                                 $rev_res = $conn->query("SELECT reporter_name, rating, review_comment, completed_at FROM repairs WHERE rating > 0 ORDER BY completed_at DESC LIMIT 10");
@@ -822,8 +825,8 @@ $dept_icons = [
                 </div>
                 <!-- ✨ สิ้นสุดส่วน Rating & Review ✨ -->
 
-                <div class="grid grid-cols-1 gap-6">
-                    <div class="modern-card overflow-hidden flex flex-col">
+                <div class="grid grid-cols-1 gap-6 mt-6">
+                    <div class="modern-card overflow-hidden flex flex-col col-span-full">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
