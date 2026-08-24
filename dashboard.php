@@ -725,10 +725,10 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <!-- ✨ ส่วน Rating & Review ใหม่ที่แก้ไขให้พอดี ไม่เทอะทะ ✨ -->
+                <!-- ✨ ส่วน Rating & Review ใหม่ที่แก้ไขให้พอดี ไม่เทอะทะ เปลี่ยนกราฟเป็นแบบ Area Line Chart ✨ -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                     
-                    <!-- Rating Chart (แก้ไขส่วนของ Flex ให้ไม่ยืดบวม) -->
+                    <!-- Rating Chart -->
                     <div class="modern-card p-6 flex flex-col lg:col-span-2">
                         <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                             <div>
@@ -749,7 +749,7 @@ $dept_icons = [
                         
                         <div class="flex flex-col md:flex-row items-center gap-8 w-full mt-2">
                             <!-- Score Box -->
-                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-auto md:min-w-[200px] p-6 rounded-3xl border border-slate-100 shrink-0">
+                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-auto md:min-w-[200px] p-6 rounded-3xl border border-slate-100 shrink-0 h-[200px]">
                                 <div class="text-6xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
                                 <div class="flex text-amber-400 text-xl gap-1 mb-3" id="avgRatingStars">
                                     <!-- stars injected by JS -->
@@ -757,14 +757,14 @@ $dept_icons = [
                                 <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
                             </div>
                             
-                            <!-- Chart Area (กำหนดความสูงคงที่ ไม่ให้บวมตามหน้าจอ) -->
+                            <!-- Chart Area -->
                             <div class="relative w-full flex-1" style="height: 200px;">
                                 <canvas id="mainRatingChart"></canvas>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Recent Reviews List (เพิ่มกำหนดความสูง เพื่อให้เกิดแถบ Scroll) -->
+                    <!-- Recent Reviews List (มีแถบเลื่อน) -->
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-1">
                         <div class="p-5 border-b border-slate-100 flex justify-between items-center shrink-0">
                             <div>
@@ -2465,7 +2465,7 @@ $dept_icons = [
             });
         }
 
-        // ✨ เพิ่มฟังก์ชันกราฟเรตติ้ง (Rating Chart) ที่ปรับความหนาแท่งแล้ว ✨
+        // ✨ แก้ไขเป็นกราฟแบบ Area Line Chart สีทอง ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2505,27 +2505,33 @@ $dept_icons = [
             }
             document.getElementById('avgRatingStars').innerHTML = starsHtml;
 
-            // เรียงลำดับใหม่จาก 5 ดาว -> 1 ดาว
-            let dataCounts = [counts[4], counts[3], counts[2], counts[1], counts[0]];
-
             const ctx = document.getElementById('mainRatingChart').getContext('2d');
             if(chartRatingInstance) chartRatingInstance.destroy();
             
+            // สร้างพื้นหลังแบบไล่สี (Gradient) สีทอง/ส้ม
+            let gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(245, 158, 11, 0.5)'); // amber-500
+            gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)'); 
+            
             chartRatingInstance = new Chart(ctx, {
-                type: 'bar', 
+                type: 'line', 
                 data: {
-                    labels: ['5 ดาว', '4 ดาว', '3 ดาว', '2 ดาว', '1 ดาว'],
+                    labels: ['1 ดาว', '2 ดาว', '3 ดาว', '4 ดาว', '5 ดาว'],
                     datasets: [{ 
-                        label: 'จำนวนรีวิว', 
-                        data: dataCounts, 
-                        backgroundColor: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'], 
-                        borderRadius: 100, // ปลายโค้งมนแบบ Pill shape
-                        barThickness: 16,  // กำหนดความหนาแท่งกราฟให้ไม่เทอะทะ
-                        borderSkipped: false
+                        label: 'จำนวน (รีวิว)', 
+                        data: counts, 
+                        borderColor: '#f59e0b', 
+                        backgroundColor: gradient, 
+                        borderWidth: 3, 
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#f59e0b',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4 // ทำเส้นให้มีความโค้งมน
                     }]
                 },
                 options: { 
-                    indexAxis: 'y',
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { 
                         legend: { display: false },
@@ -2538,15 +2544,14 @@ $dept_icons = [
                         }
                     }, 
                     scales: { 
-                        x: { 
-                            display: false, // ซ่อนแกน x แนวนอนไปเลยให้ดูคลีน
-                            beginAtZero: true 
-                        }, 
                         y: { 
-                            ticks: { 
-                                font: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' },
-                                color: '#475569'
-                            }, 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif", size: 12 }, color: '#64748b' }, 
+                            grid: { color: '#f8fafc' }, 
+                            border: {display: false} 
+                        }, 
+                        x: { 
+                            ticks: { font: { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
