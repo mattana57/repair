@@ -204,7 +204,6 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
     }
 
-    // ✨ ตรวจสอบและสร้างคอลัมน์สำหรับ Rating และ Review (ถ้ายังไม่มี) ✨
     $check_rating = $conn->query("SHOW COLUMNS FROM repairs LIKE 'rating'");
     if($check_rating && $check_rating->num_rows == 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN rating INT DEFAULT 0");
@@ -2661,6 +2660,33 @@ $dept_icons = [
             });
         }
 
+        let currentReviewFilter = 'all';
+
+        function setReviewFilter(val) {
+            currentReviewFilter = val;
+            
+            // Update Button
+            const btnAll = document.getElementById('btnFilterAllReviews');
+            if(val === 'all') {
+                btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            } else {
+                btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            }
+            
+            // Update Stars
+            const stars = document.querySelectorAll('#starFilterContainer i');
+            stars.forEach((star, index) => {
+                let starVal = index + 1;
+                if(val !== 'all' && starVal <= val) {
+                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-sm drop-shadow-sm";
+                } else {
+                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200";
+                }
+            });
+            
+            renderTechReviewsList();
+        }
+
         // ✨ ฟังก์ชันเปิด Modal สำหรับดูรีวิวของช่างที่ถูกคลิก ✨
         function openTechReviewsModal(techName, month, year) {
             document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + techName;
@@ -2682,38 +2708,30 @@ $dept_icons = [
             });
 
             document.getElementById('techReviewsModalCount').innerText = currentTechReviewsData.length + ' รีวิว';
-            document.getElementById('techReviewSort').value = 'newest'; // Reset filter
-
-            renderTechReviewsList();
+            
+            setReviewFilter('all'); // Set default filter
             toggleModal('techReviewsModal');
         }
 
-        // ✨ ฟังก์ชันสำหรับแสดงรายชื่อรีวิว (ทำงานร่วมกับระบบ Filter/Sort) ✨
+        // ✨ ฟังก์ชันสำหรับแสดงรายชื่อรีวิว (ทำงานร่วมกับระบบ Filter) ✨
         function renderTechReviewsList() {
             const container = document.getElementById('techReviewsList');
-            const sortType = document.getElementById('techReviewSort').value;
             container.innerHTML = '';
             
             let filteredReviews = [...currentTechReviewsData];
             
-            // Apply filtering by stars
-            if (['1', '2', '3', '4', '5'].includes(sortType)) {
-                filteredReviews = filteredReviews.filter(r => parseInt(r.rating) === parseInt(sortType));
+            // Apply filtering by exactly match stars
+            if (currentReviewFilter !== 'all') {
+                filteredReviews = filteredReviews.filter(r => parseInt(r.rating) === parseInt(currentReviewFilter));
             }
             
-            // Apply sorting
-            if (sortType === 'newest' || ['1', '2', '3', '4', '5'].includes(sortType)) {
-                filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
-            } else if (sortType === 'lowest') {
-                filteredReviews.sort((a,b) => parseFloat(a.rating) - parseFloat(b.rating) || new Date(b.completed_at) - new Date(a.completed_at));
-            } else if (sortType === 'highest') {
-                filteredReviews.sort((a,b) => parseFloat(b.rating) - parseFloat(a.rating) || new Date(b.completed_at) - new Date(a.completed_at));
-            }
+            // Sort newest first
+            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
 
             if(filteredReviews.length === 0) {
                 container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full'>
                                             <i class='far fa-star text-4xl text-slate-200 mb-3'></i>
-                                            <p class='text-slate-400 font-medium text-sm'>ไม่พบข้อมูลรีวิวที่ตรงกับตัวกรอง</p>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนนี้</p>
                                           </div>`;
             } else {
                 filteredReviews.forEach(rev => {
