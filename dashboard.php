@@ -682,7 +682,7 @@ $dept_icons = [
                 </div>
 
                 <!-- ✨ ปรับความสูงของ Top Locations และ Technician Workload ให้เท่ากับ Rating Chart ✨ -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start mb-4">
                             <div>
@@ -700,7 +700,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[250px]">
+                        <div class="relative w-full h-[250px]"> <!-- ลบ flex-1 ออกเพื่อล็อคความสูง -->
                             <canvas id="mainLocChart"></canvas>
                         </div>
                     </div>
@@ -722,7 +722,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[250px]">
+                        <div class="relative w-full h-[250px]"> <!-- ลบ flex-1 ออกเพื่อล็อคความสูง -->
                             <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
@@ -2521,7 +2521,7 @@ $dept_icons = [
                         data: dataCounts, 
                         backgroundColor: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'], // ไล่สีเขียวไปแดง
                         borderRadius: 100, // ขอบโค้งมนแบบ pill
-                        barThickness: 24, // เปลี่ยนกลับเป็นขนาดปกติให้เท่า Top Locations
+                        barThickness: 12, // ✨ ปรับขนาดแท่งกราฟให้เล็กลง ดูมินิมอลพอดี
                         borderSkipped: false
                     }]
                 },
@@ -2530,7 +2530,7 @@ $dept_icons = [
                     responsive: true, 
                     maintainAspectRatio: false,
                     layout: {
-                        padding: { right: 20 } // เอา padding บนล่างออก เพื่อให้กราฟขยายเต็มพื้นที่ความสูง 260px
+                        padding: { top: 35, bottom: 35, right: 20 } // ✨ บีบระยะห่างบน-ล่าง ให้กลุ่มแท่งกราฟดูชิดกันและมีขนาดรวมที่พอดีขึ้น
                     },
                     plugins: { 
                         legend: { display: false },
@@ -2548,7 +2548,7 @@ $dept_icons = [
                             beginAtZero: true 
                         }, 
                         y: { 
-                            ticks: { font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' }, color: '#475569' }, 
+                            ticks: { font: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
