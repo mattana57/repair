@@ -469,7 +469,7 @@ $dept_icons = [
     <title>MBS Repair Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -725,12 +725,11 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <!-- ✨ ส่วน Rating & Review ใหม่ที่แก้ไขให้พอดี ไม่เทอะทะ เปลี่ยนกราฟเป็นแบบ Area Line Chart ✨ -->
+                <!-- ✨ ส่วน Rating & Review ใหม่ที่ใช้ HTML/CSS Progress Bars (ไม่จำเจแน่นอน) ✨ -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                     
-                    <!-- Rating Chart -->
                     <div class="modern-card p-6 flex flex-col lg:col-span-2">
-                        <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ</p>
@@ -747,9 +746,9 @@ $dept_icons = [
                             </div>
                         </div>
                         
-                        <div class="flex flex-col md:flex-row items-center gap-8 w-full mt-2">
+                        <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10 w-full mt-2">
                             <!-- Score Box -->
-                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-auto md:min-w-[200px] p-6 rounded-3xl border border-slate-100 shrink-0 h-[200px]">
+                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-auto md:min-w-[200px] p-6 rounded-3xl border border-slate-100 shrink-0">
                                 <div class="text-6xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
                                 <div class="flex text-amber-400 text-xl gap-1 mb-3" id="avgRatingStars">
                                     <!-- stars injected by JS -->
@@ -757,14 +756,14 @@ $dept_icons = [
                                 <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
                             </div>
                             
-                            <!-- Chart Area -->
-                            <div class="relative w-full flex-1" style="height: 200px;">
-                                <canvas id="mainRatingChart"></canvas>
+                            <!-- HTML Progress Bars Area -->
+                            <div id="ratingBarsContainer" class="w-full flex-1 flex flex-col justify-center space-y-3 mt-4 md:mt-0 px-2 md:px-6">
+                                <!-- Bars injected by JS -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- Recent Reviews List (มีแถบเลื่อน) -->
+                    <!-- Recent Reviews List -->
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-1">
                         <div class="p-5 border-b border-slate-100 flex justify-between items-center shrink-0">
                             <div>
@@ -1921,7 +1920,6 @@ $dept_icons = [
         let chartStatusInstance = null;
         let chartLocInstance = null;
         let chartTechInstance = null;
-        let chartRatingInstance = null;
         
         const pageTitles = {
             'dash': 'Dashboard Overview',
@@ -2302,7 +2300,7 @@ $dept_icons = [
             renderStatusChart();
             renderLocChart();
             renderTechChart();
-            renderRatingChart(); // ✨ เรียกฟังก์ชันกราฟเรตติ้ง
+            renderRatingChart(); // ✨ เรียกฟังก์ชันกราฟเรตติ้ง HTML
         }
 
         function renderEquipChart() {
@@ -2465,7 +2463,7 @@ $dept_icons = [
             });
         }
 
-        // ✨ แก้ไขเป็นกราฟแบบ Area Line Chart สีทอง ✨
+        // ✨ ฟังก์ชันกราฟเรตติ้ง HTML Progress Bars ดีไซน์ใหม่ล่าสุด ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2505,59 +2503,29 @@ $dept_icons = [
             }
             document.getElementById('avgRatingStars').innerHTML = starsHtml;
 
-            const ctx = document.getElementById('mainRatingChart').getContext('2d');
-            if(chartRatingInstance) chartRatingInstance.destroy();
+            // สร้างโครงสร้าง Progress Bar HTML แทน Canvas
+            let container = document.getElementById('ratingBarsContainer');
+            let barsHtml = '';
             
-            // สร้างพื้นหลังแบบไล่สี (Gradient) สีทอง/ส้ม
-            let gradient = ctx.createLinearGradient(0, 0, 0, 200);
-            gradient.addColorStop(0, 'rgba(245, 158, 11, 0.5)'); // amber-500
-            gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)'); 
+            // โทนสีจาก 5 ดาว (เขียว) ลงไป 1 ดาว (แดง)
+            const colors = ['bg-emerald-500', 'bg-lime-500', 'bg-yellow-400', 'bg-orange-500', 'bg-rose-500'];
             
-            chartRatingInstance = new Chart(ctx, {
-                type: 'line', 
-                data: {
-                    labels: ['1 ดาว', '2 ดาว', '3 ดาว', '4 ดาว', '5 ดาว'],
-                    datasets: [{ 
-                        label: 'จำนวน (รีวิว)', 
-                        data: counts, 
-                        borderColor: '#f59e0b', 
-                        backgroundColor: gradient, 
-                        borderWidth: 3, 
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#f59e0b',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        fill: true,
-                        tension: 0.4 // ทำเส้นให้มีความโค้งมน
-                    }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return ' ' + context.formattedValue + ' รีวิว';
-                                }
-                            }
-                        }
-                    }, 
-                    scales: { 
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif", size: 12 }, color: '#64748b' }, 
-                            grid: { color: '#f8fafc' }, 
-                            border: {display: false} 
-                        }, 
-                        x: { 
-                            ticks: { font: { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' }, color: '#475569' }, 
-                            grid: { display: false }, 
-                            border: {display: false} 
-                        } 
-                    } 
-                }
-            });
+            for(let i = 5; i >= 1; i--) {
+                let count = counts[i-1];
+                let percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                let colorClass = colors[5-i];
+                
+                barsHtml += `
+                <div class="flex items-center text-sm">
+                    <div class="w-12 font-extrabold text-slate-600 flex items-center justify-end pr-3 shrink-0">${i} <i class="fas fa-star text-[10px] ml-1.5 text-slate-400"></i></div>
+                    <div class="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+                        <div class="h-full ${colorClass} rounded-full transition-all duration-1000 ease-out" style="width: ${percentage}%"></div>
+                    </div>
+                    <div class="w-12 text-right font-bold text-slate-400 text-xs shrink-0">${count}</div>
+                </div>
+                `;
+            }
+            container.innerHTML = barsHtml;
         }
 
         function toggleModal(m) { 
