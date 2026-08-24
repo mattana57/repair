@@ -1926,21 +1926,41 @@ $dept_icons = [
     <!-- ✨ Modal สำหรับแสดงรีวิวของช่างรายบุคคล ✨ -->
     <div id="techReviewsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techReviewsModal')"></div>
-        <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[70vh] max-h-[700px]">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0 relative">
-                <div class="flex items-center gap-4 relative z-10 flex-1 min-w-0">
-                    <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-lg shrink-0"><i class="fas fa-star"></i></div>
+        <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px]">
+            
+            <!-- Header -->
+            <div class="px-6 py-6 border-b border-slate-100 flex justify-between items-start bg-gradient-to-b from-slate-50 to-white shrink-0 relative">
+                <div class="flex gap-4 relative z-10 flex-1 min-w-0">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center text-2xl shrink-0 shadow-sm border border-amber-200 mt-1"><i class="fas fa-star"></i></div>
                     <div class="flex flex-col min-w-0">
-                        <p class="text-lg font-extrabold text-slate-800 truncate" id="techReviewsModalTitle">รีวิวของช่าง</p>
-                        <p class="text-xs font-bold text-slate-500 truncate mt-0.5" id="techReviewsModalSubtitle">ฝ่ายงาน...</p>
+                        <p class="text-xl font-extrabold text-slate-800 truncate" id="techReviewsModalTitle">รีวิวของช่าง: สมชาย ใจงาม</p>
+                        <p class="text-[13px] font-bold text-indigo-600 truncate mt-1.5" id="techReviewsModalDept">ฝ่ายงานบริการเทคโนโลยีดิจิทัล</p>
+                        <p class="text-[11px] font-medium text-slate-500 truncate mt-0.5" id="techReviewsModalPos">(นักวิชาการคอมพิวเตอร์)</p>
                     </div>
                 </div>
                 
-                <div class="flex items-center gap-3 shrink-0 ml-4 relative z-10">
-                     <span id="techReviewsModalCount" class="text-xs font-extrabold text-indigo-600 bg-indigo-100/80 px-3 py-1.5 rounded-full shadow-sm border border-indigo-200 whitespace-nowrap">0 รีวิว</span>
+                <div class="flex flex-col items-end gap-3 shrink-0 ml-4 relative z-10">
                     <button onclick="toggleModal('techReviewsModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
+                    <span id="techReviewsModalCount" class="text-xs font-extrabold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full shadow-sm border border-amber-100 whitespace-nowrap mt-1">0 รีวิว</span>
                 </div>
             </div>
+
+            <!-- Filter Sub-header -->
+            <div class="px-6 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center shrink-0 z-10 shadow-sm">
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest"><i class="fas fa-filter mr-1"></i> ตัวกรองรีวิว</span>
+                <select id="techReviewSort" onchange="renderTechReviewsList()" class="custom-select bg-white border border-slate-200 text-xs text-slate-700 rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm">
+                    <option value="newest">🗓️ ล่าสุดก่อน</option>
+                    <option value="lowest">⭐ คะแนน: ต่ำสุด - สูงสุด</option>
+                    <option value="highest">⭐ คะแนน: สูงสุด - ต่ำสุด</option>
+                    <option value="5">🌟 เฉพาะ 5 ดาว</option>
+                    <option value="4">🌟 เฉพาะ 4 ดาว</option>
+                    <option value="3">🌟 เฉพาะ 3 ดาว</option>
+                    <option value="2">🌟 เฉพาะ 2 ดาว</option>
+                    <option value="1">🌟 เฉพาะ 1 ดาว</option>
+                </select>
+            </div>
+
+            <!-- List -->
             <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar">
                 <div class="divide-y divide-slate-100" id="techReviewsList">
                     <!-- Injected via JS -->
@@ -1960,6 +1980,8 @@ $dept_icons = [
         let chartLocInstance = null;
         let chartTechInstance = null;
         let chartRatingInstance = null;
+        
+        let currentTechReviewsData = [];
         
         const pageTitles = {
             'dash': 'Dashboard Overview',
@@ -2644,47 +2666,57 @@ $dept_icons = [
             document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + techName;
             
             let deptName = techDeptMap[techName] ? techDeptMap[techName] : 'ไม่มีสังกัด';
-            if (deptName !== 'ไม่มีสังกัด' && !deptName.startsWith('ฝ่ายงาน')) {
+            if (deptName !== 'ไม่มีสังกัด' && !deptName.startsWith('ฝ่ายงาน') && deptName !== 'แม่บ้าน' && deptName !== 'อื่นๆ') {
                 deptName = 'ฝ่ายงาน' + deptName;
             }
-
+            
             let posName = (techInfoMap[techName] && techInfoMap[techName].pos) ? techInfoMap[techName].pos : '';
             
-            let subtitleText = '';
-            if (techName === 'ไม่ระบุช่าง') {
-                 subtitleText = 'ไม่มีข้อมูลแผนก/ตำแหน่ง';
-            } else {
-                 subtitleText = deptName;
-                 if (posName && posName !== '-') {
-                      subtitleText += ' • ตำแหน่ง: ' + posName;
-                 }
-            }
-            
-            let subEl = document.getElementById('techReviewsModalSubtitle');
-            if(subEl) subEl.innerText = subtitleText;
+            document.getElementById('techReviewsModalDept').innerText = deptName;
+            document.getElementById('techReviewsModalPos').innerText = posName && posName !== '-' ? '(' + posName + ')' : '(ไม่ระบุตำแหน่ง)';
             
             let data = getFilteredRepairsByMonthYear(month, year);
-            let techReviews = data.filter(r => {
+            currentTechReviewsData = data.filter(r => {
                 let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
                 return tName === techName && parseFloat(r.rating) > 0;
             });
 
-            // เรียงรีวิวล่าสุดขึ้นก่อน
-            techReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+            document.getElementById('techReviewsModalCount').innerText = currentTechReviewsData.length + ' รีวิว';
+            document.getElementById('techReviewSort').value = 'newest'; // Reset filter
 
-            // แสดงจำนวนรีวิวใกล้ๆ กากบาท Modal
-            document.getElementById('techReviewsModalCount').innerText = techReviews.length + ' รีวิว';
+            renderTechReviewsList();
+            toggleModal('techReviewsModal');
+        }
 
+        // ✨ ฟังก์ชันสำหรับแสดงรายชื่อรีวิว (ทำงานร่วมกับระบบ Filter/Sort) ✨
+        function renderTechReviewsList() {
             const container = document.getElementById('techReviewsList');
+            const sortType = document.getElementById('techReviewSort').value;
             container.innerHTML = '';
+            
+            let filteredReviews = [...currentTechReviewsData];
+            
+            // Apply filtering by stars
+            if (['1', '2', '3', '4', '5'].includes(sortType)) {
+                filteredReviews = filteredReviews.filter(r => parseInt(r.rating) === parseInt(sortType));
+            }
+            
+            // Apply sorting
+            if (sortType === 'newest' || ['1', '2', '3', '4', '5'].includes(sortType)) {
+                filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+            } else if (sortType === 'lowest') {
+                filteredReviews.sort((a,b) => parseFloat(a.rating) - parseFloat(b.rating) || new Date(b.completed_at) - new Date(a.completed_at));
+            } else if (sortType === 'highest') {
+                filteredReviews.sort((a,b) => parseFloat(b.rating) - parseFloat(a.rating) || new Date(b.completed_at) - new Date(a.completed_at));
+            }
 
-            if(techReviews.length === 0) {
-                container.innerHTML = `<div class='p-8 flex flex-col items-center justify-center text-center h-full'>
+            if(filteredReviews.length === 0) {
+                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full'>
                                             <i class='far fa-star text-4xl text-slate-200 mb-3'></i>
-                                            <p class='text-slate-400 font-medium text-sm'>ไม่พบข้อมูลรีวิว</p>
+                                            <p class='text-slate-400 font-medium text-sm'>ไม่พบข้อมูลรีวิวที่ตรงกับตัวกรอง</p>
                                           </div>`;
             } else {
-                techReviews.forEach(rev => {
+                filteredReviews.forEach(rev => {
                     let r_name = formatValJS(rev.reporter_name);
                     let r_rating = parseInt(rev.rating);
                     let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
@@ -2693,8 +2725,8 @@ $dept_icons = [
                     
                     let stars_html = '';
                     for(let i=1; i<=5; i++) {
-                        if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[10px]"></i>';
-                        else stars_html += '<i class="far fa-star text-amber-200 text-[10px]"></i>';
+                        if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px]"></i>';
+                        else stars_html += '<i class="far fa-star text-amber-100 text-[11px]"></i>';
                     }
 
                     // ใช้เวลาที่ผ่านไป (Time Ago)
@@ -2703,7 +2735,7 @@ $dept_icons = [
                         date_str = timeAgoJS(rev.completed_at);
                     }
 
-                    container.innerHTML += `<div class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0'>
+                    container.innerHTML += `<div class='p-5 hover:bg-slate-50 transition-colors group'>
                             <div class='flex justify-between items-start mb-2.5'>
                                 <div class='flex items-center gap-3'>
                                     <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
@@ -2718,8 +2750,6 @@ $dept_icons = [
                           </div>`;
                 });
             }
-            
-            toggleModal('techReviewsModal');
         }
 
         function toggleModal(m) { 
