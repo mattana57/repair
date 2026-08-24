@@ -204,6 +204,7 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
     }
 
+    // ✨ ตรวจสอบและสร้างคอลัมน์สำหรับ Rating และ Review (ถ้ายังไม่มี) ✨
     $check_rating = $conn->query("SHOW COLUMNS FROM repairs LIKE 'rating'");
     if($check_rating && $check_rating->num_rows == 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN rating INT DEFAULT 0");
@@ -592,7 +593,7 @@ $dept_icons = [
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-6 lg:p-8">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             
             <!-- Dashboard Section -->
             <div id="dash" class="section space-y-6 animate-fade-in no-print">
@@ -718,7 +719,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="relative w-full" style="height: 250px;"> <!-- ลบ flex-1 ออกเพื่อล็อคความสูง -->
+                        <div class="relative w-full" style="min-height: 250px;"> <!-- เปลี่ยนเป็น min-height ให้รับมือถือ -->
                             <canvas id="mainLocChart"></canvas>
                         </div>
                     </div>
@@ -740,7 +741,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="relative w-full" style="height: 250px;"> <!-- ลบ flex-1 ออกเพื่อล็อคความสูง -->
+                        <div class="relative w-full" style="min-height: 250px;"> <!-- เปลี่ยนเป็น min-height ให้รับมือถือ -->
                             <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
@@ -754,7 +755,7 @@ $dept_icons = [
                         <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ <span class="text-indigo-500 font-bold ml-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span></p>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ <span class="text-indigo-500 font-bold ml-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่กราฟเพื่อดูรีวิวช่าง</span></p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
@@ -800,8 +801,9 @@ $dept_icons = [
                                         
                                         $stars_html = '';
                                         for($i=1; $i<=5; $i++) {
-                                            if($i <= $r_rating) $stars_html += '<i class="fas fa-star text-amber-400 text-[10px]"></i>';
-                                            else $stars_html += '<i class="far fa-star text-amber-200 text-[10px]"></i>';
+                                            // ใช้คลาส fas แบบทึบ และใช้วิธีสลับสี เพื่อป้องกันปัญหาฟอนต์ไม่โหลดกลายเป็นเลข 0
+                                            if($i <= $r_rating) $stars_html .= '<i class="fas fa-star text-amber-400 text-xs drop-shadow-sm"></i>';
+                                            else $stars_html .= '<i class="fas fa-star text-slate-200 text-xs"></i>';
                                         }
 
                                         $has_completed = (!empty($rev['completed_at']) && $rev['completed_at'] != '0000-00-00 00:00:00');
@@ -823,7 +825,7 @@ $dept_icons = [
                                     }
                                 } else {
                                     echo "<div class='p-8 flex flex-col items-center justify-center text-center h-full'>
-                                            <i class='far fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
                                             <p class='text-slate-400 font-medium text-sm'>ยังไม่มีการรีวิวจากผู้ใช้งาน</p>
                                           </div>";
                                 }
@@ -845,7 +847,7 @@ $dept_icons = [
                             </button>
                         </div>
                         <div class="overflow-x-auto pb-4 custom-scrollbar">
-                            <table class="w-full text-left whitespace-nowrap">
+                            <table class="w-full text-left whitespace-nowrap min-w-[700px]">
                                 <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
                                     <tr>
                                         <th class="px-6 py-4">Date / Time</th>
@@ -1928,35 +1930,37 @@ $dept_icons = [
         <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px]">
             
             <!-- Header -->
-            <div class="px-6 py-6 border-b border-slate-100 flex justify-between items-start bg-gradient-to-b from-slate-50 to-white shrink-0 relative">
+            <div class="px-5 py-5 border-b border-slate-100 flex justify-between items-start bg-gradient-to-b from-slate-50 to-white shrink-0 relative">
                 <div class="flex gap-4 relative z-10 flex-1 min-w-0">
                     <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center text-2xl shrink-0 shadow-sm border border-amber-200 mt-1"><i class="fas fa-star"></i></div>
                     <div class="flex flex-col min-w-0">
-                        <p class="text-xl font-extrabold text-slate-800 truncate" id="techReviewsModalTitle">รีวิวของช่าง: สมชาย ใจงาม</p>
-                        <p class="text-[13px] font-bold text-indigo-600 truncate mt-1.5" id="techReviewsModalDept">ฝ่ายงานบริการเทคโนโลยีดิจิทัล</p>
+                        <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate" id="techReviewsModalTitle">รีวิวของช่าง: สมชาย ใจงาม</p>
+                        <p class="text-[13px] font-bold text-indigo-600 truncate mt-1" id="techReviewsModalDept">ฝ่ายงานบริการเทคโนโลยีดิจิทัล</p>
                         <p class="text-[11px] font-medium text-slate-500 truncate mt-0.5" id="techReviewsModalPos">(นักวิชาการคอมพิวเตอร์)</p>
                     </div>
                 </div>
                 
-                <div class="flex flex-col items-end gap-3 shrink-0 ml-4 relative z-10">
+                <div class="flex flex-col items-end gap-3 shrink-0 ml-3 relative z-10">
                     <button onclick="toggleModal('techReviewsModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
                     <span id="techReviewsModalCount" class="text-xs font-extrabold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full shadow-sm border border-amber-100 whitespace-nowrap mt-1">0 รีวิว</span>
                 </div>
             </div>
 
-            <!-- Filter Sub-header -->
-            <div class="px-6 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center shrink-0 z-10 shadow-sm">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest"><i class="fas fa-filter mr-1"></i> ตัวกรองรีวิว</span>
-                <select id="techReviewSort" onchange="renderTechReviewsList()" class="custom-select bg-white border border-slate-200 text-xs text-slate-700 rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm">
-                    <option value="newest">🗓️ ล่าสุดก่อน</option>
-                    <option value="lowest">⭐ คะแนน: ต่ำสุด - สูงสุด</option>
-                    <option value="highest">⭐ คะแนน: สูงสุด - ต่ำสุด</option>
-                    <option value="5">🌟 เฉพาะ 5 ดาว</option>
-                    <option value="4">🌟 เฉพาะ 4 ดาว</option>
-                    <option value="3">🌟 เฉพาะ 3 ดาว</option>
-                    <option value="2">🌟 เฉพาะ 2 ดาว</option>
-                    <option value="1">🌟 เฉพาะ 1 ดาว</option>
-                </select>
+            <!-- ✨ Filter Sub-header (แบบรูปดาว) ✨ -->
+            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1"><i class="fas fa-filter mr-1 text-slate-400"></i> ระดับคะแนน:</span>
+                    <div id="starFilterContainer" class="flex gap-1">
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200" onclick="setReviewFilter(2)" title="2 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200" onclick="setReviewFilter(3)" title="3 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200" onclick="setReviewFilter(4)" title="4 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
+                    </div>
+                </div>
+                <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">
+                    ทั้งหมด
+                </button>
             </div>
 
             <!-- List -->
@@ -2610,15 +2614,22 @@ $dept_icons = [
                     indexAxis: 'y', 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    onClick: (e, elements) => {
-                        if (elements.length > 0 && topTechs.length > 0) {
-                            const index = elements[0].index;
+                    // ✨ เปิดใช้งาน interaction mode 'y' เพื่อให้กดตรงไหนก็ได้ในแนวนอน ✨
+                    interaction: {
+                        mode: 'y',
+                        intersect: false
+                    },
+                    onClick: (e, elements, chart) => {
+                        // ใช้ chart.getElementsAtEventForMode เพื่อจับเหตุการณ์ครอบคลุมทั้งแถว
+                        const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
+                        if (activeElements.length > 0 && topTechs.length > 0) {
+                            const index = activeElements[0].index;
                             let selectedTech = topTechs[index].name;
                             openTechReviewsModal(selectedTech, m, y);
                         }
                     },
                     onHover: (event, chartElement) => {
-                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                        event.native.target.style.cursor = chartElement.length > 0 ? 'pointer' : 'default';
                     },
                     layout: {
                         padding: { top: 10, bottom: 10, right: 30 } 
@@ -2637,7 +2648,12 @@ $dept_icons = [
                                 label: function(context) {
                                     if (!topTechs.length) return ' ไม่มีข้อมูล';
                                     let tech = topTechs[context.dataIndex];
-                                    return ' ' + tech.name + ' (' + tech.dept + ')';
+                                    // เพิ่มคำว่า ฝ่ายงาน ในวงเล็บ
+                                    let dName = tech.dept;
+                                    if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
+                                        dName = 'ฝ่ายงาน' + dName;
+                                    }
+                                    return ' ' + tech.name + ' (' + dName + ')';
                                 }
                             }
                         }
@@ -2730,7 +2746,7 @@ $dept_icons = [
 
             if(filteredReviews.length === 0) {
                 container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full'>
-                                            <i class='far fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
                                             <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนนี้</p>
                                           </div>`;
             } else {
@@ -2743,8 +2759,9 @@ $dept_icons = [
                     
                     let stars_html = '';
                     for(let i=1; i<=5; i++) {
-                        if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px]"></i>';
-                        else stars_html += '<i class="far fa-star text-amber-100 text-[11px]"></i>';
+                        // ใช้คลาส fas แบบทึบ และใช้วิธีสลับสี เพื่อป้องกันปัญหาฟอนต์ไม่โหลดกลายเป็นเลข 0
+                        if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                        else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
                     }
 
                     // ใช้เวลาที่ผ่านไป (Time Ago)
