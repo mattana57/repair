@@ -41,6 +41,28 @@ if (!is_null($events['events'])) {
         $userId = $event['source']['userId'];
         $groupId = isset($event['source']['groupId']) ? $event['source']['groupId'] : null;
 
+        if ($event['type'] == 'message' && $event['message']['type'] == 'image') {
+            $message_id = $event['message']['id'];
+            $image_url = "https://api-data.line.me/v2/bot/message/$message_id/content";
+            
+            $ch = curl_init($image_url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $channelAccessToken]);
+            $image_data = curl_exec($ch);
+            curl_close($ch);
+            
+            if ($image_data) {
+                if (!is_dir('uploads')) {
+                    mkdir('uploads', 0777, true);
+                }
+                file_put_contents("uploads/temp_{$userId}.jpg", $image_data);
+                
+                $replyText = "📸 รับรูปภาพเรียบร้อยค่ะ\nกรุณาพิมพ์ข้อความแจ้งรายละเอียดปัญหาและสถานที่ (เช่น 'แอร์ไม่เย็น ห้อง 502') เพื่อให้ระบบบันทึกเข้าระบบแจ้งซ่อมได้เลยค่ะ";
+                send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+            }
+            continue;
+        }
+
         if ($event['type'] == 'message' && $event['message']['type'] == 'text') {
             $text = trim($event['message']['text']);
             $message_id = $event['message']['id']; 
@@ -81,14 +103,11 @@ if (!is_null($events['events'])) {
             $text_clean = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
             $greetings = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'รับทราบ', 'เยี่ยม', 'แต้ง'];
             $is_greeting = false;
-            
             foreach ($greetings as $g) {
                 if (mb_strpos($text_clean, $g) !== false) {
-                    $is_greeting = true;
-                    break;
+                    $is_greeting = true; break;
                 }
             }
-            
             if ($is_greeting && mb_strlen($text_clean) < 40) {
                 $replyMsg = ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งได้ตลอดเลยนะคะ"];
                 send_reply($replyToken, $replyMsg, $channelAccessToken);
@@ -107,11 +126,9 @@ if (!is_null($events['events'])) {
                 $ticket_no = "MR-" . rand(1000, 9999);
                 $status = "รอรับเรื่อง"; 
                 $phone_number = "ไม่ระบุ";
+                $image_path = null; 
                 
-                $words_to_remove = [
-                    $location, 'ค่ะ', 'ครับ', 'คะ', 'คับ', 'รบกวน', 'ด่วน', 'แจ้งซ่อม', 'นึง', 'หน่อย'
-                ];
-                
+                $words_to_remove = [$location, 'ค่ะ', 'ครับ', 'คะ', 'คับ', 'รบกวน', 'ด่วน', 'แจ้งซ่อม', 'นึง', 'หน่อย'];
                 $problem = str_replace($words_to_remove, '', $text);
                 $problem = trim($problem); 
                 
@@ -119,12 +136,37 @@ if (!is_null($events['events'])) {
                     $problem = "มีความผิดปกติ (รอตรวจสอบ)";
                 }
 
-                $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id, line_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssssssss", $ticket_no, $category, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id);
+                $temp_img_path = "uploads/temp_{$userId}.jpg";
+                if (file_exists($temp_img_path)) {
+                    $new_img_name = $ticket_no . "_" . time() . ".jpg";
+                    rename($temp_img_path, "uploads/" . $new_img_name); 
+                    $image_path = $new_img_name;
+                }
+
+                $chk_img_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'");
+                if($chk_img_col && $chk_img_col->num_rows == 0) {
+                    $conn->query("ALTER TABLE repairs ADD COLUMN image_path VARCHAR(255) NULL");
+                }
+
+                $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id, line_message_id, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssssssss", $ticket_no, $category, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id, $image_path);
                 
                 if($stmt->execute()) {
                     $replyText = "✅ รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n⚠️ ปัญหา: $category\n📍 สถานที่: $location\n📝 รายละเอียด: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
+                    if ($image_path) {
+                        $replyText .= "\n📸 (ระบบได้รับและแนบรูปภาพของคุณเข้าไปในใบงานเรียบร้อยแล้วค่ะ)";
+                    }
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+
+                    $flex_details = [
+                        ['type' => 'text', 'text' => "ปัญหา: $category", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
+                        ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
+                        ['type' => 'text', 'text' => "ผู้แจ้ง: $user_name", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
+                        ['type' => 'text', 'text' => "รายละเอียด: $problem", 'size' => 'xs', 'color' => '#ef4444', 'wrap' => true]
+                    ];
+                    if ($image_path) {
+                        $flex_details[] = ['type' => 'text', 'text' => "📸 (มีรูปภาพแนบในระบบ)", 'size' => 'xs', 'color' => '#3b82f6', 'weight' => 'bold', 'margin' => 'sm'];
+                    }
 
                     $pushMsg = [
                         'type' => 'flex',
@@ -140,12 +182,7 @@ if (!is_null($events['events'])) {
                                     ['type' => 'separator', 'margin' => 'sm'],
                                     [
                                         'type' => 'box', 'layout' => 'vertical', 'spacing' => 'xs', 'margin' => 'sm',
-                                        'contents' => [
-                                            ['type' => 'text', 'text' => "ปัญหา: $category", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
-                                            ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
-                                            ['type' => 'text', 'text' => "ผู้แจ้ง: $user_name", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
-                                            ['type' => 'text', 'text' => "รายละเอียด: $problem", 'size' => 'xs', 'color' => '#ef4444', 'wrap' => true]
-                                        ]
+                                        'contents' => $flex_details
                                     ]
                                 ]
                             ],
@@ -166,7 +203,6 @@ if (!is_null($events['events'])) {
             }
             else {
                 $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
-                
                 if ($stmt_check_review) {
                     $stmt_check_review->bind_param("s", $userId);
                     $stmt_check_review->execute();
@@ -214,7 +250,8 @@ if (!is_null($events['events'])) {
                                 continue;
                             }
 
-                            $stmt = $conn->prepare("UPDATE repairs SET status = 'ช่างรับเรื่องแจ้งซ่อมแล้ว', technician_name = ? WHERE ticket_no = ?");
+                            // 💡 อัปเดตสถานะเป็น "กำลังดำเนินการ" เพื่อให้ตรงกับโครงสร้างใน Dashboard
+                            $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_name = ? WHERE ticket_no = ?");
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
 
@@ -261,7 +298,7 @@ if (!is_null($events['events'])) {
                             $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ\n📞 เบอร์ติดต่อ: $tech_phone\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ 🛠️"];
                             send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
 
-                            // ส่งแจ้งเตือนลงกลุ่ม LINE หลังจากช่างกดรับงานสำเร็จ
+                            // 💡 นำข้อความแจ้งกลุ่ม ย้ายมาตรงนี้ (แสดงทันทีหลังกดปุ่มรับงาน)
                             if(!empty($line_group_id)) {
                                 $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
                                                 "👨‍🔧 ช่าง: " . $tech_name . "\n" .
@@ -287,7 +324,8 @@ if (!is_null($events['events'])) {
                     $job = $stmt_check->get_result()->fetch_assoc();
 
                     if ($job) {
-                        if ($job['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') {
+                        // 💡 แก้บั๊ก: รองรับทั้งสถานะ "กำลังดำเนินการ" และ "ช่างรับเรื่องแจ้งซ่อมแล้ว" เผื่อกรณีค้างในระบบเก่า
+                        if ($job['status'] == 'กำลังดำเนินการ' || $job['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') {
                             
                             $stmt_tech = $conn->prepare("SELECT full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
                             $stmt_tech->bind_param("s", $userId);
@@ -299,7 +337,8 @@ if (!is_null($events['events'])) {
                                 
                                 if ($clicker_name === $job['technician_name']) {
                                     
-                                    $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว' WHERE ticket_no = ?");
+                                    // 💡 เพิ่มการเก็บข้อมูลเวลาที่กดปิดงานให้ตรงกับหน้าเว็บ
+                                    $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว', completed_at = CURRENT_TIMESTAMP WHERE ticket_no = ?");
                                     $stmt->bind_param("s", $ticket_no);
                                     $stmt->execute();
 

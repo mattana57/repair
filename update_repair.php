@@ -103,6 +103,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $chk->close();
         
     } else {
+        // 💡 เก็บค่าเก่าไว้เทียบว่ามีการเปลี่ยนหมายเหตุหรือสถานะหรือไม่
+        $old_status = $repair['status'];
+        $old_note = $repair['repair_note'];
+
         $status = $_POST['status'];
         $repair_note = trim($_POST['repair_note']);
         $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
@@ -154,24 +158,92 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
 
-            if(!empty($repair['line_user_id']) && !empty($repair_note)) {
-                $messageText = "📝 ช่างได้เพิ่มหมายเหตุในงานซ่อม\n\n" .
-                               "📋 ใบงาน: " . $repair['ticket_no'] . "\n" .
-                               "💬 หมายเหตุ: " . $repair_note;
+            $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
+            
+            // 💡 โลจิกแจ้งเตือนผู้แจ้งซ่อมโฉมใหม่ 💡
+            if(!empty($repair['line_user_id'])) {
+                $messages = [];
+                
+                // กรณีที่ 1: เพิ่งกด "ซ่อมเสร็จแล้ว" (ปิดงานจากเว็บ) -> ส่งข้อความแจ้งปิดงาน + แบบประเมินดาว
+                if ($status === 'ซ่อมเสร็จแล้ว' && $old_status !== 'ซ่อมเสร็จแล้ว') {
+                    $textMsg = "🎉 ช่างได้ดำเนินการแก้ไขใบงาน {$repair['ticket_no']} เสร็จสิ้นแล้วค่ะ\n\n" .
+                               "📝 หมายเหตุ: " . (!empty($repair_note) ? $repair_note : "- ไม่มีหมายเหตุ -");
+                               
+                    $review_msg = [
+                        'type' => 'flex',
+                        'altText' => 'ประเมินผลการซ่อม',
+                        'contents' => [
+                            'type' => 'bubble',
+                            'body' => [
+                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                'contents' => [
+                                    ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'md'],
+                                    ['type' => 'text', 'text' => "ถึงคุณ ".$repair['reporter_name'], 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'xs'],
+                                    ['type' => 'text', 'text' => 'ช่าง '.$tech_display.' ดำเนินการซ่อมเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'size' => 'xs', 'wrap' => true],
+                                    ['type' => 'separator', 'margin' => 'sm'],
+                                    ['type' => 'text', 'text' => '1️⃣ ให้คะแนนดาว (กดเปลี่ยนได้)', 'size' => 'xs', 'color' => '#aaaaaa', 'margin' => 'sm'],
+                                    [
+                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm',
+                                        'contents' => [
+                                            ['type' => 'button', 'style' => 'primary', 'color' => '#fbbf24', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '5 ดาว', 'data' => "action=rate&score=5&ticket={$repair['ticket_no']}"]],
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '4 ดาว', 'data' => "action=rate&score=4&ticket={$repair['ticket_no']}"]],
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '3 ดาว', 'data' => "action=rate&score=3&ticket={$repair['ticket_no']}"]]
+                                        ]
+                                    ],
+                                    [
+                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
+                                        'contents' => [
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '2 ดาว', 'data' => "action=rate&score=2&ticket={$repair['ticket_no']}"]],
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '1 ดาว', 'data' => "action=rate&score=1&ticket={$repair['ticket_no']}"]],
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '0 ดาว', 'data' => "action=rate&score=0&ticket={$repair['ticket_no']}"]]
+                                        ]
+                                    ],
+                                    ['type' => 'separator', 'margin' => 'sm'],
+                                    ['type' => 'text', 'text' => '2️⃣ เลือกรีวิว (กดได้หลายข้อ)', 'size' => 'xs', 'color' => '#aaaaaa', 'margin' => 'sm'],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ดำเนินการเร็ว', 'data' => "action=add_tag&tag=ดำเนินการรวดเร็วทันใจ&ticket={$repair['ticket_no']}"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🎯 แก้ปัญหาตรงจุด', 'data' => "action=add_tag&tag=แก้ไขปัญหาได้อย่างตรงจุด&ticket={$repair['ticket_no']}"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '💡 ให้คำแนะนำดี', 'data' => "action=add_tag&tag=อธิบายและให้คำแนะนำชัดเจน&ticket={$repair['ticket_no']}"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพเรียบร้อย', 'data' => "action=add_tag&tag=สุภาพเรียบร้อย บริการเต็มใจ&ticket={$repair['ticket_no']}"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ เก็บงานเรียบร้อย', 'data' => "action=add_tag&tag=ซ่อมแซมและเก็บงานเรียบร้อย&ticket={$repair['ticket_no']}"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🙏 ช่วยเหลือดีเยี่ยม', 'data' => "action=add_tag&tag=ช่วยอำนวยความสะดวกได้ดีเยี่ยม&ticket={$repair['ticket_no']}"]],
+                                    ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวเพิ่มเติมส่งมาในแชทได้เลยค่ะ', 'size' => 'xxs', 'color' => '#bbbbbb', 'margin' => 'sm', 'wrap' => true]
+                                ]
+                            ]
+                        ]
+                    ];
+                    
+                    $messages = [
+                        ['type' => 'text', 'text' => $textMsg],
+                        $review_msg
+                    ];
+                } 
+                // กรณีที่ 2: กดเซฟเพื่อ "เพิ่มหมายเหตุ" เฉยๆ (ไม่มีการปิดงาน และหมายเหตุต้องถูกพิมพ์มาใหม่)
+                else if ($status === 'กำลังดำเนินการ' && !empty($repair_note) && $repair_note !== $old_note) {
+                    $textMsg = "📝 ช่างได้เพิ่มหมายเหตุในงานซ่อม\n\n" .
+                               "📋 ใบงาน: {$repair['ticket_no']}\n" .
+                               "💻 ปัญหา: {$repair['equipment_type']} ({$repair['location']})\n" .
+                               "👨‍🔧 ช่างดูแล: {$tech_display}\n" .
+                               "💬 หมายเหตุ: {$repair_note}";
+                               
+                    $messages = [['type' => 'text', 'text' => $textMsg]];
+                }
+                
+                // ส่งข้อความก็ต่อเมื่อมีเงื่อนไขตรงตาม 2 กรณีข้างบน
+                if (!empty($messages)) {
+                    $postData = [
+                        'to' => $repair['line_user_id'],
+                        'messages' => $messages
+                    ];
 
-                $postData = [
-                    'to' => $repair['line_user_id'],
-                    'messages' => [['type' => 'text', 'text' => $messageText]]
-                ];
-
-                $ch = curl_init('https://api.line.me/v2/bot/message/push');
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
-                curl_exec($ch);
-                curl_close($ch);
+                    $ch = curl_init('https://api.line.me/v2/bot/message/push');
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+                    curl_exec($ch);
+                    curl_close($ch);
+                }
             }
         }
     }
@@ -303,6 +375,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
                             
                             <?php if (!empty($current_tech_full) && $current_tech_full !== '-' && !$is_admin): ?>
+                                <!-- โหมดช่างเปิดจาก LINE (ล็อกชื่อช่างเพื่อป้องกันการแก้ไขผิดพลาด) -->
                                 <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center shadow-sm">
                                     <div class="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center mr-4 text-sky-600 shrink-0">
                                         <i class="fas fa-user-check"></i>
@@ -314,6 +387,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                                 <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($current_tech_full); ?>">
                             <?php else: ?>
+                                <!-- โหมดแอดมินเปิดจาก Dashboard (มีสิทธิ์เปลี่ยนชื่อช่างได้) -->
                                 <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 transition-all cursor-text shadow-sm" onclick="toggleTechDropdown(event, true)">
                                     <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="-- ค้นหาหรือเลือกช่าง --">
                                     
@@ -420,11 +494,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <div class="text-sm font-medium">รอรับเรื่อง</div>
                                     </div>
                                 </label>
+                                <!-- 💡 ปรับ value ให้เป็น 'กำลังดำเนินการ' เพื่อให้ตรงกับฐานข้อมูลเป๊ะๆ -->
                                 <label class="cursor-pointer">
                                     <input type="radio" name="status" value="กำลังดำเนินการ" class="peer sr-only" <?php echo ($repair['status'] == 'กำลังดำเนินการ' || $repair['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') ? 'checked' : ''; ?>>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-sky-50 peer-checked:border-sky-300 peer-checked:text-sky-700 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-tools mb-1 text-lg"></i>
-                                        <div class="text-sm font-medium">ช่างรับเรื่องแจ้งซ่อมแล้ว</div>
+                                        <div class="text-sm font-medium">กำลังดำเนินการ</div>
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
@@ -466,6 +541,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
     </div>
 
+    <!-- Modal เพิ่มครุภัณฑ์ -->
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
@@ -673,7 +749,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         Swal.fire({
             icon: 'success',
             title: 'บันทึกข้อมูลใบงานสำเร็จ!',
-            text: 'อัปเดตสถานะและส่งแจ้งเตือนผ่าน LINE เรียบร้อยแล้ว',
+            text: 'อัปเดตระบบเรียบร้อยแล้ว',
             confirmButtonColor: '#0284c7',
             confirmButtonText: 'ตกลง'
         }).then((result) => {
@@ -681,7 +757,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php if($is_admin): ?>
                 window.location.href = 'dashboard.php?tab=repairs';
                 <?php else: ?>
-                window.close();
+                window.close(); // โหมดช่างปิดหน้าต่างตัวเองเมื่อเสร็จ
                 <?php endif; ?>
             }
         });
