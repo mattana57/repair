@@ -750,18 +750,9 @@ $dept_icons = [
                             </div>
                         </div>
                         
-                        <div class="flex flex-col md:flex-row items-center gap-8 w-full mt-2 flex-1">
-                            <!-- Score Box -->
-                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-48 p-6 rounded-3xl border border-slate-100 shrink-0 h-[250px]">
-                                <div class="text-5xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
-                                <div class="flex text-amber-400 text-xl gap-1 mb-4" id="avgRatingStars">
-                                    <!-- stars injected by JS -->
-                                </div>
-                                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-4 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
-                            </div>
-                            
+                        <div class="flex items-center w-full mt-2 flex-1">
                             <!-- ✨ Chart Area: แสดงกราฟเรตติ้งรายบุคคล ✨ -->
-                            <div class="relative flex-1 w-full min-w-0 h-[250px]">
+                            <div class="relative w-full h-[250px]">
                                 <canvas id="mainRatingChart"></canvas>
                             </div>
                         </div>
@@ -2509,26 +2500,6 @@ $dept_icons = [
                 }
             });
 
-            // อัปเดตกล่องคะแนนรวมซ้ายมือ
-            let avg = totalReviews > 0 ? (totalScore / totalReviews).toFixed(1) : "0.0";
-            document.getElementById('avgRatingText').innerText = avg;
-            document.getElementById('totalReviewsText').innerText = 'จาก ' + totalReviews + ' รีวิว';
-
-            let starsHtml = '';
-            let fullStars = Math.floor(avg);
-            let halfStar = (avg - fullStars) >= 0.5;
-            
-            for(let i=1; i<=5; i++) {
-                if(i <= fullStars) {
-                    starsHtml += '<i class="fas fa-star drop-shadow-sm"></i>';
-                } else if(i === fullStars + 1 && halfStar) {
-                    starsHtml += '<i class="fas fa-star-half-alt drop-shadow-sm"></i>';
-                } else {
-                    starsHtml += '<i class="far fa-star text-slate-200"></i>';
-                }
-            }
-            document.getElementById('avgRatingStars').innerHTML = starsHtml;
-
             // เตรียมข้อมูลลงกราฟแท่ง (ช่างแต่ละคน)
             let techArr = Object.keys(techMap).map(k => {
                 let dName = techDeptMap[k] ? techDeptMap[k] : 'ไม่มีสังกัด';
@@ -2551,7 +2522,7 @@ $dept_icons = [
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: topTechs.length ? topTechs.map(t => [t.name, `(${t.dept})`]) : [['ไม่มีข้อมูล']], // ทำ Label 2 บรรทัด
+                    labels: topTechs.length ? topTechs.map(t => ['⭐ ' + t.avg + ' (' + t.count + ' รีวิว)', t.name, `(${t.dept})`]) : [['ไม่มีข้อมูล']], // ทำ Label 2 บรรทัด
                     datasets: [{ 
                         label: 'คะแนนเฉลี่ย (ดาว)', 
                         data: topTechs.length ? topTechs.map(t => t.avg) : [0], 
