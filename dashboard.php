@@ -736,7 +736,7 @@ $dept_icons = [
                         <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ</p>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ <span class="text-indigo-500 font-bold ml-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span></p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
@@ -760,7 +760,7 @@ $dept_icons = [
                                 <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-4 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
                             </div>
                             
-                            <!-- Chart Area (แก้บั๊กเพิ่ม min-w-0 แล้วเปลี่ยนเป็นแท่งแนวนอน) -->
+                            <!-- ✨ Chart Area: แสดงกราฟเรตติ้งรายบุคคล ✨ -->
                             <div class="relative flex-1 w-full min-w-0 h-[250px]">
                                 <canvas id="mainRatingChart"></canvas>
                             </div>
@@ -1913,6 +1913,25 @@ $dept_icons = [
         </div>
     </div>
 
+    <!-- ✨ Modal สำหรับแสดงรีวิวของช่างรายบุคคล ✨ -->
+    <div id="techReviewsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techReviewsModal')"></div>
+        <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[70vh] max-h-[700px]">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-lg"><i class="fas fa-star"></i></div>
+                    <p class="text-lg font-extrabold text-slate-800 truncate pr-4" id="techReviewsModalTitle">รีวิวของช่าง</p>
+                </div>
+                <button onclick="toggleModal('techReviewsModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar">
+                <div class="divide-y divide-slate-100" id="techReviewsList">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ================== JAVASCRIPT ================== -->
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
@@ -2467,27 +2486,30 @@ $dept_icons = [
             });
         }
 
-        // ✨ แก้ไขเป็นกราฟแท่งแนวนอน (Horizontal Bar Chart) สำหรับ Rating 5 ดาว ✨
+        // ✨ แก้ไขฟังก์ชันกราฟเรตติ้ง: เปลี่ยนเป็นแสดงคะแนนของช่างรายบุคคล ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
             let data = getFilteredRepairsByMonthYear(m, y);
 
-            let counts = [0, 0, 0, 0, 0]; // 1, 2, 3, 4, 5 stars
             let totalScore = 0;
             let totalReviews = 0;
+            let techMap = {};
 
             data.forEach(r => {
                 let rating = parseFloat(r.rating);
                 if (!isNaN(rating) && rating > 0) {
                     totalScore += rating;
                     totalReviews++;
-                    if(rating >= 1 && rating <= 5) {
-                        counts[Math.round(rating) - 1]++;
-                    }
+                    
+                    let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                    if (!techMap[tName]) techMap[tName] = { sum: 0, count: 0 };
+                    techMap[tName].sum += rating;
+                    techMap[tName].count++;
                 }
             });
 
+            // อัปเดตกล่องคะแนนรวมซ้ายมือ
             let avg = totalReviews > 0 ? (totalScore / totalReviews).toFixed(1) : "0.0";
             document.getElementById('avgRatingText').innerText = avg;
             document.getElementById('totalReviewsText').innerText = 'จาก ' + totalReviews + ' รีวิว';
@@ -2507,54 +2529,144 @@ $dept_icons = [
             }
             document.getElementById('avgRatingStars').innerHTML = starsHtml;
 
+            // เตรียมข้อมูลลงกราฟแท่ง (ช่างแต่ละคน)
+            let techArr = Object.keys(techMap).map(k => {
+                return {
+                    name: k,
+                    avg: (techMap[k].sum / techMap[k].count).toFixed(1),
+                    count: techMap[k].count
+                };
+            });
+            
+            // เรียงลำดับคนได้คะแนนสูงสุดไปต่ำสุด
+            techArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
+            let topTechs = techArr.slice(0, 5); // แสดง 5 อันดับแรกเพื่อให้ UI สวยงาม
+
             const ctx = document.getElementById('mainRatingChart').getContext('2d');
             if(chartRatingInstance) chartRatingInstance.destroy();
-            
-            let dataCounts = [counts[4], counts[3], counts[2], counts[1], counts[0]]; // เรียงจาก 5 ดาวลงไป 1 ดาว
             
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: ['5 ดาว', '4 ดาว', '3 ดาว', '2 ดาว', '1 ดาว'],
+                    labels: topTechs.length ? topTechs.map(t => t.name) : ['ไม่มีข้อมูล'],
                     datasets: [{ 
-                        label: 'จำนวน (รีวิว)', 
-                        data: dataCounts, 
-                        backgroundColor: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'], // ไล่สีเขียวไปแดง
-                        borderRadius: 100, // ขอบโค้งมนแบบ pill
-                        barThickness: 24, // เปลี่ยนกลับเป็นขนาดปกติให้เท่า Top Locations
+                        label: 'คะแนนเฉลี่ย (ดาว)', 
+                        data: topTechs.length ? topTechs.map(t => t.avg) : [0], 
+                        backgroundColor: topTechs.length ? topTechs.map(() => '#3b82f6') : ['#e2e8f0'], // สีฟ้า
+                        hoverBackgroundColor: '#2563eb', // ฟ้าเข้มตอนชี้
+                        borderRadius: 6,
+                        barThickness: 16,
                         borderSkipped: false
                     }]
                 },
                 options: { 
-                    indexAxis: 'y', // กำหนดเป็นแนวนอน
+                    indexAxis: 'y', 
                     responsive: true, 
                     maintainAspectRatio: false,
+                    onClick: (e, elements) => {
+                        if (elements.length > 0 && topTechs.length > 0) {
+                            const index = elements[0].index;
+                            let selectedTech = topTechs[index].name;
+                            openTechReviewsModal(selectedTech, m, y);
+                        }
+                    },
+                    onHover: (event, chartElement) => {
+                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                    },
                     layout: {
-                        padding: { right: 20 } // เอา padding บนล่างออก เพื่อให้กราฟขยายเต็มพื้นที่ความสูง 260px
+                        padding: { top: 10, bottom: 10, right: 30 } 
                     },
                     plugins: { 
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return ' ' + context.formattedValue + ' รีวิว';
+                                    if (!topTechs.length) return ' ไม่มีข้อมูล';
+                                    let tech = topTechs[context.dataIndex];
+                                    return ' ได้คะแนน ' + context.formattedValue + ' ดาว (จาก ' + tech.count + ' รีวิว)';
                                 }
                             }
                         }
                     }, 
                     scales: { 
                         x: { 
-                            display: false, // ซ่อนแกน X ทั้งหมดให้ดูคลีนเหมือนแถบ Progress
-                            beginAtZero: true 
+                            min: 0,
+                            max: 5,
+                            ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif" } }, 
+                            grid: { color: '#f8fafc' }, 
+                            border: {display: false} 
                         }, 
                         y: { 
-                            ticks: { font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' }, color: '#475569' }, 
+                            ticks: { font: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     } 
                 }
             });
+        }
+
+        // ✨ ฟังก์ชันเปิด Modal สำหรับดูรีวิวของช่างที่ถูกคลิก ✨
+        function openTechReviewsModal(techName, month, year) {
+            document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + techName;
+            
+            let data = getFilteredRepairsByMonthYear(month, year);
+            let techReviews = data.filter(r => {
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                return tName === techName && parseFloat(r.rating) > 0;
+            });
+
+            // เรียงรีวิวล่าสุดขึ้นก่อน
+            techReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+
+            const container = document.getElementById('techReviewsList');
+            container.innerHTML = '';
+
+            if(techReviews.length === 0) {
+                container.innerHTML = `<div class='p-8 flex flex-col items-center justify-center text-center h-full'>
+                                            <i class='far fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm'>ไม่พบข้อมูลรีวิว</p>
+                                          </div>`;
+            } else {
+                techReviews.forEach(rev => {
+                    let r_name = formatValJS(rev.reporter_name);
+                    let r_rating = parseInt(rev.rating);
+                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
+                                    ? rev.review_comment.trim() 
+                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
+                    
+                    let stars_html = '';
+                    for(let i=1; i<=5; i++) {
+                        if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[10px]"></i>';
+                        else stars_html += '<i class="far fa-star text-amber-200 text-[10px]"></i>';
+                    }
+
+                    let date_str = "-";
+                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
+                        let d = new Date(rev.completed_at);
+                        let thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                        let mName = thaiMonths[d.getMonth()];
+                        let yThai = d.getFullYear() + 543;
+                        date_str = `${d.getDate()} ${mName} ${yThai}`;
+                    }
+
+                    container.innerHTML += `<div class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0'>
+                            <div class='flex justify-between items-start mb-2.5'>
+                                <div class='flex items-center gap-3'>
+                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
+                                    <div>
+                                        <div class='text-sm font-bold text-slate-800'>${r_name}</div>
+                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
+                                    </div>
+                                </div>
+                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
+                            </div>
+                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
+                          </div>`;
+                });
+            }
+            
+            toggleModal('techReviewsModal');
         }
 
         function toggleModal(m) { 
