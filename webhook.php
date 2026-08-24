@@ -192,7 +192,7 @@ if (!is_null($events['events'])) {
                 $ticket_no = $postbackData['ticket'];
 
                 if ($postbackData['action'] == 'accept') {
-                    $stmt_check = $conn->prepare("SELECT status, line_user_id, technician_name, equipment_type, location FROM repairs WHERE ticket_no = ?");
+                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_name, equipment_type, location FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
@@ -243,10 +243,13 @@ if (!is_null($events['events'])) {
                                         ]
                                     ],
                                     'footer' => [
-                                        'type' => 'box', 'layout' => 'vertical', 'paddingAll' => '15px', 'paddingTop' => '0px',
+                                        'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm', 'paddingAll' => '15px', 'paddingTop' => '0px',
                                         'contents' => [
                                             ['type' => 'button', 'style' => 'primary', 'color' => '#ef4444', 'height' => 'sm',
                                                 'action' => ['type' => 'postback', 'label' => 'แจ้งปิดงาน', 'data' => "action=close&ticket=$ticket_no"]
+                                            ],
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm',
+                                                'action' => ['type' => 'uri', 'label' => '📝 จัดการ/เพิ่มหมายเหตุ', 'uri' => "http://103.99.11.147/repair/update_repair.php?id=" . $job['id']]
                                             ]
                                         ]
                                     ]
@@ -264,7 +267,7 @@ if (!is_null($events['events'])) {
                     }
                 }
                 elseif ($postbackData['action'] == 'close') {
-                    $stmt_check = $conn->prepare("SELECT status, line_user_id, technician_name, reporter_name FROM repairs WHERE ticket_no = ?");
+                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_name, reporter_name FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
@@ -286,7 +289,11 @@ if (!is_null($events['events'])) {
                                     $stmt->bind_param("s", $ticket_no);
                                     $stmt->execute();
 
-                                    send_reply($replyToken, ['type' => 'text', 'text' => "🎉 บันทึกปิดงานใบงาน $ticket_no เรียบร้อยค่ะ ระบบได้ส่งแบบประเมินให้ผู้แจ้งแล้ว"], $channelAccessToken);
+                                    $close_reply = "🎉 บันทึกปิดงานใบงาน $ticket_no เรียบร้อยค่ะ ระบบได้ส่งแบบประเมินให้ผู้แจ้งแล้ว\n\n" .
+                                                   "📝 หากต้องการเพิ่มหมายเหตุย้อนหลัง หรือตรวจสอบรายละเอียดใบงาน สามารถคลิกลิงก์ด้านล่างได้เลยค่ะ:\n" .
+                                                   "http://103.99.11.147/repair/update_repair.php?id=" . $job['id'];
+                                    
+                                    send_reply($replyToken, ['type' => 'text', 'text' => $close_reply], $channelAccessToken);
 
                                     $review_msg = [
                                         'type' => 'flex',
