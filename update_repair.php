@@ -2,6 +2,8 @@
 date_default_timezone_set('Asia/Bangkok');
 include 'db_connect.php';
 
+$is_admin = isset($_SESSION['role']) && in_array(strtolower($_SESSION['role']), ['admin', 'executive']);
+
 function splitThaiEngName($fullName, $engName) {
     $th = trim((string)$fullName);
     $en = trim((string)$engName);
@@ -102,7 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
     } else {
         $status = $_POST['status'];
-        $repair_note = $_POST['repair_note'];
+        $repair_note = trim($_POST['repair_note']);
         $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
         $asset_code = isset($_POST['asset_code']) && $_POST['asset_code'] !== '' ? trim($_POST['asset_code']) : null;
         $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
@@ -152,47 +154,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
 
-            $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
-            $note_display = !empty($repair_note) ? $repair_note : "-";
-
-            $current_time = date("d/m/Y H:i น.");
-
-            $tech_phone = "- ไม่ระบุ -";
-            if (!empty($technician_name)) {
-                $stmt_tech = $conn->prepare("SELECT phone FROM technicians WHERE full_name = ? LIMIT 1");
-                if ($stmt_tech) {
-                    $stmt_tech->bind_param("s", $technician_name);
-                    $stmt_tech->execute();
-                    $res_tech = $stmt_tech->get_result();
-                    if ($res_tech->num_rows > 0) {
-                        $row_tech = $res_tech->fetch_assoc();
-                        if (!empty($row_tech['phone'])) {
-                            $tech_phone = $row_tech['phone'];
-                        }
-                    }
-                    $stmt_tech->close();
-                }
-            }
-
-            $status_display = $status;
-            if ($status == 'กำลังดำเนินการ') {
-                $status_display = 'ช่างรับเรื่องแจ้งซ่อมแล้ว';
-            }
-
-            if(!empty($repair['line_user_id'])) {
-                $icon = "🔔";
-                if($status == 'กำลังดำเนินการ') $icon = "🛠️";
-                if($status == 'ซ่อมเสร็จแล้ว') $icon = "🎉";
-
-                $messageText = $icon . " อัปเดตสถานะงานซ่อม\n\n" .
-                               "📋 เลขที่ใบงาน: " . $repair['ticket_no'] . "\n" .
-                               "🕒 เวลาอัปเดต: " . $current_time . "\n" .
-                               "💻 อุปกรณ์: " . $repair['equipment_type'] . "\n" .
-                               "⚠️ อาการ: " . $repair['problem_desc'] . "\n\n" .
-                               "📌 สถานะใหม่: " . $status_display . "\n" .  
-                               "👨‍🔧 ช่างผู้ดูแล: " . $tech_display . "\n" .
-                               "📱 เบอร์ติดต่อช่าง: " . $tech_phone . "\n" .
-                               "📝 หมายเหตุ: " . $note_display;
+            if(!empty($repair['line_user_id']) && !empty($repair_note)) {
+                $messageText = "📝 ช่างได้เพิ่มหมายเหตุในงานซ่อม\n\n" .
+                               "📋 ใบงาน: " . $repair['ticket_no'] . "\n" .
+                               "💬 หมายเหตุ: " . $repair_note;
 
                 $postData = [
                     'to' => $repair['line_user_id'],
@@ -207,28 +172,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
                 curl_exec($ch);
                 curl_close($ch);
-            }
-
-            $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
-
-            if(!empty($line_group_id) && $status == 'กำลังดำเนินการ') {
-                $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
-                                "👨‍🔧 ช่าง: " . $tech_display . "\n" .
-                                "💻 งาน: " . $repair['equipment_type'] . " (" . $repair['location'] . ")";
-
-                $postDataGroup = [
-                    'to' => $line_group_id,
-                    'messages' => [['type' => 'text', 'text' => $groupMessage]]
-                ];
-
-                $ch2 = curl_init('https://api.line.me/v2/bot/message/push');
-                curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch2, CURLOPT_POST, true);
-                curl_setopt($ch2, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
-                curl_setopt($ch2, CURLOPT_POSTFIELDS, json_encode($postDataGroup));
-                curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false); 
-                curl_exec($ch2);
-                curl_close($ch2);
             }
         }
     }
@@ -278,9 +221,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> ระบบจัดการใบงานแจ้งซ่อม</h1>
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
+            <?php if($is_admin): ?>
             <a href="dashboard.php?tab=repairs" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
+            <?php endif; ?>
         </div>
 
         <?php if($repair): ?>
@@ -357,41 +302,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <div class="mb-4 relative" id="techDropdownContainer">
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
                             
-                            <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 transition-all cursor-text shadow-sm" onclick="toggleTechDropdown(event, true)">
-                                <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="-- ค้นหาหรือเลือกช่าง --">
-                                
-                                <button type="button" class="px-4 py-3 text-slate-400 hover:text-sky-600 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
-                                    <i class="fas fa-caret-down text-lg"></i>
-                                </button>
-                            </div>
-                            
-                            <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
-                                <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
-                                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
-                                        <i class="fas fa-user-slash text-xs"></i>
+                            <?php if (!empty($current_tech_full) && $current_tech_full !== '-' && !$is_admin): ?>
+                                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center shadow-sm">
+                                    <div class="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center mr-4 text-sky-600 shrink-0">
+                                        <i class="fas fa-user-check"></i>
                                     </div>
-                                    -- ยังไม่ระบุผู้รับผิดชอบ --
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-800"><?php echo htmlspecialchars($current_tech_display); ?></p>
+                                        <p class="text-[11px] text-slate-500 mt-0.5">ล็อกสิทธิ์ผู้รับผิดชอบ (ป้องกันการแก้ไขผิดพลาด)</p>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($current_tech_full); ?>">
+                            <?php else: ?>
+                                <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 transition-all cursor-text shadow-sm" onclick="toggleTechDropdown(event, true)">
+                                    <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="-- ค้นหาหรือเลือกช่าง --">
+                                    
+                                    <button type="button" class="px-4 py-3 text-slate-400 hover:text-sky-600 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
+                                        <i class="fas fa-caret-down text-lg"></i>
+                                    </button>
                                 </div>
                                 
-                                <div class="px-6 pt-4 pb-2 text-[11px] font-extrabold text-slate-400 tracking-wide">รายชื่อช่างในระบบ</div>
-                                
-                                <?php foreach($techs as $t): 
-                                    list($th_name, $en_name) = splitThaiEngName($t, '');
-                                    $searchStr = preg_replace('/\s+/', '', strtolower($th_name));
-                                ?>
-                                    <div class="tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-sky-50 hover:text-sky-600 cursor-pointer flex justify-between items-center transition-all group" data-value="<?php echo htmlspecialchars($t); ?>" data-display="<?php echo htmlspecialchars($th_name); ?>" data-search="<?php echo htmlspecialchars($searchStr); ?>" onmousedown="selectTech('<?php echo htmlspecialchars($t, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($th_name, ENT_QUOTES); ?>')">
-                                        <div class="flex items-center pointer-events-none">
-                                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-sky-100 group-hover:text-sky-500 transition-colors">
-                                                <i class="fas fa-user text-xs"></i>
-                                            </div>
-                                            <span><?php echo htmlspecialchars($th_name); ?></span>
+                                <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
+                                    <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
+                                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
+                                            <i class="fas fa-user-slash text-xs"></i>
                                         </div>
-                                        <i class="fas fa-check text-sky-500 opacity-0 group-hover:opacity-100 transition-opacity check-icon pointer-events-none"></i>
+                                        -- ยังไม่ระบุผู้รับผิดชอบ --
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                            
-                            <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($repair['technician_name'] ?? ''); ?>">
+                                    
+                                    <div class="px-6 pt-4 pb-2 text-[11px] font-extrabold text-slate-400 tracking-wide">รายชื่อช่างในระบบ</div>
+                                    
+                                    <?php foreach($techs as $t): 
+                                        list($th_name, $en_name) = splitThaiEngName($t, '');
+                                        $searchStr = preg_replace('/\s+/', '', strtolower($th_name));
+                                    ?>
+                                        <div class="tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-sky-50 hover:text-sky-600 cursor-pointer flex justify-between items-center transition-all group" data-value="<?php echo htmlspecialchars($t); ?>" data-display="<?php echo htmlspecialchars($th_name); ?>" data-search="<?php echo htmlspecialchars($searchStr); ?>" onmousedown="selectTech('<?php echo htmlspecialchars($t, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($th_name, ENT_QUOTES); ?>')">
+                                            <div class="flex items-center pointer-events-none">
+                                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-sky-100 group-hover:text-sky-500 transition-colors">
+                                                    <i class="fas fa-user text-xs"></i>
+                                                </div>
+                                                <span><?php echo htmlspecialchars($th_name); ?></span>
+                                            </div>
+                                            <i class="fas fa-check text-sky-500 opacity-0 group-hover:opacity-100 transition-opacity check-icon pointer-events-none"></i>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                
+                                <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($repair['technician_name'] ?? ''); ?>">
+                            <?php endif; ?>
                         </div>
 
                         <div class="mb-4 p-5 border border-slate-200 bg-slate-50/50 rounded-2xl shadow-sm">
@@ -501,7 +459,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <i class="fas fa-exclamation-triangle text-3xl text-slate-400"></i>
                 </div>
                 <h2 class="text-xl font-bold text-slate-700 mb-2">ไม่พบข้อมูลใบงาน</h2>
+                <?php if($is_admin): ?>
                 <a href="dashboard.php?tab=repairs" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block mt-4">กลับหน้ารายการ</a>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
     </div>
@@ -545,6 +505,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 
     <script>
+        <?php if ($is_admin): ?>
         let currentTechDisplay = '<?php echo addslashes($current_tech_display); ?>';
         let currentTechValue = '<?php echo addslashes($current_tech_full); ?>';
 
@@ -631,7 +592,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             document.getElementById('techSearchInput').value = currentTechDisplay || '-- ยังไม่ระบุผู้รับผิดชอบ --';
             updateTechCheckmarks();
         });
-
+        <?php endif; ?>
 
         function toggleModal(m) { 
             document.getElementById(m).classList.toggle('opacity-0'); 
@@ -717,7 +678,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             confirmButtonText: 'ตกลง'
         }).then((result) => {
             if (result.isConfirmed) {
+                <?php if($is_admin): ?>
                 window.location.href = 'dashboard.php?tab=repairs';
+                <?php else: ?>
+                window.close();
+                <?php endif; ?>
             }
         });
     </script>

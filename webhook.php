@@ -260,6 +260,20 @@ if (!is_null($events['events'])) {
                             
                             $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ\n📞 เบอร์ติดต่อ: $tech_phone\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ 🛠️"];
                             send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
+
+                            // ส่งแจ้งเตือนลงกลุ่ม LINE หลังจากช่างกดรับงานสำเร็จ
+                            if(!empty($line_group_id)) {
+                                $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
+                                                "👨‍🔧 ช่าง: " . $tech_name . "\n" .
+                                                "💻 งาน: " . $job['equipment_type'] . " (" . $job['location'] . ")";
+                                
+                                $postDataGroup = [
+                                    'to' => $line_group_id,
+                                    'messages' => [['type' => 'text', 'text' => $groupMessage]]
+                                ];
+                                send_push($line_group_id, $postDataGroup, $channelAccessToken);
+                            }
+
                         } else {
                             $taken_by = !empty($job['technician_name']) ? $job['technician_name'] : "ช่างท่านอื่น";
                             send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ใบงาน $ticket_no ถูกรับไปแล้วโดยช่าง $taken_by"], $channelAccessToken);
