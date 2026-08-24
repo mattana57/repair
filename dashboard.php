@@ -681,7 +681,7 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <!-- ✨ จุดที่ 1: แบ่งครึ่งหน้าจอ (grid-cols-2) ปรับความสูงเป็น h-[280px] ให้เท่ากันหมด ดูกว้างโปร่งตา ไม่อึดอัด ✨ -->
+                <!-- ✨ จุดที่ 1: นำกลับมาใช้รูปแบบแบ่งครึ่งหน้าจอ (grid-cols-2) แต่ลดความสูงเหลือ h-[240px] เพื่อให้สัดส่วนกว้างและไม่อึดอัด ✨ -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start mb-4">
@@ -700,7 +700,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[280px]">
+                        <div class="flex-1 relative w-full h-[240px]">
                             <canvas id="mainLocChart"></canvas>
                         </div>
                     </div>
@@ -722,18 +722,18 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[280px]">
+                        <div class="flex-1 relative w-full h-[240px]">
                             <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <!-- ✨ ส่วน Rating & Review (เปลี่ยนเป็นแท่งแนวนอนแบบ Progress Bar 5 ดาว ไป 1 ดาว) ความสูงสมมาตรกับด้านบน (h-[280px]) ✨ -->
+                <!-- ✨ ส่วน Rating & Review (HTML Progress Bar) ✨ -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                     
                     <!-- Rating Chart -->
                     <div class="modern-card p-6 flex flex-col lg:col-span-2 justify-between">
-                        <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ</p>
@@ -750,26 +750,26 @@ $dept_icons = [
                             </div>
                         </div>
                         
-                        <div class="flex flex-col md:flex-row items-center gap-8 w-full mt-2 flex-1">
+                        <div class="flex flex-col md:flex-row items-center gap-8 w-full mt-2">
                             <!-- Score Box -->
-                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-56 p-6 rounded-3xl border border-slate-100 shrink-0 h-[280px]">
+                            <div class="flex flex-col items-center justify-center bg-slate-50/50 w-full md:w-56 p-6 rounded-3xl border border-slate-100 shrink-0 h-[210px]">
                                 <div class="text-7xl font-black text-slate-800 tracking-tighter mb-2" id="avgRatingText">0.0</div>
-                                <div class="flex text-amber-400 text-2xl gap-1.5 mb-4" id="avgRatingStars">
+                                <div class="flex text-amber-400 text-xl gap-1 mb-3 drop-shadow-sm" id="avgRatingStars">
                                     <!-- stars injected by JS -->
                                 </div>
-                                <div class="text-xs font-bold text-slate-500 uppercase tracking-widest bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
+                                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest bg-white px-4 py-1.5 rounded-full shadow-sm border border-slate-100" id="totalReviewsText">จาก 0 รีวิว</div>
                             </div>
                             
-                            <!-- Chart Area (แก้บั๊กเพิ่ม w-full min-w-0 แล้วเปลี่ยน Javascript เป็นแท่งแนวนอน) -->
-                            <div class="relative flex-1 w-full min-w-0 h-[280px]">
-                                <canvas id="mainRatingChart"></canvas>
+                            <!-- แถบ Progress แบบ Native HTML/CSS (สวยงามและคลีนมาก) -->
+                            <div class="flex-1 w-full flex flex-col justify-center gap-3.5 py-2 px-2" id="ratingBarsContainer">
+                                <!-- JS fills this -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- Recent Reviews List -->
-                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-1 h-full">
-                        <div class="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
+                    <!-- Recent Reviews List (มีแถบเลื่อน) -->
+                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-1">
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center shrink-0">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Reviews</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ข้อความรีวิวล่าสุด</p>
@@ -777,8 +777,8 @@ $dept_icons = [
                             <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg"><i class="fas fa-comment-dots"></i></div>
                         </div>
                         
-                        <!-- ✨ ล็อคความสูงและใส่คำสั่งเลื่อน Scrollbar ให้พอดีกับกล่องฝั่งซ้าย (280px พอดีเป๊ะ) ✨ -->
-                        <div class="overflow-y-auto p-0 custom-scrollbar flex-1 h-[280px]">
+                        <!-- ✨ ล็อคความสูงและใส่คำสั่งเลื่อน Scrollbar ให้พอดีกับกล่องฝั่งซ้าย ✨ -->
+                        <div class="overflow-y-auto p-0 custom-scrollbar h-[265px]">
                             <div class="divide-y divide-slate-100">
                                 <?php
                                 $rev_res = $conn->query("SELECT reporter_name, rating, review_comment, completed_at FROM repairs WHERE rating > 0 ORDER BY completed_at DESC LIMIT 10");
@@ -823,6 +823,7 @@ $dept_icons = [
                         </div>
                     </div>
                 </div>
+                <!-- ✨ สิ้นสุดส่วน Rating & Review ✨ -->
 
                 <div class="grid grid-cols-1 gap-6 mt-6">
                     <div class="modern-card overflow-hidden flex flex-col col-span-full">
@@ -2467,6 +2468,7 @@ $dept_icons = [
             });
         }
 
+        // ✨ แก้ไขเป็นกราฟแบบ Area Line Chart สีทอง ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2509,26 +2511,31 @@ $dept_icons = [
             const ctx = document.getElementById('mainRatingChart').getContext('2d');
             if(chartRatingInstance) chartRatingInstance.destroy();
             
-            // ใช้กราฟแท่งแนวนอน (Horizontal Bar Chart) เหมือน Progress Bar
-            let dataCounts = [counts[4], counts[3], counts[2], counts[1], counts[0]]; // เรียงจาก 5 ดาวไป 1 ดาว
+            // สร้างพื้นหลังแบบไล่สี (Gradient) สีทอง/ส้ม
+            let gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(245, 158, 11, 0.5)'); // amber-500
+            gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)'); 
             
             chartRatingInstance = new Chart(ctx, {
-                type: 'bar', 
+                type: 'line', 
                 data: {
-                    labels: ['5 ดาว', '4 ดาว', '3 ดาว', '2 ดาว', '1 ดาว'],
+                    labels: ['1 ดาว', '2 ดาว', '3 ดาว', '4 ดาว', '5 ดาว'],
                     datasets: [{ 
-                        label: 'จำนวนรีวิว', 
-                        data: dataCounts, 
-                        backgroundColor: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'], // ไล่สีเขียวไปแดง
-                        borderRadius: 100, // ขอบโค้งมนแบบ pill
-                        barThickness: 24, // ความหนาพอดี ไม่อึดอัด
-                        borderSkipped: false
+                        label: 'จำนวน (รีวิว)', 
+                        data: counts, 
+                        borderColor: '#f59e0b', 
+                        backgroundColor: gradient, 
+                        borderWidth: 3, 
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#f59e0b',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4 // ทำเส้นให้มีความโค้งมน
                     }]
                 },
                 options: { 
-                    indexAxis: 'y', // เปลี่ยนเป็นแนวนอน
-                    responsive: true, 
-                    maintainAspectRatio: false, 
+                    responsive: true, maintainAspectRatio: false, 
                     plugins: { 
                         legend: { display: false },
                         tooltip: {
@@ -2540,12 +2547,14 @@ $dept_icons = [
                         }
                     }, 
                     scales: { 
-                        x: { 
-                            display: false, // ซ่อนแกน X ทั้งหมดให้ดูคลีนเหมือนแถบ Progress
-                            beginAtZero: true 
-                        }, 
                         y: { 
-                            ticks: { font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' }, color: '#475569' }, 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif", size: 12 }, color: '#64748b' }, 
+                            grid: { color: '#f8fafc' }, 
+                            border: {display: false} 
+                        }, 
+                        x: { 
+                            ticks: { font: { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
