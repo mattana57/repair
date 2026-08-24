@@ -700,7 +700,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="relative w-full h-[250px]"> <!-- ลบ flex-1 ออกเพื่อล็อคความสูง -->
+                        <div class="relative w-full" style="height: 250px;"> <!-- ลบ flex-1 ออกเพื่อล็อคความสูง -->
                             <canvas id="mainLocChart"></canvas>
                         </div>
                     </div>
@@ -722,7 +722,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="relative w-full h-[250px]"> <!-- ลบ flex-1 ออกเพื่อล็อคความสูง -->
+                        <div class="relative w-full" style="height: 250px;"> <!-- ลบ flex-1 ออกเพื่อล็อคความสูง -->
                             <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
@@ -839,11 +839,11 @@ $dept_icons = [
                             <table class="w-full text-left whitespace-nowrap">
                                 <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
                                     <tr>
+                                        <th class="px-6 py-4">Date / Time</th>
                                         <th class="px-6 py-4">Ticket No.</th>
                                         <th class="px-6 py-4">Reporter</th>
                                         <th class="px-6 py-4">Equipment</th>
                                         <th class="px-6 py-4 text-center">Status</th>
-                                        <th class="px-6 py-4 text-right">Date</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100">
@@ -852,7 +852,7 @@ $dept_icons = [
                                     if($recent_dash && $recent_dash->num_rows > 0){
                                         while($rd = $recent_dash->fetch_assoc()) {
                                             $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
-                                            $statusText = ($rd['status'] == 'รอรับเรื่อง') ? 'Pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'In Progress' : 'Completed');
+                                            $statusText = htmlspecialchars($rd['status']);
                                             
                                             $ticket_no = formatEmptyOrDash($rd['ticket_no']);
                                             $reporter_name = formatEmptyOrDash($rd['reporter_name']);
@@ -869,6 +869,10 @@ $dept_icons = [
                                             }
                                             
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                    <div class='font-medium text-slate-700'>{$date_fmt}</div>
+                                                    {$time_html}
+                                                </td>
                                                 <td class='px-6 py-4 align-top text-slate-500 font-mono font-semibold'>{$ticket_no}</td>
                                                 <td class='px-6 py-4 align-top text-slate-800 font-bold'>
                                                     <div class='flex items-center'>
@@ -878,10 +882,6 @@ $dept_icons = [
                                                 </td>
                                                 <td class='px-6 py-4 align-top text-slate-600 font-medium'>{$equipment_type} {$imageIcon}</td>
                                                 <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$statusText}</span></td>
-                                                <td class='px-6 py-4 align-top text-right whitespace-nowrap'>
-                                                    <div class='font-medium text-slate-700'>{$date_fmt}</div>
-                                                    {$time_html}
-                                                </td>
                                             </tr>";
                                         }
                                     } else {
