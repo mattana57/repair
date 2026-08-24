@@ -700,7 +700,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[250px]">
+                        <div class="flex-1 relative w-full h-[260px]">
                             <canvas id="mainLocChart"></canvas>
                         </div>
                     </div>
@@ -722,7 +722,7 @@ $dept_icons = [
                                 </select>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[250px]">
+                        <div class="flex-1 relative w-full h-[260px]">
                             <canvas id="mainTechChart"></canvas>
                         </div>
                     </div>
