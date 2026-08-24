@@ -204,7 +204,6 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
     }
 
-    // ✨ ตรวจสอบและสร้างคอลัมน์สำหรับ Rating และ Review (ถ้ายังไม่มี) ✨
     $check_rating = $conn->query("SHOW COLUMNS FROM repairs LIKE 'rating'");
     if($check_rating && $check_rating->num_rows == 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN rating INT DEFAULT 0");
@@ -2555,21 +2554,30 @@ $dept_icons = [
             techArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
             let topTechs = techArr.slice(0, 5); // แสดง 5 อันดับแรกเพื่อให้ UI สวยงาม
 
+            // ฟังก์ชันสำหรับเลือกสีกราฟตามคะแนนเฉลี่ย
+            const getRatingColor = (score) => {
+                if (score >= 4.5) return '#22c55e'; // เขียวเข้ม (5 ดาว)
+                if (score >= 3.5) return '#84cc16'; // เขียวอ่อน (4 ดาว)
+                if (score >= 2.5) return '#eab308'; // เหลือง (3 ดาว)
+                if (score >= 1.5) return '#f97316'; // ส้ม (2 ดาว)
+                return '#ef4444'; // แดง (1 ดาว)
+            };
+
             const ctx = document.getElementById('mainRatingChart').getContext('2d');
             if(chartRatingInstance) chartRatingInstance.destroy();
             
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: topTechs.length ? topTechs.map(t => ['⭐ ' + t.avg + ' (' + t.count + ' รีวิว)', t.name, `(${t.dept})`]) : [['ไม่มีข้อมูล']], // ทำ Label 2 บรรทัด
+                    // เปลี่ยน Label ให้เหลือแค่ ⭐ 4.4 กับ ชื่อ
+                    labels: topTechs.length ? topTechs.map(t => ['⭐ ' + t.avg, t.name]) : [['ไม่มีข้อมูล']],
                     datasets: [{ 
-                        label: 'คะแนนเฉลี่ย (ดาว)', 
+                        label: 'ช่าง', 
                         data: topTechs.length ? topTechs.map(t => t.avg) : [0], 
-                        backgroundColor: topTechs.length ? topTechs.map(() => '#3b82f6') : ['#e2e8f0'], // สีฟ้า
-                        hoverBackgroundColor: '#2563eb', // ฟ้าเข้มตอนชี้
+                        backgroundColor: topTechs.length ? topTechs.map(t => getRatingColor(t.avg)) : ['#e2e8f0'], 
                         borderRadius: 6,
-                        barThickness: 24, // กลับมาใช้ขนาดกำลังดี
-                        maxBarThickness: 32, // ป้องกันแท่งใหญ่เกินไปถ้ามีช่างแค่คนเดียว
+                        barThickness: 24,
+                        maxBarThickness: 32,
                         borderSkipped: false
                     }]
                 },
@@ -2594,10 +2602,17 @@ $dept_icons = [
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
+                                // เปลี่ยน Title (ส่วนหัวของ Tooltip)
+                                title: function(context) {
+                                    if (!topTechs.length) return '';
+                                    let tech = topTechs[context[0].dataIndex];
+                                    return '⭐ ' + tech.avg + ' (' + tech.count + ' รีวิว)';
+                                },
+                                // เปลี่ยน Label (ส่วนเนื้อหาของ Tooltip)
                                 label: function(context) {
                                     if (!topTechs.length) return ' ไม่มีข้อมูล';
                                     let tech = topTechs[context.dataIndex];
-                                    return ' ได้คะแนน ' + context.formattedValue + ' ดาว (จาก ' + tech.count + ' รีวิว)';
+                                    return ' ' + tech.name + ' (' + tech.dept + ')';
                                 }
                             }
                         }
