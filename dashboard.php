@@ -755,7 +755,10 @@ $dept_icons = [
                         <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ <span class="text-indigo-500 font-bold ml-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span></p>
+                                <div class="mt-0.5">
+                                    <p class="text-sm font-medium text-slate-400">คะแนนความพึงพอใจการให้บริการ</p>
+                                    <p class="text-xs text-indigo-500 font-bold mt-1.5"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
+                                </div>
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
@@ -769,11 +772,9 @@ $dept_icons = [
                             </div>
                         </div>
                         
-                        <div class="flex items-center w-full mt-2 flex-1">
+                        <div class="w-full mt-2 flex-1 relative h-[300px]">
                             <!-- ✨ Chart Area: แสดงกราฟเรตติ้งรายบุคคล ✨ -->
-                            <div class="relative w-full h-[250px]">
-                                <canvas id="mainRatingChart"></canvas>
-                            </div>
+                            <canvas id="mainRatingChart"></canvas>
                         </div>
                     </div>
 
@@ -2646,7 +2647,7 @@ $dept_icons = [
             });
         }
 
-        // ✨ แก้ไขฟังก์ชันกราฟเรตติ้ง: กลับมาเป็นแบบแนวนอน พร้อมแท่งพื้นหลังสวยงาม ✨
+        // ✨ แก้ไขฟังก์ชันกราฟเรตติ้ง: เปลี่ยนเป็นกราฟแท่งแนวตั้งขอบมน (Vertical Bar) แสนสวย ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2667,6 +2668,7 @@ $dept_icons = [
             // เตรียมข้อมูลลงกราฟแท่ง (ช่างแต่ละคน)
             let techArr = Object.keys(techMap).map(k => {
                 let dName = techDeptMap[k] ? techDeptMap[k] : 'ไม่มีสังกัด';
+                // ถ้าไม่ใช่แผนกแม่บ้าน/อื่นๆ และยังไม่มีคำว่าฝ่ายงาน ให้เติมเข้าไป (แต่ข้อมูลในฐานข้อมูลปกติจะมีมาให้อยู่แล้ว)
                 if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
                     dName = 'ฝ่ายงาน' + dName;
                 }
@@ -2695,43 +2697,31 @@ $dept_icons = [
             if(chartRatingInstance) chartRatingInstance.destroy();
             
             chartRatingInstance = new Chart(ctx, {
-                type: 'bar', 
+                type: 'bar', // ใช้ Vertical Bar
                 data: {
-                    labels: topTechs.length ? topTechs.map(t => ['⭐ ' + t.avg, t.name]) : [['ไม่มีข้อมูล']],
-                    datasets: [
-                        { 
-                            label: 'คะแนนเฉลี่ย', 
-                            data: topTechs.length ? topTechs.map(t => t.avg) : [0], 
-                            backgroundColor: topTechs.length ? topTechs.map(t => getRatingColor(t.avg)) : ['#e2e8f0'], 
-                            borderRadius: 10,
-                            barThickness: 20,
-                            maxBarThickness: 24,
-                            borderSkipped: false,
-                            z: 2
-                        },
-                        {
-                            label: 'เต็ม 5',
-                            data: topTechs.length ? topTechs.map(t => 5.0) : [5.0],
-                            backgroundColor: '#f1f5f9',
-                            borderRadius: 10,
-                            barThickness: 20,
-                            maxBarThickness: 24,
-                            borderSkipped: false,
-                            z: 1
-                        }
-                    ]
+                    // แกน X แสดงชื่อและคะแนนดาว
+                    labels: topTechs.length ? topTechs.map(t => [t.name, '⭐ ' + t.avg]) : [['ไม่มีข้อมูล']],
+                    datasets: [{ 
+                        label: 'คะแนนเฉลี่ย', 
+                        data: topTechs.length ? topTechs.map(t => t.avg) : [0], 
+                        backgroundColor: topTechs.length ? topTechs.map(t => getRatingColor(t.avg)) : ['#e2e8f0'], 
+                        borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 }, // โค้งมนเฉพาะด้านบน
+                        borderSkipped: 'bottom',
+                        barThickness: 32,
+                        maxBarThickness: 48,
+                    }]
                 },
                 options: { 
-                    indexAxis: 'y', 
-                    grouped: false, // ✨ ทำให้แท่งกราฟซ้อนทับกันเป็นหลอด Progress ✨
                     responsive: true, 
                     maintainAspectRatio: false,
+                    // ✨ เปิดใช้งาน interaction mode 'index' ตามแนวแกน X ✨
                     interaction: {
-                        mode: 'y',
+                        mode: 'index',
+                        axis: 'x',
                         intersect: false
                     },
                     onClick: (e, elements, chart) => {
-                        const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
+                        const activeElements = chart.getElementsAtEventForMode(e, 'x', { intersect: false }, true);
                         if (activeElements && activeElements.length > 0 && topTechs.length > 0) {
                             const index = activeElements[0].index;
                             if(topTechs && topTechs[index]) {
@@ -2744,21 +2734,19 @@ $dept_icons = [
                         event.native.target.style.cursor = chartElement.length > 0 ? 'pointer' : 'default';
                     },
                     layout: {
-                        padding: { top: 10, bottom: 10, left: 0, right: 20 } 
+                        padding: { top: 20, bottom: 10, left: 10, right: 10 } 
                     },
                     plugins: { 
                         legend: { display: false },
                         tooltip: {
-                            filter: function(tooltipItem) {
-                                // ซ่อน Tooltip ของแท่งพื้นหลัง (เต็ม 5)
-                                return tooltipItem.datasetIndex === 0;
-                            },
                             callbacks: {
+                                // เปลี่ยน Title (ส่วนหัวของ Tooltip)
                                 title: function(context) {
                                     if (!topTechs.length) return '';
                                     let tech = topTechs[context[0].dataIndex];
                                     return 'ช่าง: ' + tech.name;
                                 },
+                                // เปลี่ยน Label (ส่วนเนื้อหาของ Tooltip)
                                 label: function(context) {
                                     if (!topTechs.length) return ' ไม่มีข้อมูล';
                                     let tech = topTechs[context.dataIndex];
@@ -2766,20 +2754,20 @@ $dept_icons = [
                                     if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
                                         dName = 'ฝ่ายงาน' + dName;
                                     }
-                                    return [' ⭐ คะแนนเฉลี่ย: ' + tech.avg + ' / 5', ' 📝 จำนวน: ' + tech.count + ' รีวิว', ' 🏢 ' + dName];
+                                    return [' ⭐ คะแนนเฉลี่ย: ' + tech.avg, ' 📝 จำนวน: ' + tech.count + ' รีวิว', ' 🏢 ' + dName];
                                 }
                             }
                         }
                     }, 
                     scales: { 
-                        x: { 
+                        y: { 
                             min: 0,
                             max: 5,
                             ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif", weight: 'bold' }, color: '#94a3b8' }, 
                             grid: { color: '#f1f5f9', drawBorder: false }, 
                             border: {display: false} 
                         }, 
-                        y: { 
+                        x: { 
                             ticks: { font: { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
