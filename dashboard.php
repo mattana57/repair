@@ -755,10 +755,8 @@ $dept_icons = [
                         <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
-                                <div class="mt-0.5">
-                                    <p class="text-sm font-medium text-slate-400">คะแนนความพึงพอใจการให้บริการ</p>
-                                    <p class="text-xs text-indigo-500 font-bold mt-1.5"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
-                                </div>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ</p>
+                                <div class="text-[11px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</div>
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
@@ -772,9 +770,11 @@ $dept_icons = [
                             </div>
                         </div>
                         
-                        <div class="w-full mt-2 flex-1 relative h-[300px]">
+                        <div class="flex items-center w-full mt-2 flex-1">
                             <!-- ✨ Chart Area: แสดงกราฟเรตติ้งรายบุคคล ✨ -->
-                            <canvas id="mainRatingChart"></canvas>
+                            <div class="relative w-full h-[350px]">
+                                <canvas id="mainRatingChart"></canvas>
+                            </div>
                         </div>
                     </div>
 
@@ -1191,7 +1191,7 @@ $dept_icons = [
                                                     </div>
                                                     
                                                     <div class='hidden sm:flex items-center pr-1 relative z-10'>
-                                                        <span class='bg-white/20 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center'>
+                                                        <span class='bg-white/20 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
                                                             <i class='fas fa-user-check mr-1.5 opacity-80'></i> ".count($techs)." คน
                                                         </span>
                                                     </div>
