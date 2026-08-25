@@ -204,7 +204,6 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
     }
 
-    // ✨ ตรวจสอบและสร้างคอลัมน์สำหรับ Rating และ Review (ถ้ายังไม่มี) ✨
     $check_rating = $conn->query("SHOW COLUMNS FROM repairs LIKE 'rating'");
     if($check_rating && $check_rating->num_rows == 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN rating INT DEFAULT 0");
@@ -755,7 +754,7 @@ $dept_icons = [
                         <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ <span class="text-indigo-500 font-bold ml-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่กราฟเพื่อดูรีวิวช่าง</span></p>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ <span class="text-indigo-500 font-bold ml-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span></p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
@@ -789,12 +788,15 @@ $dept_icons = [
                         
                         <!-- ✨ แถบ Filter แบบรูปดาว สำหรับหน้า Dashboard ✨ -->
                         <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-2">
-                            <div class="flex items-center gap-1.5" id="mainDashboardStarFilter">
-                                <i id="mStar_1" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(1)" title="1 ดาว"></i>
-                                <i id="mStar_2" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(2)" title="2 ดาว"></i>
-                                <i id="mStar_3" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(3)" title="3 ดาว"></i>
-                                <i id="mStar_4" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(4)" title="4 ดาว"></i>
-                                <i id="mStar_5" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(5)" title="5 ดาว"></i>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
+                                <div class="flex items-center gap-1.5" id="mainDashboardStarFilter">
+                                    <i id="mStar_1" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(1)" title="1 ดาว"></i>
+                                    <i id="mStar_2" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(2)" title="2 ดาว"></i>
+                                    <i id="mStar_3" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(3)" title="3 ดาว"></i>
+                                    <i id="mStar_4" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(4)" title="4 ดาว"></i>
+                                    <i id="mStar_5" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(5)" title="5 ดาว"></i>
+                                </div>
                             </div>
                             <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
                                 <button id="btnMainFilterZero" onclick="setMainReviewFilter(0)" class="px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap">
@@ -2643,7 +2645,7 @@ $dept_icons = [
             });
         }
 
-        // ✨ แก้ไขฟังก์ชันกราฟเรตติ้ง: เปลี่ยนเป็นแสดงคะแนนของช่างรายบุคคล ✨
+        // ✨ แก้ไขฟังก์ชันกราฟเรตติ้ง: เปลี่ยนเป็นกราฟแท่งแนวตั้งขอบมน (Vertical Bar) แสนสวย ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2693,33 +2695,31 @@ $dept_icons = [
             if(chartRatingInstance) chartRatingInstance.destroy();
             
             chartRatingInstance = new Chart(ctx, {
-                type: 'bar', 
+                type: 'bar', // ใช้ Vertical Bar
                 data: {
-                    // เปลี่ยน Label ให้เหลือแค่ 2 บรรทัด (ดาว และ ชื่อ)
-                    labels: topTechs.length ? topTechs.map(t => ['⭐ ' + t.avg, t.name]) : [['ไม่มีข้อมูล']],
+                    // แกน X แสดงชื่อและคะแนนดาว
+                    labels: topTechs.length ? topTechs.map(t => [t.name, '⭐ ' + t.avg]) : [['ไม่มีข้อมูล']],
                     datasets: [{ 
-                        label: 'ช่าง', 
+                        label: 'คะแนนเฉลี่ย', 
                         data: topTechs.length ? topTechs.map(t => t.avg) : [0], 
                         backgroundColor: topTechs.length ? topTechs.map(t => getRatingColor(t.avg)) : ['#e2e8f0'], 
-                        borderRadius: 6,
-                        barThickness: 24,
-                        maxBarThickness: 32,
-                        borderSkipped: false
+                        borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 }, // โค้งมนเฉพาะด้านบน
+                        borderSkipped: 'bottom',
+                        barThickness: 32,
+                        maxBarThickness: 48,
                     }]
                 },
                 options: { 
-                    indexAxis: 'y', 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    // ✨ เปิดใช้งาน interaction mode 'index' และระบุแกน y เพื่อให้กดตรงไหนก็ได้ในบรรทัดนั้นบนมือถือ ✨
+                    // ✨ เปิดใช้งาน interaction mode 'index' ตามแนวแกน X ✨
                     interaction: {
                         mode: 'index',
-                        axis: 'y',
+                        axis: 'x',
                         intersect: false
                     },
                     onClick: (e, elements, chart) => {
-                        // ดึงข้อมูลแถวทั้งหมดที่ผู้ใช้คลิกโดน ไม่ว่าจะคลิกโดนกราฟหรือคลิกโดนพื้นที่ว่างข้างๆ กราฟ
-                        const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
+                        const activeElements = chart.getElementsAtEventForMode(e, 'x', { intersect: false }, true);
                         if (activeElements && activeElements.length > 0 && topTechs.length > 0) {
                             const index = activeElements[0].index;
                             if(topTechs && topTechs[index]) {
@@ -2732,7 +2732,7 @@ $dept_icons = [
                         event.native.target.style.cursor = chartElement.length > 0 ? 'pointer' : 'default';
                     },
                     layout: {
-                        padding: { top: 10, bottom: 10, right: 30 } 
+                        padding: { top: 20, bottom: 10, left: 10, right: 10 } 
                     },
                     plugins: { 
                         legend: { display: false },
@@ -2742,31 +2742,30 @@ $dept_icons = [
                                 title: function(context) {
                                     if (!topTechs.length) return '';
                                     let tech = topTechs[context[0].dataIndex];
-                                    return '⭐ ' + tech.avg + ' (' + tech.count + ' รีวิว)';
+                                    return 'ช่าง: ' + tech.name;
                                 },
                                 // เปลี่ยน Label (ส่วนเนื้อหาของ Tooltip)
                                 label: function(context) {
                                     if (!topTechs.length) return ' ไม่มีข้อมูล';
                                     let tech = topTechs[context.dataIndex];
-                                    // เพิ่มคำว่า ฝ่ายงาน ในวงเล็บ
                                     let dName = tech.dept;
                                     if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
                                         dName = 'ฝ่ายงาน' + dName;
                                     }
-                                    return ' ' + tech.name + ' (' + dName + ')';
+                                    return [' ⭐ คะแนนเฉลี่ย: ' + tech.avg, ' 📝 จำนวน: ' + tech.count + ' รีวิว', ' 🏢 ' + dName];
                                 }
                             }
                         }
                     }, 
                     scales: { 
-                        x: { 
+                        y: { 
                             min: 0,
                             max: 5,
-                            ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif" } }, 
-                            grid: { color: '#f8fafc' }, 
+                            ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif", weight: 'bold' }, color: '#94a3b8' }, 
+                            grid: { color: '#f1f5f9', drawBorder: false }, 
                             border: {display: false} 
                         }, 
-                        y: { 
+                        x: { 
                             ticks: { font: { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
