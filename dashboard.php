@@ -486,7 +486,7 @@ $dept_icons = [
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -2715,7 +2715,7 @@ $dept_icons = [
                 type: 'bar', 
                 data: {
                     // โชว์ชื่อแผนก และ ชื่อช่างที่ได้ที่ 1 ตามที่รีเควส
-                    labels: deptArr.length ? deptArr.map(d => [d.name, '🏆 อันดับ 1: ' + d.topTech + ' (⭐ ' + d.topTechAvg + ')']) : [['ไม่มีข้อมูล']],
+                    labels: deptArr.length ? deptArr.map(d => ['⭐ ' + d.topTechAvg, d.topTech, d.name]) : [['ไม่มีข้อมูล']],
                     datasets: [
                         { 
                             label: 'คะแนนเฉลี่ยฝ่าย', 
@@ -2887,7 +2887,7 @@ $dept_icons = [
                 techArr.forEach(t => {
                     let opt = document.createElement('option');
                     opt.value = t.name;
-                    opt.text = `⭐ ${t.avg} - ${t.name} (${t.count} รีวิว)`;
+                    opt.text = `${t.name} ⭐ ${t.avg} (${t.count} รีวิว)`;
                     selector.appendChild(opt);
                 });
                 
