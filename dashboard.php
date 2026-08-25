@@ -772,7 +772,7 @@ $dept_icons = [
                         
                         <div class="flex items-center w-full mt-2 flex-1">
                             <!-- ✨ Chart Area: แสดงกราฟเรตติ้งรายบุคคล ✨ -->
-                            <div class="relative w-full h-[380px]">
+                            <div class="relative w-full h-[350px]"> <!-- ขยายขนาดความสูงกราฟให้ใหญ่ขึ้น -->
                                 <canvas id="mainRatingChart"></canvas>
                             </div>
                         </div>
@@ -2647,7 +2647,7 @@ $dept_icons = [
             });
         }
 
-        // ✨ แก้ไขฟังก์ชันกราฟเรตติ้ง: กลับมาเป็นแบบแนวนอน พร้อมแท่งพื้นหลังสวยงาม ✨
+        // ✨ แก้ไขฟังก์ชันกราฟเรตติ้ง: กลับมาเป็นแบบแนวนอน พร้อมปรับให้หนาขึ้นและดูสบายตา ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2698,15 +2698,16 @@ $dept_icons = [
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: topTechs.length ? topTechs.map(t => [t.name, '⭐ ' + t.avg]) : [['ไม่มีข้อมูล']],
+                    labels: topTechs.length ? topTechs.map(t => ['⭐ ' + t.avg, t.name]) : [['ไม่มีข้อมูล']],
                     datasets: [
                         { 
                             label: 'คะแนนเฉลี่ย', 
                             data: topTechs.length ? topTechs.map(t => t.avg) : [0], 
                             backgroundColor: topTechs.length ? topTechs.map(t => getRatingColor(t.avg)) : ['#e2e8f0'], 
-                            borderRadius: 10,
-                            barThickness: 24,
-                            maxBarThickness: 32,
+                            borderRadius: 20,
+                            maxBarThickness: 48,
+                            barPercentage: 0.8,
+                            categoryPercentage: 0.7,
                             borderSkipped: false,
                             z: 2
                         },
@@ -2714,9 +2715,10 @@ $dept_icons = [
                             label: 'เต็ม 5',
                             data: topTechs.length ? topTechs.map(t => 5.0) : [5.0],
                             backgroundColor: '#f1f5f9',
-                            borderRadius: 10,
-                            barThickness: 24,
-                            maxBarThickness: 32,
+                            borderRadius: 20,
+                            maxBarThickness: 48,
+                            barPercentage: 0.8,
+                            categoryPercentage: 0.7,
                             borderSkipped: false,
                             z: 1
                         }
@@ -2777,7 +2779,7 @@ $dept_icons = [
                             min: 0,
                             max: 5,
                             ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif", weight: 'bold' }, color: '#94a3b8' }, 
-                            grid: { color: '#f1f5f9', drawBorder: false }, 
+                            grid: { color: '#e2e8f0', drawBorder: false, borderDash: [5, 5] }, 
                             border: {display: false} 
                         }, 
                         y: { 
