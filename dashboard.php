@@ -780,12 +780,21 @@ $dept_icons = [
 
                     <!-- ✨ Recent Reviews List ของหน้า Dashboard หลัก ✨ -->
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
-                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-center shrink-0">
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Reviews</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ข้อความรีวิวล่าสุดทั้งหมด</p>
                             </div>
-                            <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg shrink-0"><i class="fas fa-comment-dots"></i></div>
+                            <div class="flex items-center gap-2">
+                                <select id="mainReviewMonth" onchange="renderMainRecentReviewsList()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
+                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
+                                </select>
+                                <select id="mainReviewYear" onchange="renderMainRecentReviewsList()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
                         </div>
                         
                         <!-- ✨ แถบ Filter แบบรูปดาว สำหรับหน้า Dashboard ✨ -->
@@ -1916,7 +1925,7 @@ $dept_icons = [
             <!-- Header -->
             <div class="px-5 py-5 border-b border-slate-100 flex justify-between items-start bg-gradient-to-b from-slate-50 to-white shrink-0 relative">
                 <div class="flex gap-4 relative z-10 flex-1 min-w-0">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center text-2xl shrink-0 shadow-sm border border-amber-200 mt-1"><i class="fas fa-star"></i></div>
+                    <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-50 flex items-center justify-center text-2xl shrink-0 shadow-sm border border-amber-200 mt-1"><i class="fas fa-star"></i></div>
                     <div class="flex flex-col min-w-0">
                         <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate" id="techReviewsModalTitle">รีวิวของช่าง: สมชาย ใจงาม</p>
                         <p class="text-[13px] font-bold text-indigo-600 truncate mt-1" id="techReviewsModalDept">ฝ่ายงานบริการเทคโนโลยีดิจิทัล</p>
@@ -2339,8 +2348,15 @@ $dept_icons = [
             if(!container) return;
             container.innerHTML = '';
             
+            // ✨ อ่านค่าจาก Dropdown เดือน/ปี ของ Recent Reviews ✨
+            let m = document.getElementById('mainReviewMonth') ? document.getElementById('mainReviewMonth').value : 'all';
+            let y = document.getElementById('mainReviewYear') ? document.getElementById('mainReviewYear').value : 'all';
+            
+            // ✨ กรองข้อมูลรีวิวตามเดือนและปีที่เลือก ✨
+            let filteredReviews = getFilteredRepairsByMonthYear(m, y);
+            
             // กรองเอาเฉพาะอันที่มีดาว หรือมีคอมเมนต์พิมพ์มา
-            let filteredReviews = allRepairs.filter(r => {
+            filteredReviews = filteredReviews.filter(r => {
                 let rRating = parseFloat(r.rating) || 0;
                 let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
                 return rRating > 0 || hasComment;
@@ -2360,7 +2376,7 @@ $dept_icons = [
             if(filteredReviews.length === 0) {
                 container.innerHTML = `<div class='p-8 flex flex-col items-center justify-center text-center h-full min-h-[200px]'>
                                             <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
-                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนนี้</p>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนหรือช่วงเวลานี้</p>
                                           </div>`;
             } else {
                 filteredReviews.forEach(rev => {
