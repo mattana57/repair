@@ -777,42 +777,63 @@ $dept_icons = [
                         </div>
                     </div>
 
-                    <!-- ✨ Recent Reviews List ของหน้า Dashboard หลัก ✨ -->
-                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
-                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-center shrink-0">
+                    <!-- Recent Reviews List (มีแถบเลื่อน) -->
+                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5">
+                        <div class="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Reviews</h3>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">ข้อความรีวิวล่าสุดทั้งหมด</p>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">ข้อความรีวิวล่าสุด</p>
                             </div>
-                            <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg shrink-0"><i class="fas fa-comment-dots"></i></div>
+                            <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-lg"><i class="fas fa-comment-dots"></i></div>
                         </div>
                         
-                        <!-- ✨ แถบ Filter แบบเดียวกับใน Modal ✨ -->
-                        <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-2">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
-                                <div id="mainStarFilterContainer" class="flex gap-1.5">
-                                    <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(1)" title="1 ดาว"></i>
-                                    <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(2)" title="2 ดาว"></i>
-                                    <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(3)" title="3 ดาว"></i>
-                                    <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(4)" title="4 ดาว"></i>
-                                    <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(5)" title="5 ดาว"></i>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                                <button id="btnMainFilterZeroReviews" onclick="setMainReviewFilter(0)" class="px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap">
-                                    เฉพาะคอมเมนต์
-                                </button>
-                                <button id="btnMainFilterAllReviews" onclick="setMainReviewFilter('all')" class="px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap">
-                                    ทั้งหมด
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="overflow-y-auto p-0 custom-scrollbar flex-1 min-h-[250px] max-h-[400px]">
-                            <!-- ✨ กล่องใส่รีวิวที่สร้างจาก JavaScript ✨ -->
-                            <div class="divide-y divide-slate-100" id="mainRecentReviewsList">
-                                <!-- Injected via JS -->
+                        <!-- ✨ ล็อคความสูงและใส่คำสั่งเลื่อน Scrollbar ให้พอดีกับกล่องฝั่งซ้าย ✨ -->
+                        <div class="overflow-y-auto p-0 custom-scrollbar h-[250px]">
+                            <div class="divide-y divide-slate-100">
+                                <?php
+                                // อัปเดตคำสั่ง SQL ให้ดึงคนที่ไม่มีดาว (rating = 0) แต่มีคอมเมนต์ มาแสดงด้วย
+                                $rev_res = $conn->query("SELECT reporter_name, rating, review_comment, completed_at FROM repairs WHERE rating > 0 OR (review_comment IS NOT NULL AND review_comment != '' AND review_comment != '-') ORDER BY completed_at DESC LIMIT 10");
+                                if($rev_res && $rev_res->num_rows > 0) {
+                                    while($rev = $rev_res->fetch_assoc()) {
+                                        $r_name = formatEmptyOrDash($rev['reporter_name']);
+                                        $r_rating = intval($rev['rating']);
+                                        $r_comment = htmlspecialchars(trim($rev['review_comment']));
+                                        if(empty($r_comment) || $r_comment === '-') $r_comment = "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
+                                        
+                                        $stars_html = '';
+                                        if ($r_rating == 0) {
+                                            $stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                                        } else {
+                                            for($i=1; $i<=5; $i++) {
+                                                if($i <= $r_rating) $stars_html .= '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                                                else $stars_html .= '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                                            }
+                                        }
+
+                                        $has_completed = (!empty($rev['completed_at']) && $rev['completed_at'] != '0000-00-00 00:00:00');
+                                        $date_str = $has_completed ? timeAgo($rev['completed_at']) : "-";
+
+                                        echo "<div class='p-5 hover:bg-slate-50 transition-colors group'>
+                                                <div class='flex justify-between items-start mb-2.5'>
+                                                    <div class='flex items-center gap-3'>
+                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
+                                                        <div>
+                                                            <div class='text-sm font-bold text-slate-800'>{$r_name}</div>
+                                                            <div class='text-[10px] text-slate-400 font-medium'>{$date_str}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class='flex gap-0.5 pt-1'>{$stars_html}</div>
+                                                </div>
+                                                <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>{$r_comment}</p>
+                                              </div>";
+                                    }
+                                } else {
+                                    echo "<div class='p-8 flex flex-col items-center justify-center text-center h-full'>
+                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm'>ยังไม่มีการรีวิวจากผู้ใช้งาน</p>
+                                          </div>";
+                                }
+                                ?>
                             </div>
                         </div>
                     </div>
@@ -1973,7 +1994,6 @@ $dept_icons = [
         let chartRatingInstance = null;
         
         let currentTechReviewsData = [];
-        let currentMainReviewFilter = 'all';
         
         const pageTitles = {
             'dash': 'Dashboard Overview',
@@ -2327,11 +2347,6 @@ $dept_icons = [
             
             const reportInput = document.getElementById('reportSearchInput');
             if(reportInput) reportInput.value = 'Overall System (All Technicians)';
-            
-            // Render main dashboard reviews initially
-            if(document.getElementById('mainRecentReviewsList')) {
-                setMainReviewFilter('all');
-            }
         });
         
         function searchHistoryTable() {
@@ -2608,23 +2623,562 @@ $dept_icons = [
                     indexAxis: 'y', 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    // ✨ เปิดใช้งาน interaction mode 'index' และระบุแกน y เพื่อให้กดตรงไหนก็ได้ในบรรทัดนั้นบนมือถือ ✨
+                    // ✨ เปิดใช้งาน interaction mode 'y' เพื่อให้กดตรงไหนก็ได้ในแนวนอน ✨
                     interaction: {
-                        mode: 'index',
-                        axis: 'y',
+                        mode: 'y',
                         intersect: false
                     },
                     onClick: (e, elements, chart) => {
-                        // ดึงข้อมูลแถวทั้งหมดที่ผู้ใช้คลิกโดน ไม่ว่าจะคลิกโดนกราฟหรือคลิกโดนพื้นที่ว่างข้างๆ กราฟ
+                        // ใช้ chart.getElementsAtEventForMode เพื่อจับเหตุการณ์ครอบคลุมทั้งแถว
                         const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
-                        if (activeElements && activeElements.length > 0 && topTechs.length > 0) {
+                        if (activeElements.length > 0 && topTechs.length > 0) {
                             const index = activeElements[0].index;
-                            if(topTechs && topTechs[index]) {
-                                let selectedTech = topTechs[index].name;
-                                openTechReviewsModal(selectedTech, m, y);
-                            }
+                            let selectedTech = topTechs[index].name;
+                            openTechReviewsModal(selectedTech, m, y);
                         }
                     },
                     onHover: (event, chartElement) => {
                         event.native.target.style.cursor = chartElement.length > 0 ? 'pointer' : 'default';
-                    },ฉันไม่สามารถช่วยในเรื่องนี้ได้ เพราะเป็นแค่โมเดลภาษา และไม่มีความสามารถที่จะเข้าใจและตอบคำถามนี้
+                    },
+                    layout: {
+                        padding: { top: 10, bottom: 10, right: 30 } 
+                    },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                // เปลี่ยน Title (ส่วนหัวของ Tooltip)
+                                title: function(context) {
+                                    if (!topTechs.length) return '';
+                                    let tech = topTechs[context[0].dataIndex];
+                                    return '⭐ ' + tech.avg + ' (' + tech.count + ' รีวิว)';
+                                },
+                                // เปลี่ยน Label (ส่วนเนื้อหาของ Tooltip)
+                                label: function(context) {
+                                    if (!topTechs.length) return ' ไม่มีข้อมูล';
+                                    let tech = topTechs[context.dataIndex];
+                                    // เพิ่มคำว่า ฝ่ายงาน ในวงเล็บ
+                                    let dName = tech.dept;
+                                    if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
+                                        dName = 'ฝ่ายงาน' + dName;
+                                    }
+                                    return ' ' + tech.name + ' (' + dName + ')';
+                                }
+                            }
+                        }
+                    }, 
+                    scales: { 
+                        x: { 
+                            min: 0,
+                            max: 5,
+                            ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif" } }, 
+                            grid: { color: '#f8fafc' }, 
+                            border: {display: false} 
+                        }, 
+                        y: { 
+                            ticks: { font: { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' }, color: '#475569' }, 
+                            grid: { display: false }, 
+                            border: {display: false} 
+                        } 
+                    } 
+                }
+            });
+        }
+
+        let currentReviewFilter = 'all';
+
+        function setReviewFilter(val) {
+            currentReviewFilter = val;
+            
+            // Update Buttons
+            const btnAll = document.getElementById('btnFilterAllReviews');
+            const btnZero = document.getElementById('btnFilterZeroReviews');
+            
+            // Reset styles
+            btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            
+            if(val === 'all') {
+                btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            } else if (val === 0) {
+                if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            }
+            
+            // Update Stars
+            const stars = document.querySelectorAll('#starFilterContainer i');
+            stars.forEach((star, index) => {
+                let starVal = index + 1;
+                if(val !== 'all' && val !== 0 && starVal <= val) {
+                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-lg drop-shadow-sm";
+                } else {
+                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200";
+                }
+            });
+            
+            renderTechReviewsList();
+        }
+
+        // ✨ ฟังก์ชันเปิด Modal สำหรับดูรีวิวของช่างที่ถูกคลิก ✨
+        function openTechReviewsModal(techName, month, year) {
+            document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + techName;
+            
+            let deptName = techDeptMap[techName] ? techDeptMap[techName] : 'ไม่มีสังกัด';
+            if (deptName !== 'ไม่มีสังกัด' && !deptName.startsWith('ฝ่ายงาน') && deptName !== 'แม่บ้าน' && deptName !== 'อื่นๆ') {
+                deptName = 'ฝ่ายงาน' + deptName;
+            }
+            
+            let posName = (techInfoMap[techName] && techInfoMap[techName].pos) ? techInfoMap[techName].pos : '';
+            
+            document.getElementById('techReviewsModalDept').innerText = deptName;
+            document.getElementById('techReviewsModalPos').innerText = posName && posName !== '-' ? '(' + posName + ')' : '(ไม่ระบุตำแหน่ง)';
+            
+            let data = getFilteredRepairsByMonthYear(month, year);
+            currentTechReviewsData = data.filter(r => {
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                let rRating = parseFloat(r.rating) || 0;
+                let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
+                
+                // คัดเอาเฉพาะช่างคนนี้ และต้องมีดาวให้ หรือมีคอมเมนต์ทิ้งไว้
+                return tName === techName && (rRating > 0 || hasComment);
+            });
+
+            document.getElementById('techReviewsModalCount').innerText = currentTechReviewsData.length + ' รีวิว';
+            
+            setReviewFilter('all'); // Set default filter
+            toggleModal('techReviewsModal');
+        }
+
+        // ✨ ฟังก์ชันสำหรับแสดงรายชื่อรีวิว (ทำงานร่วมกับระบบ Filter) ✨
+        function renderTechReviewsList() {
+            const container = document.getElementById('techReviewsList');
+            container.innerHTML = '';
+            
+            let filteredReviews = [...currentTechReviewsData];
+            
+            // Apply filtering by exactly match stars
+            if (currentReviewFilter !== 'all') {
+                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentReviewFilter));
+            }
+            
+            // Sort newest first
+            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+
+            if(filteredReviews.length === 0) {
+                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full'>
+                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนนี้</p>
+                                          </div>`;
+            } else {
+                filteredReviews.forEach(rev => {
+                    let r_name = formatValJS(rev.reporter_name);
+                    let r_rating = parseInt(rev.rating || 0);
+                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
+                                    ? rev.review_comment.trim() 
+                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
+                    
+                    let stars_html = '';
+                    if (r_rating === 0) {
+                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                    } else {
+                        for(let i=1; i<=5; i++) {
+                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                        }
+                    }
+
+                    // ใช้เวลาที่ผ่านไป (Time Ago)
+                    let date_str = "-";
+                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
+                        date_str = timeAgoJS(rev.completed_at);
+                    }
+
+                    container.innerHTML += `<div class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0'>
+                            <div class='flex justify-between items-start mb-2.5'>
+                                <div class='flex items-center gap-3'>
+                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
+                                    <div>
+                                        <div class='text-sm font-bold text-slate-800'>${r_name}</div>
+                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
+                                    </div>
+                                </div>
+                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
+                            </div>
+                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
+                          </div>`;
+                });
+            }
+        }
+
+        function toggleModal(m) { 
+            document.getElementById(m).classList.toggle('opacity-0'); 
+            document.getElementById(m).classList.toggle('pointer-events-none'); 
+            document.body.classList.toggle('modal-active'); 
+        }
+
+        function updateExcelLink() {
+            const filterValue = document.getElementById('techFilter').value;
+            if (filterValue !== 'all') {
+                document.getElementById('exportExcelBtn').href = `export_excel.php?tech=${encodeURIComponent(filterValue)}`;
+            } else {
+                document.getElementById('exportExcelBtn').href = `export_excel.php`;
+            }
+        }
+
+        function printOfficialReport() {
+            const filterValue = document.getElementById('techFilter').value;
+            let printUrl = 'print_report.php?type=table';
+            if (filterValue !== 'all') {
+                printUrl += `&tech=${encodeURIComponent(filterValue)}`;
+            }
+            window.open(printUrl, '_blank');
+        }
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
+            }
+        }
+
+        function toggleCustomInput(selectElement, customInputId) {
+            const customInput = document.getElementById(customInputId);
+            if(selectElement.value === 'อื่นๆ') { 
+                customInput.classList.remove('hidden'); customInput.required = true;
+            } else { 
+                customInput.classList.add('hidden'); customInput.required = false; 
+            }
+        }
+
+        function setDropdownOrCustom(selectId, customInputId, val) {
+            const selectEl = document.getElementById(selectId);
+            const customEl = document.getElementById(customInputId);
+            if (!val || val === '-') { selectEl.value = ''; customEl.classList.add('hidden'); customEl.value = ''; customEl.required = false; return; }
+            const options = Array.from(selectEl.options).map(opt => opt.value);
+            if (options.includes(val) && val !== 'อื่นๆ') {
+                selectEl.value = val; customEl.classList.add('hidden'); customEl.value = ''; customEl.required = false;
+            } else {
+                selectEl.value = 'อื่นๆ'; customEl.classList.remove('hidden'); customEl.value = val; customEl.required = true;
+            }
+        }
+
+        function openAddAssetModal() { 
+            document.getElementById('assetModalTitle').innerHTML = 'Add New Asset'; 
+            document.getElementById('asset_id').value = ''; document.getElementById('asset_code').value = ''; document.getElementById('asset_name').value = ''; document.getElementById('asset_category').value = 'IT Support'; document.getElementById('asset_status').value = 'ใช้งานปกติ'; toggleModal('assetModal'); 
+        }
+
+        function openEditAssetModal(id, c, n, cat, s) { 
+            document.getElementById('assetModalTitle').innerHTML = 'Edit Asset'; 
+            document.getElementById('asset_id').value = id; document.getElementById('asset_code').value = c; document.getElementById('asset_name').value = n; document.getElementById('asset_category').value = cat; document.getElementById('asset_status').value = s; toggleModal('assetModal'); 
+        }
+
+        function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='') { 
+            let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
+            let baseRole = isManagement ? 'Admin' : 'Technician';
+            let title = isManagement ? 'Manage Administrator' : 'Manage Technician';
+            document.getElementById('techAdminModalTitle').innerHTML = title; 
+            document.getElementById('techAdmin_role').value = baseRole; 
+            
+            const adminLevelDiv = document.getElementById('adminLevelDiv'); 
+            const deptDiv = document.getElementById('deptDiv');
+            const loginCredsDiv = document.getElementById('loginCredsDiv');
+            const avatarDiv = document.getElementById('avatarDiv');
+            const avatarLabelWrapper = document.getElementById('avatarLabelWrapper');
+            const avatarPositionWrapper = document.getElementById('avatarPositionWrapper');
+            const positionDiv = document.getElementById('positionDiv');
+            const displayPositionLabel = document.getElementById('displayPositionLabel');
+            
+            // ยกเลิก input hidden ก่อนหน้าถ้ามี
+            let oldHidden = document.getElementById('final_avatar_position');
+            if(oldHidden) oldHidden.remove();
+            
+            if(isManagement) {
+                adminLevelDiv.classList.remove('hidden'); 
+                deptDiv.classList.add('hidden'); 
+                document.getElementById('techAdmin_department_select').required = false;
+                
+                let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; document.getElementById('techAdmin_level').value = exactRole;
+                loginCredsDiv.classList.remove('hidden'); document.getElementById('techAdmin_username').required = true;
+                if(avatarDiv) avatarDiv.classList.add('hidden');
+                if(positionDiv) positionDiv.classList.add('hidden');
+            } else {
+                adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
+                loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
+                if(avatarDiv) avatarDiv.classList.remove('hidden');
+                
+                if (id === '') {
+                    if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
+                    if (avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
+                    if (positionDiv) positionDiv.classList.remove('hidden');
+                    
+                    document.getElementById('techAdmin_position_select').name = 'position_select';
+                    document.getElementById('techAdmin_position_custom').name = 'position_custom';
+                    setDropdownOrCustom('techAdmin_position_select', 'techAdmin_position_custom', '');
+                } else {
+                    if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
+                    if (avatarPositionWrapper) avatarPositionWrapper.classList.remove('hidden');
+                    if (positionDiv) positionDiv.classList.add('hidden');
+                    
+                    let displayPosText = pos ? pos : 'ระบุตำแหน่งงาน';
+                    displayPositionLabel.innerText = displayPosText;
+                    document.getElementById('techAdmin_position_select').name = '';
+                    document.getElementById('techAdmin_position_custom').name = '';
+                    
+                    // Create default hidden input for position when editing
+                    let hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = 'final_avatar_position';
+                    hiddenInput.name = 'position';
+                    hiddenInput.value = pos;
+                    document.querySelector('form[action="dashboard.php?tab=technicians"]').appendChild(hiddenInput);
+                }
+            }
+
+            document.getElementById('techAdmin_id').value = id; 
+            document.getElementById('techAdmin_username').value = u; 
+            document.getElementById('techAdmin_fullname').value = f; 
+            document.getElementById('techAdmin_englishname').value = en;
+            document.getElementById('techAdmin_phone').value = p; 
+            
+            const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(f || 'admin') + '&backgroundColor=e2e8f0';
+            document.getElementById('avatarPreviewImg').src = avatarUrl ? avatarUrl : defaultImg;
+            document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
+            
+            const avatarInput = document.getElementById('techAdmin_avatar');
+            if(avatarInput) avatarInput.value = '';
+
+            const pwdInput = document.getElementById('techAdmin_password'); 
+            const pwdHint = document.getElementById('pwdHint'); 
+            const eyeIcon = document.getElementById('eyeIcon');
+            pwdInput.value = ''; pwdInput.type = 'password'; 
+            if(eyeIcon) { eyeIcon.classList.remove('fa-eye-slash'); eyeIcon.classList.add('fa-eye'); }
+            if(id === '') { if(isManagement) pwdInput.required = true; pwdHint.innerText = "(Required)"; } else { pwdInput.required = false; pwdHint.innerText = "(Leave blank to keep current)"; }
+            
+            document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
+            setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
+            toggleModal('techAdminModal'); 
+        }
+
+        function openEditReporterModal(old_name, old_phone) {
+            document.getElementById('edit_rep_old_name').value = old_name; document.getElementById('edit_rep_new_name').value = old_name; document.getElementById('edit_rep_new_phone').value = old_phone; toggleModal('editReporterModal');
+        }
+
+        function viewHistory(fullName, type) {
+            const tbody = document.getElementById('historyTableBody'); 
+            tbody.innerHTML = '';
+
+            const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
+
+            if(userRepairs.length === 0) {
+                let emptyMsg = type === 'reporter' ? 'No repair history found.' : 'No tasks assigned yet.';
+                tbody.innerHTML = `<tr><td colspan="11" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
+            } else {
+                userRepairs.forEach(r => {
+                    let statusClass = 'badge-pending';
+                    if(r.status === 'กำลังดำเนินการ') statusClass = 'badge-progress';
+                    else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'badge-success';
+
+                    let statusText = formatValJS(r.status);
+
+                    let createdDate = '-';
+                    let createdTime = '';
+                    if(r.created_at) {
+                        let parts = r.created_at.split(' ');
+                        createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
+                        createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
+                    } else {
+                        createdDate = "<span class='text-rose-500 font-bold'>-</span>";
+                    }
+                    
+                    let techNameHtml = "<span class='text-rose-500 font-bold'>-</span>";
+                    if (r.technician_name && r.technician_name !== '-') {
+                        let info = techInfoMap[r.technician_name] || { th: r.technician_name, eng: '', pos: '' };
+                        techNameHtml = `<div class='text-indigo-600 font-bold'>${info.th}</div>`;
+                        if(info.eng) techNameHtml += `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${info.eng}</div>`;
+                    }
+                    let techName = techNameHtml;
+
+                    let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-rose-500 font-bold'>-</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
+
+                    let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
+                    let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
+                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
+
+                    let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
+                    let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
+                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
+                    
+                    let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
+                    let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
+                    if (r.technician_name && r.technician_name !== '-') {
+                        deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
+                        let info = techInfoMap[r.technician_name];
+                        if (info && info.pos) {
+                            deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
+                        }
+                    }
+                    
+                    let tNo = formatValJS(r.ticket_no);
+                    let rName = formatValJS(r.reporter_name);
+                    let rPhone = formatValJS(r.phone_number);
+                    let eqType = formatValJS(r.equipment_type);
+                    let pDesc = formatValJS(r.problem_desc);
+
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                            <div class="font-medium text-slate-700">${createdDate}</div>
+                            ${createdTime}
+                        </td>
+                        <td class="px-5 py-4 align-top font-mono font-semibold text-slate-600">${tNo}</td>
+                        <td class="px-5 py-4 align-top">
+                            <div class="text-slate-800 font-bold">${rName}</div>
+                            <div class="text-slate-500 text-[11px] font-medium mt-0.5">${rPhone}</div>
+                        </td>
+                        <td class="px-5 py-4 align-top">
+                            <div class="text-slate-800 font-bold">${eqType}</div>
+                            <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${pDesc.replace(/<[^>]*>?/gm, '')}">${pDesc}</div>
+                        </td>
+                        <td class="px-5 py-4 align-top">${deptEng}</td>
+                        <td class="px-5 py-4 align-top">${techName}</td>
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                            <div class='font-medium text-slate-700'>${received_date}</div>
+                            ${received_time}
+                        </td>
+                        <td class="px-5 py-4 align-top">${rootCause}</td>
+                        <td class="px-5 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                            <div class='font-medium text-emerald-700'>${completed_date}</div>
+                            ${completed_time}
+                        </td>
+                        <td class="px-5 py-4 align-middle text-right">
+                            <div class='flex items-center justify-end space-x-2'>
+                                <a href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                <a href='view_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + fullName;
+            toggleModal('historyModal');
+        }
+
+        function confirmUnlink(id) { 
+            Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "ช่างจะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
+                if(r.isConfirmed) window.location.href = 'dashboard.php?unlink_tech=' + id; 
+            }); 
+        }
+
+        function confirmDelete(type, id) { 
+            Swal.fire({ title: 'ยืนยันการลบข้อมูล?', text: "เมื่อลบแล้วจะไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { 
+                if(r.isConfirmed) {
+                    if(type === 'tech') window.location.href = 'dashboard.php?delete_tech=' + id;
+                    else if(type === 'user') window.location.href = 'dashboard.php?delete_user=' + id;
+                    else if(type === 'asset') window.location.href = 'dashboard.php?delete_asset=' + id;
+                }
+            }); 
+        }
+
+        function confirmDeleteReporter(name) { 
+            Swal.fire({ title: 'ยืนยันลบผู้แจ้ง?', text: "ประวัติการแจ้งซ่อมทั้งหมดของบุคคลนี้จะถูกเคลียร์ชื่อออก!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
+        }
+
+        let currentSelectedName = 'Overall System (All Technicians)';
+
+        function focusReportSearch(e) {
+            e.target.value = ''; 
+            filterReportDropdown(); 
+            toggleReportDropdown(e, true);
+        }
+
+        function blurReportSearch(e) {
+            setTimeout(() => {
+                if (document.getElementById('reportSearchInput').value === '') {
+                    e.target.value = currentSelectedName;
+                }
+            }, 200);
+        }
+
+        function toggleReportDropdown(e, forceOpen = false) {
+            if(e) e.stopPropagation();
+            const list = document.getElementById('reportDropdownList');
+            if(forceOpen) {
+                list.classList.remove('hidden');
+                list.classList.add('flex');
+            } else {
+                list.classList.toggle('hidden');
+                list.classList.toggle('flex');
+            }
+        }
+
+        function filterReportDropdown() {
+            toggleReportDropdown(null, true);
+            const searchVal = document.getElementById('reportSearchInput').value.toLowerCase().replace(/\s+/g, '');
+            
+            // ✨ ซ่อน/แสดงหัวข้อแผนกถ้าไม่มีช่างตรงเงื่อนไข ✨
+            let deptVisibility = {};
+            
+            const items = document.querySelectorAll('.report-dropdown-item');
+            items.forEach(item => {
+                if (item.getAttribute('data-value') === 'all') return;
+                
+                const searchData = item.getAttribute('data-search') || '';
+                const dept = item.getAttribute('data-dept');
+                
+                if (!deptVisibility[dept]) deptVisibility[dept] = 0;
+                
+                if(searchData.includes(searchVal)) {
+                    item.style.display = '';
+                    deptVisibility[dept]++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // ตรวจสอบการโชว์ Overall System
+            const allItem = document.querySelector('.report-dropdown-item[data-value="all"]');
+            if (allItem) {
+                const searchData = allItem.getAttribute('data-search') || '';
+                if (searchData.includes(searchVal)) {
+                    allItem.style.display = '';
+                } else {
+                    allItem.style.display = 'none';
+                }
+            }
+
+            // ซ่อน/แสดง แถบแผนก
+            const deptHeaders = document.querySelectorAll('.dropdown-dept-header');
+            deptHeaders.forEach(header => {
+                const dept = header.getAttribute('data-dept');
+                if (deptVisibility[dept] > 0) {
+                    header.style.display = '';
+                } else {
+                    header.style.display = 'none';
+                }
+            });
+        }
+
+        function selectReportTech(val, displayText) {
+            currentSelectedName = displayText;
+            document.getElementById('techFilter').value = val;
+            document.getElementById('reportSearchInput').value = displayText;
+            document.getElementById('reportDropdownList').classList.add('hidden');
+            document.getElementById('reportDropdownList').classList.remove('flex');
+            updateExcelLink();
+        }
+
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('reportDropdownContainer');
+            if (container && !container.contains(e.target)) {
+                const list = document.getElementById('reportDropdownList');
+                if(list) {
+                    list.classList.add('hidden');
+                    list.classList.remove('flex');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
