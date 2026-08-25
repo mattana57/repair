@@ -851,7 +851,7 @@ $dept_icons = [
                             </button>
                         </div>
                         <div class="overflow-x-auto pb-4 custom-scrollbar">
-                            <table class="w-full text-left whitespace-nowrap min-w-[700px]">
+                            <table class="w-full text-left whitespace-nowrap">
                                 <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
                                     <tr>
                                         <th class="px-6 py-4">Date / Time</th>
@@ -1955,11 +1955,11 @@ $dept_icons = [
                 <div class="flex items-center gap-2">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
                     <div id="starFilterContainer" class="flex gap-1.5">
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200" onclick="setReviewFilter(2)" title="2 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200" onclick="setReviewFilter(3)" title="3 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200" onclick="setReviewFilter(4)" title="4 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(2)" title="2 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(3)" title="3 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(4)" title="4 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -2709,9 +2709,9 @@ $dept_icons = [
             stars.forEach((star, index) => {
                 let starVal = index + 1;
                 if(val !== 'all' && val !== 0 && starVal <= val) {
-                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-base drop-shadow-sm";
+                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-lg drop-shadow-sm";
                 } else {
-                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200";
+                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200";
                 }
             });
             
