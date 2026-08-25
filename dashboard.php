@@ -791,7 +791,8 @@ $dept_icons = [
                         <div class="overflow-y-auto p-0 custom-scrollbar h-[250px]">
                             <div class="divide-y divide-slate-100">
                                 <?php
-                                $rev_res = $conn->query("SELECT reporter_name, rating, review_comment, completed_at FROM repairs WHERE rating > 0 ORDER BY completed_at DESC LIMIT 10");
+                                // อัปเดตคำสั่ง SQL ให้ดึงคนที่ไม่มีดาว (rating = 0) แต่มีคอมเมนต์ มาแสดงด้วย
+                                $rev_res = $conn->query("SELECT reporter_name, rating, review_comment, completed_at FROM repairs WHERE rating > 0 OR (review_comment IS NOT NULL AND review_comment != '' AND review_comment != '-') ORDER BY completed_at DESC LIMIT 10");
                                 if($rev_res && $rev_res->num_rows > 0) {
                                     while($rev = $rev_res->fetch_assoc()) {
                                         $r_name = formatEmptyOrDash($rev['reporter_name']);
@@ -800,10 +801,13 @@ $dept_icons = [
                                         if(empty($r_comment) || $r_comment === '-') $r_comment = "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
                                         
                                         $stars_html = '';
-                                        for($i=1; $i<=5; $i++) {
-                                            // ใช้คลาส fas แบบทึบ และใช้วิธีสลับสี เพื่อป้องกันปัญหาฟอนต์ไม่โหลดกลายเป็นเลข 0
-                                            if($i <= $r_rating) $stars_html .= '<i class="fas fa-star text-amber-400 text-xs drop-shadow-sm"></i>';
-                                            else $stars_html .= '<i class="fas fa-star text-slate-200 text-xs"></i>';
+                                        if ($r_rating == 0) {
+                                            $stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                                        } else {
+                                            for($i=1; $i<=5; $i++) {
+                                                if($i <= $r_rating) $stars_html .= '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                                                else $stars_html .= '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                                            }
                                         }
 
                                         $has_completed = (!empty($rev['completed_at']) && $rev['completed_at'] != '0000-00-00 00:00:00');
@@ -1949,18 +1953,23 @@ $dept_icons = [
             <!-- ✨ Filter Sub-header (แบบรูปดาว) ✨ -->
             <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
                 <div class="flex items-center gap-2">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1"><i class="fas fa-filter mr-1 text-slate-400"></i> ระดับคะแนน:</span>
-                    <div id="starFilterContainer" class="flex gap-1">
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200" onclick="setReviewFilter(2)" title="2 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200" onclick="setReviewFilter(3)" title="3 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200" onclick="setReviewFilter(4)" title="4 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
+                    <div id="starFilterContainer" class="flex gap-1.5">
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200" onclick="setReviewFilter(2)" title="2 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200" onclick="setReviewFilter(3)" title="3 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200" onclick="setReviewFilter(4)" title="4 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
                     </div>
                 </div>
-                <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">
-                    ทั้งหมด
-                </button>
+                <div class="flex items-center gap-2">
+                    <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
+                        เฉพาะคอมเมนต์
+                    </button>
+                    <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">
+                        ทั้งหมด
+                    </button>
+                </div>
             </div>
 
             <!-- List -->
@@ -2681,22 +2690,28 @@ $dept_icons = [
         function setReviewFilter(val) {
             currentReviewFilter = val;
             
-            // Update Button
+            // Update Buttons
             const btnAll = document.getElementById('btnFilterAllReviews');
+            const btnZero = document.getElementById('btnFilterZeroReviews');
+            
+            // Reset styles
+            btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            
             if(val === 'all') {
                 btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
-            } else {
-                btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            } else if (val === 0) {
+                if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
             }
             
             // Update Stars
             const stars = document.querySelectorAll('#starFilterContainer i');
             stars.forEach((star, index) => {
                 let starVal = index + 1;
-                if(val !== 'all' && starVal <= val) {
-                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-sm drop-shadow-sm";
+                if(val !== 'all' && val !== 0 && starVal <= val) {
+                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-base drop-shadow-sm";
                 } else {
-                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm hover:text-amber-200";
+                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base hover:text-amber-200";
                 }
             });
             
@@ -2720,7 +2735,11 @@ $dept_icons = [
             let data = getFilteredRepairsByMonthYear(month, year);
             currentTechReviewsData = data.filter(r => {
                 let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
-                return tName === techName && parseFloat(r.rating) > 0;
+                let rRating = parseFloat(r.rating) || 0;
+                let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
+                
+                // คัดเอาเฉพาะช่างคนนี้ และต้องมีดาวให้ หรือมีคอมเมนต์ทิ้งไว้
+                return tName === techName && (rRating > 0 || hasComment);
             });
 
             document.getElementById('techReviewsModalCount').innerText = currentTechReviewsData.length + ' รีวิว';
@@ -2738,7 +2757,7 @@ $dept_icons = [
             
             // Apply filtering by exactly match stars
             if (currentReviewFilter !== 'all') {
-                filteredReviews = filteredReviews.filter(r => parseInt(r.rating) === parseInt(currentReviewFilter));
+                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentReviewFilter));
             }
             
             // Sort newest first
@@ -2752,16 +2771,19 @@ $dept_icons = [
             } else {
                 filteredReviews.forEach(rev => {
                     let r_name = formatValJS(rev.reporter_name);
-                    let r_rating = parseInt(rev.rating);
+                    let r_rating = parseInt(rev.rating || 0);
                     let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
                                     ? rev.review_comment.trim() 
                                     : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
                     
                     let stars_html = '';
-                    for(let i=1; i<=5; i++) {
-                        // ใช้คลาส fas แบบทึบ และใช้วิธีสลับสี เพื่อป้องกันปัญหาฟอนต์ไม่โหลดกลายเป็นเลข 0
-                        if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
-                        else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                    if (r_rating === 0) {
+                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                    } else {
+                        for(let i=1; i<=5; i++) {
+                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                        }
                     }
 
                     // ใช้เวลาที่ผ่านไป (Time Ago)
@@ -2770,7 +2792,7 @@ $dept_icons = [
                         date_str = timeAgoJS(rev.completed_at);
                     }
 
-                    container.innerHTML += `<div class='p-5 hover:bg-slate-50 transition-colors group'>
+                    container.innerHTML += `<div class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0'>
                             <div class='flex justify-between items-start mb-2.5'>
                                 <div class='flex items-center gap-3'>
                                     <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
