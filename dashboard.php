@@ -204,6 +204,7 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
     }
 
+    // ✨ ตรวจสอบและสร้างคอลัมน์สำหรับ Rating และ Review (ถ้ายังไม่มี) ✨
     $check_rating = $conn->query("SHOW COLUMNS FROM repairs LIKE 'rating'");
     if($check_rating && $check_rating->num_rows == 0) {
         $conn->query("ALTER TABLE repairs ADD COLUMN rating INT DEFAULT 0");
@@ -662,11 +663,11 @@ $dept_icons = [
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="equipMonth" onchange="renderEquipChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- เดือน --</option>
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
                                 </select>
                                 <select id="equipYear" onchange="renderEquipChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- ปี --</option>
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
                             </div>
@@ -684,11 +685,11 @@ $dept_icons = [
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="statusMonth" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- เดือน --</option>
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
                                 </select>
                                 <select id="statusYear" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- ปี --</option>
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
                             </div>
@@ -709,11 +710,11 @@ $dept_icons = [
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="locMonth" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- เดือน --</option>
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
                                 </select>
                                 <select id="locYear" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- ปี --</option>
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
                             </div>
@@ -731,11 +732,11 @@ $dept_icons = [
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="techMonth" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- เดือน --</option>
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
                                 </select>
                                 <select id="techYear" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- ปี --</option>
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
                             </div>
@@ -758,11 +759,11 @@ $dept_icons = [
                             </div>
                             <div class="flex items-center gap-2">
                                 <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- เดือน --</option>
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
                                 </select>
                                 <select id="ratingYear" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">-- ปี --</option>
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
                             </div>
@@ -2645,7 +2646,7 @@ $dept_icons = [
             });
         }
 
-        // ✨ แก้ไขฟังก์ชันกราฟเรตติ้ง: เปลี่ยนเป็นกราฟแท่งแนวตั้งขอบมน (Vertical Bar) แสนสวย ✨
+        // ✨ แก้ไขฟังก์ชันกราฟเรตติ้ง: เปลี่ยนเป็นแสดงแนวนอนและให้ดูเป็นหลอดคะแนน ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2695,31 +2696,32 @@ $dept_icons = [
             if(chartRatingInstance) chartRatingInstance.destroy();
             
             chartRatingInstance = new Chart(ctx, {
-                type: 'bar', // ใช้ Vertical Bar
+                type: 'bar', // ใช้แนวนอน
                 data: {
-                    // แกน X แสดงชื่อและคะแนนดาว
-                    labels: topTechs.length ? topTechs.map(t => [t.name, '⭐ ' + t.avg]) : [['ไม่มีข้อมูล']],
+                    // เปลี่ยน Label ให้เหลือแค่ 2 บรรทัด (ดาว และ ชื่อ)
+                    labels: topTechs.length ? topTechs.map(t => ['⭐ ' + t.avg, t.name]) : [['ไม่มีข้อมูล']],
                     datasets: [{ 
-                        label: 'คะแนนเฉลี่ย', 
+                        label: 'ช่าง', 
                         data: topTechs.length ? topTechs.map(t => t.avg) : [0], 
                         backgroundColor: topTechs.length ? topTechs.map(t => getRatingColor(t.avg)) : ['#e2e8f0'], 
-                        borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 0, bottomRight: 0 }, // โค้งมนเฉพาะด้านบน
-                        borderSkipped: 'bottom',
-                        barThickness: 32,
-                        maxBarThickness: 48,
+                        borderRadius: 8,
+                        barThickness: 20,
+                        maxBarThickness: 24,
+                        borderSkipped: false
                     }]
                 },
                 options: { 
+                    indexAxis: 'y', 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    // ✨ เปิดใช้งาน interaction mode 'index' ตามแนวแกน X ✨
+                    // ✨ เปิดใช้งาน interaction mode 'index' และระบุแกน y เพื่อให้กดตรงไหนก็ได้ในบรรทัดนั้นบนมือถือ ✨
                     interaction: {
-                        mode: 'index',
-                        axis: 'x',
+                        mode: 'y',
                         intersect: false
                     },
                     onClick: (e, elements, chart) => {
-                        const activeElements = chart.getElementsAtEventForMode(e, 'x', { intersect: false }, true);
+                        // ดึงข้อมูลแถวทั้งหมดที่ผู้ใช้คลิกโดน ไม่ว่าจะคลิกโดนกราฟหรือคลิกโดนพื้นที่ว่างข้างๆ กราฟ
+                        const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
                         if (activeElements && activeElements.length > 0 && topTechs.length > 0) {
                             const index = activeElements[0].index;
                             if(topTechs && topTechs[index]) {
@@ -2732,7 +2734,7 @@ $dept_icons = [
                         event.native.target.style.cursor = chartElement.length > 0 ? 'pointer' : 'default';
                     },
                     layout: {
-                        padding: { top: 20, bottom: 10, left: 10, right: 10 } 
+                        padding: { top: 10, bottom: 10, right: 40 } 
                     },
                     plugins: { 
                         legend: { display: false },
@@ -2742,30 +2744,31 @@ $dept_icons = [
                                 title: function(context) {
                                     if (!topTechs.length) return '';
                                     let tech = topTechs[context[0].dataIndex];
-                                    return 'ช่าง: ' + tech.name;
+                                    return '⭐ ' + tech.avg + ' (' + tech.count + ' รีวิว)';
                                 },
                                 // เปลี่ยน Label (ส่วนเนื้อหาของ Tooltip)
                                 label: function(context) {
                                     if (!topTechs.length) return ' ไม่มีข้อมูล';
                                     let tech = topTechs[context.dataIndex];
+                                    // เพิ่มคำว่า ฝ่ายงาน ในวงเล็บ
                                     let dName = tech.dept;
                                     if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
                                         dName = 'ฝ่ายงาน' + dName;
                                     }
-                                    return [' ⭐ คะแนนเฉลี่ย: ' + tech.avg, ' 📝 จำนวน: ' + tech.count + ' รีวิว', ' 🏢 ' + dName];
+                                    return ' ' + tech.name + ' (' + dName + ')';
                                 }
                             }
                         }
                     }, 
                     scales: { 
-                        y: { 
+                        x: { 
                             min: 0,
                             max: 5,
                             ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif", weight: 'bold' }, color: '#94a3b8' }, 
                             grid: { color: '#f1f5f9', drawBorder: false }, 
                             border: {display: false} 
                         }, 
-                        x: { 
+                        y: { 
                             ticks: { font: { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' }, color: '#475569' }, 
                             grid: { display: false }, 
                             border: {display: false} 
@@ -2995,7 +2998,7 @@ $dept_icons = [
                 if(positionDiv) positionDiv.classList.add('hidden');
             } else {
                 adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
-                loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
+                loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false document.getElementById('techAdmin_password').required = false;
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 
                 if (id === '') {
