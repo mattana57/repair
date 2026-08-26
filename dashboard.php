@@ -2641,7 +2641,7 @@ $dept_icons = [
             });
         }
 
-      // ✨ ฟังก์ชันกราฟเรตติ้ง (ใช้ Plugin บังคับแยกสีเฉพาะชื่อฝ่ายงานให้เป็นสีน้ำเงิน) ✨
+      // ✨ 1. ฟังก์ชันกราฟเรตติ้ง (ชื่อฝ่ายสีน้ำเงิน + ดาวไล่สีตามเปอร์เซ็นต์จริง) ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2709,12 +2709,13 @@ $dept_icons = [
             
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
-                // ✨ เรียกใช้ Plugin วาดข้อความแยกสี ✨
+                // ✨ Plugin สำหรับวาดข้อความ 3 บรรทัด และดาวไล่สี ✨
                 plugins: [{
-                    id: 'custom_y_axis_colors',
+                    id: 'custom_star_gradient',
                     afterDraw: (chart) => {
                         const ctx = chart.ctx;
                         const yAxis = chart.scales.y;
+                        
                         ctx.save();
                         ctx.textAlign = 'right';
                         ctx.textBaseline = 'middle';
@@ -2725,32 +2726,64 @@ $dept_icons = [
                             if (!labelArray) return;
                             
                             if (Array.isArray(labelArray) && labelArray.length === 3) {
-                                // บรรทัดที่ 1: ดาว (สีเทาอ่อนแบบเดิม)
-                                ctx.font = 'bold 12px "Sarabun", sans-serif';
-                                ctx.fillStyle = '#64748b';
-                                ctx.fillText(labelArray[0], yAxis.right - 10, y - 18);
+                                const scoreStr = labelArray[0].trim();
+                                const scoreVal = parseFloat(scoreStr) || 0;
+                                const tName = labelArray[1];
+                                const dName = labelArray[2];
                                 
-                                // บรรทัดที่ 2: ชื่อช่าง (สีเทาเข้มแบบเดิม)
-                                ctx.font = 'bold 13px "Sarabun", sans-serif';
-                                ctx.fillStyle = '#475569';
-                                ctx.fillText(labelArray[1], yAxis.right - 10, y);
-                                
-                                // บรรทัดที่ 3: ชื่อฝ่ายงาน (✨ สีน้ำเงินเด่น และหนาพิเศษ ตามสั่ง ✨)
+                                // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงินเด่น
                                 ctx.font = '800 14px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#4f46e5';
-                                ctx.fillText(labelArray[2], yAxis.right - 10, y + 18);
+                                ctx.fillText(dName, yAxis.right - 10, y + 18);
+
+                                // 2. วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
+                                ctx.font = 'bold 13px "Sarabun", sans-serif';
+                                ctx.fillStyle = '#475569';
+                                ctx.fillText(tName, yAxis.right - 10, y);
+
+                                // 3. วาดตัวเลขคะแนน (บรรทัดบน)
+                                const textY = y - 18; 
+                                ctx.font = 'bold 12px "Sarabun", sans-serif';
+                                ctx.fillStyle = '#64748b';
+                                ctx.fillText(scoreStr, yAxis.right - 10, textY);
+                                
+                                // 4. วาดดาวไล่สี
+                                const scoreWidth = ctx.measureText(scoreStr).width;
+                                const starX = yAxis.right - 10 - scoreWidth - 4; // ถอยมาจากตัวเลขคะแนน
+                                
+                                ctx.font = '900 13px "Font Awesome 6 Free"';
+                                const starIcon = '\uf005';
+                                const starWidth = ctx.measureText(starIcon).width;
+                                const startX = starX - starWidth;
+                                
+                                // วาดดาวพื้นหลังสีเทา
+                                ctx.fillStyle = '#e2e8f0';
+                                ctx.fillText(starIcon, starX, textY);
+                                
+                                // วาดดาวทับสีเหลืองตามเปอร์เซ็นต์คะแนน
+                                if (scoreVal > 0) {
+                                    const fillPercent = scoreVal / 5.0;
+                                    ctx.save();
+                                    ctx.beginPath();
+                                    // สร้างพื้นที่ตัดขอบเฉพาะส่วนที่เป็นคะแนน
+                                    ctx.rect(startX, textY - 10, starWidth * fillPercent, 20);
+                                    ctx.clip();
+                                    ctx.fillStyle = '#f59e0b'; // สีเหลือง
+                                    ctx.fillText(starIcon, starX, textY);
+                                    ctx.restore();
+                                }
                             } else {
                                 ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
-                                let text = Array.isArray(labelArray) ? labelArray.join(' ') : labelArray;
-                                ctx.fillText(text, yAxis.right - 10, y);
+                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, yAxis.right - 10, y);
                             }
                         });
                         ctx.restore();
                     }
                 }],
                 data: {
-                    labels: deptArr.length ? deptArr.map(d => ['⭐ ' + d.topTechAvg, d.topTech, d.name]) : [['ไม่มีข้อมูล']],
+                    // เติม Space หน้าตัวเลขเพื่อให้มีพื้นที่วาดดาว
+                    labels: deptArr.length ? deptArr.map(d => ['   ' + d.topTechAvg, d.topTech, d.name]) : [['ไม่มีข้อมูล']],
                     datasets: [
                         { 
                             label: 'คะแนนเฉลี่ยฝ่าย', 
@@ -2779,10 +2812,7 @@ $dept_icons = [
                     grouped: false,
                     responsive: true, 
                     maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'y',
-                        intersect: false
-                    },
+                    interaction: { mode: 'y', intersect: false },
                     onClick: (e, elements, chart) => {
                         const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
                         if (activeElements && activeElements.length > 0 && deptArr.length > 0) {
@@ -2796,41 +2826,34 @@ $dept_icons = [
                     onHover: (event, chartElement) => {
                         event.native.target.style.cursor = chartElement.length > 0 ? 'pointer' : 'default';
                     },
-                    layout: {
-                        padding: { top: 10, bottom: 10, left: 0, right: 20 } 
-                    },
+                    layout: { padding: { top: 10, bottom: 10, left: 0, right: 20 } },
                     plugins: { 
                         legend: { display: false },
                         tooltip: {
-                            filter: function(tooltipItem) {
-                                return tooltipItem.datasetIndex === 0;
-                            },
+                            filter: function(tooltipItem) { return tooltipItem.datasetIndex === 0; },
                             callbacks: {
                                 title: function(context) {
                                     if (!deptArr.length) return '';
-                                    let dept = deptArr[context[0].dataIndex];
-                                    return dept.name;
+                                    return deptArr[context[0].dataIndex].name;
                                 },
                                 label: function(context) {
                                     if (!deptArr.length) return ' ไม่มีข้อมูล';
                                     let dept = deptArr[context.dataIndex];
-                                    return [' ช่าง ' + dept.topTech + ' (⭐ ' + dept.topTechAvg + ')', ' จำนวน: ' + dept.count + ' รีวิว'];
+                                    return [' ช่าง ' + dept.topTech + ' (⭐ ' + parseFloat(dept.topTechAvg).toFixed(1) + ')', ' จำนวน: ' + dept.count + ' รีวิว'];
                                 }
                             }
                         }
                     }, 
                     scales: { 
                         x: { 
-                            min: 0,
-                            max: 5,
+                            min: 0, max: 5,
                             ticks: { stepSize: 1, font: { family: "'Sarabun', sans-serif", weight: 'bold' }, color: '#94a3b8' }, 
                             grid: { color: '#f1f5f9', drawBorder: false }, 
                             border: {display: false} 
                         }, 
                         y: { 
                             ticks: { 
-                                // ปรับข้อความเดิมให้โปร่งใสเพื่อซ่อนไว้ แล้วปล่อยให้ Plugin ของเราวาดทับแทน
-                                color: 'transparent', 
+                                color: 'transparent', // ซ่อน Text ปกติเพื่อวาดเอง
                                 font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' } 
                             }, 
                             grid: { display: false }, 
@@ -2841,41 +2864,13 @@ $dept_icons = [
             });
         }
 
-        function setReviewFilter(val) {
-            currentReviewFilter = val;
-            
-            const btnAll = document.getElementById('btnFilterAllReviews');
-            const btnZero = document.getElementById('btnFilterZeroReviews');
-            
-            btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
-            if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
-            
-            if(val === 'all') {
-                btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
-            } else if (val === 0) {
-                if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
-            }
-            
-            const stars = document.querySelectorAll('#starFilterContainer i');
-            stars.forEach((star, index) => {
-                let starVal = index + 1;
-                if(val !== 'all' && val !== 0 && starVal <= val) {
-                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-lg drop-shadow-sm";
-                } else {
-                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200";
-                }
-            });
-            
-            renderTechReviewsList();
-        }
-
-        // ✨ ปรับ Dropdown ให้เล็กลง คลีนขึ้น มินิมอล และโชว์ช่างทุกคน ✨
+        // ✨ 2. ฟังก์ชัน Dropdown ใน Modal (เอาชื่อขึ้นก่อน + ไม่มีขีด) ✨
         function openTechReviewsModal(deptName, month, year) {
             document.getElementById('techReviewsModalDept').innerText = deptName;
             
             let data = getFilteredRepairsByMonthYear(month, year);
             
-            // หาช่างทั้งหมดในฝ่ายงานนั้นมาแสดง (ทุกคน)
+            // หาช่างทั้งหมดในฝ่ายงานนั้น
             let allTechsInDept = Object.keys(techDeptMap).filter(tName => {
                 let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
                 if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
@@ -2908,18 +2903,16 @@ $dept_icons = [
                 return { name: k, avg: parseFloat(tAvg), count: techStats[k].count };
             });
 
-            // เรียงคนมีคะแนนขึ้นก่อน
             techArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
 
             const selector = document.getElementById('modalTechSelector');
             selector.innerHTML = '';
             
-            // ปรับ CSS Dropdown ให้มินิมอล เล็กลง คลีนๆ
-            selector.className = "w-max min-w-[200px] max-w-[250px] bg-slate-50 border border-slate-200 text-[12px] text-slate-600 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-medium cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
+            selector.className = "w-max min-w-[200px] max-w-[280px] bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
             selector.style.backgroundImage = "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')";
             selector.style.backgroundRepeat = "no-repeat";
             selector.style.backgroundPosition = "right 0.5rem top 50%";
-            selector.style.backgroundSize = "0.55rem auto";
+            selector.style.backgroundSize = "0.6rem auto";
             
             if(techArr.length === 0) {
                 selector.style.display = 'none';
@@ -2932,11 +2925,11 @@ $dept_icons = [
                 techArr.forEach(t => {
                     let opt = document.createElement('option');
                     opt.value = t.name;
-                    // ถ้ามีคะแนนใช้ดาวทึบ ⭐ ถ้าไม่มีใช้ดาวโปร่ง ☆
+                    // ✨ จัดรูปแบบเอาชื่อขึ้นก่อน และไม่มีขีด - ✨
                     if (t.avg > 0) {
-                        opt.text = `⭐ ${t.name} - ${t.avg} (${t.count} รีวิว)`;
+                        opt.text = `${t.name} ⭐ ${t.avg} (${t.count} รีวิว)`;
                     } else {
-                        opt.text = `☆ ${t.name} - ยังไม่มีคะแนน`;
+                        opt.text = `${t.name} ☆ ยังไม่มีคะแนน`;
                     }
                     selector.appendChild(opt);
                 });
@@ -2947,7 +2940,7 @@ $dept_icons = [
             toggleModal('techReviewsModal');
         }
 
-        // ✨ ปรับดาวดวงใหญ่ให้ไล่สีเหลือง-เทา ตามเปอร์เซ็นต์คะแนน ✨
+        // ✨ 3. ฟังก์ชันดาวดวงใหญ่ใน Modal (ไล่สีตามเปอร์เซ็นต์คะแนน) ✨
         function changeModalTech(techName) {
             document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + techName;
             
@@ -2963,7 +2956,6 @@ $dept_icons = [
 
             document.getElementById('techReviewsModalCount').innerText = currentTechReviewsData.length + ' รีวิว';
             
-            // คำนวณคะแนนดาวดวงใหญ่
             let sum = 0, count = 0;
             currentTechReviewsData.forEach(r => {
                 let rating = parseFloat(r.rating) || 0;
@@ -2971,6 +2963,7 @@ $dept_icons = [
             });
             let avg = count > 0 ? sum / count : 0;
             
+            // ไล่สีดาวดวงใหญ่
             const bigStarIcon = document.getElementById('techReviewsModalTitle').parentNode.parentNode.querySelector('.fa-star');
             if (bigStarIcon) {
                 if (avg > 0) {
@@ -2982,13 +2975,13 @@ $dept_icons = [
                     bigStarIcon.style.background = 'none';
                     bigStarIcon.style.webkitBackgroundClip = 'border-box';
                     bigStarIcon.style.webkitTextFillColor = 'initial';
-                    bigStarIcon.style.color = '#cbd5e1'; // สีเทาโปร่ง
+                    bigStarIcon.style.color = '#cbd5e1'; 
                 }
             }
             
             setReviewFilter('all'); 
         }
-
+        
         function renderTechReviewsList() {
             const container = document.getElementById('techReviewsList');
             container.innerHTML = '';
