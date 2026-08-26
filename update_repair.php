@@ -56,7 +56,7 @@ if (isset($_GET['id'])) {
     $repair = $result->fetch_assoc();
 }
 
-// ✨ ระบบจัดกลุ่มช่างตามฝ่าย (เพิ่มใหม่ตามโจทย์) ✨
+// ✨ ระบบจัดกลุ่มช่างตามฝ่าย ✨
 $techs_by_dept = [];
 $tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != ''");
 if($tech_res && $tech_res->num_rows > 0){
@@ -349,7 +349,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
             <?php if($is_admin): ?>
-            <!-- ✨ แก้ไขปุ่มกลับ ให้ดึงค่า URL ที่จำไว้มาใช้ ✨ -->
             <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
@@ -475,13 +474,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <?php endif; ?>
                     </div>
                 </div>
+
             </div>
 
             <div class="lg:col-span-3">
-                <div class="modern-card p-6 md:p-8 h-full">
+                <div class="modern-card p-6 md:p-8 h-full flex flex-col">
                     <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-6">บันทึกการปฏิบัติงาน</h2>
 
-                    <form id="updateForm" action="" method="POST" class="space-y-6">
+                    <form id="updateForm" action="" method="POST" class="space-y-6 flex-1 flex flex-col">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
 
                         <?php
@@ -515,7 +515,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </button>
                                 </div>
                                 
-                                <!-- ✨ ระบบจัดกลุ่มช่างตามฝ่าย (อัปเดตตามโจทย์) ✨ -->
+                                <!-- ✨ ระบบจัดกลุ่มช่างตามฝ่าย ✨ -->
                                 <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
                                     <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
                                         <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
@@ -527,8 +527,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <?php foreach($techs_by_dept as $dept => $techList): 
                                         $count = count($techList);
                                     ?>
+                                        <!-- ✨ ขยายขนาดฟอนต์ของชื่อฝ่ายตรงนี้ ✨ -->
                                         <div class="tech-dept-header flex justify-between items-center px-4 py-2.5 mt-2 mb-1 bg-indigo-50/60 border-y border-indigo-100" data-dept="<?php echo htmlspecialchars($dept); ?>">
-                                            <span class="text-[13px] font-extrabold text-indigo-700 tracking-wide"><?php echo htmlspecialchars($dept); ?></span>
+                                            <span class="text-[15px] font-extrabold text-indigo-700 tracking-wide"><?php echo htmlspecialchars($dept); ?></span>
                                             <span class="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 shadow-sm px-2 py-0.5 rounded-md flex items-center">
                                                 <i class="fas fa-users mr-1 opacity-70 text-[9px]"></i> <?php echo $count; ?> คน
                                             </span>
@@ -652,16 +653,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                         </div>
 
-                        <div>
+                        <div class="flex-1">
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-edit text-sky-500 mr-2"></i> บันทึกผลการดำเนินการ / หมายเหตุช่าง</label>
-                            <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
+                            <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
                         </div>
 
-                        <div class="pt-4 border-t border-slate-100">
-                            <button type="submit" class="w-full md:w-auto md:float-right bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
+                        <!-- ✨ เพิ่มปุ่ม ดูรายละเอียดใบงาน ✨ -->
+                        <div class="pt-4 border-t border-slate-100 flex flex-col md:flex-row justify-end gap-3 mt-auto">
+                            <a href="view_repair.php?id=<?php echo $repair['id']; ?>" target="_blank" class="w-full md:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-6 py-3 rounded-xl font-bold transition-all shadow-sm flex justify-center items-center">
+                                <i class="fas fa-eye mr-2 text-sky-500"></i> ดูรายละเอียด (View)
+                            </a>
+                            <button type="submit" class="w-full md:w-auto bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
                                 <i class="fas fa-save mr-2"></i> บันทึกข้อมูลและแจ้งเตือน
                             </button>
-                            <div class="clear-both"></div>
                         </div>
                     </form>
                 </div>
@@ -751,7 +755,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             updateTechCheckmarks();
         }
 
-        // ✨ อัปเดตระบบค้นหาให้ซ่อน/โชว์หัวข้อฝ่ายงานได้ ✨
         function filterTechDropdown() {
             toggleTechDropdown(null, true);
             const searchVal = document.getElementById('techSearchInput').value.toLowerCase().replace(/\s+/g, '');
@@ -924,7 +927,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }).then((result) => {
             if (result.isConfirmed) {
                 <?php if($is_admin): ?>
-                // ✨ เวลากด Save เสร็จ ให้วิ่งกลับไปหน้าที่เคยจากมาเป๊ะๆ ✨
                 window.location.href = '<?php echo $back_url; ?>';
                 <?php else: ?>
                 window.close(); 
