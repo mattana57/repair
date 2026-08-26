@@ -2641,7 +2641,7 @@ $dept_icons = [
             });
         }
 
-      /// ✨ 1. ฟังก์ชันกราฟเรตติ้ง (ชื่อฝ่ายสีน้ำเงิน + ดาวไล่สีตามเปอร์เซ็นต์จริง) ✨
+      // ✨ 1. ฟังก์ชันกราฟเรตติ้ง (ชื่อฝ่ายสีน้ำเงิน + ดาวไล่สีตามเปอร์เซ็นต์จริง) ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2709,6 +2709,7 @@ $dept_icons = [
             
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
+                // ✨ Plugin สำหรับวาดข้อความ 3 บรรทัด และดาวไล่สี ✨
                 plugins: [{
                     id: 'custom_star_gradient',
                     afterDraw: (chart) => {
@@ -2730,7 +2731,7 @@ $dept_icons = [
                                 const tName = labelArray[1];
                                 const dName = labelArray[2];
                                 
-                                // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
+                                // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงินเด่น
                                 ctx.font = '800 14px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#4f46e5';
                                 ctx.fillText(dName, yAxis.right - 10, y + 18);
@@ -2740,7 +2741,7 @@ $dept_icons = [
                                 ctx.fillStyle = '#475569';
                                 ctx.fillText(tName, yAxis.right - 10, y);
 
-                                // 3. วาดคะแนนตัวเลข (บรรทัดบน)
+                                // 3. วาดตัวเลขคะแนน (บรรทัดบน)
                                 const textY = y - 18; 
                                 ctx.font = 'bold 12px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#64748b';
@@ -2748,25 +2749,26 @@ $dept_icons = [
                                 
                                 // 4. วาดดาวไล่สี
                                 const scoreWidth = ctx.measureText(scoreStr).width;
-                                const starX = yAxis.right - 10 - scoreWidth - 4; 
+                                const starX = yAxis.right - 10 - scoreWidth - 4; // ถอยมาจากตัวเลขคะแนน
                                 
                                 ctx.font = '900 13px "Font Awesome 6 Free"';
-                                const starIcon = '\uf005'; // FontAwesome solid star
+                                const starIcon = '\uf005';
                                 const starWidth = ctx.measureText(starIcon).width;
                                 const startX = starX - starWidth;
                                 
-                                // ดาวพื้นหลัง (สีเทา)
+                                // วาดดาวพื้นหลังสีเทา
                                 ctx.fillStyle = '#e2e8f0';
                                 ctx.fillText(starIcon, starX, textY);
                                 
-                                // ดาวทับ (สีเหลือง ไล่ตาม %)
+                                // วาดดาวทับสีเหลืองตามเปอร์เซ็นต์คะแนน
                                 if (scoreVal > 0) {
                                     const fillPercent = scoreVal / 5.0;
                                     ctx.save();
                                     ctx.beginPath();
+                                    // สร้างพื้นที่ตัดขอบเฉพาะส่วนที่เป็นคะแนน
                                     ctx.rect(startX, textY - 10, starWidth * fillPercent, 20);
-                                    ctx.clip(); 
-                                    ctx.fillStyle = '#f59e0b'; 
+                                    ctx.clip();
+                                    ctx.fillStyle = '#f59e0b'; // สีเหลือง
                                     ctx.fillText(starIcon, starX, textY);
                                     ctx.restore();
                                 }
@@ -2780,6 +2782,7 @@ $dept_icons = [
                     }
                 }],
                 data: {
+                    // เติม Space หน้าตัวเลขเพื่อให้มีพื้นที่วาดดาว
                     labels: deptArr.length ? deptArr.map(d => ['   ' + d.topTechAvg, d.topTech, d.name]) : [['ไม่มีข้อมูล']],
                     datasets: [
                         { 
@@ -2850,7 +2853,7 @@ $dept_icons = [
                         }, 
                         y: { 
                             ticks: { 
-                                color: 'transparent', // ซ่อน text จริง เพื่อให้ Plugin วาดทับ
+                                color: 'transparent', // ซ่อน Text ปกติเพื่อวาดเอง
                                 font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' } 
                             }, 
                             grid: { display: false }, 
@@ -2889,12 +2892,13 @@ $dept_icons = [
             renderTechReviewsList();
         }
 
-        // ✨ 2. ฟังก์ชัน Dropdown ใน Modal (เอาชื่อไทยขึ้นก่อน + แยกดาวมีคะแนน/ไม่มีคะแนน + ดันขวา) ✨
+        // ✨ ปรับ Dropdown ให้เล็กลง คลีนขึ้น มินิมอล และโชว์ช่างทุกคน ✨
         function openTechReviewsModal(deptName, month, year) {
             document.getElementById('techReviewsModalDept').innerText = deptName;
             
             let data = getFilteredRepairsByMonthYear(month, year);
             
+            // หาช่างทั้งหมดในฝ่ายงานนั้นมาแสดง (ทุกคน)
             let allTechsInDept = Object.keys(techDeptMap).filter(tName => {
                 let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
                 if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
@@ -2927,16 +2931,18 @@ $dept_icons = [
                 return { name: k, avg: parseFloat(tAvg), count: techStats[k].count };
             });
 
+            // เรียงคนมีคะแนนขึ้นก่อน
             techArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
 
             const selector = document.getElementById('modalTechSelector');
             selector.innerHTML = '';
             
-            selector.className = "w-full max-w-[320px] bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
+            // ปรับ CSS Dropdown ให้มินิมอล เล็กลง คลีนๆ
+            selector.className = "w-max min-w-[200px] max-w-[250px] bg-slate-50 border border-slate-200 text-[12px] text-slate-600 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-medium cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
             selector.style.backgroundImage = "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')";
             selector.style.backgroundRepeat = "no-repeat";
-            selector.style.backgroundPosition = "right 0.6rem top 50%";
-            selector.style.backgroundSize = "0.6rem auto";
+            selector.style.backgroundPosition = "right 0.5rem top 50%";
+            selector.style.backgroundSize = "0.55rem auto";
             
             if(techArr.length === 0) {
                 selector.style.display = 'none';
@@ -2949,15 +2955,11 @@ $dept_icons = [
                 techArr.forEach(t => {
                     let opt = document.createElement('option');
                     opt.value = t.name;
-                    
-                    // ดึงเฉพาะชื่อภาษาไทย
-                    let thNameOnly = (techInfoMap[t.name] && techInfoMap[t.name].th) ? techInfoMap[t.name].th : t.name.split(' (')[0];
-                    
-                    // จัดรูปแบบโดยดันดาวและคะแนนไปด้านขวาสุดด้วย &emsp; และใช้สัญลักษณ์ ★ กับ ☆ ที่ขนาดเท่ากันเป๊ะ
+                    // ถ้ามีคะแนนใช้ดาวทึบ ⭐ ถ้าไม่มีใช้ดาวโปร่ง ☆
                     if (t.avg > 0) {
-                        opt.innerHTML = `${thNameOnly}&emsp;&emsp;&emsp;&#9733; ${t.avg} (${t.count} รีวิว)`;
+                        opt.text = `⭐ ${t.name} - ${t.avg} (${t.count} รีวิว)`;
                     } else {
-                        opt.innerHTML = `${thNameOnly}&emsp;&emsp;&emsp;&#9734; ยังไม่มีคะแนน`;
+                        opt.text = `☆ ${t.name} - ยังไม่มีคะแนน`;
                     }
                     selector.appendChild(opt);
                 });
@@ -2968,11 +2970,9 @@ $dept_icons = [
             toggleModal('techReviewsModal');
         }
 
-        // ✨ 3. ฟังก์ชันดาวดวงใหญ่ใน Modal (ไล่สีเหลือง-เทา ตามคะแนนจริง) ✨
+        // ✨ ปรับดาวดวงใหญ่ให้ไล่สีเหลือง-เทา ตามเปอร์เซ็นต์คะแนน ✨
         function changeModalTech(techName) {
-            // โชว์เฉพาะชื่อภาษาไทยบน Title
-            let thNameOnly = (techInfoMap[techName] && techInfoMap[techName].th) ? techInfoMap[techName].th : techName.split(' (')[0];
-            document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + thNameOnly;
+            document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + techName;
             
             let posName = (techInfoMap[techName] && techInfoMap[techName].pos) ? techInfoMap[techName].pos : '';
             document.getElementById('techReviewsModalPos').innerText = posName && posName !== '-' ? '(' + posName + ')' : '(ไม่ระบุตำแหน่ง)';
@@ -2986,6 +2986,7 @@ $dept_icons = [
 
             document.getElementById('techReviewsModalCount').innerText = currentTechReviewsData.length + ' รีวิว';
             
+            // คำนวณคะแนนดาวดวงใหญ่
             let sum = 0, count = 0;
             currentTechReviewsData.forEach(r => {
                 let rating = parseFloat(r.rating) || 0;
@@ -2993,7 +2994,6 @@ $dept_icons = [
             });
             let avg = count > 0 ? sum / count : 0;
             
-            // ไล่สีดาวดวงใหญ่ตามเปอร์เซ็นต์จริง
             const bigStarIcon = document.getElementById('techReviewsModalTitle').parentNode.parentNode.querySelector('.fa-star');
             if (bigStarIcon) {
                 if (avg > 0) {
@@ -3005,13 +3005,13 @@ $dept_icons = [
                     bigStarIcon.style.background = 'none';
                     bigStarIcon.style.webkitBackgroundClip = 'border-box';
                     bigStarIcon.style.webkitTextFillColor = 'initial';
-                    bigStarIcon.style.color = '#cbd5e1'; 
+                    bigStarIcon.style.color = '#cbd5e1'; // สีเทาโปร่ง
                 }
             }
             
             setReviewFilter('all'); 
         }
-        
+
         function renderTechReviewsList() {
             const container = document.getElementById('techReviewsList');
             container.innerHTML = '';
