@@ -2385,12 +2385,16 @@ $dept_icons = [
                         date_str = timeAgoJS(rev.completed_at);
                     }
 
-                    container.innerHTML += `<div class='p-4 md:p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0'>
-                            <div class='flex justify-between items-start mb-2.5'>
+                    // ✨ ส่วนที่แก้ให้กดเปิดไปหน้า update_repair.php ได้ ✨
+                    container.innerHTML += `<div onclick="window.open('update_repair.php?id=${rev.id}', '_blank')" class='p-4 md:p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
+                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
+                            </div>
+                            <div class='flex justify-between items-start mb-2.5 pr-6'>
                                 <div class='flex items-center gap-3'>
                                     <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
                                     <div>
-                                        <div class='text-sm font-bold text-slate-800'>${r_name}</div>
+                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
                                         <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
                                     </div>
                                 </div>
@@ -3056,12 +3060,16 @@ $dept_icons = [
                         date_str = timeAgoJS(rev.completed_at);
                     }
 
-                    container.innerHTML += `<div class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0'>
-                            <div class='flex justify-between items-start mb-2.5'>
+                    // ✨ ส่วนที่แก้ให้กดเปิดไปหน้า update_repair.php ได้ ✨
+                    container.innerHTML += `<div onclick="window.open('update_repair.php?id=${rev.id}', '_blank')" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
+                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
+                            </div>
+                            <div class='flex justify-between items-start mb-2.5 pr-6'>
                                 <div class='flex items-center gap-3'>
                                     <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
                                     <div>
-                                        <div class='text-sm font-bold text-slate-800'>${r_name}</div>
+                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
                                         <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
                                     </div>
                                 </div>
@@ -3327,7 +3335,7 @@ $dept_icons = [
             document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + fullName;
             toggleModal('historyModal');
         }
-        
+
         function confirmUnlink(id) { 
             Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "ช่างจะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
                 if(r.isConfirmed) window.location.href = 'dashboard.php?unlink_tech=' + id; 
