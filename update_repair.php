@@ -660,7 +660,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <!-- ✨ เพิ่มปุ่ม ดูรายละเอียดใบงาน ✨ -->
                         <div class="pt-4 border-t border-slate-100 flex flex-col md:flex-row justify-end gap-3 mt-auto">
-                            <a href="view_repair.php?id=<?php echo $repair['id']; ?>" target="_blank" class="w-full md:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-6 py-3 rounded-xl font-bold transition-all shadow-sm flex justify-center items-center">
+                            <a href="view_repair.php?id=<?php echo $repair['id']; ?>" class="w-full md:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-6 py-3 rounded-xl font-bold transition-all shadow-sm flex justify-center items-center">
                                 <i class="fas fa-eye mr-2 text-sky-500"></i> ดูรายละเอียด (View)
                             </a>
                             <button type="submit" class="w-full md:w-auto bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
@@ -755,6 +755,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             updateTechCheckmarks();
         }
 
+        // ✨ อัปเดตระบบค้นหาให้ซ่อน/โชว์หัวข้อฝ่ายงานได้ ✨
         function filterTechDropdown() {
             toggleTechDropdown(null, true);
             const searchVal = document.getElementById('techSearchInput').value.toLowerCase().replace(/\s+/g, '');
@@ -927,6 +928,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }).then((result) => {
             if (result.isConfirmed) {
                 <?php if($is_admin): ?>
+                // ✨ เวลากด Save เสร็จ ให้วิ่งกลับไปหน้าที่เคยจากมาเป๊ะๆ ✨
                 window.location.href = '<?php echo $back_url; ?>';
                 <?php else: ?>
                 window.close(); 
