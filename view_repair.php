@@ -15,6 +15,22 @@ function formatCensoredPhone($phone) {
     return '- ไม่ระบุ -';
 }
 
+// ✨ ฟังก์ชันคำนวณเวลาที่ผ่านไป (Time Ago) ✨
+function timeAgo($datetime) {
+    $time = strtotime($datetime);
+    $diff = time() - $time;
+    if ($diff < 0) $diff = 0; 
+    if ($diff < 60) return "เมื่อสักครู่";
+    if ($diff < 3600) return floor($diff / 60) . " นาทีที่แล้ว";
+    if ($diff < 86400) return floor($diff / 3600) . " ชั่วโมงที่แล้ว";
+    if ($diff < 604800) return floor($diff / 86400) . " วันที่แล้ว";
+    $thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    $m = date('n', $time) - 1;
+    $y = date('Y', $time) + 543;
+    $d = date('j', $time);
+    return "$d " . $thaiMonths[$m] . " $y";
+}
+
 // ดึงข้อมูลใบงาน
 $repair = null;
 $tech_phone = null; // ตัวแปรเก็บเบอร์ช่าง
@@ -220,6 +236,70 @@ if (isset($_GET['id'])) {
                             </div>
                         </div>
                         <?php endif; ?>
+
+                        <!-- ✨ เพิ่มส่วนแสดงรีวิวตรงนี้ตามกรอบแดง ✨ -->
+                        <div class="mt-6 border-t border-slate-100 pt-6">
+                            <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center"><i class="fas fa-star text-amber-400 mr-2"></i> ผลการประเมินจากผู้แจ้ง</h3>
+                            <?php 
+                            $has_rating = !empty($repair['rating']) && (int)$repair['rating'] > 0;
+                            $has_comment = !empty($repair['review_comment']) && trim($repair['review_comment']) !== '' && trim($repair['review_comment']) !== '-';
+                            if ($has_rating || $has_comment): 
+                            ?>
+                                <div class="bg-slate-50 rounded-xl p-5 border border-slate-100">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 shrink-0 shadow-sm border border-slate-100">
+                                                <i class="fas fa-user text-sm"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-bold text-slate-800"><?php echo htmlspecialchars($repair['reporter_name']); ?></div>
+                                                <div class="text-[11px] text-slate-400 font-medium">
+                                                    <?php 
+                                                    if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
+                                                        echo timeAgo($repair['completed_at']);
+                                                    } else {
+                                                        echo "ไม่ระบุเวลา";
+                                                    }
+                                                    ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-0.5 pt-1">
+                                            <?php 
+                                            $rating = (int)($repair['rating'] ?? 0);
+                                            if ($rating > 0) {
+                                                for($i=1; $i<=5; $i++) {
+                                                    if($i <= $rating) echo '<i class="fas fa-star text-amber-400 text-[13px] drop-shadow-sm"></i>';
+                                                    else echo '<i class="fas fa-star text-slate-200 text-[13px]"></i>';
+                                                }
+                                            } else {
+                                                echo '<span class="text-[10px] font-bold text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded-md">ไม่มีคะแนน</span>';
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
+                                    <?php if($has_comment): ?>
+                                        <p class="text-sm text-slate-600 font-medium pl-[52px] leading-relaxed mt-1"><?php echo nl2br(htmlspecialchars(trim($repair['review_comment']))); ?></p>
+                                    <?php endif; ?>
+                                    
+                                    <!-- 🟢 เพิ่มป้ายชื่อช่างที่ได้รับการประเมิน -->
+                                    <div class="pl-[52px] mt-2.5">
+                                        <div class="text-[11px] text-indigo-600 font-bold inline-block bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
+                                            <i class="fas fa-tools mr-1.5 opacity-70"></i>ให้คะแนนช่าง: <?php echo !empty($repair['technician_name']) && $repair['technician_name'] !== '-' ? htmlspecialchars($repair['technician_name']) : 'ไม่ระบุช่าง'; ?>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            <?php else: ?>
+                                <div class="bg-slate-50 rounded-xl p-6 text-center border border-slate-100">
+                                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm border border-slate-100">
+                                        <i class="fas fa-star text-slate-300 text-lg"></i>
+                                    </div>
+                                    <p class="text-slate-500 text-xs font-medium">ใบงานนี้ยังไม่ได้รับการประเมินผล</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
                     </div>
                 </div>
 
