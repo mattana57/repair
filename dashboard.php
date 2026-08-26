@@ -2890,7 +2890,7 @@ $dept_icons = [
             renderTechReviewsList();
         }
 
-        // ✨ 2. ฟังก์ชัน Dropdown ใน Modal (กลับมาใช้แบบเดิมเป๊ะๆ แค่เปลี่ยนดาว ⭐ กับ ★) ✨
+        // ✨ 2. ฟังก์ชัน Dropdown ใน Modal (ดันขวาให้ตรงกัน + ใช้ดาว ⭐ ทึบ/โปร่ง + เล็กกะทัดรัด) ✨
         function openTechReviewsModal(deptName, month, year) {
             document.getElementById('techReviewsModalDept').innerText = deptName;
             
@@ -2933,12 +2933,12 @@ $dept_icons = [
             const selector = document.getElementById('modalTechSelector');
             selector.innerHTML = '';
             
-            // ใช้คลาสขนาดเดิมของคุณเป๊ะๆ
-            selector.className = "w-max min-w-[200px] max-w-[280px] bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
+            // ปรับขนาดให้เล็กกะทัดรัดเหมือนเดิม (w-max min-w-[200px] max-w-[280px])
+            selector.className = "w-max min-w-[200px] max-w-[320px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
             selector.style.backgroundImage = "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')";
             selector.style.backgroundRepeat = "no-repeat";
             selector.style.backgroundPosition = "right 0.5rem top 50%";
-            selector.style.backgroundSize = "0.6rem auto";
+            selector.style.backgroundSize = "0.55rem auto";
             
             if(techArr.length === 0) {
                 selector.style.display = 'none';
@@ -2948,29 +2948,22 @@ $dept_icons = [
                 renderTechReviewsList();
             } else {
                 selector.style.display = 'block';
-                
-                // คำนวณความยาวชื่อเพื่อเว้นวรรค
-                let maxNameLen = 0;
-                techArr.forEach(t => {
-                    let thNameOnly = (techInfoMap[t.name] && techInfoMap[t.name].th) ? techInfoMap[t.name].th : t.name.split(' (')[0];
-                    if (thNameOnly.length > maxNameLen) maxNameLen = thNameOnly.length;
-                });
-
                 techArr.forEach(t => {
                     let opt = document.createElement('option');
                     opt.value = t.name;
                     
+                    // ดึงเฉพาะชื่อภาษาไทย
                     let thNameOnly = (techInfoMap[t.name] && techInfoMap[t.name].th) ? techInfoMap[t.name].th : t.name.split(' (')[0];
                     
-                    // ดันขวา
-                    let padCount = Math.max(0, maxNameLen - thNameOnly.length); 
-                    let spaces = '\u00A0'.repeat(padCount * 2) + '\u2003\u2003'; 
+                    // สูตรคำนวณการดันช่องไฟไปทางขวาให้ตรงกัน (ตัดสระบนล่างภาษาไทยทิ้งก่อนคำนวณความยาว)
+                    let visualLen = thNameOnly.replace(/[\u0E31-\u0E3A\u0E47-\u0E4E]/g, '').length;
+                    let padSpaces = '\u00A0'.repeat(Math.max(2, 38 - (visualLen * 1.8))); 
                     
-                    // ใช้ ⭐ กับ ★
+                    // ใช้ดาว ⭐ และ ☆ ตามที่สั่ง
                     if (t.avg > 0) {
-                        opt.text = `${thNameOnly}${spaces}⭐ ${t.avg} (${t.count} รีวิว)`;
+                        opt.innerHTML = `${thNameOnly}${padSpaces}⭐ ${t.avg} (${t.count} รีวิว)`;
                     } else {
-                        opt.text = `${thNameOnly}${spaces}★ ยังไม่มีคะแนน`;
+                        opt.innerHTML = `${thNameOnly}${padSpaces}☆ ยังไม่มีคะแนน`;
                     }
                     selector.appendChild(opt);
                 });
@@ -2981,7 +2974,7 @@ $dept_icons = [
             toggleModal('techReviewsModal');
         }
 
-        // ✨ 3. ฟังก์ชันสลับช่างใน Modal ✨
+        // ✨ 3. ฟังก์ชันดาวดวงใหญ่ใน Modal ✨
         function changeModalTech(techName) {
             let thNameOnly = (techInfoMap[techName] && techInfoMap[techName].th) ? techInfoMap[techName].th : techName.split(' (')[0];
             document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + thNameOnly;
@@ -3007,15 +3000,16 @@ $dept_icons = [
             
             const bigStarIcon = document.getElementById('techReviewsModalTitle').parentNode.parentNode.querySelector('.fa-star');
             if (bigStarIcon) {
-                // เอา Effect ไล่สีออก กลับมาใช้สีพื้นฐาน
-                bigStarIcon.style.background = 'none';
-                bigStarIcon.style.webkitBackgroundClip = 'border-box';
-                bigStarIcon.style.webkitTextFillColor = 'initial';
-                
                 if (avg > 0) {
-                    bigStarIcon.style.color = '#f59e0b'; // สีเหลือง
+                    let percent = (avg / 5.0) * 100;
+                    bigStarIcon.style.background = `linear-gradient(90deg, #f59e0b ${percent}%, #e2e8f0 ${percent}%)`;
+                    bigStarIcon.style.webkitBackgroundClip = 'text';
+                    bigStarIcon.style.webkitTextFillColor = 'transparent';
                 } else {
-                    bigStarIcon.style.color = '#cbd5e1'; // สีเทา
+                    bigStarIcon.style.background = 'none';
+                    bigStarIcon.style.webkitBackgroundClip = 'border-box';
+                    bigStarIcon.style.webkitTextFillColor = 'initial';
+                    bigStarIcon.style.color = '#cbd5e1'; 
                 }
             }
             
