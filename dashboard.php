@@ -2385,10 +2385,10 @@ $dept_icons = [
                         date_str = timeAgoJS(rev.completed_at);
                     }
 
-                    // ✨ ส่วนที่แก้ให้กดเปิดไปหน้า update_repair.php ได้ ✨
-                    container.innerHTML += `<div onclick="window.open('update_repair.php?id=${rev.id}', '_blank')" class='p-4 md:p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                    // ✨ เปลี่ยนให้โหลดในแท็บเดิม ✨
+                    container.innerHTML += `<div onclick="window.location.href='update_repair.php?id=${rev.id}'" class='p-4 md:p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
-                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
+                                <i class="fas fa-arrow-right text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
                             </div>
                             <div class='flex justify-between items-start mb-2.5 pr-6'>
                                 <div class='flex items-center gap-3'>
