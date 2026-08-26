@@ -1,23 +1,26 @@
 <?php
 include 'db_connect.php';
 
-// ✨ ระบบคำนวณ URL สำหรับปุ่มกลับหน้ารายการ (แท็บเดิม) ✨
+// ✨ ระบบคำนวณ URL สำหรับปุ่มกลับ และส่งต่อพารามิเตอร์ให้หน้า Update ✨
 $back_url = 'dashboard.php?tab=repairs';
+$query_string = '';
 if (isset($_GET['source'])) {
     $source = $_GET['source'];
     if ($source === 'tech_history' && !empty($_GET['tech'])) {
         $back_url = 'dashboard.php?tab=technicians&open_history=' . urlencode($_GET['tech']);
+        $query_string = '&source=tech_history&tech=' . urlencode($_GET['tech']);
     } elseif ($source === 'reporter_history' && !empty($_GET['reporter'])) {
         $back_url = 'dashboard.php?tab=users&open_reporter=' . urlencode($_GET['reporter']);
+        $query_string = '&source=reporter_history&reporter=' . urlencode($_GET['reporter']);
     } elseif ($source === 'overview') {
         $back_url = 'dashboard.php?tab=dash';
+        $query_string = '&source=overview';
     }
 }
 
 // ฟังก์ชันช่วยเซ็นเซอร์เบอร์โทรศัพท์
 function formatCensoredPhone($phone) {
     $phone = trim((string)$phone);
-    // เอาขีดออกก่อนเพื่อเช็คความยาวที่แท้จริง
     $clean_phone = str_replace('-', '', $phone);
 
     if (strlen($clean_phone) >= 9) {
@@ -28,7 +31,7 @@ function formatCensoredPhone($phone) {
     return '- ไม่ระบุ -';
 }
 
-// ✨ ฟังก์ชันคำนวณเวลาที่ผ่านไป (Time Ago) ✨
+// ฟังก์ชันคำนวณเวลาที่ผ่านไป (Time Ago)
 function timeAgo($datetime) {
     $time = strtotime($datetime);
     $diff = time() - $time;
@@ -46,7 +49,7 @@ function timeAgo($datetime) {
 
 // ดึงข้อมูลใบงาน
 $repair = null;
-$tech_phone = null; // ตัวแปรเก็บเบอร์ช่าง
+$tech_phone = null; 
 
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
@@ -97,9 +100,15 @@ if (isset($_GET['id'])) {
                 <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
-            <div class="flex gap-3">
-                <!-- ✨ แก้ไขปุ่มปิดหน้าต่าง ให้ดึงค่า URL ย้อนกลับ ✨ -->
-                <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center text-sm">
+            <div class="flex gap-3 w-full sm:w-auto">
+                <!-- ✨ เพิ่มปุ่มลิงก์ไปหน้าอัปเดตงานซ่อม ตรงนี้ครับ ✨ -->
+                <?php if($repair): ?>
+                <a href="update_repair.php?id=<?php echo $repair['id']; ?><?php echo $query_string; ?>" class="flex-1 sm:flex-none bg-white hover:bg-sky-50 text-sky-600 border border-sky-200 px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm inline-flex items-center justify-center text-sm">
+                    <i class="fas fa-edit mr-2"></i> อัปเดตงานซ่อม
+                </a>
+                <?php endif; ?>
+                
+                <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
             </div>
