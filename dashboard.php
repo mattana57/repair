@@ -486,7 +486,7 @@ $dept_icons = [
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -2728,23 +2728,23 @@ $dept_icons = [
                                 const tName = labelArray[1];
                                 const dName = labelArray[2];
                                 
-                                // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
+                                // วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
                                 ctx.font = '800 14px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#4f46e5';
                                 ctx.fillText(dName, yAxis.right - 10, y + 18);
 
-                                // 2. วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
+                                // วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
                                 ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
                                 ctx.fillText(tName, yAxis.right - 10, y);
 
-                                // 3. วาดคะแนนตัวเลข (บรรทัดบน)
+                                // วาดคะแนนตัวเลข (บรรทัดบน)
                                 const textY = y - 18; 
                                 ctx.font = 'bold 12px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#64748b';
                                 ctx.fillText(scoreStr, yAxis.right - 10, textY);
                                 
-                                // 4. วาดดาวไล่สี
+                                // วาดดาวไล่สี
                                 const scoreWidth = ctx.measureText(scoreStr).width;
                                 const starX = yAxis.right - 10 - scoreWidth - 4; 
                                 
@@ -2858,34 +2858,6 @@ $dept_icons = [
                     } 
                 }
             });
-        }
-
-        function setReviewFilter(val) {
-            currentReviewFilter = val;
-            
-            const btnAll = document.getElementById('btnFilterAllReviews');
-            const btnZero = document.getElementById('btnFilterZeroReviews');
-            
-            btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
-            if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
-            
-            if(val === 'all') {
-                btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
-            } else if (val === 0) {
-                if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
-            }
-            
-            const stars = document.querySelectorAll('#starFilterContainer i');
-            stars.forEach((star, index) => {
-                let starVal = index + 1;
-                if(val !== 'all' && val !== 0 && starVal <= val) {
-                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-lg drop-shadow-sm";
-                } else {
-                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200";
-                }
-            });
-            
-            renderTechReviewsList();
         }
 
         // ✨ ควบคุมการเปิดปิด Custom Dropdown (เพิ่มใหม่) ✨
