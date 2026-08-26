@@ -49,10 +49,6 @@ if (isset($_GET['id'])) {
     $repair = $result->fetch_assoc();
 }
 
-// 🌟 เพิ่มบรรทัดนี้: รับค่า source เพื่อให้รู้ว่ากดมาจากหน้าไหน
-$source_tab = isset($_GET['source']) ? $_GET['source'] : 'repairs';
-$back_url = "dashboard.php?tab=" . htmlspecialchars($source_tab);
-
 $techs = [];
 $tech_res = $conn->query("SELECT DISTINCT full_name FROM technicians WHERE full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
 if($tech_res && $tech_res->num_rows > 0){
