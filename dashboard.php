@@ -2641,7 +2641,7 @@ $dept_icons = [
             });
         }
 
-        // ✨ แก้ไขฟังก์ชันกราฟเรตติ้ง: จัดกลุ่มเป็นระดับฝ่ายงาน และปรับ Format กราฟเป็น 3 บรรทัด ✨
+        // ✨ ฟังก์ชันกราฟเรตติ้ง (ปรับปรุง UI ป้ายกำกับและ Tooltip ตามสั่ง) ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2697,11 +2697,11 @@ $dept_icons = [
             deptArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
 
             const getRatingColor = (score) => {
-                if (score >= 4.5) return '#22c55e'; // เขียวเข้ม
-                if (score >= 3.5) return '#84cc16'; // เขียวอ่อน
-                if (score >= 2.5) return '#eab308'; // เหลือง
-                if (score >= 1.5) return '#f97316'; // ส้ม
-                return '#ef4444'; // แดง
+                if (score >= 4.5) return '#22c55e'; 
+                if (score >= 3.5) return '#84cc16'; 
+                if (score >= 2.5) return '#eab308'; 
+                if (score >= 1.5) return '#f97316'; 
+                return '#ef4444'; 
             };
 
             const ctx = document.getElementById('mainRatingChart').getContext('2d');
@@ -2710,7 +2710,6 @@ $dept_icons = [
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    // ✨ แก้ไข Format การแสดงผลเป็น 3 บรรทัดตามที่คุณต้องการ ✨
                     labels: deptArr.length ? deptArr.map(d => ['⭐ ' + d.topTechAvg, d.topTech, d.name]) : [['ไม่มีข้อมูล']],
                     datasets: [
                         { 
@@ -2775,7 +2774,8 @@ $dept_icons = [
                                 label: function(context) {
                                     if (!deptArr.length) return ' ไม่มีข้อมูล';
                                     let dept = deptArr[context.dataIndex];
-                                    return [' 🏆 ช่างอันดับ 1: ' + dept.topTech + ' (⭐ ' + dept.topTechAvg + ')', ' 📝 จำนวนรีวิวทั้งฝ่าย: ' + dept.count + ' รีวิว'];
+                                    // ✨ ลบไอคอนถ้วยรางวัล และปรับคำตามที่สั่งเป๊ะๆ ✨
+                                    return [' ช่าง ' + dept.topTech + ' (⭐ ' + dept.topTechAvg + ')', ' จำนวน: ' + dept.count + ' รีวิว'];
                                 }
                             }
                         }
@@ -2789,7 +2789,11 @@ $dept_icons = [
                             border: {display: false} 
                         }, 
                         y: { 
-                            ticks: { font: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' }, color: '#475569' }, 
+                            ticks: { 
+                                // ✨ ปรับแต่งให้ Label ฝ่ายงานเด่นและเตะตาขึ้น ✨
+                                font: { family: "'Sarabun', sans-serif", size: 14, weight: 'extrabold' }, 
+                                color: '#4f46e5' 
+                            }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
