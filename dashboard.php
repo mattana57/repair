@@ -1916,7 +1916,6 @@ $dept_icons = [
                             <p class="text-[11px] font-medium text-slate-500 truncate ml-1.5" id="techReviewsModalPos">(...)</p>
                         </div>
                         
-                       
                         <!-- ✨ Dropdown สำหรับเลือกดูช่างในฝ่ายงาน ✨ -->
                         <div class="mt-2.5 relative" id="customTechDropdownContainer">
                             <!-- Dropdown แบบใหม่ จะถูกสร้างลงในนี้ผ่าน JavaScript เพื่อให้แต่งสีและจัดระเบียบได้ -->
@@ -2889,22 +2888,22 @@ $dept_icons = [
             renderTechReviewsList();
         }
 
-        // ✨ ควบคุมการเปิดปิด Custom Dropdown ✨
+        // ✨ ควบคุมการเปิดปิด Custom Dropdown (เพิ่มใหม่) ✨
         function toggleCustomDropdown(e) {
             e.stopPropagation();
             const menu = document.getElementById('customDropdownMenu');
             if(menu) menu.classList.toggle('hidden');
         }
 
-        // ✨ เมื่อคลิกเลือกช่างใน Custom Dropdown ✨
-        function selectCustomDropdownOption(e, techName, nameHTML, rightSideHTML) {
+        // ✨ เมื่อคลิกเลือกช่างใน Custom Dropdown (เพิ่มใหม่) ✨
+        function selectCustomDropdownOption(e, element, techName) {
             e.stopPropagation();
-            document.getElementById('customDropdownLabel').innerHTML = `<span class="truncate pr-2">${nameHTML}</span>${rightSideHTML}`;
+            document.getElementById('customDropdownLabel').innerHTML = element.innerHTML;
             document.getElementById('customDropdownMenu').classList.add('hidden');
             changeModalTech(techName);
         }
 
-        // ปิด Dropdown เมื่อคลิกที่อื่น
+        // ปิด Dropdown เมื่อคลิกที่อื่น (เพิ่มใหม่)
         document.addEventListener('click', function(e) {
             const menu = document.getElementById('customDropdownMenu');
             const btn = document.getElementById('customDropdownBtn');
@@ -2969,7 +2968,7 @@ $dept_icons = [
                 
                 // โครงสร้าง Dropdown แบบใหม่
                 let dropdownHTML = `
-                    <div id="customDropdownBtn" class="w-full max-w-[320px] bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm flex justify-between items-center" onclick="toggleCustomDropdown(event)">
+                    <div id="customDropdownBtn" class="w-full max-w-[320px] bg-white border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-2.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm flex justify-between items-center" onclick="toggleCustomDropdown(event)">
                         <div id="customDropdownLabel" class="flex-1 flex justify-between items-center w-full">เลือกช่าง...</div>
                         <i class="fas fa-chevron-down text-slate-400 ml-3 text-[10px]"></i>
                     </div>
@@ -2979,18 +2978,18 @@ $dept_icons = [
                 let optionsHTML = '';
                 techArr.forEach((t) => {
                     let thNameOnly = (techInfoMap[t.name] && techInfoMap[t.name].th) ? techInfoMap[t.name].th : t.name.split(' (')[0];
+                    let safeTechName = t.name.replace(/'/g, "\\'");
                     
                     let rightSide = '';
-                    // จัดระเบียบชิดขวาเป๊ะ และใช้ดาวสีเหลือง (text-amber-400) กับดาวสีเทา (text-slate-200) ตามที่คุณต้องการเลยครับ
+                    // 🌟 จัดระเบียบชิดขวาเป๊ะ! ใช้ดาวทึบทั้งหมด แต่แยกสี (เหลือง=มีคะแนน, เทา=ไม่มีคะแนน)
                     if (t.avg > 0) {
-                        rightSide = `<div class="flex items-center gap-1.5 shrink-0"><i class="fas fa-star text-amber-400 text-xs drop-shadow-sm"></i><span class="text-slate-700 font-bold">${t.avg} <span class="text-slate-400 font-medium text-[11px]">(${t.count} รีวิว)</span></span></div>`;
+                        rightSide = `<div class="flex items-center gap-1.5 shrink-0"><i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i><span class="text-slate-700 font-bold">${t.avg} <span class="text-slate-400 font-medium text-[11px]">(${t.count} รีวิว)</span></span></div>`;
                     } else {
-                        rightSide = `<div class="flex items-center gap-1.5 shrink-0"><i class="fas fa-star text-slate-200 text-xs"></i><span class="text-slate-400 font-medium text-[11px]">ยังไม่มีคะแนน</span></div>`;
+                        rightSide = `<div class="flex items-center gap-1.5 shrink-0"><i class="fas fa-star text-slate-200 text-[11px]"></i><span class="text-slate-400 font-medium text-[11px]">ยังไม่มีคะแนน</span></div>`;
                     }
 
-                    let safeTechName = t.name.replace(/'/g, "\\'");
                     optionsHTML += `
-                        <div class="px-3 py-2.5 hover:bg-indigo-50 border-b border-slate-50 last:border-0 cursor-pointer flex justify-between items-center transition-colors group" onclick="selectCustomDropdownOption(event, '${safeTechName}', \`${thNameOnly}\`, \`${rightSide}\`)">
+                        <div class="px-3 py-2.5 hover:bg-indigo-50 border-b border-slate-50 last:border-0 cursor-pointer flex justify-between items-center transition-colors group" onclick="selectCustomDropdownOption(event, this, '${safeTechName}')">
                             <span class="text-slate-700 font-bold text-[13px] group-hover:text-indigo-700 transition-colors truncate pr-2">${thNameOnly}</span>
                             ${rightSide}
                         </div>
@@ -3004,15 +3003,17 @@ $dept_icons = [
                 let firstTech = techArr[0];
                 let firstThNameOnly = (techInfoMap[firstTech.name] && techInfoMap[firstTech.name].th) ? techInfoMap[firstTech.name].th : firstTech.name.split(' (')[0];
                 let firstRightSide = firstTech.avg > 0 
-                    ? `<div class="flex items-center gap-1.5 shrink-0"><i class="fas fa-star text-amber-400 text-xs drop-shadow-sm"></i><span class="text-slate-700 font-bold">${firstTech.avg} <span class="text-slate-400 font-medium text-[11px]">(${firstTech.count} รีวิว)</span></span></div>`
-                    : `<div class="flex items-center gap-1.5 shrink-0"><i class="fas fa-star text-slate-200 text-xs"></i><span class="text-slate-400 font-medium text-[11px]">ยังไม่มีคะแนน</span></div>`;
+                    ? `<div class="flex items-center gap-1.5 shrink-0"><i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i><span class="text-slate-700 font-bold">${firstTech.avg} <span class="text-slate-400 font-medium text-[11px]">(${firstTech.count} รีวิว)</span></span></div>`
+                    : `<div class="flex items-center gap-1.5 shrink-0"><i class="fas fa-star text-slate-200 text-[11px]"></i><span class="text-slate-400 font-medium text-[11px]">ยังไม่มีคะแนน</span></div>`;
                 
-                document.getElementById('customDropdownLabel').innerHTML = `<span class="truncate pr-2">${firstThNameOnly}</span>${firstRightSide}`;
+                document.getElementById('customDropdownLabel').innerHTML = `<span class="text-slate-700 font-bold text-[13px] truncate pr-2">${firstThNameOnly}</span>${firstRightSide}`;
                 
                 changeModalTech(firstTech.name);
             }
             
-            toggleModal('techReviewsModal');
+            // ให้ Modal แสดงขึ้นมาก่อน ค่อยโหลด List Review
+            document.getElementById('techReviewsModal').classList.remove('opacity-0', 'pointer-events-none');
+            document.body.classList.add('modal-active');
         }
 
         // ✨ 3. ฟังก์ชันสลับช่างใน Modal ✨
@@ -3039,6 +3040,7 @@ $dept_icons = [
             });
             let avg = count > 0 ? sum / count : 0;
             
+            // ไล่สีดาวดวงใหญ่ตามเปอร์เซ็นต์คะแนนจริง
             const bigStarIcon = document.getElementById('techReviewsModalTitle').parentNode.parentNode.querySelector('.fa-star');
             if (bigStarIcon) {
                 if (avg > 0) {
@@ -3050,7 +3052,7 @@ $dept_icons = [
                     bigStarIcon.style.background = 'none';
                     bigStarIcon.style.webkitBackgroundClip = 'border-box';
                     bigStarIcon.style.webkitTextFillColor = 'initial';
-                    bigStarIcon.style.color = '#e2e8f0'; 
+                    bigStarIcon.style.color = '#cbd5e1'; 
                 }
             }
             
@@ -3113,372 +3115,6 @@ $dept_icons = [
                 });
             }
         }
-
-        function toggleModal(m) { 
-            document.getElementById(m).classList.toggle('opacity-0'); 
-            document.getElementById(m).classList.toggle('pointer-events-none'); 
-            document.body.classList.toggle('modal-active'); 
-        }
-
-        function updateExcelLink() {
-            const filterValue = document.getElementById('techFilter').value;
-            if (filterValue !== 'all') {
-                document.getElementById('exportExcelBtn').href = `export_excel.php?tech=${encodeURIComponent(filterValue)}`;
-            } else {
-                document.getElementById('exportExcelBtn').href = `export_excel.php`;
-            }
-        }
-
-        function printOfficialReport() {
-            const filterValue = document.getElementById('techFilter').value;
-            let printUrl = 'print_report.php?type=table';
-            if (filterValue !== 'all') {
-                printUrl += `&tech=${encodeURIComponent(filterValue)}`;
-            }
-            window.open(printUrl, '_blank');
-        }
-
-        function togglePasswordVisibility(inputId, iconId) {
-            const input = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
-            if (input.type === 'password') {
-                input.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
-            }
-        }
-
-        function toggleCustomInput(selectElement, customInputId) {
-            const customInput = document.getElementById(customInputId);
-            if(selectElement.value === 'อื่นๆ') { 
-                customInput.classList.remove('hidden'); customInput.required = true;
-            } else { 
-                customInput.classList.add('hidden'); customInput.required = false; 
-            }
-        }
-
-        function setDropdownOrCustom(selectId, customInputId, val) {
-            const selectEl = document.getElementById(selectId);
-            const customEl = document.getElementById(customInputId);
-            if (!val || val === '-') { selectEl.value = ''; customEl.classList.add('hidden'); customEl.value = ''; customEl.required = false; return; }
-            const options = Array.from(selectEl.options).map(opt => opt.value);
-            if (options.includes(val) && val !== 'อื่นๆ') {
-                selectEl.value = val; customEl.classList.add('hidden'); customEl.value = ''; customEl.required = false;
-            } else {
-                selectEl.value = 'อื่นๆ'; customEl.classList.remove('hidden'); customEl.value = val; customEl.required = true;
-            }
-        }
-
-        function openAddAssetModal() { 
-            document.getElementById('assetModalTitle').innerHTML = 'Add New Asset'; 
-            document.getElementById('asset_id').value = ''; document.getElementById('asset_code').value = ''; document.getElementById('asset_name').value = ''; document.getElementById('asset_category').value = 'IT Support'; document.getElementById('asset_status').value = 'ใช้งานปกติ'; toggleModal('assetModal'); 
-        }
-
-        function openEditAssetModal(id, c, n, cat, s) { 
-            document.getElementById('assetModalTitle').innerHTML = 'Edit Asset'; 
-            document.getElementById('asset_id').value = id; document.getElementById('asset_code').value = c; document.getElementById('asset_name').value = n; document.getElementById('asset_category').value = cat; document.getElementById('asset_status').value = s; toggleModal('assetModal'); 
-        }
-
-        function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='') { 
-            let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
-            let baseRole = isManagement ? 'Admin' : 'Technician';
-            let title = isManagement ? 'Manage Administrator' : 'Manage Technician';
-            document.getElementById('techAdminModalTitle').innerHTML = title; 
-            document.getElementById('techAdmin_role').value = baseRole; 
-            
-            const adminLevelDiv = document.getElementById('adminLevelDiv'); 
-            const deptDiv = document.getElementById('deptDiv');
-            const loginCredsDiv = document.getElementById('loginCredsDiv');
-            const avatarDiv = document.getElementById('avatarDiv');
-            const avatarLabelWrapper = document.getElementById('avatarLabelWrapper');
-            const avatarPositionWrapper = document.getElementById('avatarPositionWrapper');
-            const positionDiv = document.getElementById('positionDiv');
-            const displayPositionLabel = document.getElementById('displayPositionLabel');
-            
-            let oldHidden = document.getElementById('final_avatar_position');
-            if(oldHidden) oldHidden.remove();
-            
-            if(isManagement) {
-                adminLevelDiv.classList.remove('hidden'); 
-                deptDiv.classList.add('hidden'); 
-                document.getElementById('techAdmin_department_select').required = false;
-                
-                let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; document.getElementById('techAdmin_level').value = exactRole;
-                loginCredsDiv.classList.remove('hidden'); document.getElementById('techAdmin_username').required = true;
-                if(avatarDiv) avatarDiv.classList.add('hidden');
-                if(positionDiv) positionDiv.classList.add('hidden');
-            } else {
-                adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
-                loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
-                if(avatarDiv) avatarDiv.classList.remove('hidden');
-                
-                if (id === '') {
-                    if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
-                    if (avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
-                    if (positionDiv) positionDiv.classList.remove('hidden');
-                    
-                    document.getElementById('techAdmin_position_select').name = 'position_select';
-                    document.getElementById('techAdmin_position_custom').name = 'position_custom';
-                    setDropdownOrCustom('techAdmin_position_select', 'techAdmin_position_custom', '');
-                } else {
-                    if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
-                    if (avatarPositionWrapper) avatarPositionWrapper.classList.remove('hidden');
-                    if (positionDiv) positionDiv.classList.add('hidden');
-                    
-                    let displayPosText = pos ? pos : 'ระบุตำแหน่งงาน';
-                    displayPositionLabel.innerText = displayPosText;
-                    document.getElementById('techAdmin_position_select').name = '';
-                    document.getElementById('techAdmin_position_custom').name = '';
-                    
-                    let hiddenInput = document.createElement('input');
-                    hiddenInput.type = 'hidden';
-                    hiddenInput.id = 'final_avatar_position';
-                    hiddenInput.name = 'position';
-                    hiddenInput.value = pos;
-                    document.querySelector('form[action="dashboard.php?tab=technicians"]').appendChild(hiddenInput);
-                }
-            }
-
-            document.getElementById('techAdmin_id').value = id; 
-            document.getElementById('techAdmin_username').value = u; 
-            document.getElementById('techAdmin_fullname').value = f; 
-            document.getElementById('techAdmin_englishname').value = en;
-            document.getElementById('techAdmin_phone').value = p; 
-            
-            const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(f || 'admin') + '&backgroundColor=e2e8f0';
-            document.getElementById('avatarPreviewImg').src = avatarUrl ? avatarUrl : defaultImg;
-            document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
-            
-            const avatarInput = document.getElementById('techAdmin_avatar');
-            if(avatarInput) avatarInput.value = '';
-
-            const pwdInput = document.getElementById('techAdmin_password'); 
-            const pwdHint = document.getElementById('pwdHint'); 
-            const eyeIcon = document.getElementById('eyeIcon');
-            pwdInput.value = ''; pwdInput.type = 'password'; 
-            if(eyeIcon) { eyeIcon.classList.remove('fa-eye-slash'); eyeIcon.classList.add('fa-eye'); }
-            if(id === '') { if(isManagement) pwdInput.required = true; pwdHint.innerText = "(Required)"; } else { pwdInput.required = false; pwdHint.innerText = "(Leave blank to keep current)"; }
-            
-            document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
-            setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
-            toggleModal('techAdminModal'); 
-        }
-
-        function openEditReporterModal(old_name, old_phone) {
-            document.getElementById('edit_rep_old_name').value = old_name; document.getElementById('edit_rep_new_name').value = old_name; document.getElementById('edit_rep_new_phone').value = old_phone; toggleModal('editReporterModal');
-        }
-
-        function viewHistory(fullName, type) {
-            const tbody = document.getElementById('historyTableBody'); 
-            tbody.innerHTML = '';
-
-            const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
-
-            if(userRepairs.length === 0) {
-                let emptyMsg = type === 'reporter' ? 'No repair history found.' : 'No tasks assigned yet.';
-                tbody.innerHTML = `<tr><td colspan="11" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
-            } else {
-                userRepairs.forEach(r => {
-                    let statusClass = 'badge-pending';
-                    if(r.status === 'กำลังดำเนินการ') statusClass = 'badge-progress';
-                    else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'badge-success';
-
-                    let statusText = formatValJS(r.status);
-
-                    let createdDate = '-';
-                    let createdTime = '';
-                    if(r.created_at) {
-                        let parts = r.created_at.split(' ');
-                        createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
-                        createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
-                    } else {
-                        createdDate = "<span class='text-rose-500 font-bold'>-</span>";
-                    }
-                    
-                    let techNameHtml = "<span class='text-rose-500 font-bold'>-</span>";
-                    if (r.technician_name && r.technician_name !== '-') {
-                        let info = techInfoMap[r.technician_name] || { th: r.technician_name, eng: '', pos: '' };
-                        techNameHtml = `<div class='text-indigo-600 font-bold'>${info.th}</div>`;
-                        if(info.eng) techNameHtml += `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${info.eng}</div>`;
-                    }
-                    let techName = techNameHtml;
-
-                    let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-rose-500 font-bold'>-</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
-
-                    let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
-                    let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
-                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
-
-                    let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
-                    let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
-                    
-                    let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
-                    let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
-                    if (r.technician_name && r.technician_name !== '-') {
-                        deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
-                        let info = techInfoMap[r.technician_name];
-                        if (info && info.pos) {
-                            deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
-                        }
-                    }
-                    
-                    let tNo = formatValJS(r.ticket_no);
-                    let rName = formatValJS(r.reporter_name);
-                    let rPhone = formatValJS(r.phone_number);
-                    let eqType = formatValJS(r.equipment_type);
-                    let pDesc = formatValJS(r.problem_desc);
-
-                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
-                            <div class="font-medium text-slate-700">${createdDate}</div>
-                            ${createdTime}
-                        </td>
-                        <td class="px-5 py-4 align-top font-mono font-semibold text-slate-600">${tNo}</td>
-                        <td class="px-5 py-4 align-top">
-                            <div class="text-slate-800 font-bold">${rName}</div>
-                            <div class="text-slate-500 text-[11px] font-medium mt-0.5">${rPhone}</div>
-                        </td>
-                        <td class="px-5 py-4 align-top">
-                            <div class="text-slate-800 font-bold">${eqType}</div>
-                            <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${pDesc.replace(/<[^>]*>?/gm, '')}">${pDesc}</div>
-                        </td>
-                        <td class="px-5 py-4 align-top">${deptEng}</td>
-                        <td class="px-5 py-4 align-top">${techName}</td>
-                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
-                            <div class='font-medium text-slate-700'>${received_date}</div>
-                            ${received_time}
-                        </td>
-                        <td class="px-5 py-4 align-top">${rootCause}</td>
-                        <td class="px-5 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
-                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
-                            <div class='font-medium text-emerald-700'>${completed_date}</div>
-                            ${completed_time}
-                        </td>
-                        <td class="px-5 py-4 align-middle text-right">
-                            <div class='flex items-center justify-end space-x-2'>
-                                <a href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
-                                <a href='view_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
-                            </div>
-                        </td>
-                    </tr>`;
-                });
-            }
-            document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + fullName;
-            toggleModal('historyModal');
-        }
-
-        function confirmUnlink(id) { 
-            Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "ช่างจะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
-                if(r.isConfirmed) window.location.href = 'dashboard.php?unlink_tech=' + id; 
-            }); 
-        }
-
-        function confirmDelete(type, id) { 
-            Swal.fire({ title: 'ยืนยันการลบข้อมูล?', text: "เมื่อลบแล้วจะไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { 
-                if(r.isConfirmed) {
-                    if(type === 'tech') window.location.href = 'dashboard.php?delete_tech=' + id;
-                    else if(type === 'user') window.location.href = 'dashboard.php?delete_user=' + id;
-                    else if(type === 'asset') window.location.href = 'dashboard.php?delete_asset=' + id;
-                }
-            }); 
-        }
-
-        function confirmDeleteReporter(name) { 
-            Swal.fire({ title: 'ยืนยันลบผู้แจ้ง?', text: "ประวัติการแจ้งซ่อมทั้งหมดของบุคคลนี้จะถูกเคลียร์ชื่อออก!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
-        }
-
-        let currentSelectedName = 'Overall System (All Technicians)';
-
-        function focusReportSearch(e) {
-            e.target.value = ''; 
-            filterReportDropdown(); 
-            toggleReportDropdown(e, true);
-        }
-
-        function blurReportSearch(e) {
-            setTimeout(() => {
-                if (document.getElementById('reportSearchInput').value === '') {
-                    e.target.value = currentSelectedName;
-                }
-            }, 200);
-        }
-
-        function toggleReportDropdown(e, forceOpen = false) {
-            if(e) e.stopPropagation();
-            const list = document.getElementById('reportDropdownList');
-            if(forceOpen) {
-                list.classList.remove('hidden');
-                list.classList.add('flex');
-            } else {
-                list.classList.toggle('hidden');
-                list.classList.toggle('flex');
-            }
-        }
-
-        function filterReportDropdown() {
-            toggleReportDropdown(null, true);
-            const searchVal = document.getElementById('reportSearchInput').value.toLowerCase().replace(/\s+/g, '');
-            
-            let deptVisibility = {};
-            
-            const items = document.querySelectorAll('.report-dropdown-item');
-            items.forEach(item => {
-                if (item.getAttribute('data-value') === 'all') return;
-                
-                const searchData = item.getAttribute('data-search') || '';
-                const dept = item.getAttribute('data-dept');
-                
-                if (!deptVisibility[dept]) deptVisibility[dept] = 0;
-                
-                if(searchData.includes(searchVal)) {
-                    item.style.display = '';
-                    deptVisibility[dept]++;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-
-            const allItem = document.querySelector('.report-dropdown-item[data-value="all"]');
-            if (allItem) {
-                const searchData = allItem.getAttribute('data-search') || '';
-                if (searchData.includes(searchVal)) {
-                    allItem.style.display = '';
-                } else {
-                    allItem.style.display = 'none';
-                }
-            }
-
-            const deptHeaders = document.querySelectorAll('.dropdown-dept-header');
-            deptHeaders.forEach(header => {
-                const dept = header.getAttribute('data-dept');
-                if (deptVisibility[dept] > 0) {
-                    header.style.display = '';
-                } else {
-                    header.style.display = 'none';
-                }
-            });
-        }
-
-        function selectReportTech(val, displayText) {
-            currentSelectedName = displayText;
-            document.getElementById('techFilter').value = val;
-            document.getElementById('reportSearchInput').value = displayText;
-            document.getElementById('reportDropdownList').classList.add('hidden');
-            document.getElementById('reportDropdownList').classList.remove('flex');
-            updateExcelLink();
-        }
-
-        document.addEventListener('click', function(e) {
-            const container = document.getElementById('reportDropdownContainer');
-            if (container && !container.contains(e.target)) {
-                const list = document.getElementById('reportDropdownList');
-                if(list) {
-                    list.classList.add('hidden');
-                    list.classList.remove('flex');
-                }
-            }
-        });
     </script>
 </body>
 </html>
