@@ -1,11 +1,24 @@
 <?php
 session_start();
 
-// ✨ บันทึก URL ล่าสุดของ Dashboard เพื่อให้ปุ่มกลับไปหน้าเดิมเสมอ (ไม่หลุดแท็บ) ✨
-if(isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'dashboard.php') !== false) {
-    $_SESSION['last_dashboard_url'] = $_SERVER['HTTP_REFERER'];
+// ✨ ระบบคำนวณ URL สำหรับปุ่มกลับหน้ารายการ ✨
+$back_url = 'dashboard.php?tab=repairs';
+$query_params = [];
+
+if (isset($_GET['source'])) {
+    $source = $_GET['source'];
+    $query_params['source'] = $source;
+    
+    if ($source === 'tech_history' && !empty($_GET['tech'])) {
+        $back_url = 'dashboard.php?tab=technicians&open_history=' . urlencode($_GET['tech']);
+        $query_params['tech'] = $_GET['tech'];
+    } elseif ($source === 'reporter_history' && !empty($_GET['reporter'])) {
+        $back_url = 'dashboard.php?tab=users&open_reporter=' . urlencode($_GET['reporter']);
+        $query_params['reporter'] = $_GET['reporter'];
+    } elseif ($source === 'overview') {
+        $back_url = 'dashboard.php?tab=dash';
+    }
 }
-$back_url = isset($_SESSION['last_dashboard_url']) ? $_SESSION['last_dashboard_url'] : 'dashboard.php?tab=repairs';
 
 // ตั้งค่าโซนเวลาเป็นประเทศไทย
 date_default_timezone_set('Asia/Bangkok');
@@ -56,6 +69,16 @@ if (isset($_GET['id'])) {
     $repair = $result->fetch_assoc();
 }
 
+// ✨ สร้าง URL สำหรับปุ่มฟอร์มและปุ่ม View เพื่อให้จำค่าหน้าเดิมไว้ ✨
+$form_action = "update_repair.php?id=" . ($repair['id'] ?? '');
+if (!empty($query_params)) {
+    $form_action .= "&" . http_build_query($query_params);
+}
+$view_url = "view_repair.php?id=" . ($repair['id'] ?? '');
+if (!empty($query_params)) {
+    $view_url .= "&" . http_build_query($query_params);
+}
+
 // ✨ ระบบจัดกลุ่มช่างตามฝ่าย ✨
 $techs_by_dept = [];
 $tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != ''");
@@ -89,9 +112,7 @@ uksort($techs_by_dept, function($a, $b) use ($custom_dept_order) {
     return $pos_a - $pos_b;
 });
 
-foreach ($techs_by_dept as &$tList) {
-    sort($tList);
-}
+foreach ($techs_by_dept as &$tList) { sort($tList); }
 unset($tList);
 
 $assets_list = [];
@@ -159,7 +180,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $chk->close();
         
     } else {
-        // 💡 เก็บค่าเก่าไว้เทียบว่ามีการเปลี่ยนหมายเหตุหรือสถานะหรือไม่
         $old_status = isset($repair['status']) ? $repair['status'] : '';
         $old_note = isset($repair['repair_note']) ? trim($repair['repair_note']) : '';
 
@@ -219,7 +239,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if(!empty($repair['line_user_id'])) {
                 $messages = [];
                 
-                // กรณีที่ 1: เพิ่งกด "ซ่อมเสร็จแล้ว" (ปิดงานจากเว็บ) -> ส่งข้อความแจ้งปิดงาน + แบบประเมินดาว
                 if ($status === 'ซ่อมเสร็จแล้ว' && $old_status !== 'ซ่อมเสร็จแล้ว') {
                     $textMsg = "🎉 ช่างได้ดำเนินการแก้ไขใบงาน {$repair['ticket_no']} เสร็จสิ้นแล้วค่ะ\n\n" .
                                "📝 หมายเหตุ: " . (!empty($repair_note) ? $repair_note : "- ไม่มีหมายเหตุ -");
@@ -272,7 +291,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $review_msg
                     ];
                 } 
-                // 💡 กรณีที่ 2: มีการ "อัปเดตหมายเหตุ" เปลี่ยนไปจากเดิม (ส่งข้อความแจ้งเตือน ไม่ว่าสถานะของงานจะเป็นอะไรก็ตาม)
                 else if ($repair_note !== $old_note && $repair_note !== '') {
                     $textMsg = "📝 ช่างได้อัปเดตหมายเหตุในงานซ่อม\n\n" .
                                "📋 ใบงาน: {$repair['ticket_no']}\n" .
@@ -283,7 +301,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $messages = [['type' => 'text', 'text' => $textMsg]];
                 }
                 
-                // ส่งข้อความถ้าเข้าเงื่อนไขด้านบน
                 if (!empty($messages)) {
                     $postData = [
                         'to' => $repair['line_user_id'],
@@ -349,6 +366,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
             <?php if($is_admin): ?>
+            <!-- ✨ ปุ่มกลับ จะดึง URL ย้อนกลับแบบไร้รอยต่อ ✨ -->
             <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
@@ -481,7 +499,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="modern-card p-6 md:p-8 h-full flex flex-col">
                     <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-6">บันทึกการปฏิบัติงาน</h2>
 
-                    <form id="updateForm" action="" method="POST" class="space-y-6 flex-1 flex flex-col">
+                    <!-- ✨ ฟอร์มจะพ่วงค่า Parameter แบบเดียวกับลิงก์ให้อัตโนมัติ ✨ -->
+                    <form id="updateForm" action="<?php echo htmlspecialchars($form_action); ?>" method="POST" class="space-y-6 flex-1 flex flex-col">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
 
                         <?php
@@ -515,7 +534,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </button>
                                 </div>
                                 
-                                <!-- ✨ ระบบจัดกลุ่มช่างตามฝ่าย ✨ -->
+                                <!-- ✨ Dropdown แสดงช่าง แยกตามแผนกพร้อมโชว์จำนวนคน (ฟอนต์ฝ่ายใหญ่ขึ้น) ✨ -->
                                 <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
                                     <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
                                         <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
@@ -527,7 +546,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <?php foreach($techs_by_dept as $dept => $techList): 
                                         $count = count($techList);
                                     ?>
-                                        <!-- ✨ ขยายขนาดฟอนต์ของชื่อฝ่ายตรงนี้ ✨ -->
+                                        <!-- ✨ ขยายขนาดฟอนต์ของชื่อฝ่ายตรงนี้ เป็น text-[15px] ✨ -->
                                         <div class="tech-dept-header flex justify-between items-center px-4 py-2.5 mt-2 mb-1 bg-indigo-50/60 border-y border-indigo-100" data-dept="<?php echo htmlspecialchars($dept); ?>">
                                             <span class="text-[15px] font-extrabold text-indigo-700 tracking-wide"><?php echo htmlspecialchars($dept); ?></span>
                                             <span class="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 shadow-sm px-2 py-0.5 rounded-md flex items-center">
@@ -603,20 +622,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
                                         <select name="new_asset_category" id="new_asset_category" onchange="toggleCustomInput(this, 'new_asset_category_custom')" class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
-                                            <?php 
-                                            // สร้างตัวแปรดึงหมวดหมู่ (เหมือนใน update_repair)
-                                            $dash_categories = ['IT Support', 'ไฟฟ้า/แอร์', 'อาคารสถานที่'];
-                                            $d_cat_res = $conn->query("SELECT DISTINCT category FROM assets WHERE category IS NOT NULL AND category != ''");
-                                            if($d_cat_res && $d_cat_res->num_rows > 0){
-                                                while($dc = $d_cat_res->fetch_assoc()){
-                                                    if(!in_array($dc['category'], $dash_categories) && $dc['category'] !== 'อื่นๆ') {
-                                                        $dash_categories[] = $dc['category'];
-                                                    }
-                                                }
-                                            }
-                                            ?>
-                                            <?php foreach($dash_categories as $dcat): ?>
-                                                <option value="<?php echo htmlspecialchars($dcat); ?>"><?php echo htmlspecialchars($dcat); ?></option>
+                                            <?php foreach($asset_categories as $cat): ?>
+                                                <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
                                             <?php endforeach; ?>
                                             <option value="อื่นๆ">อื่นๆ (พิมพ์ระบุเอง)</option>
                                         </select>
@@ -658,9 +665,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
                         </div>
 
-                        <!-- ✨ เพิ่มปุ่ม ดูรายละเอียดใบงาน ✨ -->
+                        <!-- ✨ เพิ่มปุ่ม ดูรายละเอียดใบงาน และไม่ขึ้นแท็บใหม่แล้ว ✨ -->
                         <div class="pt-4 border-t border-slate-100 flex flex-col md:flex-row justify-end gap-3 mt-auto">
-                            <a href="view_repair.php?id=<?php echo $repair['id']; ?>" class="w-full md:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-6 py-3 rounded-xl font-bold transition-all shadow-sm flex justify-center items-center">
+                            <a href="<?php echo htmlspecialchars($view_url); ?>" class="w-full md:w-auto bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-6 py-3 rounded-xl font-bold transition-all shadow-sm flex justify-center items-center">
                                 <i class="fas fa-eye mr-2 text-sky-500"></i> ดูรายละเอียด (View)
                             </a>
                             <button type="submit" class="w-full md:w-auto bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
@@ -707,8 +714,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
                         <select name="modal_category" id="modal_category" onchange="toggleCustomInput(this, 'modal_category_custom')" required class="custom-select w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
-                            <?php foreach($dash_categories as $dcat): ?>
-                                <option value="<?php echo htmlspecialchars($dcat); ?>"><?php echo htmlspecialchars($dcat); ?></option>
+                            <?php foreach($asset_categories as $cat): ?>
+                                <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
                             <?php endforeach; ?>
                             <option value="อื่นๆ">อื่นๆ (พิมพ์ระบุเอง)</option>
                         </select>
@@ -928,8 +935,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }).then((result) => {
             if (result.isConfirmed) {
                 <?php if($is_admin): ?>
-                // ✨ เวลากด Save เสร็จ ให้วิ่งกลับไปหน้าที่เคยจากมาเป๊ะๆ ✨
-                window.location.href = '<?php echo $back_url; ?>';
+                window.location.href = '<?php echo htmlspecialchars($back_url); ?>';
                 <?php else: ?>
                 window.close(); 
                 <?php endif; ?>
