@@ -2730,23 +2730,23 @@ $dept_icons = [
                                 const tName = labelArray[1];
                                 const dName = labelArray[2];
                                 
-                                // วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
+                                // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
                                 ctx.font = '800 14px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#4f46e5';
                                 ctx.fillText(dName, yAxis.right - 10, y + 18);
 
-                                // วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
+                                // 2. วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
                                 ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
                                 ctx.fillText(tName, yAxis.right - 10, y);
 
-                                // วาดคะแนนตัวเลข (บรรทัดบน)
+                                // 3. วาดคะแนนตัวเลข (บรรทัดบน)
                                 const textY = y - 18; 
                                 ctx.font = 'bold 12px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#64748b';
                                 ctx.fillText(scoreStr, yAxis.right - 10, textY);
                                 
-                                // วาดดาวไล่สี
+                                // 4. วาดดาวไล่สี
                                 const scoreWidth = ctx.measureText(scoreStr).width;
                                 const starX = yAxis.right - 10 - scoreWidth - 4; 
                                 
@@ -2890,7 +2890,7 @@ $dept_icons = [
             renderTechReviewsList();
         }
 
-        // ✨ 2. ฟังก์ชัน Dropdown ใน Modal (เอาชื่อไทยขึ้นก่อน + แยกดาวมีคะแนน/ไม่มีคะแนน + ดันขวา) ✨
+        // ✨ 2. ฟังก์ชัน Dropdown ใน Modal (ดันขวาให้ตรงกัน + ใช้ดาว ⭐ ทึบ/โปร่ง + เล็กกะทัดรัด) ✨
         function openTechReviewsModal(deptName, month, year) {
             document.getElementById('techReviewsModalDept').innerText = deptName;
             
@@ -2933,7 +2933,8 @@ $dept_icons = [
             const selector = document.getElementById('modalTechSelector');
             selector.innerHTML = '';
             
-            selector.className = "w-full max-w-[280px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
+            // ปรับขนาดให้เล็กกะทัดรัดเหมือนเดิม (w-max min-w-[200px] max-w-[280px])
+            selector.className = "w-max min-w-[200px] max-w-[320px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
             selector.style.backgroundImage = "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')";
             selector.style.backgroundRepeat = "no-repeat";
             selector.style.backgroundPosition = "right 0.5rem top 50%";
@@ -2954,15 +2955,15 @@ $dept_icons = [
                     // ดึงเฉพาะชื่อภาษาไทย
                     let thNameOnly = (techInfoMap[t.name] && techInfoMap[t.name].th) ? techInfoMap[t.name].th : t.name.split(' (')[0];
                     
-                    // จัดรูปแบบโดยดันดาวและคะแนนไปด้านขวาสุด และใช้สัญลักษณ์ ★ กับ ☆
-                    let paddingLen = 50 - (thNameOnly.length * 2);
-                    if(paddingLen < 5) paddingLen = 5;
-                    let spaces = '\u00A0'.repeat(paddingLen);
+                    // สูตรคำนวณการดันช่องไฟไปทางขวาให้ตรงกัน (ตัดสระบนล่างภาษาไทยทิ้งก่อนคำนวณความยาว)
+                    let visualLen = thNameOnly.replace(/[\u0E31-\u0E3A\u0E47-\u0E4E]/g, '').length;
+                    let padSpaces = '\u00A0'.repeat(Math.max(2, 38 - (visualLen * 1.8))); 
                     
+                    // ใช้ดาว ⭐ และ ☆ ตามที่สั่ง
                     if (t.avg > 0) {
-                        opt.innerHTML = `${thNameOnly}${spaces}★ ${t.avg} (${t.count} รีวิว)`;
+                        opt.innerHTML = `${thNameOnly}${padSpaces}⭐ ${t.avg} (${t.count} รีวิว)`;
                     } else {
-                        opt.innerHTML = `${thNameOnly}${spaces}☆ ยังไม่มีคะแนน`;
+                        opt.innerHTML = `${thNameOnly}${padSpaces}☆ ยังไม่มีคะแนน`;
                     }
                     selector.appendChild(opt);
                 });
@@ -2973,9 +2974,8 @@ $dept_icons = [
             toggleModal('techReviewsModal');
         }
 
-        // ✨ 3. ฟังก์ชันดาวดวงใหญ่ใน Modal (ไล่สีเหลือง-เทา ตามคะแนนจริง) ✨
+        // ✨ 3. ฟังก์ชันดาวดวงใหญ่ใน Modal ✨
         function changeModalTech(techName) {
-            // โชว์เฉพาะชื่อภาษาไทยบน Title
             let thNameOnly = (techInfoMap[techName] && techInfoMap[techName].th) ? techInfoMap[techName].th : techName.split(' (')[0];
             document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + thNameOnly;
             
@@ -2998,7 +2998,6 @@ $dept_icons = [
             });
             let avg = count > 0 ? sum / count : 0;
             
-            // ไล่สีดาวดวงใหญ่ตามเปอร์เซ็นต์จริง
             const bigStarIcon = document.getElementById('techReviewsModalTitle').parentNode.parentNode.querySelector('.fa-star');
             if (bigStarIcon) {
                 if (avg > 0) {
@@ -3016,7 +3015,7 @@ $dept_icons = [
             
             setReviewFilter('all'); 
         }
-
+        
         function renderTechReviewsList() {
             const container = document.getElementById('techReviewsList');
             container.innerHTML = '';
