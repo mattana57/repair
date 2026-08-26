@@ -2840,7 +2840,7 @@ $dept_icons = [
                 }
             });
         }
-        
+
         function setReviewFilter(val) {
             currentReviewFilter = val;
             
@@ -2869,72 +2869,85 @@ $dept_icons = [
             renderTechReviewsList();
         }
 
-        // ✨ ฟังก์ชันสำหรับเปิด Modal และดึงช่างทุกคนในฝ่ายงานนั้นๆ มาใส่ใน Dropdown ✨
+        // ✨ ปรับ Dropdown ให้เล็กลง คลีนขึ้น มินิมอล และโชว์ช่างทุกคน ✨
         function openTechReviewsModal(deptName, month, year) {
             document.getElementById('techReviewsModalDept').innerText = deptName;
             
             let data = getFilteredRepairsByMonthYear(month, year);
             
-            currentDeptReviewsData = data.filter(r => {
-                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+            // หาช่างทั้งหมดในฝ่ายงานนั้นมาแสดง (ทุกคน)
+            let allTechsInDept = Object.keys(techDeptMap).filter(tName => {
                 let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
                 if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
                     dName = 'ฝ่ายงาน' + dName;
                 }
-                
-                let rRating = parseFloat(r.rating) || 0;
-                let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
-                
-                return dName === deptName && (rRating > 0 || hasComment);
+                return dName === deptName;
             });
 
-            let techMap = {};
+            currentDeptReviewsData = data.filter(r => {
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                return allTechsInDept.includes(tName);
+            });
+
+            let techStats = {};
+            allTechsInDept.forEach(tName => { techStats[tName] = { sum: 0, count: 0 }; });
+
             currentDeptReviewsData.forEach(r => {
                 let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
-                if (!techMap[tName]) techMap[tName] = { sum: 0, count: 0 };
-                
-                let rating = parseFloat(r.rating) || 0;
-                if(rating > 0) {
-                    techMap[tName].sum += rating;
-                    techMap[tName].count++;
+                if(techStats[tName]) {
+                    let rating = parseFloat(r.rating) || 0;
+                    if(rating > 0) { 
+                        techStats[tName].sum += rating; 
+                        techStats[tName].count++; 
+                    }
                 }
             });
 
-            let techArr = Object.keys(techMap).map(k => {
-                let tAvg = techMap[k].count > 0 ? (techMap[k].sum / techMap[k].count).toFixed(1) : 0;
-                return { name: k, avg: tAvg, count: techMap[k].count };
+            let techArr = Object.keys(techStats).map(k => {
+                let tAvg = techStats[k].count > 0 ? (techStats[k].sum / techStats[k].count).toFixed(1) : 0;
+                return { name: k, avg: parseFloat(tAvg), count: techStats[k].count };
             });
 
+            // เรียงคนมีคะแนนขึ้นก่อน
             techArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
 
             const selector = document.getElementById('modalTechSelector');
             selector.innerHTML = '';
             
+            // ปรับ CSS Dropdown ให้มินิมอล เล็กลง คลีนๆ
+            selector.className = "w-max min-w-[200px] max-w-[250px] bg-slate-50 border border-slate-200 text-[12px] text-slate-600 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-medium cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
+            selector.style.backgroundImage = "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')";
+            selector.style.backgroundRepeat = "no-repeat";
+            selector.style.backgroundPosition = "right 0.5rem top 50%";
+            selector.style.backgroundSize = "0.55rem auto";
+            
             if(techArr.length === 0) {
-                selector.innerHTML = '<option value="">ไม่มีข้อมูลช่าง</option>';
                 selector.style.display = 'none';
                 document.getElementById('techReviewsModalTitle').innerText = 'รีวิวฝ่ายงาน';
-                document.getElementById('techReviewsModalPos').innerText = '';
-                currentTechReviewsData = [];
                 document.getElementById('techReviewsModalCount').innerText = '0 รีวิว';
+                currentTechReviewsData = [];
                 renderTechReviewsList();
             } else {
                 selector.style.display = 'block';
                 techArr.forEach(t => {
                     let opt = document.createElement('option');
                     opt.value = t.name;
-                    // ✨ แก้ไขรูปแบบ Text ใน Dropdown Modal ตามที่คุณต้องการ ✨
-                    opt.text = `${t.name} ⭐ ${t.avg} (${t.count} รีวิว)`;
+                    // ถ้ามีคะแนนใช้ดาวทึบ ⭐ ถ้าไม่มีใช้ดาวโปร่ง ☆
+                    if (t.avg > 0) {
+                        opt.text = `⭐ ${t.name} - ${t.avg} (${t.count} รีวิว)`;
+                    } else {
+                        opt.text = `☆ ${t.name} - ยังไม่มีคะแนน`;
+                    }
                     selector.appendChild(opt);
                 });
                 
-                let topTech = techArr[0].name;
-                changeModalTech(topTech);
+                changeModalTech(techArr[0].name);
             }
             
             toggleModal('techReviewsModal');
         }
 
+        // ✨ ปรับดาวดวงใหญ่ให้ไล่สีเหลือง-เทา ตามเปอร์เซ็นต์คะแนน ✨
         function changeModalTech(techName) {
             document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + techName;
             
@@ -2943,10 +2956,35 @@ $dept_icons = [
 
             currentTechReviewsData = currentDeptReviewsData.filter(r => {
                 let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
-                return tName === techName;
+                let rRating = parseFloat(r.rating) || 0;
+                let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
+                return tName === techName && (rRating > 0 || hasComment);
             });
 
             document.getElementById('techReviewsModalCount').innerText = currentTechReviewsData.length + ' รีวิว';
+            
+            // คำนวณคะแนนดาวดวงใหญ่
+            let sum = 0, count = 0;
+            currentTechReviewsData.forEach(r => {
+                let rating = parseFloat(r.rating) || 0;
+                if(rating > 0) { sum += rating; count++; }
+            });
+            let avg = count > 0 ? sum / count : 0;
+            
+            const bigStarIcon = document.getElementById('techReviewsModalTitle').parentNode.parentNode.querySelector('.fa-star');
+            if (bigStarIcon) {
+                if (avg > 0) {
+                    let percent = (avg / 5.0) * 100;
+                    bigStarIcon.style.background = `linear-gradient(90deg, #f59e0b ${percent}%, #e2e8f0 ${percent}%)`;
+                    bigStarIcon.style.webkitBackgroundClip = 'text';
+                    bigStarIcon.style.webkitTextFillColor = 'transparent';
+                } else {
+                    bigStarIcon.style.background = 'none';
+                    bigStarIcon.style.webkitBackgroundClip = 'border-box';
+                    bigStarIcon.style.webkitTextFillColor = 'initial';
+                    bigStarIcon.style.color = '#cbd5e1'; // สีเทาโปร่ง
+                }
+            }
             
             setReviewFilter('all'); 
         }
