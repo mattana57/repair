@@ -2641,7 +2641,7 @@ $dept_icons = [
             });
         }
 
-       // ✨ ฟังก์ชันกราฟเรตติ้ง (แยกสีเฉพาะบรรทัดชื่อฝ่ายงาน) ✨
+      // ✨ ฟังก์ชันกราฟเรตติ้ง (ใช้ Plugin บังคับแยกสีเฉพาะชื่อฝ่ายงานให้เป็นสีน้ำเงิน) ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2709,6 +2709,46 @@ $dept_icons = [
             
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
+                // ✨ เรียกใช้ Plugin วาดข้อความแยกสี ✨
+                plugins: [{
+                    id: 'custom_y_axis_colors',
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const yAxis = chart.scales.y;
+                        ctx.save();
+                        ctx.textAlign = 'right';
+                        ctx.textBaseline = 'middle';
+                        
+                        yAxis.ticks.forEach((tick, index) => {
+                            const y = yAxis.getPixelForTick(index);
+                            const labelArray = chart.data.labels[index];
+                            if (!labelArray) return;
+                            
+                            if (Array.isArray(labelArray) && labelArray.length === 3) {
+                                // บรรทัดที่ 1: ดาว (สีเทาอ่อนแบบเดิม)
+                                ctx.font = 'bold 12px "Sarabun", sans-serif';
+                                ctx.fillStyle = '#64748b';
+                                ctx.fillText(labelArray[0], yAxis.right - 10, y - 18);
+                                
+                                // บรรทัดที่ 2: ชื่อช่าง (สีเทาเข้มแบบเดิม)
+                                ctx.font = 'bold 13px "Sarabun", sans-serif';
+                                ctx.fillStyle = '#475569';
+                                ctx.fillText(labelArray[1], yAxis.right - 10, y);
+                                
+                                // บรรทัดที่ 3: ชื่อฝ่ายงาน (✨ สีน้ำเงินเด่น และหนาพิเศษ ตามสั่ง ✨)
+                                ctx.font = '800 14px "Sarabun", sans-serif';
+                                ctx.fillStyle = '#4f46e5';
+                                ctx.fillText(labelArray[2], yAxis.right - 10, y + 18);
+                            } else {
+                                ctx.font = 'bold 13px "Sarabun", sans-serif';
+                                ctx.fillStyle = '#475569';
+                                let text = Array.isArray(labelArray) ? labelArray.join(' ') : labelArray;
+                                ctx.fillText(text, yAxis.right - 10, y);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }],
                 data: {
                     labels: deptArr.length ? deptArr.map(d => ['⭐ ' + d.topTechAvg, d.topTech, d.name]) : [['ไม่มีข้อมูล']],
                     datasets: [
@@ -2789,28 +2829,9 @@ $dept_icons = [
                         }, 
                         y: { 
                             ticks: { 
-                                // ✨ แยกรูปแบบและสีของฟอนต์ในแต่ละบรรทัด ✨
-                                font: function(context) {
-                                    let label = context.tick && context.tick.label;
-                                    if (Array.isArray(label) && label.length === 3) {
-                                        return [
-                                            { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' },      // รูปดาว
-                                            { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' },     // ชื่อช่าง
-                                            { family: "'Sarabun', sans-serif", size: 14, weight: 'extrabold' } // ชื่อฝ่ายงาน (หนาพิเศษ)
-                                        ];
-                                    }
-                                    return { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' };
-                                },
-                                color: function(context) {
-                                    let label = context.tick && context.tick.label;
-                                    if (Array.isArray(label) && label.length === 3) {
-                                        return ['#64748b', '#475569', '#4f46e5']; 
-                                        // บรรทัดที่ 1 (ดาว): สีเทากลาง (#64748b)
-                                        // บรรทัดที่ 2 (ช่าง): สีเทาเข้มเดิม (#475569)
-                                        // บรรทัดที่ 3 (ฝ่าย): สีน้ำเงินเด่นๆ (#4f46e5)
-                                    }
-                                    return '#475569';
-                                }
+                                // ปรับข้อความเดิมให้โปร่งใสเพื่อซ่อนไว้ แล้วปล่อยให้ Plugin ของเราวาดทับแทน
+                                color: 'transparent', 
+                                font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' } 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
@@ -2819,6 +2840,7 @@ $dept_icons = [
                 }
             });
         }
+        
         function setReviewFilter(val) {
             currentReviewFilter = val;
             
