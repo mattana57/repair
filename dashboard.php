@@ -2641,7 +2641,7 @@ $dept_icons = [
             });
         }
 
-        // ✨ ฟังก์ชันกราฟเรตติ้ง (ปรับปรุง UI ป้ายกำกับและ Tooltip ตามสั่ง) ✨
+       // ✨ ฟังก์ชันกราฟเรตติ้ง (แยกสีเฉพาะบรรทัดชื่อฝ่ายงาน) ✨
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
@@ -2774,7 +2774,6 @@ $dept_icons = [
                                 label: function(context) {
                                     if (!deptArr.length) return ' ไม่มีข้อมูล';
                                     let dept = deptArr[context.dataIndex];
-                                    // ✨ ลบไอคอนถ้วยรางวัล และปรับคำตามที่สั่งเป๊ะๆ ✨
                                     return [' ช่าง ' + dept.topTech + ' (⭐ ' + dept.topTechAvg + ')', ' จำนวน: ' + dept.count + ' รีวิว'];
                                 }
                             }
@@ -2790,9 +2789,28 @@ $dept_icons = [
                         }, 
                         y: { 
                             ticks: { 
-                                // ✨ ปรับแต่งให้ Label ฝ่ายงานเด่นและเตะตาขึ้น ✨
-                                font: { family: "'Sarabun', sans-serif", size: 14, weight: 'extrabold' }, 
-                                color: '#4f46e5' 
+                                // ✨ แยกรูปแบบและสีของฟอนต์ในแต่ละบรรทัด ✨
+                                font: function(context) {
+                                    let label = context.tick && context.tick.label;
+                                    if (Array.isArray(label) && label.length === 3) {
+                                        return [
+                                            { family: "'Sarabun', sans-serif", size: 12, weight: 'bold' },      // รูปดาว
+                                            { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' },     // ชื่อช่าง
+                                            { family: "'Sarabun', sans-serif", size: 14, weight: 'extrabold' } // ชื่อฝ่ายงาน (หนาพิเศษ)
+                                        ];
+                                    }
+                                    return { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' };
+                                },
+                                color: function(context) {
+                                    let label = context.tick && context.tick.label;
+                                    if (Array.isArray(label) && label.length === 3) {
+                                        return ['#64748b', '#475569', '#4f46e5']; 
+                                        // บรรทัดที่ 1 (ดาว): สีเทากลาง (#64748b)
+                                        // บรรทัดที่ 2 (ช่าง): สีเทาเข้มเดิม (#475569)
+                                        // บรรทัดที่ 3 (ฝ่าย): สีน้ำเงินเด่นๆ (#4f46e5)
+                                    }
+                                    return '#475569';
+                                }
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
@@ -2801,7 +2819,6 @@ $dept_icons = [
                 }
             });
         }
-
         function setReviewFilter(val) {
             currentReviewFilter = val;
             
