@@ -1875,12 +1875,24 @@ $dept_icons = [
             </div>
            <div class="p-6 overflow-y-auto flex-1 bg-white">
                 <div class="w-full overflow-x-auto rounded-2xl border border-slate-100 shadow-sm max-h-[65vh] overflow-y-auto custom-scrollbar relative">
-                    <table class="w-full text-left whitespace-nowrap min-w-[900px]">
-                        <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-[11px] uppercase tracking-widest font-extrabold sticky top-0 z-20 shadow-sm" id="historyTableHead">
-                            <!-- หัวตารางจะถูกสร้างโดย JavaScript -->
+                    <table class="w-full text-left whitespace-nowrap min-w-[1100px]">
+                        <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                            <tr>
+                                <th class="px-5 py-4">Date / Time</th>
+                                <th class="px-5 py-4">Ticket No.</th>
+                                <th class="px-5 py-4">Reporter</th>
+                                <th class="px-5 py-4">Equipment</th>
+                                <th class="px-5 py-4">Department</th>
+                                <th class="px-5 py-4">Technician</th>
+                                <!-- ✨ สลับคอลัมน์เหมือนหน้าตารางหลัก ✨ -->
+                                <th class="px-5 py-4">Received At</th>
+                                <th class="px-5 py-4">Root Cause</th>
+                                <th class="px-5 py-4 text-center">Status</th>
+                                <th class="px-5 py-4">Completed At</th>
+                                <th class="px-5 py-4 text-right">Action</th>
+                            </tr>
                         </thead>
                         <tbody class="text-sm divide-y divide-slate-50" id="historyTableBody">
-                            <!-- ข้อมูลจะถูกสร้างโดย JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -3216,91 +3228,99 @@ $dept_icons = [
         }
 
         function viewHistory(fullName, type) {
-            const thead = document.getElementById('historyTableHead');
             const tbody = document.getElementById('historyTableBody'); 
-            thead.innerHTML = '';
             tbody.innerHTML = '';
 
             const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
 
-            // 🌟 1. สร้างหัวตารางแยกตามประเภท (ช่าง ให้แสดงเหมือนรูปที่ 2)
-            if (type === 'technician') {
-                thead.innerHTML = `<tr>
-                    <th class="px-5 py-4">TECHNICIAN</th>
-                    <th class="px-5 py-4">RECEIVED AT</th>
-                    <th class="px-5 py-4">ROOT CAUSE</th>
-                    <th class="px-5 py-4 text-center">STATUS</th>
-                    <th class="px-5 py-4">COMPLETED AT</th>
-                    <th class="px-5 py-4 text-center">ACTION</th>
-                </tr>`;
-            } else {
-                thead.innerHTML = `<tr>
-                    <th class="px-5 py-4">Date / Time</th>
-                    <th class="px-5 py-4">Ticket No.</th>
-                    <th class="px-5 py-4">Reporter</th>
-                    <th class="px-5 py-4">Equipment</th>
-                    <th class="px-5 py-4 text-center">Status</th>
-                    <th class="px-5 py-4 text-center">Action</th>
-                </tr>`;
-            }
-
             if(userRepairs.length === 0) {
                 let emptyMsg = type === 'reporter' ? 'No repair history found.' : 'No tasks assigned yet.';
-                tbody.innerHTML = `<tr><td colspan="6" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
             } else {
                 userRepairs.forEach(r => {
                     let statusClass = 'badge-pending';
                     if(r.status === 'กำลังดำเนินการ') statusClass = 'badge-progress';
                     else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'badge-success';
+
                     let statusText = formatValJS(r.status);
 
-                    let createdDate = r.created_at ? r.created_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    let createdTime = r.created_at && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
-
-                    let completedDate = (r.completed_at && r.completed_at != '0000-00-00 00:00:00') ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    let completedTime = (r.completed_at && r.completed_at != '0000-00-00 00:00:00') ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
-
-                    // 🌟 2. ไอคอน Action แบบใหม่ (สไตล์รูปที่ 3) และแนบพารามิเตอร์บอกว่ามาจากหน้าไหน
-                    let sourceTab = type === 'technician' ? 'team_cards' : 'users';
-                    let actionBtns = `
-                        <div class='flex items-center justify-center space-x-2'>
-                            <a href='update_repair.php?id=${r.id}&source=${sourceTab}' class='w-9 h-9 rounded-[10px] bg-white text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition-all flex items-center justify-center border border-slate-200 shadow-sm' title='Edit'><i class='fas fa-edit'></i></a>
-                            <a href='view_repair.php?id=${r.id}&source=${sourceTab}' class='w-9 h-9 rounded-[10px] bg-white text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all flex items-center justify-center border border-slate-200 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
-                        </div>`;
-
-                    // 🌟 3. สร้างแถวแยกตามประเภท
-                    if (type === 'technician') {
-                        let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-slate-400 italic font-normal'>- ไม่ระบุ -</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
-                        let engName = (techInfoMap[fullName] && techInfoMap[fullName].eng) ? techInfoMap[fullName].eng : '';
-                        let techNameHTML = `<div class='text-indigo-600 font-bold'>${fullName}</div>${engName ? `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${engName}</div>` : ''}`;
-
-                        tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                            <td class="px-5 py-4 align-top">${techNameHTML}</td>
-                            <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
-                                <div class="font-medium text-slate-700">${createdDate}</div>
-                                ${createdTime}
-                            </td>
-                            <td class="px-5 py-4 align-top whitespace-normal min-w-[200px] text-[13px]">${rootCause}</td>
-                            <td class="px-5 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
-                            <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
-                                <div class='font-medium text-emerald-700'>${completedDate}</div>
-                                ${completedTime}
-                            </td>
-                            <td class="px-5 py-4 align-middle text-center">${actionBtns}</td>
-                        </tr>`;
+                    let createdDate = '-';
+                    let createdTime = '';
+                    if(r.created_at) {
+                        let parts = r.created_at.split(' ');
+                        createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
+                        createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
                     } else {
-                        tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                            <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
-                                <div class="font-medium text-slate-700">${createdDate}</div>
-                                ${createdTime}
-                            </td>
-                            <td class="px-5 py-4 align-top font-mono font-semibold text-slate-600">${formatValJS(r.ticket_no)}</td>
-                            <td class="px-5 py-4 align-top"><div class="text-slate-800 font-bold">${formatValJS(r.reporter_name)}</div></td>
-                            <td class="px-5 py-4 align-top"><div class="text-slate-800 font-bold">${formatValJS(r.equipment_type)}</div></td>
-                            <td class="px-5 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
-                            <td class="px-5 py-4 align-middle text-center">${actionBtns}</td>
-                        </tr>`;
+                        createdDate = "<span class='text-rose-500 font-bold'>-</span>";
                     }
+                    
+                    let techNameHtml = "<span class='text-rose-500 font-bold'>-</span>";
+                    if (r.technician_name && r.technician_name !== '-') {
+                        let info = techInfoMap[r.technician_name] || { th: r.technician_name, eng: '', pos: '' };
+                        techNameHtml = `<div class='text-indigo-600 font-bold'>${info.th}</div>`;
+                        if(info.eng) techNameHtml += `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${info.eng}</div>`;
+                    }
+                    let techName = techNameHtml;
+
+                    let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-rose-500 font-bold'>-</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
+
+                    let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
+                    let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
+                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
+
+                    let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
+                    let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
+                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
+                    
+                    let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
+                    let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
+                    if (r.technician_name && r.technician_name !== '-') {
+                        deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
+                        let info = techInfoMap[r.technician_name];
+                        if (info && info.pos) {
+                            deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
+                        }
+                    }
+                    
+                    let tNo = formatValJS(r.ticket_no);
+                    let rName = formatValJS(r.reporter_name);
+                    let rPhone = formatValJS(r.phone_number);
+                    let eqType = formatValJS(r.equipment_type);
+                    let pDesc = formatValJS(r.problem_desc);
+
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                            <div class="font-medium text-slate-700">${createdDate}</div>
+                            ${createdTime}
+                        </td>
+                        <td class="px-5 py-4 align-top font-mono font-semibold text-slate-600">${tNo}</td>
+                        <td class="px-5 py-4 align-top">
+                            <div class="text-slate-800 font-bold">${rName}</div>
+                            <div class="text-slate-500 text-[11px] font-medium mt-0.5">${rPhone}</div>
+                        </td>
+                        <td class="px-5 py-4 align-top">
+                            <div class="text-slate-800 font-bold">${eqType}</div>
+                            <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${pDesc.replace(/<[^>]*>?/gm, '')}">${pDesc}</div>
+                        </td>
+                        <td class="px-5 py-4 align-top">${deptEng}</td>
+                        <td class="px-5 py-4 align-top">${techName}</td>
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                            <div class='font-medium text-slate-700'>${received_date}</div>
+                            ${received_time}
+                        </td>
+                        <td class="px-5 py-4 align-top">${rootCause}</td>
+                        <td class="px-5 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                            <div class='font-medium text-emerald-700'>${completed_date}</div>
+                            ${completed_time}
+                        </td>
+                        <td class="px-5 py-4 align-middle text-right">
+                            <div class='flex items-center justify-end space-x-2'>
+                                <a href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                <a href='view_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
+                            </div>
+                        </td>
+                    </tr>`;
                 });
             }
             document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + fullName;
