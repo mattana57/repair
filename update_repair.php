@@ -1,5 +1,12 @@
 <?php
 session_start();
+
+// ✨ บันทึก URL ล่าสุดของ Dashboard เพื่อให้ปุ่มกลับไปหน้าเดิมเสมอ (ไม่หลุดแท็บ) ✨
+if(isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'dashboard.php') !== false) {
+    $_SESSION['last_dashboard_url'] = $_SERVER['HTTP_REFERER'];
+}
+$back_url = isset($_SESSION['last_dashboard_url']) ? $_SESSION['last_dashboard_url'] : 'dashboard.php?tab=repairs';
+
 // ตั้งค่าโซนเวลาเป็นประเทศไทย
 date_default_timezone_set('Asia/Bangkok');
 include 'db_connect.php';
@@ -49,13 +56,43 @@ if (isset($_GET['id'])) {
     $repair = $result->fetch_assoc();
 }
 
-$techs = [];
-$tech_res = $conn->query("SELECT DISTINCT full_name FROM technicians WHERE full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
+// ✨ ระบบจัดกลุ่มช่างตามฝ่าย (เพิ่มใหม่ตามโจทย์) ✨
+$techs_by_dept = [];
+$tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != ''");
 if($tech_res && $tech_res->num_rows > 0){
     while($t = $tech_res->fetch_assoc()) {
-        $techs[] = $t['full_name'];
+        $dept = !empty($t['department']) ? $t['department'] : 'ฝ่ายงานทั่วไป';
+        if (!isset($techs_by_dept[$dept])) {
+            $techs_by_dept[$dept] = [];
+        }
+        if (!in_array($t['full_name'], $techs_by_dept[$dept])) {
+            $techs_by_dept[$dept][] = $t['full_name'];
+        }
     }
 }
+
+$custom_dept_order = [
+    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
+    'ฝ่ายงานโสตทัศนูปกรณ์',
+    'ฝ่ายงานยานยนต์',
+    'แม่บ้าน',
+    'ฝ่ายงานทั่วไป',
+    'อื่นๆ'
+];
+
+uksort($techs_by_dept, function($a, $b) use ($custom_dept_order) {
+    $pos_a = array_search($a, $custom_dept_order);
+    $pos_b = array_search($b, $custom_dept_order);
+    $pos_a = ($pos_a === false) ? 999 : $pos_a;
+    $pos_b = ($pos_b === false) ? 999 : $pos_b;
+    if ($pos_a == $pos_b) return strcmp($a, $b);
+    return $pos_a - $pos_b;
+});
+
+foreach ($techs_by_dept as &$tList) {
+    sort($tList);
+}
+unset($tList);
 
 $assets_list = [];
 $assets_res = $conn->query("SELECT asset_code, asset_name FROM assets ORDER BY asset_code ASC");
@@ -312,7 +349,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
             <?php if($is_admin): ?>
-            <a href="dashboard.php?tab=repairs" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
+            <!-- ✨ แก้ไขปุ่มกลับ ให้ดึงค่า URL ที่จำไว้มาใช้ ✨ -->
+            <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
             <?php endif; ?>
@@ -373,7 +411,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
 
-                <!-- ✨ เพิ่มส่วนแสดงรีวิวตรงนี้ตามกรอบแดง ✨ -->
                 <div class="modern-card overflow-hidden border-t-4 border-amber-400">
                     <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center">
                         <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center mr-3">
@@ -423,7 +460,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <p class="text-sm text-slate-600 font-medium pl-[52px] leading-relaxed mt-1"><?php echo nl2br(htmlspecialchars(trim($repair['review_comment']))); ?></p>
                             <?php endif; ?>
 
-                            <!-- 🟢 เพิ่มป้ายชื่อช่างที่ได้รับการประเมิน -->
                             <div class="pl-[52px] mt-2.5">
                                 <div class="text-[11px] text-indigo-600 font-bold inline-block bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
                                     <i class="fas fa-tools mr-1.5 opacity-70"></i>ให้คะแนนช่าง: <?php echo !empty($repair['technician_name']) && $repair['technician_name'] !== '-' ? htmlspecialchars($repair['technician_name']) : 'ไม่ระบุช่าง'; ?>
@@ -479,7 +515,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </button>
                                 </div>
                                 
-                                <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
+                                <!-- ✨ ระบบจัดกลุ่มช่างตามฝ่าย (อัปเดตตามโจทย์) ✨ -->
+                                <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
                                     <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
                                         <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
                                             <i class="fas fa-user-slash text-xs"></i>
@@ -487,21 +524,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         -- ยังไม่ระบุผู้รับผิดชอบ --
                                     </div>
                                     
-                                    <div class="px-6 pt-4 pb-2 text-[11px] font-extrabold text-slate-400 tracking-wide">รายชื่อช่างในระบบ</div>
-                                    
-                                    <?php foreach($techs as $t): 
-                                        list($th_name, $en_name) = splitThaiEngName($t, '');
-                                        $searchStr = preg_replace('/\s+/', '', strtolower($th_name));
+                                    <?php foreach($techs_by_dept as $dept => $techList): 
+                                        $count = count($techList);
                                     ?>
-                                        <div class="tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-sky-50 hover:text-sky-600 cursor-pointer flex justify-between items-center transition-all group" data-value="<?php echo htmlspecialchars($t); ?>" data-display="<?php echo htmlspecialchars($th_name); ?>" data-search="<?php echo htmlspecialchars($searchStr); ?>" onmousedown="selectTech('<?php echo htmlspecialchars($t, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($th_name, ENT_QUOTES); ?>')">
-                                            <div class="flex items-center pointer-events-none">
-                                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-sky-100 group-hover:text-sky-500 transition-colors">
-                                                    <i class="fas fa-user text-xs"></i>
-                                                </div>
-                                                <span><?php echo htmlspecialchars($th_name); ?></span>
-                                            </div>
-                                            <i class="fas fa-check text-sky-500 opacity-0 group-hover:opacity-100 transition-opacity check-icon pointer-events-none"></i>
+                                        <div class="tech-dept-header flex justify-between items-center px-4 py-2.5 mt-2 mb-1 bg-indigo-50/60 border-y border-indigo-100" data-dept="<?php echo htmlspecialchars($dept); ?>">
+                                            <span class="text-[13px] font-extrabold text-indigo-700 tracking-wide"><?php echo htmlspecialchars($dept); ?></span>
+                                            <span class="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 shadow-sm px-2 py-0.5 rounded-md flex items-center">
+                                                <i class="fas fa-users mr-1 opacity-70 text-[9px]"></i> <?php echo $count; ?> คน
+                                            </span>
                                         </div>
+                                        
+                                        <?php foreach($techList as $t): 
+                                            list($th_name, $en_name) = splitThaiEngName($t, '');
+                                            $searchStr = preg_replace('/\s+/', '', strtolower($th_name . $dept));
+                                        ?>
+                                            <div class="tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer flex justify-between items-center transition-all group" data-value="<?php echo htmlspecialchars($t); ?>" data-display="<?php echo htmlspecialchars($th_name); ?>" data-search="<?php echo htmlspecialchars($searchStr); ?>" data-dept="<?php echo htmlspecialchars($dept); ?>" onmousedown="selectTech('<?php echo htmlspecialchars($t, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($th_name, ENT_QUOTES); ?>')">
+                                                <div class="flex items-center pointer-events-none">
+                                                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors">
+                                                        <i class="fas fa-user text-xs"></i>
+                                                    </div>
+                                                    <span><?php echo htmlspecialchars($th_name); ?></span>
+                                                </div>
+                                                <i class="fas fa-check text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity check-icon pointer-events-none"></i>
+                                            </div>
+                                        <?php endforeach; ?>
                                     <?php endforeach; ?>
                                 </div>
                                 
@@ -556,8 +602,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
                                         <select name="new_asset_category" id="new_asset_category" onchange="toggleCustomInput(this, 'new_asset_category_custom')" class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
-                                            <?php foreach($asset_categories as $cat): ?>
-                                                <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
+                                            <?php 
+                                            // สร้างตัวแปรดึงหมวดหมู่ (เหมือนใน update_repair)
+                                            $dash_categories = ['IT Support', 'ไฟฟ้า/แอร์', 'อาคารสถานที่'];
+                                            $d_cat_res = $conn->query("SELECT DISTINCT category FROM assets WHERE category IS NOT NULL AND category != ''");
+                                            if($d_cat_res && $d_cat_res->num_rows > 0){
+                                                while($dc = $d_cat_res->fetch_assoc()){
+                                                    if(!in_array($dc['category'], $dash_categories) && $dc['category'] !== 'อื่นๆ') {
+                                                        $dash_categories[] = $dc['category'];
+                                                    }
+                                                }
+                                            }
+                                            ?>
+                                            <?php foreach($dash_categories as $dcat): ?>
+                                                <option value="<?php echo htmlspecialchars($dcat); ?>"><?php echo htmlspecialchars($dcat); ?></option>
                                             <?php endforeach; ?>
                                             <option value="อื่นๆ">อื่นๆ (พิมพ์ระบุเอง)</option>
                                         </select>
@@ -617,7 +675,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
                 <h2 class="text-xl font-bold text-slate-700 mb-2">ไม่พบข้อมูลใบงาน</h2>
                 <?php if($is_admin): ?>
-                <a href="dashboard.php?tab=repairs" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block mt-4">กลับหน้ารายการ</a>
+                <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block mt-4">กลับหน้ารายการ</a>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
@@ -645,18 +703,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
                         <select name="modal_category" id="modal_category" onchange="toggleCustomInput(this, 'modal_category_custom')" required class="custom-select w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
-                            <?php 
-                            // สร้างตัวแปรดึงหมวดหมู่ (เหมือนใน update_repair)
-                            $dash_categories = ['IT Support', 'ไฟฟ้า/แอร์', 'อาคารสถานที่'];
-                            $d_cat_res = $conn->query("SELECT DISTINCT category FROM assets WHERE category IS NOT NULL AND category != ''");
-                            if($d_cat_res && $d_cat_res->num_rows > 0){
-                                while($dc = $d_cat_res->fetch_assoc()){
-                                    if(!in_array($dc['category'], $dash_categories) && $dc['category'] !== 'อื่นๆ') {
-                                        $dash_categories[] = $dc['category'];
-                                    }
-                                }
-                            }
-                            ?>
                             <?php foreach($dash_categories as $dcat): ?>
                                 <option value="<?php echo htmlspecialchars($dcat); ?>"><?php echo htmlspecialchars($dcat); ?></option>
                             <?php endforeach; ?>
@@ -664,9 +710,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </select>
                         <input type="text" name="modal_category_custom" id="modal_category_custom" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="ระบุหมวดหมู่ใหม่">
                     </div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label><select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"><option value="ใช้งานปกติ">ใช้งานปกติ</option><option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option><option value="แทงจำหน่าย">แทงจำหน่าย</option></select></div>
                 </div>
-                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Asset</button></div>
+                <div class="mt-8 flex justify-end gap-3">
+                    <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Asset</button>
+                </div>
             </form>
         </div>
     </div>
@@ -703,17 +751,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             updateTechCheckmarks();
         }
 
+        // ✨ อัปเดตระบบค้นหาให้ซ่อน/โชว์หัวข้อฝ่ายงานได้ ✨
         function filterTechDropdown() {
             toggleTechDropdown(null, true);
             const searchVal = document.getElementById('techSearchInput').value.toLowerCase().replace(/\s+/g, '');
+            
+            let deptVisibility = {};
             const items = document.querySelectorAll('.tech-dropdown-item');
+            
             items.forEach(item => {
+                const val = item.getAttribute('data-value');
+                if (val === '') {
+                    const displayData = '--ยังไม่ระบุผู้รับผิดชอบ--';
+                    if(displayData.includes(searchVal) || searchVal === '') {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                    return;
+                }
+                
                 const searchData = item.getAttribute('data-search') || '';
                 const displayData = (item.getAttribute('data-display') || '').toLowerCase().replace(/\s+/g, '');
-                if(searchData.includes(searchVal) || displayData.includes(searchVal) || item.getAttribute('data-value') === '') {
+                const dept = item.getAttribute('data-dept');
+                
+                if (!deptVisibility[dept]) deptVisibility[dept] = 0;
+                
+                if(searchData.includes(searchVal) || displayData.includes(searchVal)) {
                     item.style.display = '';
+                    deptVisibility[dept]++;
                 } else {
                     item.style.display = 'none';
+                }
+            });
+
+            const deptHeaders = document.querySelectorAll('.tech-dept-header');
+            deptHeaders.forEach(header => {
+                const dept = header.getAttribute('data-dept');
+                if (deptVisibility[dept] && deptVisibility[dept] > 0) {
+                    header.style.display = '';
+                } else {
+                    header.style.display = 'none';
                 }
             });
         }
@@ -846,7 +924,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }).then((result) => {
             if (result.isConfirmed) {
                 <?php if($is_admin): ?>
-                window.location.href = 'dashboard.php?tab=repairs';
+                // ✨ เวลากด Save เสร็จ ให้วิ่งกลับไปหน้าที่เคยจากมาเป๊ะๆ ✨
+                window.location.href = '<?php echo $back_url; ?>';
                 <?php else: ?>
                 window.close(); 
                 <?php endif; ?>
