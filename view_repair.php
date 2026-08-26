@@ -1,10 +1,17 @@
 <?php
 include 'db_connect.php';
 
-// ✨ จับ URL ก่อนหน้าให้อัตโนมัติ เพื่อให้ปุ่มกลับไปหน้าเดิมเสมอ (ไม่หลุดแท็บ) ✨
+// ✨ ระบบคำนวณ URL สำหรับปุ่มกลับหน้ารายการ (แท็บเดิม) ✨
 $back_url = 'dashboard.php?tab=repairs';
-if(isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'dashboard.php') !== false) {
-    $back_url = $_SERVER['HTTP_REFERER'];
+if (isset($_GET['source'])) {
+    $source = $_GET['source'];
+    if ($source === 'tech_history' && !empty($_GET['tech'])) {
+        $back_url = 'dashboard.php?tab=technicians&open_history=' . urlencode($_GET['tech']);
+    } elseif ($source === 'reporter_history' && !empty($_GET['reporter'])) {
+        $back_url = 'dashboard.php?tab=users&open_reporter=' . urlencode($_GET['reporter']);
+    } elseif ($source === 'overview') {
+        $back_url = 'dashboard.php?tab=dash';
+    }
 }
 
 // ฟังก์ชันช่วยเซ็นเซอร์เบอร์โทรศัพท์
@@ -91,7 +98,7 @@ if (isset($_GET['id'])) {
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
             <div class="flex gap-3">
-                <!-- ✨ แก้ไขปุ่มปิดหน้าต่าง ให้ดึงค่า URL ที่จำไว้มาใช้ ✨ -->
+                <!-- ✨ แก้ไขปุ่มปิดหน้าต่าง ให้ดึงค่า URL ย้อนกลับ ✨ -->
                 <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center text-sm">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
