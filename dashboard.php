@@ -2864,6 +2864,34 @@ $dept_icons = [
             });
         }
 
+        function setReviewFilter(val) {
+            currentReviewFilter = val;
+            
+            const btnAll = document.getElementById('btnFilterAllReviews');
+            const btnZero = document.getElementById('btnFilterZeroReviews');
+            
+            btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            
+            if(val === 'all') {
+                btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            } else if (val === 0) {
+                if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            }
+            
+            const stars = document.querySelectorAll('#starFilterContainer i');
+            stars.forEach((star, index) => {
+                let starVal = index + 1;
+                if(val !== 'all' && val !== 0 && starVal <= val) {
+                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-lg drop-shadow-sm";
+                } else {
+                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200";
+                }
+            });
+            
+            renderTechReviewsList();
+        }
+
         // ✨ 2. ฟังก์ชัน Dropdown ใน Modal (เอาชื่อขึ้นก่อน + ไม่มีขีด) ✨
         function openTechReviewsModal(deptName, month, year) {
             document.getElementById('techReviewsModalDept').innerText = deptName;
@@ -2981,7 +3009,7 @@ $dept_icons = [
             
             setReviewFilter('all'); 
         }
-        
+
         function renderTechReviewsList() {
             const container = document.getElementById('techReviewsList');
             container.innerHTML = '';
