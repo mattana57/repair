@@ -1,6 +1,12 @@
 <?php
 include 'db_connect.php';
 
+// ✨ จับ URL ก่อนหน้าให้อัตโนมัติ เพื่อให้ปุ่มกลับไปหน้าเดิมเสมอ (ไม่หลุดแท็บ) ✨
+$back_url = 'dashboard.php?tab=repairs';
+if(isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'dashboard.php') !== false) {
+    $back_url = $_SERVER['HTTP_REFERER'];
+}
+
 // ฟังก์ชันช่วยเซ็นเซอร์เบอร์โทรศัพท์
 function formatCensoredPhone($phone) {
     $phone = trim((string)$phone);
@@ -85,7 +91,8 @@ if (isset($_GET['id'])) {
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
             <div class="flex gap-3">
-                <a href="dashboard.php?tab=repairs" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center text-sm">
+                <!-- ✨ แก้ไขปุ่มปิดหน้าต่าง ให้ดึงค่า URL ที่จำไว้มาใช้ ✨ -->
+                <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center text-sm">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
             </div>
