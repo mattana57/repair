@@ -1,19 +1,25 @@
 <?php
+session_start();
 include 'db_connect.php';
 
-// ✨ ระบบคำนวณ URL สำหรับปุ่มกลับ และส่งต่อพารามิเตอร์ให้หน้า Update ✨
-$back_url = 'dashboard.php?tab=repairs';
+// ✨ เช็คสิทธิ์ว่าเป็น Executive หรือไม่ เพื่อใช้ซ่อนปุ่มและเปลี่ยนหน้ากลับ ✨
+$is_executive = isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'executive';
+
+// ✨ ระบบคำนวณ URL สำหรับปุ่มกลับ ให้ตรงกับหน้าของแต่ละสิทธิ์ ✨
+if(isset($_SERVER['HTTP_REFERER']) && (strpos($_SERVER['HTTP_REFERER'], 'dashboard.php') !== false || strpos($_SERVER['HTTP_REFERER'], 'executive_dashboard.php') !== false)) {
+    $_SESSION['last_view_url'] = $_SERVER['HTTP_REFERER'];
+}
+$default_back = $is_executive ? 'executive_dashboard.php' : 'dashboard.php?tab=repairs';
+$back_url = isset($_SESSION['last_view_url']) ? $_SESSION['last_view_url'] : $default_back;
+
 $query_string = '';
 if (isset($_GET['source'])) {
     $source = $_GET['source'];
     if ($source === 'tech_history' && !empty($_GET['tech'])) {
-        $back_url = 'dashboard.php?tab=technicians&open_history=' . urlencode($_GET['tech']);
         $query_string = '&source=tech_history&tech=' . urlencode($_GET['tech']);
     } elseif ($source === 'reporter_history' && !empty($_GET['reporter'])) {
-        $back_url = 'dashboard.php?tab=users&open_reporter=' . urlencode($_GET['reporter']);
         $query_string = '&source=reporter_history&reporter=' . urlencode($_GET['reporter']);
     } elseif ($source === 'overview') {
-        $back_url = 'dashboard.php?tab=dash';
         $query_string = '&source=overview';
     }
 }
@@ -101,8 +107,8 @@ if (isset($_GET['id'])) {
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
             <div class="flex gap-3 w-full sm:w-auto">
-                <!-- ✨ เพิ่มปุ่มลิงก์ไปหน้าอัปเดตงานซ่อม ตรงนี้ครับ ✨ -->
-                <?php if($repair): ?>
+                <!-- ✨ ซ่อนปุ่ม "อัปเดตงานซ่อม" ถ้าเป็นฝั่งผู้บริหาร (Executive) ✨ -->
+                <?php if($repair && !$is_executive): ?>
                 <a href="update_repair.php?id=<?php echo $repair['id']; ?><?php echo $query_string; ?>" class="flex-1 sm:flex-none bg-white hover:bg-sky-50 text-sky-600 border border-sky-200 px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm inline-flex items-center justify-center text-sm">
                     <i class="fas fa-edit mr-2"></i> อัปเดตงานซ่อม
                 </a>
@@ -260,7 +266,6 @@ if (isset($_GET['id'])) {
                         </div>
                         <?php endif; ?>
 
-                        <!-- ✨ เพิ่มส่วนแสดงรีวิวตรงนี้ตามกรอบแดง ✨ -->
                         <div class="mt-6 border-t border-slate-100 pt-6">
                             <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center"><i class="fas fa-star text-amber-400 mr-2"></i> ผลการประเมินจากผู้แจ้ง</h3>
                             <?php 
@@ -305,7 +310,6 @@ if (isset($_GET['id'])) {
                                         <p class="text-sm text-slate-600 font-medium pl-[52px] leading-relaxed mt-1"><?php echo nl2br(htmlspecialchars(trim($repair['review_comment']))); ?></p>
                                     <?php endif; ?>
                                     
-                                    <!-- 🟢 เพิ่มป้ายชื่อช่างที่ได้รับการประเมิน -->
                                     <div class="pl-[52px] mt-2.5">
                                         <div class="text-[11px] text-indigo-600 font-bold inline-block bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
                                             <i class="fas fa-tools mr-1.5 opacity-70"></i>ให้คะแนนช่าง: <?php echo !empty($repair['technician_name']) && $repair['technician_name'] !== '-' ? htmlspecialchars($repair['technician_name']) : 'ไม่ระบุช่าง'; ?>
