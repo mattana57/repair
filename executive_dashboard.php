@@ -33,7 +33,7 @@ if (isset($_SESSION['user_id'])) {
         $current_user_name = !empty($u_data['full_name']) ? $u_data['full_name'] : $u_data['username'];
         
         if (strtolower($u_data['role']) === 'executive') {
-            $current_user_role = !empty($u_data['position']) ? $u_data['position'] : 'System Administrator';
+            $current_user_role = !empty($u_data['position']) ? $u_data['position'] : 'ผู้บริหารระบบ';
         } else {
             $current_user_role = !empty($u_data['position']) ? $u_data['position'] : $u_data['role'];
         }
