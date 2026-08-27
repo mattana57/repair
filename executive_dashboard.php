@@ -187,8 +187,8 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
         </div>
         
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
-            <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">สำหรับผู้บริหาร</p>
-            <button class="nav-btn active-btn"><i class="fas fa-chart-pie"></i> ภาพรวมและสถิติ</button>
+            <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">EXECUTIVE</p>
+            <button class="nav-btn active-btn"><i class="fas fa-chart-pie"></i> Overview</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
                 <!-- ✨ เอาปุ่ม "กลับหน้าเว็บหลัก" ออกแล้วตามคำขอ ✨ -->
@@ -205,7 +205,7 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h2 class="text-2xl font-bold text-white tracking-tight drop-shadow-sm">ภาพรวมเชิงกลยุทธ์</h2>
+                <h2 class="text-2xl font-bold text-white tracking-tight drop-shadow-sm">Dashboard Overview</h2>
             </div>
             
             <div class="flex items-center space-x-3 md:space-x-6">
