@@ -15,6 +15,49 @@ if (strtolower($_SESSION['role']) === 'technician') {
 
 include 'db_connect.php'; 
 
+// ฟังก์ชันแยกชื่อไทย-อังกฤษ อัตโนมัติ (สำหรับดึงข้อมูลช่าง)
+function splitThaiEngName($fullName, $engName) {
+    $th = trim((string)$fullName);
+    $en = trim((string)$engName);
+    if (empty($en) && !empty($th)) {
+        if (preg_match('/^(.*?)\s*\((.*?)\)$/', $th, $matches)) {
+            $th = trim($matches[1]);
+            $en = trim($matches[2]);
+        } elseif (preg_match('/^(.*?)\s+(Mr\.|Mrs\.|Miss|Ms\.)\s*(.*)$/i', $th, $matches)) {
+            $th = trim($matches[1]);
+            $en = trim($matches[2]) . ' ' . trim($matches[3]);
+        }
+    }
+    return array($th, $en);
+}
+
+// ฟังก์ชันกำหนดตำแหน่งงานอัตโนมัติ (สำหรับดึงข้อมูลช่าง)
+function getAutoPosition($th_name) {
+    $map = [
+        'สมพร วงษ์จำปา' => 'นักวิชาการคอมพิวเตอร์',
+        'ปริญญา จันทรภา' => 'นักวิชาการคอมพิวเตอร์',
+        'ทองสน พลมีศักดิ์' => 'นักวิชาการคอมพิวเตอร์',
+        'ธีรศักดิ์ พาโคกทม' => 'นักวิชาการคอมพิวเตอร์',
+        'จิตรณรงค์ นาใจคง' => 'นักวิชาการโสตทัศนศึกษา',
+        'ลำไพร ทองบ่อ' => 'นักวิชาการโสตทัศนศึกษา',
+        'รักชาติ แดงเทโพธิ์' => 'นักวิชาการโสตทัศนศึกษา',
+        'ปิยะสันต์ บุญพระ' => 'นักวิชาการโสตทัศนศึกษา',
+        'จตุพล ฤทธิสิงห์' => 'เจ้าหน้าที่บริหารงานทั่วไป',
+        'อาทิตย์ บรรเทา' => 'เจ้าหน้าที่บริหารงานทั่วไป',
+        'ธวัชชัย รัสสมบัติ' => 'เจ้าหน้าที่บริหารงานทั่วไป',
+        'ทรงภพ จันทร์ลอย' => 'เจ้าหน้าที่บริหารงานทั่วไป',
+        'รนภักดี ลิงลม' => 'พนักงานขับรถยนต์',
+        'กิตติภณ รัดถา' => 'พนักงานขับรถยนต์',
+        'ทิวา เนื่องทะบาล' => 'พนักงานขับรถยนต์',
+        'นิรุตติ์ กองเงิน' => 'พนักงานขับรถยนต์',
+        'อุทัย หาหอม' => 'พนักงานขับรถยนต์'
+    ];
+    foreach($map as $key => $val) {
+        if(mb_strpos($th_name, $key) !== false) return $val;
+    }
+    return '';
+}
+
 // ตรวจสอบข้อมูลการแจ้งซ่อมเพื่อนำมาคำนวณสถิติ
 $check_repairs = $conn->query("SHOW TABLES LIKE 'repairs'");
 
@@ -32,6 +75,11 @@ $location_data_json = "[]";
 
 $top_equipment = "-";
 $top_equipment_count = 0;
+
+$all_repairs_json = "[]";
+$tech_dept_map_json = "{}";
+$tech_info_map_json = "{}";
+$available_years = [];
 
 if($check_repairs->num_rows > 0) {
     // 1. คำนวณ KPIs ภาพรวม
@@ -108,6 +156,42 @@ if($check_repairs->num_rows > 0) {
     $monthly_labels_json = json_encode($labels);
     $monthly_data_json = json_encode($actual_data);
     $forecast_data_json = json_encode($forecast_data);
+
+    // ✨ 5. เตรียมข้อมูลสำหรับโชว์ Recent Reviews ✨
+    $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
+    $rep_res = $conn->query($select_query);
+    $reps = [];
+    if($rep_res) {
+        while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
+        $all_repairs_json = json_encode($reps, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?: "[]";
+    }
+
+    $tech_dept_map = [];
+    $tech_info_map = [];
+    $td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians");
+    if($td_res) {
+        while($tr = $td_res->fetch_assoc()) {
+            $tech_dept_map[$tr['full_name']] = !empty($tr['department']) ? $tr['department'] : 'ฝ่ายงานทั่วไป';
+            list($th_name, $en_name) = splitThaiEngName($tr['full_name'], $tr['english_name']);
+            $pos = !empty($tr['position']) ? $tr['position'] : getAutoPosition($th_name);
+            $tech_info_map[$tr['full_name']] = [
+                'th' => $th_name,
+                'eng' => $en_name,
+                'pos' => $pos
+            ];
+        }
+    }
+    $tech_dept_map_json = json_encode($tech_dept_map, JSON_UNESCAPED_UNICODE) ?: "{}";
+    $tech_info_map_json = json_encode($tech_info_map, JSON_UNESCAPED_UNICODE) ?: "{}";
+
+    $years_query = $conn->query("SELECT DISTINCT YEAR(created_at) as y FROM repairs WHERE created_at IS NOT NULL ORDER BY y DESC");
+    if($years_query && $years_query->num_rows > 0) {
+        while($y_row = $years_query->fetch_assoc()) {
+            if(!empty($y_row['y'])) $available_years[] = $y_row['y'];
+        }
+    } else {
+        $available_years[] = date('Y');
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -137,6 +221,19 @@ if($check_repairs->num_rows > 0) {
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; margin: 0 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { border: 2px solid #f1f5f9; }
+
+        .custom-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20512%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M31.3%20192h257.3c17.8%200%2026.7%2021.5%2014.1%2034.1L174.1%20354.8c-7.8%207.8-20.5%207.8-28.3%200L17.2%20226.1C4.6%20213.5%2013.5%20192%2031.3%20192z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center; 
+            background-size: 0.65em auto;
+            padding-right: 2.25rem !important; 
+        }
+
         @media print {
             aside, header, .no-print { display: none !important; }
             main { padding: 0 !important; margin: 0 !important; background: white; }
@@ -172,7 +269,7 @@ if($check_repairs->num_rows > 0) {
             <p class="px-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">สำหรับผู้บริหาร</p>
             <button class="nav-btn active-btn"><i class="fas fa-tachometer-alt"></i> ภาพรวมและสถิติ (KPIs)</button>
             <div class="mt-auto pt-4 border-t border-slate-100 flex flex-col gap-1">
-                <!-- ✨ นำปุ่มกลับหน้าเว็บหลักออกตามคำขอแล้วครับ ✨ -->
+                <!-- เอาปุ่มกลับหน้าเว็บหลักออกแล้ว -->
                 <a href="logout.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
             </div>
         </nav>
@@ -215,7 +312,7 @@ if($check_repairs->num_rows > 0) {
                 <p class="text-slate-500 mt-2">พิมพ์เมื่อ: <?php echo date('d/m/Y H:i'); ?></p>
             </div>
 
-            <!-- Executive KPIs (เหลือ 3 การ์ด และ AI Recommendation เป็นส่วนที่ 4) -->
+            <!-- Executive KPIs -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                 
                 <div class="modern-card p-5 md:p-6 border-b-4 border-indigo-500 bg-white flex flex-col justify-between">
@@ -255,7 +352,7 @@ if($check_repairs->num_rows > 0) {
                         <h3 class="font-bold text-white tracking-wide text-sm md:text-base">AI Recommendation</h3>
                     </div>
                     <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
-                        พบการแจ้งซ่อม <strong class="text-white bg-white/20 px-2 py-0.5 rounded">"<?php echo $top_equipment; ?>"</strong> บ่อยผิดปกติ (<?php echo $top_equipment_count; ?> ครั้ง)<br>
+                        พบการแจ้งซ่อม <strong class="text-white bg-white/20 px-2 py-0.5 rounded">"<?php echo htmlspecialchars($top_equipment); ?>"</strong> บ่อยผิดปกติ (<?php echo $top_equipment_count; ?> ครั้ง)<br>
                         <span class="text-purple-300 mt-2 inline-block">💡 แนะนำ: พิจารณาจัดตั้งงบประมาณเพื่อจัดซื้อทดแทนในปีหน้า</span>
                     </p>
                 </div>
@@ -288,57 +385,264 @@ if($check_repairs->num_rows > 0) {
 
             </div>
             
-            <!-- Strategic Data Table -->
-            <div class="modern-card bg-white overflow-hidden mb-8">
-                <div class="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-800 text-base md:text-lg"><i class="fas fa-clipboard-list text-slate-400 mr-2"></i> บันทึกงานแจ้งซ่อมล่าสุด</h3>
-                </div>
-                <div class="overflow-x-auto w-full">
-                    <table class="w-full text-left whitespace-nowrap min-w-[600px]">
-                        <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
-                            <tr>
-                                <th class="px-4 md:px-6 py-3 md:py-4">วัน/เวลาที่รับเรื่อง</th>
-                                <th class="px-4 md:px-6 py-3 md:py-4">เลขที่ใบงาน</th>
-                                <th class="px-4 md:px-6 py-3 md:py-4">ประเภทอุปกรณ์</th>
-                                <th class="px-4 md:px-6 py-3 md:py-4">สถานที่</th>
-                                <th class="px-4 md:px-6 py-3 md:py-4 text-center">สถานะ</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-xs md:text-sm divide-y divide-slate-100">
-                            <?php
-                            if($check_repairs->num_rows > 0) {
-                                $recent_res = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
-                                if($recent_res && $recent_res->num_rows > 0){
-                                    while($row = $recent_res->fetch_assoc()) {
-                                        $date = date("d/m/Y H:i", strtotime($row['created_at']));
-                                        $statusClass = "bg-slate-100 text-slate-600 border-slate-200"; 
-                                        if($row['status'] == 'รอรับเรื่อง') $statusClass = "bg-amber-50 text-amber-600 border-amber-200";
-                                        elseif($row['status'] == 'กำลังดำเนินการ') $statusClass = "bg-sky-50 text-sky-600 border-sky-200";
-                                        elseif($row['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
+            <!-- ✨ เพิ่มส่วนตารางงานล่าสุด และ รีวิว (ปรับให้กดได้เฉพาะ View Repair) ✨ -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+                
+                <!-- Strategic Data Table -->
+                <div class="modern-card bg-white overflow-hidden lg:col-span-7 flex flex-col h-full">
+                    <div class="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
+                        <h3 class="font-bold text-slate-800 text-base md:text-lg"><i class="fas fa-clipboard-list text-slate-400 mr-2"></i> บันทึกงานแจ้งซ่อมล่าสุด</h3>
+                    </div>
+                    <div class="overflow-x-auto w-full custom-scrollbar">
+                        <table class="w-full text-left whitespace-nowrap min-w-[600px]">
+                            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                                <tr>
+                                    <th class="px-4 md:px-6 py-3 md:py-4">วัน/เวลาที่รับเรื่อง</th>
+                                    <th class="px-4 md:px-6 py-3 md:py-4">เลขที่ใบงาน</th>
+                                    <th class="px-4 md:px-6 py-3 md:py-4">ประเภทอุปกรณ์</th>
+                                    <th class="px-4 md:px-6 py-3 md:py-4">สถานที่</th>
+                                    <th class="px-4 md:px-6 py-3 md:py-4 text-center">สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs md:text-sm divide-y divide-slate-100">
+                                <?php
+                                if($check_repairs->num_rows > 0) {
+                                    $recent_res = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
+                                    if($recent_res && $recent_res->num_rows > 0){
+                                        while($row = $recent_res->fetch_assoc()) {
+                                            $date = date("d/m/Y H:i", strtotime($row['created_at']));
+                                            $statusClass = "bg-slate-100 text-slate-600 border-slate-200"; 
+                                            if($row['status'] == 'รอรับเรื่อง') $statusClass = "bg-amber-50 text-amber-600 border-amber-200";
+                                            elseif($row['status'] == 'กำลังดำเนินการ') $statusClass = "bg-sky-50 text-sky-600 border-sky-200";
+                                            elseif($row['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-600 border-emerald-200";
 
-                                        echo "<tr class='hover:bg-slate-50 transition-colors'>
-                                            <td class='px-4 md:px-6 py-3 md:py-4 text-slate-500'>{$date}</td>
-                                            <td class='px-4 md:px-6 py-3 md:py-4 font-bold text-slate-700'>{$row['ticket_no']}</td>
-                                            <td class='px-4 md:px-6 py-3 md:py-4 font-semibold text-slate-800'>{$row['equipment_type']}</td>
-                                            <td class='px-4 md:px-6 py-3 md:py-4 text-slate-600'>{$row['location']}</td>
-                                            <td class='px-4 md:px-6 py-3 md:py-4 text-center'><span class='inline-flex items-center px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-bold border {$statusClass}'>{$row['status']}</span></td>
-                                        </tr>";
-                                    }
-                                } else { echo "<tr><td colspan='5' class='px-4 md:px-6 py-6 md:py-8 text-center text-slate-400'>ไม่มีข้อมูล</td></tr>"; }
-                            }
-                            ?>
-                        </tbody>
-                    </table>
+                                            echo "<tr class='hover:bg-slate-50 transition-colors'>
+                                                <td class='px-4 md:px-6 py-3 md:py-4 text-slate-500'>{$date}</td>
+                                                <td class='px-4 md:px-6 py-3 md:py-4 font-bold text-slate-700'>{$row['ticket_no']}</td>
+                                                <td class='px-4 md:px-6 py-3 md:py-4 font-semibold text-slate-800'>{$row['equipment_type']}</td>
+                                                <td class='px-4 md:px-6 py-3 md:py-4 text-slate-600'>{$row['location']}</td>
+                                                <td class='px-4 md:px-6 py-3 md:py-4 text-center'><span class='inline-flex items-center px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-bold border {$statusClass}'>{$row['status']}</span></td>
+                                            </tr>";
+                                        }
+                                    } else { echo "<tr><td colspan='5' class='px-4 md:px-6 py-6 md:py-8 text-center text-slate-400'>ไม่มีข้อมูล</td></tr>"; }
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
+                <!-- Recent Reviews (Read-Only) -->
+                <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
+                    <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3">
+                        <div>
+                            <h3 class="font-extrabold text-slate-800 text-lg">Recent Reviews</h3>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">ข้อความรีวิวล่าสุดทั้งหมด</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="mainReviewMonth" onchange="renderMainRecentReviewsList()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
+                                <?php foreach($thai_months as $num => $name) { 
+                                    // แปลง index กลับไปให้เป็น '01', '02', ...
+                                    $val = str_pad($num + 1, 2, '0', STR_PAD_LEFT); 
+                                    echo "<option value='{$val}'>{$name}</option>"; 
+                                } ?>
+                            </select>
+                            <select id="mainReviewYear" onchange="renderMainRecentReviewsList()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
+                                <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
+                            <div class="flex items-center gap-1.5" id="mainDashboardStarFilter">
+                                <i id="mStar_1" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(1)" title="1 ดาว"></i>
+                                <i id="mStar_2" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(2)" title="2 ดาว"></i>
+                                <i id="mStar_3" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(3)" title="3 ดาว"></i>
+                                <i id="mStar_4" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(4)" title="4 ดาว"></i>
+                                <i id="mStar_5" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(5)" title="5 ดาว"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
+                            <button id="btnMainFilterZero" onclick="setMainReviewFilter(0)" class="px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap">
+                                เฉพาะคอมเมนต์
+                            </button>
+                            <button id="btnMainFilterAll" onclick="setMainReviewFilter('all')" class="px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap">
+                                ทั้งหมด
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-y-auto p-0 custom-scrollbar flex-1 min-h-[350px] max-h-[500px]">
+                        <div class="divide-y divide-slate-100" id="mainRecentReviewsList">
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>
     </main>
 
     <script>
+        // ข้อมูลสำหรับ Javascript
+        const allRepairs = <?php echo $all_repairs_json; ?>;
+        const techDeptMap = <?php echo $tech_dept_map_json; ?>;
+        const techInfoMap = <?php echo $tech_info_map_json; ?>; 
+        let currentMainReviewFilter = 'all';
+
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebarOverlay').classList.toggle('hidden');
+        }
+
+        function formatValJS(val) {
+            if (!val || String(val).trim() === '-' || String(val).trim() === '') return "<span class='text-rose-500 font-bold'>-</span>";
+            if (String(val).trim() === 'ไม่ระบุ') return "<span class='text-rose-500 font-bold'>ไม่ระบุ</span>";
+            return val;
+        }
+
+        function timeAgoJS(dateString) {
+            if (!dateString || dateString === '0000-00-00 00:00:00') return "-";
+            const date = new Date(dateString.replace(/-/g, '/'));
+            const now = new Date();
+            let diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 0) diffInSeconds = 0;
+            
+            if (diffInSeconds < 60) return "เมื่อสักครู่";
+            if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + " นาทีที่แล้ว";
+            if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + " ชั่วโมงที่แล้ว";
+            if (diffInSeconds < 604800) return Math.floor(diffInSeconds / 86400) + " วันที่แล้ว"; 
+            
+            const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            return `${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
+        }
+
+        function setMainReviewFilter(val) {
+            currentMainReviewFilter = val;
+            
+            const btnAll = document.getElementById('btnMainFilterAll');
+            const btnZero = document.getElementById('btnMainFilterZero');
+            
+            if(btnAll) btnAll.className = "px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap";
+            if(btnZero) btnZero.className = "px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap";
+            
+            if(val === 'all') {
+                if(btnAll) btnAll.className = "px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap";
+            } else if (val === 0) {
+                if(btnZero) btnZero.className = "px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap";
+            }
+            
+            for(let i=1; i<=5; i++) {
+                let star = document.getElementById('mStar_' + i);
+                if(star) {
+                    if(val !== 'all' && val !== 0 && i <= val) {
+                        star.classList.remove('text-slate-200');
+                        star.classList.add('text-amber-400');
+                    } else {
+                        star.classList.remove('text-amber-400');
+                        star.classList.add('text-slate-200');
+                    }
+                }
+            }
+            renderMainRecentReviewsList();
+        }
+
+        function getFilteredRepairsByMonthYear(m, y) {
+            if (m === 'all' && y === 'all') return allRepairs;
+            return allRepairs.filter(r => {
+                if (!r.created_at || r.created_at === '0000-00-00 00:00:00') return false;
+                let datePart = r.created_at.split(' ')[0]; // YYYY-MM-DD
+                if (!datePart) return false;
+                let parts = datePart.split('-');
+                if (parts.length < 3) return false;
+                let rYear = parts[0];
+                let rMonth = parts[1];
+                
+                let matchMonth = (m === 'all' || rMonth === m);
+                let matchYear = (y === 'all' || rYear === y);
+                return matchMonth && matchYear;
+            });
+        }
+
+        function renderMainRecentReviewsList() {
+            const container = document.getElementById('mainRecentReviewsList');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            let m = document.getElementById('mainReviewMonth') ? document.getElementById('mainReviewMonth').value : 'all';
+            let y = document.getElementById('mainReviewYear') ? document.getElementById('mainReviewYear').value : 'all';
+            
+            let filteredReviews = getFilteredRepairsByMonthYear(m, y);
+            
+            filteredReviews = filteredReviews.filter(r => {
+                let rRating = parseFloat(r.rating) || 0;
+                let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
+                return rRating > 0 || hasComment;
+            });
+            
+            if (currentMainReviewFilter !== 'all') {
+                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentMainReviewFilter));
+            }
+            
+            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+            filteredReviews = filteredReviews.slice(0, 30);
+
+            if(filteredReviews.length === 0) {
+                container.innerHTML = `<div class='p-8 flex flex-col items-center justify-center text-center h-full min-h-[200px]'>
+                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนหรือช่วงเวลานี้</p>
+                                          </div>`;
+            } else {
+                filteredReviews.forEach(rev => {
+                    let r_name = formatValJS(rev.reporter_name);
+                    let r_rating = parseInt(rev.rating || 0);
+                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
+                                    ? rev.review_comment.trim() 
+                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
+                    
+                    let stars_html = '';
+                    if (r_rating === 0) {
+                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                    } else {
+                        for(let i=1; i<=5; i++) {
+                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                        }
+                    }
+
+                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
+                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
+
+                    let date_str = "-";
+                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
+                        date_str = timeAgoJS(rev.completed_at);
+                    }
+
+                    // ✨ เปลี่ยนการคลิกให้ไปหน้า View Repair เท่านั้น (ไม่ให้แก้ไข) ✨
+                    container.innerHTML += `<div onclick="window.location.href='view_repair.php?id=${rev.id}&source=overview'" class='p-4 md:p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
+                                <i class="fas fa-arrow-right text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
+                            </div>
+                            <div class='flex justify-between items-start mb-2.5 pr-6'>
+                                <div class='flex items-center gap-3'>
+                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
+                                    <div>
+                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
+                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
+                                    </div>
+                                </div>
+                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
+                            </div>
+                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
+                            <div class='pl-11'>${techInfoHtml}</div>
+                          </div>`;
+                });
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -417,6 +721,11 @@ if($check_repairs->num_rows > 0) {
                     } 
                 }
             });
+
+            // 3. Render Reviews
+            if(document.getElementById('mainRecentReviewsList')) {
+                setMainReviewFilter('all');
+            }
 
         });
     </script>
