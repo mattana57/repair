@@ -344,10 +344,6 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
             </div>
             
             <div class="flex items-center space-x-3 md:space-x-6">
-                <!-- ปุ่มออกรายงานผู้บริหาร -->
-                <a href="executive_summary_report.php" target="_blank" class="hidden sm:flex bg-white/20 hover:bg-white/30 border border-white/40 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm items-center transition-all backdrop-blur-md">
-                    <i class="fas fa-file-invoice-dollar mr-2"></i> ออกรายงานผู้บริหาร
-                </a>
                 
                 <!-- ✨ กรอบมนตรงชื่อมุมขวาบน แบบ Glassmorphism ตัดสีพื้นหลังได้สวยงาม ✨ -->
                 <div class="flex items-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full transition-all shadow-sm cursor-pointer">
