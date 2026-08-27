@@ -21,7 +21,7 @@ $conn->set_charset("utf8mb4");
 // ✨ ดึงข้อมูลผู้ใช้ล่าสุดจากฐานข้อมูลโดยตรง ✨
 // เพื่อให้ข้อมูลชื่อ/ตำแหน่งอัปเดตตามฝั่งแอดมินเสมอแบบเรียลไทม์
 $current_user_name = 'Executive Board';
-$current_user_role = 'ผู้บริหารระบบ';
+$current_user_role = 'System Administrator';
 $current_username = $_SESSION['username'] ?? 'exec';
 
 if (isset($_SESSION['user_id'])) {
@@ -33,7 +33,7 @@ if (isset($_SESSION['user_id'])) {
         $current_user_name = !empty($u_data['full_name']) ? $u_data['full_name'] : $u_data['username'];
         
         if (strtolower($u_data['role']) === 'executive') {
-            $current_user_role = !empty($u_data['position']) ? $u_data['position'] : 'ผู้บริหารระบบ';
+            $current_user_role = !empty($u_data['position']) ? $u_data['position'] : 'System Administrator';
         } else {
             $current_user_role = !empty($u_data['position']) ? $u_data['position'] : $u_data['role'];
         }
