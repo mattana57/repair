@@ -26,22 +26,7 @@ function formatEmptyOrDash($val) {
     return htmlspecialchars($val);
 }
 
-// ✨ ฟังก์ชันคำนวณเวลาที่ผ่านไป (Time Ago) ✨
-function timeAgo($datetime) {
-    $time = strtotime($datetime);
-    $diff = time() - $time;
-    if ($diff < 0) $diff = 0; 
-    if ($diff < 60) return "เมื่อสักครู่";
-    if ($diff < 3600) return floor($diff / 60) . " นาทีที่แล้ว";
-    if ($diff < 86400) return floor($diff / 3600) . " ชั่วโมงที่แล้ว";
-    if ($diff < 604800) return floor($diff / 86400) . " วันที่แล้ว";
-    $thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-    $m = date('n', $time) - 1;
-    $y = date('Y', $time) + 543;
-    $d = date('j', $time);
-    return "$d " . $thaiMonths[$m] . " $y";
-}
-
+// ฟังก์ชันแยกชื่อไทย-อังกฤษ อัตโนมัติ
 function splitThaiEngName($fullName, $engName) {
     $th = trim((string)$fullName);
     $en = trim((string)$engName);
@@ -57,6 +42,7 @@ function splitThaiEngName($fullName, $engName) {
     return array($th, $en);
 }
 
+// ฟังก์ชันกำหนดตำแหน่งงานอัตโนมัติ
 function getAutoPosition($th_name) {
     $map = [
         'สมพร วงษ์จำปา' => 'นักวิชาการคอมพิวเตอร์',
@@ -84,8 +70,9 @@ function getAutoPosition($th_name) {
 }
 
 // =====================================================================
-// ดึงข้อมูลสำหรับกราฟทั้งหมดแบบเดียวกับฝั่งแอดมิน
+// ดึงข้อมูลเตรียมแสดงผล (เหมือนฝั่งแอดมินเป๊ะๆ)
 // =====================================================================
+
 $all_repairs_json = "[]";
 $check_repairs_list = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs_list && $check_repairs_list->num_rows > 0) {
@@ -107,8 +94,10 @@ $td_res = $conn->query("SELECT full_name, department, english_name, position FRO
 if($td_res) {
     while($tr = $td_res->fetch_assoc()) {
         $tech_dept_map[$tr['full_name']] = !empty($tr['department']) ? $tr['department'] : 'ฝ่ายงานทั่วไป';
+        
         list($th_name, $en_name) = splitThaiEngName($tr['full_name'], $tr['english_name']);
         $pos = !empty($tr['position']) ? $tr['position'] : getAutoPosition($th_name);
+        
         $tech_info_map[$tr['full_name']] = [
             'th' => $th_name,
             'eng' => $en_name,
@@ -116,8 +105,8 @@ if($td_res) {
         ];
     }
 }
-$tech_dept_map_json = json_encode($tech_dept_map, JSON_UNESCAPED_UNICODE) ?: "{}";
-$tech_info_map_json = json_encode($tech_info_map, JSON_UNESCAPED_UNICODE) ?: "{}";
+$tech_dept_map_json = json_encode($tech_dept_map, JSON_UNESCAPED_UNICODE);
+$tech_info_map_json = json_encode($tech_info_map, JSON_UNESCAPED_UNICODE);
 
 $years_query = $conn->query("SELECT DISTINCT YEAR(created_at) as y FROM repairs WHERE created_at IS NOT NULL ORDER BY y DESC");
 $available_years = [];
@@ -130,15 +119,6 @@ if($years_query && $years_query->num_rows > 0) {
 }
 $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 
-// คำนวณ KPI ด้านบน
-$resTotal = $conn->query("SELECT count(*) as c FROM repairs");
-$cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
-$resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE status='รอรับเรื่อง'");
-$cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
-$resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE status='กำลังดำเนินการ'");
-$cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
-$resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
-$cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -182,60 +162,64 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; margin: 0 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { border: 2px solid #f1f5f9; }
         
-        .modal { transition: opacity 0.25s ease; }
-        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
         .badge-pending { background-color: #fef3c7; color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-progress { background-color: #e0e7ff; color: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-success { background-color: #d1fae5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        
+        @media print { aside, header, .no-print { display: none !important; } }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100">
-        <!-- ✨ โลโก้แบบเก่าที่คุณต้องการ ✨ -->
-        <div class="sidebar-logo-box flex items-center border-b border-slate-50">
-            <div class="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30 mr-3 shrink-0">
-                <i class="fas fa-chart-line text-white text-lg md:text-xl"></i>
+    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
+        
+        <!-- ✨ โลโก้ตามรูปที่ 3 เป๊ะๆ ✨ -->
+        <div class="sidebar-logo-box flex items-center border-b border-slate-50 py-6 px-6">
+            <div class="w-[42px] h-[42px] rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-purple-500/30 mr-3.5 shrink-0">
+                <i class="fas fa-chart-line text-white text-[22px]"></i>
             </div>
-            <div class="overflow-hidden flex-1">
-                <h1 class="text-lg md:text-xl font-extrabold text-slate-800 leading-tight tracking-tight">MBS <span class="text-slate-800">REPAIR</span></h1>
-                <p class="text-[10px] md:text-xs text-purple-600 font-bold tracking-widest uppercase mt-0.5">Executive View</p>
+            <div class="overflow-hidden flex-1 mt-0.5">
+                <h1 class="text-[19px] font-extrabold text-slate-800 tracking-tight leading-none mb-1">MBS REPAIR</h1>
+                <p class="text-[10px] text-purple-600 font-extrabold tracking-[0.15em] uppercase leading-none">Executive View</p>
             </div>
         </div>
         
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">สำหรับผู้บริหาร</p>
-            <button class="nav-btn active-btn"><i class="fas fa-chart-pie"></i> ภาพรวมและสถิติ (KPIs)</button>
+            <button class="nav-btn active-btn"><i class="fas fa-chart-pie"></i> ภาพรวมและสถิติ</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
-                <a href="logout.php" class="nav-btn text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
+                <!-- ✨ เอาปุ่ม "กลับหน้าเว็บหลัก" ออกแล้วตามคำขอ ✨ -->
+                <a href="logout.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
             </div>
         </nav>
     </aside>
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
-        <!-- ✨ แถบสีม่วงแบบแอดมิน + ปุ่มออกรายงาน ✨ -->
+        <!-- ✨ แถบ Header สีเหมือนฝั่งแอดมิน ✨ -->
         <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-10 sticky top-0 shadow-md shadow-indigo-200/50">
             <div class="flex items-center">
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h2 class="text-xl md:text-2xl font-bold text-white tracking-wide truncate">ภาพรวมเชิงกลยุทธ์</h2>
+                <h2 class="text-2xl font-bold text-white tracking-tight drop-shadow-sm">ภาพรวมเชิงกลยุทธ์</h2>
             </div>
             
-            <div class="flex items-center space-x-3 md:space-x-6 shrink-0">
-                <a href="executive_summary_report.php" target="_blank" class="hidden sm:flex bg-white/20 hover:bg-white/30 border border-white/30 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm items-center transition-all backdrop-blur-sm">
+            <div class="flex items-center space-x-3 md:space-x-6">
+                <!-- ปุ่มออกรายงานผู้บริหาร -->
+                <a href="executive_summary_report.php" target="_blank" class="hidden sm:flex bg-white/20 hover:bg-white/30 border border-white/40 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm items-center transition-all backdrop-blur-md">
                     <i class="fas fa-file-invoice-dollar mr-2"></i> ออกรายงานผู้บริหาร
                 </a>
+                
                 <div class="flex items-center gap-3 cursor-pointer group">
                     <div class="text-right hidden sm:block">
-                        <span class="block text-sm font-bold text-white drop-shadow-sm leading-none mb-1">
+                        <span class="block text-sm font-bold text-white drop-shadow-sm leading-none mb-1 group-hover:text-indigo-100 transition-colors">
                             <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Executive'); ?>
                         </span>
-                        <span class="block text-[11px] text-indigo-100 font-semibold">Executive View</span>
+                        <span class="block text-[11px] text-indigo-100 font-semibold">ผู้บริหารระบบ</span>
                     </div>
                     <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white overflow-hidden border border-white/30 shadow-inner backdrop-blur-sm">
                         <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'exec'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
@@ -245,10 +229,20 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
         </header>
 
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-            <div id="dash" class="section space-y-6 animate-fade-in">
+            <div id="dash" class="section space-y-6 animate-fade-in no-print">
 
-                <!-- KPI Cards (4 ใบเหมือนแอดมิน) -->
+                <!-- KPI Cards (เหมือนฝั่งแอดมินเป๊ะๆ) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <?php 
+                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
+                        $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
+                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE status='รอรับเรื่อง'");
+                        $cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
+                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE status='กำลังดำเนินการ'");
+                        $cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
+                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
+                        $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
+                    ?>
                     <div class="modern-card p-6 flex flex-col justify-between">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
@@ -294,7 +288,7 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     </div>
                 </div>
 
-                <!-- กราฟแถวที่ 1: Equipment & Status -->
+                <!-- กราฟแถวที่ 1 -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start mb-4">
@@ -341,7 +335,7 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     </div>
                 </div>
 
-                <!-- กราฟแถวที่ 2: Locations & Technician Workload -->
+                <!-- กราฟแถวที่ 2 -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start mb-4">
@@ -388,7 +382,7 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     </div>
                 </div>
 
-                <!-- กราฟแถวที่ 3: Satisfaction & Reviews -->
+                <!-- กราฟแถวที่ 3: ความพึงพอใจ & รีวิว -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                     
                     <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
@@ -427,7 +421,7 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                                 <select id="mainReviewMonth" onchange="renderMainRecentReviewsList()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
                                     <?php foreach($thai_months as $num => $name) { 
-                                        $val = str_pad($num, 2, '0', STR_PAD_LEFT); 
+                                        $val = str_pad($num + 1, 2, '0', STR_PAD_LEFT); 
                                         echo "<option value='{$val}'>{$name}</option>"; 
                                     } ?>
                                 </select>
@@ -466,7 +460,7 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     </div>
                 </div>
 
-                <!-- กราฟแถวที่ 4: ตารางงานล่าสุด (Read Only) -->
+                <!-- แถวที่ 4: ตารางงานล่าสุด (Read Only) -->
                 <div class="grid grid-cols-1 gap-6 mt-6">
                     <div class="modern-card overflow-hidden flex flex-col col-span-full">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
@@ -484,7 +478,7 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                                         <th class="px-6 py-4">Reporter</th>
                                         <th class="px-6 py-4">Equipment</th>
                                         <th class="px-6 py-4 text-center">Status</th>
-                                        <!-- ✨ แอคชั่นแบบดูได้อย่างเดียว ✨ -->
+                                        <!-- ✨ Action (View Only) ✨ -->
                                         <th class="px-6 py-4 text-right">Action</th>
                                     </tr>
                                 </thead>
@@ -526,7 +520,8 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                                                 <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$statusText}</span></td>
                                                 <td class='px-6 py-4 align-middle text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <a href='view_repair.php?id={$rd['id']}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
+                                                        <!-- ✨ ปุ่ม View อย่างเดียว ✨ -->
+                                                        <a href='view_repair.php?id={$rd['id']}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
                                                     </div>
                                                 </td>
                                             </tr>";
@@ -598,6 +593,7 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
         </div>
     </div>
 
+    <!-- Javascript ฝั่งแสดงกราฟ -->
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
         const techDeptMap = <?php echo $tech_dept_map_json; ?>;
@@ -650,7 +646,7 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
             if (m === 'all' && y === 'all') return allRepairs;
             return allRepairs.filter(r => {
                 if (!r.created_at || r.created_at === '0000-00-00 00:00:00') return false;
-                let datePart = r.created_at.split(' ')[0]; // YYYY-MM-DD
+                let datePart = r.created_at.split(' ')[0];
                 if (!datePart) return false;
                 let parts = datePart.split('-');
                 if (parts.length < 3) return false;
@@ -862,6 +858,7 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
 
             let deptArr = Object.keys(deptMap).map(dName => {
                 let dAvg = (deptMap[dName].sum / deptMap[dName].count).toFixed(1);
+                
                 let topTechName = '-';
                 let topTechAvg = 0;
                 
@@ -1127,7 +1124,7 @@ $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                         date_str = timeAgoJS(rev.completed_at);
                     }
 
-                    // ✨ ระบบผู้บริหาร: คลิกรีวิวให้ไปหน้า view_repair.php อย่างเดียว ✨
+                    // ✨ ระบบผู้บริหาร: คลิกรีวิวให้ไปหน้า view_repair.php อย่างเดียว (ห้ามไป update_repair.php) ✨
                     container.innerHTML += `<div onclick="window.location.href='view_repair.php?id=${rev.id}&source=overview'" class='p-4 md:p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
                                 <i class="fas fa-arrow-right text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
