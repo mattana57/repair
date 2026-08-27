@@ -172,8 +172,7 @@ if($check_repairs->num_rows > 0) {
             <p class="px-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">สำหรับผู้บริหาร</p>
             <button class="nav-btn active-btn"><i class="fas fa-tachometer-alt"></i> ภาพรวมและสถิติ (KPIs)</button>
             <div class="mt-auto pt-4 border-t border-slate-100 flex flex-col gap-1">
-                <!-- 🟢 ปุ่มกลับหน้าเว็บหลัก -->
-                <a href="index.php" class="nav-btn text-slate-500 hover:bg-indigo-50 hover:text-indigo-600"><i class="fas fa-home text-indigo-400"></i> กลับหน้าเว็บหลัก</a>
+                <!-- ✨ นำปุ่มกลับหน้าเว็บหลักออกตามคำขอแล้วครับ ✨ -->
                 <a href="logout.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
             </div>
         </nav>
