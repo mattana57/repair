@@ -48,6 +48,7 @@ if (!is_null($events['events'])) {
             $ch = curl_init($image_url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $channelAccessToken]);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             $image_data = curl_exec($ch);
             curl_close($ch);
             
@@ -56,30 +57,23 @@ if (!is_null($events['events'])) {
                     mkdir('uploads', 0777, true);
                 }
                 
-                $stmt_check = $conn->prepare("SELECT id, ticket_no, created_at FROM repairs WHERE line_user_id = ? ORDER BY id DESC LIMIT 1");
+                $stmt_check = $conn->prepare("SELECT id, ticket_no, image_path FROM repairs WHERE line_user_id = ? ORDER BY id DESC LIMIT 1");
                 $stmt_check->bind_param("s", $userId);
                 $stmt_check->execute();
                 $latest_job = $stmt_check->get_result()->fetch_assoc();
                 
                 $attached = false;
-                if ($latest_job) {
-                    if ((time() - strtotime($latest_job['created_at'])) <= 3600) {
-                        $new_img_name = $latest_job['ticket_no'] . "_" . time() . ".jpg";
-                        file_put_contents("uploads/" . $new_img_name, $image_data);
-                        
-                        $chk_img_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'");
-                        if($chk_img_col && $chk_img_col->num_rows == 0) {
-                            $conn->query("ALTER TABLE repairs ADD COLUMN image_path VARCHAR(255) NULL");
-                        }
-                        
-                        $stmt_upd = $conn->prepare("UPDATE repairs SET image_path = ? WHERE id = ?");
-                        $stmt_upd->bind_param("si", $new_img_name, $latest_job['id']);
-                        $stmt_upd->execute();
-                        
-                        $replyText = "📸 แนบรูปภาพเข้ากับใบงาน {$latest_job['ticket_no']} เรียบร้อยแล้วค่ะ";
-                        send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
-                        $attached = true;
-                    }
+                if ($latest_job && empty($latest_job['image_path'])) {
+                    $new_img_name = $latest_job['ticket_no'] . "_" . time() . ".jpg";
+                    file_put_contents("uploads/" . $new_img_name, $image_data);
+                    
+                    $stmt_upd = $conn->prepare("UPDATE repairs SET image_path = ? WHERE id = ?");
+                    $stmt_upd->bind_param("si", $new_img_name, $latest_job['id']);
+                    $stmt_upd->execute();
+                    
+                    $replyText = "📸 แนบรูปภาพเข้ากับใบงาน {$latest_job['ticket_no']} เรียบร้อยแล้วค่ะ";
+                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                    $attached = true;
                 }
                 
                 if (!$attached) {
