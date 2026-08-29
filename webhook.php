@@ -8,7 +8,6 @@ function extract_repair_info($text) {
     $category = "ไม่ระบุปัญหา";
     $location = "ไม่ระบุสถานที่";
     
-    // 💡 เพิ่มคำศัพท์พื้นฐานให้บอทรู้จักมากขึ้น
     $keywords = [
         'แอร์', 'คอม', 'เครื่องปริ้น', 'printer', 'projector', 'โปรเจคเตอร์', 'โปรเจกเตอร์', 'เครื่องฉาย', 
         'จอ', 'ทีวี', 'ไมค์', 'หลอดไฟ', 'ไฟดับ', 'สายไฟ', 'ปลั๊ก', 'ไฟ', 'หลอด', 'พัดลม', 'เน็ต', 'wifi', 'วายฟาย','ไว้ฟาย','ไวฟาย', 'อินเทอร์เน็ต',
@@ -56,10 +55,38 @@ if (!is_null($events['events'])) {
                 if (!is_dir('uploads')) {
                     mkdir('uploads', 0777, true);
                 }
-                file_put_contents("uploads/temp_{$userId}.jpg", $image_data);
                 
-                $replyText = "📸 รับรูปภาพเรียบร้อยค่ะ\nกรุณาพิมพ์ข้อความแจ้งรายละเอียดปัญหาและสถานที่ (เช่น 'แอร์ไม่เย็น ห้อง 502') เพื่อให้ระบบบันทึกเข้าระบบแจ้งซ่อมได้เลยค่ะ";
-                send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                $stmt_check = $conn->prepare("SELECT id, ticket_no, created_at FROM repairs WHERE line_user_id = ? ORDER BY id DESC LIMIT 1");
+                $stmt_check->bind_param("s", $userId);
+                $stmt_check->execute();
+                $latest_job = $stmt_check->get_result()->fetch_assoc();
+                
+                $attached = false;
+                if ($latest_job) {
+                    if ((time() - strtotime($latest_job['created_at'])) <= 3600) {
+                        $new_img_name = $latest_job['ticket_no'] . "_" . time() . ".jpg";
+                        file_put_contents("uploads/" . $new_img_name, $image_data);
+                        
+                        $chk_img_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'");
+                        if($chk_img_col && $chk_img_col->num_rows == 0) {
+                            $conn->query("ALTER TABLE repairs ADD COLUMN image_path VARCHAR(255) NULL");
+                        }
+                        
+                        $stmt_upd = $conn->prepare("UPDATE repairs SET image_path = ? WHERE id = ?");
+                        $stmt_upd->bind_param("si", $new_img_name, $latest_job['id']);
+                        $stmt_upd->execute();
+                        
+                        $replyText = "📸 แนบรูปภาพเข้ากับใบงาน {$latest_job['ticket_no']} เรียบร้อยแล้วค่ะ";
+                        send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                        $attached = true;
+                    }
+                }
+                
+                if (!$attached) {
+                    file_put_contents("uploads/temp_{$userId}.jpg", $image_data);
+                    $replyText = "📸 รับรูปภาพเรียบร้อยค่ะ\nกรุณาพิมพ์ข้อความแจ้งรายละเอียดปัญหาและสถานที่ (เช่น 'แอร์ไม่เย็น ห้อง 502') เพื่อให้ระบบบันทึกเข้าระบบแจ้งซ่อมได้เลยค่ะ";
+                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                }
             }
             continue;
         }
@@ -133,7 +160,6 @@ if (!is_null($events['events'])) {
                     $problem = "มีความผิดปกติ (รอตรวจสอบ)";
                 }
 
-                // 💡 หัวใจสำคัญ: ตามที่คุณน้ำฝนแนะนำ ถ้าระบุหมวดหมู่ปัญหาไม่ได้ ให้ดึงข้อความรายละเอียดมาโชว์ในช่อง "ปัญหา" แทนเลย
                 if ($category === "ไม่ระบุปัญหา") {
                     $category = mb_substr($problem, 0, 50, 'UTF-8');
                 }
