@@ -881,6 +881,7 @@ $dept_icons = [
                         </div>
                     </div>
                 </div>
+             </div>
 
             <!-- ✨ เริ่มต้นส่วนหน้า Transactions ที่หายไป (นำกลับมาให้แล้วครับ!) ✨ -->
             <div id="repairs" class="section hidden space-y-6 no-print">
@@ -1027,7 +1028,7 @@ $dept_icons = [
                 </div>
             </div>
             <!-- ✨ สิ้นสุดส่วนหน้า Transactions ✨ -->
-             
+
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
