@@ -889,7 +889,6 @@ $dept_icons = [
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
-                        <h2 class="text-xl md:text-2xl font-extrabold text-slate-800">Team Management</h2>
                         <p class="text-sm font-medium text-slate-500 mt-0.5">Manage administrators and technicians</p>
                     </div>
                     <div class="flex flex-col md:flex-row w-full md:w-auto gap-3">
