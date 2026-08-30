@@ -2422,6 +2422,39 @@ $dept_icons = [
                 });
             }
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            window.chartsRendered = false;
+            
+            if(tab) { show(tab); } else { show('dash'); }
+
+            const inputElement = document.getElementById('searchInput');
+            if(inputElement) {
+                inputElement.addEventListener('input', function() {
+                    let filter = this.value.toLowerCase();
+                    let activeSection = document.querySelector('.section:not(.hidden)');
+                    if (!activeSection) return;
+                    
+                    let rows = activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)');
+                    rows.forEach(row => {
+                        if (row.innerText.toLowerCase().includes(filter)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+            
+            const reportInput = document.getElementById('reportSearchInput');
+            if(reportInput) reportInput.value = 'Overall System (All Technicians)';
+            
+            if(document.getElementById('topReportersList')) {
+            renderTopReporters();
+            }
+        });
         
         function searchHistoryTable() {
             let input = document.getElementById('searchHistoryInput');
