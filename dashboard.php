@@ -678,15 +678,19 @@ $dept_icons = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="statusMonth" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
-                                </select>
-                                <select id="statusYear" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
-                            </div>
+                            <select id="reporterMonth" onchange="renderTopReporters()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
+                                <?php foreach($thai_months as $num => $name) { 
+                                    // ✨ แก้ตรงนี้ครับ: เอา + 1 ออกแล้ว ใช้ $num ตรงๆ เลย ✨
+                                    $val = str_pad($num, 2, '0', STR_PAD_LEFT); 
+                                    echo "<option value='{$val}'>{$name}</option>"; 
+                                } ?>
+                            </select>
+                            <select id="reporterYear" onchange="renderTopReporters()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
+                                <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
+                            </select>
+                        </div>
                         </div>
                         <div class="flex-1 relative w-full h-[280px] flex justify-center items-center">
                             <canvas id="mainStatusChart"></canvas>
