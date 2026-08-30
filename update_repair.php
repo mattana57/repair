@@ -366,7 +366,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
             <?php if($is_admin): ?>
-            <!-- ✨ ปุ่มกลับ จะดึง URL ย้อนกลับแบบไร้รอยต่อ ✨ -->
             <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
@@ -499,7 +498,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="modern-card p-6 md:p-8 h-full flex flex-col">
                     <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-6">บันทึกการปฏิบัติงาน</h2>
 
-                    <!-- ✨ ฟอร์มจะพ่วงค่า Parameter แบบเดียวกับลิงก์ให้อัตโนมัติ ✨ -->
                     <form id="updateForm" action="<?php echo htmlspecialchars($form_action); ?>" method="POST" class="space-y-6 flex-1 flex flex-col">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
 
@@ -534,7 +532,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </button>
                                 </div>
                                 
-                                <!-- ✨ Dropdown แสดงช่าง แยกตามแผนกพร้อมโชว์จำนวนคน (ฟอนต์ฝ่ายใหญ่ขึ้น) ✨ -->
                                 <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
                                     <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
                                         <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
@@ -546,7 +543,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <?php foreach($techs_by_dept as $dept => $techList): 
                                         $count = count($techList);
                                     ?>
-                                        <!-- ✨ ขยายขนาดฟอนต์ของชื่อฝ่ายตรงนี้ เป็น text-[15px] ✨ -->
                                         <div class="tech-dept-header flex justify-between items-center px-4 py-2.5 mt-2 mb-1 bg-indigo-50/60 border-y border-indigo-100" data-dept="<?php echo htmlspecialchars($dept); ?>">
                                             <span class="text-[15px] font-extrabold text-indigo-700 tracking-wide"><?php echo htmlspecialchars($dept); ?></span>
                                             <span class="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 shadow-sm px-2 py-0.5 rounded-md flex items-center">
@@ -665,6 +661,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
                         </div>
 
+                        <!-- ✨ เหลือแค่ปุ่ม บันทึกข้อมูลและแจ้งเตือน ตามเดิม ✨ -->
+                        <div class="pt-4 border-t border-slate-100 flex flex-col md:flex-row justify-end gap-3 mt-auto">
                             <button type="submit" class="w-full md:w-auto bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
                                 <i class="fas fa-save mr-2"></i> บันทึกข้อมูลและแจ้งเตือน
                             </button>
@@ -757,7 +755,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             updateTechCheckmarks();
         }
 
-        // ✨ อัปเดตระบบค้นหาให้ซ่อน/โชว์หัวข้อฝ่ายงานได้ ✨
         function filterTechDropdown() {
             toggleTechDropdown(null, true);
             const searchVal = document.getElementById('techSearchInput').value.toLowerCase().replace(/\s+/g, '');
