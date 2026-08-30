@@ -2448,7 +2448,8 @@ $dept_icons = [
             
             if(document.getElementById('topReportersList')) {
             renderTopReporters();
-        }
+            }
+        });
         
         function searchHistoryTable() {
             let input = document.getElementById('searchHistoryInput');
