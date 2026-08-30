@@ -811,6 +811,27 @@ $dept_icons = [
                         </div>
                     </div>
                         
+                        <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
+                                <div class="flex items-center gap-1.5" id="mainDashboardStarFilter">
+                                    <i id="mStar_1" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(1)" title="1 ดาว"></i>
+                                    <i id="mStar_2" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(2)" title="2 ดาว"></i>
+                                    <i id="mStar_3" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(3)" title="3 ดาว"></i>
+                                    <i id="mStar_4" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(4)" title="4 ดาว"></i>
+                                    <i id="mStar_5" class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-sm md:text-base hover:text-amber-200" onclick="setMainReviewFilter(5)" title="5 ดาว"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
+                                <button id="btnMainFilterZero" onclick="setMainReviewFilter(0)" class="px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap">
+                                    เฉพาะคอมเมนต์
+                                </button>
+                                <button id="btnMainFilterAll" onclick="setMainReviewFilter('all')" class="px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap">
+                                    ทั้งหมด
+                                </button>
+                            </div>
+                        </div>
+                        
                         <div class="overflow-y-auto p-0 custom-scrollbar flex-1 min-h-[350px] max-h-[500px]">
                             <div class="divide-y divide-slate-100" id="mainRecentReviewsList">
                             </div>
@@ -2333,71 +2354,78 @@ $dept_icons = [
             renderTopReporters();
         }
 
-        // ✨ ฟังก์ชันคำนวณและแสดงผล Top Reporters ✨
-        function renderTopReporters() {
-            const container = document.getElementById('topReportersList');
+        function renderMainRecentReviewsList() {
+            const container = document.getElementById('mainRecentReviewsList');
             if(!container) return;
             container.innerHTML = '';
-
-            let m = document.getElementById('reporterMonth') ? document.getElementById('reporterMonth').value : 'all';
-            let y = document.getElementById('reporterYear') ? document.getElementById('reporterYear').value : 'all';
-
-            let filteredRepairs = getFilteredRepairsByMonthYear(m, y);
-
-            let reporterMap = {};
-            filteredRepairs.forEach(r => {
-                let name = formatValJS(r.reporter_name);
-                // ตัดพวกค่าที่ไม่มีชื่อออก หรือจัดกลุ่มเป็น 'ไม่ระบุชื่อ'
-                if (name.includes('ไม่ระบุ') || name.includes('span')) name = 'ไม่ระบุชื่อผู้แจ้ง';
-                else name = r.reporter_name.trim();
-
-                if (!reporterMap[name]) reporterMap[name] = 0;
-                reporterMap[name]++;
+            
+            let m = document.getElementById('mainReviewMonth') ? document.getElementById('mainReviewMonth').value : 'all';
+            let y = document.getElementById('mainReviewYear') ? document.getElementById('mainReviewYear').value : 'all';
+            
+            let filteredReviews = getFilteredRepairsByMonthYear(m, y);
+            
+            filteredReviews = filteredReviews.filter(r => {
+                let rRating = parseFloat(r.rating) || 0;
+                let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
+                return rRating > 0 || hasComment;
             });
-
-            // แปลงเป็น Array แล้วเรียงลำดับจากแจ้งมากสุด ไปน้อยสุด
-            let reporterArr = Object.keys(reporterMap).map(k => ({ name: k, count: reporterMap[k] }));
-            reporterArr.sort((a,b) => b.count - a.count);
-
-            // ✨ ส่วนที่คัดกรองจำนวนตามปุ่มที่กด ✨
-            if (currentTopReportersLimit !== 'all') {
-                reporterArr = reporterArr.slice(0, parseInt(currentTopReportersLimit));
+            
+            if (currentMainReviewFilter !== 'all') {
+                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentMainReviewFilter));
             }
+            
+            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+            filteredReviews = filteredReviews.slice(0, 30);
 
-            if(reporterArr.length === 0) {
-                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full min-h-[250px]'>
-                                            <i class='fas fa-user-tag text-4xl text-slate-200 mb-3'></i>
-                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลผู้แจ้งในเดือน/ปีนี้</p>
-                                        </div>`;
+            if(filteredReviews.length === 0) {
+                container.innerHTML = `<div class='p-8 flex flex-col items-center justify-center text-center h-full min-h-[200px]'>
+                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนหรือช่วงเวลานี้</p>
+                                          </div>`;
             } else {
-                reporterArr.forEach((rep, index) => {
-                    // กำหนดสีและไอคอนตามอันดับ 1, 2, 3
-                    let rankColor = index === 0 ? 'text-amber-500 bg-amber-50 border-amber-200' :
-                                    index === 1 ? 'text-slate-500 bg-slate-100 border-slate-300' :
-                                    index === 2 ? 'text-orange-500 bg-orange-50 border-orange-200' :
-                                    'text-indigo-500 bg-indigo-50 border-indigo-100';
+                filteredReviews.forEach(rev => {
+                    let r_name = formatValJS(rev.reporter_name);
+                    let r_rating = parseInt(rev.rating || 0);
+                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
+                                    ? rev.review_comment.trim() 
+                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
+                    
+                    let stars_html = '';
+                    if (r_rating === 0) {
+                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                    } else {
+                        for(let i=1; i<=5; i++) {
+                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                        }
+                    }
 
-                    let rankIcon = index === 0 ? '<i class="fas fa-trophy text-lg"></i>' :
-                                   index === 1 ? '<i class="fas fa-medal text-base"></i>' :
-                                   index === 2 ? '<i class="fas fa-award text-base"></i>' :
-                                   `<span class="text-sm font-black">#${index + 1}</span>`;
+                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
+                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
 
-                    container.innerHTML += `
-                        <div class='p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0'>
-                            <div class='flex items-center gap-4'>
-                                <div class='w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${rankColor} shrink-0'>
-                                    ${rankIcon}
-                                </div>
-                                <div>
-                                    <div class='text-sm font-bold text-slate-800'>${rep.name}</div>
-                                    <div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>
-                                </div>
+                    let date_str = "-";
+                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
+                        date_str = timeAgoJS(rev.completed_at);
+                    }
+
+                    // ✨ เปลี่ยนให้โหลดในแท็บเดิม ✨
+                    container.innerHTML += `<div onclick="window.location.href='update_repair.php?id=${rev.id}'" class='p-4 md:p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
+                                <i class="fas fa-arrow-right text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
                             </div>
-                            <div class='text-right'>
-                                <span class='text-xl font-extrabold text-indigo-600'>${rep.count}</span>
-                                <span class='text-[11px] text-slate-500 font-medium ml-1'>รายการ</span>
+                            <div class='flex justify-between items-start mb-2.5 pr-6'>
+                                <div class='flex items-center gap-3'>
+                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
+                                    <div>
+                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
+                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
+                                    </div>
+                                </div>
+                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
                             </div>
-                        </div>`;
+                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
+                            <div class='pl-11'>${techInfoHtml}</div>
+                          </div>`;
                 });
             }
         }
