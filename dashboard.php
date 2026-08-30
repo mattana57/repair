@@ -590,154 +590,299 @@ $dept_icons = [
 
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             
-            </div> ```
-*(ถ้าไม่เจอคำว่า `<div id="dash">` ให้ลองหา `id="repairs"` อันแรกดูนะคะ)*
+            <div id="dash" class="section space-y-6 animate-fade-in no-print">
 
-**2. วางโค้ดหน้า Transactions ที่หายไปคืนมา:**
-ให้คัดลอกโค้ดด้านล่างนี้ไปวาง **ต่อจากบรรทัดที่หาเจอในข้อ 1** ได้เลยค่ะ
-
-```html
-            <div id="repairs" class="section hidden space-y-6 no-print">
-                <div class="modern-card overflow-hidden flex flex-col">
-                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
-                        <div>
-                            <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <?php 
+                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
+                        $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
+                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE status='รอรับเรื่อง'");
+                        $cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
+                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE status='กำลังดำเนินการ'");
+                        $cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
+                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
+                        $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
+                    ?>
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('all')">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
+                            <span class="text-xs font-bold text-slate-400">TOTAL</span>
                         </div>
-                        <div class="w-full md:w-auto relative">
-                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchInput" placeholder="Search ticket or status..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
+                        <div>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
+                            <p class="text-sm font-medium text-slate-500 mt-1">Total Repairs</p>
                         </div>
                     </div>
-                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative">
-                        <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
-                                <tr>
-                                    <th class="px-6 py-4">Date / Time</th>
-                                    <th class="px-6 py-4">Ticket No.</th>
-                                    <th class="px-6 py-4">Reporter</th>
-                                    <th class="px-6 py-4">Equipment</th>
-                                    <th class="px-6 py-4">Department</th>
-                                    <th class="px-6 py-4">Technician</th>
-                                    <th class="px-6 py-4">Received At</th>
-                                    <th class="px-6 py-4">Root Cause</th>
-                                    <th class="px-6 py-4 text-center">Status</th>
-                                    <th class="px-6 py-4">Completed At</th>
-                                    <th class="px-6 py-4 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
-                                <?php
-                                $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
-                                $res = $conn->query($select_query);
+                    
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('รอรับเรื่อง')">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-xl"><i class="fas fa-clock"></i></div>
+                            <span class="text-xs font-bold text-slate-400">WAITING</span>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
+                            <p class="text-sm font-medium text-slate-500 mt-1">Pending</p>
+                        </div>
+                    </div>
 
-                                if($res && $res->num_rows > 0){
-                                    while($row = $res->fetch_assoc()) {
-                                        $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
-                                        
-                                        $ticket_no = formatEmptyOrDash($row['ticket_no']);
-                                        $reporter_name = formatEmptyOrDash($row['reporter_name']);
-                                        $phone_number = formatEmptyOrDash($row['phone_number']);
-                                        $equipment_type = formatEmptyOrDash($row['equipment_type']);
-                                        $problem_desc = formatEmptyOrDash($row['problem_desc']);
-                                        
-                                        $t_pos = ''; 
-                                        $t_eng = '';
-                                        $t_th = '';
-                                        
-                                        if (!empty($row['technician_name']) && $row['technician_name'] !== '-') {
-                                            $t_raw = $row['technician_name'];
-                                            if (isset($tech_info_map[$t_raw])) {
-                                                $t_th = htmlspecialchars($tech_info_map[$t_raw]['th']);
-                                                $t_eng = htmlspecialchars($tech_info_map[$t_raw]['eng']);
-                                                $t_pos = htmlspecialchars($tech_info_map[$t_raw]['pos']);
-                                            } else {
-                                                list($th_name, $en_name) = splitThaiEngName($t_raw, '');
-                                                $t_th = htmlspecialchars($th_name);
-                                                $t_eng = htmlspecialchars($en_name);
-                                                $t_pos = htmlspecialchars(getAutoPosition($th_name));
-                                            }
-                                            
-                                            $techHtml = "<div class='text-blue-600 font-bold hover:text-blue-500 transition-colors cursor-default'>{$t_th}</div>";
-                                            if (!empty($t_eng)) {
-                                                $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
-                                            }
-                                            $techName = $techHtml;
-                                        } else {
-                                            $techName = "<span class='text-rose-500 font-bold'>-</span>";
-                                        }
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('กำลังดำเนินการ')">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-xl"><i class="fas fa-spinner"></i></div>
+                            <span class="text-xs font-bold text-slate-400">ACTIVE</span>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
+                            <p class="text-sm font-medium text-slate-500 mt-1">In Progress</p>
+                        </div>
+                    </div>
 
-                                        $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
-                                        if (empty($row['technician_name']) || $row['technician_name'] === '-') {
-                                            $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
-                                        } else {
-                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
-                                            if (!empty($t_pos)) {
-                                                $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
-                                            }
-                                        }
-
-                                        $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-                                        $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
-                                        $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
-
-                                        $has_received = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-                                        $received_date = $has_received ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $received_time = $has_received ? date('H:i', strtotime($row['created_at'])) : '';
-                                        $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
-
-                                        $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
-                                        $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
-                                        $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
-
-                                        $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
-
-                                        $imageIcon = "";
-                                        if(isset($row['image_path']) && !empty($row['image_path'])) {
-                                            $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                                        }
-
-                                        echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-slate-700'>{$created_date}</div>
-                                                {$created_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
-                                            <td class='px-6 py-4 align-top'><div class='text-slate-800 font-bold'>{$reporter_name}</div><div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div></td>
-                                            <td class='px-6 py-4 align-top'>
-                                                <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
-                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='".strip_tags($problem_desc)."'>{$problem_desc}</div>
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>{$deptEng}</td>
-                                            <td class='px-6 py-4 align-top'>{$techName}</td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-slate-700'>{$received_date}</div>
-                                                {$received_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>{$rootCause}</td>
-                                            <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-emerald-700'>{$completed_date}</div>
-                                                {$completed_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-middle text-right'>
-                                                <div class='flex items-center justify-end space-x-2'>
-                                                    <a href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
-                                                    <a href='view_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
-                                                </div>
-                                            </td>
-                                        </tr>";
-                                    }
-                                } else { echo "<tr><td colspan='11' class='px-6 py-16 text-center text-slate-400 font-medium'>No records found</td></tr>"; }
-                                ?>
-                            </tbody>
-                        </table>
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl"><i class="fas fa-check-circle"></i></div>
+                            <span class="text-xs font-bold text-slate-400">DONE</span>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
+                            <p class="text-sm font-medium text-slate-500 mt-1">Completed</p>
+                        </div>
                     </div>
                 </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="modern-card p-6 flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="equipMonth" onchange="renderEquipChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
+                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
+                                </select>
+                                <select id="equipYear" onchange="renderEquipChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex-1 relative w-full h-[280px]">
+                            <canvas id="mainEquipChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="modern-card p-6 flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Work Status</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="statusMonth" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
+                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
+                                </select>
+                                <select id="statusYear" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex-1 relative w-full h-[280px] flex justify-center items-center">
+                            <canvas id="mainStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="modern-card p-6 flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Top Locations</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="locMonth" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
+                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
+                                </select>
+                                <select id="locYear" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="relative w-full h-[250px]"> 
+                            <canvas id="mainLocChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="modern-card p-6 flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Technician Workload</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="techMonth" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
+                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
+                                </select>
+                                <select id="techYear" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="relative w-full h-[250px]"> 
+                            <canvas id="mainTechChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+                    
+                    <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
+                        <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+                            <div class="flex flex-col">
+                                <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
+                                <span class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ</span>
+                                <span class="text-[12px] text-indigo-500 font-bold mt-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
+                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
+                                </select>
+                                <select id="ratingYear" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center w-full mt-2 flex-1">
+                            <div class="relative w-full h-[380px]">
+                                <canvas id="mainRatingChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Top Reporters</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="reporterMonth" onchange="renderTopReporters()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
+                                    <?php foreach($thai_months as $num => $name) { 
+                                        $val = str_pad($num, 2, '0', STR_PAD_LEFT); 
+                                        echo "<option value='{$val}'>{$name}</option>"; 
+                                    } ?>
+                                </select>
+                                <select id="reporterYear" onchange="renderTopReporters()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">จัดอันดับ:</span>
+                                <div class="flex items-center gap-1.5" id="topReportersFilterContainer">
+                                    <button id="btnFilterTop3" onclick="setTopReportersFilter(3)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 3</button>
+                                    <button id="btnFilterTop5" onclick="setTopReportersFilter(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">Top 5</button>
+                                    <button id="btnFilterTop10" onclick="setTopReportersFilter(10)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 10</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
+                                    ทั้งหมด
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar max-h-[380px]">
+                            <div class="divide-y divide-slate-100" id="topReportersList">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 mt-6">
+                    <div class="modern-card overflow-hidden flex flex-col col-span-full">
+                        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                            <div>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">Latest 5 repairs in system</p>
+                            </div>
+                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
+                                See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto pb-4 custom-scrollbar">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
+                                    <tr>
+                                        <th class="px-6 py-4">Date / Time</th>
+                                        <th class="px-6 py-4">Ticket No.</th>
+                                        <th class="px-6 py-4">Reporter</th>
+                                        <th class="px-6 py-4">Equipment</th>
+                                        <th class="px-6 py-4 text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-slate-100">
+                                    <?php
+                                    $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
+                                    if($recent_dash && $recent_dash->num_rows > 0){
+                                        while($rd = $recent_dash->fetch_assoc()) {
+                                            $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
+                                            $statusText = htmlspecialchars($rd['status']);
+                                            
+                                            $ticket_no = formatEmptyOrDash($rd['ticket_no']);
+                                            $reporter_name = formatEmptyOrDash($rd['reporter_name']);
+                                            $equipment_type = formatEmptyOrDash($rd['equipment_type']);
+                                            
+                                            $has_created = (!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00');
+                                            $date_fmt = $has_created ? date("Y-m-d", strtotime($rd['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                            $time_fmt = $has_created ? date("H:i", strtotime($rd['created_at'])) : '';
+                                            $time_html = $time_fmt ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$time_fmt}</div>" : "";
+                                            
+                                            $imageIcon = "";
+                                            if(isset($rd['image_path']) && !empty($rd['image_path'])) {
+                                                $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
+                                            }
+                                            
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                    <div class='font-medium text-slate-700'>{$date_fmt}</div>
+                                                    {$time_html}
+                                                </td>
+                                                <td class='px-6 py-4 align-top text-slate-500 font-mono font-semibold'>{$ticket_no}</td>
+                                                <td class='px-6 py-4 align-top text-slate-800 font-bold'>
+                                                    <div class='flex items-center'>
+                                                        <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mr-3 text-xs'><i class='fas fa-user'></i></div>
+                                                        {$reporter_name}
+                                                    </div>
+                                                </td>
+                                                <td class='px-6 py-4 align-top text-slate-600 font-medium'>{$equipment_type} {$imageIcon}</td>
+                                                <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$statusText}</span></td>
+                                            </tr>";
+                                        }
+                                    } else {
+                                        echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No transactions found</td></tr>";
+                                    }
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            
             <!-- ===================================================================================
                  ✨ ส่วนที่มีการเปลี่ยนแปลงธีม: Team Management (ตารางรายชื่อช่าง) ✨
                  =================================================================================== -->
