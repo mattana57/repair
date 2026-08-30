@@ -1978,6 +1978,7 @@ $dept_icons = [
         
         let currentTechReviewsData = [];
         let currentDeptReviewsData = []; // ✨ เก็บข้อมูลรีวิวของทั้งแผนก
+        let currentReviewFilter = 'all'; // ✨ เติมตัวแปรนี้ เพื่อให้ Modal ทำงานได้ ✨
         // ✨ ตัวแปรเก็บค่าเริ่มต้น ให้โชว์ Top 5 ✨
         let currentTopReportersLimit = 5;
         
