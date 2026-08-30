@@ -768,23 +768,34 @@ $dept_icons = [
                         </div>
                     </div>
 
+                    <!-- ✨ Top Reporters (แทนที่ Recent Reviews) ✨ -->
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
                         <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3">
                             <div>
-                                <h3 class="font-extrabold text-slate-800 text-lg">Recent Reviews</h3>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">ข้อความรีวิวล่าสุดทั้งหมด</p>
+                                <h3 class="font-extrabold text-slate-800 text-lg">Top Reporters</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="mainReviewMonth" onchange="renderMainRecentReviewsList()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="reporterMonth" onchange="renderTopReporters()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
+                                    <?php foreach($thai_months as $num => $name) { 
+                                        $val = str_pad($num + 1, 2, '0', STR_PAD_LEFT); 
+                                        echo "<option value='{$val}'>{$name}</option>"; 
+                                    } ?>
                                 </select>
-                                <select id="mainReviewYear" onchange="renderMainRecentReviewsList()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
+                                <select id="reporterYear" onchange="renderTopReporters()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
                                     <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
                                 </select>
                             </div>
                         </div>
+                        
+                        <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar max-h-[380px]">
+                            <div class="divide-y divide-slate-100" id="topReportersList">
+                                <!-- ข้อมูลจะถูกดึงมาใส่ตรงนี้ด้วย JS -->
+                            </div>
+                        </div>
+                    </div>
                         
                         <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-2">
                             <div class="flex items-center gap-2">
@@ -2435,10 +2446,9 @@ $dept_icons = [
             const reportInput = document.getElementById('reportSearchInput');
             if(reportInput) reportInput.value = 'Overall System (All Technicians)';
             
-            if(document.getElementById('mainRecentReviewsList')) {
-                setMainReviewFilter('all');
-            }
-        });
+            if(document.getElementById('topReportersList')) {
+            renderTopReporters();
+        }
         
         function searchHistoryTable() {
             let input = document.getElementById('searchHistoryInput');
@@ -3020,68 +3030,66 @@ $dept_icons = [
             setReviewFilter('all'); 
         }
         
-        function renderTechReviewsList() {
-            const container = document.getElementById('techReviewsList');
+        // ✨ ฟังก์ชันคำนวณและแสดงผล Top Reporters ✨
+        function renderTopReporters() {
+            const container = document.getElementById('topReportersList');
+            if(!container) return;
             container.innerHTML = '';
-            
-            let filteredReviews = [...currentTechReviewsData];
-            
-            if (currentReviewFilter !== 'all') {
-                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentReviewFilter));
-            }
-            
-            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
 
-            if(filteredReviews.length === 0) {
-                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full'>
-                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
-                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนนี้</p>
-                                          </div>`;
+            let m = document.getElementById('reporterMonth') ? document.getElementById('reporterMonth').value : 'all';
+            let y = document.getElementById('reporterYear') ? document.getElementById('reporterYear').value : 'all';
+
+            let filteredRepairs = getFilteredRepairsByMonthYear(m, y);
+
+            let reporterMap = {};
+            filteredRepairs.forEach(r => {
+                let name = formatValJS(r.reporter_name);
+                // ตัดพวกค่าที่ไม่มีชื่อออก หรือจัดกลุ่มเป็น 'ไม่ระบุชื่อ'
+                if (name.includes('ไม่ระบุ') || name.includes('span')) name = 'ไม่ระบุชื่อผู้แจ้ง';
+                else name = r.reporter_name.trim();
+
+                if (!reporterMap[name]) reporterMap[name] = 0;
+                reporterMap[name]++;
+            });
+
+            // แปลงเป็น Array แล้วเรียงลำดับจากแจ้งมากสุด ไปน้อยสุด
+            let reporterArr = Object.keys(reporterMap).map(k => ({ name: k, count: reporterMap[k] }));
+            reporterArr.sort((a,b) => b.count - a.count);
+
+            if(reporterArr.length === 0) {
+                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full min-h-[250px]'>
+                                            <i class='fas fa-user-tag text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลผู้แจ้งในเดือน/ปีนี้</p>
+                                        </div>`;
             } else {
-                filteredReviews.forEach(rev => {
-                    let r_name = formatValJS(rev.reporter_name);
-                    let r_rating = parseInt(rev.rating || 0);
-                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
-                                    ? rev.review_comment.trim() 
-                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
-                    
-                    let stars_html = '';
-                    if (r_rating === 0) {
-                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
-                    } else {
-                        for(let i=1; i<=5; i++) {
-                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
-                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
-                        }
-                    }
+                reporterArr.forEach((rep, index) => {
+                    // กำหนดสีและไอคอนตามอันดับ 1, 2, 3
+                    let rankColor = index === 0 ? 'text-amber-500 bg-amber-50 border-amber-200' :
+                                    index === 1 ? 'text-slate-500 bg-slate-100 border-slate-300' :
+                                    index === 2 ? 'text-orange-500 bg-orange-50 border-orange-200' :
+                                    'text-indigo-500 bg-indigo-50 border-indigo-100';
 
-                    let date_str = "-";
-                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
-                        date_str = timeAgoJS(rev.completed_at);
-                    }
+                    let rankIcon = index === 0 ? '<i class="fas fa-trophy text-lg"></i>' :
+                                   index === 1 ? '<i class="fas fa-medal text-base"></i>' :
+                                   index === 2 ? '<i class="fas fa-award text-base"></i>' :
+                                   `<span class="text-sm font-black">#${index + 1}</span>`;
 
-                    // สร้างป้ายชื่อช่าง
-                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
-                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
-
-                    // ✨ เพิ่ม onclick="window.location.href..." และเอฟเฟกต์ลูกศร ✨
-                    container.innerHTML += `<div onclick="window.location.href='update_repair.php?id=${rev.id}'" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
-                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
-                                <i class="fas fa-arrow-right text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
-                            </div>
-                            <div class='flex justify-between items-start mb-2.5 pr-6'>
-                                <div class='flex items-center gap-3'>
-                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
-                                    <div>
-                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
-                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
-                                    </div>
+                    container.innerHTML += `
+                        <div class='p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0'>
+                            <div class='flex items-center gap-4'>
+                                <div class='w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${rankColor} shrink-0'>
+                                    ${rankIcon}
                                 </div>
-                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
+                                <div>
+                                    <div class='text-sm font-bold text-slate-800'>${rep.name}</div>
+                                    <div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>
+                                </div>
                             </div>
-                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
-                            <div class='pl-11'>${techInfoHtml}</div>
-                          </div>`;
+                            <div class='text-right'>
+                                <span class='text-xl font-extrabold text-indigo-600'>${rep.count}</span>
+                                <span class='text-[11px] text-slate-500 font-medium ml-1'>รายการ</span>
+                            </div>
+                        </div>`;
                 });
             }
         }
