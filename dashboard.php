@@ -1963,7 +1963,7 @@ $dept_icons = [
             </div>
         </div>
     </div>
-
+    
     <!-- ================== JAVASCRIPT ================== -->
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
