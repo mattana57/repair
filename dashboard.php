@@ -2057,7 +2057,7 @@ $dept_icons = [
                 });
             }
         }
-        
+
         function formatValJS(val) {
             if (!val || String(val).trim() === '-' || String(val).trim() === '') return "<span class='text-rose-500 font-bold'>-</span>";
             if (String(val).trim() === 'ไม่ระบุ') return "<span class='text-rose-500 font-bold'>ไม่ระบุ</span>";
@@ -3012,6 +3012,7 @@ $dept_icons = [
         }
         
         // ✨ ฟังก์ชันคำนวณและแสดงผล Top Reporters ✨
+        // ✨ ฟังก์ชันคำนวณและแสดงผล Top Reporters ✨
         function renderTopReporters() {
             const container = document.getElementById('topReportersList');
             if(!container) return;
@@ -3035,7 +3036,6 @@ $dept_icons = [
             let reporterArr = Object.keys(reporterMap).map(k => ({ name: k, count: reporterMap[k] }));
             reporterArr.sort((a,b) => b.count - a.count);
 
-            // ✨ ส่วนที่คัดกรองจำนวนตามปุ่มที่กด ✨
             if (currentTopReportersLimit !== 'all') {
                 reporterArr = reporterArr.slice(0, parseInt(currentTopReportersLimit));
             }
@@ -3057,20 +3057,29 @@ $dept_icons = [
                                    index === 2 ? '<i class="fas fa-award text-base"></i>' :
                                    `<span class="text-sm font-black">#${index + 1}</span>`;
 
+                    // ✨ แก้ไขส่วนนี้: เพิ่ม onclick, cursor-pointer และ group-hover เพื่อให้กดดูประวัติได้ ✨
+                    // ถ้าชื่อเป็น 'ไม่ระบุชื่อผู้แจ้ง' จะกดดูไม่ได้
+                    let safeName = rep.name.replace(/'/g, "\\'");
+                    let clickAction = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? '' : `onclick="viewHistory('${safeName}', 'reporter')" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group" title="คลิกเพื่อดูประวัติการแจ้งซ่อมของ ${rep.name}"`;
+                    let disableClickClass = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? `class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 opacity-70"` : '';
+
                     container.innerHTML += `
-                        <div class='p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0'>
+                        <div ${clickAction || disableClickClass}>
                             <div class='flex items-center gap-4'>
-                                <div class='w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${rankColor} shrink-0'>
+                                <div class='w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${rankColor} shrink-0 group-hover:scale-110 transition-transform'>
                                     ${rankIcon}
                                 </div>
                                 <div>
-                                    <div class='text-sm font-bold text-slate-800'>${rep.name}</div>
+                                    <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${rep.name}</div>
                                     <div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>
                                 </div>
                             </div>
-                            <div class='text-right'>
-                                <span class='text-xl font-extrabold text-indigo-600'>${rep.count}</span>
-                                <span class='text-[11px] text-slate-500 font-medium ml-1'>รายการ</span>
+                            <div class='text-right flex items-center'>
+                                <div class='flex flex-col items-end'>
+                                    <span class='text-xl font-extrabold text-indigo-600'>${rep.count}</span>
+                                    <span class='text-[11px] text-slate-500 font-medium ml-1'>รายการ</span>
+                                </div>
+                                ${rep.name !== 'ไม่ระบุชื่อผู้แจ้ง' ? `<i class="fas fa-chevron-right ml-4 text-slate-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-xs"></i>` : ''}
                             </div>
                         </div>`;
                 });
