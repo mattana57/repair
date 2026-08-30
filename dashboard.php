@@ -1963,7 +1963,7 @@ $dept_icons = [
             </div>
         </div>
     </div>
-    
+
     <!-- ================== JAVASCRIPT ================== -->
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
@@ -1992,6 +1992,72 @@ $dept_icons = [
             'reports': 'Official Report'
         };
 
+        // ✨ ฟังก์ชันแสดงผลรายการรีวิวใน Modal ✨
+        function renderTechReviewsList() {
+            const container = document.getElementById('techReviewsList');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            let filteredReviews = [...currentTechReviewsData];
+            
+            if (currentReviewFilter !== 'all') {
+                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentReviewFilter));
+            }
+            
+            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+
+            if(filteredReviews.length === 0) {
+                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full'>
+                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนนี้</p>
+                                          </div>`;
+            } else {
+                filteredReviews.forEach(rev => {
+                    let r_name = formatValJS(rev.reporter_name);
+                    let r_rating = parseInt(rev.rating || 0);
+                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
+                                    ? rev.review_comment.trim() 
+                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
+                    
+                    let stars_html = '';
+                    if (r_rating === 0) {
+                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                    } else {
+                        for(let i=1; i<=5; i++) {
+                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                        }
+                    }
+
+                    let date_str = "-";
+                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
+                        date_str = timeAgoJS(rev.completed_at);
+                    }
+
+                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
+                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
+
+                    container.innerHTML += `<div onclick="window.open('update_repair.php?id=${rev.id}', '_blank')" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
+                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
+                            </div>
+                            <div class='flex justify-between items-start mb-2.5 pr-6'>
+                                <div class='flex items-center gap-3'>
+                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
+                                    <div>
+                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
+                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
+                                    </div>
+                                </div>
+                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
+                            </div>
+                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
+                            <div class='pl-11'>${techInfoHtml}</div>
+                          </div>`;
+                });
+            }
+        }
+        
         function formatValJS(val) {
             if (!val || String(val).trim() === '-' || String(val).trim() === '') return "<span class='text-rose-500 font-bold'>-</span>";
             if (String(val).trim() === 'ไม่ระบุ') return "<span class='text-rose-500 font-bold'>ไม่ระบุ</span>";
