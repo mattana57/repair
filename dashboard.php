@@ -1040,9 +1040,9 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div>
-                    <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Administrators</h3>
-                    <p class="text-sm font-medium text-slate-500 mt-1 mb-5">Manage administrators</p>
+                <div class="mb-6">
+                    <h3 class="text-lg md:text-xl font-extrabold text-slate-800 mb-1 flex items-center">Administrators</h3>
+                    <p class="text-sm font-medium text-slate-500 mb-6">Manage administrators</p>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
