@@ -1291,6 +1291,7 @@ $dept_icons = [
                 
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-700 tracking-tight">Team Management</h2>
                         <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
                     <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
