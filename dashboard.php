@@ -1041,7 +1041,7 @@ $dept_icons = [
                 </div>
 
                 <div>
-                    <h2 class="text-2xl md:text-2xl font-extrabold text-slate-700 tracking-tight mb-3">Administrators</h2>
+                    <h2 class="text-2xl md:text-2xl font-extrabold text-slate-500 tracking-tight mb-3">Administrators</h2>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
