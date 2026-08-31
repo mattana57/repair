@@ -570,7 +570,7 @@ $dept_icons = [
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h3 class="text2xl font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle">Dashboard Overview</h3>
+                <h2 class="text2xl font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle">Dashboard Overview</h2>
             </div>
             
             <div class="flex items-center">
