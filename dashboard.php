@@ -1109,13 +1109,13 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div class="mt-12 mb-4">
-                    <div class="flex flex-col lg:flex-row justify-between items-start gap-4 mb-4">
-                        <div>
-                            <h3 class="text-lg md:text-xl font-extrabold text-slate-800">Technicians</h3>
-                            <p class="text-sm font-medium text-slate-500 mt-0.5">Manage technicians</p>
+                <div class="mt-16 space-y-6">
+                    <div class="flex flex-col lg:flex-row justify-between items-start gap-4">
+                        <div class="pt-1.5">
+                            <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center leading-none">Technicians</h3>
+                            <p class="text-sm font-medium text-slate-500 mt-1.5">Manage technicians</p>
                         </div>
-                        <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto pt-1">
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
                             <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
