@@ -1109,7 +1109,7 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div class="mt-16 space-y-6">
+                <div class="mt-24 space-y-6">
                     <div class="flex flex-col lg:flex-row justify-between items-start gap-4">
                         <div class="pt-1.5">
                             <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center leading-none">Technicians</h3>
