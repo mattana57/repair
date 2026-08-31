@@ -1040,9 +1040,9 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div class="mb-6">
-                    <h3 class="text-lg md:text-xl font-extrabold text-slate-800 mb-1 flex items-center">Administrators</h3>
-                    <p class="text-sm font-medium text-slate-500 mb-6">Manage administrators</p>
+                <div>
+                    <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Administrators</h3>
+                    <p class="text-sm font-medium text-slate-500 mt-1 mb-5">Manage administrators</p>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
@@ -1112,8 +1112,8 @@ $dept_icons = [
                 <div class="mt-16 space-y-6">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                         <div>
-                            <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Technicians</h3>
-                            <p class="text-sm font-medium text-slate-500 mt-1">Manage technicians</p>
+                            <h3 class="text-lg md:text-xl font-extrabold text-slate-800 mb-1 flex items-center">Technicians</h3>
+                            <p class="text-sm font-medium text-slate-500 mb-0">Manage technicians</p>
                         </div>
                         <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
