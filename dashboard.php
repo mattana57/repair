@@ -1032,7 +1032,7 @@ $dept_icons = [
             <div id="technicians" class="section hidden space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
-                        <p class="text-sm font-medium text-slate-500 mt-0.5">Manage administrators and technicians</p>
+                        
                     </div>
                     <div class="flex flex-col md:flex-row w-full md:w-auto gap-3">
                         <button onclick="openTechAdminModal('Admin')" class="flex-1 md:flex-none bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> Add Admin</button>
@@ -1042,6 +1042,7 @@ $dept_icons = [
 
                 <div>
                     <h3 class="text-lg md:text-xl font-extrabold text-slate-800 mb-3 flex items-center">Administrators</h3>
+                    <p class="text-sm font-medium text-slate-500 mt-1">Manage administrators and technicians</p>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
