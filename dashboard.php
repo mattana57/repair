@@ -1040,9 +1040,9 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div class="mb-6">
-                    <h3 class="text-lg md:text-xl font-extrabold text-slate-800 mb-1 flex items-center">Administrators</h3>
-                    <p class="text-sm font-medium text-slate-500 mb-6">Manage administrators</p>
+                <div>
+                    <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Administrators</h3>
+                    <p class="text-sm font-medium text-slate-500 mt-1 mb-5">Manage administrators</p>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
@@ -1109,13 +1109,13 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div class="mt-16 space-y-6">
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div class="mt-12 mb-4">
+                    <div class="flex flex-col lg:flex-row justify-between items-start gap-4 mb-4">
                         <div>
-                            <h3 class="text-lg md:text-xl font-extrabold text-slate-800 mb-1 flex items-center">Technicians</h3>
-                            <p class="text-sm font-medium text-slate-500 mb-0">Manage technicians</p>
+                            <h3 class="text-lg md:text-xl font-extrabold text-slate-800">Technicians</h3>
+                            <p class="text-sm font-medium text-slate-500 mt-0.5">Manage technicians</p>
                         </div>
-                        <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto pt-1">
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
                             <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
