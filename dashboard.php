@@ -570,7 +570,7 @@ $dept_icons = [
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h2 class="text-2xl font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle">Dashboard Overview</h2>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Overview</h2>
             </div>
             
             <div class="flex items-center">
@@ -1291,7 +1291,7 @@ $dept_icons = [
                 
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
-                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Team Management</h2>
+                        <h3 class="text-base font-extrabold text-slate-700 mb-3 flex items-center">Team Management</h2>
                         <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
                     <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
