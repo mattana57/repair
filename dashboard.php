@@ -266,11 +266,16 @@ if($check_lu && $check_lu->num_rows > 0) {
     $lu_res = $conn->query("SELECT line_display_name, real_name, phone_number FROM line_users");
     if($lu_res) {
         while($lu = $lu_res->fetch_assoc()) {
+            $user_info = [
+                'line_display_name' => $lu['line_display_name'],
+                'real_name' => $lu['real_name'],
+                'phone_number' => $lu['phone_number']
+            ];
             if(!empty($lu['line_display_name'])) {
-                $line_users_map[$lu['line_display_name']] = [
-                    'real_name' => $lu['real_name'],
-                    'phone_number' => $lu['phone_number']
-                ];
+                $line_users_map[$lu['line_display_name']] = $user_info;
+            }
+            if(!empty($lu['real_name'])) {
+                $line_users_map[$lu['real_name']] = $user_info;
             }
         }
     }
