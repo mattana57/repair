@@ -158,7 +158,7 @@ if (!is_null($events['events'])) {
                 }
             }
 
-            $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร','เบอโทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', 'นะคะ', 'นะครับ', 'ค่ะ', 'ครับ', 'คับ', 'จ้า', 'จ๊ะ', 'นะ', 'หน่อย','ด้วย','จาก','เดิม','อัน','เก่า','และ','หรือ','ทั้ง','ได้ไหม','ได้มั้ย','คะ','ข้อมูล','กับ','ปรับ','ปรุง','แก้','นี้','เบอ','จ้ะ','ค้าบ','อยาก','ต้องการ','ช่วย','ให้','ค่า','ต้อง','การ','ครัช','ได้','มั้ย','ไหม','โท','สกุล','เอา','ออก','แล้ว','ถ้า','หาก','สอง','อย่าง','2',':', '-', ','];
+            $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'จาก', 'เดิม', 'ด้วย', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร','เบอโทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', 'นะคะ', 'นะครับ', 'ค่ะ', 'ครับ', 'คับ', 'จ้า', 'จ๊ะ', 'นะ', 'หน่อย', 'และ', 'หรือ', 'ทั้ง', 'ได้ไหม', 'ได้มั้ย', 'คะ', 'ข้อมูล', 'กับ', 'ปรับ', 'ปรุง', 'แก้', 'นี้', 'เบอ', 'จ้ะ', 'ค้าบ', 'อยาก', 'ต้องการ', 'ช่วย', 'ให้', 'ค่า', 'ต้อง', 'การ', 'ครัช', 'ได้', 'มั้ย', 'ไหม', 'โท', 'สกุล', 'เอา', 'ออก', 'แล้ว', 'ถ้า', 'หาก', 'สอง', 'อย่าง', '2', ':', '-', ','];
 
             if ($is_edit_cmd) {
                 preg_match('/(0[0-9]{8,9})/', $text, $matches);
@@ -258,7 +258,7 @@ if (!is_null($events['events'])) {
                         $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE ticket_no = ?");
                         $stmt_upd->bind_param("ss", $new_rev, $recent_job['ticket_no']);
                         $stmt_upd->execute();
-                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมเรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมให้ใบงาน {$recent_job['ticket_no']} เรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
                         continue;
                     }
                 }
@@ -384,7 +384,7 @@ if (!is_null($events['events'])) {
                         $stmt_update_review->bind_param("ss", $new_rev, $recent_job['ticket_no']);
                         $stmt_update_review->execute();
                         
-                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมเรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมให้ใบงาน {$recent_job['ticket_no']} เรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
                     }
                 }
             }
@@ -577,7 +577,7 @@ if (!is_null($events['events'])) {
                     if($stmt->execute()){
                         $thankYouMsg = [
                             'type' => 'text', 
-                            'text' => "✅ บันทึกคะแนน $score ดาว เรียบร้อยค่ะ\n\n(ประทับใจส่วนไหน เลือกรีวิวด้านบน 👆 หรือพิมพ์ข้อความส่งมาในแชทได้เลยนะคะ 💬)"
+                            'text' => "✅ บันทึกคะแนน $score ดาว สำหรับใบงาน $ticket_no เรียบร้อยค่ะ\n\n(ประทับใจส่วนไหน เลือกรีวิวด้านบน 👆 หรือพิมพ์ข้อความส่งมาในแชทได้เลยนะคะ 💬)"
                         ];
                         send_reply($replyToken, $thankYouMsg, $channelAccessToken);
                     }
@@ -597,10 +597,10 @@ if (!is_null($events['events'])) {
                         $stmt_upd->bind_param("ss", $new_rev, $ticket_no);
                         
                         if($stmt_upd->execute()){
-                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ เพิ่มรีวิว: $tag"], $channelAccessToken);
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ เพิ่มรีวิวให้ใบงาน $ticket_no: $tag"], $channelAccessToken);
                         }
                     } else {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "คุณได้เลือกรีวิว '$tag' ไปแล้วค่ะ 💖"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "คุณได้เลือกรีวิว '$tag' ให้ใบงาน $ticket_no ไปแล้วค่ะ 💖"], $channelAccessToken);
                     }
                 }
             }
