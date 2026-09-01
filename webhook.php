@@ -63,7 +63,7 @@ if (!is_null($events['events'])) {
             $stmt_chk_user->bind_param("s", $userId);
             $stmt_chk_user->execute();
             if ($stmt_chk_user->get_result()->num_rows === 0) {
-                send_reply($replyToken, ['type' => 'text', 'text' => "🛑 คุณยังไม่ได้ลงทะเบียนใช้งานค่ะ\n\nกรุณาลงทะเบียนก่อนส่งรูปหรือแจ้งซ่อม โดยพิมพ์:\nลงทะเบียน [ชื่อ-สกุล] [เบอร์โทร]\n\nตัวอย่าง:\nลงทะเบียน มัทนา รัตนแสง 0812345678"], $channelAccessToken);
+                send_reply($replyToken, ['type' => 'text', 'text' => "🛑 คุณยังไม่ได้ให้ข้อมูลติดต่อค่ะ\n\nกรุณาพิมพ์ ชื่อ และ เบอร์โทรศัพท์ ส่งมาได้เลยนะคะ (ไม่ต้องมีคำสั่งใดๆ)\n\nตัวอย่าง:\nดวงดาว 098009809"], $channelAccessToken);
                 continue;
             }
 
@@ -120,29 +120,6 @@ if (!is_null($events['events'])) {
         if ($event['type'] == 'message' && $event['message']['type'] == 'text') {
             $text = trim($event['message']['text']);
             $message_id = $event['message']['id']; 
-
-            if (mb_strpos($text, 'ลงทะเบียน') === 0) {
-                $reg_data = mb_substr($text, 9);
-                $reg_data = preg_replace('/(ชื่อ\s*-\s*สกุล|ชื่อ|นามสกุล|เบอร์โทรศัพท์|เบอร์โทร|เบอร์|โทร|tel)/iu', ' ', $reg_data);
-                $reg_data = trim($reg_data);
-                
-                if (preg_match('/^(.*?)\s*([0-9]{9,10})$/u', $reg_data, $matches)) {
-                    $real_name = trim($matches[1]);
-                    $phone = trim($matches[2]);
-
-                    $stmt = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE line_display_name=?, real_name=?, phone_number=?");
-                    $stmt->bind_param("sssssss", $userId, $line_name, $real_name, $phone, $line_name, $real_name, $phone);
-                    
-                    if ($stmt->execute()) {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ ลงทะเบียนผู้ใช้สำเร็จ!\n\nชื่อ-สกุล: $real_name\nเบอร์โทร: $phone\n\nคุณสามารถพิมพ์แจ้งซ่อมเข้ามาได้เลยค่ะ เช่น 'แอร์น้ำหยด ห้อง 901' 🛠️"], $channelAccessToken);
-                    } else {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการบันทึกข้อมูลค่ะ"], $channelAccessToken);
-                    }
-                } else {
-                    send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รูปแบบการลงทะเบียนไม่ถูกต้องค่ะ\n\nกรุณาพิมพ์:\nลงทะเบียน [ชื่อ-นามสกุล] [เบอร์โทร 10 หลัก]\n\nตัวอย่าง:\nลงทะเบียน มัทนา รัตนแสง 0812345678"], $channelAccessToken);
-                }
-                continue;
-            }
 
             if (mb_strpos($text, 'ผูกบัญชี') === 0) {
                 $code = trim(str_replace('ผูกบัญชี', '', $text));
@@ -208,7 +185,28 @@ if (!is_null($events['events'])) {
                     }
                 }
 
-                send_reply($replyToken, ['type' => 'text', 'text' => "🛑 คุณยังไม่ได้ลงทะเบียนใช้งานค่ะ\n\nกรุณาลงทะเบียนก่อนแจ้งซ่อม โดยพิมพ์:\nลงทะเบียน [ชื่อ-สกุล] [เบอร์โทร]\n\nตัวอย่าง:\nลงทะเบียน มัทนา รัตนแสง 0812345678"], $channelAccessToken);
+                if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {
+                    $phone = $matches[1];
+                    $name_part = str_replace($phone, '', $text);
+                    $words_to_remove = ['ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', ':', '-', ','];
+                    $real_name = str_replace($words_to_remove, ' ', $name_part);
+                    $real_name = preg_replace('/\s+/', ' ', $real_name);
+                    $real_name = trim($real_name);
+                    
+                    if (!empty($real_name)) {
+                        $stmt = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE line_display_name=?, real_name=?, phone_number=?");
+                        $stmt->bind_param("sssssss", $userId, $line_name, $real_name, $phone, $line_name, $real_name, $phone);
+                        
+                        if ($stmt->execute()) {
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกข้อมูลสำเร็จ!\nยินดีต้อนรับคุณ $real_name\n\nจากนี้สามารถพิมพ์แจ้งซ่อมเข้ามาได้เลยค่ะ เช่น 'แอร์น้ำหยด ห้อง 901' 🛠️"], $channelAccessToken);
+                        } else {
+                            send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการบันทึกข้อมูลค่ะ"], $channelAccessToken);
+                        }
+                        continue;
+                    }
+                }
+
+                send_reply($replyToken, ['type' => 'text', 'text' => "🛑 คุณยังไม่ได้ให้ข้อมูลติดต่อค่ะ\n\nเพื่อให้ช่างติดต่อกลับได้สะดวก กรุณาพิมพ์ ชื่อ และ เบอร์โทรศัพท์ ส่งมาให้ระบบได้เลยนะคะ\n\nตัวอย่าง:\nดวงดาว 098009809"], $channelAccessToken);
                 continue;
             }
 
@@ -252,8 +250,7 @@ if (!is_null($events['events'])) {
                     $flex_details = [
                         ['type' => 'text', 'text' => "ปัญหา: $category", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                         ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
-                        ['type' => 'text', 'text' => "ผู้แจ้ง: ".$user_reg['real_name'], 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
-                        ['type' => 'text', 'text' => "เบอร์ติดต่อ: ".$user_reg['phone_number'], 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
+                        ['type' => 'text', 'text' => "ผู้แจ้ง: ".$user_reg['real_name']." (".$user_reg['phone_number'].")", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
                         ['type' => 'text', 'text' => "รายละเอียด: $problem", 'size' => 'xs', 'color' => '#ef4444', 'wrap' => true]
                     ];
                     if ($image_path) {
@@ -320,7 +317,8 @@ if (!is_null($events['events'])) {
                 $ticket_no = $postbackData['ticket'];
 
                 if ($postbackData['action'] == 'accept') {
-                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_name, equipment_type, location FROM repairs WHERE ticket_no = ?");
+                    // ปรับ Query ดึงชื่อและเบอร์โทรของผู้แจ้งซ่อมมาด้วย
+                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_name, equipment_type, location, reporter_name, phone_number FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
@@ -346,6 +344,7 @@ if (!is_null($events['events'])) {
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
 
+                            // ปรับหน้าตาบับเบิล "รับงานเรียบร้อย" ให้แสดงชื่อผู้แจ้งและเบอร์โทร
                             $replyMsg = [
                                 'type' => 'flex',
                                 'altText' => 'รับงานซ่อม: '.$ticket_no,
@@ -365,6 +364,7 @@ if (!is_null($events['events'])) {
                                                     ['type' => 'text', 'text' => "ใบงาน: $ticket_no", 'size' => 'xs', 'color' => '#333333'],
                                                     ['type' => 'text', 'text' => "ปัญหา: ".$job['equipment_type'], 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                                                     ['type' => 'text', 'text' => "สถานที่: ".$job['location'], 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
+                                                    ['type' => 'text', 'text' => "ผู้แจ้ง: ".$job['reporter_name']." (".$job['phone_number'].")", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                                                     ['type' => 'text', 'text' => "สถานะ: กำลังดำเนินการ", 'size' => 'xs', 'color' => '#3b82f6', 'weight' => 'bold', 'wrap' => true]
                                                 ]
                                             ]
