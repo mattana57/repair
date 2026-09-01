@@ -1875,10 +1875,10 @@ $dept_icons = [
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
                 <p class="text-lg font-extrabold text-slate-800 truncate pr-4" id="historyModalTitle">History</p>
                 <div class="flex items-center gap-3 shrink-0">
-                    <button id="historyModalLinkBtn" class="text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center">
-                        <i class="fas fa-address-book mr-2"></i> Contacts
+                    <button id="historyModalLinkBtn" class="text-xs font-bold text-indigo-600 bg-white border border-indigo-200 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-lg shadow-sm transition-colors flex items-center">
+                        <i class="fas fa-address-book mr-1.5"></i> จัดการข้อมูล
                     </button>
-                    <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-sm shrink-0 border border-slate-200"><i class="fas fa-times"></i></button>
+                    <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
                 </div>
             </div>
            <div class="p-6 overflow-y-auto flex-1 bg-white">
@@ -3345,17 +3345,17 @@ $dept_icons = [
             const linkBtn = document.getElementById('historyModalLinkBtn');
             if (linkBtn) {
                 if (type === 'reporter') {
-                    linkBtn.innerHTML = '<i class="fas fa-address-book mr-2"></i> Contacts';
+                    linkBtn.innerHTML = '<i class="fas fa-address-book mr-1.5"></i> จัดการผู้แจ้ง';
                     linkBtn.onclick = function() { toggleModal('historyModal'); show('users'); };
                 } else {
-                    linkBtn.innerHTML = '<i class="fas fa-user-cog mr-2"></i> Technicians';
+                    linkBtn.innerHTML = '<i class="fas fa-users-cog mr-1.5"></i> จัดการช่าง';
                     linkBtn.onclick = function() { toggleModal('historyModal'); show('technicians'); };
                 }
             }
             
             toggleModal('historyModal');
         }
-        
+
         function confirmUnlink(id) { 
             Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "ช่างจะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
                 if(r.isConfirmed) window.location.href = 'dashboard.php?unlink_tech=' + id; 
