@@ -1520,31 +1520,60 @@ $dept_icons = [
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                $asset_res = $conn->query("SELECT * FROM assets ORDER BY created_at DESC");
-                                if($asset_res && $asset_res->num_rows > 0){
-                                    while($a = $asset_res->fetch_assoc()) {
-                                        $a_statusClass = ($a['status'] == 'ใช้งานปกติ') ? 'badge-success' : 'bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-[11px] font-bold';
+                                // ดึงข้อมูลพื้นฐานจาก repairs เท่านั้นเพื่อป้องกัน SQL Error
+                                $reporter_res = $conn->query("SELECT reporter_name, MAX(phone_number) as fallback_phone, COUNT(id) as total_repairs FROM repairs WHERE reporter_name IS NOT NULL AND reporter_name != '' GROUP BY reporter_name ORDER BY MAX(created_at) DESC");
+                                
+                                if($reporter_res && $reporter_res->num_rows > 0){
+                                    while($r = $reporter_res->fetch_assoc()) {
+                                        $raw_name = trim((string)$r['reporter_name']);
                                         
-                                        $a_code = formatEmptyOrDash($a['asset_code']);
-                                        $a_name = formatEmptyOrDash($a['asset_name']);
-                                        $a_cat = formatEmptyOrDash($a['category']);
+                                        $line_id = $raw_name;
+                                        $real_name = "";
+                                        $display_phone = trim((string)$r['fallback_phone']);
                                         
-                                        $js_id = $a['id']; $js_code = htmlspecialchars($a['asset_code'], ENT_QUOTES); $js_name = htmlspecialchars($a['asset_name'], ENT_QUOTES); $js_cat = htmlspecialchars($a['category'], ENT_QUOTES); $js_status = htmlspecialchars($a['status'], ENT_QUOTES);
-
-                                        echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-500'>{$a_code}</td>
-                                            <td class='px-6 py-4 align-top text-slate-800 font-bold'>{$a_name}</td>
-                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>{$a_cat}</td>
-                                            <td class='px-6 py-4 align-middle text-center'><span class='{$a_statusClass}'>{$a['status']}</span></td>
+                                        // นำมาเทียบกับ Map ที่ดึงมาจากตาราง line_users เพื่อหาชื่อจริงและเบอร์
+                                        if (isset($line_users_map[$raw_name])) {
+                                            if (!empty($line_users_map[$raw_name]['real_name'])) {
+                                                $real_name = $line_users_map[$raw_name]['real_name'];
+                                            }
+                                            if (!empty($line_users_map[$raw_name]['phone_number'])) {
+                                                $display_phone = $line_users_map[$raw_name]['phone_number'];
+                                            }
+                                        }
+                                        
+                                        // จัดรูปแบบการแสดงผล: ชื่อหลัก (บน) = ID LINE | ชื่อรอง (ล่าง) = ชื่อสกุลจริง
+                                        $main_name_html = formatEmptyOrDash($line_id);
+                                        $sub_name_html = ($real_name !== '') ? "<div class='text-[10px] text-slate-400 mt-0.5 font-medium'>ชื่อ-สกุล: " . htmlspecialchars($real_name) . "</div>" : "";
+                                        
+                                        $js_old_name = htmlspecialchars($raw_name, ENT_QUOTES); 
+                                        $js_old_phone = htmlspecialchars($display_phone, ENT_QUOTES);
+                                        
+                                        $rep_phone_html = formatEmptyOrDash($display_phone);
+                                        
+                                        echo "<tr class='hover:bg-slate-50/50 transition-colors user-row'>
+                                            <td class='px-6 py-4 align-top'>
+                                                <div class='flex items-center'>
+                                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 shrink-0'><i class='fas fa-user text-xs'></i></div>
+                                                    <div>
+                                                        <div class='text-slate-800 font-bold'>{$main_name_html}</div>
+                                                        {$sub_name_html}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>{$rep_phone_html}</td>
+                                            <td class='px-6 py-4 align-middle text-center'>
+                                                <span class='px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600'>{$r['total_repairs']}</span>
+                                            </td>
                                             <td class='px-6 py-4 align-middle text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"openEditAssetModal('$js_id', '$js_code', '$js_name', '$js_cat', '$js_status')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
-                                                    <button onclick=\"confirmDelete('asset', {$a['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
+                                                    <button onclick=\"viewHistory('{$js_old_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                                                    <button onclick=\"openEditReporterModal('{$js_old_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"confirmDeleteReporter('{$js_old_name}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
                                         </tr>";
                                     }
-                                } else { echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>No assets found</td></tr>"; }
+                                } else { echo "<tr><td colspan='4' class='px-6 py-12 text-center text-slate-400'>No history found</td></tr>"; }
                                 ?>
                             </tbody>
                         </table>
