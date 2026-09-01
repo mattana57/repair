@@ -1576,6 +1576,7 @@ $dept_icons = [
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
+                                // ดึงข้อมูลพื้นฐานจาก repairs
                                 $reporter_res = $conn->query("SELECT reporter_name, MAX(phone_number) as fallback_phone, COUNT(id) as total_repairs FROM repairs WHERE reporter_name IS NOT NULL AND reporter_name != '' GROUP BY reporter_name ORDER BY MAX(created_at) DESC");
                                 
                                 if($reporter_res && $reporter_res->num_rows > 0){
@@ -1586,19 +1587,26 @@ $dept_icons = [
                                         $real_name = "";
                                         $display_phone = trim((string)$r['fallback_phone']);
                                         
+                                        // นำมาเทียบกับ Map เพื่อดึง ID LINE, ชื่อจริง และเบอร์
                                         if (isset($line_users_map[$raw_name])) {
+                                            if (!empty($line_users_map[$raw_name]['line_display_name'])) {
+                                                $line_id = $line_users_map[$raw_name]['line_display_name']; // ดึง ID LINE (nattam) กลับมา
+                                            }
                                             if (!empty($line_users_map[$raw_name]['real_name'])) {
-                                                $real_name = $line_users_map[$raw_name]['real_name'];
+                                                $real_name = $line_users_map[$raw_name]['real_name']; // ชื่อจริง
                                             }
                                             if (!empty($line_users_map[$raw_name]['phone_number'])) {
-                                                $display_phone = $line_users_map[$raw_name]['phone_number'];
+                                                $display_phone = $line_users_map[$raw_name]['phone_number']; // เบอร์โทร
                                             }
                                         }
                                         
+                                        // จัดรูปแบบ: ชื่อหลัก (บน) = ID LINE, ชื่อรอง (ล่าง) = ชื่อสกุลจริง
                                         $main_name_html = formatEmptyOrDash($line_id);
-                                        $sub_name_html = ($real_name !== '') ? "<div class='text-[10px] text-slate-400 mt-0.5 font-medium'>ชื่อ-สกุล: " . htmlspecialchars($real_name) . "</div>" : "";
+                                        $sub_name_html = ($real_name !== '' && $real_name !== $line_id) ? "<div class='text-[10px] text-slate-400 mt-0.5 font-medium'>ชื่อ-สกุล: " . htmlspecialchars($real_name) . "</div>" : "";
                                         
-                                        $js_old_name = htmlspecialchars($raw_name, ENT_QUOTES); 
+                                        // แยกตัวแปรเพื่อไม่ให้ระบบ View/Delete บั๊ก
+                                        $js_view_name = htmlspecialchars($raw_name, ENT_QUOTES); 
+                                        $js_edit_name = htmlspecialchars($line_id, ENT_QUOTES);
                                         $js_old_phone = htmlspecialchars($display_phone, ENT_QUOTES);
                                         
                                         $rep_phone_html = formatEmptyOrDash($display_phone);
@@ -1619,9 +1627,9 @@ $dept_icons = [
                                             </td>
                                             <td class='px-6 py-4 align-middle text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"viewHistory('{$js_old_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                    <button onclick=\"openEditReporterModal('{$js_old_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
-                                                    <button onclick=\"confirmDeleteReporter('{$js_old_name}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
+                                                    <button onclick=\"viewHistory('{$js_view_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                                                    <button onclick=\"openEditReporterModal('{$js_edit_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"confirmDeleteReporter('{$js_view_name}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
                                         </tr>";
