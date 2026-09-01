@@ -158,24 +158,45 @@ if (!is_null($events['events'])) {
                 }
             }
 
+            // ชุดคำขยะที่ครอบคลุมคำลงท้ายสุภาพทั้งหมด
+            $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', 'นะคะ', 'นะครับ', 'ค่ะ', 'ครับ', 'คับ', 'จ้า', 'จ๊ะ', 'นะ', 'หน่อย', ':', '-', ','];
+
             if ($is_edit_cmd) {
                 if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {
                     $phone = $matches[1];
                     $name_part = str_replace($phone, '', $text);
-                    $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', ':', '-', ','];
                     $real_name = str_replace($words_to_remove, ' ', $name_part);
                     $real_name = preg_replace('/\s+/', ' ', $real_name);
                     $real_name = trim($real_name);
 
-                    if (!empty($real_name)) {
+                    // ถ้าดึงชื่อมาแล้วว่างเปล่า (แสดงว่าพิมพ์มาแค่ขอเปลี่ยนเบอร์) ให้ดึงชื่อเก่ามาใช้
+                    if (empty($real_name)) {
+                        $stmt_old = $conn->prepare("SELECT real_name FROM line_users WHERE line_user_id = ?");
+                        $stmt_old->bind_param("s", $userId);
+                        $stmt_old->execute();
+                        $res_old = $stmt_old->get_result()->fetch_assoc();
+                        if ($res_old && !empty($res_old['real_name'])) {
+                            $real_name = $res_old['real_name'];
+                        } else {
+                            $real_name = $line_name; 
+                        }
+                    }
+
+                    if (!empty($real_name) || !empty($phone)) {
                         $stmt = $conn->prepare("UPDATE line_users SET line_display_name=?, real_name=?, phone_number=? WHERE line_user_id=?");
                         $stmt->bind_param("ssss", $line_name, $real_name, $phone, $userId);
                         
                         if ($stmt->execute()) {
                             if ($stmt->affected_rows == 0) {
-                                $stmt2 = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?)");
-                                $stmt2->bind_param("ssss", $userId, $line_name, $real_name, $phone);
-                                $stmt2->execute();
+                                // ป้องกันกรณีที่คำสั่ง UPDATE ทำงานแต่ไม่มีข้อมูลผู้ใช้คนนี้ในตารางเลย ให้ทำการ INSERT ใหม่แทน
+                                $stmt_chk = $conn->prepare("SELECT id FROM line_users WHERE line_user_id=?");
+                                $stmt_chk->bind_param("s", $userId);
+                                $stmt_chk->execute();
+                                if ($stmt_chk->get_result()->num_rows == 0) {
+                                    $stmt2 = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?)");
+                                    $stmt2->bind_param("ssss", $userId, $line_name, $real_name, $phone);
+                                    $stmt2->execute();
+                                }
                             }
                             send_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nครั้งต่อไปที่แจ้งซ่อม ระบบจะใช้ข้อมูลใหม่นี้ทันทีค่ะ ✨"], $channelAccessToken);
                         } else {
@@ -206,17 +227,23 @@ if (!is_null($events['events'])) {
             $stmt_chk_user->execute();
             $user_reg = $stmt_chk_user->get_result()->fetch_assoc();
 
+            // ----------------------------------------------------
+            // กรณีผู้ใช้ "ยังไม่เคยลงทะเบียน"
+            // ----------------------------------------------------
             if (!$user_reg) {
                 
                 if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {
                     $phone = $matches[1];
                     $name_part = str_replace($phone, '', $text);
-                    $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', ':', '-', ','];
                     $real_name = str_replace($words_to_remove, ' ', $name_part);
                     $real_name = preg_replace('/\s+/', ' ', $real_name);
                     $real_name = trim($real_name);
                     
-                    if (!empty($real_name) && mb_strlen($text, 'UTF-8') < 50) {
+                    if (empty($real_name)) {
+                        $real_name = $line_name; // ถ้าพิมพ์มาแต่เบอร์เอาชื่อไลน์ตั้งให้ก่อน
+                    }
+                    
+                    if (!empty($real_name)) {
                         $stmt = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE line_display_name=?, real_name=?, phone_number=?");
                         $stmt->bind_param("sssssss", $userId, $line_name, $real_name, $phone, $line_name, $real_name, $phone);
                         
@@ -250,6 +277,9 @@ if (!is_null($events['events'])) {
                 continue;
             }
 
+            // ----------------------------------------------------
+            // กรณีผู้ใช้ "ลงทะเบียนแล้ว" เข้าสู่การแจ้งซ่อม
+            // ----------------------------------------------------
             list($category, $location) = extract_repair_info($text);
 
             if ($category !== "ไม่ระบุปัญหา" || $location !== "ไม่ระบุสถานที่") {
@@ -258,8 +288,8 @@ if (!is_null($events['events'])) {
                 $status = "รอรับเรื่อง"; 
                 $image_path = null; 
                 
-                $words_to_remove = [$location, 'ค่ะ', 'ครับ', 'คะ', 'คับ', 'รบกวน', 'ด่วน', 'แจ้งซ่อม', 'นึง', 'หน่อย'];
-                $problem = str_replace($words_to_remove, '', $text);
+                $words_to_remove_repair = [$location, 'ค่ะ', 'ครับ', 'คะ', 'คับ', 'รบกวน', 'ด่วน', 'แจ้งซ่อม', 'นึง', 'หน่อย'];
+                $problem = str_replace($words_to_remove_repair, '', $text);
                 $problem = trim($problem); 
                 
                 if (empty($problem)) {
@@ -331,15 +361,24 @@ if (!is_null($events['events'])) {
                 }
             }
             else {
+                // ----------------------------------------------------
+                // กรณีลัด (พิมพ์แค่เบอร์โทร เพื่อแก้ไขข้อมูลแบบไวๆ)
+                // ----------------------------------------------------
                 if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {
                     $phone = $matches[1];
                     $name_part = str_replace($phone, '', $text);
-                    $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', ':', '-', ','];
                     $real_name = str_replace($words_to_remove, ' ', $name_part);
                     $real_name = preg_replace('/\s+/', ' ', $real_name);
                     $real_name = trim($real_name);
                     
-                    if (!empty($real_name) && mb_strlen($text, 'UTF-8') < 50) {
+                    // ป้องกันการอัปเดตมั่วๆ หากพิมพ์ยาวเกินไป (เช่น อาจจะเป็นคอมเมนต์รีวิวที่มีเบอร์)
+                    if (mb_strlen($text, 'UTF-8') < 50) {
+                        
+                        if (empty($real_name)) {
+                            // ดึงชื่อเดิมมาใส่ ถ้าเขาพิมพ์มาแค่เบอร์
+                            $real_name = $user_reg['real_name']; 
+                        }
+
                         $stmt = $conn->prepare("UPDATE line_users SET line_display_name=?, real_name=?, phone_number=? WHERE line_user_id=?");
                         $stmt->bind_param("ssss", $line_name, $real_name, $phone, $userId);
                         $stmt->execute();
@@ -349,6 +388,9 @@ if (!is_null($events['events'])) {
                     }
                 }
 
+                // ----------------------------------------------------
+                // ระบบบันทึกรีวิว
+                // ----------------------------------------------------
                 $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
                 if ($stmt_check_review) {
                     $stmt_check_review->bind_param("s", $userId);
