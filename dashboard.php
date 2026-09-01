@@ -1874,7 +1874,12 @@ $dept_icons = [
         <div class="modal-container bg-white w-full max-w-5xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[85vh] max-h-[850px]">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
                 <p class="text-lg font-extrabold text-slate-800 truncate pr-4" id="historyModalTitle">History</p>
-                <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
+                <div class="flex items-center gap-3 shrink-0">
+                    <button id="historyModalLinkBtn" class="text-xs font-bold text-indigo-600 bg-white border border-indigo-200 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-lg shadow-sm transition-colors flex items-center">
+                        <i class="fas fa-address-book mr-1.5"></i> จัดการข้อมูล
+                    </button>
+                    <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
+                </div>
             </div>
            <div class="p-6 overflow-y-auto flex-1 bg-white">
                 <div class="w-full overflow-x-auto rounded-2xl border border-slate-100 shadow-sm max-h-[65vh] overflow-y-auto custom-scrollbar relative">
@@ -3336,6 +3341,18 @@ $dept_icons = [
                 });
             }
             document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + fullName;
+            
+            const linkBtn = document.getElementById('historyModalLinkBtn');
+            if (linkBtn) {
+                if (type === 'reporter') {
+                    linkBtn.innerHTML = '<i class="fas fa-address-book mr-1.5"></i> จัดการผู้แจ้ง';
+                    linkBtn.onclick = function() { toggleModal('historyModal'); show('users'); };
+                } else {
+                    linkBtn.innerHTML = '<i class="fas fa-users-cog mr-1.5"></i> จัดการช่าง';
+                    linkBtn.onclick = function() { toggleModal('historyModal'); show('technicians'); };
+                }
+            }
+            
             toggleModal('historyModal');
         }
 
