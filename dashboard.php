@@ -1874,11 +1874,11 @@ $dept_icons = [
         <div class="modal-container bg-white w-full max-w-5xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[85vh] max-h-[850px]">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
                 <p class="text-lg font-extrabold text-slate-800 truncate pr-4" id="historyModalTitle">History</p>
-                <div class="flex items-center gap-3 shrink-0">
-                    <button id="historyModalLinkBtn" class="text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer">
+                <div class="flex items-center gap-4 shrink-0">
+                    <button id="historyModalLinkBtn" class="text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center cursor-pointer ring-2 ring-slate-800/20 hover:ring-slate-800/40">
                         <i class="fas fa-address-book mr-2"></i> Contacts
                     </button>
-                    <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50"><i class="fas fa-times"></i></button>
+                    <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-10 h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50"><i class="fas fa-times text-lg"></i></button>
                 </div>
             </div>
            <div class="p-6 overflow-y-auto flex-1 bg-white">
