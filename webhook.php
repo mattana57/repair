@@ -4,6 +4,20 @@ require 'env.php';
 
 $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
 
+$conn->query("CREATE TABLE IF NOT EXISTS line_users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    line_user_id VARCHAR(255) UNIQUE NOT NULL,
+    line_display_name VARCHAR(255),
+    real_name VARCHAR(255),
+    phone_number VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+$chk_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'line_display_name'");
+if($chk_col && $chk_col->num_rows == 0) {
+    $conn->query("ALTER TABLE repairs ADD COLUMN line_display_name VARCHAR(255) NULL AFTER reporter_name");
+}
+
 function extract_repair_info($text) {
     $category = "ไม่ระบุปัญหา";
     $location = "ไม่ระบุสถานที่";
@@ -41,7 +55,18 @@ if (!is_null($events['events'])) {
         $userId = $event['source']['userId'];
         $groupId = isset($event['source']['groupId']) ? $event['source']['groupId'] : null;
 
+        $line_name = get_line_profile($userId, null, $channelAccessToken);
+
         if ($event['type'] == 'message' && $event['message']['type'] == 'image') {
+            
+            $stmt_chk_user = $conn->prepare("SELECT id FROM line_users WHERE line_user_id = ?");
+            $stmt_chk_user->bind_param("s", $userId);
+            $stmt_chk_user->execute();
+            if ($stmt_chk_user->get_result()->num_rows === 0) {
+                send_reply($replyToken, ['type' => 'text', 'text' => "🛑 คุณยังไม่ได้ลงทะเบียนใช้งานค่ะ\n\nกรุณาลงทะเบียนก่อนส่งรูปหรือแจ้งซ่อม โดยพิมพ์:\nลงทะเบียน [ชื่อ-สกุล] [เบอร์โทร]\n\nตัวอย่าง:\nลงทะเบียน มัทนา รัตนแสง 0812345678"], $channelAccessToken);
+                continue;
+            }
+
             $message_id = $event['message']['id'];
             $image_url = "https://api-data.line.me/v2/bot/message/$message_id/content";
             
@@ -96,9 +121,31 @@ if (!is_null($events['events'])) {
             $text = trim($event['message']['text']);
             $message_id = $event['message']['id']; 
 
+            if (mb_strpos($text, 'ลงทะเบียน') === 0) {
+                $reg_data = mb_substr($text, 9);
+                $reg_data = preg_replace('/(ชื่อ\s*-\s*สกุล|ชื่อ|นามสกุล|เบอร์โทรศัพท์|เบอร์โทร|เบอร์|โทร|tel)/iu', ' ', $reg_data);
+                $reg_data = trim($reg_data);
+                
+                if (preg_match('/^(.*?)\s*([0-9]{9,10})$/u', $reg_data, $matches)) {
+                    $real_name = trim($matches[1]);
+                    $phone = trim($matches[2]);
+
+                    $stmt = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE line_display_name=?, real_name=?, phone_number=?");
+                    $stmt->bind_param("sssssss", $userId, $line_name, $real_name, $phone, $line_name, $real_name, $phone);
+                    
+                    if ($stmt->execute()) {
+                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ ลงทะเบียนผู้ใช้สำเร็จ!\n\nชื่อ-สกุล: $real_name\nเบอร์โทร: $phone\n\nคุณสามารถพิมพ์แจ้งซ่อมเข้ามาได้เลยค่ะ เช่น 'แอร์น้ำหยด ห้อง 901' 🛠️"], $channelAccessToken);
+                    } else {
+                        send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการบันทึกข้อมูลค่ะ"], $channelAccessToken);
+                    }
+                } else {
+                    send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รูปแบบการลงทะเบียนไม่ถูกต้องค่ะ\n\nกรุณาพิมพ์:\nลงทะเบียน [ชื่อ-นามสกุล] [เบอร์โทร 10 หลัก]\n\nตัวอย่าง:\nลงทะเบียน มัทนา รัตนแสง 0812345678"], $channelAccessToken);
+                }
+                continue;
+            }
+
             if (mb_strpos($text, 'ผูกบัญชี') === 0) {
                 $code = trim(str_replace('ผูกบัญชี', '', $text));
-                
                 if (preg_match('/^[0-9]{4}$/', $code)) {
                     $stmt_check = $conn->prepare("SELECT id, full_name, department FROM technicians WHERE secret_code = ? AND approval_status = 'รอผูกบัญชี'");
                     $stmt_check->bind_param("s", $code);
@@ -114,18 +161,14 @@ if (!is_null($events['events'])) {
                         $stmt_update->bind_param("si", $userId, $tech_id);
                         
                         if ($stmt_update->execute()) {
-                            $msg = "✅ ยืนยันตัวตนสำเร็จ\n\nยินดีต้อนรับ ช่าง$tech_name\n($tech_dept)\n\nคุณสามารถเริ่มรับงานซ่อมได้เลยค่ะ 🛠️";
-                        } else {
-                            $msg = "🚨 เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ ยืนยันตัวตนสำเร็จ\n\nยินดีต้อนรับ ช่าง$tech_name\n($tech_dept)\n\nคุณสามารถเริ่มรับงานซ่อมได้เลยค่ะ 🛠️"], $channelAccessToken);
                         }
                     } else {
-                        $msg = "⚠️ รหัสลับไม่ถูกต้อง หรือรหัสนี้ถูกใช้งานไปแล้วค่ะ\nกรุณาติดต่อแอดมินเพื่อขอรหัสใหม่นะคะ";
+                        send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รหัสลับไม่ถูกต้อง หรือรหัสนี้ถูกใช้งานไปแล้วค่ะ"], $channelAccessToken);
                     }
                 } else {
-                    $msg = "⚠️ รูปแบบไม่ถูกต้อง\nกรุณาพิมพ์: ผูกบัญชี [รหัส 4 หลัก]\nเช่น: ผูกบัญชี 1234";
+                    send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รูปแบบไม่ถูกต้อง\nกรุณาพิมพ์: ผูกบัญชี [รหัส 4 หลัก]"], $channelAccessToken);
                 }
-                
-                send_reply($replyToken, ['type' => 'text', 'text' => $msg], $channelAccessToken);
                 continue; 
             }
 
@@ -138,19 +181,43 @@ if (!is_null($events['events'])) {
                 }
             }
             if ($is_greeting && mb_strlen($text_clean) < 40) {
-                $replyMsg = ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งได้ตลอดเลยนะคะ"];
-                send_reply($replyToken, $replyMsg, $channelAccessToken);
+                send_reply($replyToken, ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งได้ตลอดเลยนะคะ"], $channelAccessToken);
                 continue; 
+            }
+
+            $stmt_chk_user = $conn->prepare("SELECT real_name, phone_number FROM line_users WHERE line_user_id = ?");
+            $stmt_chk_user->bind_param("s", $userId);
+            $stmt_chk_user->execute();
+            $user_reg = $stmt_chk_user->get_result()->fetch_assoc();
+
+            if (!$user_reg) {
+                $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
+                if ($stmt_check_review) {
+                    $stmt_check_review->bind_param("s", $userId);
+                    $stmt_check_review->execute();
+                    $recent_job = $stmt_check_review->get_result()->fetch_assoc();
+
+                    if ($recent_job && mb_strlen($text) < 100 && !preg_match('/(ห้อง|อาคาร|ชั้น)/', $text)) {
+                        $current_rev = (string)$recent_job['review_comment'];
+                        $new_rev = trim($current_rev . " " . $text);
+                        $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE ticket_no = ?");
+                        $stmt_upd->bind_param("ss", $new_rev, $recent_job['ticket_no']);
+                        $stmt_upd->execute();
+                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมเรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
+                        continue;
+                    }
+                }
+
+                send_reply($replyToken, ['type' => 'text', 'text' => "🛑 คุณยังไม่ได้ลงทะเบียนใช้งานค่ะ\n\nกรุณาลงทะเบียนก่อนแจ้งซ่อม โดยพิมพ์:\nลงทะเบียน [ชื่อ-สกุล] [เบอร์โทร]\n\nตัวอย่าง:\nลงทะเบียน มัทนา รัตนแสง 0812345678"], $channelAccessToken);
+                continue;
             }
 
             list($category, $location) = extract_repair_info($text);
 
             if ($category !== "ไม่ระบุปัญหา" || $location !== "ไม่ระบุสถานที่") {
                 
-                $user_name = get_line_profile($userId, null, $channelAccessToken);
                 $ticket_no = "MR-" . rand(1000, 9999);
                 $status = "รอรับเรื่อง"; 
-                $phone_number = "ไม่ระบุ";
                 $image_path = null; 
                 
                 $words_to_remove = [$location, 'ค่ะ', 'ครับ', 'คะ', 'คับ', 'รบกวน', 'ด่วน', 'แจ้งซ่อม', 'นึง', 'หน่อย'];
@@ -172,13 +239,8 @@ if (!is_null($events['events'])) {
                     $image_path = $new_img_name;
                 }
 
-                $chk_img_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'");
-                if($chk_img_col && $chk_img_col->num_rows == 0) {
-                    $conn->query("ALTER TABLE repairs ADD COLUMN image_path VARCHAR(255) NULL");
-                }
-
-                $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, phone_number, line_user_id, line_message_id, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssssssss", $ticket_no, $category, $location, $problem, $status, $user_name, $phone_number, $userId, $message_id, $image_path);
+                $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, line_display_name, phone_number, line_user_id, line_message_id, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("sssssssssss", $ticket_no, $category, $location, $problem, $status, $user_reg['real_name'], $line_name, $user_reg['phone_number'], $userId, $message_id, $image_path);
                 
                 if($stmt->execute()) {
                     $replyText = "✅ รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n⚠️ ปัญหา: $category\n📍 สถานที่: $location\n📝 รายละเอียด: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
@@ -190,7 +252,8 @@ if (!is_null($events['events'])) {
                     $flex_details = [
                         ['type' => 'text', 'text' => "ปัญหา: $category", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                         ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
-                        ['type' => 'text', 'text' => "ผู้แจ้ง: $user_name", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
+                        ['type' => 'text', 'text' => "ผู้แจ้ง: ".$user_reg['real_name'], 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
+                        ['type' => 'text', 'text' => "เบอร์ติดต่อ: ".$user_reg['phone_number'], 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
                         ['type' => 'text', 'text' => "รายละเอียด: $problem", 'size' => 'xs', 'color' => '#ef4444', 'wrap' => true]
                     ];
                     if ($image_path) {
