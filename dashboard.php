@@ -466,13 +466,13 @@ if (isset($_GET['delete_reporter'])) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
-    $old_name = $_POST['old_name']; // LINE ID เดิม
-    $new_full_name = $_POST['new_name']; // ชื่อ-สกุลจริง
+    $old_name = $_POST['old_name'];
+    $new_name = $_POST['new_name'];
     $new_phone = $_POST['new_phone'];
     
-    // ✨ อัปเดตไปที่ตาราง line_users แทน repairs ✨
+    // อัปเดตข้อมูลลงตาราง line_users โดยใช้ line_display_name เป็นตัวอ้างอิง
     $stmt = $conn->prepare("UPDATE line_users SET real_name = ?, phone_number = ? WHERE line_display_name = ?");
-    $stmt->bind_param("sss", $new_full_name, $new_phone, $old_name);
+    $stmt->bind_param("sss", $new_name, $new_phone, $old_name);
     $stmt->execute();
     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลผู้แจ้งสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
 }
