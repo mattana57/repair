@@ -168,23 +168,8 @@ if (!is_null($events['events'])) {
             $user_reg = $stmt_chk_user->get_result()->fetch_assoc();
 
             if (!$user_reg) {
-                $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
-                if ($stmt_check_review) {
-                    $stmt_check_review->bind_param("s", $userId);
-                    $stmt_check_review->execute();
-                    $recent_job = $stmt_check_review->get_result()->fetch_assoc();
-
-                    if ($recent_job && mb_strlen($text) < 100 && !preg_match('/(ห้อง|อาคาร|ชั้น)/', $text)) {
-                        $current_rev = (string)$recent_job['review_comment'];
-                        $new_rev = trim($current_rev . " " . $text);
-                        $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE ticket_no = ?");
-                        $stmt_upd->bind_param("ss", $new_rev, $recent_job['ticket_no']);
-                        $stmt_upd->execute();
-                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมเรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
-                        continue;
-                    }
-                }
-
+                
+                // 1. เช็คว่าเป็นข้อความลงทะเบียนก่อน (ดักจากเบอร์โทร)
                 if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {
                     $phone = $matches[1];
                     $name_part = str_replace($phone, '', $text);
@@ -206,6 +191,25 @@ if (!is_null($events['events'])) {
                     }
                 }
 
+                // 2. ถ้าไม่มีเบอร์โทร ค่อยเช็คว่าเป็นการพิมพ์รีวิวให้กับงานเก่าหรือไม่
+                $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
+                if ($stmt_check_review) {
+                    $stmt_check_review->bind_param("s", $userId);
+                    $stmt_check_review->execute();
+                    $recent_job = $stmt_check_review->get_result()->fetch_assoc();
+
+                    if ($recent_job && mb_strlen($text) < 100 && !preg_match('/(ห้อง|อาคาร|ชั้น)/', $text)) {
+                        $current_rev = (string)$recent_job['review_comment'];
+                        $new_rev = trim($current_rev . " " . $text);
+                        $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE ticket_no = ?");
+                        $stmt_upd->bind_param("ss", $new_rev, $recent_job['ticket_no']);
+                        $stmt_upd->execute();
+                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมเรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
+                        continue;
+                    }
+                }
+
+                // 3. ถ้าไม่ใช่ทั้งลงทะเบียน และไม่ใช่รีวิว ให้แจ้งเตือนลงทะเบียน
                 send_reply($replyToken, ['type' => 'text', 'text' => "🛑 คุณยังไม่ได้ให้ข้อมูลติดต่อค่ะ\n\nเพื่อให้ช่างติดต่อกลับได้สะดวก กรุณาพิมพ์ ชื่อ และ เบอร์โทรศัพท์ ส่งมาให้ระบบได้เลยนะคะ\n\nตัวอย่าง:\nดวงดาว 098009809"], $channelAccessToken);
                 continue;
             }
@@ -317,7 +321,6 @@ if (!is_null($events['events'])) {
                 $ticket_no = $postbackData['ticket'];
 
                 if ($postbackData['action'] == 'accept') {
-                    // ปรับ Query ดึงชื่อและเบอร์โทรของผู้แจ้งซ่อมมาด้วย
                     $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_name, equipment_type, location, reporter_name, phone_number FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
@@ -344,7 +347,6 @@ if (!is_null($events['events'])) {
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
 
-                            // ปรับหน้าตาบับเบิล "รับงานเรียบร้อย" ให้แสดงชื่อผู้แจ้งและเบอร์โทร
                             $replyMsg = [
                                 'type' => 'flex',
                                 'altText' => 'รับงานซ่อม: '.$ticket_no,
