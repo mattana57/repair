@@ -180,11 +180,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $status = $_POST['status'];
         $repair_note = trim($_POST['repair_note']);
         
-        if (!empty($repair_note) && $repair_note !== $old_note && mb_strpos($repair_note, '(บันทึกหมายเหตุโดย:') === false) {
-            $updater_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : (isset($_SESSION['username']) ? $_SESSION['username'] : 'ไม่ระบุชื่อ');
-            $repair_note = $repair_note . "\n(บันทึกหมายเหตุโดย: " . $updater_name . ")";
-        }
-        
         $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
         $asset_code = isset($_POST['asset_code']) && $_POST['asset_code'] !== '' ? trim($_POST['asset_code']) : null;
         $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
