@@ -1109,20 +1109,21 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div class="mt-24 space-y-6">
-                    <div class="flex flex-col lg:flex-row justify-between items-start gap-4">
-                        <div class="pt-1.5">
-                            <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center leading-none">Technicians</h3>
-                            <p class="text-sm font-medium text-slate-500 mt-1.5">Manage technicians</p>
+                <div class="mt-20 space-y-6">
+                    <div class="flex flex-col xl:flex-row justify-between items-center gap-4">
+                        <div class="flex items-center gap-3 shrink-0">
+                            <h3 class="text-lg md:text-xl font-extrabold text-slate-800 leading-none">Technicians</h3>
+                            <span class="text-slate-300">|</span>
+                            <p class="text-sm font-medium text-slate-500 leading-none">Manage technicians</p>
                         </div>
-                        <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
-                            <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
-                            <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
+                        
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-3 items-center w-full xl:w-auto">
+                            <div class="relative w-full sm:w-56 shrink-0">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="search-tech-table" oninput="searchTeamTable()" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
                             
-                            <div class="flex flex-wrap gap-2.5">
+                            <div class="flex flex-wrap gap-2 shrink-0">
                                 <button onclick="filterDeptTable('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
                                 <button onclick="filterDeptTable('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
                                 <button onclick="filterDeptTable('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
