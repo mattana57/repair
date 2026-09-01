@@ -867,7 +867,15 @@ $dept_icons = [
                                             $statusText = htmlspecialchars($rd['status']);
                                             
                                             $ticket_no = formatEmptyOrDash($rd['ticket_no']);
-                                            $reporter_name = formatEmptyOrDash($rd['reporter_name']);
+                                            
+                                            // ✨ ดึง ID LINE มาแสดง ✨
+                                            $raw_rep = trim((string)$rd['reporter_name']);
+                                            $disp_line_id = $raw_rep;
+                                            if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['line_display_name'])) {
+                                                $disp_line_id = $line_users_map[$raw_rep]['line_display_name'];
+                                            }
+                                            $reporter_name = formatEmptyOrDash($disp_line_id);
+                                            
                                             $equipment_type = formatEmptyOrDash($rd['equipment_type']);
                                             
                                             $has_created = (!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00');
@@ -947,8 +955,31 @@ $dept_icons = [
                                         $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                         
                                         $ticket_no = formatEmptyOrDash($row['ticket_no']);
-                                        $reporter_name = formatEmptyOrDash($row['reporter_name']);
+                                        
+                                        // ✨ ดึง ID LINE และชื่อจริง ✨
+                                        $raw_rep = trim((string)$row['reporter_name']);
+                                        $disp_line_id = $raw_rep;
+                                        $disp_real_name = "";
+                                        if (isset($line_users_map[$raw_rep])) {
+                                            if (!empty($line_users_map[$raw_rep]['line_display_name'])) {
+                                                $disp_line_id = $line_users_map[$raw_rep]['line_display_name'];
+                                            }
+                                            if (!empty($line_users_map[$raw_rep]['real_name'])) {
+                                                $disp_real_name = $line_users_map[$raw_rep]['real_name'];
+                                            }
+                                        }
+                                        
+                                        $reporter_name = formatEmptyOrDash($disp_line_id);
                                         $phone_number = formatEmptyOrDash($row['phone_number']);
+                                        
+                                        // ✨ จัดรูปแบบ: โชว์ชื่อจริง และ เบอร์โทร ด้านล่าง ID LINE ✨
+                                        $sub_info = "";
+                                        if($disp_real_name !== '' && $disp_real_name !== $disp_line_id) {
+                                            $sub_info = htmlspecialchars($disp_real_name) . " <span class='mx-1 text-slate-300'>|</span> " . $phone_number;
+                                        } else {
+                                            $sub_info = $phone_number;
+                                        }
+                                        
                                         $equipment_type = formatEmptyOrDash($row['equipment_type']);
                                         $problem_desc = formatEmptyOrDash($row['problem_desc']);
                                         
@@ -1018,7 +1049,7 @@ $dept_icons = [
                                             <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
                                             <td class='px-6 py-4 align-top'>
                                                 <div class='text-slate-800 font-bold'>{$reporter_name}</div>
-                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
+                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$sub_info}</div>
                                             </td>
                                             <td class='px-6 py-4 align-top'>
                                                 <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
@@ -1038,7 +1069,6 @@ $dept_icons = [
                                             </td>
                                             <td class='px-6 py-4 align-middle text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
-                                                    <!-- ✨ เพิ่ม target=\"_blank\" ตรงลิงก์ Action ทั้งคู่ ✨ -->
                                                     <a href='update_repair.php?id={$row['id']}' target='_blank' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
                                                     <a href='view_repair.php?id={$row['id']}' target='_blank' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
                                                 </div>
@@ -1576,7 +1606,6 @@ $dept_icons = [
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                // ดึงข้อมูลพื้นฐานจาก repairs
                                 $reporter_res = $conn->query("SELECT reporter_name, MAX(phone_number) as fallback_phone, COUNT(id) as total_repairs FROM repairs WHERE reporter_name IS NOT NULL AND reporter_name != '' GROUP BY reporter_name ORDER BY MAX(created_at) DESC");
                                 
                                 if($reporter_res && $reporter_res->num_rows > 0){
@@ -1587,7 +1616,6 @@ $dept_icons = [
                                         $real_name = "";
                                         $display_phone = trim((string)$r['fallback_phone']);
                                         
-                                        // นำมาเทียบกับ Map เพื่อดึง ID LINE, ชื่อจริง และเบอร์
                                         if (isset($line_users_map[$raw_name])) {
                                             if (!empty($line_users_map[$raw_name]['line_display_name'])) {
                                                 $line_id = $line_users_map[$raw_name]['line_display_name']; 
@@ -1600,7 +1628,7 @@ $dept_icons = [
                                             }
                                         }
                                         
-                                        // ✨ จัดรูปแบบ: ขนาดเท่ากัน, เอาคำนำหน้าออก, และใช้สีเทาอ่อน (text-slate-400)
+                                        // ✨ จัดรูปแบบ: ขนาดเท่ากัน, สีเทาอ่อน (slate-400), ลบคำว่า 'ชื่อ-สกุล:' ออก ✨
                                         $main_name_html = formatEmptyOrDash($line_id);
                                         $sub_name_html = ($real_name !== '' && $real_name !== $line_id) ? "<div class='text-slate-400 font-medium mt-0.5'>" . htmlspecialchars($real_name) . "</div>" : "";
                                         
@@ -1629,8 +1657,8 @@ $dept_icons = [
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     <button onclick=\"viewHistory('{$js_view_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
                                                     
-                                                    <!-- ✨ แทรกคำสั่ง JS บังคับให้ช่อง Full Name โชว์ชื่อจริง ทันทีที่กดปุ่ม Edit ✨ -->
-                                                    <button onclick=\"openEditReporterModal('{$js_edit_line_id}', '{$js_old_phone}'); document.getElementById('edit_rep_new_name').value = '{$js_edit_real_name}';\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <!-- ✨ แก้ไขการส่งข้อมูลให้ Modal (ส่งเบอร์โทรเข้าไปด้วย) ✨ -->
+                                                    <button onclick=\"openEditReporterModal('{$js_edit_line_id}', '{$js_edit_real_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                     
                                                     <button onclick=\"confirmDeleteReporter('{$js_view_name}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
