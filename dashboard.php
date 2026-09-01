@@ -259,6 +259,24 @@ if($td_res) {
 $tech_dept_map_json = json_encode($tech_dept_map, JSON_UNESCAPED_UNICODE);
 $tech_info_map_json = json_encode($tech_info_map, JSON_UNESCAPED_UNICODE);
 
+// ✨ ดึงข้อมูลตาราง line_users เพื่อนำมาแมปกับชื่อไลน์ (reporter_name) ✨
+$line_users_map = [];
+$check_lu = $conn->query("SHOW TABLES LIKE 'line_users'");
+if($check_lu && $check_lu->num_rows > 0) {
+    $lu_res = $conn->query("SELECT line_display_name, real_name, phone_number FROM line_users");
+    if($lu_res) {
+        while($lu = $lu_res->fetch_assoc()) {
+            if(!empty($lu['line_display_name'])) {
+                $line_users_map[$lu['line_display_name']] = [
+                    'real_name' => $lu['real_name'],
+                    'phone_number' => $lu['phone_number']
+                ];
+            }
+        }
+    }
+}
+$line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
+
 $years_query = $conn->query("SELECT DISTINCT YEAR(created_at) as y FROM repairs WHERE created_at IS NOT NULL ORDER BY y DESC");
 $available_years = [];
 if($years_query && $years_query->num_rows > 0) {
