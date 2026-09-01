@@ -434,6 +434,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     }
 }
 
+// ✨ Auto-Fix: ตรวจสอบและสร้างคอลัมน์ reporter_full_name ในตาราง repairs
+$check_reporter_fullname = $conn->query("SHOW COLUMNS FROM repairs LIKE 'reporter_full_name'");
+if($check_reporter_fullname && $check_reporter_fullname->num_rows == 0) {
+    $conn->query("ALTER TABLE repairs ADD COLUMN reporter_full_name VARCHAR(255) NULL");
+}
+
 if (isset($_GET['delete_reporter'])) {
     $del_name = $_GET['delete_reporter'];
     $stmt = $conn->prepare("DELETE FROM repairs WHERE reporter_name = ?");
@@ -443,12 +449,13 @@ if (isset($_GET['delete_reporter'])) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
-    $old_name = $_POST['old_name'];
-    $new_name = $_POST['new_name'];
+    $old_name = $_POST['old_name']; // คือ LINE ID เดิม (ไม่เปลี่ยน)
+    $new_full_name = $_POST['new_name']; // คือ ชื่อ-สกุลจริง
     $new_phone = $_POST['new_phone'];
     
-    $stmt = $conn->prepare("UPDATE repairs SET reporter_name = ?, phone_number = ? WHERE reporter_name = ?");
-    $stmt->bind_param("sss", $new_name, $new_phone, $old_name);
+    // อัปเดตเฉพาะเบอร์โทรและชื่อจริง (ในคอลัมน์ใหม่) โดยอ้างอิงจาก ID LINE เดิม
+    $stmt = $conn->prepare("UPDATE repairs SET reporter_full_name = ?, phone_number = ? WHERE reporter_name = ?");
+    $stmt->bind_param("sss", $new_full_name, $new_phone, $old_name);
     $stmt->execute();
     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลผู้แจ้งสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
 }
@@ -1551,21 +1558,29 @@ $dept_icons = [
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                $reporter_res = $conn->query("SELECT reporter_name, MAX(phone_number) as phone_number, COUNT(id) as total_repairs FROM repairs WHERE reporter_name IS NOT NULL AND reporter_name != '' GROUP BY reporter_name ORDER BY MAX(created_at) DESC");
+                                // เพิ่มการดึง MAX(reporter_full_name) มาร่วมด้วย
+                                $reporter_res = $conn->query("SELECT reporter_name, MAX(reporter_full_name) as reporter_full_name, MAX(phone_number) as phone_number, COUNT(id) as total_repairs FROM repairs WHERE reporter_name IS NOT NULL AND reporter_name != '' GROUP BY reporter_name ORDER BY MAX(created_at) DESC");
                                 
                                 if($reporter_res && $reporter_res->num_rows > 0){
                                     while($r = $reporter_res->fetch_assoc()) {
                                         $js_old_name = htmlspecialchars($r['reporter_name'], ENT_QUOTES);
                                         $js_old_phone = htmlspecialchars($r['phone_number'], ENT_QUOTES);
                                         
-                                        $rep_name = formatEmptyOrDash($r['reporter_name']);
+                                        // ตรวจสอบว่ามีชื่อจริงเซฟไว้ไหม
+                                        $hasFullName = !empty($r['reporter_full_name']);
+                                        $display_name = $hasFullName ? htmlspecialchars($r['reporter_full_name']) : htmlspecialchars($r['reporter_name']);
+                                        $line_id_html = $hasFullName ? "<div class='text-[10px] text-slate-400 mt-0.5 font-medium'>ID LINE: " . htmlspecialchars($r['reporter_name']) . "</div>" : "";
+                                        
                                         $rep_phone = formatEmptyOrDash($r['phone_number']);
                                         
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors user-row'>
-                                            <td class='px-6 py-4 align-top text-slate-800 font-bold'>
+                                            <td class='px-6 py-4 align-top'>
                                                 <div class='flex items-center'>
-                                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3'><i class='fas fa-user text-xs'></i></div>
-                                                    {$rep_name}
+                                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 shrink-0'><i class='fas fa-user text-xs'></i></div>
+                                                    <div>
+                                                        <div class='text-slate-800 font-bold'>{$display_name}</div>
+                                                        {$line_id_html}
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td class='px-6 py-4 align-top text-slate-500 font-medium'>{$rep_phone}</td>
