@@ -1576,38 +1576,47 @@ $dept_icons = [
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                // เพิ่มการดึง MAX(reporter_full_name) มาร่วมด้วย
-                                $reporter_res = $conn->query("SELECT reporter_name, MAX(reporter_full_name) as reporter_full_name, MAX(phone_number) as phone_number, COUNT(id) as total_repairs FROM repairs WHERE reporter_name IS NOT NULL AND reporter_name != '' GROUP BY reporter_name ORDER BY MAX(created_at) DESC");
+                                // เชื่อมตาราง line_users เพื่อดึง ID LINE, ชื่อจริง และเบอร์โทร มารวมบรรทัดเดียวกัน
+                                $query = "
+                                    SELECT 
+                                        COALESCE(NULLIF(lu.line_display_name, ''), r.reporter_name) AS unified_line_id,
+                                        MAX(lu.real_name) AS real_name,
+                                        COALESCE(NULLIF(MAX(lu.phone_number), ''), MAX(r.phone_number)) AS phone_num,
+                                        COUNT(r.id) AS total_repairs,
+                                        MAX(r.created_at) AS last_created
+                                    FROM repairs r
+                                    LEFT JOIN line_users lu 
+                                        ON (r.reporter_name = lu.line_display_name OR r.reporter_name = lu.real_name)
+                                    WHERE r.reporter_name IS NOT NULL AND r.reporter_name != ''
+                                    GROUP BY COALESCE(NULLIF(lu.line_display_name, ''), r.reporter_name)
+                                    ORDER BY last_created DESC
+                                ";
+                                $reporter_res = $conn->query($query);
                                 
                                 if($reporter_res && $reporter_res->num_rows > 0){
                                     while($r = $reporter_res->fetch_assoc()) {
-                                        $js_old_name = htmlspecialchars($r['reporter_name'], ENT_QUOTES);
-                                        $js_old_phone = htmlspecialchars($r['phone_number'], ENT_QUOTES);
+                                        $line_id = trim($r['unified_line_id']);
+                                        $real_name = trim((string)$r['real_name']);
+                                        $phone_num = trim($r['phone_num']);
                                         
-                                        $raw_name = trim($r['reporter_name']);
-                                        $display_name = $raw_name;
-                                        $display_phone = trim($r['phone_number']);
-                                        $line_id_html = "";
-
-                                        // ดึงข้อมูลชื่อจริงและเบอร์โทร จากตาราง line_users ถ้ามี
-                                        if (isset($line_users_map[$raw_name]) && !empty($line_users_map[$raw_name]['real_name'])) {
-                                            $display_name = $line_users_map[$raw_name]['real_name'];
-                                            $line_id_html = "<div class='text-[10px] text-slate-400 mt-0.5 font-medium'>ID LINE: " . htmlspecialchars($raw_name) . "</div>";
-                                            if (!empty($line_users_map[$raw_name]['phone'])) {
-                                                $display_phone = $line_users_map[$raw_name]['phone'];
-                                            }
-                                        }
-
-                                        $rep_name_html = formatEmptyOrDash($display_name);
-                                        $rep_phone_html = formatEmptyOrDash($display_phone);
+                                        // ✨ ให้ ID LINE เป็นชื่อหลัก (บรรทัดบน)
+                                        $main_name_html = formatEmptyOrDash($line_id);
+                                        
+                                        // ✨ ให้ ชื่อจริง เป็นชื่อรอง (บรรทัดล่าง)
+                                        $sub_name_html = ($real_name !== '' && $real_name !== $line_id) ? "<div class='text-[10px] text-slate-400 mt-0.5 font-medium'>ชื่อ-สกุล: " . htmlspecialchars($real_name) . "</div>" : "";
+                                        
+                                        $js_old_name = htmlspecialchars($line_id, ENT_QUOTES);
+                                        $js_old_phone = htmlspecialchars($phone_num, ENT_QUOTES);
+                                        
+                                        $rep_phone_html = formatEmptyOrDash($phone_num);
                                         
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors user-row'>
                                             <td class='px-6 py-4 align-top'>
                                                 <div class='flex items-center'>
                                                     <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 shrink-0'><i class='fas fa-user text-xs'></i></div>
                                                     <div>
-                                                        <div class='text-slate-800 font-bold'>{$rep_name_html}</div>
-                                                        {$line_id_html}
+                                                        <div class='text-slate-800 font-bold'>{$main_name_html}</div>
+                                                        {$sub_name_html}
                                                     </div>
                                                 </div>
                                             </td>
