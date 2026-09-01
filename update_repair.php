@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// ✨ ระบบคำนวณ URL สำหรับปุ่มกลับหน้ารายการ ✨
 $back_url = 'dashboard.php?tab=repairs';
 $query_params = [];
 
@@ -20,11 +19,9 @@ if (isset($_GET['source'])) {
     }
 }
 
-// ตั้งค่าโซนเวลาเป็นประเทศไทย
 date_default_timezone_set('Asia/Bangkok');
 include 'db_connect.php';
 
-// เช็คสิทธิ์ว่าเป็น Admin/Executive หรือไม่
 $is_admin = isset($_SESSION['role']) && in_array(strtolower($_SESSION['role']), ['admin', 'executive']);
 
 function splitThaiEngName($fullName, $engName) {
@@ -42,7 +39,6 @@ function splitThaiEngName($fullName, $engName) {
     return array($th, $en);
 }
 
-// ✨ ฟังก์ชันคำนวณเวลาที่ผ่านไป (Time Ago) ✨
 function timeAgo($datetime) {
     $time = strtotime($datetime);
     $diff = time() - $time;
@@ -69,7 +65,6 @@ if (isset($_GET['id'])) {
     $repair = $result->fetch_assoc();
 }
 
-// ✨ สร้าง URL สำหรับปุ่มฟอร์มและปุ่ม View เพื่อให้จำค่าหน้าเดิมไว้ ✨
 $form_action = "update_repair.php?id=" . ($repair['id'] ?? '');
 if (!empty($query_params)) {
     $form_action .= "&" . http_build_query($query_params);
@@ -79,7 +74,6 @@ if (!empty($query_params)) {
     $view_url .= "&" . http_build_query($query_params);
 }
 
-// ✨ ระบบจัดกลุ่มช่างตามฝ่าย ✨
 $techs_by_dept = [];
 $tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != ''");
 if($tech_res && $tech_res->num_rows > 0){
@@ -185,6 +179,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $status = $_POST['status'];
         $repair_note = trim($_POST['repair_note']);
+        
+        if (!empty($repair_note) && $repair_note !== $old_note && mb_strpos($repair_note, '(บันทึกหมายเหตุโดย:') === false) {
+            $updater_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : (isset($_SESSION['username']) ? $_SESSION['username'] : 'ไม่ระบุชื่อ');
+            $repair_note = $repair_note . "\n(บันทึกหมายเหตุโดย: " . $updater_name . ")";
+        }
+        
         $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
         $asset_code = isset($_POST['asset_code']) && $_POST['asset_code'] !== '' ? trim($_POST['asset_code']) : null;
         $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
@@ -661,7 +661,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
                         </div>
 
-                        <!-- ✨ เอาเส้นขอบออก และปรับระยะให้พอดี ✨ -->
                         <div class="flex flex-col md:flex-row justify-end gap-3 mt-2">
                             <button type="submit" class="w-full md:w-auto bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
                                 <i class="fas fa-save mr-2"></i> บันทึกข้อมูลและแจ้งเตือน
@@ -685,7 +684,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
     </div>
 
-    <!-- Modal เพิ่มครุภัณฑ์ -->
     <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">

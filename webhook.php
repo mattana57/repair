@@ -149,11 +149,20 @@ if (!is_null($events['events'])) {
                 continue; 
             }
 
-            if (mb_strpos($text, 'เปลี่ยนชื่อ') !== false || mb_strpos($text, 'เปลี่ยนเบอร์') !== false || mb_strpos($text, 'แก้ไขข้อมูล') !== false || mb_strpos($text, 'แก้ชื่อ') !== false) {
+            $edit_keywords = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์'];
+            $is_edit_cmd = false;
+            foreach ($edit_keywords as $keyword) {
+                if (mb_strpos($text, $keyword) !== false) {
+                    $is_edit_cmd = true;
+                    break;
+                }
+            }
+
+            if ($is_edit_cmd) {
                 if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {
                     $phone = $matches[1];
                     $name_part = str_replace($phone, '', $text);
-                    $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', ':', '-', ','];
+                    $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', ':', '-', ','];
                     $real_name = str_replace($words_to_remove, ' ', $name_part);
                     $real_name = preg_replace('/\s+/', ' ', $real_name);
                     $real_name = trim($real_name);
@@ -175,7 +184,7 @@ if (!is_null($events['events'])) {
                         continue;
                     }
                 }
-                send_reply($replyToken, ['type' => 'text', 'text' => "💡 หากต้องการแก้ไขข้อมูล\nกรุณาพิมพ์คำสั่งตามด้วย ชื่อ และ เบอร์โทรศัพท์ใหม่ ให้ครบถ้วนค่ะ\n\nตัวอย่าง:\nเปลี่ยนเบอร์ มัทนา 0812345678\nแก้ไขข้อมูล ดวงดาว 098009809"], $channelAccessToken);
+                send_reply($replyToken, ['type' => 'text', 'text' => "💡 หากต้องการแก้ไขข้อมูล\nกรุณาพิมพ์คำสั่งตามด้วย ชื่อ และ เบอร์โทรศัพท์ใหม่ ให้ครบถ้วนค่ะ\n\nตัวอย่าง:\nเปลี่ยนเบอร์ ธารา 0812345678\nแก้ไขข้อมูล ดวงดาว 098009809"], $channelAccessToken);
                 continue;
             }
 
@@ -202,12 +211,12 @@ if (!is_null($events['events'])) {
                 if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {
                     $phone = $matches[1];
                     $name_part = str_replace($phone, '', $text);
-                    $words_to_remove = ['ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', ':', '-', ','];
+                    $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', ':', '-', ','];
                     $real_name = str_replace($words_to_remove, ' ', $name_part);
                     $real_name = preg_replace('/\s+/', ' ', $real_name);
                     $real_name = trim($real_name);
                     
-                    if (!empty($real_name)) {
+                    if (!empty($real_name) && mb_strlen($text, 'UTF-8') < 50) {
                         $stmt = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE line_display_name=?, real_name=?, phone_number=?");
                         $stmt->bind_param("sssssss", $userId, $line_name, $real_name, $phone, $line_name, $real_name, $phone);
                         
@@ -322,13 +331,31 @@ if (!is_null($events['events'])) {
                 }
             }
             else {
+                if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {
+                    $phone = $matches[1];
+                    $name_part = str_replace($phone, '', $text);
+                    $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', ':', '-', ','];
+                    $real_name = str_replace($words_to_remove, ' ', $name_part);
+                    $real_name = preg_replace('/\s+/', ' ', $real_name);
+                    $real_name = trim($real_name);
+                    
+                    if (!empty($real_name) && mb_strlen($text, 'UTF-8') < 50) {
+                        $stmt = $conn->prepare("UPDATE line_users SET line_display_name=?, real_name=?, phone_number=? WHERE line_user_id=?");
+                        $stmt->bind_param("ssss", $line_name, $real_name, $phone, $userId);
+                        $stmt->execute();
+                        
+                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nครั้งต่อไปที่แจ้งซ่อม ระบบจะใช้ข้อมูลใหม่นี้ทันทีค่ะ ✨"], $channelAccessToken);
+                        continue;
+                    }
+                }
+
                 $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
                 if ($stmt_check_review) {
                     $stmt_check_review->bind_param("s", $userId);
                     $stmt_check_review->execute();
                     $recent_job = $stmt_check_review->get_result()->fetch_assoc();
 
-                    if ($recent_job) {
+                    if ($recent_job && mb_strlen($text) < 100 && !preg_match('/(ห้อง|อาคาร|ชั้น)/', $text)) {
                         $current_rev = (string)$recent_job['review_comment'];
                         $new_rev = trim($current_rev . " " . $text);
                         
