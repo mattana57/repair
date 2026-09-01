@@ -1851,7 +1851,7 @@ $dept_icons = [
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('editReporterModal')"></div>
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
-                <p class="text-lg font-extrabold text-slate-800"><i class="fab fa-line text-emerald-500 mr-2 text-xl"></i>ผูกข้อมูลผู้แจ้งซ่อม (ID LINE)</p>
+                <p class="text-lg font-extrabold text-slate-800">Edit Reporter</p>
                 <button onclick="toggleModal('editReporterModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
             <form action="dashboard.php?tab=users" method="POST" class="p-6">
@@ -1859,24 +1859,10 @@ $dept_icons = [
                 <input type="hidden" name="old_name" id="edit_rep_old_name" value="">
                 
                 <div class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ชื่อ ID LINE เดิม</label>
-                        <div class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-500 font-bold cursor-not-allowed flex items-center" id="display_old_name_ui">
-                            </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ชื่อ-นามสกุลจริง (อัปเดตให้ตรงกัน)</label>
-                        <input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 focus:outline-none font-bold shadow-sm" placeholder="เช่น ภาสวิชญ์ สุวรรณสถิตย์">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">เบอร์โทรศัพท์ติดต่อ</label>
-                        <input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500 focus:outline-none font-bold shadow-sm" placeholder="ระบุเบอร์โทรศัพท์">
-                    </div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label><input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label><input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
                 </div>
-                <div class="mt-8 flex justify-end gap-3">
-                    <button type="button" onclick="toggleModal('editReporterModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">ยกเลิก</button>
-                    <button type="submit" class="px-5 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-bold hover:bg-emerald-600 shadow-md shadow-emerald-200 transition-all flex items-center"><i class="fas fa-sync-alt mr-2"></i> ซิงค์ข้อมูล</button>
-                </div>
+                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('editReporterModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Update</button></div>
             </form>
         </div>
     </div>
