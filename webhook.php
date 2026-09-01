@@ -158,10 +158,9 @@ if (!is_null($events['events'])) {
                 }
             }
 
-            $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร','เบอโทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', 'นะคะ', 'นะครับ', 'ค่ะ', 'ครับ', 'คับ', 'จ้า', 'จ๊ะ', 'นะ', 'หน่อย','ด้วย','จาก','เดิม','อัน','เก่า','และ','หรือ','ทั้ง','ได้ไหม','ได้มั้ย','คะ','ข้อมูล','กับ','ปรับ','ปรุง','แก้','นี้','เบอ','จ้ะ','ค้าบ','อยาก','ต้องการ','ช่วย','ให้','ค่า','ต้อง','การ','ครัช','ได้','มั้ย','ไหม','โท','สกุล','เอา','ออก','แล้ว',':', '-', ','];
+            $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร','เบอโทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', 'นะคะ', 'นะครับ', 'ค่ะ', 'ครับ', 'คับ', 'จ้า', 'จ๊ะ', 'นะ', 'หน่อย','ด้วย','จาก','เดิม','อัน','เก่า','และ','หรือ','ทั้ง','ได้ไหม','ได้มั้ย','คะ','ข้อมูล','กับ','ปรับ','ปรุง','แก้','นี้','เบอ','จ้ะ','ค้าบ','อยาก','ต้องการ','ช่วย','ให้','ค่า','ต้อง','การ','ครัช','ได้','มั้ย','ไหม','โท','สกุล','เอา','ออก','แล้ว','ถ้า','หาก','สอง','อย่าง','2',':', '-', ','];
 
             if ($is_edit_cmd) {
-                // ดึงเบอร์โทรเก่าหรือเบอร์ใหม่
                 preg_match('/(0[0-9]{8,9})/', $text, $matches);
                 $phone = !empty($matches[1]) ? $matches[1] : null;
 
@@ -170,17 +169,14 @@ if (!is_null($events['events'])) {
                 $real_name = preg_replace('/\s+/', ' ', $real_name);
                 $real_name = trim($real_name);
 
-                // ดึงข้อมูลเดิมของผู้ใช้จากฐานข้อมูลมาก่อน
                 $stmt_old = $conn->prepare("SELECT real_name, phone_number FROM line_users WHERE line_user_id = ?");
                 $stmt_old->bind_param("s", $userId);
                 $stmt_old->execute();
                 $res_old = $stmt_old->get_result()->fetch_assoc();
 
-                // ถ้าไม่ได้พิมพ์ชื่อใหม่มา (เช่น พิมพ์มาแค่เปลี่ยนเบอร์) ให้ใช้ชื่อเดิม
                 if (empty($real_name)) {
                     $real_name = ($res_old && !empty($res_old['real_name'])) ? $res_old['real_name'] : $line_name;
                 }
-                // ถ้าไม่ได้พิมพ์เบอร์ใหม่มา (เช่น พิมพ์มาแค่เปลี่ยนชื่อ) ให้ใช้เบอร์เดิม
                 if (empty($phone)) {
                     $phone = ($res_old && !empty($res_old['phone_number'])) ? $res_old['phone_number'] : "-";
                 }
@@ -190,9 +186,14 @@ if (!is_null($events['events'])) {
                 
                 if ($stmt->execute()) {
                     if ($stmt->affected_rows == 0) {
-                        $stmt2 = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?)");
-                        $stmt2->bind_param("ssss", $userId, $line_name, $real_name, $phone);
-                        $stmt2->execute();
+                        $stmt_chk = $conn->prepare("SELECT id FROM line_users WHERE line_user_id=?");
+                        $stmt_chk->bind_param("s", $userId);
+                        $stmt_chk->execute();
+                        if ($stmt_chk->get_result()->num_rows == 0) {
+                            $stmt2 = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?)");
+                            $stmt2->bind_param("ssss", $userId, $line_name, $real_name, $phone);
+                            $stmt2->execute();
+                        }
                     }
                     send_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nครั้งต่อไปที่แจ้งซ่อม ระบบจะใช้ข้อมูลใหม่นี้ทันทีค่ะ ✨"], $channelAccessToken);
                 } else {
