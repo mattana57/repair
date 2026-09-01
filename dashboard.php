@@ -1859,8 +1859,18 @@ $dept_icons = [
                 <input type="hidden" name="old_name" id="edit_rep_old_name" value="">
                 
                 <div class="space-y-5">
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label><input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label><input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">LINE ID (Cannot be changed)</label>
+                        <input type="text" id="display_old_name_ui" disabled class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-500 cursor-not-allowed font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
+                        <input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
+                        <input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
+                    </div>
                 </div>
                 <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('editReporterModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Update</button></div>
             </form>
@@ -3242,8 +3252,9 @@ $dept_icons = [
             document.getElementById('edit_rep_new_name').value = old_name; 
             document.getElementById('edit_rep_new_phone').value = old_phone; 
             
+            // ให้แสดงชื่อ ID LINE เก่าในช่องที่เราเพิ่มมาใหม่ (ใช้ .value เพราะเป็น input)
             let displayOldUi = document.getElementById('display_old_name_ui');
-            if(displayOldUi) displayOldUi.innerText = old_name;
+            if(displayOldUi) displayOldUi.value = old_name;
             
             toggleModal('editReporterModal');
         }
