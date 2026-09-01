@@ -1590,23 +1590,24 @@ $dept_icons = [
                                         // นำมาเทียบกับ Map เพื่อดึง ID LINE, ชื่อจริง และเบอร์
                                         if (isset($line_users_map[$raw_name])) {
                                             if (!empty($line_users_map[$raw_name]['line_display_name'])) {
-                                                $line_id = $line_users_map[$raw_name]['line_display_name']; // ดึง ID LINE (nattam) กลับมา
+                                                $line_id = $line_users_map[$raw_name]['line_display_name']; 
                                             }
                                             if (!empty($line_users_map[$raw_name]['real_name'])) {
-                                                $real_name = $line_users_map[$raw_name]['real_name']; // ชื่อจริง
+                                                $real_name = $line_users_map[$raw_name]['real_name']; 
                                             }
                                             if (!empty($line_users_map[$raw_name]['phone_number'])) {
-                                                $display_phone = $line_users_map[$raw_name]['phone_number']; // เบอร์โทร
+                                                $display_phone = $line_users_map[$raw_name]['phone_number']; 
                                             }
                                         }
                                         
-                                        // จัดรูปแบบ: ชื่อหลัก (บน) = ID LINE, ชื่อรอง (ล่าง) = ชื่อสกุลจริง
+                                        // จัดรูปแบบ: ชื่อหลัก (LINE ID) และ ชื่อรอง (ชื่อจริง) ตัวใหญ่เท่ากัน ไม่มีคำนำหน้า
                                         $main_name_html = formatEmptyOrDash($line_id);
-                                        $sub_name_html = ($real_name !== '' && $real_name !== $line_id) ? "<div class='text-[10px] text-slate-400 mt-0.5 font-medium'>ชื่อ-สกุล: " . htmlspecialchars($real_name) . "</div>" : "";
+                                        $sub_name_html = ($real_name !== '' && $real_name !== $line_id) ? "<div class='text-slate-600 font-bold mt-0.5'>" . htmlspecialchars($real_name) . "</div>" : "";
                                         
-                                        // แยกตัวแปรเพื่อไม่ให้ระบบ View/Delete บั๊ก
+                                        // เตรียมตัวแปรส่งให้ปุ่ม Edit (ส่งแยก LINE ID และ ชื่อจริง)
                                         $js_view_name = htmlspecialchars($raw_name, ENT_QUOTES); 
-                                        $js_edit_name = htmlspecialchars($line_id, ENT_QUOTES);
+                                        $js_edit_line_id = htmlspecialchars($line_id, ENT_QUOTES);
+                                        $js_edit_real_name = htmlspecialchars($real_name !== '' ? $real_name : $line_id, ENT_QUOTES);
                                         $js_old_phone = htmlspecialchars($display_phone, ENT_QUOTES);
                                         
                                         $rep_phone_html = formatEmptyOrDash($display_phone);
@@ -1628,7 +1629,7 @@ $dept_icons = [
                                             <td class='px-6 py-4 align-middle text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     <button onclick=\"viewHistory('{$js_view_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                    <button onclick=\"openEditReporterModal('{$js_edit_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"openEditReporterModal('{$js_edit_line_id}', '{$js_edit_real_name}', '{$js_old_phone}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                     <button onclick=\"confirmDeleteReporter('{$js_view_name}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
@@ -3309,14 +3310,14 @@ $dept_icons = [
             toggleModal('techAdminModal'); 
         }
 
-        function openEditReporterModal(old_name, old_phone) {
-            document.getElementById('edit_rep_old_name').value = old_name; 
-            document.getElementById('edit_rep_new_name').value = old_name; 
+        function openEditReporterModal(line_id, real_name, old_phone) {
+            document.getElementById('edit_rep_old_name').value = line_id; 
+            document.getElementById('edit_rep_new_name').value = real_name; 
             document.getElementById('edit_rep_new_phone').value = old_phone; 
             
-            // ให้แสดงชื่อ ID LINE เก่าในช่องที่เราเพิ่มมาใหม่ (ใช้ .value เพราะเป็น input)
+            // ให้แสดงชื่อ ID LINE ในช่องที่ไม่ให้แก้
             let displayOldUi = document.getElementById('display_old_name_ui');
-            if(displayOldUi) displayOldUi.value = old_name;
+            if(displayOldUi) displayOldUi.value = line_id;
             
             toggleModal('editReporterModal');
         }
