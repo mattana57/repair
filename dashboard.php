@@ -1597,12 +1597,12 @@ $dept_icons = [
                                     while($r = $reporter_res->fetch_assoc()) {
                                         $line_id = trim($r['unified_line_id']);
                                         $real_name = trim((string)$r['real_name']);
-                                        $phone_num = trim($r['phone_num']);
+                                        $phone_num = trim((string)$r['phone_num']);
                                         
-                                        // ✨ ให้ ID LINE เป็นชื่อหลัก (บรรทัดบน)
+                                        // ให้ ID LINE เป็นชื่อหลักตัวใหญ่ (บรรทัดบน)
                                         $main_name_html = formatEmptyOrDash($line_id);
                                         
-                                        // ✨ ให้ ชื่อจริง เป็นชื่อรอง (บรรทัดล่าง)
+                                        // ให้ ชื่อ-สกุลจริง เป็นตัวเล็ก (บรรทัดล่าง)
                                         $sub_name_html = ($real_name !== '' && $real_name !== $line_id) ? "<div class='text-[10px] text-slate-400 mt-0.5 font-medium'>ชื่อ-สกุล: " . htmlspecialchars($real_name) . "</div>" : "";
                                         
                                         $js_old_name = htmlspecialchars($line_id, ENT_QUOTES);
