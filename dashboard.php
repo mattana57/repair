@@ -3082,7 +3082,7 @@ $dept_icons = [
                                     <span class='text-xl font-extrabold text-indigo-600'>${rep.count}</span>
                                     <span class='text-[11px] text-slate-500 font-medium ml-1'>รายการ</span>
                                 </div>
-                                ${rep.name !== 'ไม่ระบุชื่อผู้แจ้ง' ? `<i class="fas fa-chevron-right ml-4 text-slate-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-xs"></i>` : ''}
+                                ${rep.name !== 'ไม่ระบุชื่อผู้แจ้ง' ? `<div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div>` : '<div class="ml-4 w-8 h-8"></div>'}
                             </div>
                         </div>`;
                 });
