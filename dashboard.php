@@ -1840,7 +1840,7 @@ $dept_icons = [
                              <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
                         </div>
                         
-                        <div id="avatarPositionWrapper" class="hidden mb-3 w-max relative">
+                        <div id="avatarPositionWrapper" class="hidden mb-6 w-max relative z-20">
                              <div id="positionDisplayGroup" class="flex items-center gap-2">
                                  <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="toggleCustomPositionDropdown(event)" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
                                      <span id="displayPositionLabel">ตำแหน่งงาน</span>
