@@ -1840,7 +1840,7 @@ $dept_icons = [
                              <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
                         </div>
                         
-                        <div id="avatarPositionWrapper" class="hidden mb-2 w-max relative z-30">
+                        <div id="avatarPositionWrapper" class="hidden mb-1 w-max relative z-30">
                              <div id="positionDisplayGroup" class="flex items-center gap-2">
                                  <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="toggleCustomPositionDropdown(event)" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
                                      <span id="displayPositionLabel">ตำแหน่งงาน</span>
@@ -1867,7 +1867,7 @@ $dept_icons = [
                              </select>
                         </div>
                         
-                        <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm mt-1 mb-3">
+                        <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm mb-6">
                             <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
                             </div>
