@@ -126,12 +126,6 @@ if (isset($_GET['id'])) {
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
             <div class="flex gap-3 w-full sm:w-auto">
-                <!-- ✨ ซ่อนปุ่ม "อัปเดตงานซ่อม" ถ้าเป็นฝั่งผู้บริหาร (Executive) ✨ -->
-                <?php if($repair && !$is_executive): ?>
-                <a href="update_repair.php?id=<?php echo $repair['id']; ?><?php echo $query_string; ?>" class="flex-1 sm:flex-none bg-white hover:bg-sky-50 text-sky-600 border border-sky-200 px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm inline-flex items-center justify-center text-sm">
-                    <i class="fas fa-edit mr-2"></i> อัปเดตงานซ่อม
-                </a>
-                <?php endif; ?>
                 
                 <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
