@@ -1840,10 +1840,11 @@ $dept_icons = [
                              <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
                         </div>
                         
-                        <div id="avatarPositionWrapper" class="hidden mb-6 w-max relative z-20">
+                        <div id="avatarPositionWrapper" class="hidden mb-3 w-max relative z-30">
                              <div id="positionDisplayGroup" class="flex items-center gap-2">
                                  <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="toggleCustomPositionDropdown(event)" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
                                      <span id="displayPositionLabel">ตำแหน่งงาน</span>
+                                     <!-- ไอคอนดรอปดาวน์ เปลี่ยนเป็นสีน้ำเงิน (text-indigo-600) -->
                                      <i class="fas fa-caret-down ml-1.5 text-indigo-600 text-xs hover:text-indigo-400 transition-colors"></i>
                                  </div>
                                  <button type="button" onclick="openCustomPositionPrompt()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors shadow-sm" title="พิมพ์ระบุตำแหน่งเอง">
@@ -1851,7 +1852,7 @@ $dept_icons = [
                                  </button>
                              </div>
                              
-                             <!-- กล่อง Dropdown ที่เราสร้างขึ้นมาใหม่ -->
+                             <!-- กล่อง Dropdown ที่เราสร้างขึ้นมาใหม่ (Absolute ป้องกันการดันเลย์เอาต์) -->
                              <div id="customPositionDropdown" class="absolute left-0 top-full mt-2 w-64 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 hidden flex-col py-2 custom-scrollbar max-h-60 overflow-y-auto">
                                  <!-- ข้อมูลตำแหน่งจะถูกแทรกเข้ามาตรงนี้อัตโนมัติ -->
                              </div>
@@ -2205,19 +2206,25 @@ $dept_icons = [
         // ระบบ Dropdown ตำแหน่งงานอัจฉริยะ
         let availablePositions = <?php echo $available_positions_json; ?>;
         
+        // ระบบ Dropdown ตำแหน่งงานอัจฉริยะ (Custom UI)
+        let availablePositions = <?php echo isset($available_positions_json) ? $available_positions_json : '[]'; ?>;
+        
         function renderPositionDropdown() {
             const dropdown = document.getElementById('customPositionDropdown');
+            if(!dropdown) return;
             dropdown.innerHTML = '';
             
             availablePositions.forEach((pos, index) => {
                 dropdown.innerHTML += `
                     <div class="px-4 py-2 mx-2 mb-1 rounded-xl text-sm font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex justify-between items-center transition-colors">
                         <span onclick="selectCustomPosition('${pos}')" class="flex-1 cursor-pointer truncate mr-2">${pos}</span>
+                        <!-- ไอคอนลบ เป็นสีแดงตลอดเวลา (text-rose-500) -->
                         <i class="fas fa-times-circle text-rose-500 hover:text-rose-700 transition-colors p-1 cursor-pointer" onclick="deletePositionOption(${index}, event)" title="ลบออกจากรายการ"></i>
                     </div>
                 `;
             });
             
+            // เมนู 'อื่นๆ' จะไม่มีปุ่มกากบาทให้ลบ
             dropdown.innerHTML += `
                 <div class="px-4 py-2 mx-2 mt-1 rounded-xl text-sm font-bold text-indigo-500 bg-indigo-50/50 hover:bg-indigo-100 cursor-pointer flex items-center transition-colors" onclick="openCustomPositionPrompt()">
                     <i class="fas fa-plus-circle mr-2"></i> อื่นๆ (พิมพ์ระบุเอง)
@@ -2228,6 +2235,7 @@ $dept_icons = [
         function toggleCustomPositionDropdown(e) {
             if (e) e.stopPropagation();
             const dropdown = document.getElementById('customPositionDropdown');
+            if(!dropdown) return;
             if (dropdown.classList.contains('hidden')) {
                 renderPositionDropdown();
                 dropdown.classList.remove('hidden');
@@ -2241,15 +2249,17 @@ $dept_icons = [
         function selectCustomPosition(pos) {
             savePositionValue(pos);
             const dropdown = document.getElementById('customPositionDropdown');
-            dropdown.classList.add('hidden');
-            dropdown.classList.remove('flex');
+            if(dropdown) {
+                dropdown.classList.add('hidden');
+                dropdown.classList.remove('flex');
+            }
         }
 
         function deletePositionOption(index, e) {
             e.stopPropagation();
             Swal.fire({
                 title: 'ลบออกจากตัวเลือก?',
-                text: `ต้องการลบตำแหน่งงานนี้ใช่หรือไม่?`,
+                text: 'ต้องการลบตำแหน่งงานนี้ใช่หรือไม่?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
@@ -2291,12 +2301,27 @@ $dept_icons = [
                 if (result.isConfirmed && result.value.trim() !== '') {
                     const newVal = result.value.trim();
                     savePositionValue(newVal);
-                    // ทันทีที่กดตกลง ให้จำชื่อนี้ไว้ใน Dropdown เสมอ
+                    // ระบบจะจำค่าที่พิมพ์ใหม่เข้าไปในตัวเลือกอัตโนมัติ
                     if (!availablePositions.includes(newVal)) {
                         availablePositions.push(newVal);
                     }
                 }
             });
+        }
+
+        function savePositionValue(val) {
+            const label = document.getElementById('displayPositionLabel');
+            if(label) label.innerText = val;
+            let hiddenInput = document.getElementById('final_avatar_position');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = 'final_avatar_position';
+                hiddenInput.name = 'position';
+                const form = document.querySelector('form[action="dashboard.php?tab=technicians"]');
+                if(form) form.appendChild(hiddenInput);
+            }
+            hiddenInput.value = val;
         }
 
         // ซ่อน Dropdown ถ้ายูสเซอร์คลิกที่อื่น
@@ -2310,19 +2335,6 @@ $dept_icons = [
                 }
             }
         });
-
-        function savePositionValue(val) {
-            document.getElementById('displayPositionLabel').innerText = val;
-            let hiddenInput = document.getElementById('final_avatar_position');
-            if (!hiddenInput) {
-                hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.id = 'final_avatar_position';
-                hiddenInput.name = 'position';
-                document.querySelector('form[action="dashboard.php?tab=technicians"]').appendChild(hiddenInput);
-            }
-            hiddenInput.value = val;
-        }
 
         function updateTechVisibility() {
             ['technicians', 'team_cards'].forEach(containerId => {
