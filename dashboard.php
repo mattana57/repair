@@ -1797,7 +1797,7 @@ $dept_icons = [
 
     <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
-        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto max-h-[90vh] transform transition-all">
+        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 flex flex-col max-h-[90vh] transform transition-all overflow-hidden">
             
             <div class="px-6 py-5 flex justify-between items-center bg-white rounded-t-3xl sticky top-0 z-10">
                 <h2 class="text-xl font-bold text-slate-800" id="techAdminModalTitle">Manage Technician</h2>
