@@ -1836,27 +1836,43 @@ $dept_icons = [
                     </div>
 
                     <div id="avatarDiv" class="hidden">
-                        <div id="avatarLabelWrapper" class="mb-3">
-                             <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
-                        </div>
-                        
-                        <div id="avatarPositionWrapper" class="hidden mb-3 w-max relative z-30">
-                             <div id="positionDisplayGroup" class="flex items-center gap-2">
-                                 <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="toggleCustomPositionDropdown(event)" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
-                                     <span id="displayPositionLabel">ตำแหน่งงาน</span>
-                                     <!-- ไอคอนดรอปดาวน์ เปลี่ยนเป็นสีน้ำเงิน (text-indigo-600) -->
-                                     <i class="fas fa-caret-down ml-1.5 text-indigo-600 text-xs hover:text-indigo-400 transition-colors"></i>
+                        <div class="flex flex-col gap-4 mb-2 mt-2">
+                            <div id="avatarLabelWrapper">
+                                 <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
+                            </div>
+                            
+                            <div id="avatarPositionWrapper" class="hidden w-max relative z-20">
+                                 <div id="positionDisplayGroup" class="flex items-center gap-2">
+                                     <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="toggleCustomPositionDropdown(event)" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
+                                         <span id="displayPositionLabel">ตำแหน่งงาน</span>
+                                         <i class="fas fa-caret-down ml-1.5 text-indigo-600 text-xs hover:text-indigo-400 transition-colors"></i>
+                                     </div>
+                                     <button type="button" onclick="openCustomPositionPrompt()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors shadow-sm" title="พิมพ์ระบุตำแหน่งเอง">
+                                         <i class="fas fa-pencil-alt text-[10px]"></i>
+                                     </button>
                                  </div>
-                                 <button type="button" onclick="openCustomPositionPrompt()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors shadow-sm" title="พิมพ์ระบุตำแหน่งเอง">
-                                     <i class="fas fa-pencil-alt text-[10px]"></i>
-                                 </button>
-                             </div>
-                             
-                             <!-- กล่อง Dropdown ที่เราสร้างขึ้นมาใหม่ (Absolute ป้องกันการดันเลย์เอาต์) -->
-                             <div id="customPositionDropdown" class="absolute left-0 top-full mt-2 w-64 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 hidden flex-col py-2 custom-scrollbar max-h-60 overflow-y-auto">
-                                 <!-- ข้อมูลตำแหน่งจะถูกแทรกเข้ามาตรงนี้อัตโนมัติ -->
-                             </div>
+                                 
+                                 <div id="customPositionDropdown" class="absolute left-0 top-full mt-2 w-64 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 hidden flex-col py-2 custom-scrollbar max-h-60 overflow-y-auto">
+                                     </div>
+                            </div>
+                            
+                            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-5 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
+                                <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
+                                    <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
+                                </div>
+                                <div class="flex-1 min-w-0 flex flex-col justify-center text-center sm:text-left mt-2 sm:mt-0">
+                                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-3">
+                                        <label for="techAdmin_avatar" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl text-sm font-bold transition-colors whitespace-nowrap shadow-sm">
+                                            เลือกไฟล์รูปภาพ
+                                        </label>
+                                        <span id="fileNameDisplay" class="text-sm text-slate-500 truncate max-w-[200px]">ไม่ได้เลือกไฟล์ใด</span>
+                                    </div>
+                                    <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="hidden" onchange="previewAvatar(event)">
+                                    <p class="text-[11px] text-slate-400 font-medium">แนะนำรูปภาพขนาด 1:1 หรือ 4:5 (JPG, PNG)</p>
+                                </div>
+                            </div>
                         </div>
+                    </div>
                              
                              <select id="avatarPositionSelect" class="hidden w-full mt-1 text-sm font-extrabold text-indigo-600 uppercase tracking-wider bg-transparent border-b-2 border-indigo-400 focus:border-indigo-600 outline-none pb-1 transition-colors cursor-pointer appearance-none pr-6" onchange="handleDropdownChange(this)" onblur="cancelDropdownEdit()" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234f46e5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right top 50%; background-size: 0.65rem auto;">
                                 <option value="" disabled selected>-- เลือกตำแหน่ง --</option>
@@ -2206,25 +2222,19 @@ $dept_icons = [
         // ระบบ Dropdown ตำแหน่งงานอัจฉริยะ
         let availablePositions = <?php echo $available_positions_json; ?>;
         
-        // ระบบ Dropdown ตำแหน่งงานอัจฉริยะ (Custom UI)
-        let availablePositions = <?php echo isset($available_positions_json) ? $available_positions_json : '[]'; ?>;
-        
         function renderPositionDropdown() {
             const dropdown = document.getElementById('customPositionDropdown');
-            if(!dropdown) return;
             dropdown.innerHTML = '';
             
             availablePositions.forEach((pos, index) => {
                 dropdown.innerHTML += `
                     <div class="px-4 py-2 mx-2 mb-1 rounded-xl text-sm font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex justify-between items-center transition-colors">
                         <span onclick="selectCustomPosition('${pos}')" class="flex-1 cursor-pointer truncate mr-2">${pos}</span>
-                        <!-- ไอคอนลบ เป็นสีแดงตลอดเวลา (text-rose-500) -->
                         <i class="fas fa-times-circle text-rose-500 hover:text-rose-700 transition-colors p-1 cursor-pointer" onclick="deletePositionOption(${index}, event)" title="ลบออกจากรายการ"></i>
                     </div>
                 `;
             });
             
-            // เมนู 'อื่นๆ' จะไม่มีปุ่มกากบาทให้ลบ
             dropdown.innerHTML += `
                 <div class="px-4 py-2 mx-2 mt-1 rounded-xl text-sm font-bold text-indigo-500 bg-indigo-50/50 hover:bg-indigo-100 cursor-pointer flex items-center transition-colors" onclick="openCustomPositionPrompt()">
                     <i class="fas fa-plus-circle mr-2"></i> อื่นๆ (พิมพ์ระบุเอง)
@@ -2235,7 +2245,6 @@ $dept_icons = [
         function toggleCustomPositionDropdown(e) {
             if (e) e.stopPropagation();
             const dropdown = document.getElementById('customPositionDropdown');
-            if(!dropdown) return;
             if (dropdown.classList.contains('hidden')) {
                 renderPositionDropdown();
                 dropdown.classList.remove('hidden');
@@ -2249,17 +2258,15 @@ $dept_icons = [
         function selectCustomPosition(pos) {
             savePositionValue(pos);
             const dropdown = document.getElementById('customPositionDropdown');
-            if(dropdown) {
-                dropdown.classList.add('hidden');
-                dropdown.classList.remove('flex');
-            }
+            dropdown.classList.add('hidden');
+            dropdown.classList.remove('flex');
         }
 
         function deletePositionOption(index, e) {
             e.stopPropagation();
             Swal.fire({
                 title: 'ลบออกจากตัวเลือก?',
-                text: 'ต้องการลบตำแหน่งงานนี้ใช่หรือไม่?',
+                text: `ต้องการลบตำแหน่งงานนี้ใช่หรือไม่?`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
@@ -2301,27 +2308,12 @@ $dept_icons = [
                 if (result.isConfirmed && result.value.trim() !== '') {
                     const newVal = result.value.trim();
                     savePositionValue(newVal);
-                    // ระบบจะจำค่าที่พิมพ์ใหม่เข้าไปในตัวเลือกอัตโนมัติ
+                    // ทันทีที่กดตกลง ให้จำชื่อนี้ไว้ใน Dropdown เสมอ
                     if (!availablePositions.includes(newVal)) {
                         availablePositions.push(newVal);
                     }
                 }
             });
-        }
-
-        function savePositionValue(val) {
-            const label = document.getElementById('displayPositionLabel');
-            if(label) label.innerText = val;
-            let hiddenInput = document.getElementById('final_avatar_position');
-            if (!hiddenInput) {
-                hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.id = 'final_avatar_position';
-                hiddenInput.name = 'position';
-                const form = document.querySelector('form[action="dashboard.php?tab=technicians"]');
-                if(form) form.appendChild(hiddenInput);
-            }
-            hiddenInput.value = val;
         }
 
         // ซ่อน Dropdown ถ้ายูสเซอร์คลิกที่อื่น
@@ -2335,6 +2327,19 @@ $dept_icons = [
                 }
             }
         });
+
+        function savePositionValue(val) {
+            document.getElementById('displayPositionLabel').innerText = val;
+            let hiddenInput = document.getElementById('final_avatar_position');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.id = 'final_avatar_position';
+                hiddenInput.name = 'position';
+                document.querySelector('form[action="dashboard.php?tab=technicians"]').appendChild(hiddenInput);
+            }
+            hiddenInput.value = val;
+        }
 
         function updateTechVisibility() {
             ['technicians', 'team_cards'].forEach(containerId => {
