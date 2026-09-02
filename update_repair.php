@@ -406,7 +406,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                         <div>
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide">ผู้แจ้ง</p>
-                            <p class="font-bold text-indigo-600 mt-1"><i class="fab fa-line text-indigo-500 mr-1"></i> ID LINE: <?php echo htmlspecialchars($repair_line_id); ?></p>
+                            <p class="font-bold text-indigo-600 mt-1 flex items-center"><i class="fab fa-line text-[#06C755] text-[16px] mr-1.5"></i> <?php echo htmlspecialchars($repair_line_id); ?></p>
                             <p class="font-medium text-slate-700 mt-0.5"><i class="far fa-user text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair_real_name); ?></p>
                             <p class="text-slate-500 mt-0.5"><i class="fas fa-phone-alt text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair['phone_number']); ?></p>
                         </div>

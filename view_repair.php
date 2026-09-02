@@ -177,7 +177,7 @@ if (isset($_GET['id'])) {
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2 mb-1">
                                 <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">ข้อมูลผู้แจ้ง</p>
-                                <p class="font-bold text-indigo-600"><i class="fab fa-line mr-1"></i> ID LINE: <?php echo htmlspecialchars($repair_line_id); ?></p>
+                                <p class="font-bold text-indigo-600 flex items-center"><i class="fab fa-line text-[#06C755] text-[16px] mr-1.5"></i> <?php echo htmlspecialchars($repair_line_id); ?></p>
                             </div>
                             <div>
                                 <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">ชื่อ-นามสกุล</p>

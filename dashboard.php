@@ -3146,9 +3146,9 @@ $dept_icons = [
                     
                     if (lineUsersMap[rep.name] && lineUsersMap[rep.name].real_name) {
                         displayName = lineUsersMap[rep.name].real_name;
-                        // โชว์ ID LINE เฉพาะกรณีที่ ID LINE ไม่ใช่ชื่อเดียวกันกับชื่อจริง
                         if (rep.name !== displayName) {
-                            lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>ID LINE: ${rep.name}</div>`;
+                            // ✨ เปลี่ยนไอคอนเป็นสีเขียว LINE และให้ชื่อเป็นสีน้ำเงิน
+                            lineIdHtml = `<div class='text-[12px] font-bold text-indigo-600 mt-0.5 flex items-center'><i class='fab fa-line text-[#06C755] text-[14px] mr-1.5'></i> ${rep.name}</div>`;
                         }
                     }
 
