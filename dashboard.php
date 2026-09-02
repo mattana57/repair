@@ -1795,27 +1795,20 @@ $dept_icons = [
         </div>
     </div>
 
-    <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-50 px-4">
-        <div class="modal-overlay absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
-        
-        <!-- ✨ โครงสร้างกล่องหลัก: ความสูงพอดี ล็อคขอบโค้งให้ Scrollbar ไม่ทะลุ ✨ -->
-        <div class="modal-container relative bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 flex flex-col max-h-[85vh] transform transition-all overflow-hidden">
+    <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
+        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 flex flex-col max-h-[90vh] transform transition-all overflow-hidden">
             
-            <!-- ส่วนหัว Modal (ล็อคอยู่ด้านบนเสมอ) -->
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white shrink-0 z-20">
+            <div class="px-6 py-5 flex justify-between items-center bg-white rounded-t-3xl border-b border-slate-100 shrink-0">
                 <h2 class="text-xl font-bold text-slate-800" id="techAdminModalTitle">Manage Technician</h2>
-                <button type="button" onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-slate-50 hover:bg-rose-50 rounded-full w-8 h-8 flex items-center justify-center shadow-sm">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
+                <button type="button" onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full w-8 h-8 flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
             </div>
 
-            <!-- ส่วนฟอร์ม (แบ่งพื้นที่เนื้อหาให้ Scroll ได้ และล็อคปุ่มด้านล่าง) -->
-            <form action="dashboard.php?tab=technicians" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0">
+            <form action="dashboard.php?tab=technicians" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-hidden min-h-0">
                 <input type="hidden" name="save_user" value="1">
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
                 <input type="hidden" name="role" id="techAdmin_role" value="">
                 
-                <!-- ✨ พื้นที่เนื้อหาที่ Scroll ได้อย่างเดียว (Scrollbar จะเนียนกริบ) ✨ -->
                 <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5">
                     
                     <div id="loginCredsDiv" class="space-y-5">
@@ -1842,8 +1835,7 @@ $dept_icons = [
                         </select>
                     </div>
 
-                    <!-- ✨ ส่วนแสดงผลรูปภาพและตำแหน่งงาน (จัดหน้าตาตามรูปที่ 2) ✨ -->
-                    <div id="avatarDiv" class="hidden flex flex-col gap-2">
+                    <div id="avatarDiv" class="hidden space-y-3">
                         <div id="avatarLabelWrapper">
                              <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
                         </div>
@@ -1862,20 +1854,29 @@ $dept_icons = [
                              <div id="customPositionDropdown" class="absolute left-0 top-full mt-2 w-64 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 hidden flex-col py-2 custom-scrollbar max-h-60 overflow-y-auto">
                              </div>
                         </div>
+                             
+                        <select id="avatarPositionSelect" class="hidden w-full mt-1 text-sm font-extrabold text-indigo-600 uppercase tracking-wider bg-transparent border-b-2 border-indigo-400 focus:border-indigo-600 outline-none pb-1 transition-colors cursor-pointer appearance-none pr-6" onchange="handleDropdownChange(this)" onblur="cancelDropdownEdit()" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234f46e5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right top 50%; background-size: 0.65rem auto;">
+                            <option value="" disabled selected>-- เลือกตำแหน่ง --</option>
+                            <option value="นักวิชาการคอมพิวเตอร์">นักวิชาการคอมพิวเตอร์</option>
+                            <option value="นักวิชาการโสตทัศนศึกษา">นักวิชาการโสตทัศนศึกษา</option>
+                            <option value="เจ้าหน้าที่บริหารงานทั่วไป">เจ้าหน้าที่บริหารงานทั่วไป</option>
+                            <option value="พนักงานขับรถยนต์">พนักงานขับรถยนต์</option>
+                            <option value="custom">อื่นๆ (พิมพ์ระบุเอง)</option>
+                        </select>
                         
-                        <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm w-full">
-                            <div class="w-[90px] h-[90px] rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
+                        <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
+                            <div class="w-[100px] h-[100px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
                             </div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex flex-col gap-2">
-                                    <label for="techAdmin_avatar" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-xl text-xs font-bold transition-colors shadow-sm w-max">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <label for="techAdmin_avatar" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl text-sm font-bold transition-colors whitespace-nowrap">
                                         เลือกไฟล์รูปภาพ
                                     </label>
-                                    <span id="fileNameDisplay" class="text-[11px] text-slate-500 truncate w-full">ไม่ได้เลือกไฟล์ใด</span>
-                                    <p class="text-[10px] text-slate-400 font-medium">แนะนำรูปภาพขนาด 1:1 หรือ 4:5</p>
+                                    <span id="fileNameDisplay" class="text-sm text-slate-500 truncate">ไม่ได้เลือกไฟล์ใด</span>
                                 </div>
                                 <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="hidden" onchange="previewAvatar(event)">
+                                <p class="text-[11px] text-slate-400 mt-2">แนะนำรูปภาพขนาด 1:1 หรือ 4:5 (JPG, PNG)</p>
                             </div>
                         </div>
                     </div>
@@ -1890,10 +1891,15 @@ $dept_icons = [
                         <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
-                    <div id="positionDiv" class="hidden">
+                    <div id="positionDiv">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION</label>
-                        <select name="position_select" id="techAdmin_position_select" onchange="toggleCustomInput(this, 'techAdmin_position_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none">
+                        <select name="position_select" id="techAdmin_position_select" onchange="toggleCustomInput(this, 'techAdmin_position_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
                             <option value="" disabled selected>-- Select Position --</option>
+                            <option value="นักวิชาการคอมพิวเตอร์">นักวิชาการคอมพิวเตอร์</option>
+                            <option value="นักวิชาการโสตทัศนศึกษา">นักวิชาการโสตทัศนศึกษา</option>
+                            <option value="เจ้าหน้าที่บริหารงานทั่วไป">เจ้าหน้าที่บริหารงานทั่วไป</option>
+                            <option value="พนักงานขับรถยนต์">พนักงานขับรถยนต์</option>
+                            <option value="อื่นๆ">อื่นๆ (Custom)</option>
                         </select>
                         <input type="text" name="position_custom" id="techAdmin_position_custom" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="Specify position">
                     </div>
@@ -1917,9 +1923,8 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <!-- ✨ ปุ่มกดด้านล่าง (ล็อคติดขอบล่างเสมอ) ✨ -->
-                <div class="px-6 py-5 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 shrink-0 z-20">
-                    <button type="button" onclick="toggleModal('techAdminModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors shadow-sm">Cancel</button>
+                <div class="p-6 pt-4 border-t border-slate-100 flex justify-end gap-3 shrink-0 bg-white rounded-b-3xl">
+                    <button type="button" onclick="toggleModal('techAdminModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">Cancel</button>
                     <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Data</button>
                 </div>
             </form>
