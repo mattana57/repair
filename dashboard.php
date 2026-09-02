@@ -1836,43 +1836,26 @@ $dept_icons = [
                     </div>
 
                     <div id="avatarDiv" class="hidden">
-                        <div class="flex flex-col gap-4 mb-2 mt-2">
-                            <div id="avatarLabelWrapper">
-                                 <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
-                            </div>
-                            
-                            <div id="avatarPositionWrapper" class="hidden w-max relative z-20">
-                                 <div id="positionDisplayGroup" class="flex items-center gap-2">
-                                     <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="toggleCustomPositionDropdown(event)" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
-                                         <span id="displayPositionLabel">ตำแหน่งงาน</span>
-                                         <i class="fas fa-caret-down ml-1.5 text-indigo-600 text-xs hover:text-indigo-400 transition-colors"></i>
-                                     </div>
-                                     <button type="button" onclick="openCustomPositionPrompt()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors shadow-sm" title="พิมพ์ระบุตำแหน่งเอง">
-                                         <i class="fas fa-pencil-alt text-[10px]"></i>
-                                     </button>
-                                 </div>
-                                 
-                                 <div id="customPositionDropdown" class="absolute left-0 top-full mt-2 w-64 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 hidden flex-col py-2 custom-scrollbar max-h-60 overflow-y-auto">
-                                     </div>
-                            </div>
-                            
-                            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-5 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
-                                <div class="w-[110px] h-[110px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
-                                    <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
-                                </div>
-                                <div class="flex-1 min-w-0 flex flex-col justify-center text-center sm:text-left mt-2 sm:mt-0">
-                                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-3">
-                                        <label for="techAdmin_avatar" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl text-sm font-bold transition-colors whitespace-nowrap shadow-sm">
-                                            เลือกไฟล์รูปภาพ
-                                        </label>
-                                        <span id="fileNameDisplay" class="text-sm text-slate-500 truncate max-w-[200px]">ไม่ได้เลือกไฟล์ใด</span>
-                                    </div>
-                                    <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="hidden" onchange="previewAvatar(event)">
-                                    <p class="text-[11px] text-slate-400 font-medium">แนะนำรูปภาพขนาด 1:1 หรือ 4:5 (JPG, PNG)</p>
-                                </div>
-                            </div>
+                        <div id="avatarLabelWrapper" class="mb-3">
+                             <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
                         </div>
-                    </div>
+                        
+                        <div id="avatarPositionWrapper" class="hidden mb-6 w-max relative z-20">
+                             <div id="positionDisplayGroup" class="flex items-center gap-2">
+                                 <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="toggleCustomPositionDropdown(event)" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
+                                     <span id="displayPositionLabel">ตำแหน่งงาน</span>
+                                     <i class="fas fa-caret-down ml-1.5 text-indigo-600 text-xs hover:text-indigo-400 transition-colors"></i>
+                                 </div>
+                                 <button type="button" onclick="openCustomPositionPrompt()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors shadow-sm" title="พิมพ์ระบุตำแหน่งเอง">
+                                     <i class="fas fa-pencil-alt text-[10px]"></i>
+                                 </button>
+                             </div>
+                             
+                             <!-- กล่อง Dropdown ที่เราสร้างขึ้นมาใหม่ -->
+                             <div id="customPositionDropdown" class="absolute left-0 top-full mt-2 w-64 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 hidden flex-col py-2 custom-scrollbar max-h-60 overflow-y-auto">
+                                 <!-- ข้อมูลตำแหน่งจะถูกแทรกเข้ามาตรงนี้อัตโนมัติ -->
+                             </div>
+                        </div>
                              
                              <select id="avatarPositionSelect" class="hidden w-full mt-1 text-sm font-extrabold text-indigo-600 uppercase tracking-wider bg-transparent border-b-2 border-indigo-400 focus:border-indigo-600 outline-none pb-1 transition-colors cursor-pointer appearance-none pr-6" onchange="handleDropdownChange(this)" onblur="cancelDropdownEdit()" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234f46e5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right top 50%; background-size: 0.65rem auto;">
                                 <option value="" disabled selected>-- เลือกตำแหน่ง --</option>
