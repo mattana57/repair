@@ -265,9 +265,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             <div class="flex flex-col lg:flex-row justify-between items-start md:items-center gap-4">
                 
                 <div class="flex items-center space-x-4 w-full lg:w-auto justify-center lg:justify-start shrink-0">
-                    <a href="dashboard.php?tab=reports" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center">
+                    <button type="button" onclick="window.close();" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center cursor-pointer">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
-                    </a>
+                    </button>
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide hidden sm:block">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
