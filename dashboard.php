@@ -3452,11 +3452,11 @@ $dept_icons = [
             const linkBtn = document.getElementById('historyModalLinkBtn');
             if (linkBtn) {
                 if (type === 'reporter') {
+                    linkBtn.style.display = ''; // แสดงปุ่มปกติถ้าเป็นผู้แจ้งซ่อม
                     linkBtn.innerHTML = '<i class="fas fa-address-book mr-2"></i> Contacts';
                     linkBtn.onclick = function() { toggleModal('historyModal'); show('users'); };
                 } else {
-                    linkBtn.innerHTML = '<i class="fas fa-users-cog mr-2"></i> Team';
-                    linkBtn.onclick = function() { toggleModal('historyModal'); show('technicians'); };
+                    linkBtn.style.display = 'none'; // ซ่อนปุ่มไปเลยถ้าเป็นประวัติช่าง
                 }
             }
             
