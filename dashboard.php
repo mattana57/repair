@@ -945,7 +945,7 @@ $dept_icons = [
                                     <th class="px-6 py-4">Root Cause</th>
                                     <th class="px-6 py-4 text-center">Status</th>
                                     <th class="px-6 py-4">Completed At</th>
-                                    <th class="px-6 py-4 text-right">Action</th>
+                                    <th class="px-6 py-4 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
@@ -1056,10 +1056,9 @@ $dept_icons = [
                                                 <div class='font-medium text-emerald-700'>{$completed_date}</div>
                                                 {$completed_time_html}
                                             </td>
-                                            <td class='px-6 py-4 align-middle text-right'>
-                                                <div class='flex items-center justify-end space-x-2'>
+                                            <td class='px-6 py-4 align-middle text-center'>
+                                                <div class='flex items-center justify-center'>
                                                     <a href='update_repair.php?id={$row['id']}' target='_blank' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
-                                                    <a href='view_repair.php?id={$row['id']}' target='_blank' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
                                                 </div>
                                             </td>
                                         </tr>";
@@ -1975,7 +1974,7 @@ $dept_icons = [
                                 <th class="px-5 py-4">Root Cause</th>
                                 <th class="px-5 py-4 text-center">Status</th>
                                 <th class="px-5 py-4">Completed At</th>
-                                <th class="px-5 py-4 text-right">Action</th>
+                                <th class="px-5 py-4 text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody class="text-sm divide-y divide-slate-50" id="historyTableBody">
@@ -3435,10 +3434,9 @@ $dept_icons = [
                             <div class='font-medium text-emerald-700'>${completed_date}</div>
                             ${completed_time}
                         </td>
-                        <td class="px-5 py-4 align-middle text-right">
-                            <div class='flex items-center justify-end space-x-2'>
+                        <td class="px-5 py-4 align-middle text-center">
+                            <div class='flex items-center justify-center'>
                                 <a href='update_repair.php?id=${r.id}' target='_blank' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
-                                <a href='view_repair.php?id=${r.id}' target='_blank' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='View'><i class='fas fa-eye'></i></a>
                             </div>
                         </td>
                     </tr>`;
