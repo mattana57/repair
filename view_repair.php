@@ -56,6 +56,8 @@ function timeAgo($datetime) {
 // ดึงข้อมูลใบงาน
 $repair = null;
 $tech_phone = null; 
+$repair_line_id = "";
+$repair_real_name = "";
 
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
@@ -65,6 +67,23 @@ if (isset($_GET['id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $repair = $result->fetch_assoc();
+
+    // ✨ ดึง ID LINE และ ชื่อจริง จากตาราง line_users
+    $repair_line_id = $repair['reporter_name'];
+    $repair_real_name = $repair['reporter_name'];
+    if (!empty($repair['reporter_name'])) {
+        $stmt_lu = $conn->prepare("SELECT line_display_name, real_name FROM line_users WHERE line_display_name = ? OR real_name = ? LIMIT 1");
+        if ($stmt_lu) {
+            $stmt_lu->bind_param("ss", $repair['reporter_name'], $repair['reporter_name']);
+            $stmt_lu->execute();
+            $res_lu = $stmt_lu->get_result();
+            if ($row_lu = $res_lu->fetch_assoc()) {
+                if (!empty($row_lu['line_display_name'])) $repair_line_id = $row_lu['line_display_name'];
+                if (!empty($row_lu['real_name'])) $repair_real_name = $row_lu['real_name'];
+            }
+            $stmt_lu->close();
+        }
+    }
 
     // ดึงเบอร์โทรศัพท์ของช่างผู้รับผิดชอบจากตาราง users
     if (!empty($repair['technician_name'])) {
@@ -156,9 +175,13 @@ if (isset($_GET['id'])) {
                     </div>
                     <div class="p-6 space-y-5">
                         <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-2 mb-1">
+                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">ข้อมูลผู้แจ้ง</p>
+                                <p class="font-bold text-indigo-600"><i class="fab fa-line mr-1"></i> ID LINE: <?php echo htmlspecialchars($repair_line_id); ?></p>
+                            </div>
                             <div>
                                 <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">ชื่อ-นามสกุล</p>
-                                <p class="font-semibold text-slate-800"><?php echo htmlspecialchars($repair['reporter_name']); ?></p>
+                                <p class="font-semibold text-slate-800"><?php echo htmlspecialchars($repair_real_name); ?></p>
                             </div>
                             <div>
                                 <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">เบอร์โทรศัพท์</p>

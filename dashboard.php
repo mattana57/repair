@@ -3146,7 +3146,10 @@ $dept_icons = [
                     
                     if (lineUsersMap[rep.name] && lineUsersMap[rep.name].real_name) {
                         displayName = lineUsersMap[rep.name].real_name;
-                        lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>ID LINE: ${rep.name}</div>`;
+                        // โชว์ ID LINE เฉพาะกรณีที่ ID LINE ไม่ใช่ชื่อเดียวกันกับชื่อจริง
+                        if (rep.name !== displayName) {
+                            lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>ID LINE: ${rep.name}</div>`;
+                        }
                     }
 
                     let safeName = rep.name.replace(/'/g, "\\'");

@@ -55,6 +55,9 @@ function timeAgo($datetime) {
 }
 
 $repair = null;
+$repair_line_id = "";
+$repair_real_name = "";
+
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
     $sql = "SELECT * FROM repairs WHERE id = ?";
@@ -63,6 +66,23 @@ if (isset($_GET['id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $repair = $result->fetch_assoc();
+    
+    // ✨ ดึงข้อมูล ID LINE และ ชื่อจริง จากตาราง line_users เพื่อนำมาโชว์
+    $repair_line_id = $repair['reporter_name'];
+    $repair_real_name = $repair['reporter_name'];
+    if (!empty($repair['reporter_name'])) {
+        $stmt_lu = $conn->prepare("SELECT line_display_name, real_name FROM line_users WHERE line_display_name = ? OR real_name = ? LIMIT 1");
+        if ($stmt_lu) {
+            $stmt_lu->bind_param("ss", $repair['reporter_name'], $repair['reporter_name']);
+            $stmt_lu->execute();
+            $res_lu = $stmt_lu->get_result();
+            if ($row_lu = $res_lu->fetch_assoc()) {
+                if (!empty($row_lu['line_display_name'])) $repair_line_id = $row_lu['line_display_name'];
+                if (!empty($row_lu['real_name'])) $repair_real_name = $row_lu['real_name'];
+            }
+            $stmt_lu->close();
+        }
+    }
 }
 
 $form_action = "update_repair.php?id=" . ($repair['id'] ?? '');
@@ -386,7 +406,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                         <div>
                             <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide">ผู้แจ้ง</p>
-                            <p class="font-medium text-slate-700 mt-0.5"><i class="far fa-user text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair['reporter_name']); ?></p>
+                            <p class="font-bold text-indigo-600 mt-1"><i class="fab fa-line text-indigo-500 mr-1"></i> ID LINE: <?php echo htmlspecialchars($repair_line_id); ?></p>
+                            <p class="font-medium text-slate-700 mt-0.5"><i class="far fa-user text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair_real_name); ?></p>
                             <p class="text-slate-500 mt-0.5"><i class="fas fa-phone-alt text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair['phone_number']); ?></p>
                         </div>
                         <div>
