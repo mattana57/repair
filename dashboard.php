@@ -1058,7 +1058,7 @@ $dept_icons = [
                                             </td>
                                             <td class='px-6 py-4 align-middle text-center'>
                                                 <div class='flex items-center justify-center'>
-                                                    <a href='update_repair.php?id={$row['id']}' target='_blank' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                                    <a href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
                                                 </div>
                                             </td>
                                         </tr>";
@@ -2121,7 +2121,7 @@ $dept_icons = [
                     let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
                     let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
 
-                    container.innerHTML += `<div onclick="window.open('update_repair.php?id=${rev.id}', '_blank')" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                    container.innerHTML += `<div onclick="window.location.href='update_repair.php?id=${rev.id}'" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
                                 <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
                             </div>
@@ -3436,7 +3436,7 @@ $dept_icons = [
                         </td>
                         <td class="px-5 py-4 align-middle text-center">
                             <div class='flex items-center justify-center'>
-                                <a href='update_repair.php?id=${r.id}' target='_blank' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                <a href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
                             </div>
                         </td>
                     </tr>`;
