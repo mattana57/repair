@@ -1844,7 +1844,7 @@ $dept_icons = [
                              <div id="positionDisplayGroup" class="flex items-center gap-2">
                                  <div class="flex items-center text-sm font-extrabold text-indigo-600 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors" onclick="toggleCustomPositionDropdown(event)" title="คลิกเพื่อเลือกตำแหน่งจากรายการ">
                                      <span id="displayPositionLabel">ตำแหน่งงาน</span>
-                                     <i class="fas fa-caret-down ml-1.5 text-slate-400 text-xs group-hover:text-indigo-400 transition-colors"></i>
+                                     <i class="fas fa-caret-down ml-1.5 text-indigo-600 text-xs hover:text-indigo-400 transition-colors"></i>
                                  </div>
                                  <button type="button" onclick="openCustomPositionPrompt()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors shadow-sm" title="พิมพ์ระบุตำแหน่งเอง">
                                      <i class="fas fa-pencil-alt text-[10px]"></i>
@@ -2211,9 +2211,9 @@ $dept_icons = [
             
             availablePositions.forEach((pos, index) => {
                 dropdown.innerHTML += `
-                    <div class="px-4 py-2 mx-2 mb-1 rounded-xl text-sm font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex justify-between items-center group transition-colors">
+                    <div class="px-4 py-2 mx-2 mb-1 rounded-xl text-sm font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex justify-between items-center transition-colors">
                         <span onclick="selectCustomPosition('${pos}')" class="flex-1 cursor-pointer truncate mr-2">${pos}</span>
-                        <i class="fas fa-times-circle text-rose-200 hover:text-rose-500 transition-colors p-1 cursor-pointer opacity-0 group-hover:opacity-100" onclick="deletePositionOption(${index}, event)" title="ลบออกจากรายการ"></i>
+                        <i class="fas fa-times-circle text-rose-500 hover:text-rose-700 transition-colors p-1 cursor-pointer" onclick="deletePositionOption(${index}, event)" title="ลบออกจากรายการ"></i>
                     </div>
                 `;
             });
