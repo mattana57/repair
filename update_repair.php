@@ -381,9 +381,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
             <?php if($is_admin): ?>
-            <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
+            <button type="button" onclick="window.close();" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto cursor-pointer">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
-            </a>
+            </button>
             <?php endif; ?>
         </div>
 
@@ -940,11 +940,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             confirmButtonText: 'ตกลง'
         }).then((result) => {
             if (result.isConfirmed) {
-                <?php if($is_admin): ?>
-                window.location.href = '<?php echo htmlspecialchars($back_url); ?>';
-                <?php else: ?>
                 window.close(); 
-                <?php endif; ?>
             }
         });
     </script>
