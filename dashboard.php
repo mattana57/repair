@@ -565,6 +565,19 @@ $dept_icons = [
         .badge-progress { background-color: #e0e7ff; color: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-success { background-color: #d1fae5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         @media print { aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #team_cards, #assets, #users, #reports { display: none !important; } }
+
+        /* ✨ สไตล์สำหรับ Keyboard Navigation (หน้า Official Report) ✨ */
+        .report-dropdown-item.kb-active-item {
+            background-color: #eef2ff !important;
+            color: #4f46e5 !important;
+        }
+        .report-dropdown-item.kb-active-item .bg-slate-100 {
+            background-color: #e0e7ff !important;
+            color: #6366f1 !important;
+        }
+        .report-dropdown-item.kb-active-item .fa-check {
+            opacity: 1 !important;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -3567,6 +3580,8 @@ $dept_icons = [
         function toggleReportDropdown(e, forceOpen = false) {
             if(e) e.stopPropagation();
             const list = document.getElementById('reportDropdownList');
+            const input = document.getElementById('reportSearchInput'); // ✨ ดึง Input มาใช้งาน
+            
             if(forceOpen) {
                 list.classList.remove('hidden');
                 list.classList.add('flex');
@@ -3574,12 +3589,27 @@ $dept_icons = [
                 list.classList.toggle('hidden');
                 list.classList.toggle('flex');
             }
+
+            // ✨ บังคับ Focus ไปที่ช่อง Input ทันทีเมื่อเปิด Dropdown เพื่อรับคำสั่งจากคีย์บอร์ด
+            if (!list.classList.contains('hidden')) {
+                if (document.activeElement !== input) {
+                    input.focus();
+                }
+            } else {
+                input.blur();
+            }
         }
+
+        let currentReportFocus = -1; // ✨ ตัวแปรเก็บตำแหน่งลูกศรสำหรับหน้า Report
 
         function filterReportDropdown() {
             toggleReportDropdown(null, true);
             const searchVal = document.getElementById('reportSearchInput').value.toLowerCase().replace(/\s+/g, '');
             
+            // ✨ รีเซ็ตสีเวลาเริ่มพิมพ์ค้นหาใหม่
+            currentReportFocus = -1;
+            removeReportActive(document.querySelectorAll('.report-dropdown-item'));
+
             let deptVisibility = {};
             
             const items = document.querySelectorAll('.report-dropdown-item');
@@ -3639,6 +3669,68 @@ $dept_icons = [
                 }
             }
         });
+
+        // ✨ ฟังก์ชันจัดการปุ่มลูกศร ขึ้น-ลง และ Enter ในช่องค้นหา (หน้า Report) ✨
+        document.getElementById('reportSearchInput').addEventListener('keydown', function(e) {
+            const list = document.getElementById('reportDropdownList');
+            
+            // ถ้า Dropdown ปิดอยู่ แล้วกดลูกศรลงหรือ Enter ให้เปิด Dropdown
+            if (list.classList.contains('hidden')) {
+                if (e.key === "ArrowDown" || e.key === "Enter") {
+                    toggleReportDropdown(null, true);
+                }
+                return;
+            }
+
+            let items = list.querySelectorAll('.report-dropdown-item');
+            let visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
+
+            if (e.key === "ArrowDown") {
+                currentReportFocus++;
+                addReportActive(visibleItems);
+                e.preventDefault(); // ป้องกันไม่ให้ cursor ในช่องพิมพ์ขยับ
+            } else if (e.key === "ArrowUp") {
+                currentReportFocus--;
+                addReportActive(visibleItems);
+                e.preventDefault();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (currentReportFocus > -1) {
+                    if (visibleItems[currentReportFocus]) {
+                        const val = visibleItems[currentReportFocus].getAttribute('data-value');
+                        let disp = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
+                        if (val !== 'all') {
+                            const span = visibleItems[currentReportFocus].querySelector('span');
+                            if(span) disp = span.innerText;
+                        }
+                        selectReportTech(val, disp);
+                    }
+                } else if (visibleItems.length === 1) {
+                    const val = visibleItems[0].getAttribute('data-value');
+                    let disp = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
+                    if (val !== 'all') {
+                        const span = visibleItems[0].querySelector('span');
+                        if(span) disp = span.innerText;
+                    }
+                    selectReportTech(val, disp);
+                }
+            }
+        });
+
+        function addReportActive(x) {
+            if (!x) return false;
+            removeReportActive(x);
+            if (currentReportFocus >= x.length) currentReportFocus = 0;
+            if (currentReportFocus < 0) currentReportFocus = (x.length - 1);
+            x[currentReportFocus].classList.add("kb-active-item");
+            x[currentReportFocus].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function removeReportActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("kb-active-item");
+            }
+        }
     </script>
 </body>
 </html>
