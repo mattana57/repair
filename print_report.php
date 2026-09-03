@@ -215,26 +215,32 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
         @media print {
             .no-print { display: none !important; }
-            body { background: white !important; font-size: 14px; color: black !important; }
+            body { background: white !important; font-size: 14px; color: black !important; min-height: auto !important; }
             
             @page { 
                 size: A4 portrait; 
-                margin: 20mm; 
+                margin: 15mm; /* ลดขอบลงนิดนึงกันเนื้อหาดันล้นกระดาษ */
             }
 
             .a4-container { 
                 width: 100% !important; 
-                height: 256mm !important; 
-                min-height: 256mm !important;
+                height: auto !important; /* ปล่อยความสูงให้เป็นไปตามเนื้อหาจริง */
+                min-height: auto !important;
                 padding: 0 !important; 
                 margin: 0 !important; 
                 box-shadow: none !important; 
                 page-break-after: always;
                 page-break-inside: avoid;
             }
-            .a4-container:last-child {
-                page-break-after: auto; 
+            
+            /* บังคับให้กระดาษแผ่นสุดท้าย ห้ามเว้นแผ่นเปล่าเด็ดขาด */
+            .a4-container:last-of-type {
+                page-break-after: auto !important; 
             }
+            
+            /* ล้างระยะห่างขอบล่างของเว็บไซต์ตอนปริ้นท์ */
+            .pb-10 { padding-bottom: 0 !important; }
+
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; page-break-after: auto; }
             thead { display: table-header-group; }
