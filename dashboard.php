@@ -1809,7 +1809,8 @@ $dept_icons = [
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
                 <input type="hidden" name="role" id="techAdmin_role" value="">
                 
-                <div class="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5">
+                <!-- ✨ พื้นที่เนื้อหา ปรับระยะ margin (my-5) เพื่อร่น Scrollbar ลงมา ไม่ให้ชิดเส้นขอบบนเกินไป ✨ -->
+                <div class="px-6 py-1 my-5 overflow-y-auto custom-scrollbar flex-1 space-y-5">
                     
                     <div id="loginCredsDiv" class="space-y-5">
                         <div>
