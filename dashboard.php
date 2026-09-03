@@ -1810,7 +1810,7 @@ $dept_icons = [
                 <input type="hidden" name="role" id="techAdmin_role" value="">
                 
                 <!-- ✨ เปลี่ยนมาใช้ pt-4 และ flex-col gap-5 เพื่อแก้ปัญหาช่องว่างโล่งๆ ด้านบน ✨ -->
-                <div class="px-6 pt-4 pb-6 overflow-y-auto custom-scrollbar flex-1 flex flex-col gap-5">
+                <div class="px-6 pt-2 pb-6 overflow-y-auto custom-scrollbar flex-1 flex flex-col gap-5">
                     
                     <div id="loginCredsDiv" class="flex flex-col gap-5">
                         <div>
