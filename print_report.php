@@ -357,24 +357,40 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <input type="hidden" name="tech" id="techHiddenInput" value="<?php echo htmlspecialchars($selected_tech); ?>">
                         </div>
 
-                        <select name="month" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors w-24 sm:w-auto">
-                            <?php 
-                            for($m=1; $m<=12; $m++) {
-                                $sel = ($selected_month === $m) ? 'selected' : '';
-                                echo "<option value='$m' $sel>{$thai_months[$m]}</option>";
-                            }
-                            ?>
-                        </select>
+                        <!-- Dropdown เดือนแบบกำหนดเอง -->
+                        <div class="relative w-28 sm:w-32" id="monthDropdownContainer">
+                            <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
+                                <span id="monthDisplayText" class="truncate"><?php echo $thai_months[$selected_month]; ?></span>
+                                <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
+                            </div>
+                            <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col py-2 custom-scrollbar">
+                                <?php
+                                for($m=1; $m<=12; $m++) {
+                                    $activeClass = ($selected_month === $m) ? 'bg-indigo-50 dark:bg-slate-600 text-indigo-600 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300';
+                                    echo "<div class='px-4 py-2 mx-2 mb-1 rounded-xl text-xs font-bold cursor-pointer transition-all {$activeClass}' onclick=\"selectMonth($m, '{$thai_months[$m]}')\">{$thai_months[$m]}</div>";
+                                }
+                                ?>
+                            </div>
+                            <input type="hidden" name="month" id="monthHiddenInput" value="<?php echo $selected_month; ?>">
+                        </div>
 
-                        <select name="year" class="custom-select bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer transition-colors w-24 sm:w-auto">
-                            <?php 
-                            foreach($available_years as $y) {
-                                $sel = ($selected_year == $y) ? 'selected' : '';
-                                $thai_y = $y + 543;
-                                echo "<option value='$y' $sel>พ.ศ. $thai_y</option>";
-                            }
-                            ?>
-                        </select>
+                        <!-- Dropdown ปีแบบกำหนดเอง -->
+                        <div class="relative w-28 sm:w-32" id="yearDropdownContainer">
+                            <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
+                                <span id="yearDisplayText" class="truncate">พ.ศ. <?php echo $selected_year + 543; ?></span>
+                                <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
+                            </div>
+                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col py-2 custom-scrollbar">
+                                <?php
+                                foreach($available_years as $y) {
+                                    $thai_y = $y + 543;
+                                    $activeClass = ($selected_year == $y) ? 'bg-indigo-50 dark:bg-slate-600 text-indigo-600 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300';
+                                    echo "<div class='px-4 py-2 mx-2 mb-1 rounded-xl text-xs font-bold cursor-pointer transition-all {$activeClass}' onclick=\"selectYear($y, 'พ.ศ. {$thai_y}')\">พ.ศ. {$thai_y}</div>";
+                                }
+                                ?>
+                            </div>
+                            <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
+                        </div>
 
                         <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-1.5 rounded-full font-extrabold transition-all shadow-sm">
                             ค้นหา
@@ -773,8 +789,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         }
 
         document.addEventListener('click', function(e) {
-            const container = document.getElementById('techDropdownContainer');
-            if (container && !container.contains(e.target)) {
+            // เช็คปิด Dropdown ช่าง
+            const techContainer = document.getElementById('techDropdownContainer');
+            if (techContainer && !techContainer.contains(e.target)) {
                 const list = document.getElementById('techDropdownList');
                 if(list) {
                     list.classList.add('hidden');
@@ -782,7 +799,65 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     document.getElementById('techSearchInput').value = currentTechDisplay;
                 }
             }
+            
+            // เช็คปิด Dropdown เดือน
+            const monthContainer = document.getElementById('monthDropdownContainer');
+            if (monthContainer && !monthContainer.contains(e.target)) {
+                const mList = document.getElementById('monthDropdownList');
+                if(mList) {
+                    mList.classList.add('hidden');
+                    mList.classList.remove('flex');
+                }
+            }
+
+            // เช็คปิด Dropdown ปี
+            const yearContainer = document.getElementById('yearDropdownContainer');
+            if (yearContainer && !yearContainer.contains(e.target)) {
+                const yList = document.getElementById('yearDropdownList');
+                if(yList) {
+                    yList.classList.add('hidden');
+                    yList.classList.remove('flex');
+                }
+            }
         });
+
+        // ✨ ฟังก์ชันควบคุม Dropdown เดือน ✨
+        function toggleMonthDropdown(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('monthDropdownList').classList.toggle('hidden');
+            document.getElementById('monthDropdownList').classList.toggle('flex');
+            // ปิดกล่องอื่นที่อาจเปิดค้างอยู่
+            document.getElementById('techDropdownList').classList.add('hidden');
+            document.getElementById('techDropdownList').classList.remove('flex');
+            document.getElementById('yearDropdownList').classList.add('hidden');
+            document.getElementById('yearDropdownList').classList.remove('flex');
+        }
+
+        function selectMonth(val, displayText) {
+            document.getElementById('monthHiddenInput').value = val;
+            document.getElementById('monthDisplayText').innerText = displayText;
+            document.getElementById('monthDropdownList').classList.add('hidden');
+            document.getElementById('monthDropdownList').classList.remove('flex');
+        }
+
+        // ✨ ฟังก์ชันควบคุม Dropdown ปี ✨
+        function toggleYearDropdown(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('yearDropdownList').classList.toggle('hidden');
+            document.getElementById('yearDropdownList').classList.toggle('flex');
+            // ปิดกล่องอื่นที่อาจเปิดค้างอยู่
+            document.getElementById('techDropdownList').classList.add('hidden');
+            document.getElementById('techDropdownList').classList.remove('flex');
+            document.getElementById('monthDropdownList').classList.add('hidden');
+            document.getElementById('monthDropdownList').classList.remove('flex');
+        }
+
+        function selectYear(val, displayText) {
+            document.getElementById('yearHiddenInput').value = val;
+            document.getElementById('yearDisplayText').innerText = displayText;
+            document.getElementById('yearDropdownList').classList.add('hidden');
+            document.getElementById('yearDropdownList').classList.remove('flex');
+        }
 
         // ✨ ฟังก์ชันจัดการปุ่มลูกศร ขึ้น-ลง และ Enter ในช่องค้นหา ✨
         document.getElementById('techSearchInput').addEventListener('keydown', function(e) {
