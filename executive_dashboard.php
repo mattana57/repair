@@ -18,7 +18,6 @@ include 'db_connect.php';
 $conn->set_charset("utf8mb4");
 
 // ✨ ดึงข้อมูลผู้ใช้ล่าสุดจากฐานข้อมูลโดยตรง ✨
-// เพื่อให้ข้อมูลชื่อ/ตำแหน่งอัปเดตตามฝั่งแอดมินเสมอแบบเรียลไทม์
 $current_user_name = 'Executive Board';
 $current_user_role = 'ผู้บริหารระบบ';
 $current_username = $_SESSION['username'] ?? 'exec';
@@ -39,7 +38,7 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 
-// ✨ ฟังก์ชันจัดการค่าว่าง (-) และ (ไม่ระบุ) ให้เป็นสีแดง ✨
+// ฟังก์ชันต่างๆ สำหรับ Format ข้อมูล
 function formatEmptyOrDash($val) {
     $val = trim((string)$val);
     if (empty($val) || $val === '-') return "<span class='text-rose-500 font-bold'>-</span>";
@@ -47,7 +46,6 @@ function formatEmptyOrDash($val) {
     return htmlspecialchars($val);
 }
 
-// ฟังก์ชันแยกชื่อไทย-อังกฤษ อัตโนมัติ
 function splitThaiEngName($fullName, $engName) {
     $th = trim((string)$fullName);
     $en = trim((string)$engName);
@@ -63,7 +61,6 @@ function splitThaiEngName($fullName, $engName) {
     return array($th, $en);
 }
 
-// ฟังก์ชันกำหนดตำแหน่งงานอัตโนมัติ
 function getAutoPosition($th_name) {
     $map = [
         'สมพร วงษ์จำปา' => 'นักวิชาการคอมพิวเตอร์',
@@ -90,7 +87,6 @@ function getAutoPosition($th_name) {
     return '';
 }
 
-// ฟังก์ชันคำนวณเวลาที่ผ่านไป (Time Ago) สำหรับ PHP
 function timeAgo($datetime) {
     $time = strtotime($datetime);
     $diff = time() - $time;
@@ -107,7 +103,7 @@ function timeAgo($datetime) {
 }
 
 // =====================================================================
-// ดึงข้อมูลเตรียมแสดงผล (เหมือนฝั่งแอดมินเป๊ะๆ)
+// ดึงข้อมูลเตรียมแสดงผล
 // =====================================================================
 
 $all_repairs_json = "[]";
@@ -131,10 +127,8 @@ $td_res = $conn->query("SELECT full_name, department, english_name, position FRO
 if($td_res) {
     while($tr = $td_res->fetch_assoc()) {
         $tech_dept_map[$tr['full_name']] = !empty($tr['department']) ? $tr['department'] : 'ฝ่ายงานทั่วไป';
-
         list($th_name, $en_name) = splitThaiEngName($tr['full_name'], $tr['english_name']);
         $pos = !empty($tr['position']) ? $tr['position'] : getAutoPosition($th_name);
-
         $tech_info_map[$tr['full_name']] = [
             'th' => $th_name,
             'eng' => $en_name,
@@ -144,6 +138,25 @@ if($td_res) {
 }
 $tech_dept_map_json = json_encode($tech_dept_map, JSON_UNESCAPED_UNICODE);
 $tech_info_map_json = json_encode($tech_info_map, JSON_UNESCAPED_UNICODE);
+
+// ดึงข้อมูล line_users
+$line_users_map = [];
+$check_lu = $conn->query("SHOW TABLES LIKE 'line_users'");
+if($check_lu && $check_lu->num_rows > 0) {
+    $lu_res = $conn->query("SELECT line_display_name, real_name, phone_number FROM line_users");
+    if($lu_res) {
+        while($lu = $lu_res->fetch_assoc()) {
+            $user_info = [
+                'line_display_name' => $lu['line_display_name'],
+                'real_name' => $lu['real_name'],
+                'phone_number' => $lu['phone_number']
+            ];
+            if(!empty($lu['line_display_name'])) { $line_users_map[$lu['line_display_name']] = $user_info; }
+            if(!empty($lu['real_name'])) { $line_users_map[$lu['real_name']] = $user_info; }
+        }
+    }
+}
+$line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
 
 $years_query = $conn->query("SELECT DISTINCT YEAR(created_at) as y FROM repairs WHERE created_at IS NOT NULL ORDER BY y DESC");
 $available_years = [];
@@ -156,6 +169,10 @@ if($years_query && $years_query->num_rows > 0) {
 }
 $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 
+$pageTitles = [
+    'dash' => 'Dashboard Overview',
+    'repairs' => 'All Repairs List'
+];
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -182,16 +199,6 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
         .active-btn { background-color: #eef2ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
         .active-btn i { color: #4f46e5 !important; }
 
-        .custom-select {
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20512%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M31.3%20192h257.3c17.8%200%2026.7%2021.5%2014.1%2034.1L174.1%20354.8c-7.8%207.8-20.5%207.8-28.3%200L17.2%20226.1C4.6%20213.5%2013.5%20192%2031.3%20192z%22%2F%3E%3C%2Fsvg%3E');
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center; 
-            background-size: 0.65em auto;
-            padding-right: 2.25rem !important; 
-        }
-
         ::-webkit-scrollbar { width: 8px; height: 12px; } 
         ::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 3px solid #f8fafc; }
@@ -199,6 +206,9 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; margin: 0 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { border: 2px solid #f1f5f9; }
 
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+        
         .badge-pending { background-color: #fef3c7; color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-progress { background-color: #e0e7ff; color: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-success { background-color: #d1fae5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
@@ -230,7 +240,8 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
 
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">EXECUTIVE</p>
-            <button class="nav-btn active-btn"><i class="fas fa-chart-pie"></i> Overview</button>
+            <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
+            <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
 
             <div class="mt-auto pt-4 border-t border-slate-50">
                 <a href="logout.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
@@ -245,21 +256,19 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h2 class="text-2xl font-bold text-white tracking-tight drop-shadow-sm">Dashboard Overview</h2>
+                <h2 class="text-2xl font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle">Dashboard Overview</h2>
             </div>
 
             <div class="flex items-center space-x-3 md:space-x-6">
-
-
                 <div class="flex items-center gap-3 cursor-pointer group">
                     <div class="text-right hidden sm:block">
                         <span class="block text-sm font-bold text-white drop-shadow-sm leading-none mb-1 group-hover:text-indigo-100 transition-colors">
-                            <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Executive'); ?>
+                            <?php echo htmlspecialchars($current_user_name); ?>
                         </span>
-                        <span class="block text-[11px] text-indigo-100 font-semibold">ผู้บริหารระบบ</span>
+                        <span class="block text-[11px] text-indigo-100 font-semibold"><?php echo htmlspecialchars($current_user_role); ?></span>
                     </div>
                     <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white overflow-hidden border border-white/30 shadow-inner backdrop-blur-sm">
-                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'exec'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($current_username); ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
             </div>
@@ -279,7 +288,7 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                         $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
                         $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     ?>
-                    <div class="modern-card p-6 flex flex-col justify-between">
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
                             <span class="text-xs font-bold text-slate-400">TOTAL</span>
@@ -290,7 +299,7 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                         </div>
                     </div>
 
-                    <div class="modern-card p-6 flex flex-col justify-between">
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-xl"><i class="fas fa-clock"></i></div>
                             <span class="text-xs font-bold text-slate-400">WAITING</span>
@@ -301,7 +310,7 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                         </div>
                     </div>
 
-                    <div class="modern-card p-6 flex flex-col justify-between">
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-xl"><i class="fas fa-spinner"></i></div>
                             <span class="text-xs font-bold text-slate-400">ACTIVE</span>
@@ -312,7 +321,7 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                         </div>
                     </div>
 
-                    <div class="modern-card p-6 flex flex-col justify-between">
+                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
                         <div class="flex justify-between items-start mb-4">
                             <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl"><i class="fas fa-check-circle"></i></div>
                             <span class="text-xs font-bold text-slate-400">DONE</span>
@@ -332,13 +341,13 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <!-- เปลี่ยน ID (เช่น equip, status, loc, tech, rating, mainReview) และชื่อฟังก์ชัน render ให้ตรงกับแต่ละกราฟด้วยนะครับ -->
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)">
+                                <!-- ✨ Custom Dropdown ✨ -->
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Month')">
                                         <span id="equip-MonthText" class="truncate">เดือน</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('equip-Month', 'all', 'เดือน', renderEquipChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
                                         </div>
@@ -346,12 +355,12 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                     </div>
                                     <input type="hidden" id="equipMonth" value="all">
                                 </div>
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Year', renderEquipChart)">
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Year', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Year')">
                                         <span id="equip-YearText" class="truncate">ปี (พ.ศ.)</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('equip-Year', 'all', 'ปี (พ.ศ.)', renderEquipChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                         </div>
@@ -365,7 +374,7 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                             <canvas id="mainEquipChart"></canvas>
                         </div>
                     </div>
-                    
+
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start mb-4">
                             <div>
@@ -373,14 +382,33 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="statusMonth" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
-                                </select>
-                                <select id="statusYear" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
+                                <!-- ✨ Custom Dropdown ✨ -->
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Month', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Month')">
+                                        <span id="status-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="status-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('status-Month', 'all', 'เดือน', renderStatusChart)">
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
+                                        </div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('status-Month', '{$num_pad}', '{$name}', renderStatusChart)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="statusMonth" value="all">
+                                </div>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Year', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Year')">
+                                        <span id="status-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="status-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('status-Year', 'all', 'ปี (พ.ศ.)', renderStatusChart)">
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('status-Year', '{$y}', 'พ.ศ. {$thai_y}', renderStatusChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="statusYear" value="all">
+                                </div>
                             </div>
                         </div>
                         <div class="flex-1 relative w-full h-[280px] flex justify-center items-center">
@@ -397,14 +425,33 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="locMonth" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
-                                </select>
-                                <select id="locYear" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
+                                <!-- ✨ Custom Dropdown ✨ -->
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Month', renderLocChart)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'loc-Month')">
+                                        <span id="loc-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="loc-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('loc-Month', 'all', 'เดือน', renderLocChart)">
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
+                                        </div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('loc-Month', '{$num_pad}', '{$name}', renderLocChart)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="locMonth" value="all">
+                                </div>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Year', renderLocChart)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'loc-Year')">
+                                        <span id="loc-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="loc-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('loc-Year', 'all', 'ปี (พ.ศ.)', renderLocChart)">
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('loc-Year', '{$y}', 'พ.ศ. {$thai_y}', renderLocChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="locYear" value="all">
+                                </div>
                             </div>
                         </div>
                         <div class="relative w-full h-[250px]"> 
@@ -419,14 +466,33 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="techMonth" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
-                                </select>
-                                <select id="techYear" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
+                                <!-- ✨ Custom Dropdown ✨ -->
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Month', renderTechChart)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'tech-Month')">
+                                        <span id="tech-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="tech-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('tech-Month', 'all', 'เดือน', renderTechChart)">
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
+                                        </div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('tech-Month', '{$num_pad}', '{$name}', renderTechChart)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="techMonth" value="all">
+                                </div>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Year', renderTechChart)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'tech-Year')">
+                                        <span id="tech-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="tech-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('tech-Year', 'all', 'ปี (พ.ศ.)', renderTechChart)">
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('tech-Year', '{$y}', 'พ.ศ. {$thai_y}', renderTechChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="techYear" value="all">
+                                </div>
                             </div>
                         </div>
                         <div class="relative w-full h-[250px]"> 
@@ -445,20 +511,39 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                 <span class="text-[12px] text-indigo-500 font-bold mt-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
-                                </select>
-                                <select id="ratingYear" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
+                                <!-- ✨ Custom Dropdown ✨ -->
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Month')">
+                                        <span id="rating-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="rating-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('rating-Month', 'all', 'เดือน', renderRatingChart)">
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
+                                        </div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('rating-Month', '{$num_pad}', '{$name}', renderRatingChart)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="ratingMonth" value="all">
+                                </div>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Year', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Year')">
+                                        <span id="rating-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="rating-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('rating-Year', 'all', 'ปี (พ.ศ.)', renderRatingChart)">
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('rating-Year', '{$y}', 'พ.ศ. {$thai_y}', renderRatingChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="ratingYear" value="all">
+                                </div>
                             </div>
                         </div>
                         
                         <div class="flex items-center w-full mt-2 flex-1">
                             <div class="relative w-full h-[380px]">
-                                <canvas id="mainRatingChart"></canvas>
+                                <canvas id="mainRatingChart" class="cursor-pointer"></canvas>
                             </div>
                         </div>
                     </div>
@@ -471,12 +556,12 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Month', renderTopReporters)">
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Month', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'reporter-Month')">
                                         <span id="reporter-MonthText" class="truncate">เดือน</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="reporter-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="reporter-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('reporter-Month', 'all', 'เดือน', renderTopReporters)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
                                         </div>
@@ -484,12 +569,12 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                     </div>
                                     <input type="hidden" id="reporterMonth" value="all">
                                 </div>
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Year', renderTopReporters)">
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Year', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'reporter-Year')">
                                         <span id="reporter-YearText" class="truncate">ปี (พ.ศ.)</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="reporter-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="reporter-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('reporter-Year', 'all', 'ปี (พ.ศ.)', renderTopReporters)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                         </div>
@@ -517,6 +602,7 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                             <div class="divide-y divide-slate-100" id="topReportersList"></div>
                         </div>
                     </div>
+                </div>
 
                 <div class="grid grid-cols-1 gap-6 mt-6">
                     <div class="modern-card overflow-hidden flex flex-col col-span-full">
@@ -525,6 +611,9 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">Latest 5 repairs in system</p>
                             </div>
+                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
+                                See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
+                            </button>
                         </div>
                         <div class="overflow-x-auto pb-4 custom-scrollbar">
                             <table class="w-full text-left whitespace-nowrap">
@@ -547,7 +636,16 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                             $statusText = htmlspecialchars($rd['status']);
                                             
                                             $ticket_no = formatEmptyOrDash($rd['ticket_no']);
-                                            $reporter_name = formatEmptyOrDash($rd['reporter_name']);
+                                            
+                                            // จัดการชื่อและเบอร์โทร
+                                            $raw_rep = trim((string)$rd['reporter_name']);
+                                            $disp_name = $raw_rep;
+                                            if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['real_name'])) {
+                                                $disp_name = $line_users_map[$raw_rep]['real_name'];
+                                            }
+                                            $reporter_name = formatEmptyOrDash($disp_name);
+                                            $phone_number = formatEmptyOrDash($rd['phone_number']);
+                                            
                                             $equipment_type = formatEmptyOrDash($rd['equipment_type']);
                                             
                                             $has_created = (!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00');
@@ -566,10 +664,13 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                                     {$time_html}
                                                 </td>
                                                 <td class='px-6 py-4 align-top text-slate-500 font-mono font-semibold'>{$ticket_no}</td>
-                                                <td class='px-6 py-4 align-top text-slate-800 font-bold'>
+                                                <td class='px-6 py-4 align-top'>
                                                     <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mr-3 text-xs'><i class='fas fa-user'></i></div>
-                                                        {$reporter_name}
+                                                        <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mr-3 text-xs shrink-0'><i class='fas fa-user'></i></div>
+                                                        <div>
+                                                            <div class='text-slate-800 font-bold'>{$reporter_name}</div>
+                                                            <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td class='px-6 py-4 align-top text-slate-600 font-medium'>{$equipment_type} {$imageIcon}</td>
@@ -592,13 +693,202 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                 </div>
 
             </div>
+
+            <!-- ✨ เพิ่มหน้า Transactions แบบ View Only ให้ผู้บริหาร ✨ -->
+            <div id="repairs" class="section hidden space-y-6 no-print animate-fade-in">
+                <div class="modern-card overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions (View Only)</p>
+                        </div>
+                        <div class="w-full md:w-auto relative">
+                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative">
+                        <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                                <tr>
+                                    <th class="px-6 py-4">Date / Time</th>
+                                    <th class="px-6 py-4">Ticket No.</th>
+                                    <th class="px-6 py-4">Reporter</th>
+                                    <th class="px-6 py-4">Equipment</th>
+                                    <th class="px-6 py-4">Department</th>
+                                    <th class="px-6 py-4">Technician</th>
+                                    <th class="px-6 py-4">Received At</th>
+                                    <th class="px-6 py-4">Root Cause</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4">Completed At</th>
+                                    <th class="px-6 py-4 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <?php
+                                $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
+                                $res = $conn->query($select_query);
+
+                                if($res && $res->num_rows > 0){
+                                    while($row = $res->fetch_assoc()) {
+                                        $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
+                                        
+                                        $ticket_no = formatEmptyOrDash($row['ticket_no']);
+                                        
+                                        $raw_rep = trim((string)$row['reporter_name']);
+                                        $disp_name = $raw_rep;
+                                        if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['real_name'])) {
+                                            $disp_name = $line_users_map[$raw_rep]['real_name'];
+                                        }
+                                        
+                                        $reporter_name = formatEmptyOrDash($disp_name);
+                                        $phone_number = formatEmptyOrDash($row['phone_number']);
+                                        
+                                        $equipment_type = formatEmptyOrDash($row['equipment_type']);
+                                        $problem_desc = formatEmptyOrDash($row['problem_desc']);
+                                        
+                                        $t_pos = ''; 
+                                        $t_eng = '';
+                                        $t_th = '';
+                                        
+                                        if (!empty($row['technician_name']) && $row['technician_name'] !== '-') {
+                                            $t_raw = $row['technician_name'];
+                                            if (isset($tech_info_map[$t_raw])) {
+                                                $t_th = htmlspecialchars($tech_info_map[$t_raw]['th']);
+                                                $t_eng = htmlspecialchars($tech_info_map[$t_raw]['eng']);
+                                                $t_pos = htmlspecialchars($tech_info_map[$t_raw]['pos']);
+                                            } else {
+                                                list($th_name, $en_name) = splitThaiEngName($t_raw, '');
+                                                $t_th = htmlspecialchars($th_name);
+                                                $t_eng = htmlspecialchars($en_name);
+                                                $t_pos = htmlspecialchars(getAutoPosition($th_name));
+                                            }
+                                            
+                                            $techHtml = "<div class='text-blue-600 font-bold hover:text-blue-500 transition-colors cursor-default'>{$t_th}</div>";
+                                            if (!empty($t_eng)) {
+                                                $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
+                                            }
+                                            $techName = $techHtml;
+                                        } else {
+                                            $techName = "<span class='text-rose-500 font-bold'>-</span>";
+                                        }
+
+                                        $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
+                                        if (empty($row['technician_name']) || $row['technician_name'] === '-') {
+                                            $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
+                                        } else {
+                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
+                                            if (!empty($t_pos)) {
+                                                $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
+                                            }
+                                        }
+
+                                        $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
+                                        $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
+                                        $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
+
+                                        $has_received = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
+                                        $received_date = $has_received ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $received_time = $has_received ? date('H:i', strtotime($row['created_at'])) : '';
+                                        $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
+
+                                        $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
+                                        $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
+                                        $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
+
+                                        $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
+
+                                        $imageIcon = "";
+                                        if(isset($row['image_path']) && !empty($row['image_path'])) {
+                                            $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
+                                        }
+
+                                        echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                <div class='font-medium text-slate-700'>{$created_date}</div>
+                                                {$created_time_html}
+                                            </td>
+                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
+                                            <td class='px-6 py-4 align-top'>
+                                                <div class='text-slate-800 font-bold'>{$reporter_name}</div>
+                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
+                                            </td>
+                                            <td class='px-6 py-4 align-top'>
+                                                <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
+                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='".strip_tags($problem_desc)."'>{$problem_desc}</div>
+                                            </td>
+                                            <td class='px-6 py-4 align-top'>{$deptEng}</td>
+                                            <td class='px-6 py-4 align-top'>{$techName}</td>
+                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                <div class='font-medium text-slate-700'>{$received_date}</div>
+                                                {$received_time_html}
+                                            </td>
+                                            <td class='px-6 py-4 align-top'>{$rootCause}</td>
+                                            <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
+                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                <div class='font-medium text-emerald-700'>{$completed_date}</div>
+                                                {$completed_time_html}
+                                            </td>
+                                            <td class='px-6 py-4 align-middle text-center'>
+                                                <div class='flex items-center justify-center'>
+                                                    <a target='_blank' href='view_repair.php?id={$row['id']}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
+                                                </div>
+                                            </td>
+                                        </tr>";
+                                    }
+                                } else { echo "<tr><td colspan='11' class='px-6 py-16 text-center text-slate-400 font-medium'>No records found</td></tr>"; }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
+    <!-- ✨ Modal ประวัติการซ่อม ✨ -->
+    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('historyModal')"></div>
+        <div class="modal-container bg-white w-full max-w-5xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[85vh] max-h-[850px]">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
+                <p class="text-lg font-extrabold text-slate-800 truncate pr-4" id="historyModalTitle">History</p>
+                <div class="flex items-center gap-6 shrink-0">
+                    <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-10 h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50"><i class="fas fa-times text-lg"></i></button>
+                </div>
+            </div>
+           <div class="p-6 overflow-y-auto flex-1 bg-white">
+                <div class="w-full overflow-x-auto rounded-2xl border border-slate-100 shadow-sm max-h-[65vh] overflow-y-auto custom-scrollbar relative">
+                    <table class="w-full text-left whitespace-nowrap min-w-[1100px]">
+                        <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                            <tr>
+                                <th class="px-5 py-4">Date / Time</th>
+                                <th class="px-5 py-4">Ticket No.</th>
+                                <th class="px-5 py-4">Reporter</th>
+                                <th class="px-5 py-4">Equipment</th>
+                                <th class="px-5 py-4">Department</th>
+                                <th class="px-5 py-4">Technician</th>
+                                <th class="px-5 py-4">Received At</th>
+                                <th class="px-5 py-4">Root Cause</th>
+                                <th class="px-5 py-4 text-center">Status</th>
+                                <th class="px-5 py-4">Completed At</th>
+                                <th class="px-5 py-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm divide-y divide-slate-50" id="historyTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✨ Modal สำหรับแสดงรีวิวของช่างรายบุคคล ✨ -->
     <div id="techReviewsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techReviewsModal')"></div>
         <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px]">
-            
             <div class="px-5 py-5 border-b border-slate-100 flex justify-between items-start bg-gradient-to-b from-slate-50 to-white shrink-0 relative">
                 <div class="flex gap-4 relative z-10 flex-1 min-w-0">
                     <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center text-2xl shrink-0 shadow-sm border border-amber-200 mt-1"><i class="fas fa-star"></i></div>
@@ -609,7 +899,7 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                             <p class="text-[11px] font-medium text-slate-500 truncate ml-1.5" id="techReviewsModalPos">(...)</p>
                         </div>
                         <div class="mt-2.5">
-                            <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full max-w-[280px] bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm">
+                            <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-max min-w-[200px] max-w-[320px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1">
                             </select>
                         </div>
                     </div>
@@ -619,38 +909,15 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                     <span id="techReviewsModalCount" class="text-xs font-extrabold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full shadow-sm border border-amber-100 whitespace-nowrap mt-1">0 รีวิว</span>
                 </div>
             </div>
-
-            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
-                    <div id="starFilterContainer" class="flex gap-1.5">
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(2)" title="2 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(3)" title="3 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(4)" title="4 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
-                        เฉพาะคอมเมนต์
-                    </button>
-                    <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">
-                        ทั้งหมด
-                    </button>
-                </div>
-            </div>
-
-            <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar">
-                <div class="divide-y divide-slate-100" id="techReviewsList"></div>
-            </div>
         </div>
     </div>
 
+    <!-- ================== JAVASCRIPT ================== -->
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
         const techDeptMap = <?php echo $tech_dept_map_json; ?>;
         const techInfoMap = <?php echo $tech_info_map_json; ?>; 
+        const lineUsersMap = <?php echo $line_users_map_json; ?>;
         
         let chartEquipInstance = null;
         let chartStatusInstance = null;
@@ -662,9 +929,37 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
         let currentDeptReviewsData = []; 
         let currentMainReviewFilter = 'all';
 
+        const pageTitles = {
+            'dash': 'Dashboard Overview',
+            'repairs': 'All Repairs List'
+        };
+
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebarOverlay').classList.toggle('hidden');
+        }
+
+        function show(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
+            const activeBtn = document.getElementById('btn-' + id);
+            if(activeBtn) activeBtn.classList.add('active-btn');
+            document.getElementById('headerTitle').innerText = pageTitles[id] || 'Executive View';
+            
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+                document.getElementById('sidebarOverlay').classList.add('hidden');
+            }
+
+            let searchInput = document.getElementById('searchInput');
+            if(searchInput && id === 'repairs') {
+                searchInput.value = '';
+                let activeSection = document.getElementById(id);
+                if(activeSection) {
+                    activeSection.querySelectorAll('table tbody tr').forEach(row => row.style.display = '');
+                }
+            }
         }
 
         function formatValJS(val) {
@@ -678,13 +973,11 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
             const date = new Date(dateString.replace(/-/g, '/'));
             const now = new Date();
             let diffInSeconds = Math.floor((now - date) / 1000);
-            
             if (diffInSeconds < 0) diffInSeconds = 0;
             if (diffInSeconds < 60) return "เมื่อสักครู่";
             if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + " นาทีที่แล้ว";
             if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + " ชั่วโมงที่แล้ว";
             if (diffInSeconds < 604800) return Math.floor(diffInSeconds / 86400) + " วันที่แล้ว"; 
-            
             const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
             return `${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
         }
@@ -693,14 +986,6 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
             document.getElementById(m).classList.toggle('opacity-0'); 
             document.getElementById(m).classList.toggle('pointer-events-none'); 
             document.body.classList.toggle('modal-active'); 
-            document.addEventListener('click', function(e) {
-            document.querySelectorAll('.chart-dropdown-list').forEach(list => {
-                if (!list.parentElement.contains(e.target)) {
-                    list.classList.add('hidden');
-                    list.classList.remove('flex');
-                }
-            });
-        });
         }
 
         function getFilteredRepairsByMonthYear(m, y) {
@@ -713,7 +998,6 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                 if (parts.length < 3) return false;
                 let rYear = parts[0];
                 let rMonth = parts[1];
-                
                 let matchMonth = (m === 'all' || rMonth === m);
                 let matchYear = (y === 'all' || rYear === y);
                 return matchMonth && matchYear;
@@ -900,7 +1184,6 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                 let rating = parseFloat(r.rating);
                 if (!isNaN(rating) && rating > 0) {
                     let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
-
                     let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
                     if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
                         dName = 'ฝ่ายงาน' + dName;
@@ -919,7 +1202,6 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
 
             let deptArr = Object.keys(deptMap).map(dName => {
                 let dAvg = (deptMap[dName].sum / deptMap[dName].count).toFixed(1);
-
                 let topTechName = '-';
                 let topTechAvg = 0;
 
@@ -1101,112 +1383,6 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
             });
         }
 
-        function setMainReviewFilter(val) {
-            currentMainReviewFilter = val;
-
-            const btnAll = document.getElementById('btnMainFilterAll');
-            const btnZero = document.getElementById('btnMainFilterZero');
-
-            if(btnAll) btnAll.className = "px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap";
-            if(btnZero) btnZero.className = "px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap";
-
-            if(val === 'all') {
-                if(btnAll) btnAll.className = "px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap";
-            } else if (val === 0) {
-                if(btnZero) btnZero.className = "px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap";
-            }
-
-            for(let i=1; i<=5; i++) {
-                let star = document.getElementById('mStar_' + i);
-                if(star) {
-                    if(val !== 'all' && val !== 0 && i <= val) {
-                        star.classList.remove('text-slate-200');
-                        star.classList.add('text-amber-400');
-                    } else {
-                        star.classList.remove('text-amber-400');
-                        star.classList.add('text-slate-200');
-                    }
-                }
-            }
-            renderMainRecentReviewsList();
-        }
-
-        function renderMainRecentReviewsList() {
-            const container = document.getElementById('mainRecentReviewsList');
-            if(!container) return;
-            container.innerHTML = '';
-
-            let m = document.getElementById('mainReviewMonth') ? document.getElementById('mainReviewMonth').value : 'all';
-            let y = document.getElementById('mainReviewYear') ? document.getElementById('mainReviewYear').value : 'all';
-
-            let filteredReviews = getFilteredRepairsByMonthYear(m, y);
-
-            filteredReviews = filteredReviews.filter(r => {
-                let rRating = parseFloat(r.rating) || 0;
-                let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
-                return rRating > 0 || hasComment;
-            });
-
-            if (currentMainReviewFilter !== 'all') {
-                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentMainReviewFilter));
-            }
-
-            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
-            filteredReviews = filteredReviews.slice(0, 30);
-
-            if(filteredReviews.length === 0) {
-                container.innerHTML = `<div class='p-8 flex flex-col items-center justify-center text-center h-full min-h-[200px]'>
-                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
-                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนหรือช่วงเวลานี้</p>
-                                          </div>`;
-            } else {
-                filteredReviews.forEach(rev => {
-                    let r_name = formatValJS(rev.reporter_name);
-                    let r_rating = parseInt(rev.rating || 0);
-                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
-                                    ? rev.review_comment.trim() 
-                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
-
-                    let stars_html = '';
-                    if (r_rating === 0) {
-                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
-                    } else {
-                        for(let i=1; i<=5; i++) {
-                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
-                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
-                        }
-                    }
-
-                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
-                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
-
-                    let date_str = "-";
-                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
-                        date_str = timeAgoJS(rev.completed_at);
-                    }
-
-                    // ✨ ระบบผู้บริหาร: คลิกรีวิวให้ไปหน้า view_repair.php อย่างเดียว ✨
-                    container.innerHTML += `<div onclick="window.location.href='view_repair.php?id=${rev.id}&source=overview'" class='p-4 md:p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
-                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
-                                <i class="fas fa-arrow-right text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
-                            </div>
-                            <div class='flex justify-between items-start mb-2.5 pr-6'>
-                                <div class='flex items-center gap-3'>
-                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
-                                    <div>
-                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
-                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
-                                    </div>
-                                </div>
-                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
-                            </div>
-                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
-                            <div class='pl-11'>${techInfoHtml}</div>
-                          </div>`;
-                });
-            }
-        }
-
         function openTechReviewsModal(deptName, month, year) {
             document.getElementById('techReviewsModalDept').innerText = deptName;
 
@@ -1253,8 +1429,6 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                 selector.style.display = 'none';
                 document.getElementById('techReviewsModalTitle').innerText = 'รีวิวฝ่ายงาน';
                 document.getElementById('techReviewsModalCount').innerText = '0 รีวิว';
-                currentTechReviewsData = [];
-                renderTechReviewsList();
             } else {
                 selector.style.display = 'block';
                 techArr.forEach(t => {
@@ -1312,68 +1486,118 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                     bigStarIcon.style.color = '#cbd5e1'; 
                 }
             }
-            setReviewFilter('all'); 
         }
 
-        function renderTechReviewsList() {
-            const container = document.getElementById('techReviewsList');
-            container.innerHTML = '';
+        // ✨ ประวัติ Modal การคลิกจาก Top Reporters ✨
+        function viewHistory(fullName, type) {
+            const tbody = document.getElementById('historyTableBody'); 
+            tbody.innerHTML = '';
 
-            let filteredReviews = [...currentTechReviewsData];
+            const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
 
-            if (currentReviewFilter !== 'all') {
-                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentReviewFilter));
-            }
-
-            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
-
-            if(filteredReviews.length === 0) {
-                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full'>
-                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
-                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนนี้</p>
-                                          </div>`;
+            if(userRepairs.length === 0) {
+                let emptyMsg = type === 'reporter' ? 'No repair history found.' : 'No tasks assigned yet.';
+                tbody.innerHTML = `<tr><td colspan="11" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
             } else {
-                filteredReviews.forEach(rev => {
-                    let r_name = formatValJS(rev.reporter_name);
-                    let r_rating = parseInt(rev.rating || 0);
-                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
-                                    ? rev.review_comment.trim() 
-                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
+                userRepairs.forEach(r => {
+                    let statusClass = 'badge-pending';
+                    if(r.status === 'กำลังดำเนินการ') statusClass = 'badge-progress';
+                    else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'badge-success';
 
-                    let stars_html = '';
-                    if (r_rating === 0) {
-                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                    let statusText = formatValJS(r.status);
+
+                    let createdDate = '-';
+                    let createdTime = '';
+                    if(r.created_at) {
+                        let parts = r.created_at.split(' ');
+                        createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
+                        createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
                     } else {
-                        for(let i=1; i<=5; i++) {
-                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
-                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                        createdDate = "<span class='text-rose-500 font-bold'>-</span>";
+                    }
+                    
+                    let techNameHtml = "<span class='text-rose-500 font-bold'>-</span>";
+                    if (r.technician_name && r.technician_name !== '-') {
+                        let info = techInfoMap[r.technician_name] || { th: r.technician_name, eng: '', pos: '' };
+                        techNameHtml = `<div class='text-indigo-600 font-bold'>${info.th}</div>`;
+                        if(info.eng) techNameHtml += `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${info.eng}</div>`;
+                    }
+                    let techName = techNameHtml;
+
+                    let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-rose-500 font-bold'>-</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
+
+                    let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
+                    let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
+                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
+
+                    let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
+                    let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
+                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
+                    
+                    let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
+                    let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
+                    if (r.technician_name && r.technician_name !== '-') {
+                        deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
+                        let info = techInfoMap[r.technician_name];
+                        if (info && info.pos) {
+                            deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
                         }
                     }
-
-                    let date_str = "-";
-                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
-                        date_str = timeAgoJS(rev.completed_at);
+                    
+                    let rNameRaw = r.reporter_name;
+                    let dispName = rNameRaw;
+                    if (lineUsersMap[rNameRaw] && lineUsersMap[rNameRaw].real_name) {
+                        dispName = lineUsersMap[rNameRaw].real_name;
                     }
+                    let rName = formatValJS(dispName);
+                    let rPhone = formatValJS(r.phone_number);
+                    
+                    let tNo = formatValJS(r.ticket_no);
+                    let eqType = formatValJS(r.equipment_type);
+                    let pDesc = formatValJS(r.problem_desc);
 
-                    // ✨ ระบบผู้บริหาร: คลิกรีวิวให้ไปหน้า view_repair.php อย่างเดียว ✨
-                    container.innerHTML += `<div onclick="window.location.href='view_repair.php?id=${rev.id}&source=overview'" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
-                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
-                                <i class="fas fa-arrow-right text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                            <div class="font-medium text-slate-700">${createdDate}</div>
+                            ${createdTime}
+                        </td>
+                        <td class="px-5 py-4 align-top font-mono font-semibold text-slate-600">${tNo}</td>
+                        <td class="px-5 py-4 align-top">
+                            <div class="text-slate-800 font-bold">${rName}</div>
+                            <div class="text-slate-500 text-[11px] font-medium mt-0.5">${rPhone}</div>
+                        </td>
+                        <td class="px-5 py-4 align-top">
+                            <div class="text-slate-800 font-bold">${eqType}</div>
+                            <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${pDesc.replace(/<[^>]*>?/gm, '')}">${pDesc}</div>
+                        </td>
+                        <td class="px-5 py-4 align-top">${deptEng}</td>
+                        <td class="px-5 py-4 align-top">${techName}</td>
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                            <div class='font-medium text-slate-700'>${received_date}</div>
+                            ${received_time}
+                        </td>
+                        <td class="px-5 py-4 align-top">${rootCause}</td>
+                        <td class="px-5 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
+                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                            <div class='font-medium text-emerald-700'>${completed_date}</div>
+                            ${completed_time}
+                        </td>
+                        <td class="px-5 py-4 align-middle text-center">
+                            <div class='flex items-center justify-center'>
+                                <a target='_blank' href='view_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
                             </div>
-                            <div class='flex justify-between items-start mb-2.5 pr-6'>
-                                <div class='flex items-center gap-3'>
-                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
-                                    <div>
-                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
-                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
-                                    </div>
-                                </div>
-                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
-                            </div>
-                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
-                          </div>`;
+                        </td>
+                    </tr>`;
                 });
             }
+            
+            let displayTitleName = fullName;
+            if (type === 'reporter' && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
+                displayTitleName = lineUsersMap[fullName].real_name;
+            }
+            document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
+            
+            toggleModal('historyModal');
         }
 
         // ✨ ตัวแปรและฟังก์ชันจัดอันดับ Top Reporters ✨
@@ -1437,14 +1661,27 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                    index === 1 ? '<i class="fas fa-medal text-base"></i>' :
                                    index === 2 ? '<i class="fas fa-award text-base"></i>' : `<span class="text-sm font-black">#${index + 1}</span>`;
                     
-                    // ผู้บริหารดูได้อย่างเดียว กดลิงก์ไม่ได้
+                    let displayName = rep.name;
+                    let lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>`;
+                    
+                    if (lineUsersMap[rep.name] && lineUsersMap[rep.name].real_name) {
+                        displayName = lineUsersMap[rep.name].real_name;
+                        if (rep.name !== displayName) {
+                            lineIdHtml = `<div class='text-[12px] font-bold text-indigo-600 mt-0.5 flex items-center'><i class='fab fa-line text-[#06C755] text-[14px] mr-1.5'></i> ${rep.name}</div>`;
+                        }
+                    }
+
+                    let safeName = rep.name.replace(/'/g, "\\'");
+                    let clickAction = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? '' : `onclick="viewHistory('${safeName}', 'reporter')" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group" title="คลิกเพื่อดูประวัติการแจ้งซ่อมของ ${displayName}"`;
+                    let disableClickClass = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? `class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 opacity-70"` : '';
+
                     container.innerHTML += `
-                        <div class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 ${rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? 'opacity-70' : ''}">
+                        <div ${clickAction || disableClickClass}>
                             <div class='flex items-center gap-4'>
                                 <div class='w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${rankColor} shrink-0 group-hover:scale-110 transition-transform'>${rankIcon}</div>
                                 <div>
-                                    <div class='text-sm font-bold text-slate-800 transition-colors'>${rep.name}</div>
-                                    <div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>
+                                    <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${displayName}</div>
+                                    ${lineIdHtml}
                                 </div>
                             </div>
                             <div class='text-right flex items-center'>
@@ -1452,7 +1689,7 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
                                     <span class='text-xl font-extrabold text-indigo-600'>${rep.count}</span>
                                     <span class='text-[11px] text-slate-500 font-medium ml-1'>รายการ</span>
                                 </div>
-                                <div class="ml-4 w-8 h-8"></div>
+                                ${rep.name !== 'ไม่ระบุชื่อผู้แจ้ง' ? `<div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div>` : '<div class="ml-4 w-8 h-8"></div>'}
                             </div>
                         </div>`;
                 });
@@ -1554,11 +1791,42 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
             }
         }
 
+        // ปิด Dropdown เวลากดที่อื่น
+        document.addEventListener('click', function(e) {
+            document.querySelectorAll('.chart-dropdown-list').forEach(list => {
+                if (!list.parentElement.contains(e.target)) {
+                    list.classList.add('hidden');
+                    list.classList.remove('flex');
+                }
+            });
+        });
+
+        // ================== INIT ==================
         document.addEventListener('DOMContentLoaded', () => {
-            renderAllCharts();
-            if(document.getElementById('mainRecentReviewsList')) {
-                setMainReviewFilter('all');
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            
+            if(tab) { show(tab); } else { show('dash'); }
+
+            const inputElement = document.getElementById('searchInput');
+            if(inputElement) {
+                inputElement.addEventListener('input', function() {
+                    let filter = this.value.toLowerCase();
+                    let activeSection = document.querySelector('.section:not(.hidden)');
+                    if (!activeSection) return;
+                    
+                    let rows = activeSection.querySelectorAll('table tbody tr.search-row');
+                    rows.forEach(row => {
+                        if (row.innerText.toLowerCase().includes(filter)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
             }
+
+            renderAllCharts();
             if(document.getElementById('topReportersList')) {
                 renderTopReporters();
             }
