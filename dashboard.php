@@ -1064,7 +1064,7 @@ $dept_icons = [
                                             </td>
                                             <td class='px-6 py-4 align-top'>{$rootCause}</td>
                                             <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'><a target='_blank' href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-emerald-700'>{$completed_date}</div>
                                                 {$completed_time_html}
                                             </td>
