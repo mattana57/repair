@@ -17,9 +17,9 @@ include 'db_connect.php';
 
 $conn->set_charset("utf8mb4");
 
-// ✨ ดึงข้อมูลผู้ใช้ล่าสุดจากฐานข้อมูลโดยตรง ✨
-$current_user_name = 'Executive Board';
-$current_user_role = 'ผู้บริหารระบบ';
+// ✨ ดึงข้อมูลผู้ใช้ล่าสุดจากฐานข้อมูล บังคับชื่อผู้บริหารเป็น "บรรพต สุขสม" ตามคำสั่ง ✨
+$current_user_name = 'บรรพต สุขสม';
+$current_user_role = 'Executive';
 $current_username = $_SESSION['username'] ?? 'exec';
 
 if (isset($_SESSION['user_id'])) {
@@ -28,10 +28,11 @@ if (isset($_SESSION['user_id'])) {
     if ($u_res && $u_res->num_rows > 0) {
         $u_data = $u_res->fetch_assoc();
         $current_username = $u_data['username'];
-        $current_user_name = !empty($u_data['full_name']) ? $u_data['full_name'] : $u_data['username'];
+        // ถ้าฐานข้อมูลมีชื่อให้ใช้ชื่อนั้น ถ้าไม่มีให้บังคับเป็น บรรพต สุขสม
+        $current_user_name = !empty($u_data['full_name']) ? $u_data['full_name'] : 'บรรพต สุขสม';
         
         if (strtolower($u_data['role']) === 'executive') {
-            $current_user_role = !empty($u_data['position']) ? $u_data['position'] : 'System Administrator';
+            $current_user_role = !empty($u_data['position']) ? $u_data['position'] : 'Executive';
         } else {
             $current_user_role = !empty($u_data['position']) ? $u_data['position'] : $u_data['role'];
         }
@@ -103,7 +104,7 @@ function timeAgo($datetime) {
 }
 
 // =====================================================================
-// ดึงข้อมูลเตรียมแสดงผล (เหมือนฝั่งแอดมินเป๊ะๆ)
+// ดึงข้อมูลเตรียมแสดงผล
 // =====================================================================
 
 $all_repairs_json = "[]";
@@ -268,7 +269,7 @@ $pageTitles = [
                         <span class="block text-[11px] text-indigo-100 font-semibold"><?php echo htmlspecialchars($current_user_role); ?></span>
                     </div>
                     <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white overflow-hidden border border-white/30 shadow-inner backdrop-blur-sm">
-                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($current_username); ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($current_user_name); ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
             </div>
@@ -333,6 +334,7 @@ $pageTitles = [
                     </div>
                 </div>
 
+                <!-- Equipment & Work Status -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start mb-4">
@@ -342,12 +344,12 @@ $pageTitles = [
                             </div>
                             <div class="flex items-center gap-2">
                                 <!-- ✨ Custom Dropdown ✨ -->
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Month')">
-                                        <span id="equip-MonthText" class="truncate">เดือน</span>
+                                        <span id="equip-MonthText" class="truncate font-bold">เดือน</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('equip-Month', 'all', 'เดือน', renderEquipChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
                                         </div>
@@ -355,12 +357,12 @@ $pageTitles = [
                                     </div>
                                     <input type="hidden" id="equipMonth" value="all">
                                 </div>
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Year', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Year', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Year')">
-                                        <span id="equip-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <span id="equip-YearText" class="truncate font-bold">ปี (พ.ศ.)</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('equip-Year', 'all', 'ปี (พ.ศ.)', renderEquipChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                         </div>
@@ -382,13 +384,12 @@ $pageTitles = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <!-- ✨ Custom Dropdown ✨ -->
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Month', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Month', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Month')">
-                                        <span id="status-MonthText" class="truncate">เดือน</span>
+                                        <span id="status-MonthText" class="truncate font-bold">เดือน</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="status-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="status-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('status-Month', 'all', 'เดือน', renderStatusChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
                                         </div>
@@ -396,12 +397,12 @@ $pageTitles = [
                                     </div>
                                     <input type="hidden" id="statusMonth" value="all">
                                 </div>
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Year', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Year', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Year')">
-                                        <span id="status-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <span id="status-YearText" class="truncate font-bold">ปี (พ.ศ.)</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="status-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="status-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('status-Year', 'all', 'ปี (พ.ศ.)', renderStatusChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                         </div>
@@ -417,6 +418,7 @@ $pageTitles = [
                     </div>
                 </div>
 
+                <!-- Locations & Workload -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start mb-4">
@@ -425,13 +427,12 @@ $pageTitles = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <!-- ✨ Custom Dropdown ✨ -->
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Month', renderLocChart)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Month', renderLocChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'loc-Month')">
-                                        <span id="loc-MonthText" class="truncate">เดือน</span>
+                                        <span id="loc-MonthText" class="truncate font-bold">เดือน</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="loc-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="loc-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('loc-Month', 'all', 'เดือน', renderLocChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
                                         </div>
@@ -439,12 +440,12 @@ $pageTitles = [
                                     </div>
                                     <input type="hidden" id="locMonth" value="all">
                                 </div>
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Year', renderLocChart)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Year', renderLocChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'loc-Year')">
-                                        <span id="loc-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <span id="loc-YearText" class="truncate font-bold">ปี (พ.ศ.)</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="loc-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="loc-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('loc-Year', 'all', 'ปี (พ.ศ.)', renderLocChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                         </div>
@@ -466,13 +467,12 @@ $pageTitles = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <!-- ✨ Custom Dropdown ✨ -->
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Month', renderTechChart)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Month', renderTechChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'tech-Month')">
-                                        <span id="tech-MonthText" class="truncate">เดือน</span>
+                                        <span id="tech-MonthText" class="truncate font-bold">เดือน</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="tech-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="tech-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('tech-Month', 'all', 'เดือน', renderTechChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
                                         </div>
@@ -480,12 +480,12 @@ $pageTitles = [
                                     </div>
                                     <input type="hidden" id="techMonth" value="all">
                                 </div>
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Year', renderTechChart)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Year', renderTechChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'tech-Year')">
-                                        <span id="tech-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <span id="tech-YearText" class="truncate font-bold">ปี (พ.ศ.)</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="tech-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="tech-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('tech-Year', 'all', 'ปี (พ.ศ.)', renderTechChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                         </div>
@@ -501,8 +501,8 @@ $pageTitles = [
                     </div>
                 </div>
 
+                <!-- Customer Satisfaction & Top Reporters -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-                    
                     <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
                         <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                             <div class="flex flex-col">
@@ -511,13 +511,12 @@ $pageTitles = [
                                 <span class="text-[12px] text-indigo-500 font-bold mt-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <!-- ✨ Custom Dropdown ✨ -->
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Month')">
-                                        <span id="rating-MonthText" class="truncate">เดือน</span>
+                                        <span id="rating-MonthText" class="truncate font-bold">เดือน</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="rating-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="rating-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('rating-Month', 'all', 'เดือน', renderRatingChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
                                         </div>
@@ -525,12 +524,12 @@ $pageTitles = [
                                     </div>
                                     <input type="hidden" id="ratingMonth" value="all">
                                 </div>
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Year', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Year', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Year')">
-                                        <span id="rating-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <span id="rating-YearText" class="truncate font-bold">ปี (พ.ศ.)</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="rating-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="rating-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('rating-Year', 'all', 'ปี (พ.ศ.)', renderRatingChart)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                         </div>
@@ -540,7 +539,6 @@ $pageTitles = [
                                 </div>
                             </div>
                         </div>
-                        
                         <div class="flex items-center w-full mt-2 flex-1">
                             <div class="relative w-full h-[380px]">
                                 <canvas id="mainRatingChart" class="cursor-pointer"></canvas>
@@ -548,7 +546,6 @@ $pageTitles = [
                         </div>
                     </div>
 
-                    <!-- ✨ เพิ่มส่วน Top Reporters ✨ -->
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
                         <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3">
                             <div>
@@ -556,12 +553,12 @@ $pageTitles = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Month', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Month', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'reporter-Month')">
-                                        <span id="reporter-MonthText" class="truncate">เดือน</span>
+                                        <span id="reporter-MonthText" class="truncate font-bold">เดือน</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="reporter-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="reporter-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('reporter-Month', 'all', 'เดือน', renderTopReporters)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
                                         </div>
@@ -569,12 +566,12 @@ $pageTitles = [
                                     </div>
                                     <input type="hidden" id="reporterMonth" value="all">
                                 </div>
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Year', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Year', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'reporter-Year')">
-                                        <span id="reporter-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <span id="reporter-YearText" class="truncate font-bold">ปี (พ.ศ.)</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="reporter-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                    <div id="reporter-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('reporter-Year', 'all', 'ปี (พ.ศ.)', renderTopReporters)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                         </div>
@@ -584,7 +581,6 @@ $pageTitles = [
                                 </div>
                             </div>
                         </div>
-                        
                         <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
                             <div class="flex items-center gap-2">
                                 <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">จัดอันดับ:</span>
@@ -604,6 +600,7 @@ $pageTitles = [
                     </div>
                 </div>
 
+                <!-- Recent Transactions (Dashboard) -->
                 <div class="grid grid-cols-1 gap-6 mt-6">
                     <div class="modern-card overflow-hidden flex flex-col col-span-full">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
@@ -634,10 +631,8 @@ $pageTitles = [
                                         while($rd = $recent_dash->fetch_assoc()) {
                                             $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                             $statusText = htmlspecialchars($rd['status']);
-                                            
                                             $ticket_no = formatEmptyOrDash($rd['ticket_no']);
                                             
-                                            // จัดการชื่อและเบอร์โทร
                                             $raw_rep = trim((string)$rd['reporter_name']);
                                             $disp_name = $raw_rep;
                                             if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['real_name'])) {
@@ -647,7 +642,6 @@ $pageTitles = [
                                             $phone_number = formatEmptyOrDash($rd['phone_number']);
                                             
                                             $equipment_type = formatEmptyOrDash($rd['equipment_type']);
-                                            
                                             $has_created = (!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00');
                                             $date_fmt = $has_created ? date("Y-m-d", strtotime($rd['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
                                             $time_fmt = $has_created ? date("H:i", strtotime($rd['created_at'])) : '';
@@ -677,14 +671,13 @@ $pageTitles = [
                                                 <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$statusText}</span></td>
                                                 <td class='px-6 py-4 align-middle text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <a target='_blank' href='view_repair.php?id={$rd['id']}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
+                                                        <!-- ผู้บริหารลิงก์ไปแค่ view_repair.php -->
+                                                        <a href='view_repair.php?id={$rd['id']}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
                                                     </div>
                                                 </td>
                                             </tr>";
                                         }
-                                    } else {
-                                        echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>No transactions found</td></tr>";
-                                    }
+                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>No transactions found</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -694,7 +687,7 @@ $pageTitles = [
 
             </div>
 
-            <!-- ✨ เพิ่มหน้า Transactions แบบ View Only ให้ผู้บริหาร ✨ -->
+            <!-- ✨ หน้า Transactions (All Repairs List) ให้ผู้บริหาร ✨ -->
             <div id="repairs" class="section hidden space-y-6 no-print animate-fade-in">
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
@@ -734,23 +727,17 @@ $pageTitles = [
                                         $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                         
                                         $ticket_no = formatEmptyOrDash($row['ticket_no']);
-                                        
                                         $raw_rep = trim((string)$row['reporter_name']);
                                         $disp_name = $raw_rep;
                                         if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['real_name'])) {
                                             $disp_name = $line_users_map[$raw_rep]['real_name'];
                                         }
-                                        
                                         $reporter_name = formatEmptyOrDash($disp_name);
                                         $phone_number = formatEmptyOrDash($row['phone_number']);
-                                        
                                         $equipment_type = formatEmptyOrDash($row['equipment_type']);
                                         $problem_desc = formatEmptyOrDash($row['problem_desc']);
                                         
-                                        $t_pos = ''; 
-                                        $t_eng = '';
-                                        $t_th = '';
-                                        
+                                        $t_pos = ''; $t_eng = ''; $t_th = '';
                                         if (!empty($row['technician_name']) && $row['technician_name'] !== '-') {
                                             $t_raw = $row['technician_name'];
                                             if (isset($tech_info_map[$t_raw])) {
@@ -763,8 +750,7 @@ $pageTitles = [
                                                 $t_eng = htmlspecialchars($en_name);
                                                 $t_pos = htmlspecialchars(getAutoPosition($th_name));
                                             }
-                                            
-                                            $techHtml = "<div class='text-blue-600 font-bold hover:text-blue-500 transition-colors cursor-default'>{$t_th}</div>";
+                                            $techHtml = "<div class='text-blue-600 font-bold cursor-default'>{$t_th}</div>";
                                             if (!empty($t_eng)) {
                                                 $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
                                             }
@@ -833,6 +819,7 @@ $pageTitles = [
                                             </td>
                                             <td class='px-6 py-4 align-middle text-center'>
                                                 <div class='flex items-center justify-center'>
+                                                    <!-- ผู้บริหารลิงก์ไปแค่ view_repair.php -->
                                                     <a target='_blank' href='view_repair.php?id={$row['id']}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
                                                 </div>
                                             </td>
@@ -910,7 +897,6 @@ $pageTitles = [
                 </div>
             </div>
             
-            <!-- ✨ Filter ย่อยของ Modal ✨ -->
             <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
                 <div class="flex items-center gap-2">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
@@ -953,8 +939,7 @@ $pageTitles = [
         
         let currentTechReviewsData = [];
         let currentDeptReviewsData = []; 
-        let currentMainReviewFilter = 'all';
-        let currentReviewFilter = 'all'; // ✨ สำหรับ Modal เล็ก
+        let currentReviewFilter = 'all';
 
         const pageTitles = {
             'dash': 'Dashboard Overview',
@@ -1410,197 +1395,112 @@ $pageTitles = [
             });
         }
 
-        // ✨ ระบบตรวจสอบปุ่มฟิลเตอร์และกดดูประวัติ ✨
-        function setMainReviewFilter(val) {
-            currentMainReviewFilter = val;
-            const btnAll = document.getElementById('btnMainFilterAll');
-            const btnZero = document.getElementById('btnMainFilterZero');
+        function openTechReviewsModal(deptName, month, year) {
+            document.getElementById('techReviewsModalDept').innerText = deptName;
 
-            if(btnAll) btnAll.className = "px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap";
-            if(btnZero) btnZero.className = "px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap";
+            let data = getFilteredRepairsByMonthYear(month, year);
 
-            if(val === 'all') {
-                if(btnAll) btnAll.className = "px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap";
-            } else if (val === 0) {
-                if(btnZero) btnZero.className = "px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap";
-            }
+            let allTechsInDept = Object.keys(techDeptMap).filter(tName => {
+                let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
+                if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
+                    dName = 'ฝ่ายงาน' + dName;
+                }
+                return dName === deptName;
+            });
 
-            for(let i=1; i<=5; i++) {
-                let star = document.getElementById('mStar_' + i);
-                if(star) {
-                    if(val !== 'all' && val !== 0 && i <= val) {
-                        star.classList.remove('text-slate-200');
-                        star.classList.add('text-amber-400');
-                    } else {
-                        star.classList.remove('text-amber-400');
-                        star.classList.add('text-slate-200');
+            currentDeptReviewsData = data.filter(r => {
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                return allTechsInDept.includes(tName);
+            });
+
+            let techStats = {};
+            allTechsInDept.forEach(tName => { techStats[tName] = { sum: 0, count: 0 }; });
+
+            currentDeptReviewsData.forEach(r => {
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                if(techStats[tName]) {
+                    let rating = parseFloat(r.rating) || 0;
+                    if(rating > 0) { 
+                        techStats[tName].sum += rating; 
+                        techStats[tName].count++; 
                     }
                 }
-            }
-            renderMainRecentReviewsList();
-        }
-
-        function setReviewFilter(val) {
-            currentReviewFilter = val;
-            const btnAll = document.getElementById('btnFilterAllReviews');
-            const btnZero = document.getElementById('btnFilterZeroReviews');
-            
-            if(btnAll) btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
-            if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
-            
-            if(val === 'all') {
-                if(btnAll) btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
-            } else if (val === 0) {
-                if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
-            }
-            
-            const stars = document.querySelectorAll('#starFilterContainer i');
-            stars.forEach((star, index) => {
-                let starVal = index + 1;
-                if(val !== 'all' && val !== 0 && starVal <= val) {
-                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-lg drop-shadow-sm";
-                } else {
-                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200";
-                }
             });
-            renderTechReviewsList();
+
+            let techArr = Object.keys(techStats).map(k => {
+                let tAvg = techStats[k].count > 0 ? (techStats[k].sum / techStats[k].count).toFixed(1) : 0;
+                return { name: k, avg: parseFloat(tAvg), count: techStats[k].count };
+            });
+
+            techArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
+
+            const selector = document.getElementById('modalTechSelector');
+            selector.innerHTML = '';
+
+            if(techArr.length === 0) {
+                selector.style.display = 'none';
+                document.getElementById('techReviewsModalTitle').innerText = 'รีวิวฝ่ายงาน';
+                document.getElementById('techReviewsModalCount').innerText = '0 รีวิว';
+                currentTechReviewsData = [];
+                renderTechReviewsList();
+            } else {
+                selector.style.display = 'block';
+                techArr.forEach(t => {
+                    let opt = document.createElement('option');
+                    opt.value = t.name;
+                    let thNameOnly = (techInfoMap[t.name] && techInfoMap[t.name].th) ? techInfoMap[t.name].th : t.name.split(' (')[0];
+                    let visualLen = thNameOnly.replace(/[\u0E31-\u0E3A\u0E47-\u0E4E]/g, '').length;
+                    let padSpaces = '\u00A0'.repeat(Math.max(2, 38 - (visualLen * 1.8))); 
+                    if (t.avg > 0) {
+                        opt.innerHTML = `${thNameOnly}${padSpaces}⭐ ${t.avg} (${t.count} รีวิว)`;
+                    } else {
+                        opt.innerHTML = `${thNameOnly}${padSpaces}☆ ยังไม่มีคะแนน`;
+                    }
+                    selector.appendChild(opt);
+                });
+                changeModalTech(techArr[0].name);
+            }
+            toggleModal('techReviewsModal');
         }
 
-        function renderMainRecentReviewsList() {
-            const container = document.getElementById('mainRecentReviewsList');
-            if(!container) return;
-            container.innerHTML = '';
+        function changeModalTech(techName) {
+            let thNameOnly = (techInfoMap[techName] && techInfoMap[techName].th) ? techInfoMap[techName].th : techName.split(' (')[0];
+            document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + thNameOnly;
 
-            let m = document.getElementById('ratingMonth') ? document.getElementById('ratingMonth').value : 'all';
-            let y = document.getElementById('ratingYear') ? document.getElementById('ratingYear').value : 'all';
+            let posName = (techInfoMap[techName] && techInfoMap[techName].pos) ? techInfoMap[techName].pos : '';
+            document.getElementById('techReviewsModalPos').innerText = posName && posName !== '-' ? '(' + posName + ')' : '(ไม่ระบุตำแหน่ง)';
 
-            let filteredReviews = getFilteredRepairsByMonthYear(m, y);
-
-            filteredReviews = filteredReviews.filter(r => {
+            currentTechReviewsData = currentDeptReviewsData.filter(r => {
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
                 let rRating = parseFloat(r.rating) || 0;
                 let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
-                return rRating > 0 || hasComment;
+                return tName === techName && (rRating > 0 || hasComment);
             });
 
-            if (currentMainReviewFilter !== 'all') {
-                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentMainReviewFilter));
+            document.getElementById('techReviewsModalCount').innerText = currentTechReviewsData.length + ' รีวิว';
+
+            let sum = 0, count = 0;
+            currentTechReviewsData.forEach(r => {
+                let rating = parseFloat(r.rating) || 0;
+                if(rating > 0) { sum += rating; count++; }
+            });
+            let avg = count > 0 ? sum / count : 0;
+
+            const bigStarIcon = document.getElementById('techReviewsModalTitle').parentNode.parentNode.querySelector('.fa-star');
+            if (bigStarIcon) {
+                if (avg > 0) {
+                    let percent = (avg / 5.0) * 100;
+                    bigStarIcon.style.background = `linear-gradient(90deg, #f59e0b ${percent}%, #e2e8f0 ${percent}%)`;
+                    bigStarIcon.style.webkitBackgroundClip = 'text';
+                    bigStarIcon.style.webkitTextFillColor = 'transparent';
+                } else {
+                    bigStarIcon.style.background = 'none';
+                    bigStarIcon.style.webkitBackgroundClip = 'border-box';
+                    bigStarIcon.style.webkitTextFillColor = 'initial';
+                    bigStarIcon.style.color = '#cbd5e1'; 
+                }
             }
-
-            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
-            filteredReviews = filteredReviews.slice(0, 30);
-
-            if(filteredReviews.length === 0) {
-                container.innerHTML = `<div class='p-8 flex flex-col items-center justify-center text-center h-full min-h-[200px]'>
-                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
-                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนหรือช่วงเวลานี้</p>
-                                          </div>`;
-            } else {
-                filteredReviews.forEach(rev => {
-                    let r_name = formatValJS(rev.reporter_name);
-                    let r_rating = parseInt(rev.rating || 0);
-                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
-                                    ? rev.review_comment.trim() 
-                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
-
-                    let stars_html = '';
-                    if (r_rating === 0) {
-                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
-                    } else {
-                        for(let i=1; i<=5; i++) {
-                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
-                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
-                        }
-                    }
-
-                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
-                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
-
-                    let date_str = "-";
-                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
-                        date_str = timeAgoJS(rev.completed_at);
-                    }
-
-                    // ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว
-                    container.innerHTML += `<div onclick="window.open('view_repair.php?id=${rev.id}&source=overview', '_blank')" class='p-4 md:p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
-                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
-                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
-                            </div>
-                            <div class='flex justify-between items-start mb-2.5 pr-6'>
-                                <div class='flex items-center gap-3'>
-                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
-                                    <div>
-                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
-                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
-                                    </div>
-                                </div>
-                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
-                            </div>
-                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
-                            <div class='pl-11'>${techInfoHtml}</div>
-                          </div>`;
-                });
-            }
-        }
-
-        function renderTechReviewsList() {
-            const container = document.getElementById('techReviewsList');
-            container.innerHTML = '';
-
-            let filteredReviews = [...currentTechReviewsData];
-
-            if (currentReviewFilter !== 'all') {
-                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentReviewFilter));
-            }
-
-            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
-
-            if(filteredReviews.length === 0) {
-                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full'>
-                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
-                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนนี้</p>
-                                          </div>`;
-            } else {
-                filteredReviews.forEach(rev => {
-                    let r_name = formatValJS(rev.reporter_name);
-                    let r_rating = parseInt(rev.rating || 0);
-                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
-                                    ? rev.review_comment.trim() 
-                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
-
-                    let stars_html = '';
-                    if (r_rating === 0) {
-                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
-                    } else {
-                        for(let i=1; i<=5; i++) {
-                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
-                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
-                        }
-                    }
-
-                    let date_str = "-";
-                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
-                        date_str = timeAgoJS(rev.completed_at);
-                    }
-
-                    // ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว
-                    container.innerHTML += `<div onclick="window.open('view_repair.php?id=${rev.id}&source=overview', '_blank')" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
-                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
-                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
-                            </div>
-                            <div class='flex justify-between items-start mb-2.5 pr-6'>
-                                <div class='flex items-center gap-3'>
-                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
-                                    <div>
-                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
-                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
-                                    </div>
-                                </div>
-                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
-                            </div>
-                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
-                          </div>`;
-                });
-            }
+            setReviewFilter('all'); 
         }
 
         // ✨ ประวัติ Modal การคลิกจาก Top Reporters ✨
@@ -1671,7 +1571,7 @@ $pageTitles = [
                     let eqType = formatValJS(r.equipment_type);
                     let pDesc = formatValJS(r.problem_desc);
 
-                    // ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว
+                    // ✨ ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว ✨
                     tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
                         <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
@@ -1700,7 +1600,7 @@ $pageTitles = [
                         </td>
                         <td class="px-5 py-4 align-middle text-center">
                             <div class='flex items-center justify-center'>
-                                <a target='_blank' href='view_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
+                                <a target='_blank' href='view_repair.php?id=${r.id}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
                             </div>
                         </td>
                     </tr>`;
@@ -1714,6 +1614,93 @@ $pageTitles = [
             document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
             
             toggleModal('historyModal');
+        }
+
+        function setReviewFilter(val) {
+            currentReviewFilter = val;
+            const btnAll = document.getElementById('btnFilterAllReviews');
+            const btnZero = document.getElementById('btnFilterZeroReviews');
+            
+            if(btnAll) btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            
+            if(val === 'all') {
+                if(btnAll) btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            } else if (val === 0) {
+                if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            }
+            
+            const stars = document.querySelectorAll('#starFilterContainer i');
+            stars.forEach((star, index) => {
+                let starVal = index + 1;
+                if(val !== 'all' && val !== 0 && starVal <= val) {
+                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-lg drop-shadow-sm";
+                } else {
+                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200";
+                }
+            });
+            renderTechReviewsList();
+        }
+
+        function renderTechReviewsList() {
+            const container = document.getElementById('techReviewsList');
+            container.innerHTML = '';
+
+            let filteredReviews = [...currentTechReviewsData];
+
+            if (currentReviewFilter !== 'all') {
+                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentReviewFilter));
+            }
+
+            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+
+            if(filteredReviews.length === 0) {
+                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full'>
+                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนนี้</p>
+                                          </div>`;
+            } else {
+                filteredReviews.forEach(rev => {
+                    let r_name = formatValJS(rev.reporter_name);
+                    let r_rating = parseInt(rev.rating || 0);
+                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
+                                    ? rev.review_comment.trim() 
+                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
+
+                    let stars_html = '';
+                    if (r_rating === 0) {
+                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                    } else {
+                        for(let i=1; i<=5; i++) {
+                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                        }
+                    }
+
+                    let date_str = "-";
+                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
+                        date_str = timeAgoJS(rev.completed_at);
+                    }
+
+                    // ✨ ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว ✨
+                    container.innerHTML += `<div onclick="window.open('view_repair.php?id=${rev.id}&source=overview', '_blank')" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
+                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
+                            </div>
+                            <div class='flex justify-between items-start mb-2.5 pr-6'>
+                                <div class='flex items-center gap-3'>
+                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
+                                    <div>
+                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
+                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
+                                    </div>
+                                </div>
+                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
+                            </div>
+                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
+                          </div>`;
+                });
+            }
         }
 
         // ✨ ตัวแปรและฟังก์ชันจัดอันดับ Top Reporters ✨
@@ -1788,6 +1775,7 @@ $pageTitles = [
                     }
 
                     let safeName = rep.name.replace(/'/g, "\\'");
+                    // ✨ ลิงก์บังคับให้ไปดูประวัติอย่างเดียว
                     let clickAction = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? '' : `onclick="viewHistory('${safeName}', 'reporter')" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group" title="คลิกเพื่อดูประวัติการแจ้งซ่อมของ ${displayName}"`;
                     let disableClickClass = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? `class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 opacity-70"` : '';
 
@@ -1812,7 +1800,7 @@ $pageTitles = [
             }
         }
 
-        // ✨ ระบบจัดการ Custom Dropdown และ Keyboard (หน่วงเวลา 120ms) ✨
+        // ✨ ระบบจัดการ Custom Dropdown และ Keyboard (หน่วงเวลา 120ms และล็อกสีพื้นหลังหัวข้อ) ✨
         let lastChartKeyTime = 0;
         let currentChartFocus = -1;
         let activeChartListId = '';
@@ -1846,8 +1834,8 @@ $pageTitles = [
             document.getElementById(idPrefix + 'Text').innerText = display;
             list.classList.add('hidden'); list.classList.remove('flex');
 
+            // ✨ ป้องกันไม่ให้ลบสีพื้นหลังของหัวข้อที่กด
             list.querySelectorAll('.chart-dropdown-item').forEach(item => {
-                // ป้องกันไม่ให้ลบสีพื้นหลังของแถบหัวข้อ (เดือน/ปี)
                 if (item.getAttribute('data-value') === 'all') {
                     item.classList.add('bg-indigo-50', 'text-indigo-600');
                     item.classList.remove('text-slate-700', 'hover:bg-slate-100');
@@ -1944,9 +1932,6 @@ $pageTitles = [
             }
 
             renderAllCharts();
-            if(document.getElementById('mainRecentReviewsList')) {
-                setMainReviewFilter('all');
-            }
             if(document.getElementById('topReportersList')) {
                 renderTopReporters();
             }
