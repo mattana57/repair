@@ -381,9 +381,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
             <?php if($is_admin): ?>
-            <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
+            <button type="button" onclick="window.close();" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto cursor-pointer">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
-            </a>
+            </button>
             <?php endif; ?>
         </div>
 
@@ -694,7 +694,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
                 <h2 class="text-xl font-bold text-slate-700 mb-2">ไม่พบข้อมูลใบงาน</h2>
                 <?php if($is_admin): ?>
-                <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block mt-4">กลับหน้ารายการ</a>
+                <button type="button" onclick="window.close();" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block mt-4 cursor-pointer">กลับหน้ารายการ</button>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
@@ -940,11 +940,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             confirmButtonText: 'ตกลง'
         }).then((result) => {
             if (result.isConfirmed) {
-                <?php if($is_admin): ?>
-                window.location.href = '<?php echo htmlspecialchars($back_url); ?>';
-                <?php else: ?>
                 window.close(); 
-                <?php endif; ?>
             }
         });
     </script>
