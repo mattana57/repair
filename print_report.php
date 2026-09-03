@@ -291,6 +291,16 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         .dark .tech-dropdown-item.kb-active-item:not([data-value="all"]) > div > div {
             background-color: #64748b !important;
         }
+
+        /* ✨ สไตล์ Keyboard Navigation สำหรับดรอปดาวน์ เดือน และ ปี ✨ */
+        .month-dropdown-item.kb-active-item, .year-dropdown-item.kb-active-item {
+            background-color: #eef2ff !important;
+            color: #4f46e5 !important;
+        }
+        .dark .month-dropdown-item.kb-active-item, .dark .year-dropdown-item.kb-active-item {
+            background-color: #475569 !important;
+            color: #a5b4fc !important;
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
@@ -358,16 +368,19 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         </div>
 
                         <!-- Dropdown เดือนแบบกำหนดเอง -->
-                        <div class="relative w-28 sm:w-32" id="monthDropdownContainer">
+                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
                                 <span id="monthDisplayText" class="truncate"><?php echo $thai_months[$selected_month]; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
-                            <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col py-2 custom-scrollbar">
+                            <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar">
+                                <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50/80 dark:bg-slate-800 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10'>
+                                    <span class='text-[11px] font-extrabold text-indigo-600 dark:text-indigo-300 tracking-wide'>เดือน</span>
+                                </div>
                                 <?php
                                 for($m=1; $m<=12; $m++) {
                                     $activeClass = ($selected_month === $m) ? 'bg-indigo-50 dark:bg-slate-600 text-indigo-600 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300';
-                                    echo "<div class='px-4 py-2 mx-2 mb-1 rounded-xl text-xs font-bold cursor-pointer transition-all {$activeClass}' onclick=\"selectMonth($m, '{$thai_months[$m]}')\">{$thai_months[$m]}</div>";
+                                    echo "<div class='month-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-xs font-bold cursor-pointer transition-all {$activeClass}' data-value='$m' data-display='{$thai_months[$m]}' onclick=\"selectMonth($m, '{$thai_months[$m]}')\">{$thai_months[$m]}</div>";
                                 }
                                 ?>
                             </div>
@@ -375,17 +388,20 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         </div>
 
                         <!-- Dropdown ปีแบบกำหนดเอง -->
-                        <div class="relative w-28 sm:w-32" id="yearDropdownContainer">
+                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
                                 <span id="yearDisplayText" class="truncate">พ.ศ. <?php echo $selected_year + 543; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
-                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col py-2 custom-scrollbar">
+                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar">
+                                <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50/80 dark:bg-slate-800 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10'>
+                                    <span class='text-[11px] font-extrabold text-indigo-600 dark:text-indigo-300 tracking-wide'>ปี (พ.ศ.)</span>
+                                </div>
                                 <?php
                                 foreach($available_years as $y) {
                                     $thai_y = $y + 543;
                                     $activeClass = ($selected_year == $y) ? 'bg-indigo-50 dark:bg-slate-600 text-indigo-600 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300';
-                                    echo "<div class='px-4 py-2 mx-2 mb-1 rounded-xl text-xs font-bold cursor-pointer transition-all {$activeClass}' onclick=\"selectYear($y, 'พ.ศ. {$thai_y}')\">พ.ศ. {$thai_y}</div>";
+                                    echo "<div class='year-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-xs font-bold cursor-pointer transition-all {$activeClass}' data-value='$y' data-display='พ.ศ. {$thai_y}' onclick=\"selectYear($y, 'พ.ศ. {$thai_y}')\">พ.ศ. {$thai_y}</div>";
                                 }
                                 ?>
                             </div>
@@ -821,16 +837,28 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             }
         });
 
+        let currentMonthFocus = -1;
+        let currentYearFocus = -1;
+
         // ✨ ฟังก์ชันควบคุม Dropdown เดือน ✨
         function toggleMonthDropdown(e) {
             if(e) e.stopPropagation();
-            document.getElementById('monthDropdownList').classList.toggle('hidden');
-            document.getElementById('monthDropdownList').classList.toggle('flex');
-            // ปิดกล่องอื่นที่อาจเปิดค้างอยู่
+            const list = document.getElementById('monthDropdownList');
+            const container = document.getElementById('monthDropdownContainer');
+            
+            list.classList.toggle('hidden');
+            list.classList.toggle('flex');
+            
             document.getElementById('techDropdownList').classList.add('hidden');
             document.getElementById('techDropdownList').classList.remove('flex');
             document.getElementById('yearDropdownList').classList.add('hidden');
             document.getElementById('yearDropdownList').classList.remove('flex');
+
+            if (!list.classList.contains('hidden')) {
+                container.focus();
+                currentMonthFocus = -1;
+                removeMonthActive(document.querySelectorAll('.month-dropdown-item'));
+            }
         }
 
         function selectMonth(val, displayText) {
@@ -840,16 +868,59 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             document.getElementById('monthDropdownList').classList.remove('flex');
         }
 
+        function handleMonthKeydown(e) {
+            const list = document.getElementById('monthDropdownList');
+            if (list.classList.contains('hidden')) {
+                if (e.key === "ArrowDown" || e.key === "Enter") toggleMonthDropdown(null);
+                return;
+            }
+            let items = list.querySelectorAll('.month-dropdown-item');
+            if (e.key === "ArrowDown") {
+                currentMonthFocus++; addMonthActive(items); e.preventDefault();
+            } else if (e.key === "ArrowUp") {
+                currentMonthFocus--; addMonthActive(items); e.preventDefault();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (currentMonthFocus > -1 && items[currentMonthFocus]) {
+                    items[currentMonthFocus].click();
+                }
+            }
+        }
+
+        function addMonthActive(x) {
+            if (!x) return false;
+            removeMonthActive(x);
+            if (currentMonthFocus >= x.length) currentMonthFocus = 0;
+            if (currentMonthFocus < 0) currentMonthFocus = (x.length - 1);
+            x[currentMonthFocus].classList.add("kb-active-item");
+            x[currentMonthFocus].scrollIntoView({ behavior: 'auto', block: 'nearest' });
+        }
+
+        function removeMonthActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("kb-active-item");
+            }
+        }
+
         // ✨ ฟังก์ชันควบคุม Dropdown ปี ✨
         function toggleYearDropdown(e) {
             if(e) e.stopPropagation();
-            document.getElementById('yearDropdownList').classList.toggle('hidden');
-            document.getElementById('yearDropdownList').classList.toggle('flex');
-            // ปิดกล่องอื่นที่อาจเปิดค้างอยู่
+            const list = document.getElementById('yearDropdownList');
+            const container = document.getElementById('yearDropdownContainer');
+            
+            list.classList.toggle('hidden');
+            list.classList.toggle('flex');
+            
             document.getElementById('techDropdownList').classList.add('hidden');
             document.getElementById('techDropdownList').classList.remove('flex');
             document.getElementById('monthDropdownList').classList.add('hidden');
             document.getElementById('monthDropdownList').classList.remove('flex');
+
+            if (!list.classList.contains('hidden')) {
+                container.focus();
+                currentYearFocus = -1;
+                removeYearActive(document.querySelectorAll('.year-dropdown-item'));
+            }
         }
 
         function selectYear(val, displayText) {
@@ -858,6 +929,41 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             document.getElementById('yearDropdownList').classList.add('hidden');
             document.getElementById('yearDropdownList').classList.remove('flex');
         }
+
+        function handleYearKeydown(e) {
+            const list = document.getElementById('yearDropdownList');
+            if (list.classList.contains('hidden')) {
+                if (e.key === "ArrowDown" || e.key === "Enter") toggleYearDropdown(null);
+                return;
+            }
+            let items = list.querySelectorAll('.year-dropdown-item');
+            if (e.key === "ArrowDown") {
+                currentYearFocus++; addYearActive(items); e.preventDefault();
+            } else if (e.key === "ArrowUp") {
+                currentYearFocus--; addYearActive(items); e.preventDefault();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (currentYearFocus > -1 && items[currentYearFocus]) {
+                    items[currentYearFocus].click();
+                }
+            }
+        }
+
+        function addYearActive(x) {
+            if (!x) return false;
+            removeYearActive(x);
+            if (currentYearFocus >= x.length) currentYearFocus = 0;
+            if (currentYearFocus < 0) currentYearFocus = (x.length - 1);
+            x[currentYearFocus].classList.add("kb-active-item");
+            x[currentYearFocus].scrollIntoView({ behavior: 'auto', block: 'nearest' });
+        }
+
+        function removeYearActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("kb-active-item");
+            }
+        }
+       
 
         // ✨ ฟังก์ชันจัดการปุ่มลูกศร ขึ้น-ลง และ Enter ในช่องค้นหา ✨
         document.getElementById('techSearchInput').addEventListener('keydown', function(e) {
