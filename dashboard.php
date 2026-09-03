@@ -1150,8 +1150,8 @@ $dept_icons = [
                                                 <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 align-middle text-center'>
                                                     <div class='flex items-center justify-center space-x-2'>
-                                                        <button onclick="openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '')" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
-                                                        <button onclick="confirmDelete('user', {$u['id']})" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
                                             </tr>";
