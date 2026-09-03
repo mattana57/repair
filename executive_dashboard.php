@@ -103,7 +103,7 @@ function timeAgo($datetime) {
 }
 
 // =====================================================================
-// ดึงข้อมูลเตรียมแสดงผล
+// ดึงข้อมูลเตรียมแสดงผล (เหมือนฝั่งแอดมินเป๊ะๆ)
 // =====================================================================
 
 $all_repairs_json = "[]";
@@ -677,7 +677,7 @@ $pageTitles = [
                                                 <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$statusText}</span></td>
                                                 <td class='px-6 py-4 align-middle text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <a href='view_repair.php?id={$rd['id']}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
+                                                        <a target='_blank' href='view_repair.php?id={$rd['id']}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
                                                     </div>
                                                 </td>
                                             </tr>";
@@ -909,6 +909,32 @@ $pageTitles = [
                     <span id="techReviewsModalCount" class="text-xs font-extrabold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full shadow-sm border border-amber-100 whitespace-nowrap mt-1">0 รีวิว</span>
                 </div>
             </div>
+            
+            <!-- ✨ Filter ย่อยของ Modal ✨ -->
+            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
+                    <div id="starFilterContainer" class="flex gap-1.5">
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(2)" title="2 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(3)" title="3 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(4)" title="4 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
+                        เฉพาะคอมเมนต์
+                    </button>
+                    <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">
+                        ทั้งหมด
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar">
+                <div class="divide-y divide-slate-100" id="techReviewsList"></div>
+            </div>
         </div>
     </div>
 
@@ -928,6 +954,7 @@ $pageTitles = [
         let currentTechReviewsData = [];
         let currentDeptReviewsData = []; 
         let currentMainReviewFilter = 'all';
+        let currentReviewFilter = 'all'; // ✨ สำหรับ Modal เล็ก
 
         const pageTitles = {
             'dash': 'Dashboard Overview',
@@ -1383,108 +1410,196 @@ $pageTitles = [
             });
         }
 
-        function openTechReviewsModal(deptName, month, year) {
-            document.getElementById('techReviewsModalDept').innerText = deptName;
+        // ✨ ระบบตรวจสอบปุ่มฟิลเตอร์และกดดูประวัติ ✨
+        function setMainReviewFilter(val) {
+            currentMainReviewFilter = val;
+            const btnAll = document.getElementById('btnMainFilterAll');
+            const btnZero = document.getElementById('btnMainFilterZero');
 
-            let data = getFilteredRepairsByMonthYear(month, year);
+            if(btnAll) btnAll.className = "px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap";
+            if(btnZero) btnZero.className = "px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm whitespace-nowrap";
 
-            let allTechsInDept = Object.keys(techDeptMap).filter(tName => {
-                let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
-                if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
-                    dName = 'ฝ่ายงาน' + dName;
-                }
-                return dName === deptName;
-            });
-
-            currentDeptReviewsData = data.filter(r => {
-                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
-                return allTechsInDept.includes(tName);
-            });
-
-            let techStats = {};
-            allTechsInDept.forEach(tName => { techStats[tName] = { sum: 0, count: 0 }; });
-
-            currentDeptReviewsData.forEach(r => {
-                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
-                if(techStats[tName]) {
-                    let rating = parseFloat(r.rating) || 0;
-                    if(rating > 0) { 
-                        techStats[tName].sum += rating; 
-                        techStats[tName].count++; 
-                    }
-                }
-            });
-
-            let techArr = Object.keys(techStats).map(k => {
-                let tAvg = techStats[k].count > 0 ? (techStats[k].sum / techStats[k].count).toFixed(1) : 0;
-                return { name: k, avg: parseFloat(tAvg), count: techStats[k].count };
-            });
-
-            techArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
-
-            const selector = document.getElementById('modalTechSelector');
-            selector.innerHTML = '';
-
-            if(techArr.length === 0) {
-                selector.style.display = 'none';
-                document.getElementById('techReviewsModalTitle').innerText = 'รีวิวฝ่ายงาน';
-                document.getElementById('techReviewsModalCount').innerText = '0 รีวิว';
-            } else {
-                selector.style.display = 'block';
-                techArr.forEach(t => {
-                    let opt = document.createElement('option');
-                    opt.value = t.name;
-                    let thNameOnly = (techInfoMap[t.name] && techInfoMap[t.name].th) ? techInfoMap[t.name].th : t.name.split(' (')[0];
-                    let visualLen = thNameOnly.replace(/[\u0E31-\u0E3A\u0E47-\u0E4E]/g, '').length;
-                    let padSpaces = '\u00A0'.repeat(Math.max(2, 38 - (visualLen * 1.8))); 
-                    if (t.avg > 0) {
-                        opt.innerHTML = `${thNameOnly}${padSpaces}⭐ ${t.avg} (${t.count} รีวิว)`;
-                    } else {
-                        opt.innerHTML = `${thNameOnly}${padSpaces}☆ ยังไม่มีคะแนน`;
-                    }
-                    selector.appendChild(opt);
-                });
-                changeModalTech(techArr[0].name);
+            if(val === 'all') {
+                if(btnAll) btnAll.className = "px-3 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap";
+            } else if (val === 0) {
+                if(btnZero) btnZero.className = "px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 whitespace-nowrap";
             }
-            toggleModal('techReviewsModal');
+
+            for(let i=1; i<=5; i++) {
+                let star = document.getElementById('mStar_' + i);
+                if(star) {
+                    if(val !== 'all' && val !== 0 && i <= val) {
+                        star.classList.remove('text-slate-200');
+                        star.classList.add('text-amber-400');
+                    } else {
+                        star.classList.remove('text-amber-400');
+                        star.classList.add('text-slate-200');
+                    }
+                }
+            }
+            renderMainRecentReviewsList();
         }
 
-        function changeModalTech(techName) {
-            let thNameOnly = (techInfoMap[techName] && techInfoMap[techName].th) ? techInfoMap[techName].th : techName.split(' (')[0];
-            document.getElementById('techReviewsModalTitle').innerText = 'รีวิวของช่าง: ' + thNameOnly;
+        function setReviewFilter(val) {
+            currentReviewFilter = val;
+            const btnAll = document.getElementById('btnFilterAllReviews');
+            const btnZero = document.getElementById('btnFilterZeroReviews');
+            
+            if(btnAll) btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            
+            if(val === 'all') {
+                if(btnAll) btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            } else if (val === 0) {
+                if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            }
+            
+            const stars = document.querySelectorAll('#starFilterContainer i');
+            stars.forEach((star, index) => {
+                let starVal = index + 1;
+                if(val !== 'all' && val !== 0 && starVal <= val) {
+                    star.className = "fas fa-star cursor-pointer text-amber-400 hover:scale-125 transition-all text-lg drop-shadow-sm";
+                } else {
+                    star.className = "fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200";
+                }
+            });
+            renderTechReviewsList();
+        }
 
-            let posName = (techInfoMap[techName] && techInfoMap[techName].pos) ? techInfoMap[techName].pos : '';
-            document.getElementById('techReviewsModalPos').innerText = posName && posName !== '-' ? '(' + posName + ')' : '(ไม่ระบุตำแหน่ง)';
+        function renderMainRecentReviewsList() {
+            const container = document.getElementById('mainRecentReviewsList');
+            if(!container) return;
+            container.innerHTML = '';
 
-            currentTechReviewsData = currentDeptReviewsData.filter(r => {
-                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+            let m = document.getElementById('ratingMonth') ? document.getElementById('ratingMonth').value : 'all';
+            let y = document.getElementById('ratingYear') ? document.getElementById('ratingYear').value : 'all';
+
+            let filteredReviews = getFilteredRepairsByMonthYear(m, y);
+
+            filteredReviews = filteredReviews.filter(r => {
                 let rRating = parseFloat(r.rating) || 0;
                 let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
-                return tName === techName && (rRating > 0 || hasComment);
+                return rRating > 0 || hasComment;
             });
 
-            document.getElementById('techReviewsModalCount').innerText = currentTechReviewsData.length + ' รีวิว';
+            if (currentMainReviewFilter !== 'all') {
+                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentMainReviewFilter));
+            }
 
-            let sum = 0, count = 0;
-            currentTechReviewsData.forEach(r => {
-                let rating = parseFloat(r.rating) || 0;
-                if(rating > 0) { sum += rating; count++; }
-            });
-            let avg = count > 0 ? sum / count : 0;
+            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+            filteredReviews = filteredReviews.slice(0, 30);
 
-            const bigStarIcon = document.getElementById('techReviewsModalTitle').parentNode.parentNode.querySelector('.fa-star');
-            if (bigStarIcon) {
-                if (avg > 0) {
-                    let percent = (avg / 5.0) * 100;
-                    bigStarIcon.style.background = `linear-gradient(90deg, #f59e0b ${percent}%, #e2e8f0 ${percent}%)`;
-                    bigStarIcon.style.webkitBackgroundClip = 'text';
-                    bigStarIcon.style.webkitTextFillColor = 'transparent';
-                } else {
-                    bigStarIcon.style.background = 'none';
-                    bigStarIcon.style.webkitBackgroundClip = 'border-box';
-                    bigStarIcon.style.webkitTextFillColor = 'initial';
-                    bigStarIcon.style.color = '#cbd5e1'; 
-                }
+            if(filteredReviews.length === 0) {
+                container.innerHTML = `<div class='p-8 flex flex-col items-center justify-center text-center h-full min-h-[200px]'>
+                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนหรือช่วงเวลานี้</p>
+                                          </div>`;
+            } else {
+                filteredReviews.forEach(rev => {
+                    let r_name = formatValJS(rev.reporter_name);
+                    let r_rating = parseInt(rev.rating || 0);
+                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
+                                    ? rev.review_comment.trim() 
+                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
+
+                    let stars_html = '';
+                    if (r_rating === 0) {
+                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                    } else {
+                        for(let i=1; i<=5; i++) {
+                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                        }
+                    }
+
+                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
+                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
+
+                    let date_str = "-";
+                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
+                        date_str = timeAgoJS(rev.completed_at);
+                    }
+
+                    // ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว
+                    container.innerHTML += `<div onclick="window.open('view_repair.php?id=${rev.id}&source=overview', '_blank')" class='p-4 md:p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
+                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
+                            </div>
+                            <div class='flex justify-between items-start mb-2.5 pr-6'>
+                                <div class='flex items-center gap-3'>
+                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
+                                    <div>
+                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
+                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
+                                    </div>
+                                </div>
+                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
+                            </div>
+                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
+                            <div class='pl-11'>${techInfoHtml}</div>
+                          </div>`;
+                });
+            }
+        }
+
+        function renderTechReviewsList() {
+            const container = document.getElementById('techReviewsList');
+            container.innerHTML = '';
+
+            let filteredReviews = [...currentTechReviewsData];
+
+            if (currentReviewFilter !== 'all') {
+                filteredReviews = filteredReviews.filter(r => parseInt(r.rating || 0) === parseInt(currentReviewFilter));
+            }
+
+            filteredReviews.sort((a,b) => new Date(b.completed_at) - new Date(a.completed_at));
+
+            if(filteredReviews.length === 0) {
+                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full'>
+                                            <i class='fas fa-star text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลรีวิวในระดับคะแนนนี้</p>
+                                          </div>`;
+            } else {
+                filteredReviews.forEach(rev => {
+                    let r_name = formatValJS(rev.reporter_name);
+                    let r_rating = parseInt(rev.rating || 0);
+                    let r_comment = (rev.review_comment && rev.review_comment.trim() !== '' && rev.review_comment !== '-') 
+                                    ? rev.review_comment.trim() 
+                                    : "<span class='text-slate-300 italic'>- ไม่มีข้อความรีวิว -</span>";
+
+                    let stars_html = '';
+                    if (r_rating === 0) {
+                        stars_html = '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                    } else {
+                        for(let i=1; i<=5; i++) {
+                            if(i <= r_rating) stars_html += '<i class="fas fa-star text-amber-400 text-[11px] drop-shadow-sm"></i>';
+                            else stars_html += '<i class="fas fa-star text-slate-200 text-[11px]"></i>';
+                        }
+                    }
+
+                    let date_str = "-";
+                    if(rev.completed_at && rev.completed_at !== '0000-00-00 00:00:00') {
+                        date_str = timeAgoJS(rev.completed_at);
+                    }
+
+                    // ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว
+                    container.innerHTML += `<div onclick="window.open('view_repair.php?id=${rev.id}&source=overview', '_blank')" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
+                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
+                            </div>
+                            <div class='flex justify-between items-start mb-2.5 pr-6'>
+                                <div class='flex items-center gap-3'>
+                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
+                                    <div>
+                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
+                                        <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
+                                    </div>
+                                </div>
+                                <div class='flex gap-0.5 pt-1'>${stars_html}</div>
+                            </div>
+                            <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
+                          </div>`;
+                });
             }
         }
 
@@ -1556,6 +1671,7 @@ $pageTitles = [
                     let eqType = formatValJS(r.equipment_type);
                     let pDesc = formatValJS(r.problem_desc);
 
+                    // ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว
                     tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
                         <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
@@ -1731,6 +1847,7 @@ $pageTitles = [
             list.classList.add('hidden'); list.classList.remove('flex');
 
             list.querySelectorAll('.chart-dropdown-item').forEach(item => {
+                // ป้องกันไม่ให้ลบสีพื้นหลังของแถบหัวข้อ (เดือน/ปี)
                 if (item.getAttribute('data-value') === 'all') {
                     item.classList.add('bg-indigo-50', 'text-indigo-600');
                     item.classList.remove('text-slate-700', 'hover:bg-slate-100');
@@ -1827,6 +1944,9 @@ $pageTitles = [
             }
 
             renderAllCharts();
+            if(document.getElementById('mainRecentReviewsList')) {
+                setMainReviewFilter('all');
+            }
             if(document.getElementById('topReportersList')) {
                 renderTopReporters();
             }
