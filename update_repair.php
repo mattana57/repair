@@ -940,7 +940,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             confirmButtonText: 'ตกลง'
         }).then((result) => {
             if (result.isConfirmed) {
+                <?php if($is_admin): ?>
+                window.location.href = '<?php echo htmlspecialchars($back_url); ?>';
+                <?php else: ?>
                 window.close(); 
+                <?php endif; ?>
             }
         });
     </script>
