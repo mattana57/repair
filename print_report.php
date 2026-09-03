@@ -266,6 +266,31 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         .gov-p { font-size: 15px; line-height: 1.6; text-align: justify; margin-bottom: 0.6rem; }
         .gov-indent { text-indent: 2.5cm; }
         .gov-sub { padding-left: 1.2cm; }
+
+        /* ✨ สไตล์สำหรับจำลอง Hover เมื่อใช้ปุ่มลูกศร (Keyboard Navigation) ✨ */
+        .tech-dropdown-item.kb-active-item[data-value="all"] {
+            background-color: #f1f5f9 !important;
+        }
+        .dark .tech-dropdown-item.kb-active-item[data-value="all"] {
+            background-color: #475569 !important;
+        }
+        
+        .tech-dropdown-item.kb-active-item:not([data-value="all"]) {
+            background-color: #eef2ff !important;
+            color: #4f46e5 !important;
+        }
+        .dark .tech-dropdown-item.kb-active-item:not([data-value="all"]) {
+            background-color: #475569 !important;
+            color: #a5b4fc !important;
+        }
+        
+        .tech-dropdown-item.kb-active-item:not([data-value="all"]) > div > div {
+            background-color: #e0e7ff !important;
+            color: #6366f1 !important;
+        }
+        .dark .tech-dropdown-item.kb-active-item:not([data-value="all"]) > div > div {
+            background-color: #64748b !important;
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
@@ -653,6 +678,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         }
 
         let currentTechDisplay = '<?php echo $selected_tech === "all" ? "รวมทุกฝ่ายงาน (ทั้งหมด)" : addslashes($selected_tech); ?>';
+        let currentFocus = -1; // ✨ ตัวแปรเก็บตำแหน่งการเลื่อนลูกศร
 
         function focusTechSearch(e) {
             e.target.value = ''; 
@@ -684,6 +710,10 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             toggleTechDropdown(null, true);
             const searchVal = document.getElementById('techSearchInput').value.toLowerCase().replace(/\s+/g, '');
             let deptVisibility = {};
+            
+            // ✨ รีเซ็ตตำแหน่งลูกศรและลบสีที่เคยไฮไลท์ออก เวลามีการพิมพ์ข้อความใหม่
+            currentFocus = -1;
+            removeActive(document.querySelectorAll('.tech-dropdown-item'));
 
             const items = document.querySelectorAll('.tech-dropdown-item');
             items.forEach(item => {
@@ -742,6 +772,63 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 }
             }
         });
+
+        // ✨ ฟังก์ชันจัดการปุ่มลูกศร ขึ้น-ลง และ Enter ในช่องค้นหา ✨
+        document.getElementById('techSearchInput').addEventListener('keydown', function(e) {
+            const list = document.getElementById('techDropdownList');
+            
+            // ถ้า Dropdown ปิดอยู่ แล้วกดลูกศรลงหรือ Enter ให้เปิด Dropdown
+            if (list.classList.contains('hidden')) {
+                if (e.key === "ArrowDown" || e.key === "Enter") {
+                    toggleTechDropdown(null, true);
+                }
+                return;
+            }
+
+            let items = list.querySelectorAll('.tech-dropdown-item');
+            // เลือกเฉพาะตัวที่ไม่ได้ถูกซ่อน (แสดงผลอยู่ตอนพิมพ์ค้นหา)
+            let visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
+
+            if (e.key === "ArrowDown") {
+                currentFocus++;
+                addActive(visibleItems);
+                e.preventDefault(); // ป้องกันไม่ให้ cursor ในช่องพิมพ์ขยับ
+            } else if (e.key === "ArrowUp") {
+                currentFocus--;
+                addActive(visibleItems);
+                e.preventDefault();
+            } else if (e.key === "Enter") {
+                e.preventDefault(); // ป้องกันฟอร์มโหลดโดยไม่ได้ตั้งใจ
+                if (currentFocus > -1) {
+                    if (visibleItems[currentFocus]) {
+                        const val = visibleItems[currentFocus].getAttribute('data-value');
+                        const disp = visibleItems[currentFocus].getAttribute('data-display') || 'รวมทุกฝ่ายงาน (ทั้งหมด)';
+                        selectTech(val, disp);
+                    }
+                } else if (visibleItems.length === 1) {
+                    // ถ้ายอดค้นหาเหลือแค่ 1 อัน กด Enter แล้วให้เลือกอันนั้นเลย
+                    const val = visibleItems[0].getAttribute('data-value');
+                    const disp = visibleItems[0].getAttribute('data-display') || 'รวมทุกฝ่ายงาน (ทั้งหมด)';
+                    selectTech(val, disp);
+                }
+            }
+        });
+
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0; // วนกลับไปบนสุด
+            if (currentFocus < 0) currentFocus = (x.length - 1); // วนไปล่างสุด
+            x[currentFocus].classList.add("kb-active-item");
+            // บังคับให้ Scrollbar เลื่อนตามลูกศรลงมาด้วย
+            x[currentFocus].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function removeActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("kb-active-item");
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('techSearchInput').value = currentTechDisplay;
