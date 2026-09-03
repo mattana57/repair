@@ -681,7 +681,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         let currentFocus = -1; // ✨ ตัวแปรเก็บตำแหน่งการเลื่อนลูกศร
 
         function focusTechSearch(e) {
-            e.target.value = ''; 
+            e.target.select(); 
             filterTechDropdown(); 
             toggleTechDropdown(e, true);
         }
@@ -719,7 +719,11 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
         function filterTechDropdown() {
             toggleTechDropdown(null, true);
-            const searchVal = document.getElementById('techSearchInput').value.toLowerCase().replace(/\s+/g, '');
+            
+            let rawSearch = document.getElementById('techSearchInput').value;
+            // ถ้าข้อความที่อยู่ในช่องตรงกับค่าปัจจุบัน ให้ถือว่ายังไม่ได้พิมพ์ค้นหา (จะได้โชว์รายชื่อทั้งหมด)
+            let searchVal = (rawSearch === currentTechDisplay) ? '' : rawSearch.toLowerCase().replace(/\s+/g, '');
+            
             let deptVisibility = {};
             
             // ✨ รีเซ็ตตำแหน่งลูกศรและลบสีที่เคยไฮไลท์ออก เวลามีการพิมพ์ข้อความใหม่
