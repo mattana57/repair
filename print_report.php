@@ -34,7 +34,7 @@ $tech_formal_name = getPrefixName($selected_tech);
 
 // กำหนดรายชื่อช่างและจัดกลุ่มตามฝ่ายงาน (ดึงจากฐานข้อมูลอัตโนมัติแบบ Real-time)
 $grouped_techs = [];
-$tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE approval_status = 'อนุมัติแล้ว' AND full_name IS NOT NULL AND full_name != '' ORDER BY department ASC, full_name ASC");
+$tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != '' ORDER BY department ASC, full_name ASC");
 
 if ($tech_res && $tech_res->num_rows > 0) {
     while ($t = $tech_res->fetch_assoc()) {
