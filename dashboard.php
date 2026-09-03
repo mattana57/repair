@@ -1809,10 +1809,10 @@ $dept_icons = [
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
                 <input type="hidden" name="role" id="techAdmin_role" value="">
                 
-                <!-- ✨ พื้นที่เนื้อหา ปรับระยะ margin (my-5) เพื่อร่น Scrollbar ลงมา ไม่ให้ชิดเส้นขอบบนเกินไป ✨ -->
-                <div class="px-6 py-1 my-5 overflow-y-auto custom-scrollbar flex-1 space-y-5">
+                <!-- ✨ เปลี่ยนมาใช้ pt-4 และ flex-col gap-5 เพื่อแก้ปัญหาช่องว่างโล่งๆ ด้านบน ✨ -->
+                <div class="px-6 pt-4 pb-6 overflow-y-auto custom-scrollbar flex-1 flex flex-col gap-5">
                     
-                    <div id="loginCredsDiv" class="space-y-5">
+                    <div id="loginCredsDiv" class="flex flex-col gap-5">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
                             <input type="text" name="username" id="techAdmin_username" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
