@@ -1107,7 +1107,7 @@ $dept_icons = [
                                         <th class="px-6 py-4">Name</th>
                                         <th class="px-6 py-4">Contact</th>
                                         <th class="px-6 py-4 text-center">Role</th>
-                                        <th class="px-6 py-4 text-right">Action</th>
+                                        <th class="px-6 py-4 text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100 bg-white">
@@ -1148,10 +1148,10 @@ $dept_icons = [
                                                 </td>
                                                 <td class='px-6 py-4 align-top text-slate-500 font-medium'>".formatPhoneHtml($u['phone'])."</td>
                                                 <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
-                                                <td class='px-6 py-4 align-middle text-right'>
-                                                    <div class='flex items-center justify-end space-x-2'>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
-                                                        <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
+                                                <td class='px-6 py-4 align-middle text-center'>
+                                                    <div class='flex items-center justify-center space-x-2'>
+                                                        <button onclick="openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '')" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button onclick="confirmDelete('user', {$u['id']})" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
                                             </tr>";
@@ -1255,7 +1255,7 @@ $dept_icons = [
                                             <th class='px-6 py-4 border-0'>Contact</th> 
                                             <th class='px-6 py-4 text-center border-0'>Status / Code</th>
                                             <th class='px-6 py-4 text-center border-0'>Jobs</th>
-                                            <th class='px-6 py-4 text-right border-0'>Action</th>
+                                            <th class='px-6 py-4 text-center border-0'>Action</th>
                                         </tr>";
 
                                     foreach($techs as $t) {
@@ -1311,8 +1311,8 @@ $dept_icons = [
                                             <td class='px-6 py-4 align-top text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td> 
                                             <td class='px-6 py-4 align-middle text-center'>{$statusBadge}</td>
                                             <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
-                                            <td class='px-6 py-4 align-middle text-right'>
-                                                <div class='flex items-center justify-end space-x-2'>
+                                            <td class='px-6 py-4 align-middle text-center'>
+                                                <div class='flex items-center justify-center space-x-2'>
                                                     {$unlinkBtn}
                                                     <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
                                                     <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
