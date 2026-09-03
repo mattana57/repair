@@ -697,12 +697,23 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         function toggleTechDropdown(e, forceOpen = false) {
             if(e) e.stopPropagation();
             const list = document.getElementById('techDropdownList');
+            const input = document.getElementById('techSearchInput'); // ดึงช่อง Input มาใช้งาน
+            
             if(forceOpen) {
                 list.classList.remove('hidden');
                 list.classList.add('flex');
             } else {
                 list.classList.toggle('hidden');
                 list.classList.toggle('flex');
+            }
+
+            // ✨ บังคับ Focus ไปที่ช่อง Input ทันทีเมื่อเปิด Dropdown เพื่อรับคำสั่งจากคีย์บอร์ด
+            if (!list.classList.contains('hidden')) {
+                if (document.activeElement !== input) {
+                    input.focus();
+                }
+            } else {
+                input.blur(); // เอา Focus ออกตอนปิด จะได้ไม่เด้งเปิดซ้ำ
             }
         }
 
