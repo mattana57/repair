@@ -370,7 +370,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         <!-- Dropdown เดือนแบบกำหนดเอง -->
                         <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
-                                <span id="monthDisplayText" class="truncate"><?php echo $thai_months[$selected_month]; ?></span>
+                                <span id="monthDisplayText" class="truncate"><?php echo isset($_GET['month']) ? $thai_months[$selected_month] : 'เดือน'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
                             <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar">
@@ -391,7 +391,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         <!-- Dropdown ปีแบบกำหนดเอง -->
                         <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
-                                <span id="yearDisplayText" class="truncate">พ.ศ. <?php echo $selected_year + 543; ?></span>
+                                <span id="yearDisplayText" class="truncate"><?php echo isset($_GET['year']) ? 'พ.ศ. ' . ($selected_year + 543) : 'ปี (พ.ศ.)'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
                             <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar">
