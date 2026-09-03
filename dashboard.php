@@ -573,11 +573,11 @@ $dept_icons = [
 
     <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
         <div class="sidebar-logo-box flex items-center border-b border-slate-50">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3 shrink-0">
-                <i class="fas fa-tools text-white text-lg"></i>
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3.5 shrink-0">
+                <i class="fas fa-tools text-white text-xl"></i>
             </div>
             <div class="overflow-hidden">
-                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight">MBS<span class="text-indigo-600">Repair</span></h1>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">MBS<span class="text-indigo-600">Repair</span></h1>
             </div>
         </div>
         
