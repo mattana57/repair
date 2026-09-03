@@ -32,32 +32,38 @@ function getPrefixName($name) {
 
 $tech_formal_name = getPrefixName($selected_tech);
 
-// กำหนดรายชื่อช่างและจัดกลุ่มตามฝ่ายงาน
-$grouped_techs = [
-    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => [
-        'นาย สมพร วงษ์จำปา',
-        'นาย ปริญญา จันทรภา',
-        'นาย ทองสน พลมีศักดิ์',
-        'นาย ธีรศักดิ์ พาโคกทม'
-    ],
-    'ฝ่ายงานโสตทัศนูปกรณ์' => [
-        'นาย จิตรณรงค์ นาใจคง',
-        'นาย ลำไพร ทองบ่อ',
-        'นาย รักชาติ แดงเทโพธิ์',
-        'นาย ปิยะสันต์ บุญพระ',
-        'นาย จตุพล ฤทธิสิงห์',
-        'นาย อาทิตย์ บรรเทา'
-    ],
-    'ฝ่ายงานยานยนต์' => [
-        'นาย ธวัชชัย รัสสมบัติ',
-        'นาย ทรงภพ จันทร์ลอย',
-        'นาย รนภักดี ลิงลม',
-        'นาย กิตติภณ รัดถา',
-        'นาย ทิวา เนื่องทะบาล',
-        'นาย นิรุตติ์ กองเงิน',
-        'นาย อุทัย หาหอม'
-    ]
+// กำหนดรายชื่อช่างและจัดกลุ่มตามฝ่ายงาน (ดึงจากฐานข้อมูลอัตโนมัติแบบ Real-time)
+$grouped_techs = [];
+$tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE approval_status = 'อนุมัติแล้ว' AND full_name IS NOT NULL AND full_name != '' ORDER BY department ASC, full_name ASC");
+
+if ($tech_res && $tech_res->num_rows > 0) {
+    while ($t = $tech_res->fetch_assoc()) {
+        $dept = !empty($t['department']) ? $t['department'] : 'ฝ่ายงานทั่วไป';
+        if (!isset($grouped_techs[$dept])) {
+            $grouped_techs[$dept] = [];
+        }
+        $grouped_techs[$dept][] = trim($t['full_name']);
+    }
+}
+
+// จัดเรียงลำดับฝ่ายงานให้อยู่ในตำแหน่งที่สวยงามเสมอ
+$custom_dept_order = [
+    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
+    'ฝ่ายงานโสตทัศนูปกรณ์',
+    'ฝ่ายงานยานยนต์',
+    'แม่บ้าน',
+    'ฝ่ายงานทั่วไป',
+    'อื่นๆ'
 ];
+
+uksort($grouped_techs, function($a, $b) use ($custom_dept_order) {
+    $pos_a = array_search($a, $custom_dept_order);
+    $pos_b = array_search($b, $custom_dept_order);
+    $pos_a = ($pos_a === false) ? 999 : $pos_a;
+    $pos_b = ($pos_b === false) ? 999 : $pos_b;
+    if ($pos_a == $pos_b) return strcmp($a, $b);
+    return $pos_a - $pos_b;
+});
 
 // หาระบุฝ่ายงานของช่างที่ถูกเลือก เพื่อแสดงในเอกสาร
 $tech_department = 'ไม่ระบุฝ่ายงาน';
