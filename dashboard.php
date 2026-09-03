@@ -3886,17 +3886,26 @@ $dept_icons = [
             document.getElementById(idPrefix + 'Text').innerText = display;
             list.classList.add('hidden'); list.classList.remove('flex');
 
-            // ล้างแถบสีอันเก่าออกก่อน
+            // ล้างแถบสีอันเก่าออกก่อน แต่ต้องเก็บสีของหัวข้อ (data-value="all") ไว้
             list.querySelectorAll('.chart-dropdown-item').forEach(item => {
-                item.classList.remove('bg-indigo-50', 'text-indigo-600');
-                item.classList.add('text-slate-700', 'hover:bg-slate-100', 'hover:text-indigo-600');
+                // ✨ ป้องกันไม่ให้ลบสีพื้นหลังของแถบหัวข้อ (เดือน/ปี)
+                if (item.getAttribute('data-value') === 'all') {
+                    item.classList.add('bg-indigo-50', 'text-indigo-600');
+                    item.classList.remove('text-slate-700', 'hover:bg-slate-100');
+                } else {
+                    // รีเซ็ตสีตัวเลือกอื่นๆ ตามปกติ
+                    item.classList.remove('bg-indigo-50', 'text-indigo-600');
+                    item.classList.add('text-slate-700', 'hover:bg-slate-100', 'hover:text-indigo-600');
+                }
             });
 
-            // ไฮไลท์อันที่เพิ่งเลือก
-            const selectedItem = list.querySelector(`.chart-dropdown-item[data-value="${val}"]`);
-            if (selectedItem) {
-                selectedItem.classList.add('bg-indigo-50', 'text-indigo-600');
-                selectedItem.classList.remove('text-slate-700', 'hover:bg-slate-100');
+            // ไฮไลท์อันที่เพิ่งเลือก (ถ้าไม่ได้เลือกคำว่า เดือน/ปี)
+            if (val !== 'all') {
+                const selectedItem = list.querySelector(`.chart-dropdown-item[data-value="${val}"]`);
+                if (selectedItem) {
+                    selectedItem.classList.add('bg-indigo-50', 'text-indigo-600');
+                    selectedItem.classList.remove('text-slate-700', 'hover:bg-slate-100');
+                }
             }
             
             if (typeof renderCallback === 'function') renderCallback();
