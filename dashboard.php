@@ -578,6 +578,12 @@ $dept_icons = [
         .report-dropdown-item.kb-active-item .fa-check {
             opacity: 1 !important;
         }
+
+        /* ✨ สไตล์สำหรับ Custom Dropdown บนกราฟ ✨ */
+        .chart-dropdown-item.kb-active-item {
+            background-color: #eef2ff !important;
+            color: #4f46e5 !important;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -705,14 +711,34 @@ $dept_icons = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="equipMonth" onchange="renderEquipChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
-                                </select>
-                                <select id="equipYear" onchange="renderEquipChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Month')">
+                                        <span id="equip-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>เดือน</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='เดือน' onclick="selectChartDropdown('equip-Month', 'all', 'เดือน', renderEquipChart)">เดือน</div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('equip-Month', '{$num_pad}', '{$name}', renderEquipChart)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="equipMonth" value="all">
+                                </div>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Year', renderEquipChart)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Year')">
+                                        <span id="equip-YearText" class="truncate">ปี</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='ปี' onclick="selectChartDropdown('equip-Year', 'all', 'ปี', renderEquipChart)">ปี</div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('equip-Year', '{$y}', 'พ.ศ. {$thai_y}', renderEquipChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="equipYear" value="all">
+                                </div>
                             </div>
                         </div>
                         <div class="flex-1 relative w-full h-[280px]">
@@ -727,14 +753,34 @@ $dept_icons = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="statusMonth" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
-                                </select>
-                                <select id="statusYear" onchange="renderStatusChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Month', renderStatusChart)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Month')">
+                                        <span id="status-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="status-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>เดือน</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='เดือน' onclick="selectChartDropdown('status-Month', 'all', 'เดือน', renderStatusChart)">เดือน</div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('status-Month', '{$num_pad}', '{$name}', renderStatusChart)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="statusMonth" value="all">
+                                </div>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Year', renderStatusChart)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Year')">
+                                        <span id="status-YearText" class="truncate">ปี</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="status-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='ปี' onclick="selectChartDropdown('status-Year', 'all', 'ปี', renderStatusChart)">ปี</div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('status-Year', '{$y}', 'พ.ศ. {$thai_y}', renderStatusChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="statusYear" value="all">
+                                </div>
                             </div>
                         </div>
                         <div class="flex-1 relative w-full h-[280px] flex justify-center items-center">
@@ -751,14 +797,34 @@ $dept_icons = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="locMonth" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
-                                </select>
-                                <select id="locYear" onchange="renderLocChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Month', renderLocChart)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'loc-Month')">
+                                        <span id="loc-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="loc-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>เดือน</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='เดือน' onclick="selectChartDropdown('loc-Month', 'all', 'เดือน', renderLocChart)">เดือน</div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('loc-Month', '{$num_pad}', '{$name}', renderLocChart)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="locMonth" value="all">
+                                </div>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Year', renderLocChart)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'loc-Year')">
+                                        <span id="loc-YearText" class="truncate">ปี</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="loc-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='ปี' onclick="selectChartDropdown('loc-Year', 'all', 'ปี', renderLocChart)">ปี</div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('loc-Year', '{$y}', 'พ.ศ. {$thai_y}', renderLocChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="locYear" value="all">
+                                </div>
                             </div>
                         </div>
                         <div class="relative w-full h-[250px]"> 
@@ -773,14 +839,34 @@ $dept_icons = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="techMonth" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
-                                </select>
-                                <select id="techYear" onchange="renderTechChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Month', renderTechChart)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'tech-Month')">
+                                        <span id="tech-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="tech-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>เดือน</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='เดือน' onclick="selectChartDropdown('tech-Month', 'all', 'เดือน', renderTechChart)">เดือน</div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('tech-Month', '{$num_pad}', '{$name}', renderTechChart)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="techMonth" value="all">
+                                </div>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Year', renderTechChart)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'tech-Year')">
+                                        <span id="tech-YearText" class="truncate">ปี</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="tech-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='ปี' onclick="selectChartDropdown('tech-Year', 'all', 'ปี', renderTechChart)">ปี</div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('tech-Year', '{$y}', 'พ.ศ. {$thai_y}', renderTechChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="techYear" value="all">
+                                </div>
                             </div>
                         </div>
                         <div class="relative w-full h-[250px]"> 
@@ -799,14 +885,34 @@ $dept_icons = [
                                 <span class="text-[12px] text-indigo-500 font-bold mt-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="ratingMonth" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<option value='{$num_pad}'>{$name}</option>"; } ?>
-                                </select>
-                                <select id="ratingYear" onchange="renderRatingChart()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Month')">
+                                        <span id="rating-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="rating-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>เดือน</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='เดือน' onclick="selectChartDropdown('rating-Month', 'all', 'เดือน', renderRatingChart)">เดือน</div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('rating-Month', '{$num_pad}', '{$name}', renderRatingChart)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="ratingMonth" value="all">
+                                </div>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Year', renderRatingChart)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Year')">
+                                        <span id="rating-YearText" class="truncate">ปี</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="rating-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='ปี' onclick="selectChartDropdown('rating-Year', 'all', 'ปี', renderRatingChart)">ปี</div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('rating-Year', '{$y}', 'พ.ศ. {$thai_y}', renderRatingChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="ratingYear" value="all">
+                                </div>
                             </div>
                         </div>
                         
@@ -824,17 +930,34 @@ $dept_icons = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <select id="reporterMonth" onchange="renderTopReporters()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">เดือน</option>
-                                    <?php foreach($thai_months as $num => $name) { 
-                                        $val = str_pad($num, 2, '0', STR_PAD_LEFT); 
-                                        echo "<option value='{$val}'>{$name}</option>"; 
-                                    } ?>
-                                </select>
-                                <select id="reporterYear" onchange="renderTopReporters()" style="font-family: 'Sarabun', sans-serif;" class="custom-select bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100">
-                                    <option value="all" style="background-color: #94a3b8; color: #ffffff; font-weight: bold;">ปี</option>
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<option value='{$y}'>พ.ศ. {$thai_y}</option>"; } ?>
-                                </select>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Month', renderTopReporters)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'reporter-Month')">
+                                        <span id="reporter-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="reporter-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>เดือน</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='เดือน' onclick="selectChartDropdown('reporter-Month', 'all', 'เดือน', renderTopReporters)">เดือน</div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('reporter-Month', '{$num_pad}', '{$name}', renderTopReporters)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="reporterMonth" value="all">
+                                </div>
+                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Year', renderTopReporters)">
+                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'reporter-Year')">
+                                        <span id="reporter-YearText" class="truncate">ปี</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="reporter-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 custom-scrollbar">
+                                        <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl'>
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600' data-value='all' data-display='ปี' onclick="selectChartDropdown('reporter-Year', 'all', 'ปี', renderTopReporters)">ปี</div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('reporter-Year', '{$y}', 'พ.ศ. {$thai_y}', renderTopReporters)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="reporterYear" value="all">
+                                </div>
                             </div>
                         </div>
                         
@@ -3668,6 +3791,14 @@ $dept_icons = [
                     list.classList.remove('flex');
                 }
             }
+
+            // ปิด Dropdown ของกราฟทั้งหมดเมื่อคลิกที่อื่น
+            document.querySelectorAll('.chart-dropdown-list').forEach(list => {
+                if (!list.parentElement.contains(e.target)) {
+                    list.classList.add('hidden');
+                    list.classList.remove('flex');
+                }
+            });
         });
 
         // ✨ ฟังก์ชันจัดการปุ่มลูกศร ขึ้น-ลง และ Enter ในช่องค้นหา (หน้า Report) ✨
@@ -3728,6 +3859,91 @@ $dept_icons = [
         }
 
         function removeReportActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("kb-active-item");
+            }
+        }
+
+        // ✨ ระบบจัดการ Custom Dropdown ของกราฟทั้งหมด ✨
+        let currentChartFocus = -1;
+        let activeChartListId = '';
+
+        function toggleChartDropdown(e, idPrefix) {
+            if(e) e.stopPropagation();
+            const list = document.getElementById(idPrefix + 'List');
+            const container = document.getElementById(idPrefix + 'Container');
+
+            // ปิดกล่องอื่นให้หมดก่อนเปิด
+            document.querySelectorAll('.chart-dropdown-list').forEach(l => {
+                if (l.id !== list.id) { l.classList.add('hidden'); l.classList.remove('flex'); }
+            });
+
+            list.classList.toggle('hidden');
+            list.classList.toggle('flex');
+
+            if (!list.classList.contains('hidden')) {
+                container.focus();
+                activeChartListId = list.id;
+                currentChartFocus = -1;
+                removeChartActive(list.querySelectorAll('.chart-dropdown-item'));
+            } else {
+                activeChartListId = '';
+            }
+        }
+
+        function selectChartDropdown(idPrefix, val, display, renderCallback) {
+            const list = document.getElementById(idPrefix + 'List');
+            const actualInputId = idPrefix.replace('-', ''); // ลบขีดออก เช่น equip-Month -> equipMonth
+            document.getElementById(actualInputId).value = val;
+            document.getElementById(idPrefix + 'Text').innerText = display;
+            list.classList.add('hidden'); list.classList.remove('flex');
+
+            // ล้างแถบสีอันเก่าออกก่อน
+            list.querySelectorAll('.chart-dropdown-item').forEach(item => {
+                item.classList.remove('bg-indigo-50', 'text-indigo-600');
+                item.classList.add('text-slate-700', 'hover:bg-slate-100', 'hover:text-indigo-600');
+            });
+
+            // ไฮไลท์อันที่เพิ่งเลือก
+            const selectedItem = list.querySelector(`.chart-dropdown-item[data-value="${val}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('bg-indigo-50', 'text-indigo-600');
+                selectedItem.classList.remove('text-slate-700', 'hover:bg-slate-100');
+            }
+            
+            if (typeof renderCallback === 'function') renderCallback();
+        }
+
+        function handleChartKeydown(e, idPrefix, renderCallback) {
+            const list = document.getElementById(idPrefix + 'List');
+            if (list.classList.contains('hidden')) {
+                if (e.key === "ArrowDown" || e.key === "Enter") toggleChartDropdown(null, idPrefix);
+                return;
+            }
+
+            let items = list.querySelectorAll('.chart-dropdown-item');
+            if (e.key === "ArrowDown") {
+                currentChartFocus++; addChartActive(items); e.preventDefault();
+            } else if (e.key === "ArrowUp") {
+                currentChartFocus--; addChartActive(items); e.preventDefault();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (currentChartFocus > -1 && items[currentChartFocus]) {
+                    items[currentChartFocus].click();
+                }
+            }
+        }
+
+        function addChartActive(x) {
+            if (!x) return false;
+            removeChartActive(x);
+            if (currentChartFocus >= x.length) currentChartFocus = 0;
+            if (currentChartFocus < 0) currentChartFocus = (x.length - 1);
+            x[currentChartFocus].classList.add("kb-active-item");
+            x[currentChartFocus].scrollIntoView({ behavior: 'auto', block: 'nearest' });
+        }
+
+        function removeChartActive(x) {
             for (let i = 0; i < x.length; i++) {
                 x[i].classList.remove("kb-active-item");
             }
