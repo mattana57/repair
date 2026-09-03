@@ -940,7 +940,7 @@ $dept_icons = [
                         </div>
                         <div class="w-full md:w-auto relative">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchInput" placeholder="Search ticket or status..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
+                            <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
                         </div>
                     </div>
                     <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative">
@@ -1700,11 +1700,11 @@ $dept_icons = [
                             </div>
                             
                             <div id="reportDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
-                                <div class="report-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 cursor-pointer transition-colors flex items-center" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onmousedown="selectReportTech('all', 'Overall System (All Technicians)')">
+                                <div class="report-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 cursor-pointer transition-colors flex items-center" data-value="all" data-search="overallsystemalltechniciansทั้งหมดทุกแผนก" onmousedown="selectReportTech('all', 'รวมทุกฝ่ายงาน (ทั้งหมด)')">
                                     <div class="w-8 h-8 rounded-full bg-indigo-200/50 flex items-center justify-center mr-3 text-indigo-600">
                                         <i class="fas fa-globe"></i>
                                     </div>
-                                    Overall System (All Technicians)
+                                    รวมทุกฝ่ายงาน (ทั้งหมด)
                                 </div>
                                 <?php 
                                     foreach ($techs_by_dept as $dept => $techs) {
@@ -2573,7 +2573,7 @@ $dept_icons = [
             }
             
             const reportInput = document.getElementById('reportSearchInput');
-            if(reportInput) reportInput.value = 'Overall System (All Technicians)';
+            if(reportInput) reportInput.value = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
             
             if(document.getElementById('topReportersList')) {
             renderTopReporters();
@@ -3548,7 +3548,7 @@ $dept_icons = [
             Swal.fire({ title: 'ยืนยันลบผู้แจ้ง?', text: "ประวัติการแจ้งซ่อมทั้งหมดของบุคคลนี้จะถูกเคลียร์ชื่อออก!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
         }
 
-        let currentSelectedName = 'Overall System (All Technicians)';
+        let currentSelectedName = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
 
         function focusReportSearch(e) {
             e.target.value = ''; 
