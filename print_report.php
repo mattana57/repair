@@ -479,7 +479,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         </p>
                     </div>
 
-                    <div class="mt-auto pt-10 text-right pr-5 signature-block">
+                    <div class="mt-12 pt-4 text-right pr-5 signature-block">
                         <div class="inline-block text-center text-[15px] text-black leading-relaxed">
                             <div class="mb-3">ลงชื่อ..........................................................ผู้รายงาน</div>
                             <div class="font-bold mb-1">( <?php echo $reporter_name; ?> )</div>
@@ -624,7 +624,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <?php endif; ?>
 
                     <?php if ($page_index === $total_pages - 1): ?>
-                        <div class="mt-auto pt-10 text-right pr-5 signature-block">
+                        <div class="mt-12 pt-4 text-right pr-5 signature-block">
                             <div class="inline-block text-center text-[15px] text-black leading-relaxed">
                                 <div class="mb-3">ลงชื่อ..........................................................ผู้รายงาน</div>
                                 <div class="font-bold mb-1">( <?php echo $reporter_name; ?> )</div>
