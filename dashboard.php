@@ -1255,7 +1255,7 @@ $dept_icons = [
                                             <th class='px-6 py-4 border-0'>Contact</th> 
                                             <th class='px-6 py-4 text-center border-0'>Status / Code</th>
                                             <th class='px-6 py-4 text-center border-0'>Jobs</th>
-                                            <th class='px-6 py-4 text-center border-0'>Action</th>
+                                            <th class='py-4 pl-6 pr-[80px] text-right border-0'>Action</th>
                                         </tr>";
 
                                     foreach($techs as $t) {
