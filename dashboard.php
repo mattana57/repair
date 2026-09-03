@@ -3723,7 +3723,8 @@ $dept_icons = [
             if (currentReportFocus >= x.length) currentReportFocus = 0;
             if (currentReportFocus < 0) currentReportFocus = (x.length - 1);
             x[currentReportFocus].classList.add("kb-active-item");
-            x[currentReportFocus].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // เปลี่ยนเป็น auto เพื่อให้ไม่มีแอนิเมชันหน่วงเวลากดปุ่มลูกศรค้าง
+            x[currentReportFocus].scrollIntoView({ behavior: 'auto', block: 'nearest' });
         }
 
         function removeReportActive(x) {

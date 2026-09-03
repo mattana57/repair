@@ -831,8 +831,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             if (currentFocus >= x.length) currentFocus = 0; // วนกลับไปบนสุด
             if (currentFocus < 0) currentFocus = (x.length - 1); // วนไปล่างสุด
             x[currentFocus].classList.add("kb-active-item");
-            // บังคับให้ Scrollbar เลื่อนตามลูกศรลงมาด้วย
-            x[currentFocus].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // เปลี่ยนเป็น auto เพื่อให้ไม่มีแอนิเมชันหน่วงเวลากดปุ่มลูกศรค้าง
+            x[currentFocus].scrollIntoView({ behavior: 'auto', block: 'nearest' });
         }
 
         function removeActive(x) {
