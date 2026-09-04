@@ -2703,18 +2703,88 @@ $dept_icons = [
             if(document.getElementById('topReportersList')) {
                 renderTopReporters();
             }
+
+            // ✨ คืนค่าตำแหน่ง Scroll หลังจาก Auto-Refresh กลับมา ✨
+            setTimeout(() => {
+                const savedScrollY = sessionStorage.getItem('pageScrollY');
+                if (savedScrollY !== null) {
+                    window.scrollTo(0, parseInt(savedScrollY));
+                    sessionStorage.removeItem('pageScrollY');
+                }
+
+                const savedRepairsScrollX = sessionStorage.getItem('repairsScrollX');
+                if (savedRepairsScrollX !== null) {
+                    const repairsTableWrap = document.getElementById('repairsTable').parentElement;
+                    if (repairsTableWrap) repairsTableWrap.scrollLeft = parseInt(savedRepairsScrollX);
+                    sessionStorage.removeItem('repairsScrollX');
+                }
+
+                const savedHistoryScrollX = sessionStorage.getItem('historyScrollX');
+                if (savedHistoryScrollX !== null) {
+                    const historyTableBody = document.getElementById('historyTableBody');
+                    if (historyTableBody && historyTableBody.parentElement.parentElement) {
+                        historyTableBody.parentElement.parentElement.scrollLeft = parseInt(savedHistoryScrollX);
+                    }
+                    sessionStorage.removeItem('historyScrollX');
+                }
+
+                // ถ้าก่อนหน้านี้เปิด Modal ประวัติค้างไว้ ให้เปิดขึ้นมาเหมือนเดิม
+                const openModal = sessionStorage.getItem('modalOpen');
+                if (openModal === 'historyModal') {
+                    const titleStr = sessionStorage.getItem('historyModalTitle');
+                    if (titleStr) {
+                        let fullName = titleStr.replace('ประวัติงานช่าง: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
+                        let type = titleStr.includes('ช่าง') ? 'technician' : 'reporter';
+                        viewHistory(fullName, type);
+                        
+                        // คืนค่า Scroll แนวนอนของ Modal อีกครั้งหลังจากเปิด
+                        setTimeout(() => {
+                            const historyWrap = document.getElementById('historyTableBody').parentElement.parentElement;
+                            if (historyWrap && savedHistoryScrollX !== null) {
+                                historyWrap.scrollLeft = parseInt(savedHistoryScrollX);
+                            }
+                        }, 50);
+                    }
+                    sessionStorage.removeItem('modalOpen');
+                    sessionStorage.removeItem('historyModalTitle');
+                }
+            }, 150); // ดีเลย์นิดนึงให้ข้อมูลเรนเดอร์เสร็จก่อน
         });
 
-        // ✨ ระบบ Auto-Refresh ข้อมูลตารางอัตโนมัติเมื่อสลับแท็บกลับมา ✨
+        // ✨ ตรวจจับการคลิกเปิดหน้า Edit เพื่อสั่งให้ระบบเตรียม Refresh ✨
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"]');
+            if (target) {
+                sessionStorage.setItem('needsRefresh', 'true');
+            }
+        });
+
+        // ✨ ระบบ Auto-Refresh ดึงข้อมูลทันทีเมื่อสลับแท็บกลับมา ✨
         document.addEventListener("visibilitychange", () => {
-            // ถ้ายูสเซอร์สลับแท็บกลับมาที่หน้านี้ (state กลายเป็น visible)
             if (document.visibilityState === "visible") {
-                // เก็บค่า Tab ปัจจุบันที่กำลังเปิดอยู่
-                const activeSection = document.querySelector('.section:not(.hidden)');
-                if (activeSection) {
-                    const activeTabId = activeSection.id;
-                    // รีโหลดหน้าเว็บเงียบๆ โดยส่ง Tab ปัจจุบันไปด้วย เพื่อให้อยู่หน้าเดิม
-                    window.location.replace(`dashboard.php?tab=${activeTabId}`);
+                // เช็คว่าก่อนหน้านี้มีการกดไปหน้า Edit หรือไม่ (ป้องกันการรีเฟรชมั่วซั่วเวลาแค่สลับไปดูแท็บอื่น)
+                if (sessionStorage.getItem('needsRefresh') === 'true') {
+                    sessionStorage.removeItem('needsRefresh');
+                    
+                    // บันทึกตำแหน่ง Scroll แกน Y ของหน้าจอ
+                    sessionStorage.setItem('pageScrollY', window.scrollY);
+                    
+                    // บันทึกตำแหน่ง Scroll แนวนอน ของตารางหน้า All Repairs
+                    const repairsTableWrap = document.getElementById('repairsTable').parentElement;
+                    if (repairsTableWrap) {
+                        sessionStorage.setItem('repairsScrollX', repairsTableWrap.scrollLeft);
+                    }
+
+                    // บันทึกตำแหน่ง Scroll แนวนอน ของตารางใน Modal (ถ้าเปิดอยู่)
+                    const historyTableBody = document.getElementById('historyTableBody');
+                    if (historyTableBody && !document.getElementById('historyModal').classList.contains('opacity-0')) {
+                        sessionStorage.setItem('historyScrollX', historyTableBody.parentElement.parentElement.scrollLeft);
+                        sessionStorage.setItem('modalOpen', 'historyModal');
+                        sessionStorage.setItem('historyModalTitle', document.getElementById('historyModalTitle').innerText);
+                    }
+
+                    // สั่งรีโหลดหน้าเว็บเพื่อดึงข้อมูลใหม่
+                    window.location.reload();
                 }
             }
         });
