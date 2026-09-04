@@ -14,7 +14,7 @@ if (isset($_GET['source'])) {
     } elseif ($source === 'reporter_history' && !empty($_GET['reporter'])) {
         $back_url = 'dashboard.php?tab=users&open_reporter=' . urlencode($_GET['reporter']);
         $query_params['reporter'] = $_GET['reporter'];
-    } elseif ($source === 'overview') {
+    } elseif ($source === 'overview' || $source === 'tech_reviews') {
         $back_url = 'dashboard.php?tab=dash';
     }
 }
@@ -381,9 +381,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
             <?php if($is_admin): ?>
-            <button type="button" onclick="window.close();" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto cursor-pointer">
-                <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
-            </button>
+           <button type="button" onclick="goBack();" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto cursor-pointer">
+               <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
+           </button>
             <?php endif; ?>
         </div>
 
@@ -915,6 +915,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     });
                 }
             }
+             // ✅ โค้ดที่ต้องเพิ่มใหม่ (ใส่แทรกไว้ก่อนปิดแท็ก </script> ล่างสุด)
+        function goBack() {
+            const source = "<?php echo isset($_GET['source']) ? $_GET['source'] : ''; ?>";
+                if (source !== '') {
+                    // หากเปิดมาจากกราฟ/Pop-up ให้พากลับไปหน้าเดิม
+                    window.location.href = '<?php echo $back_url; ?>';
+                } else {
+                    // หากเปิดเป็นแท็บใหม่มาจากตารางปกติ ให้ปิดแท็บ
+                    window.close();
+                    // สำรองไว้กรณีไม่ได้เป็น popup
+                    setTimeout(() => { window.location.href = '<?php echo $back_url; ?>'; }, 300);
+                }    
+           }
         });
     </script>
 
@@ -940,7 +953,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             confirmButtonText: 'ตกลง'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.close(); 
+                goBack(); 
             }
         });
     </script>
