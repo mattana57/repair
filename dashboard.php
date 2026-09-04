@@ -3664,12 +3664,15 @@ $dept_icons = [
             
             const linkBtn = document.getElementById('historyModalLinkBtn');
             if (linkBtn) {
-                if (type === 'reporter') {
-                    linkBtn.style.display = ''; // แสดงปุ่มปกติถ้าเป็นผู้แจ้งซ่อม
+                // ✨ เช็คว่าตอนนี้กำลังเปิดหน้า Contacts (id="users") อยู่หรือไม่
+                const isContactsPage = !document.getElementById('users').classList.contains('hidden');
+
+                if (type === 'reporter' && !isContactsPage) {
+                    linkBtn.style.display = ''; // แสดงปุ่มเฉพาะตอนอยู่หน้าอื่น (เช่น หน้า Overview)
                     linkBtn.innerHTML = '<i class="fas fa-address-book md:mr-2"></i> <span class="hidden md:inline">Contacts</span>';
                     linkBtn.onclick = function() { toggleModal('historyModal'); show('users'); };
                 } else {
-                    linkBtn.style.display = 'none'; // ซ่อนปุ่มไปเลยถ้าเป็นประวัติช่าง
+                    linkBtn.style.display = 'none'; // ซ่อนปุ่มถ้าเป็นประวัติช่าง หรือเปิดจากหน้า Contacts อยู่แล้ว
                 }
             }
             
