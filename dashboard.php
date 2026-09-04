@@ -2701,7 +2701,21 @@ $dept_icons = [
             if(reportInput) reportInput.value = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
             
             if(document.getElementById('topReportersList')) {
-            renderTopReporters();
+                renderTopReporters();
+            }
+        });
+
+        // ✨ ระบบ Auto-Refresh ข้อมูลตารางอัตโนมัติเมื่อสลับแท็บกลับมา ✨
+        document.addEventListener("visibilitychange", () => {
+            // ถ้ายูสเซอร์สลับแท็บกลับมาที่หน้านี้ (state กลายเป็น visible)
+            if (document.visibilityState === "visible") {
+                // เก็บค่า Tab ปัจจุบันที่กำลังเปิดอยู่
+                const activeSection = document.querySelector('.section:not(.hidden)');
+                if (activeSection) {
+                    const activeTabId = activeSection.id;
+                    // รีโหลดหน้าเว็บเงียบๆ โดยส่ง Tab ปัจจุบันไปด้วย เพื่อให้อยู่หน้าเดิม
+                    window.location.replace(`dashboard.php?tab=${activeTabId}`);
+                }
             }
         });
         
