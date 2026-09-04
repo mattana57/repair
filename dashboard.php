@@ -1360,7 +1360,8 @@ $dept_icons = [
                                                             <h3 class='font-extrabold text-sm sm:text-base text-white tracking-wide drop-shadow-md leading-tight'>
                                                                 ".htmlspecialchars($dept)."
                                                             </h3>
-                                                            <p class='text-blue-100 text-[9px] sm:text-[10px] font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                                            <!-- ✨ ปรับฟอนต์ให้ใหญ่ขึ้นเพื่อความชัดเจน ✨ -->
+                                                            <p class='text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                                                         </div>
                                                     </div>
                                                     
@@ -1553,7 +1554,8 @@ $dept_icons = [
                                 <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
                                     <?php echo htmlspecialchars($dept_name); ?>
                                 </h3>
-                                <p class="text-blue-100 text-[9px] font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                <!-- ✨ ปรับฟอนต์ให้ใหญ่ขึ้นเพื่อความชัดเจน ✨ -->
+                                <p class="text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                             </div>
                         </div>
                         
