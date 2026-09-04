@@ -600,17 +600,30 @@ $dept_icons = [
             </div>
         </div>
         
+        <?php 
+        $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'dash';
+        $pageTitlesArr = [
+            'dash' => 'Dashboard Overview',
+            'repairs' => 'All Repairs List',
+            'technicians' => 'Team Management',
+            'team_cards' => 'Team Management',
+            'assets' => 'Assets Database',
+            'users' => 'Reporter History',
+            'reports' => 'Official Report'
+        ];
+        $currentTitle = isset($pageTitlesArr[$active_tab]) ? $pageTitlesArr[$active_tab] : 'Dashboard Overview';
+        ?>
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dashboard</p>
-            <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
-            <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
-            <button onclick="show('technicians')" class="nav-btn" id="btn-technicians"><i class="fas fa-user-friends"></i> Team</button>
-            <button onclick="show('team_cards')" class="nav-btn" id="btn-team_cards"><i class="fas fa-id-badge"></i> Technician</button>
+            <button onclick="show('dash')" class="nav-btn <?php echo $active_tab === 'dash' ? 'active-btn' : ''; ?>" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
+            <button onclick="show('repairs')" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?>" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
+            <button onclick="show('technicians')" class="nav-btn <?php echo $active_tab === 'technicians' ? 'active-btn' : ''; ?>" id="btn-technicians"><i class="fas fa-user-friends"></i> Team</button>
+            <button onclick="show('team_cards')" class="nav-btn <?php echo $active_tab === 'team_cards' ? 'active-btn' : ''; ?>" id="btn-team_cards"><i class="fas fa-id-badge"></i> Technician</button>
             
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Management</p>
-            <button onclick="show('assets')" class="nav-btn" id="btn-assets"><i class="fas fa-box-open"></i> Assets</button>
-            <button onclick="show('users')" class="nav-btn" id="btn-users"><i class="fas fa-address-book"></i> Contacts</button>
-            <button onclick="show('reports')" class="nav-btn" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
+            <button onclick="show('assets')" class="nav-btn <?php echo $active_tab === 'assets' ? 'active-btn' : ''; ?>" id="btn-assets"><i class="fas fa-box-open"></i> Assets</button>
+            <button onclick="show('users')" class="nav-btn <?php echo $active_tab === 'users' ? 'active-btn' : ''; ?>" id="btn-users"><i class="fas fa-address-book"></i> Contacts</button>
+            <button onclick="show('reports')" class="nav-btn <?php echo $active_tab === 'reports' ? 'active-btn' : ''; ?>" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
                 <a href="logout.php" class="nav-btn text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -625,7 +638,7 @@ $dept_icons = [
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h3 class="textxl md:text-3xl font-extrabold text-slate-900 font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle">Dashboard Overview</h3>
+                <h3 class="textxl md:text-3xl font-extrabold text-slate-900 font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
             
             <div class="flex items-center">
@@ -645,7 +658,7 @@ $dept_icons = [
 
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             
-            <div id="dash" class="section space-y-6 animate-fade-in no-print">
+            <div id="dash" class="section <?php echo $active_tab === 'dash' ? '' : 'hidden'; ?> space-y-6 animate-fade-in no-print">
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <?php 
@@ -1055,7 +1068,7 @@ $dept_icons = [
              </div>
 
             <!-- ✨ เริ่มต้นส่วนหน้า Transactions ที่หายไป (นำกลับมาให้แล้วครับ!) ✨ -->
-            <div id="repairs" class="section hidden space-y-6 no-print">
+            <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
@@ -1208,7 +1221,7 @@ $dept_icons = [
             </div>
             <!-- ✨ สิ้นสุดส่วนหน้า Transactions ✨ -->
 
-            <div id="technicians" class="section hidden space-y-6 no-print">
+            <div id="technicians" class="section <?php echo $active_tab === 'technicians' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                     <div>
                         
@@ -1471,7 +1484,7 @@ $dept_icons = [
             <!-- ===================================================================================
                  ✨ ส่วนการแสดงผล Team Management (ทำเนียบช่าง - Card View) ✨
                  =================================================================================== -->
-            <div id="team_cards" class="section hidden animate-fade-in no-print">
+            <div id="team_cards" class="section <?php echo $active_tab === 'team_cards' ? '' : 'hidden'; ?> animate-fade-in no-print">
                 
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
@@ -1654,7 +1667,7 @@ $dept_icons = [
                 </div>
             </div>
 
-            <div id="assets" class="section hidden space-y-6 no-print">
+            <div id="assets" class="section <?php echo $active_tab === 'assets' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
@@ -1708,7 +1721,7 @@ $dept_icons = [
                 </div>
             </div>
 
-            <div id="users" class="section hidden space-y-6 no-print">
+            <div id="users" class="section <?php echo $active_tab === 'users' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
@@ -1796,7 +1809,7 @@ $dept_icons = [
                 </div>
             </div>
 
-            <div id="reports" class="section hidden space-y-6 no-print">
+            <div id="reports" class="section <?php echo $active_tab === 'reports' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card p-6 md:p-8">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                         <div>
@@ -2620,6 +2633,9 @@ $dept_icons = [
             if(activeBtn) activeBtn.classList.add('active-btn');
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'System Management';
             
+            // ✨ อัปเดต URL เงียบๆ ให้ตรงกับแท็บที่กดเสมอ เวลา Refresh จะได้กลับมาหน้าเดิมเป๊ะๆ
+            history.replaceState(null, '', '?tab=' + id);
+            
             if (window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
                 document.getElementById('sidebarOverlay').classList.add('hidden');
@@ -2760,57 +2776,52 @@ $dept_icons = [
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            // โค้ดส่วน URL params (เราจะคืนค่าเดิม)
+            // ✨ คืนค่า Scroll ทันทีเมื่อโหลดหน้าเว็บเสร็จ
+            setTimeout(() => {
+                const savedScrollY = sessionStorage.getItem('pageScrollY');
+                if (savedScrollY !== null) {
+                    window.scrollTo(0, parseInt(savedScrollY));
+                    sessionStorage.removeItem('pageScrollY');
+                }
+
+                const savedRepairsScrollX = sessionStorage.getItem('repairsScrollX');
+                if (savedRepairsScrollX !== null) {
+                    const repairsTableWrap = document.getElementById('repairsTable').parentElement;
+                    if (repairsTableWrap) repairsTableWrap.scrollLeft = parseInt(savedRepairsScrollX);
+                    sessionStorage.removeItem('repairsScrollX');
+                }
+
+                const openModal = sessionStorage.getItem('modalOpen');
+                if (openModal === 'historyModal') {
+                    const titleStr = sessionStorage.getItem('historyModalTitle');
+                    if (titleStr) {
+                        let fullName = titleStr.replace('ประวัติงานช่าง: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
+                        let type = titleStr.includes('ช่าง') ? 'technician' : 'reporter';
+                        viewHistory(fullName, type);
+                        
+                        setTimeout(() => {
+                            const savedHistoryScrollX = sessionStorage.getItem('historyScrollX');
+                            const historyTableBody = document.getElementById('historyTableBody');
+                            if (historyTableBody && savedHistoryScrollX !== null) {
+                                historyTableBody.parentElement.parentElement.scrollLeft = parseInt(savedHistoryScrollX);
+                            }
+                            sessionStorage.removeItem('historyScrollX');
+                        }, 50);
+                    }
+                    sessionStorage.removeItem('modalOpen');
+                    sessionStorage.removeItem('historyModalTitle');
+                }
+            }, 100);
+
+            // เรนเดอร์กราฟเฉพาะถ้าอยู่หน้า dash
             const urlParams = new URLSearchParams(window.location.search);
-            let tab = urlParams.get('tab');
-            
-            // เช็คว่าถ้าเพิ่งกลับมาจากการ Refresh แบบด่วนๆ มีการบันทึกหน้าเก่าไว้มั้ย
-            const savedTab = sessionStorage.getItem('activeTabBeforeRefresh');
-            if (savedTab) {
-                tab = savedTab;
-                sessionStorage.removeItem('activeTabBeforeRefresh');
-                
-                // คืนค่าตำแหน่งการ Scroll คืนมาให้เป๊ะ
-                setTimeout(() => {
-                    const savedScrollY = sessionStorage.getItem('pageScrollY');
-                    if (savedScrollY !== null) {
-                        window.scrollTo(0, parseInt(savedScrollY));
-                        sessionStorage.removeItem('pageScrollY');
-                    }
-
-                    const savedRepairsScrollX = sessionStorage.getItem('repairsScrollX');
-                    if (savedRepairsScrollX !== null) {
-                        const repairsTableWrap = document.getElementById('repairsTable').parentElement;
-                        if (repairsTableWrap) repairsTableWrap.scrollLeft = parseInt(savedRepairsScrollX);
-                        sessionStorage.removeItem('repairsScrollX');
-                    }
-
-                    // ตรวจสอบว่าต้องเปิด Modal ประวัติไหม
-                    const openModal = sessionStorage.getItem('modalOpen');
-                    if (openModal === 'historyModal') {
-                        const titleStr = sessionStorage.getItem('historyModalTitle');
-                        if (titleStr) {
-                            let fullName = titleStr.replace('ประวัติงานช่าง: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
-                            let type = titleStr.includes('ช่าง') ? 'technician' : 'reporter';
-                            viewHistory(fullName, type);
-                            
-                            setTimeout(() => {
-                                const savedHistoryScrollX = sessionStorage.getItem('historyScrollX');
-                                const historyTableBody = document.getElementById('historyTableBody');
-                                if (historyTableBody && savedHistoryScrollX !== null) {
-                                    historyTableBody.parentElement.parentElement.scrollLeft = parseInt(savedHistoryScrollX);
-                                }
-                                sessionStorage.removeItem('historyScrollX');
-                            }, 50);
-                        }
-                        sessionStorage.removeItem('modalOpen');
-                        sessionStorage.removeItem('historyModalTitle');
-                    }
-                }, 100);
-            }
-
+            let tab = urlParams.get('tab') || 'dash';
             window.chartsRendered = false;
-            if(tab) { show(tab); } else { show('dash'); }
+            
+            if(tab === 'dash') {
+                renderAllCharts();
+                window.chartsRendered = true;
+            }
 
             const inputElement = document.getElementById('searchInput');
             if(inputElement) {
@@ -2818,14 +2829,9 @@ $dept_icons = [
                     let filter = this.value.toLowerCase();
                     let activeSection = document.querySelector('.section:not(.hidden)');
                     if (!activeSection) return;
-                    
                     let rows = activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)');
                     rows.forEach(row => {
-                        if (row.innerText.toLowerCase().includes(filter)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
+                        row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
                     });
                 });
             }
@@ -2833,31 +2839,24 @@ $dept_icons = [
             const reportInput = document.getElementById('reportSearchInput');
             if(reportInput) reportInput.value = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
             
-            if(document.getElementById('topReportersList')) {
-                renderTopReporters();
-            }
+            if(document.getElementById('topReportersList')) renderTopReporters();
         });
 
-        // ตรวจจับการคลิกไปหน้า Edit
+        // ✨ ตรวจจับการคลิกเปิดหน้า Edit หรือ View เพื่อสั่งเตรียม Refresh
         document.addEventListener('click', function(e) {
-            const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"]');
+            const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"], a[href*="view_repair.php"]');
             if (target) {
                 sessionStorage.setItem('needsRefresh', 'true');
             }
         });
 
-        // โหลดข้อมูลเนียนๆ เมื่อสลับแท็บกลับมา
+        // ✨ โหลดข้อมูลเนียนๆ เมื่อสลับแท็บกลับมา โดยระบุ URL ของหน้าเดิม
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === "visible") {
                 if (sessionStorage.getItem('needsRefresh') === 'true') {
                     sessionStorage.removeItem('needsRefresh');
                     
                     // บันทึกตำแหน่งและแท็บไว้
-                    const activeSection = document.querySelector('.section:not(.hidden)');
-                    if (activeSection) {
-                        sessionStorage.setItem('activeTabBeforeRefresh', activeSection.id);
-                    }
-                    
                     sessionStorage.setItem('pageScrollY', window.scrollY);
                     
                     const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
@@ -2872,8 +2871,10 @@ $dept_icons = [
                         sessionStorage.setItem('historyModalTitle', document.getElementById('historyModalTitle').innerText);
                     }
 
-                    // สั่งรีเฟรชตรงๆ (ข้อมูลแท็บและ Scroll ถูกจำไว้ใน Session Storage แล้ว)
-                    window.location.reload();
+                    const activeSection = document.querySelector('.section:not(.hidden)');
+                    const activeTabId = activeSection ? activeSection.id : 'dash';
+                    // สั่งให้เซิร์ฟเวอร์ดึงข้อมูลหน้าล่าสุดมาให้ตรงๆ เลย
+                    window.location.replace(`dashboard.php?tab=${activeTabId}`);
                 }
             }
         });
