@@ -2796,8 +2796,10 @@ $dept_icons = [
                         sessionStorage.setItem('historyModalTitle', document.getElementById('historyModalTitle').innerText);
                     }
 
-                    // สั่งรีโหลดหน้าเว็บเพื่อดึงข้อมูลใหม่
-                    window.location.reload();
+                    // ✨ เช็คว่าเปิดแท็บไหนอยู่ แล้วสั่งรีโหลดกลับมาหน้าเดิมเป๊ะๆ ✨
+                    const activeSection = document.querySelector('.section:not(.hidden)');
+                    const activeTabId = activeSection ? activeSection.id : 'dash';
+                    window.location.replace(`dashboard.php?tab=${activeTabId}`);
                 }
             }
         });
