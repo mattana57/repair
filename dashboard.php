@@ -2783,7 +2783,7 @@ $dept_icons = [
                     sessionStorage.setItem('pageScrollY', window.scrollY);
                     
                     // บันทึกตำแหน่ง Scroll แนวนอน ของตารางหน้า All Repairs
-                    const repairsTableWrap = document.getElementById('repairsTable').parentElement;
+                    const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
                     if (repairsTableWrap) {
                         sessionStorage.setItem('repairsScrollX', repairsTableWrap.scrollLeft);
                     }
@@ -2796,10 +2796,10 @@ $dept_icons = [
                         sessionStorage.setItem('historyModalTitle', document.getElementById('historyModalTitle').innerText);
                     }
 
-                    // ✨ เช็คว่าเปิดแท็บไหนอยู่ แล้วสั่งรีโหลดกลับมาหน้าเดิมเป๊ะๆ ✨
+                    // ✨ เช็คว่าเปิดแท็บไหนอยู่ แล้วเปลี่ยน URL พร้อม parameter โหลดหน้าใหม่เลย! ✨
                     const activeSection = document.querySelector('.section:not(.hidden)');
                     const activeTabId = activeSection ? activeSection.id : 'dash';
-                    window.location.replace(`dashboard.php?tab=${activeTabId}`);
+                    window.location.href = `dashboard.php?tab=${activeTabId}`;
                 }
             }
         });
