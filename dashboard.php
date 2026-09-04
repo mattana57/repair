@@ -3327,7 +3327,8 @@ $dept_icons = [
                                     'text-indigo-500 bg-indigo-50 border-indigo-100';
 
                     // ✨ เปลี่ยนไอคอนเป็นเซ็ต 'เหรียญรางวัล' (medal) ที่ทิศทางริบบิ้นชี้ลงเหมือนกันทั้งหมด
-                    let rankIcon = index === 0 ? '<i class="fas fa-medal text-xl drop-shadow-sm"></i>' :
+                    // ✨ คืนถ้วยรางวัลให้อันดับ 1 (ทอง) และใช้เหรียญรางวัลทิศทางเดียวกันให้อันดับ 2-3 ✨
+                    let rankIcon = index === 0 ? '<i class="fas fa-trophy text-lg drop-shadow-sm"></i>' :
                                    index === 1 ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>' :
                                    index === 2 ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>' :
                                    `<span class="text-sm font-black">#${index + 1}</span>`;
