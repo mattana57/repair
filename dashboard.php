@@ -2088,36 +2088,35 @@ $dept_icons = [
 
     <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('historyModal')"></div>
-        <div class="modal-container bg-white w-full max-w-5xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[85vh] max-h-[850px]">
+        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[85vh] max-h-[850px]">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
-                <p class="text-lg font-extrabold text-slate-800 truncate pr-4" id="historyModalTitle">History</p>
-                <div class="flex items-center gap-6 shrink-0">
-                    <button id="historyModalLinkBtn" class="text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer">
-                        <i class="fas fa-address-book mr-2"></i> Contacts
+                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate pr-4" id="historyModalTitle">History</p>
+                <div class="flex items-center gap-4 md:gap-6 shrink-0">
+                    <button id="historyModalLinkBtn" class="text-[11px] md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 md:px-5 py-2 md:py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer">
+                        <i class="fas fa-address-book md:mr-2"></i> <span class="hidden md:inline">Contacts</span>
                     </button>
-                    <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-10 h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50"><i class="fas fa-times text-lg"></i></button>
+                    <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50"><i class="fas fa-times text-base md:text-lg"></i></button>
                 </div>
             </div>
-           <div class="p-6 overflow-y-auto flex-1 bg-white">
-                <div class="w-full overflow-x-auto rounded-2xl border border-slate-100 shadow-sm max-h-[65vh] overflow-y-auto custom-scrollbar relative">
-                    <table class="w-full text-left whitespace-nowrap min-w-[1100px]">
+            <div class="p-0 md:p-6 overflow-hidden flex-1 bg-[#f8fafc]">
+                <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
+                    <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
-                                <th class="px-5 py-4">Date / Time</th>
-                                <th class="px-5 py-4">Ticket No.</th>
-                                <th class="px-5 py-4">Reporter</th>
-                                <th class="px-5 py-4">Equipment</th>
-                                <th class="px-5 py-4">Department</th>
-                                <th class="px-5 py-4">Technician</th>
-                                <!-- ✨ สลับคอลัมน์เหมือนหน้าตารางหลัก ✨ -->
-                                <th class="px-5 py-4">Received At</th>
-                                <th class="px-5 py-4">Root Cause</th>
-                                <th class="px-5 py-4 text-center">Status</th>
-                                <th class="px-5 py-4">Completed At</th>
-                                <th class="px-5 py-4 text-center">Action</th>
+                                <th class="px-6 py-4">Date / Time</th>
+                                <th class="px-6 py-4">Ticket No.</th>
+                                <th class="px-6 py-4">Reporter</th>
+                                <th class="px-6 py-4">Equipment</th>
+                                <th class="px-6 py-4">Department</th>
+                                <th class="px-6 py-4">Technician</th>
+                                <th class="px-6 py-4">Received At</th>
+                                <th class="px-6 py-4">Root Cause</th>
+                                <th class="px-6 py-4 text-center">Status</th>
+                                <th class="px-6 py-4">Completed At</th>
+                                <th class="px-6 py-4 text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="text-sm divide-y divide-slate-50" id="historyTableBody">
+                        <tbody class="text-sm divide-y divide-slate-100 bg-white" id="historyTableBody">
                         </tbody>
                     </table>
                 </div>
@@ -3529,15 +3528,21 @@ $dept_icons = [
             toggleModal('editReporterModal');
         }
 
+        // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
         function viewHistory(fullName, type) {
             const tbody = document.getElementById('historyTableBody'); 
             tbody.innerHTML = '';
 
-            const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
+            const userRepairs = allRepairs.filter(r => {
+                let nameToCompare = (type === 'reporter') ? r.reporter_name : r.technician_name;
+                if (!nameToCompare) return false;
+                nameToCompare = nameToCompare.trim();
+                return nameToCompare === fullName;
+            });
 
             if(userRepairs.length === 0) {
-                let emptyMsg = type === 'reporter' ? 'No repair history found.' : 'No tasks assigned yet.';
-                tbody.innerHTML = `<tr><td colspan="11" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
+                let emptyMsg = type === 'reporter' ? 'ยังไม่มีประวัติการแจ้งซ่อม' : 'ยังไม่เคยรับงานซ่อมในระบบ';
+                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-16 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
             } else {
                 userRepairs.forEach(r => {
                     let statusClass = 'badge-pending';
@@ -3545,10 +3550,12 @@ $dept_icons = [
                     else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'badge-success';
 
                     let statusText = formatValJS(r.status);
+                    let ticket_no = formatValJS(r.ticket_no);
 
+                    // สร้างรูปแบบวันที่รับแจ้ง (Date / Time)
                     let createdDate = '-';
                     let createdTime = '';
-                    if(r.created_at) {
+                    if(r.created_at && r.created_at != '0000-00-00 00:00:00') {
                         let parts = r.created_at.split(' ');
                         createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
                         createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
@@ -3556,6 +3563,7 @@ $dept_icons = [
                         createdDate = "<span class='text-rose-500 font-bold'>-</span>";
                     }
                     
+                    // ข้อมูลช่าง
                     let techNameHtml = "<span class='text-rose-500 font-bold'>-</span>";
                     if (r.technician_name && r.technician_name !== '-') {
                         let info = techInfoMap[r.technician_name] || { th: r.technician_name, eng: '', pos: '' };
@@ -3564,16 +3572,7 @@ $dept_icons = [
                     }
                     let techName = techNameHtml;
 
-                    let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-rose-500 font-bold'>-</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
-
-                    let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
-                    let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
-                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
-
-                    let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
-                    let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
-                    
+                    // สังกัด/แผนก
                     let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
                     let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
                     if (r.technician_name && r.technician_name !== '-') {
@@ -3583,8 +3582,17 @@ $dept_icons = [
                             deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
                         }
                     }
-                    
-                    // ✨ ดึงชื่อจริงและเบอร์โทรมาแสดง ✨
+
+                    // เวลาเข้างานและเสร็จงาน
+                    let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
+                    let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
+                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
+
+                    let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
+                    let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
+                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
+
+                    // ผู้แจ้งซ่อม
                     let rNameRaw = r.reporter_name;
                     let dispName = rNameRaw;
                     if (lineUsersMap[rNameRaw] && lineUsersMap[rNameRaw].real_name) {
@@ -3593,39 +3601,50 @@ $dept_icons = [
                     let rName = formatValJS(dispName);
                     let rPhone = formatValJS(r.phone_number);
                     
-                    let tNo = formatValJS(r.ticket_no);
+                    // รายละเอียด
                     let eqType = formatValJS(r.equipment_type);
                     let pDesc = formatValJS(r.problem_desc);
+                    let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-rose-500 font-bold'>-</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
 
-                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                    let imageIcon = "";
+                    if(r.image_path && r.image_path !== '') {
+                        imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
+                    }
+
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
+                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
                             ${createdTime}
                         </td>
-                        <td class="px-5 py-4 align-top font-mono font-semibold text-slate-600">${tNo}</td>
-                        <td class="px-5 py-4 align-top">
-                            <div class="text-slate-800 font-bold">${rName}</div>
-                            <div class="text-slate-500 text-[11px] font-medium mt-0.5">${rPhone}</div>
+                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${ticket_no}</td>
+                        <td class="px-6 py-4 align-top">
+                            <div class='flex items-center'>
+                                <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas fa-user text-xs text-slate-400'></i></div>
+                                <div>
+                                    <div class="text-slate-800 font-bold">${rName}</div>
+                                    <div class="text-slate-500 text-[11px] font-medium mt-0.5">${rPhone}</div>
+                                </div>
+                            </div>
                         </td>
-                        <td class="px-5 py-4 align-top">
-                            <div class="text-slate-800 font-bold">${eqType}</div>
+                        <td class="px-6 py-4 align-top">
+                            <div class="text-slate-800 font-bold">${eqType} ${imageIcon}</div>
                             <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${pDesc.replace(/<[^>]*>?/gm, '')}">${pDesc}</div>
                         </td>
-                        <td class="px-5 py-4 align-top">${deptEng}</td>
-                        <td class="px-5 py-4 align-top">${techName}</td>
-                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                        <td class="px-6 py-4 align-top">${deptEng}</td>
+                        <td class="px-6 py-4 align-top">${techName}</td>
+                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class='font-medium text-slate-700'>${received_date}</div>
                             ${received_time}
                         </td>
-                        <td class="px-5 py-4 align-top">${rootCause}</td>
-                        <td class="px-5 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
-                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                        <td class="px-6 py-4 align-top">${rootCause}</td>
+                        <td class="px-6 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
+                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class='font-medium text-emerald-700'>${completed_date}</div>
                             ${completed_time}
                         </td>
-                        <td class="px-5 py-4 align-middle text-center">
+                        <td class="px-6 py-4 align-middle text-center">
                             <div class='flex items-center justify-center'>
-                                <a target='_blank' href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                <a target='_blank' href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='Edit'><i class='fas fa-pen-to-square'></i></a>
                             </div>
                         </td>
                     </tr>`;
@@ -3642,7 +3661,7 @@ $dept_icons = [
             if (linkBtn) {
                 if (type === 'reporter') {
                     linkBtn.style.display = ''; // แสดงปุ่มปกติถ้าเป็นผู้แจ้งซ่อม
-                    linkBtn.innerHTML = '<i class="fas fa-address-book mr-2"></i> Contacts';
+                    linkBtn.innerHTML = '<i class="fas fa-address-book md:mr-2"></i> <span class="hidden md:inline">Contacts</span>';
                     linkBtn.onclick = function() { toggleModal('historyModal'); show('users'); };
                 } else {
                     linkBtn.style.display = 'none'; // ซ่อนปุ่มไปเลยถ้าเป็นประวัติช่าง
