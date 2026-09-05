@@ -825,7 +825,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
         }
 
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElemenSt.classList.add('dark');
+            document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
