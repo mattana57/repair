@@ -317,18 +317,19 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
 
                         <!-- Dropdown ปีแบบกำหนดเอง -->
                         <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
-                            <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
-                                <span id="yearDisplayText" class="truncate"><?php echo isset($_GET['year']) ? 'พ.ศ. ' . ($selected_year + 543) : 'ปี (พ.ศ.)'; ?></span>
-                                <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
+                            <div class="flex items-center justify-between w-full bg-white text-slate-700 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
+                                <span id="yearDisplayText" class="truncate"><?php echo ($selected_year > 0) ? 'พ.ศ. ' . ($selected_year + 543) : 'ปี (พ.ศ.)'; ?></span>
+                                <i class="fas fa-caret-down text-slate-400 ml-2"></i>
                             </div>
-                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar">
-                                <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 dark:bg-slate-800 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl'>
-                                    <span class='text-[11px] font-extrabold text-indigo-600 dark:text-indigo-300 tracking-wide'>ปี (พ.ศ.)</span>
+                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar">
+                                <!-- ✨ ทำให้หัวข้อ "ปี (พ.ศ.)" กดได้เพื่อเคลียร์ค่า ✨ -->
+                                <div class='year-dropdown-item flex justify-center items-center px-4 py-2 mb-1 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer transition-colors <?php echo ($selected_year == 0) ? "bg-indigo-100 text-indigo-700" : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"; ?>' data-value='0' data-display='ปี (พ.ศ.)' onclick="selectYear(0, 'ปี (พ.ศ.)')">
+                                    <span class='text-[11px] font-extrabold tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                 </div>
                                 <?php
                                 foreach($available_years as $y) {
                                     $thai_y = $y + 543;
-                                    $activeClass = ($selected_year == $y) ? 'bg-indigo-50 dark:bg-slate-600 text-indigo-600 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300';
+                                    $activeClass = ($selected_year == $y) ? 'bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-slate-100 hover:text-indigo-600';
                                     echo "<div class='year-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-xs font-bold cursor-pointer transition-all {$activeClass}' data-value='$y' data-display='พ.ศ. {$thai_y}' onclick=\"selectYear($y, 'พ.ศ. {$thai_y}')\">พ.ศ. {$thai_y}</div>";
                                 }
                                 ?>
@@ -411,8 +412,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                         <h2 class="text-xl font-bold text-slate-900">รายงานสรุปผลการปฏิบัติงานซ่อมบำรุงครุภัณฑ์</h2>
                         <p class="text-sm font-semibold text-slate-700 mt-1">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
                         <p class="text-xs text-slate-600 mt-1">
-                            <strong>ประจำเดือน:</strong> <?php echo $thai_months[$selected_month]; ?> พ.ศ. <?php echo $selected_year + 543; ?> <br>
-                            <strong>ช่างผู้รับผิดชอบ:</strong> 
+                            <strong>ประจำเดือน:</strong> <?php echo ($selected_month > 0) ? $thai_months[$selected_month] : 'รวมทุกเดือน'; ?> <?php echo ($selected_year > 0) ? ' พ.ศ. ' . ($selected_year + 543) : ' (รวมทุกปี)'; ?> <br>
+                            <strong>ช่างผู้รับผิดชอบ:</strong>
                             <?php 
                                 if ($selected_tech === 'all') {
                                     echo 'เจ้าหน้าที่ช่างทุกคน (ภาพรวมคณะ)';
