@@ -915,20 +915,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     });
                 }
             }
-             // ✅ โค้ดที่ต้องเพิ่มใหม่ (ใส่แทรกไว้ก่อนปิดแท็ก </script> ล่างสุด)
+        }); // ✅ ปิด Form ให้เรียบร้อยตรงนี้ก่อน
+
+        // ✅ วาง goBack ไว้ด้านนอกสุดแบบนี้ ปุ่มถึงจะมองเห็นและกดได้
         function goBack() {
             const source = "<?php echo isset($_GET['source']) ? $_GET['source'] : ''; ?>";
-                if (source !== '') {
-                    // หากเปิดมาจากกราฟ/Pop-up ให้พากลับไปหน้าเดิม
-                    window.location.href = '<?php echo $back_url; ?>';
-                } else {
-                    // หากเปิดเป็นแท็บใหม่มาจากตารางปกติ ให้ปิดแท็บ
-                    window.close();
-                    // สำรองไว้กรณีไม่ได้เป็น popup
-                    setTimeout(() => { window.location.href = '<?php echo $back_url; ?>'; }, 300);
-                }    
-           }
-        });
+            if (source !== '') {
+                // หากเปิดมาจากกราฟ/Pop-up ให้พากลับไปหน้าเดิม
+                window.location.href = '<?php echo $back_url; ?>';
+            } else {
+                // หากเปิดเป็นแท็บใหม่มาจากตารางปกติ ให้ปิดแท็บ
+                window.close();
+                // สำรองไว้กรณีไม่ได้เป็น popup
+                setTimeout(() => { window.location.href = '<?php echo $back_url; ?>'; }, 300);
+            }    
+        }
     </script>
 
     <?php if($show_asset_alert): ?>
