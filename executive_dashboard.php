@@ -257,7 +257,7 @@ $pageTitles = [
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h2 class="text-2xl font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle">Dashboard Overview</h2>
+                <h3 class="text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm" id="headerTitle">Dashboard Overview</h3>
             </div>
 
             <div class="flex items-center space-x-3 md:space-x-6">
@@ -269,7 +269,7 @@ $pageTitles = [
                         <span class="block text-[11px] text-indigo-100 font-semibold"><?php echo htmlspecialchars($current_user_role); ?></span>
                     </div>
                     <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white overflow-hidden border border-white/30 shadow-inner backdrop-blur-sm">
-                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($current_user_name); ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($current_username); ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
             </div>
