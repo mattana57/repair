@@ -2275,7 +2275,7 @@ $dept_icons = [
                     let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
                     let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
 
-                    container.innerHTML += `<div onclick="openReviewTicket(${rev.id})" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                    container.innerHTML += `<div onclick="window.open('update_repair.php?id=${rev.id}&source=tech_reviews', '_blank')" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
                                 <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
                             </div>
@@ -2294,15 +2294,6 @@ $dept_icons = [
                           </div>`;
                 });
             }
-        }
-
-        function openReviewTicket(id) {
-            sessionStorage.setItem('reopenTechReviewsModal', 'true');
-            sessionStorage.setItem('tr_dept', document.getElementById('techReviewsModalDept').innerText);
-            sessionStorage.setItem('tr_tech', document.getElementById('modalTechSelector').value);
-            sessionStorage.setItem('tr_month', document.getElementById('ratingMonth').value);
-            sessionStorage.setItem('tr_year', document.getElementById('ratingYear').value);
-            window.location.href = 'update_repair.php?id=' + id + '&source=tech_reviews';
         }
 
         function formatValJS(val) {
