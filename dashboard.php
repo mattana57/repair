@@ -2296,9 +2296,9 @@ $dept_icons = [
             }
         }
 
-        // ✨ เปิดแท็บใหม่แบบไร้ร่องรอย: ไม่ส่งค่า source เพื่อให้ตอนกดกลับ แท็บมันปิดตัวเองลงทันที และหน้า Dashboard เดิมจะหยุดนิ่งไม่รีเฟรช 100% ✨
+        // ✨ เปิดแท็บใหม่แบบมีรหัสลับ: ส่งค่า source ไปด้วย เพื่อสั่งให้แท็บมันปิดตัวเองลงทันที 100% ไม่โหลดหน้าซ้อนทับ ✨
         function openReviewTab(id) {
-            window.open('update_repair.php?id=' + id, '_blank');
+            window.open('update_repair.php?id=' + id + '&source=tech_reviews', '_blank');
         }
 
         function formatValJS(val) {
@@ -3891,7 +3891,7 @@ $dept_icons = [
                         </td>
                         <td class="px-6 py-4 align-middle text-center">
                             <div class='flex items-center justify-center'>
-                                <a target='_blank' href='update_repair.php?id=${r.id}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='Edit'><i class='fas fa-pen-to-square'></i></a>
+                                <div onclick="openReviewTab(${r.id})" class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='Edit'><i class='fas fa-pen-to-square'></i></div>
                             </div>
                         </td>
                     </tr>`;
