@@ -2835,6 +2835,29 @@ $dept_icons = [
                     sessionStorage.removeItem('modalOpen');
                     sessionStorage.removeItem('historyModalTitle');
                 }
+
+                // ✨ จำลองเปิด Pop-up รีวิวช่างคืนให้อัตโนมัติ ✨
+                const reopenReviews = sessionStorage.getItem('reopenTechReviewsModal');
+                if (reopenReviews === 'true') {
+                    sessionStorage.removeItem('reopenTechReviewsModal');
+                    const trDept = sessionStorage.getItem('tr_dept');
+                    const trTech = sessionStorage.getItem('tr_tech');
+                    const trMonth = sessionStorage.getItem('tr_month');
+                    const trYear = sessionStorage.getItem('tr_year');
+                    
+                    if(trMonth) document.getElementById('ratingMonth').value = trMonth;
+                    if(trYear) document.getElementById('ratingYear').value = trYear;
+                    
+                    setTimeout(() => {
+                        openTechReviewsModal(trDept, trMonth, trYear);
+                        setTimeout(() => {
+                            if (trTech) {
+                                document.getElementById('modalTechSelector').value = trTech;
+                                changeModalTech(trTech);
+                            }
+                        }, 200);
+                    }, 300);
+                }
             }, 100);
 
             // เรนเดอร์กราฟเฉพาะถ้าอยู่หน้า dash
@@ -2898,6 +2921,16 @@ $dept_icons = [
                         sessionStorage.setItem('historyScrollX', historyTableBody.parentElement.parentElement.scrollLeft);
                         sessionStorage.setItem('modalOpen', 'historyModal');
                         sessionStorage.setItem('historyModalTitle', document.getElementById('historyModalTitle').innerText);
+                    }
+
+                    // ✨ ตรวจสอบว่า Pop-up รีวิวช่างเปิดอยู่หรือไม่ ถ้าเปิดอยู่ให้จำค่าไว้ ✨
+                    const techReviewsModal = document.getElementById('techReviewsModal');
+                    if (techReviewsModal && !techReviewsModal.classList.contains('opacity-0')) {
+                        sessionStorage.setItem('reopenTechReviewsModal', 'true');
+                        sessionStorage.setItem('tr_dept', document.getElementById('techReviewsModalDept').innerText);
+                        sessionStorage.setItem('tr_tech', document.getElementById('modalTechSelector').value);
+                        sessionStorage.setItem('tr_month', document.getElementById('ratingMonth').value);
+                        sessionStorage.setItem('tr_year', document.getElementById('ratingYear').value);
                     }
 
                     // สั่งรีเฟรชตรงๆ (ข้อมูลแท็บและ Scroll ถูกจำไว้ใน Session Storage แล้ว)
