@@ -1429,6 +1429,15 @@ $pageTitles = [
 
             const selector = document.getElementById('modalTechSelector');
             selector.innerHTML = '';
+            
+            // ✨ เติมคลาส custom-select เพื่อดึงรูปลูกศรกลับมาตามรูป image_0dccac.png เป๊ะๆ ✨
+            selector.className = "custom-select w-max min-w-[200px] max-w-[320px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
+            
+            // เคลียร์ style เก่าทิ้ง เพื่อให้คลาส custom-select ทำงานได้สมบูรณ์แบบ
+            selector.style.backgroundImage = "";
+            selector.style.backgroundRepeat = "";
+            selector.style.backgroundPosition = "";
+            selector.style.backgroundSize = "";
 
             if(techArr.length === 0) {
                 selector.style.display = 'none';
