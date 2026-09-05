@@ -370,12 +370,13 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         <!-- Dropdown เดือนแบบกำหนดเอง -->
                         <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
-                                <span id="monthDisplayText" class="truncate"><?php echo isset($_GET['month']) ? $thai_months[$selected_month] : 'เดือน'; ?></span>
+                                <span id="monthDisplayText" class="truncate"><?php echo ($selected_month > 0 && isset($thai_months[$selected_month])) ? $thai_months[$selected_month] : 'เดือน'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
                             <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl hidden flex-col pb-2">
-                                <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 dark:bg-slate-800 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl'>
-                                    <span class='text-[11px] font-extrabold text-indigo-600 dark:text-indigo-300 tracking-wide'>เดือน</span>
+                                <!-- ✨ เปลี่ยนให้หัวข้อ "เดือน" กดได้เพื่อเคลียร์ค่า (ค้นหาทุกเดือน) ✨ -->
+                                <div class='month-dropdown-item flex justify-center items-center px-4 py-2 mb-1 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl cursor-pointer transition-colors <?php echo ($selected_month == 0) ? "bg-indigo-100 dark:bg-slate-600 text-indigo-700 dark:text-indigo-300" : "bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-slate-700"; ?>' data-value='0' data-display='เดือน' onclick="selectMonth(0, 'เดือน')">
+                                    <span class='text-[11px] font-extrabold tracking-wide pointer-events-none'>เดือน</span>
                                 </div>
                                 <?php
                                 for($m=1; $m<=12; $m++) {
@@ -390,13 +391,13 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         <!-- Dropdown ปีแบบกำหนดเอง -->
                         <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
-                                <span id="yearDisplayText" class="truncate"><?php echo isset($_GET['year']) ? 'พ.ศ. ' . ($selected_year + 543) : 'ปี (พ.ศ.)'; ?></span>
+                                <span id="yearDisplayText" class="truncate"><?php echo ($selected_year > 0) ? 'พ.ศ. ' . ($selected_year + 543) : 'ปี (พ.ศ.)'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
                             <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar">
-                                <!-- ✨ เอา /80 ออกและเพิ่มมุมโค้ง rounded-t-2xl ✨ -->
-                                <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 dark:bg-slate-800 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl'>
-                                    <span class='text-[11px] font-extrabold text-indigo-600 dark:text-indigo-300 tracking-wide'>ปี (พ.ศ.)</span>
+                                <!-- ✨ ทำให้หัวข้อ "ปี (พ.ศ.)" กดได้เพื่อเคลียร์ค่า ✨ -->
+                                <div class='year-dropdown-item flex justify-center items-center px-4 py-2 mb-1 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl cursor-pointer transition-colors <?php echo ($selected_year == 0) ? "bg-indigo-100 dark:bg-slate-600 text-indigo-700 dark:text-indigo-300" : "bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-slate-700"; ?>' data-value='0' data-display='ปี (พ.ศ.)' onclick="selectYear(0, 'ปี (พ.ศ.)')">
+                                    <span class='text-[11px] font-extrabold tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                 </div>
                                 <?php
                                 foreach($available_years as $y) {
