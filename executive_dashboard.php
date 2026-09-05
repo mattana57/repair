@@ -235,7 +235,9 @@ $pageTitles = [
             <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
             <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
             
-            <!-- ✨ เพิ่มปุ่มลิงก์ไปหน้าเอกสารรายงานของผู้บริหาร (เปิดแท็บใหม่) ✨ -->
+            <!-- ✨ เพิ่มหมวดหมู่ MANAGEMENT ตามฝั่งแอดมิน ✨ -->
+            <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2">MANAGEMENT</p>
+            <button onclick="show('technician')" class="nav-btn" id="btn-technician"><i class="fas fa-id-badge"></i> Technician</button>
             <a href="executive_report.php" target="_blank" class="nav-btn"><i class="fas fa-file-alt"></i> Summary Reports</a>
 
             <div class="mt-auto pt-4 border-t border-slate-50">
@@ -829,6 +831,87 @@ $pageTitles = [
                 </div>
             </div>
 
+            <!-- ✨ หน้า Technician (Team Management) ให้ผู้บริหาร ✨ -->
+            <div id="technician" class="section hidden space-y-6 no-print animate-fade-in">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.03)] border border-slate-100">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-800">Technicians</h2>
+                        <p class="text-sm font-medium text-slate-400 mt-0.5">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <?php
+                    $techs_query = "SELECT * FROM technicians ORDER BY department ASC, full_name ASC";
+                    $techs_result = $conn->query($techs_query);
+                    $grouped_technicians = [];
+                    
+                    if ($techs_result && $techs_result->num_rows > 0) {
+                        while ($t = $techs_result->fetch_assoc()) {
+                            $d = !empty($t['department']) ? $t['department'] : 'ฝ่ายงานทั่วไป';
+                            $grouped_technicians[$d][] = $t;
+                        }
+                    }
+                    
+                    $custom_dept_order_ui = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานโสตทัศนูปกรณ์', 'ฝ่ายงานยานยนต์', 'แม่บ้าน', 'ฝ่ายงานทั่วไป', 'อื่นๆ'];
+                    uksort($grouped_technicians, function($a, $b) use ($custom_dept_order_ui) {
+                        $pos_a = array_search($a, $custom_dept_order_ui); $pos_b = array_search($b, $custom_dept_order_ui);
+                        $pos_a = ($pos_a === false) ? 999 : $pos_a; $pos_b = ($pos_b === false) ? 999 : $pos_b;
+                        return $pos_a - $pos_b;
+                    });
+
+                    if (empty($grouped_technicians)) {
+                        echo "<div class='text-center p-10 bg-white rounded-2xl border border-slate-100 text-slate-500'>ไม่พบข้อมูลช่างในระบบ</div>";
+                    } else {
+                        foreach ($grouped_technicians as $dept => $members) {
+                            $count = count($members);
+                            echo "<div class='bg-blue-500 rounded-xl p-4 flex justify-between items-center text-white shadow-md mt-4'>
+                                    <div class='flex items-center gap-3'>
+                                        <div class='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm'><i class='fas fa-laptop text-lg'></i></div>
+                                        <div><h3 class='font-bold text-lg'>{$dept}</h3><p class='text-xs text-blue-100'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p></div>
+                                    </div>
+                                    <div class='bg-white/20 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm flex items-center gap-2'><i class='fas fa-user'></i> {$count} คน</div>
+                                  </div>";
+                                  
+                            echo "<div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4 mb-8'>";
+                            foreach ($members as $member) {
+                                $name = htmlspecialchars($member['full_name']);
+                                $eng_name = !empty($member['english_name']) ? htmlspecialchars($member['english_name']) : 'TECHNICIAN';
+                                $pos = !empty($member['position']) ? htmlspecialchars($member['position']) : 'เจ้าหน้าที่ช่าง';
+                                $phone = !empty($member['phone_number']) ? htmlspecialchars($member['phone_number']) : '- ไม่ระบุเบอร์โทร -';
+                                $img_src = !empty($member['profile_image']) ? "uploads/".$member['profile_image'] : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($eng_name)."&backgroundColor=e2e8f0";
+                                $safeName = addslashes($member['full_name']);
+                                
+                                echo "<div class='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow relative group'>
+                                        <div class='h-48 bg-slate-100 overflow-hidden relative'>
+                                            <img src='{$img_src}' alt='Profile' class='w-full h-full object-cover'>
+                                            <!-- ✨ ปุ่ม View (เปลี่ยนจาก Edit) กดเพื่อดูประวัติงานช่าง ✨ -->
+                                            <div class='absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity'>
+                                                <button onclick=\"viewHistory('{$safeName}', 'technician')\" class='w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white shadow-sm transition-colors' title='คลิกเพื่อดูประวัติงานช่าง'>
+                                                    <i class='fas fa-eye text-sm'></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class='p-5 flex-1 flex flex-col'>
+                                            <h4 class='text-lg font-extrabold text-slate-800 leading-tight'>{$name}</h4>
+                                            <p class='text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 mb-3'>{$eng_name}</p>
+                                            <div class='inline-block bg-indigo-50 border border-indigo-100 text-indigo-600 text-[11px] font-bold px-2.5 py-1 rounded-md mb-4 self-start flex items-center gap-1.5'>
+                                                <i class='fas fa-id-badge opacity-70'></i> {$pos}
+                                            </div>
+                                            <div class='mt-auto pt-4 border-t border-slate-50 flex items-center text-sm font-medium text-slate-600'>
+                                                <div class='w-6 h-6 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-phone-alt text-[10px]'></i></div>
+                                                {$phone}
+                                            </div>
+                                        </div>
+                                      </div>";
+                            }
+                            echo "</div>";
+                        }
+                    }
+                    ?>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -939,7 +1022,8 @@ $pageTitles = [
 
         const pageTitles = {
             'dash': 'Dashboard Overview',
-            'repairs': 'All Repairs List'
+            'repairs': 'All Repairs List',
+            'technician': 'Team Management'
         };
 
         function toggleSidebar() {
