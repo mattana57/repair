@@ -1766,12 +1766,17 @@ $pageTitles = [
                                         </div>`;
             } else {
                 reporterArr.forEach((rep, index) => {
-                    let rankColor = index === 0 ? 'text-amber-500 bg-amber-50 border-amber-200' :
-                                    index === 1 ? 'text-slate-500 bg-slate-100 border-slate-300' :
-                                    index === 2 ? 'text-orange-500 bg-orange-50 border-orange-200' : 'text-indigo-500 bg-indigo-50 border-indigo-100';
-                    let rankIcon = index === 0 ? '<i class="fas fa-trophy text-lg"></i>' :
-                                   index === 1 ? '<i class="fas fa-medal text-base"></i>' :
-                                   index === 2 ? '<i class="fas fa-award text-base"></i>' : `<span class="text-sm font-black">#${index + 1}</span>`;
+                    // ✨ ปรับสีให้ดูพรีเมียมขึ้น (ทอง, เงิน, ทองแดง) แบบเดียวกับฝั่งแอดมิน ✨
+                    let rankColor = index === 0 ? 'text-[#eab308] bg-[#fefce8] border-[#fde047]' : // ทอง
+                                    index === 1 ? 'text-[#94a3b8] bg-[#f8fafc] border-[#e2e8f0]' : // เงิน
+                                    index === 2 ? 'text-[#d97706] bg-[#fffbeb] border-[#fde68a]' : // ทองแดง
+                                    'text-indigo-500 bg-indigo-50 border-indigo-100';
+
+                    // ✨ เปลี่ยนไอคอนเป็นเซ็ต 'เหรียญรางวัล' (medal) แบบเดียวกับฝั่งแอดมิน ✨
+                    let rankIcon = index === 0 ? '<i class="fas fa-trophy text-lg drop-shadow-sm"></i>' :
+                                   index === 1 ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>' :
+                                   index === 2 ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>' : 
+                                   `<span class="text-sm font-black">#${index + 1}</span>`;
                     
                     let displayName = rep.name;
                     let lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>`;
