@@ -1600,8 +1600,8 @@ $pageTitles = [
                         </td>
                         <td class="px-5 py-4 align-middle text-center">
                             <div class='flex items-center justify-center'>
-                                <!-- ✨ เปลี่ยนมาใช้ openReviewTab เพื่อให้ส่งรหัสลับไปสั่งปิดแท็บทันทีเวลากดปุ่มกลับ ✨ -->
-                                <div onclick='openReviewTab(${r.id})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
+                                <!-- ✨ ใช้แท็ก <a> เพื่อบังคับให้ขึ้นแท็บใหม่ 100% พร้อมส่งรหัสลับ tech_reviews ไปสั่งปิดแท็บเวลากดปุ่มกลับ ✨ -->
+                                <a target='_blank' href='view_repair.php?id=${r.id}&source=tech_reviews' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
                             </div>
                         </td>
                     </tr>`;
