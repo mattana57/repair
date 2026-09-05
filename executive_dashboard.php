@@ -853,27 +853,25 @@ $pageTitles = [
                 });
                 ?>
 
-                <!-- ดีไซน์ Header ให้เหมือนฝั่งแอดมิน (เอาพื้นหลังสีขาวออก) -->
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
-                        <h2 class="text-xl font-extrabold text-slate-800">Technicians</h2>
-                        <p class="text-sm font-medium text-slate-400 mt-0.5">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
+                        <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Technicians</h3>
+                        <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
-                    
-                    <div class="mt-4 md:mt-0 overflow-x-auto pb-2 md:pb-0 custom-scrollbar w-full md:w-auto">
-                        <div class="flex items-center gap-2 min-w-max">
-                            <!-- กล่องค้นหา (พื้นหลังขาวเหมือนแอดมิน) -->
-                            <div class="relative">
-                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="ค้นหาชื่อไทย, อังกฤษ, ฝ่าย..." class="w-56 sm:w-64 bg-white border border-slate-200 text-sm rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium text-slate-700 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
-                            </div>
-                            <!-- ปุ่มฟิลเตอร์ -->
-                            <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-200">ทั้งหมด</button>
+                    <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
+                        <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="ค้นหาชื่อไทย, อังกฤษ, ฝ่าย..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        </div>
+
+                        <div class="flex flex-wrap gap-2.5">
+                            <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
                             <?php
                             foreach(array_keys($grouped_technicians) as $d_name) {
                                 // ✨ ซ่อนปุ่มแม่บ้าน ฝ่ายงานทั่วไป และ อื่นๆ ให้เหมือนหน้าแอดมิน ✨
                                 if ($d_name === 'แม่บ้าน' || $d_name === 'ฝ่ายงานทั่วไป' || $d_name === 'อื่นๆ') continue;
-                                echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm'>{$d_name}</button>";
+                                $short_name = str_replace('ฝ่ายงาน', '', $d_name); // ตัดคำว่าฝ่ายงานออกเหมือนแอดมิน
+                                echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer'>{$short_name}</button>";
                             }
                             ?>
                         </div>
@@ -908,25 +906,37 @@ $pageTitles = [
                                 // เก็บค่าค้นหาไว้เพื่อใช้ตอนพิมพ์ Search
                                 $searchString = strtolower($name . ' ' . $eng_name . ' ' . $pos . ' ' . $dept);
                                 
-                                echo "<div class='tech-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-lg hover:shadow-indigo-200/60 hover:border-indigo-500 hover:ring-1 hover:ring-indigo-500 transition-all duration-300 relative group cursor-pointer' data-search=\"".htmlspecialchars($searchString)."\" onclick=\"viewHistory('{$safeName}', 'technician')\">
-                                        <div class='h-48 bg-slate-100 overflow-hidden relative'>
-                                            <img src='{$img_src}' alt='Profile' class='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'>
-                                            <!-- ✨ ปุ่ม View โชว์ตอน Hover ✨ -->
-                                            <div class='absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
-                                                <button class='w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-indigo-600 shadow-sm transition-colors' title='คลิกเพื่อดูประวัติงานช่าง'>
-                                                    <i class='fas fa-eye text-sm'></i>
-                                                </button>
-                                            </div>
+                                // โคลนนิ่งการ์ดฝั่งแอดมินแบบ 100%
+                                echo "<div class='tech-card bg-white rounded-[24px] overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-sky-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[260px] w-full sm:w-[260px]' data-search=\"".htmlspecialchars($searchString)."\">
+                                        <div class='relative w-full aspect-square bg-slate-50 overflow-hidden'>
+                                            <img src='{$img_src}' alt='Profile' class='w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out'>
+                                            <div class='absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none'></div>
                                         </div>
-                                        <div class='p-5 flex-1 flex flex-col'>
-                                            <h4 class='text-lg font-extrabold text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors'>{$name}</h4>
-                                            <p class='text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 mb-3'>{$eng_name}</p>
-                                            <div class='inline-block bg-indigo-50 border border-indigo-100 text-indigo-600 text-[11px] font-bold px-2.5 py-1 rounded-md mb-4 self-start flex items-center gap-1.5'>
-                                                <i class='fas fa-id-badge opacity-70'></i> {$pos}
+                                        <div class='p-5 flex-1 flex flex-col relative z-10 bg-white text-left'>
+                                            <h5 class='font-extrabold text-slate-800 text-[17px] leading-tight group-hover:text-sky-500 transition-colors duration-300'>
+                                                {$name}
+                                            </h5>
+                                            <p class='text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate'>{$eng_name}</p>
+                                            
+                                            <div class='mt-3 mb-2'>
+                                                <span class='inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600'>
+                                                    <i class='fas fa-id-badge mr-1.5 opacity-70'></i> {$pos}
+                                                </span>
                                             </div>
-                                            <div class='mt-auto pt-4 border-t border-slate-50 flex items-center text-sm font-medium text-slate-600'>
-                                                <div class='w-6 h-6 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-phone-alt text-[10px]'></i></div>
-                                                {$phone}
+
+                                            <div class='mt-3 w-full pt-4 border-t border-slate-100 flex flex-col gap-2.5'>
+                                                <div class='flex items-center text-slate-600'>
+                                                    <div class='w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center mr-3 shrink-0'>
+                                                        <i class='fas fa-phone-alt text-[10px] text-emerald-500'></i>
+                                                    </div>
+                                                    <span class='text-[13px] font-bold tracking-wide text-slate-700'>{$phone}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class='mt-auto pt-4'>
+                                                <button onclick=\"viewHistory('{$safeName}', 'technician')\" class='w-full text-[11px] font-bold text-sky-600 bg-white border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn'>
+                                                    <i class='fas fa-history mr-1.5 text-sky-400 group-hover/btn:text-white transition-colors'></i> ดูประวัติงาน
+                                                </button>
                                             </div>
                                         </div>
                                       </div>";
@@ -2067,11 +2077,14 @@ $pageTitles = [
         // ✨ ระบบควบคุมการค้นหาและปุ่มกรองฝ่ายงานในหน้า Technician ✨
         function filterByDept(dept, btn) {
             // เปลี่ยนสีปุ่มที่ถูกเลือก
+            const defaultStyle = "tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer";
+            const activeStyle = "tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer";
+
             document.querySelectorAll('.tech-filter-btn').forEach(b => {
-                b.className = 'tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm';
+                b.className = defaultStyle;
             });
             if(btn) {
-                btn.className = 'tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-200';
+                btn.className = activeStyle;
             }
 
             let searchFilter = document.getElementById('techSearchFilter').value.toLowerCase();
