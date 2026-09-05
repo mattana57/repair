@@ -15,7 +15,10 @@ $back_url = isset($_SESSION['last_view_url']) ? $_SESSION['last_view_url'] : $de
 $query_string = '';
 if (isset($_GET['source'])) {
     $source = $_GET['source'];
-    if ($source === 'tech_history' && !empty($_GET['tech'])) {
+    if ($source === 'tech_reviews') {
+        // 🚨 ถ้าเปิดมาจากหน้ารีวิวช่าง (แท็บใหม่) ให้เปลี่ยน URL ของปุ่มกลับ เป็นการปิดแท็บทันที
+        $back_url = 'javascript:window.close();';
+    } elseif ($source === 'tech_history' && !empty($_GET['tech'])) {
         $query_string = '&source=tech_history&tech=' . urlencode($_GET['tech']);
     } elseif ($source === 'reporter_history' && !empty($_GET['reporter'])) {
         $query_string = '&source=reporter_history&reporter=' . urlencode($_GET['reporter']);

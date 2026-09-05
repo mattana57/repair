@@ -1676,9 +1676,8 @@ $pageTitles = [
                     }
 
                     // ✨ ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว ✨
-                    container.innerHTML += `<div onclick="window.open('view_repair.php?id=${rev.id}&source=overview', '_blank')" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
+                    container.innerHTML += `<div onclick="openReviewTab(${rev.id})" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
-                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
                             </div>
                             <div class='flex justify-between items-start mb-2.5 pr-6'>
                                 <div class='flex items-center gap-3'>
@@ -1694,6 +1693,11 @@ $pageTitles = [
                           </div>`;
                 });
             }
+        }
+
+        // ✨ เปิดแท็บใหม่แบบมีรหัสลับ: ส่งค่า source ไปด้วย เพื่อสั่งให้แท็บมันปิดตัวเองลงทันที 100% ไม่โหลดหน้าซ้อนทับ ✨
+        function openReviewTab(id) {
+            window.open('view_repair.php?id=' + id + '&source=tech_reviews', '_blank');
         }
 
         // ✨ ตัวแปรและฟังก์ชันจัดอันดับ Top Reporters ✨
@@ -1889,14 +1893,13 @@ $pageTitles = [
             }
         }
 
-        // ปิด Dropdown เวลากดที่อื่น
+        // ✨ ตรวจจับการคลิกเปิดหน้า Edit หรือ View (อัปเดต: บล็อกการรีเฟรชหน้าจอเพื่อไม่ให้กระตุกแว็บ)
         document.addEventListener('click', function(e) {
-            document.querySelectorAll('.chart-dropdown-list').forEach(list => {
-                if (!list.parentElement.contains(e.target)) {
-                    list.classList.add('hidden');
-                    list.classList.remove('flex');
-                }
-            });
+            const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"], a[href*="view_repair.php"]');
+            if (target) {
+                // 🚫 ยกเลิกคำสั่งสั่งรีเฟรชหน้าจอทิ้งไปเลย เพื่อให้พอกลับมาแท็บเดิมแล้ว ทุกอย่างหยุดนิ่ง 100% 
+                // ไม่มีอาการกระตุกหรือแว็บไปหน้าอื่นอีกต่อไปครับ!
+            }
         });
 
         // ================== INIT ==================
