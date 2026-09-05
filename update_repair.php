@@ -920,8 +920,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // ✅ วาง goBack ไว้ด้านนอกสุดแบบนี้ ปุ่มถึงจะมองเห็นและกดได้
         function goBack() {
             const source = "<?php echo isset($_GET['source']) ? $_GET['source'] : ''; ?>";
-            if (source !== '') {
-                // หากเปิดมาจากกราฟ/Pop-up ให้พากลับไปหน้าเดิม
+            if (source === 'tech_reviews') {
+                // 🚨 ถ้าเปิดมาจากหน้ารีวิวช่าง (แท็บใหม่) พอกดกลับ ให้ "ปิดแท็บนี้ลง" ทันที!
+                window.close();
+            } else if (source !== '') {
+                // หากเปิดมาจากจุดอื่น ให้พากลับไปหน้าเดิม
                 window.location.href = '<?php echo $back_url; ?>';
             } else {
                 // หากเปิดเป็นแท็บใหม่มาจากตารางปกติ ให้ปิดแท็บ

@@ -2893,7 +2893,11 @@ $dept_icons = [
         document.addEventListener('click', function(e) {
             const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"], a[href*="view_repair.php"]');
             if (target) {
-                sessionStorage.setItem('needsRefresh', 'true');
+                // 🚫 หยุด! ไม่ต้องสั่งรีเฟรชหน้า ถ้าเป็นการคลิกดูรีวิวช่าง (เพื่อรักษาหน้า Pop-up และกราฟไว้ 100%)
+                const actionStr = target.getAttribute('onclick') || target.getAttribute('href') || '';
+                if (!actionStr.includes('source=tech_reviews')) {
+                    sessionStorage.setItem('needsRefresh', 'true');
+                }
             }
         });
 
