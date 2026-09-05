@@ -2911,6 +2911,13 @@ $dept_icons = [
                     
                     // บันทึกตำแหน่งและแท็บไว้
                     const activeSection = document.querySelector('.section:not(.hidden)');
+                    
+                    // 🚫 แก้ปัญหาหน้าจอกระตุกแว็บ (เฉพาะหน้า Transactions): ห้ามระบบรีเฟรชหน้าจอเด็ดขาด
+                    // เพื่อให้เวลากดปิดแท็บใหม่มาแล้ว หน้าจอเดิมจะค้างอยู่ตำแหน่งเดิมเป๊ะๆ 100% ไม่มีโหลดใหม่
+                    if (activeSection && activeSection.id === 'repairs') {
+                        return; // หยุดการทำงานตรงนี้เลย ไม่ต้องไปทำคำสั่ง reload ด้านล่าง
+                    }
+
                     if (activeSection) {
                         sessionStorage.setItem('activeTabBeforeRefresh', activeSection.id);
                     }
