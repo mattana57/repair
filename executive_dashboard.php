@@ -832,47 +832,67 @@ $pageTitles = [
 
             <!-- ✨ หน้า Technician (Team Management) ให้ผู้บริหาร ✨ -->
             <div id="technician" class="section hidden space-y-6 no-print animate-fade-in">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.03)] border border-slate-100">
+                <?php
+                $techs_query = "SELECT * FROM technicians ORDER BY department ASC, full_name ASC";
+                $techs_result = $conn->query($techs_query);
+                $grouped_technicians = [];
+                
+                if ($techs_result && $techs_result->num_rows > 0) {
+                    while ($t = $techs_result->fetch_assoc()) {
+                        $d = !empty($t['department']) ? $t['department'] : 'ฝ่ายงานทั่วไป';
+                        $grouped_technicians[$d][] = $t;
+                    }
+                }
+                
+                $custom_dept_order_ui = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานโสตทัศนูปกรณ์', 'ฝ่ายงานยานยนต์', 'แม่บ้าน', 'ฝ่ายงานทั่วไป', 'อื่นๆ'];
+                uksort($grouped_technicians, function($a, $b) use ($custom_dept_order_ui) {
+                    $pos_a = array_search($a, $custom_dept_order_ui); $pos_b = array_search($b, $custom_dept_order_ui);
+                    $pos_a = ($pos_a === false) ? 999 : $pos_a; $pos_b = ($pos_b === false) ? 999 : $pos_b;
+                    return $pos_a - $pos_b;
+                });
+                ?>
+
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white p-6 rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.03)] border border-slate-100">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-800">Technicians</h2>
                         <p class="text-sm font-medium text-slate-400 mt-0.5">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
+                    
+                    <div class="w-full xl:w-auto mt-2 xl:mt-0 overflow-x-auto pb-2 xl:pb-0 custom-scrollbar">
+                        <div class="flex items-center gap-2 min-w-max">
+                            <!-- กล่องค้นหา (ปรับข้อความให้เหมาะกับผู้บริหาร) -->
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="พิมพ์ชื่อไทย, อังกฤษ, ฝ่าย..." class="w-56 sm:w-64 bg-slate-50 border border-slate-200 text-sm rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium text-slate-700">
+                            </div>
+                            <!-- ปุ่มฟิลเตอร์ -->
+                            <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-200">ทั้งหมด</button>
+                            <?php
+                            foreach(array_keys($grouped_technicians) as $d_name) {
+                                echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm'>{$d_name}</button>";
+                            }
+                            ?>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="space-y-6">
+                <div class="space-y-6" id="techCardsContainer">
                     <?php
-                    $techs_query = "SELECT * FROM technicians ORDER BY department ASC, full_name ASC";
-                    $techs_result = $conn->query($techs_query);
-                    $grouped_technicians = [];
-                    
-                    if ($techs_result && $techs_result->num_rows > 0) {
-                        while ($t = $techs_result->fetch_assoc()) {
-                            $d = !empty($t['department']) ? $t['department'] : 'ฝ่ายงานทั่วไป';
-                            $grouped_technicians[$d][] = $t;
-                        }
-                    }
-                    
-                    $custom_dept_order_ui = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานโสตทัศนูปกรณ์', 'ฝ่ายงานยานยนต์', 'แม่บ้าน', 'ฝ่ายงานทั่วไป', 'อื่นๆ'];
-                    uksort($grouped_technicians, function($a, $b) use ($custom_dept_order_ui) {
-                        $pos_a = array_search($a, $custom_dept_order_ui); $pos_b = array_search($b, $custom_dept_order_ui);
-                        $pos_a = ($pos_a === false) ? 999 : $pos_a; $pos_b = ($pos_b === false) ? 999 : $pos_b;
-                        return $pos_a - $pos_b;
-                    });
-
                     if (empty($grouped_technicians)) {
                         echo "<div class='text-center p-10 bg-white rounded-2xl border border-slate-100 text-slate-500'>ไม่พบข้อมูลช่างในระบบ</div>";
                     } else {
                         foreach ($grouped_technicians as $dept => $members) {
                             $count = count($members);
-                            echo "<div class='bg-blue-500 rounded-xl p-4 flex justify-between items-center text-white shadow-md mt-4'>
-                                    <div class='flex items-center gap-3'>
-                                        <div class='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm'><i class='fas fa-laptop text-lg'></i></div>
-                                        <div><h3 class='font-bold text-lg'>{$dept}</h3><p class='text-xs text-blue-100'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p></div>
+                            echo "<div class='tech-dept-group' data-dept=\"{$dept}\">
+                                    <div class='bg-blue-500 rounded-xl p-4 flex justify-between items-center text-white shadow-md mt-4'>
+                                        <div class='flex items-center gap-3'>
+                                            <div class='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm'><i class='fas fa-laptop text-lg'></i></div>
+                                            <div><h3 class='font-bold text-lg'>{$dept}</h3><p class='text-xs text-blue-100'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p></div>
+                                        </div>
+                                        <div class='bg-white/20 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm flex items-center gap-2'><i class='fas fa-user'></i> {$count} คน</div>
                                     </div>
-                                    <div class='bg-white/20 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm flex items-center gap-2'><i class='fas fa-user'></i> {$count} คน</div>
-                                  </div>";
-                                  
-                            echo "<div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4 mb-8'>";
+                                    <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4 mb-8'>";
+                                    
                             foreach ($members as $member) {
                                 $name = htmlspecialchars($member['full_name']);
                                 $eng_name = !empty($member['english_name']) ? htmlspecialchars($member['english_name']) : 'TECHNICIAN';
@@ -881,7 +901,10 @@ $pageTitles = [
                                 $img_src = !empty($member['profile_image']) ? "uploads/".$member['profile_image'] : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($eng_name)."&backgroundColor=e2e8f0";
                                 $safeName = addslashes($member['full_name']);
                                 
-                                echo "<div class='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow relative group'>
+                                // เก็บค่าค้นหาไว้เพื่อใช้ตอนพิมพ์ Search
+                                $searchString = strtolower($name . ' ' . $eng_name . ' ' . $pos . ' ' . $dept);
+                                
+                                echo "<div class='tech-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow relative group' data-search=\"".htmlspecialchars($searchString)."\">
                                         <div class='h-48 bg-slate-100 overflow-hidden relative'>
                                             <img src='{$img_src}' alt='Profile' class='w-full h-full object-cover'>
                                             <!-- ✨ ปุ่ม View (เปลี่ยนจาก Edit) กดเพื่อดูประวัติงานช่าง ✨ -->
@@ -904,7 +927,7 @@ $pageTitles = [
                                         </div>
                                       </div>";
                             }
-                            echo "</div>";
+                            echo "</div></div>";
                         }
                     }
                     ?>
@@ -2036,6 +2059,50 @@ $pageTitles = [
                 renderTopReporters();
             }
         });
+
+        // ✨ ระบบควบคุมการค้นหาและปุ่มกรองฝ่ายงานในหน้า Technician ✨
+        function filterByDept(dept, btn) {
+            // เปลี่ยนสีปุ่มที่ถูกเลือก
+            document.querySelectorAll('.tech-filter-btn').forEach(b => {
+                b.className = 'tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm';
+            });
+            if(btn) {
+                btn.className = 'tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-200';
+            }
+
+            let searchFilter = document.getElementById('techSearchFilter').value.toLowerCase();
+            
+            document.querySelectorAll('.tech-dept-group').forEach(group => {
+                let groupDept = group.getAttribute('data-dept');
+                let showGroup = false;
+
+                if(dept === 'all' || groupDept === dept) {
+                    let cards = group.querySelectorAll('.tech-card');
+                    cards.forEach(card => {
+                        let searchData = card.getAttribute('data-search').toLowerCase();
+                        if(searchData.includes(searchFilter)) {
+                            card.style.display = '';
+                            showGroup = true;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                } else {
+                    group.querySelectorAll('.tech-card').forEach(c => c.style.display = 'none');
+                }
+
+                group.style.display = showGroup ? '' : 'none';
+            });
+        }
+
+        function filterTechCards() {
+            let activeBtn = document.querySelector('.tech-filter-btn.bg-indigo-600');
+            let activeDept = 'all';
+            if(activeBtn && activeBtn.innerText.trim() !== 'ทั้งหมด') {
+                activeDept = activeBtn.innerText.trim();
+            }
+            filterByDept(activeDept, activeBtn);
+        }
     </script>
 </body>
 </html>
