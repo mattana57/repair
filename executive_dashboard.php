@@ -1678,6 +1678,7 @@ $pageTitles = [
                     // ✨ ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว ✨
                     container.innerHTML += `<div onclick="openReviewTab(${rev.id})" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
+                                <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
                             </div>
                             <div class='flex justify-between items-start mb-2.5 pr-6'>
                                 <div class='flex items-center gap-3'>
@@ -1690,6 +1691,8 @@ $pageTitles = [
                                 <div class='flex gap-0.5 pt-1'>${stars_html}</div>
                             </div>
                             <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
+                            <!-- ✨ เพิ่มตัวแปรชื่อช่างที่ลืมใส่ ให้แสดงใต้คอมเมนต์ ✨ -->
+                            <div class='pl-11'>${techInfoHtml}</div>
                           </div>`;
                 });
             }
