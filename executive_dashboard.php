@@ -853,24 +853,30 @@ $pageTitles = [
                 });
                 ?>
 
-                <!-- ดีไซน์ Header ให้เหมือนฝั่งแอดมิน (ไม่มีกรอบสี่เหลี่ยมล้อมรอบตัวค้นหา) -->
+                <!-- ดีไซน์ Header ให้เหมือนฝั่งแอดมิน (เอาพื้นหลังสีขาวออก) -->
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-800">Technicians</h2>
                         <p class="text-sm font-medium text-slate-400 mt-0.5">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
                     
-                    <div class="mt-4 md:mt-0 flex items-center flex-wrap gap-2">
-                        <div class="relative w-full md:w-auto">
-                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="ค้นหาชื่อไทย, อังกฤษ, ฝ่าย..." class="w-full md:w-64 bg-white border border-slate-200 text-sm rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium text-slate-700 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+                    <div class="mt-4 md:mt-0 overflow-x-auto pb-2 md:pb-0 custom-scrollbar w-full md:w-auto">
+                        <div class="flex items-center gap-2 min-w-max">
+                            <!-- กล่องค้นหา (พื้นหลังขาวเหมือนแอดมิน) -->
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="ค้นหาชื่อไทย, อังกฤษ, ฝ่าย..." class="w-56 sm:w-64 bg-white border border-slate-200 text-sm rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium text-slate-700 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+                            </div>
+                            <!-- ปุ่มฟิลเตอร์ -->
+                            <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-200">ทั้งหมด</button>
+                            <?php
+                            foreach(array_keys($grouped_technicians) as $d_name) {
+                                // ✨ ซ่อนปุ่มแม่บ้าน ฝ่ายงานทั่วไป และ อื่นๆ ให้เหมือนหน้าแอดมิน ✨
+                                if ($d_name === 'แม่บ้าน' || $d_name === 'ฝ่ายงานทั่วไป' || $d_name === 'อื่นๆ') continue;
+                                echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm'>{$d_name}</button>";
+                            }
+                            ?>
                         </div>
-                        <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-200">ทั้งหมด</button>
-                        <?php
-                        foreach(array_keys($grouped_technicians) as $d_name) {
-                            echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm'>{$d_name}</button>";
-                        }
-                        ?>
                     </div>
                 </div>
 
@@ -902,12 +908,12 @@ $pageTitles = [
                                 // เก็บค่าค้นหาไว้เพื่อใช้ตอนพิมพ์ Search
                                 $searchString = strtolower($name . ' ' . $eng_name . ' ' . $pos . ' ' . $dept);
                                 
-                                echo "<div class='tech-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-lg hover:shadow-indigo-100/50 hover:border-indigo-400 transition-all duration-300 relative group cursor-pointer' data-search=\"".htmlspecialchars($searchString)."\" onclick=\"viewHistory('{$safeName}', 'technician')\">
+                                echo "<div class='tech-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-lg hover:shadow-indigo-200/60 hover:border-indigo-500 hover:ring-1 hover:ring-indigo-500 transition-all duration-300 relative group cursor-pointer' data-search=\"".htmlspecialchars($searchString)."\" onclick=\"viewHistory('{$safeName}', 'technician')\">
                                         <div class='h-48 bg-slate-100 overflow-hidden relative'>
                                             <img src='{$img_src}' alt='Profile' class='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'>
-                                            <!-- ✨ ปุ่ม View (ให้กดที่การ์ดได้เลย แต่คงปุ่มตาไว้ให้เห็นชัดขึ้น) ✨ -->
+                                            <!-- ✨ ปุ่ม View โชว์ตอน Hover ✨ -->
                                             <div class='absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
-                                                <button onclick=\"viewHistory('{$safeName}', 'technician')\" class='w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white shadow-sm transition-colors' title='คลิกเพื่อดูประวัติงานช่าง'>
+                                                <button class='w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-indigo-600 shadow-sm transition-colors' title='คลิกเพื่อดูประวัติงานช่าง'>
                                                     <i class='fas fa-eye text-sm'></i>
                                                 </button>
                                             </div>
