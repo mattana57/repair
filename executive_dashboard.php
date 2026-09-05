@@ -17,26 +17,17 @@ include 'db_connect.php';
 
 $conn->set_charset("utf8mb4");
 
-// ✨ ดึงข้อมูลผู้ใช้ล่าสุดจากฐานข้อมูล บังคับชื่อผู้บริหารเป็น "บรรพต สุขสม" ตามคำสั่ง ✨
-$current_user_name = 'บรรพต สุขสม';
+// ✨ ดึงข้อมูล "ผู้บริหาร" (Executive) จากฐานข้อมูลโดยตรง เพื่อให้เชื่อมกับที่แอดมินตั้งค่าไว้อัตโนมัติ ✨
+$current_user_name = 'ยังไม่กำหนดผู้บริหาร';
 $current_user_role = 'Executive';
-$current_username = $_SESSION['username'] ?? 'exec';
+$current_username = 'exec';
 
-if (isset($_SESSION['user_id'])) {
-    $uid = intval($_SESSION['user_id']);
-    $u_res = $conn->query("SELECT username, full_name, role, position FROM users WHERE id = $uid");
-    if ($u_res && $u_res->num_rows > 0) {
-        $u_data = $u_res->fetch_assoc();
-        $current_username = $u_data['username'];
-        // ถ้าฐานข้อมูลมีชื่อให้ใช้ชื่อนั้น ถ้าไม่มีให้บังคับเป็น บรรพต สุขสม
-        $current_user_name = !empty($u_data['full_name']) ? $u_data['full_name'] : 'บรรพต สุขสม';
-        
-        if (strtolower($u_data['role']) === 'executive') {
-            $current_user_role = !empty($u_data['position']) ? $u_data['position'] : 'Executive';
-        } else {
-            $current_user_role = !empty($u_data['position']) ? $u_data['position'] : $u_data['role'];
-        }
-    }
+$exec_res = $conn->query("SELECT username, full_name, role, position FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
+if ($exec_res && $exec_res->num_rows > 0) {
+    $exec_data = $exec_res->fetch_assoc();
+    $current_username = $exec_data['username'];
+    $current_user_name = !empty($exec_data['full_name']) ? $exec_data['full_name'] : $exec_data['username'];
+    $current_user_role = !empty($exec_data['position']) ? $exec_data['position'] : 'Executive';
 }
 
 // ฟังก์ชันต่างๆ สำหรับ Format ข้อมูล
@@ -257,12 +248,14 @@ $pageTitles = [
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h3 class="text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm" id="headerTitle">Dashboard Overview</h3>
+                <!-- ✨ ปรับขนาดตัวอักษรให้ใหญ่เท่าหน้าแอดมิน (md:text-3xl) และให้เปลี่ยนชื่อแท็บอัตโนมัติ ✨ -->
+                <h3 class="text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
 
             <div class="flex items-center space-x-3 md:space-x-6">
                 <div class="flex items-center gap-3 cursor-pointer group">
                     <div class="text-right hidden sm:block">
+                        <!-- ✨ ดึงชื่อและตำแหน่งผู้บริหารที่แอดมินตั้งค่าไว้มาแสดงอัตโนมัติ ✨ -->
                         <span class="block text-sm font-bold text-white drop-shadow-sm leading-none mb-1 group-hover:text-indigo-100 transition-colors">
                             <?php echo htmlspecialchars($current_user_name); ?>
                         </span>
