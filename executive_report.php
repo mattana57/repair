@@ -25,8 +25,8 @@ function toThaiNumber($num) {
 // ฟังก์ชันจัดรูปแบบชื่อพร้อมคำนำหน้านามทางการ
 function getPrefixName($name) {
     $name = trim($name);
-    if (empty($name) \vert{}\vert{}$name === 'all') return '';
-    if (strpos($name, 'นาย') === 0 \vert{}\vert{} strpos($name, 'นางสาว') === 0 || strpos($name, 'นาง') === 0 \vert{}\vert{} strpos($name, 'ดร.') === 0) {
+    if (empty($name) || $name === 'all') return '';
+    if (strpos($name, 'นาย') === 0 || strpos($name, 'นางสาว') === 0 || strpos($name, 'นาง') === 0 || strpos($name, 'ดร.') === 0) {
         return $name;
     }
     return 'นาย ' . $name;
