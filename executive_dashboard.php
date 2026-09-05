@@ -879,71 +879,160 @@ $pageTitles = [
                 </div>
 
                 <div class="space-y-6" id="techCardsContainer">
-                    <?php
-                    if (empty($grouped_technicians)) {
-                        echo "<div class='text-center p-10 bg-white rounded-2xl border border-slate-100 text-slate-500'>ไม่พบข้อมูลช่างในระบบ</div>";
-                    } else {
-                        foreach ($grouped_technicians as $dept => $members) {
-                            $count = count($members);
-                            echo "<div class='tech-dept-group' data-dept=\"{$dept}\">
-                                    <div class='bg-blue-500 rounded-xl p-4 flex justify-between items-center text-white shadow-md mt-4'>
-                                        <div class='flex items-center gap-3'>
-                                            <div class='w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm'><i class='fas fa-laptop text-lg'></i></div>
-                                            <div><h3 class='font-bold text-lg'>{$dept}</h3><p class='text-xs text-blue-100'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p></div>
-                                        </div>
-                                        <div class='bg-white/20 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm flex items-center gap-2'><i class='fas fa-user'></i> {$count} คน</div>
-                                    </div>
-                                    <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4 mb-8'>";
-                                    
-                            foreach ($members as $member) {
-                                $name = htmlspecialchars($member['full_name']);
-                                $eng_name = !empty($member['english_name']) ? htmlspecialchars($member['english_name']) : 'TECHNICIAN';
-                                $pos = !empty($member['position']) ? htmlspecialchars($member['position']) : 'เจ้าหน้าที่ช่าง';
-                                $phone = !empty($member['phone_number']) ? htmlspecialchars($member['phone_number']) : '- ไม่ระบุเบอร์โทร -';
-                                $img_src = !empty($member['profile_image']) ? "uploads/".$member['profile_image'] : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($eng_name)."&backgroundColor=e2e8f0";
-                                $safeName = addslashes($member['full_name']);
-                                
-                                // เก็บค่าค้นหาไว้เพื่อใช้ตอนพิมพ์ Search
-                                $searchString = strtolower($name . ' ' . $eng_name . ' ' . $pos . ' ' . $dept);
-                                
-                                // โคลนนิ่งการ์ดฝั่งแอดมินแบบ 100%
-                                echo "<div class='tech-card bg-white rounded-[24px] overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-sky-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[260px] w-full sm:w-[260px]' data-search=\"".htmlspecialchars($searchString)."\">
-                                        <div class='relative w-full aspect-square bg-slate-50 overflow-hidden'>
-                                            <img src='{$img_src}' alt='Profile' class='w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out'>
-                                            <div class='absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none'></div>
-                                        </div>
-                                        <div class='p-5 flex-1 flex flex-col relative z-10 bg-white text-left'>
-                                            <h5 class='font-extrabold text-slate-800 text-[17px] leading-tight group-hover:text-sky-500 transition-colors duration-300'>
-                                                {$name}
-                                            </h5>
-                                            <p class='text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate'>{$eng_name}</p>
-                                            
-                                            <div class='mt-3 mb-2'>
-                                                <span class='inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600'>
-                                                    <i class='fas fa-id-badge mr-1.5 opacity-70'></i> {$pos}
-                                                </span>
-                                            </div>
+                    <?php 
+                    $departments_data = [];
+                    // ✨ ดึงเฉพาะช่างที่แอดมินอนุมัติแล้ว (ผูก LINE แล้ว) เหมือนหน้าแอดมินเป๊ะ ✨
+                    $res_techs = $conn->query("SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว'");
+                    if($res_techs && $res_techs->num_rows > 0) {
+                        while($row = $res_techs->fetch_assoc()) {
+                            $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป';
+                            // 🚫 ซ่อนแม่บ้านและอื่นๆ ไม่ให้ผู้บริหารเห็น
+                            if ($dept === 'แม่บ้าน' || $dept === 'อื่นๆ') continue;
 
-                                            <div class='mt-3 w-full pt-4 border-t border-slate-100 flex flex-col gap-2.5'>
-                                                <div class='flex items-center text-slate-600'>
-                                                    <div class='w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center mr-3 shrink-0'>
-                                                        <i class='fas fa-phone-alt text-[10px] text-emerald-500'></i>
-                                                    </div>
-                                                    <span class='text-[13px] font-bold tracking-wide text-slate-700'>{$phone}</span>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class='mt-auto pt-4'>
-                                                <button onclick=\"viewHistory('{$safeName}', 'technician')\" class='w-full text-[11px] font-bold text-sky-600 bg-white border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn'>
-                                                    <i class='fas fa-history mr-1.5 text-sky-400 group-hover/btn:text-white transition-colors'></i> ดูประวัติงาน
-                                                </button>
-                                            </div>
-                                        </div>
-                                      </div>";
-                            }
-                            echo "</div></div>";
+                            if(!isset($departments_data[$dept])) $departments_data[$dept] = [];
+                            
+                            $img = !empty($row['avatar_url']) ? $row['avatar_url'] : '';
+                            list($th_name, $en_name) = splitThaiEngName($row['full_name'], $row['english_name']);
+
+                            $departments_data[$dept][] = [
+                                'th' => $th_name,
+                                'eng' => $en_name, 
+                                'pos' => !empty($row['position']) ? $row['position'] : getAutoPosition($th_name),
+                                'phone' => $row['phone'],
+                                'img' => $img,
+                                'raw_name' => $row['full_name']
+                            ];
                         }
                     }
+
+                    $dept_icons = [
+                        'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
+                        'ฝ่ายงานยานยนต์' => 'fas fa-car',
+                        'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
+                        'ฝ่ายงานทั่วไป' => 'fas fa-users'
+                    ];
+                    
+                    $custom_dept_order_ui = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานโสตทัศนูปกรณ์', 'ฝ่ายงานยานยนต์', 'ฝ่ายงานทั่วไป'];
+                    
+                    uksort($departments_data, function($a, $b) use ($custom_dept_order_ui) {
+                        $pos_a = array_search($a, $custom_dept_order_ui);
+                        $pos_b = array_search($b, $custom_dept_order_ui);
+                        $pos_a = ($pos_a === false) ? 999 : $pos_a;
+                        $pos_b = ($pos_b === false) ? 999 : $pos_b;
+                        if ($pos_a == $pos_b) return strcmp($a, $b);
+                        return $pos_a - $pos_b;
+                    });
+
+                    if(empty($departments_data)) {
+                        echo "<div class='text-center p-10 bg-white rounded-2xl border border-slate-100 text-slate-500'>ไม่พบข้อมูลช่างในระบบ หรือยังไม่มีช่างที่ผูกบัญชีสำเร็จ</div>";
+                    } else {
+                        foreach ($departments_data as $dept_name => $techs):
+                            $icon_class = $dept_icons[$dept_name] ?? 'fas fa-users';
+                    ?>
+                        <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
+                            
+                            <!-- แถบหัวข้อฝ่ายงานเหมือนแอดมิน 100% -->
+                            <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-blue-500 p-3 rounded-2xl shadow-md shadow-blue-200/50 tech-dept-header">
+                                <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
+                                <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
+                                
+                                <div class="flex items-center relative z-10 pl-1">
+                                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white mr-4 border border-white/30 shadow-inner shrink-0">
+                                        <i class="<?php echo $icon_class; ?> text-lg drop-shadow-md"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
+                                            <?php echo htmlspecialchars($dept_name); ?>
+                                        </h3>
+                                        <p class="text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="relative z-10 hidden sm:flex items-center pr-1">
+                                    <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                                        <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- การจัดเรียงการ์ดแบบแอดมิน (flex flex-wrap) -->
+                            <div class="flex flex-wrap gap-6 items-start justify-center sm:justify-start">
+                                <?php foreach ($techs as $tech): 
+                                    $search_name = preg_replace('/\s+/', '', strtolower($tech['raw_name'] . $tech['eng'] . $tech['th'] . $dept_name));
+                                    $safeName = addslashes($tech['raw_name']);
+                                    $phone = !empty($tech['phone']) ? $tech['phone'] : '- ไม่ระบุเบอร์โทร -';
+                                ?>
+                                <!-- ขนาดการ์ด ระยะห่าง และ Hover แสงสีฟ้าเหมือนฝั่งแอดมินเป๊ะ -->
+                                <div class="bg-white rounded-[24px] overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-sky-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[260px] w-full sm:w-[260px] tech-card-item cursor-pointer" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>" onclick="viewHistory('<?php echo $safeName; ?>', 'technician')">
+                                    
+                                    <div class="relative w-full aspect-square bg-slate-50 overflow-hidden">
+                                        <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
+                                             onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
+                                             alt="<?php echo htmlspecialchars($tech['th']); ?>" 
+                                             class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out">
+                                    
+                                        <!-- เงาดำไล่ระดับด้านล่างรูป -->
+                                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                                        
+                                        <!-- ปุ่ม View เล็กๆ ด้านบนขวา -->
+                                        <div class='absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                                            <button class='w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-indigo-600 shadow-sm transition-colors' title='คลิกเพื่อดูประวัติงานช่าง'>
+                                                <i class='fas fa-eye text-sm'></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-5 flex-1 flex flex-col relative z-10 bg-white text-left">
+                                        <h5 class="font-extrabold text-slate-800 text-[17px] leading-tight group-hover:text-sky-500 transition-colors duration-300">
+                                            <?php echo htmlspecialchars($tech['th']); ?>
+                                        </h5>
+                                        
+                                        <?php if (!empty($tech['eng'])): ?>
+                                        <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate"><?php echo htmlspecialchars($tech['eng']); ?></p>
+                                        <?php else: ?>
+                                        <div class="mt-1 h-[15px]"></div>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($tech['pos']) && $tech['pos'] !== '-'): ?>
+                                        <div class="mt-3 mb-2">
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600">
+                                                <i class="fas fa-id-badge mr-1.5 opacity-70"></i> <?php echo htmlspecialchars($tech['pos']); ?>
+                                            </span>
+                                        </div>
+                                        <?php else: ?>
+                                        <div class="mt-3 mb-2 h-[24px]"></div>
+                                        <?php endif; ?>
+                                        
+                                        <div class="mt-3 w-full pt-4 border-t border-slate-100 flex flex-col gap-2.5">
+                                        <?php 
+                                        if ($phone !== '- ไม่ระบุเบอร์โทร -' && $phone !== '-'): 
+                                            $phone_parts = array_values(array_filter(array_map('trim', explode(',', $phone))));
+                                            foreach($phone_parts as $p): ?>
+                                                <div class="flex items-center text-slate-600">
+                                                    <div class="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center mr-3 shrink-0">
+                                                        <i class="fas fa-phone-alt text-[10px] text-emerald-500"></i>
+                                                    </div>
+                                                    <span class="text-[13px] font-bold tracking-wide text-slate-700"><?php echo htmlspecialchars(trim($p)); ?></span>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <div class="flex items-center text-rose-400">
+                                                <div class="w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center mr-3 shrink-0">
+                                                    <i class="fas fa-phone-slash text-[10px] text-rose-500"></i>
+                                                </div>
+                                                <span class="text-[12px] font-bold text-rose-500">ไม่มีเบอร์ติดต่อ</span>
+                                            </div>
+                                        <?php endif; ?>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php 
+                        endforeach; 
+                    } 
                     ?>
                 </div>
             </div>
