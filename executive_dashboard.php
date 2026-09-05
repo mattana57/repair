@@ -236,7 +236,7 @@ $pageTitles = [
             <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
 
             <div class="mt-auto pt-4 border-t border-slate-50">
-                <a href="logout.php" class="nav-btn text-rose-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt text-rose-400"></i> ออกจากระบบ</a>
+                <a href="logout.php" class="nav-btn text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
         </nav>
     </aside>
@@ -614,7 +614,7 @@ $pageTitles = [
                                         <th class="px-6 py-4">Reporter</th>
                                         <th class="px-6 py-4">Equipment</th>
                                         <th class="px-6 py-4 text-center">Status</th>
-                                        <th class="px-6 py-4 text-right">Action</th>
+                                        <th class="px-6 py-4 text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100">
@@ -662,8 +662,8 @@ $pageTitles = [
                                                 </td>
                                                 <td class='px-6 py-4 align-top text-slate-600 font-medium'>{$equipment_type} {$imageIcon}</td>
                                                 <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$statusText}</span></td>
-                                                <td class='px-6 py-4 align-middle text-right'>
-                                                    <div class='flex items-center justify-end space-x-2'>
+                                                <td class='px-6 py-4 align-middle text-center'>
+                                                    <div class='flex items-center justify-center'>
                                                         <!-- ✨ ใช้ openReviewTab บังคับเปิดแท็บใหม่และสั่งปิดแท็บเวลาปิดหน้าต่าง ✨ -->
                                                         <div onclick='openReviewTab({$rd['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
                                                     </div>
