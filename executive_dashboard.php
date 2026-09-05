@@ -1908,22 +1908,6 @@ $pageTitles = [
 
         // ================== INIT ==================
         document.addEventListener('DOMContentLoaded', () => {
-            // ✨ คืนค่า Scroll และรักษาหน้าเดิมไว้ทันทีเมื่อโหลดเสร็จ ✨
-            setTimeout(() => {
-                const savedScrollY = sessionStorage.getItem('pageScrollY');
-                if (savedScrollY !== null) {
-                    window.scrollTo(0, parseInt(savedScrollY));
-                    sessionStorage.removeItem('pageScrollY');
-                }
-
-                const savedRepairsScrollX = sessionStorage.getItem('repairsScrollX');
-                if (savedRepairsScrollX !== null) {
-                    const repairsTableWrap = document.getElementById('repairsTable').parentElement;
-                    if (repairsTableWrap) repairsTableWrap.scrollLeft = parseInt(savedRepairsScrollX);
-                    sessionStorage.removeItem('repairsScrollX');
-                }
-            }, 100);
-
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
             
@@ -1936,7 +1920,7 @@ $pageTitles = [
                     let activeSection = document.querySelector('.section:not(.hidden)');
                     if (!activeSection) return;
                     
-                    let rows = activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)');
+                    let rows = activeSection.querySelectorAll('table tbody tr.search-row');
                     rows.forEach(row => {
                         if (row.innerText.toLowerCase().includes(filter)) {
                             row.style.display = '';
@@ -1950,15 +1934,6 @@ $pageTitles = [
             renderAllCharts();
             if(document.getElementById('topReportersList')) {
                 renderTopReporters();
-            }
-        });
-
-        // ✨ ตรวจจับการคลิกเปิดหน้า View (อัปเดต: บล็อกการรีเฟรชหน้าจอเพื่อไม่ให้กระตุกแว็บ) ✨
-        document.addEventListener('click', function(e) {
-            const target = e.target.closest('a[href*="view_repair.php"]');
-            if (target) {
-                // 🚫 ยกเลิกคำสั่งสั่งรีเฟรชหน้าจอทิ้งไปเลย เพื่อให้พอกลับมาแท็บเดิมแล้ว ทุกอย่างหยุดนิ่ง 100% 
-                // ไม่มีอาการกระตุกหรือแว็บไปโชว์หน้า Overview (รูปที่ 3) อีกต่อไปครับ!
             }
         });
     </script>
