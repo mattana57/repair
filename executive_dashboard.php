@@ -664,8 +664,8 @@ $pageTitles = [
                                                 <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$statusText}</span></td>
                                                 <td class='px-6 py-4 align-middle text-right'>
                                                     <div class='flex items-center justify-end space-x-2'>
-                                                        <!-- ผู้บริหารลิงก์ไปแค่ view_repair.php -->
-                                                        <a href='view_repair.php?id={$rd['id']}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
+                                                        <!-- ✨ ใช้ openReviewTab บังคับเปิดแท็บใหม่และสั่งปิดแท็บเวลาปิดหน้าต่าง ✨ -->
+                                                        <div onclick='openReviewTab({$rd['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
                                                     </div>
                                                 </td>
                                             </tr>";
@@ -812,8 +812,8 @@ $pageTitles = [
                                             </td>
                                             <td class='px-6 py-4 align-middle text-center'>
                                                 <div class='flex items-center justify-center'>
-                                                    <!-- ผู้บริหารลิงก์ไปแค่ view_repair.php -->
-                                                    <a target='_blank' href='view_repair.php?id={$row['id']}&source=overview' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></a>
+                                                    <!-- ✨ ใช้ openReviewTab บังคับเปิดแท็บใหม่และสั่งปิดแท็บเวลาปิดหน้าต่าง ✨ -->
+                                                    <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
                                                 </div>
                                             </td>
                                         </tr>";
