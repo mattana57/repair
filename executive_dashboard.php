@@ -1675,7 +1675,10 @@ $pageTitles = [
                         date_str = timeAgoJS(rev.completed_at);
                     }
 
-                    // ✨ ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว ✨
+                    // ✨ สร้างตัวแปรดึงชื่อช่าง เพื่อเอาไปแสดงใต้คอมเมนต์ (นี่คือโค้ดที่หายไปครับ!) ✨
+                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
+                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
+
                     container.innerHTML += `<div onclick="openReviewTab(${rev.id})" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
                                 <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
@@ -1691,7 +1694,6 @@ $pageTitles = [
                                 <div class='flex gap-0.5 pt-1'>${stars_html}</div>
                             </div>
                             <p class='text-xs text-slate-600 font-medium pl-11 leading-relaxed'>${r_comment}</p>
-                            <!-- ✨ เพิ่มตัวแปรชื่อช่างที่ลืมใส่ ให้แสดงใต้คอมเมนต์ ✨ -->
                             <div class='pl-11'>${techInfoHtml}</div>
                           </div>`;
                 });
