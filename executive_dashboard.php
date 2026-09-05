@@ -833,7 +833,8 @@ $pageTitles = [
             <!-- ✨ หน้า Technician (Team Management) ให้ผู้บริหาร ✨ -->
             <div id="technician" class="section hidden space-y-6 no-print animate-fade-in">
                 <?php
-                $techs_query = "SELECT * FROM technicians ORDER BY department ASC, full_name ASC";
+                // กรองเฉพาะช่าง (ไม่เอาแม่บ้าน) ให้ตรงกับฝั่งแอดมิน
+                $techs_query = "SELECT * FROM technicians WHERE department != 'แม่บ้าน' ORDER BY department ASC, full_name ASC";
                 $techs_result = $conn->query($techs_query);
                 $grouped_technicians = [];
                 
@@ -844,7 +845,7 @@ $pageTitles = [
                     }
                 }
                 
-                $custom_dept_order_ui = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานโสตทัศนูปกรณ์', 'ฝ่ายงานยานยนต์', 'แม่บ้าน', 'ฝ่ายงานทั่วไป', 'อื่นๆ'];
+                $custom_dept_order_ui = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานโสตทัศนูปกรณ์', 'ฝ่ายงานยานยนต์', 'ฝ่ายงานทั่วไป', 'อื่นๆ'];
                 uksort($grouped_technicians, function($a, $b) use ($custom_dept_order_ui) {
                     $pos_a = array_search($a, $custom_dept_order_ui); $pos_b = array_search($b, $custom_dept_order_ui);
                     $pos_a = ($pos_a === false) ? 999 : $pos_a; $pos_b = ($pos_b === false) ? 999 : $pos_b;
@@ -852,27 +853,24 @@ $pageTitles = [
                 });
                 ?>
 
-                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white p-6 rounded-2xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.03)] border border-slate-100">
+                <!-- ดีไซน์ Header ให้เหมือนฝั่งแอดมิน (ไม่มีกรอบสี่เหลี่ยมล้อมรอบตัวค้นหา) -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-800">Technicians</h2>
                         <p class="text-sm font-medium text-slate-400 mt-0.5">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
                     
-                    <div class="w-full xl:w-auto mt-2 xl:mt-0 overflow-x-auto pb-2 xl:pb-0 custom-scrollbar">
-                        <div class="flex items-center gap-2 min-w-max">
-                            <!-- กล่องค้นหา (ปรับข้อความให้เหมาะกับผู้บริหาร) -->
-                            <div class="relative">
-                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="พิมพ์ชื่อไทย, อังกฤษ, ฝ่าย..." class="w-56 sm:w-64 bg-slate-50 border border-slate-200 text-sm rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium text-slate-700">
-                            </div>
-                            <!-- ปุ่มฟิลเตอร์ -->
-                            <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-200">ทั้งหมด</button>
-                            <?php
-                            foreach(array_keys($grouped_technicians) as $d_name) {
-                                echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm'>{$d_name}</button>";
-                            }
-                            ?>
+                    <div class="mt-4 md:mt-0 flex items-center flex-wrap gap-2">
+                        <div class="relative w-full md:w-auto">
+                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="ค้นหาชื่อไทย, อังกฤษ, ฝ่าย..." class="w-full md:w-64 bg-white border border-slate-200 text-sm rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium text-slate-700 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
                         </div>
+                        <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-200">ทั้งหมด</button>
+                        <?php
+                        foreach(array_keys($grouped_technicians) as $d_name) {
+                            echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm'>{$d_name}</button>";
+                        }
+                        ?>
                     </div>
                 </div>
 
@@ -904,18 +902,18 @@ $pageTitles = [
                                 // เก็บค่าค้นหาไว้เพื่อใช้ตอนพิมพ์ Search
                                 $searchString = strtolower($name . ' ' . $eng_name . ' ' . $pos . ' ' . $dept);
                                 
-                                echo "<div class='tech-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow relative group' data-search=\"".htmlspecialchars($searchString)."\">
+                                echo "<div class='tech-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-lg hover:shadow-indigo-100/50 hover:border-indigo-400 transition-all duration-300 relative group cursor-pointer' data-search=\"".htmlspecialchars($searchString)."\" onclick=\"viewHistory('{$safeName}', 'technician')\">
                                         <div class='h-48 bg-slate-100 overflow-hidden relative'>
-                                            <img src='{$img_src}' alt='Profile' class='w-full h-full object-cover'>
-                                            <!-- ✨ ปุ่ม View (เปลี่ยนจาก Edit) กดเพื่อดูประวัติงานช่าง ✨ -->
-                                            <div class='absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity'>
+                                            <img src='{$img_src}' alt='Profile' class='w-full h-full object-cover transition-transform duration-500 group-hover:scale-105'>
+                                            <!-- ✨ ปุ่ม View (ให้กดที่การ์ดได้เลย แต่คงปุ่มตาไว้ให้เห็นชัดขึ้น) ✨ -->
+                                            <div class='absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
                                                 <button onclick=\"viewHistory('{$safeName}', 'technician')\" class='w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-indigo-600 hover:bg-indigo-600 hover:text-white shadow-sm transition-colors' title='คลิกเพื่อดูประวัติงานช่าง'>
                                                     <i class='fas fa-eye text-sm'></i>
                                                 </button>
                                             </div>
                                         </div>
                                         <div class='p-5 flex-1 flex flex-col'>
-                                            <h4 class='text-lg font-extrabold text-slate-800 leading-tight'>{$name}</h4>
+                                            <h4 class='text-lg font-extrabold text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors'>{$name}</h4>
                                             <p class='text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 mb-3'>{$eng_name}</p>
                                             <div class='inline-block bg-indigo-50 border border-indigo-100 text-indigo-600 text-[11px] font-bold px-2.5 py-1 rounded-md mb-4 self-start flex items-center gap-1.5'>
                                                 <i class='fas fa-id-badge opacity-70'></i> {$pos}
