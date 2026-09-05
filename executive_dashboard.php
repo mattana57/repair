@@ -231,9 +231,12 @@ $pageTitles = [
         </div>
 
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
-            <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">EXECUTIVE</p>
+            <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">DASHBOARD</p>
             <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
             <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
+            
+            <!-- ✨ เพิ่มปุ่มลิงก์ไปหน้าเอกสารรายงานของผู้บริหาร (เปิดแท็บใหม่) ✨ -->
+            <a href="executive_report.php" target="_blank" class="nav-btn"><i class="fas fa-file-alt"></i> Summary Reports</a>
 
             <div class="mt-auto pt-4 border-t border-slate-50">
                 <a href="logout.php" class="nav-btn text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt"></i> Logout</a>

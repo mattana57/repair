@@ -1,0 +1,846 @@
+<?php
+session_start();
+include 'db_connect.php';
+
+// ตรวจสอบการเข้าสู่ระบบ
+if (!isset($_SESSION['user_id'])) {
+    die("กรุณาเข้าสู่ระบบก่อนดูรายงาน");
+}
+
+// ป้องกันช่างซ่อม (Technician) แอบเข้ามาดูหน้าผู้บริหาร
+if (isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'technician') {
+    die("ไม่อนุญาตให้เข้าถึงหน้านี้");
+}
+
+// รับค่าจาก URL
+$selected_tech = isset($_GET['tech']) ? trim($_GET['tech']) : 'all';
+$selected_month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');$selected_year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
+
+// ฟังก์ชันแปลงตัวเลขเป็นเลขไทย
+function toThaiNumber($num) {
+    $arabic = ['0','1','2','3','4','5','6','7','8','9'];$thai = ['๐','๑','๒','๓','๔','๕','๖','๗','๘','๙'];
+    return str_replace($arabic, $thai, (string)$num);
+}
+
+// ฟังก์ชันจัดรูปแบบชื่อพร้อมคำนำหน้านามทางการ
+function getPrefixName($name) {
+    $name = trim($name);
+    if (empty($name) \vert{}\vert{}$name === 'all') return '';
+    if (strpos($name, 'นาย') === 0 \vert{}\vert{} strpos($name, 'นางสาว') === 0 || strpos($name, 'นาง') === 0 \vert{}\vert{} strpos($name, 'ดร.') === 0) {
+        return $name;
+    }
+    return 'นาย ' . $name;
+}
+
+$tech_formal_name = getPrefixName($selected_tech);
+
+// กำหนดรายชื่อช่างและจัดกลุ่มตามฝ่ายงาน (ดึงจากฐานข้อมูลอัตโนมัติแบบ Real-time)
+$grouped_techs = [];
+$tech_res =$conn->query("SELECT full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != '' ORDER BY department ASC, full_name ASC");
+
+if ($tech_res &&$tech_res->num_rows > 0) {
+    while ($t = $tech_res->fetch_assoc()) {$dept = !empty($t['department']) ?$t['department'] : 'ฝ่ายงานทั่วไป';
+        if (!isset($grouped_techs[$dept])) {
+            $grouped_techs[$dept] = [];
+        }
+        $grouped_techs[$dept][] = trim($t['full_name']);
+    }
+}
+
+// จัดเรียงลำดับฝ่ายงานให้อยู่ในตำแหน่งที่สวยงามเสมอ
+$custom_dept_order = [
+    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
+    'ฝ่ายงานโสตทัศนูปกรณ์',
+    'ฝ่ายงานยานยนต์',
+    'แม่บ้าน',
+    'ฝ่ายงานทั่วไป',
+    'อื่นๆ'
+];
+
+uksort($grouped_techs, function($a,$b) use ($custom_dept_order) {$pos_a = array_search($a,$custom_dept_order);
+    $pos_b = array_search($b, $custom_dept_order);$pos_a = ($pos_a === false) ? 999 :$pos_a;
+    $pos_b = ($pos_b === false) ? 999 :$pos_b;
+    if ($pos_a ==$pos_b) return strcmp($a,$b);
+    return $pos_a -$pos_b;
+});
+
+// หาระบุฝ่ายงานของช่างที่ถูกเลือก เพื่อแสดงในเอกสาร
+$tech_department = 'ไม่ระบุฝ่ายงาน';
+if ($selected_tech === 'all') {$tech_department = 'ทุกฝ่ายงาน';
+} else {
+    foreach ($grouped_techs as $dept =>$techs) {
+        if (in_array($selected_tech,$techs)) {
+            $tech_department =$dept;
+            break;
+        }
+    }
+}
+
+// ดึงรายการปีทั้งหมดที่มีอยู่ในฐานข้อมูลมาแสดงใน Dropdown
+$years_query =$conn->query("SELECT DISTINCT YEAR(created_at) as y FROM repairs WHERE created_at IS NOT NULL ORDER BY y DESC");
+$available_years = [];
+if($years_query &&$years_query->num_rows > 0) {
+    while($y_row =$years_query->fetch_assoc()) {
+        if(!empty($y_row['y'])) $available_years[] =$y_row['y'];
+    }
+} else {
+    $available_years[] = date('Y'); // ถ้าไม่มีข้อมูลเลย ให้ใช้ปีปัจจุบัน
+}
+
+// เงื่อนไขการค้นหา SQL
+$where_conditions = [];
+if ($selected_year > 0) {
+    $where_conditions[] = "YEAR(created_at) = $selected_year";
+}
+if ($selected_month > 0) {
+    $where_conditions[] = "MONTH(created_at) = $selected_month";
+}
+if ($selected_tech !== 'all' && $selected_tech !== '') {$tech_esc = $conn->real_escape_string($selected_tech);
+    $where_conditions[] = "TRIM(technician_name) = '$tech_esc'";
+}
+
+$where_sql = count($where_conditions) > 0 ? "WHERE " . implode(" AND ", $where_conditions) : "";
+
+// สถิติ KPI
+$total_jobs =$conn->query("SELECT COUNT(*) as c FROM repairs $where_sql")->fetch_assoc()['c'] ?? 0;
+
+$done_where = empty($where_sql) ? "WHERE (status='ซ่อมเสร็จแล้ว' OR status='เสร็จสิ้น')" : "$where_sql AND (status='ซ่อมเสร็จแล้ว' OR status='เสร็จสิ้น')";
+$done_jobs =$conn->query("SELECT COUNT(*) as c FROM repairs $done_where")->fetch_assoc()['c'] ?? 0;
+
+$in_prog_where = empty($where_sql) ? "WHERE status='กำลังดำเนินการ'" : "$where_sql AND status='กำลังดำเนินการ'";
+$in_progress_jobs =$conn->query("SELECT COUNT(*) as c FROM repairs $in_prog_where")->fetch_assoc()['c'] ?? 0;
+
+$pending_where = empty($where_sql) ? "WHERE (status='รอดำเนินการ' OR status='รอรับเรื่อง')" : "$where_sql AND (status='รอดำเนินการ' OR status='รอรับเรื่อง')";
+$pending_jobs =$conn->query("SELECT COUNT(*) as c FROM repairs $pending_where")->fetch_assoc()['c'] ?? 0;
+
+$success_rate = ($total_jobs > 0) ? round(($done_jobs / $total_jobs) * 100, 2) : 0;
+
+// ดึงรายการซ่อมทั้งหมดมาเก็บไว้ใน Array ก่อน เพื่อใช้ในการแบ่งหน้า (Pagination)
+$repairs_list = $conn->query("SELECT * FROM repairs $where_sql ORDER BY created_at DESC");
+$all_rows = [];
+if($repairs_list &&$repairs_list->num_rows > 0) {
+    while($row =$repairs_list->fetch_assoc()) {
+        $all_rows[] =$row;
+    }
+}
+
+$thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
+$thai_year =$selected_year + 543;
+
+if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รายงานสรุปผลการปฏิบัติงานรายบุคคล ของ " . htmlspecialchars($tech_formal_name) . " (สังกัด: " . htmlspecialchars($tech_department) . ")";
+} else {
+    $report_title = "รายงานสรุปผลการปฏิบัติงานระบบแจ้งซ่อมออนไลน์ (ภาพรวมคณะ)";
+}
+?>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงานสรุปสำหรับผู้บริหาร - MBS REPAIR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif; 
+            margin: 0; padding: 0; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .custom-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center; 
+            background-size: 1.25rem;
+            padding-right: 2.25rem !important; 
+        }
+        .dark .custom-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cbd5e1'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+        
+        .a4-container {
+            font-family: 'Sarabun', sans-serif;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 30px auto 50px auto;
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dark .a4-container {
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6); 
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; font-size: 14px; color: black !important; min-height: auto !important; }
+            
+            @page { 
+                size: A4 portrait; 
+                margin: 15mm; 
+            }
+
+            .a4-container { 
+                width: 100% !important; 
+                height: auto !important;
+                min-height: auto !important;
+                padding: 0 !important; 
+                margin: 0 !important; 
+                box-shadow: none !important; 
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+            
+            .a4-container:last-of-type {
+                page-break-after: auto !important; 
+            }
+            
+            .pb-10 { padding-bottom: 0 !important; }
+
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+        }
+
+        /* ✨ สไตล์สำหรับ Keyboard Navigation ✨ */
+        .tech-dropdown-item.kb-active-item[data-value="all"] { background-color: #f1f5f9 !important; }
+        .dark .tech-dropdown-item.kb-active-item[data-value="all"] { background-color: #475569 !important; }
+        .tech-dropdown-item.kb-active-item:not([data-value="all"]) { background-color: #eef2ff !important; color: #4f46e5 !important; }
+        .dark .tech-dropdown-item.kb-active-item:not([data-value="all"]) { background-color: #475569 !important; color: #a5b4fc !important; }
+        .tech-dropdown-item.kb-active-item:not([data-value="all"]) > div > div { background-color: #e0e7ff !important; color: #6366f1 !important; }
+        .dark .tech-dropdown-item.kb-active-item:not([data-value="all"]) > div > div { background-color: #64748b !important; }
+        .month-dropdown-item.kb-active-item, .year-dropdown-item.kb-active-item { background-color: #eef2ff !important; color: #4f46e5 !important; }
+        .dark .month-dropdown-item.kb-active-item, .dark .year-dropdown-item.kb-active-item { background-color: #475569 !important; color: #a5b4fc !important; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
+
+    <!-- แถบเมนูควบคุม -->
+    <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
+        <div class="max-w-7xl mx-auto flex flex-col gap-4">
+            
+            <div class="flex flex-col lg:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex items-center space-x-4 w-full lg:w-auto justify-center lg:justify-start shrink-0">
+                    <button type="button" onclick="window.close();" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center cursor-pointer">
+                        <i class="fas fa-arrow-left mr-2"></i> Dashboard
+                    </button>
+                    <!-- ✨ เปลี่ยนชื่อหัวข้อ ✨ -->
+                    <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide hidden sm:block">รายงานสรุปสำหรับผู้บริหาร</h1>
+                </div>
+                
+                <div class="flex flex-wrap items-center justify-center lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5">
+                    <form method="GET" action="executive_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                        
+                        <div class="relative w-full md:w-60" id="techDropdownContainer">
+                            <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
+                                <i class="fas fa-search pl-3 text-slate-400 dark:text-slate-300 opacity-80"></i>
+                                <input type="text" id="techSearchInput" class="w-full bg-transparent px-2 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
+                                <button type="button" class="pr-3 pl-1 text-slate-400 dark:text-slate-300 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
+                                    <i class="fas fa-caret-down text-sm"></i>
+                                </button>
+                            </div>
+                            
+                            <div id="techDropdownList" class="absolute z-50 w-full md:w-72 mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar right-0 md:right-auto md:left-0">
+                                <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer transition-colors flex items-center" data-value="all" data-search="รวมทุกฝ่ายงานทั้งหมด" onmousedown="selectTech('all', 'รวมทุกฝ่ายงาน (ทั้งหมด)')">
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500 flex items-center justify-center mr-3 text-slate-400 dark:text-slate-300">
+                                        <i class="fas fa-globe text-[10px]"></i>
+                                    </div>
+                                    รวมทุกฝ่ายงาน (ทั้งหมด)
+                                </div>
+                                <?php 
+                                foreach($grouped_techs as $dept => $techs) {
+                                    $tech_count = count($techs);
+                                    echo "<div class='flex justify-between items-center px-4 py-2 mt-2 mb-1 bg-blue-50/50 dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800 dropdown-dept-header' data-dept=\"".htmlspecialchars($dept)."\">
+                                            <span class='text-xs font-extrabold text-indigo-600 dark:text-indigo-400 tracking-wide'>{$dept}</span>
+                                            <span class='text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 shadow-sm px-2 py-0.5 rounded-md flex items-center'>
+                                                <i class='fas fa-user-friends mr-1 text-indigo-400 dark:text-indigo-400'></i> {$tech_count} คน
+                                            </span>
+                                          </div>";
+
+                                    foreach($techs as $t_name) {
+                                        $searchStr = preg_replace('/\s+/', '', strtolower($t_name . $dept));
+                                        echo "<div class='tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-xs text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300 cursor-pointer flex justify-between items-center transition-all group' data-value=\"".htmlspecialchars($t_name)."\" data-display=\"".htmlspecialchars($t_name)."\" data-search=\"{$searchStr}\" data-dept=\"".htmlspecialchars($dept)."\" onmousedown=\"selectTech('".htmlspecialchars($t_name, ENT_QUOTES)."', '".htmlspecialchars($t_name, ENT_QUOTES)."')\">
+                                                <div class='flex items-center pointer-events-none'>
+                                                    <div class='w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500 flex items-center justify-center mr-3 text-slate-400 dark:text-slate-300 group-hover:bg-indigo-100 dark:group-hover:bg-slate-500 group-hover:text-indigo-500 transition-colors'>
+                                                        <i class='fas fa-user text-[10px]'></i>
+                                                    </div>
+                                                    <span>".htmlspecialchars($t_name)."</span>
+                                                </div>
+                                              </div>";
+                                    }
+                                }
+                                ?>
+                            </div>
+                            <input type="hidden" name="tech" id="techHiddenInput" value="<?php echo htmlspecialchars($selected_tech); ?>">
+                        </div>
+
+                        <!-- Dropdown เดือนแบบกำหนดเอง -->
+                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
+                            <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
+                                <span id="monthDisplayText" class="truncate"><?php echo isset($_GET['month']) ? $thai_months[$selected_month] : 'เดือน'; ?></span>
+                                <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
+                            </div>
+                            <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl hidden flex-col pb-2">
+                                <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 dark:bg-slate-800 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl'>
+                                    <span class='text-[11px] font-extrabold text-indigo-600 dark:text-indigo-300 tracking-wide'>เดือน</span>
+                                </div>
+                                <?php
+                                for($m=1; $m<=12; $m++) {
+                                    $activeClass = ($selected_month === $m) ? 'bg-indigo-50 dark:bg-slate-600 text-indigo-600 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300';
+                                    echo "<div class='month-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-xs font-bold cursor-pointer transition-all {$activeClass}' data-value='$m' data-display='{$thai_months[$m]}' onclick=\"selectMonth($m, '{$thai_months[$m]}')\">{$thai_months[$m]}</div>";
+                                }
+                                ?>
+                            </div>
+                            <input type="hidden" name="month" id="monthHiddenInput" value="<?php echo $selected_month; ?>">
+                        </div>
+
+                        <!-- Dropdown ปีแบบกำหนดเอง -->
+                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
+                            <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
+                                <span id="yearDisplayText" class="truncate"><?php echo isset($_GET['year']) ? 'พ.ศ. ' . ($selected_year + 543) : 'ปี (พ.ศ.)'; ?></span>
+                                <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
+                            </div>
+                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar">
+                                <div class='flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 dark:bg-slate-800 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl'>
+                                    <span class='text-[11px] font-extrabold text-indigo-600 dark:text-indigo-300 tracking-wide'>ปี (พ.ศ.)</span>
+                                </div>
+                                <?php
+                                foreach($available_years as $y) {
+                                    $thai_y = $y + 543;
+                                    $activeClass = ($selected_year == $y) ? 'bg-indigo-50 dark:bg-slate-600 text-indigo-600 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300';
+                                    echo "<div class='year-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-xs font-bold cursor-pointer transition-all {$activeClass}' data-value='$y' data-display='พ.ศ. {$thai_y}' onclick=\"selectYear($y, 'พ.ศ. {$thai_y}')\">พ.ศ. {$thai_y}</div>";
+                                }
+                                ?>
+                            </div>
+                            <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
+                        </div>
+
+                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-1.5 rounded-full font-extrabold transition-all shadow-sm">
+                            ค้นหา
+                        </button>
+                    </form>
+
+                    <button id="theme-toggle" type="button" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                        <i id="theme-toggle-icon" class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ✨ จัดปุ่มเอกสารและ Export Excel ให้อยู่กึ่งกลาง ✨ -->
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-4 w-full border-t border-slate-100 dark:border-slate-800 pt-5">
+                <div class="flex flex-wrap items-center justify-center gap-4 w-full">
+                    <a href="executive_report.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+                       class="px-5 py-2.5 rounded-full text-sm font-bold transition-all flex items-center border-2 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm">
+                        <i class="fas fa-table mr-2 text-indigo-600 dark:text-indigo-200 text-lg"></i> ตารางรายงาน
+                    </a>
+                    
+                    <a href="export_excel.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+                       target="_blank"
+                       class="bg-emerald-500 hover:bg-emerald-600 text-white text-sm px-5 py-2.5 rounded-full font-bold shadow-md transition-all flex items-center border border-emerald-600">
+                        <i class="fas fa-file-excel mr-2 text-emerald-100 text-lg"></i> Export to Excel
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ================== ส่วนแสดงผลรายงาน ================== -->
+    
+    <div class="flex-1 overflow-auto pb-10">
+        <?php
+        $first_page_limit = 14; 
+        $other_page_limit = 25; 
+        $pages = [];
+        
+        $total_records = count($all_rows);
+        if ($total_records > 0) {
+            if ($total_records <= $first_page_limit) {
+                $pages[] = $all_rows;
+            } else {
+                $pages[] = array_slice($all_rows, 0, $first_page_limit);
+                $remaining = array_slice($all_rows, $first_page_limit);
+                $chunks = array_chunk($remaining, $other_page_limit);
+                foreach ($chunks as $chunk) {
+                    $pages[] = $chunk;
+                }
+            }
+        } else {
+            $pages[] = [];
+        }
+        
+        $total_pages = count($pages);
+        $global_i = 1; 
+        
+        foreach ($pages as $page_index => $page_rows):
+        ?>
+        
+        <div class="a4-container">
+            <div class="flex-1 flex flex-col">
+                
+                <?php if ($page_index === 0): ?>
+                    <div class="text-center border-b-2 border-slate-900 pb-3 mb-5">
+                        <h2 class="text-xl font-bold text-slate-900">รายงานสรุปผลการปฏิบัติงานซ่อมบำรุงครุภัณฑ์</h2>
+                        <p class="text-sm font-semibold text-slate-700 mt-1">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
+                        <p class="text-xs text-slate-600 mt-1">
+                            <strong>ประจำเดือน:</strong> <?php echo $thai_months[$selected_month]; ?> พ.ศ. <?php echo $selected_year + 543; ?> <br>
+                            <strong>ช่างผู้รับผิดชอบ:</strong> 
+                            <?php 
+                                if ($selected_tech === 'all') {
+                                    echo 'เจ้าหน้าที่ช่างทุกคน (ภาพรวมคณะ)';
+                                } else {
+                                    echo htmlspecialchars($tech_formal_name) . " <strong>| สังกัด:</strong> " . htmlspecialchars($tech_department);
+                                }
+                            ?>
+                        </p>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="font-bold text-sm text-slate-800 mb-2">สรุปภาพรวมการซ่อมบำรุง (KPI Summary)</h3>
+                        <table class="w-full text-xs text-center border-collapse border border-slate-300">
+                            <thead class="bg-slate-100 font-bold border-b border-slate-300">
+                                <tr>
+                                    <th class="p-2 border-r border-slate-300">จำนวนรับแจ้งทั้งหมด</th>
+                                    <th class="p-2 border-r border-slate-300">ดำเนินการเสร็จสิ้น</th>
+                                    <th class="p-2 border-r border-slate-300">กำลังดำเนินการ</th>
+                                    <th class="p-2 border-r border-slate-300">รอดำเนินการ / จัดสรรช่าง</th>
+                                    <th class="p-2">อัตราความสำเร็จ (Success Rate)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="p-2 font-bold text-sm border-r border-slate-300"><?php echo $total_jobs; ?> รายการ</td>
+                                    <td class="p-2 font-bold text-sm text-emerald-700 border-r border-slate-300"><?php echo $done_jobs; ?> รายการ</td>
+                                    <td class="p-2 font-bold text-sm text-sky-700 border-r border-slate-300"><?php echo $in_progress_jobs; ?> รายการ</td>
+                                    <td class="p-2 font-bold text-sm text-amber-700 border-r border-slate-300"><?php echo $pending_jobs; ?> รายการ</td>
+                                    <td class="p-2 font-bold text-sm text-blue-700"><?php echo number_format($success_rate, 2); ?>%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mb-3">
+                        <h3 class="font-bold text-sm text-slate-800 mb-2">
+                            บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง
+                            <?php if($selected_tech !== 'all') echo " (เฉพาะ: ".htmlspecialchars($tech_formal_name).")"; ?>
+                        </h3>
+                <?php else: ?>
+                    <div class="pt-2 mb-2">
+                        <h3 class="font-bold text-sm text-slate-800">
+                            บันทึกรายละเอียดการปฏิบัติงานซ่อมบำรุง
+                            <?php if($selected_tech !== 'all') echo " (เฉพาะ: ".htmlspecialchars($tech_formal_name).")"; ?>
+                        </h3>
+                    </div>
+                <?php endif; ?>
+
+                <table class="w-full text-xs border-collapse border border-slate-300">
+                    <thead class="bg-slate-100 font-bold text-slate-700 border-b border-slate-300">
+                        <tr>
+                            <th class="p-1.5 w-8 text-center border-r border-slate-300">ลำดับ</th>
+                            <th class="p-1.5 w-24 text-center border-r border-slate-300">วัน/เวลา รับแจ้ง</th>
+                            <th class="p-1.5 w-28 text-center border-r border-slate-300">เลขที่ใบงาน</th>
+                            <th class="p-1.5 border-r border-slate-300">ประเภทอุปกรณ์/ครุภัณฑ์</th>
+                            <th class="p-1.5 border-r border-slate-300">สถานที่/ห้อง</th>
+                            <th class="p-1.5 w-24 border-r border-slate-300">ช่างผู้ดูแล</th>
+                            <th class="p-1.5 w-20 text-center">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        if(count($page_rows) > 0) {
+                            foreach($page_rows as $row) {
+                                $date = date("d/m/Y H:i", strtotime($row['created_at']));
+                                $ticket = $row['ticket_no'] ?? ('#REP-'.$row['id']);
+                                $eq = htmlspecialchars($row['equipment_type'] ?? ($row['device_name'] ?? 'ไม่ระบุ'));
+                                $loc = htmlspecialchars($row['location_room'] ?? ($row['location'] ?? 'ไม่ระบุ'));
+                                $tech = htmlspecialchars($row['technician_name'] ?? 'ยังไม่จัดสรร');
+                                $st = $row['status'] ?? 'ไม่ระบุ';
+
+                                echo "<tr class='border-b border-slate-200'>
+                                        <td class='p-1.5 text-center border-r border-slate-200'>{$global_i}</td>
+                                        <td class='p-1.5 text-center border-r border-slate-200'>{$date}</td>
+                                        <td class='p-1.5 text-center font-semibold border-r border-slate-200'>{$ticket}</td>
+                                        <td class='p-1.5 border-r border-slate-200'>{$eq}</td>
+                                        <td class='p-1.5 border-r border-slate-200'>{$loc}</td>
+                                        <td class='p-1.5 font-semibold text-slate-800 border-r border-slate-200'>{$tech}</td>
+                                        <td class='p-1.5 text-center font-semibold'>{$st}</td>
+                                    </tr>";
+                                $global_i++;
+                            }
+                        } else {
+                            echo "<tr><td colspan='7' class='p-8 text-center text-slate-400 italic bg-slate-50'>ไม่พบข้อมูลการแจ้งซ่อมของช่างหรือเดือนที่เลือก</td></tr>";
+                        }
+                        ?>
+                    </tbody>
+                </table>
+                
+                <?php if ($page_index === 0): ?>
+                    </div> 
+                <?php endif; ?>
+
+            </div> 
+        </div> 
+        
+        <?php endforeach; ?>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        let currentTechDisplay = '<?php echo $selected_tech === "all" ? "รวมทุกฝ่ายงาน (ทั้งหมด)" : addslashes($selected_tech); ?>';
+        let currentFocus = -1;
+
+        function focusTechSearch(e) {
+            e.target.value = ''; 
+            filterTechDropdown(); 
+            toggleTechDropdown(e, true);
+        }
+
+        function blurTechSearch(e) {
+            setTimeout(() => {
+                if (document.getElementById('techSearchInput').value === '') {
+                    document.getElementById('techSearchInput').value = currentTechDisplay;
+                }
+            }, 200);
+        }
+
+        function toggleTechDropdown(e, forceOpen = false) {
+            if(e) e.stopPropagation();
+            const list = document.getElementById('techDropdownList');
+            const input = document.getElementById('techSearchInput');
+            
+            if(forceOpen) {
+                list.classList.remove('hidden');
+                list.classList.add('flex');
+            } else {
+                list.classList.toggle('hidden');
+                list.classList.toggle('flex');
+            }
+
+            if (!list.classList.contains('hidden')) {
+                if (document.activeElement !== input) {
+                    input.focus();
+                }
+            } else {
+                input.blur();
+            }
+        }
+
+        function filterTechDropdown() {
+            toggleTechDropdown(null, true);
+            const searchVal = document.getElementById('techSearchInput').value.toLowerCase().replace(/\s+/g, '');
+            let deptVisibility = {};
+            
+            currentFocus = -1;
+            removeActive(document.querySelectorAll('.tech-dropdown-item'));
+
+            const items = document.querySelectorAll('.tech-dropdown-item');
+            items.forEach(item => {
+                if (item.getAttribute('data-value') === 'all') return;
+                
+                const searchData = item.getAttribute('data-search') || '';
+                const dept = item.getAttribute('data-dept');
+                
+                if (!deptVisibility[dept]) deptVisibility[dept] = 0;
+                
+                if(searchData.includes(searchVal)) {
+                    item.style.display = '';
+                    deptVisibility[dept]++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            const allItem = document.querySelector('.tech-dropdown-item[data-value="all"]');
+            if (allItem) {
+                const searchData = allItem.getAttribute('data-search') || '';
+                if (searchData.includes(searchVal) || searchVal === '') {
+                    allItem.style.display = '';
+                } else {
+                    allItem.style.display = 'none';
+                }
+            }
+
+            const deptHeaders = document.querySelectorAll('.dropdown-dept-header');
+            deptHeaders.forEach(header => {
+                const dept = header.getAttribute('data-dept');
+                if (deptVisibility[dept] > 0) {
+                    header.style.display = 'flex';
+                } else {
+                    header.style.display = 'none';
+                }
+            });
+        }
+
+        function selectTech(val, displayText) {
+            currentTechDisplay = displayText;
+            document.getElementById('techHiddenInput').value = val;
+            document.getElementById('techSearchInput').value = displayText;
+            document.getElementById('techDropdownList').classList.add('hidden');
+            document.getElementById('techDropdownList').classList.remove('flex');
+        }
+
+        document.addEventListener('click', function(e) {
+            const techContainer = document.getElementById('techDropdownContainer');
+            if (techContainer && !techContainer.contains(e.target)) {
+                const list = document.getElementById('techDropdownList');
+                if(list) {
+                    list.classList.add('hidden');
+                    list.classList.remove('flex');
+                    document.getElementById('techSearchInput').value = currentTechDisplay;
+                }
+            }
+            
+            const monthContainer = document.getElementById('monthDropdownContainer');
+            if (monthContainer && !monthContainer.contains(e.target)) {
+                const mList = document.getElementById('monthDropdownList');
+                if(mList) {
+                    mList.classList.add('hidden');
+                    mList.classList.remove('flex');
+                }
+            }
+
+            const yearContainer = document.getElementById('yearDropdownContainer');
+            if (yearContainer && !yearContainer.contains(e.target)) {
+                const yList = document.getElementById('yearDropdownList');
+                if(yList) {
+                    yList.classList.add('hidden');
+                    yList.classList.remove('flex');
+                }
+            }
+        });
+
+        let currentMonthFocus = -1;
+        let currentYearFocus = -1;
+
+        function toggleMonthDropdown(e) {
+            if(e) e.stopPropagation();
+            const list = document.getElementById('monthDropdownList');
+            const container = document.getElementById('monthDropdownContainer');
+            
+            list.classList.toggle('hidden');
+            list.classList.toggle('flex');
+            
+            document.getElementById('techDropdownList').classList.add('hidden');
+            document.getElementById('techDropdownList').classList.remove('flex');
+            document.getElementById('yearDropdownList').classList.add('hidden');
+            document.getElementById('yearDropdownList').classList.remove('flex');
+
+            if (!list.classList.contains('hidden')) {
+                container.focus();
+                currentMonthFocus = -1;
+                removeMonthActive(document.querySelectorAll('.month-dropdown-item'));
+            }
+        }
+
+        function selectMonth(val, displayText) {
+            document.getElementById('monthHiddenInput').value = val;
+            document.getElementById('monthDisplayText').innerText = displayText;
+            document.getElementById('monthDropdownList').classList.add('hidden');
+            document.getElementById('monthDropdownList').classList.remove('flex');
+        }
+
+        function handleMonthKeydown(e) {
+            const list = document.getElementById('monthDropdownList');
+            if (list.classList.contains('hidden')) {
+                if (e.key === "ArrowDown" || e.key === "Enter") toggleMonthDropdown(null);
+                return;
+            }
+            let items = list.querySelectorAll('.month-dropdown-item');
+            if (e.key === "ArrowDown") {
+                currentMonthFocus++; addMonthActive(items); e.preventDefault();
+            } else if (e.key === "ArrowUp") {
+                currentMonthFocus--; addMonthActive(items); e.preventDefault();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (currentMonthFocus > -1 && items[currentMonthFocus]) {
+                    items[currentMonthFocus].click();
+                }
+            }
+        }
+
+        function addMonthActive(x) {
+            if (!x) return false;
+            removeMonthActive(x);
+            if (currentMonthFocus >= x.length) currentMonthFocus = 0;
+            if (currentMonthFocus < 0) currentMonthFocus = (x.length - 1);
+            x[currentMonthFocus].classList.add("kb-active-item");
+            x[currentMonthFocus].scrollIntoView({ behavior: 'auto', block: 'nearest' });
+        }
+
+        function removeMonthActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("kb-active-item");
+            }
+        }
+
+        function toggleYearDropdown(e) {
+            if(e) e.stopPropagation();
+            const list = document.getElementById('yearDropdownList');
+            const container = document.getElementById('yearDropdownContainer');
+            
+            list.classList.toggle('hidden');
+            list.classList.toggle('flex');
+            
+            document.getElementById('techDropdownList').classList.add('hidden');
+            document.getElementById('techDropdownList').classList.remove('flex');
+            document.getElementById('monthDropdownList').classList.add('hidden');
+            document.getElementById('monthDropdownList').classList.remove('flex');
+
+            if (!list.classList.contains('hidden')) {
+                container.focus();
+                currentYearFocus = -1;
+                removeYearActive(document.querySelectorAll('.year-dropdown-item'));
+            }
+        }
+
+        function selectYear(val, displayText) {
+            document.getElementById('yearHiddenInput').value = val;
+            document.getElementById('yearDisplayText').innerText = displayText;
+            document.getElementById('yearDropdownList').classList.add('hidden');
+            document.getElementById('yearDropdownList').classList.remove('flex');
+        }
+
+        function handleYearKeydown(e) {
+            const list = document.getElementById('yearDropdownList');
+            if (list.classList.contains('hidden')) {
+                if (e.key === "ArrowDown" || e.key === "Enter") toggleYearDropdown(null);
+                return;
+            }
+            let items = list.querySelectorAll('.year-dropdown-item');
+            if (e.key === "ArrowDown") {
+                currentYearFocus++; addYearActive(items); e.preventDefault();
+            } else if (e.key === "ArrowUp") {
+                currentYearFocus--; addYearActive(items); e.preventDefault();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (currentYearFocus > -1 && items[currentYearFocus]) {
+                    items[currentYearFocus].click();
+                }
+            }
+        }
+
+        function addYearActive(x) {
+            if (!x) return false;
+            removeYearActive(x);
+            if (currentYearFocus >= x.length) currentYearFocus = 0;
+            if (currentYearFocus < 0) currentYearFocus = (x.length - 1);
+            x[currentYearFocus].classList.add("kb-active-item");
+            x[currentYearFocus].scrollIntoView({ behavior: 'auto', block: 'nearest' });
+        }
+
+        function removeYearActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("kb-active-item");
+            }
+        }
+       
+        document.getElementById('techSearchInput').addEventListener('keydown', function(e) {
+            const list = document.getElementById('techDropdownList');
+            
+            if (list.classList.contains('hidden')) {
+                if (e.key === "ArrowDown" || e.key === "Enter") {
+                    toggleTechDropdown(null, true);
+                }
+                return;
+            }
+
+            let items = list.querySelectorAll('.tech-dropdown-item');
+            let visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
+
+            if (e.key === "ArrowDown") {
+                currentFocus++;
+                addActive(visibleItems);
+                e.preventDefault(); 
+            } else if (e.key === "ArrowUp") {
+                currentFocus--;
+                addActive(visibleItems);
+                e.preventDefault();
+            } else if (e.key === "Enter") {
+                e.preventDefault(); 
+                if (currentFocus > -1) {
+                    if (visibleItems[currentFocus]) {
+                        const val = visibleItems[currentFocus].getAttribute('data-value');
+                        const disp = visibleItems[currentFocus].getAttribute('data-display') || 'รวมทุกฝ่ายงาน (ทั้งหมด)';
+                        selectTech(val, disp);
+                    }
+                } else if (visibleItems.length === 1) {
+                    const val = visibleItems[0].getAttribute('data-value');
+                    const disp = visibleItems[0].getAttribute('data-display') || 'รวมทุกฝ่ายงาน (ทั้งหมด)';
+                    selectTech(val, disp);
+                }
+            }
+        });
+
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0; 
+            if (currentFocus < 0) currentFocus = (x.length - 1); 
+            x[currentFocus].classList.add("kb-active-item");
+            x[currentFocus].scrollIntoView({ behavior: 'auto', block: 'nearest' });
+        }
+
+        function removeActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("kb-active-item");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('techSearchInput').value = currentTechDisplay;
+        });
+
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+        function updateIcon() {
+            if (document.documentElement.classList.contains('dark')) {
+                themeToggleIcon.classList.remove('fa-moon');
+                themeToggleIcon.classList.add('fa-sun');
+            } else {
+                themeToggleIcon.classList.remove('fa-sun');
+                themeToggleIcon.classList.add('fa-moon');
+            }
+        }
+
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElemenSt.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        updateIcon();
+
+        themeToggleBtn.addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            
+            if (document.documentElement.classList.contains('dark')) {
+                localStorage.setItem('color-theme', 'dark');
+            } else {
+                localStorage.setItem('color-theme', 'light');
+            }
+            updateIcon();
+        });
+    </script>
+</body>
+</html>
