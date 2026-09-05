@@ -2898,8 +2898,9 @@ $dept_icons = [
         document.addEventListener('click', function(e) {
             const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"], a[href*="view_repair.php"]');
             if (target) {
-                // 🚫 ตรวจสอบว่าคลิกมาจากใน Pop-up หรือไม่ ถ้าใช่ให้ข้ามการรีเฟรชไปเลย (รักษาหน้าจอเดิมไว้เป๊ะๆ 100% ไม่มีกระพริบ)
-                if (!target.closest('.modal-container')) {
+                // 🚫 ตรวจสอบว่าคลิกมาจากใน Pop-up หรือหน้า Transactions (#repairs) หรือไม่ 
+                // ถ้าใช่ให้ข้ามการรีเฟรชไปเลย (รักษาหน้าจอเดิมไว้เป๊ะๆ 100% ไม่มีกระตุกแว็บๆ แน่นอน)
+                if (!target.closest('.modal-container') && !target.closest('#repairs')) {
                     sessionStorage.setItem('needsRefresh', 'true');
                 }
             }
