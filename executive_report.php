@@ -348,16 +348,21 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
 
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-2 md:mt-0">
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 w-full sm:w-auto">
-                    <!-- ปุ่ม ตารางรายงาน (รูปแบบและขนาดเดียวกับแอดมิน) -->
+                    <!-- ✨ สร้างปุ่มล่องหน เพื่อดันปุ่มอื่นๆ ให้ไปตกในตำแหน่งที่ 2 และ 3 ให้ตรงกับฝั่งแอดมินเป๊ะๆ ✨ -->
+                    <div class="px-4 py-1.5 border-2 border-transparent opacity-0 pointer-events-none select-none hidden sm:flex items-center">
+                        <i class="fas fa-table mr-1.5"></i> ตารางรายงาน
+                    </div>
+
+                    <!-- ปุ่ม ตารางรายงาน (ถูกดันมาตำแหน่งที่ 2 แทนที่ "บันทึกข้อความ" ใต้หัวข้อพอดี) -->
                     <a href="executive_report.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                        class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm">
                         <i class="fas fa-table mr-1.5 text-indigo-600 dark:text-indigo-200"></i> ตารางรายงาน
                     </a>
                     
-                    <!-- ปุ่ม Export to Excel (แทนที่ตำแหน่งปุ่มพิมพ์ PDF เดิม) -->
+                    <!-- ปุ่ม Export to Excel (ปรับขนาด py-2 ให้เท่ากับตำแหน่ง "พิมพ์ / โหลด PDF" เดิมพอดี) -->
                     <a href="export_excel.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                        target="_blank"
-                       class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-5 py-1.5 rounded-full font-bold shadow-md transition-all flex items-center border border-emerald-600 ml-1">
+                       class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md transition-all flex items-center border border-emerald-600 ml-1">
                         <i class="fas fa-file-excel mr-1.5 text-emerald-100"></i> Export to Excel
                     </a>
                 </div>
