@@ -234,10 +234,9 @@ $pageTitles = [
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">DASHBOARD</p>
             <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
             <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
-            
-            <!-- ✨ เพิ่มหมวดหมู่ MANAGEMENT ตามฝั่งแอดมิน ✨ -->
-            <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2">MANAGEMENT</p>
             <button onclick="show('technician')" class="nav-btn" id="btn-technician"><i class="fas fa-id-badge"></i> Technician</button>
+            
+            <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2">MANAGEMENT</p>
             <a href="executive_report.php" target="_blank" class="nav-btn"><i class="fas fa-file-alt"></i> Summary Reports</a>
 
             <div class="mt-auto pt-4 border-t border-slate-50">
