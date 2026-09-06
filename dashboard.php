@@ -2643,6 +2643,11 @@ $dept_icons = [
             
             // อัปเดต URL เงียบๆ ให้ตรงกับแท็บที่กดเสมอ
             history.replaceState(null, '', '?tab=' + id);
+
+            // 🚨 ล็อกเป้าฟอร์มทั้งหมดให้เป็นหน้าปัจจุบันทันที ป้องกันหน้าจอเด้งไปผิดแท็บเวลากด Save 🚨
+            document.querySelectorAll('.modal form').forEach(f => {
+                f.action = '?tab=' + id;
+            });
             
             // ✨ รีเซ็ต Scroll กลับไปบนสุดเมื่อ "กดเปลี่ยนแท็บ" แต่ "ไม่รีเซ็ต" ตอนโหลดหน้าเว็บครั้งแรก ✨
             if (!preventScrollReset) {
