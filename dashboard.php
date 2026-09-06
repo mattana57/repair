@@ -309,8 +309,8 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
 // ระบบบันทึกและลบข้อมูล
 // =====================================================================
 
-// ✨ ดึงค่า Tab ปัจจุบันเสมอ เพื่อไม่ให้จอเด้งกลับไปผิดหน้า ✨
-$js_redirect = "let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash'; window.location.href='dashboard.php?tab=' + t;";
+// ✨ ปิดการโหลดหน้าซ้ำซ้อน เพื่อไม่ให้จอกระตุกแว็บหลังจากกด OK ใน SweetAlert ✨
+$js_redirect = "history.replaceState(null, '', '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash'));";
 
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
@@ -2710,22 +2710,32 @@ $dept_icons = [
             renderTopReporters();
         }
 
-        // ✨ ติดตาม Scroll แบบ Real-time ตลอดเวลา ✨
-        const mainScrollWrapper = document.querySelector('main > div.overflow-y-auto');
-        if (mainScrollWrapper) {
-            mainScrollWrapper.addEventListener('scroll', () => {
-                sessionStorage.setItem('dashboardScrollY', mainScrollWrapper.scrollTop);
-            });
+        // ✨ ปิดระบบการเลื่อนจออัตโนมัติของเบราว์เซอร์ ✨
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
         }
 
-        // ✨ คืนค่าตำแหน่งหน้าจอ "ทันทีแบบ Hardcore" ไม่ให้มีจังหวะกระพริบไปจุดอื่นเลย ✨
-        (function forceRestoreScroll() {
-            const container = document.querySelector('main > div.overflow-y-auto');
+        // ✨ คืนค่าตำแหน่งหน้าจอแบบเนียนกริบ (ซ่อนจอเสี้ยววิ -> เลื่อน -> โชว์จอ) ✨
+        const mainScrollWrapper = document.querySelector('main > div.overflow-y-auto');
+        if (mainScrollWrapper) {
             const targetY = sessionStorage.getItem('dashboardScrollY');
-            if (container && targetY !== null) {
-                container.scrollTop = parseInt(targetY);
+            if (targetY !== null) {
+                // ซ่อนก่อนเลื่อน เพื่อไม่ให้เห็นจังหวะกระตุก
+                mainScrollWrapper.style.opacity = '0';
+                mainScrollWrapper.scrollTop = parseInt(targetY);
+                
+                // ค่อยโชว์กลับมาแบบสมูท
+                requestAnimationFrame(() => {
+                    mainScrollWrapper.style.transition = 'opacity 0.2s ease';
+                    mainScrollWrapper.style.opacity = '1';
+                });
             }
-        })();
+
+            // แอบจำค่า Scroll แบบ Real-time
+            mainScrollWrapper.addEventListener('scroll', () => {
+                sessionStorage.setItem('dashboardScrollY', mainScrollWrapper.scrollTop);
+            }, { passive: true });
+        }
 
         // ✨ จำสถานะ Pop-up และ Tab ก่อนโหลดหน้าจอ ✨
         window.addEventListener('beforeunload', function() {
@@ -2754,7 +2764,7 @@ $dept_icons = [
             }
         });
 
-        // ✨ ระบบคืนค่าทั้งหมดเมื่อโหลดเสร็จแบบ "ไร้รอยต่อ (Seamless)" ✨
+        // ✨ คืนค่าตัวอื่นๆ เมื่อโหลดเสร็จ ✨
         document.addEventListener('DOMContentLoaded', () => {
             window.chartsRendered = false;
             
@@ -2762,20 +2772,13 @@ $dept_icons = [
             const urlParams = new URLSearchParams(window.location.search);
             const currentTabUrl = urlParams.get('tab');
             
-            // 🚨 บังคับให้โหลดกลับแท็บเป้าหมาย โดยให้ความสำคัญกับค่าเดิมก่อน URL 
-            // ป้องกันการแว็บไปหน้าอื่นเวลาโดน PHP สั่ง Redirect มาที่ tab=technicians 
+            // 🚨 โหลดกลับแท็บเป้าหมาย
             const finalTab = savedTab ? savedTab : (currentTabUrl ? currentTabUrl : 'dash');
-            
-            // เรียกฟังก์ชันเปลี่ยนแท็บแบบไร้การขยับจอ
             show(finalTab, true);
 
-            // 🚨 บังคับเซ็ต Scroll แบบ Hardcore อีกครั้งทันที ไม่ต้องรอ setTimeout
-            const container = document.querySelector('main > div.overflow-y-auto');
-            const targetY = sessionStorage.getItem('dashboardScrollY');
-            if (container && targetY !== null) {
-                // บังคับให้ scrollBehavior เป็น auto เพื่อให้มันกระโดดไปทันทีแบบไม่มีแอนิเมชันเลื่อนลงมา
-                container.style.scrollBehavior = 'auto';
-                container.scrollTop = parseInt(targetY);
+            // 🚨 ย้ำค่า Scroll อีกรอบหลัง DOM โหลดเสร็จ เพื่อความชัวร์ 100%
+            if (mainScrollWrapper && sessionStorage.getItem('dashboardScrollY') !== null) {
+                mainScrollWrapper.scrollTop = parseInt(sessionStorage.getItem('dashboardScrollY'));
             }
 
             const savedRepairsScrollX = sessionStorage.getItem('repairsScrollX');
