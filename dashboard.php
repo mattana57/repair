@@ -3634,11 +3634,13 @@ $dept_icons = [
                     hiddenInput.id = 'final_avatar_position';
                     hiddenInput.name = 'position';
                     hiddenInput.value = pos;
-                    document.querySelector('form[action="dashboard.php?tab=technicians"]').appendChild(hiddenInput);
+                    // 🚨 แก้ไขให้มันชี้ไปที่ฟอร์มด้านใน Modal โดยตรง จะได้หาเจอและปุ่ม Edit กลับมาทำงานได้!
+                    let targetForm = document.querySelector('#techAdminModal form');
+                    if(targetForm) targetForm.appendChild(hiddenInput);
                 }
             }
 
-            document.getElementById('techAdmin_id').value = id; 
+            document.getElementById('techAdmin_id').value = id;
             document.getElementById('techAdmin_username').value = u; 
             document.getElementById('techAdmin_fullname').value = f; 
             document.getElementById('techAdmin_englishname').value = en;
