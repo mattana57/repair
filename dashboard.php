@@ -2894,64 +2894,126 @@ $dept_icons = [
             if(document.getElementById('topReportersList')) renderTopReporters();
         });
 
-        // ✨ ตรวจจับการคลิกเปิดหน้า Edit หรือ View (อัปเดต: บล็อกการรีเฟรชหน้าจอเพื่อไม่ให้กระตุกแว็บ)
+        // ✨ บล็อกการรีเฟรชหน้าจอกระตุกเมื่อสลับแท็บจากหน้า View/Edit
         document.addEventListener('click', function(e) {
             const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"], a[href*="view_repair.php"]');
             if (target) {
-                // 🚫 ยกเลิกคำสั่งสั่งรีเฟรชหน้าจอทิ้งไปเลย เพื่อให้พอกลับมาแท็บเดิมแล้ว ทุกอย่างหยุดนิ่ง 100% 
-                // ไม่มีอาการกระตุกหรือแว็บไปโชว์หน้า Overview (รูปที่ 3) อีกต่อไปครับ!
+                // หยุดการทำงานรีเฟรชหน้าจอกลับมา
             }
         });
 
-        // โหลดข้อมูลเนียนๆ เมื่อสลับแท็บกลับมา
+        // โหลดข้อมูลเนียนๆ เมื่อสลับแท็บกลับมา (ตัดการรีเฟรชออโต้ทิ้งเพื่อไม่ให้เด้งกลับหน้า Dash)
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === "visible") {
                 if (sessionStorage.getItem('needsRefresh') === 'true') {
                     sessionStorage.removeItem('needsRefresh');
-                    
-                    // บันทึกตำแหน่งและแท็บไว้
-                    const activeSection = document.querySelector('.section:not(.hidden)');
-                    
-                    // 🚫 แก้ปัญหาหน้าจอกระตุกแว็บ (เฉพาะหน้า Transactions): ห้ามระบบรีเฟรชหน้าจอเด็ดขาด
-                    // เพื่อให้เวลากดปิดแท็บใหม่มาแล้ว หน้าจอเดิมจะค้างอยู่ตำแหน่งเดิมเป๊ะๆ 100% ไม่มีโหลดใหม่
-                    if (activeSection && activeSection.id === 'repairs') {
-                        return; // หยุดการทำงานตรงนี้เลย ไม่ต้องไปทำคำสั่ง reload ด้านล่าง
-                    }
-
-                    if (activeSection) {
-                        sessionStorage.setItem('activeTabBeforeRefresh', activeSection.id);
-                    }
-                    
-                    sessionStorage.setItem('pageScrollY', window.scrollY);
-                    
-                    const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
-                    if (repairsTableWrap) {
-                        sessionStorage.setItem('repairsScrollX', repairsTableWrap.scrollLeft);
-                    }
-
-                    const historyTableBody = document.getElementById('historyTableBody');
-                    if (historyTableBody && !document.getElementById('historyModal').classList.contains('opacity-0')) {
-                        sessionStorage.setItem('historyScrollX', historyTableBody.parentElement.parentElement.scrollLeft);
-                        sessionStorage.setItem('modalOpen', 'historyModal');
-                        sessionStorage.setItem('historyModalTitle', document.getElementById('historyModalTitle').innerText);
-                    }
-
-                    // ✨ ตรวจสอบว่า Pop-up รีวิวช่างเปิดอยู่หรือไม่ ถ้าเปิดอยู่ให้จำค่าไว้ ✨
-                    const techReviewsModal = document.getElementById('techReviewsModal');
-                    if (techReviewsModal && !techReviewsModal.classList.contains('opacity-0')) {
-                        sessionStorage.setItem('reopenTechReviewsModal', 'true');
-                        sessionStorage.setItem('tr_dept', document.getElementById('techReviewsModalDept').innerText);
-                        sessionStorage.setItem('tr_tech', document.getElementById('modalTechSelector').value);
-                        sessionStorage.setItem('tr_month', document.getElementById('ratingMonth').value);
-                        sessionStorage.setItem('tr_year', document.getElementById('ratingYear').value);
-                    }
-
-                    // สั่งรีเฟรชตรงๆ (ข้อมูลแท็บและ Scroll ถูกจำไว้ใน Session Storage แล้ว)
-                    window.location.reload();
+                    // ไม่ต้องทำคำสั่ง reload() ปล่อยให้ผู้ใช้กด F5 เอง ถ้าระบบไม่ได้ให้บันทึกข้อมูล
                 }
             }
         });
-        
+
+        // ✨ จำสถานะทั้งหมดก่อนที่หน้าจอจะโหลดใหม่ (เช่น ตอนกด Save / อัปเดต / ลบ ข้อมูล) ✨
+        window.addEventListener('beforeunload', function() {
+            const activeSection = document.querySelector('.section:not(.hidden)');
+            if (activeSection) {
+                sessionStorage.setItem('activeTabBeforeRefresh', activeSection.id);
+            }
+            
+            sessionStorage.setItem('pageScrollY', window.scrollY);
+            
+            const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
+            if (repairsTableWrap) sessionStorage.setItem('repairsScrollX', repairsTableWrap.scrollLeft);
+
+            const historyTableBody = document.getElementById('historyTableBody');
+            if (historyTableBody && !document.getElementById('historyModal').classList.contains('opacity-0')) {
+                sessionStorage.setItem('historyScrollX', historyTableBody.parentElement.parentElement.scrollLeft);
+                sessionStorage.setItem('modalOpen', 'historyModal');
+                sessionStorage.setItem('historyModalTitle', document.getElementById('historyModalTitle').innerText);
+            }
+
+            // ถ้า Pop-up รีวิวเปิดอยู่
+            const techReviewsModal = document.getElementById('techReviewsModal');
+            if (techReviewsModal && !techReviewsModal.classList.contains('opacity-0')) {
+                sessionStorage.setItem('reopenTechReviewsModal', 'true');
+                sessionStorage.setItem('tr_dept', document.getElementById('techReviewsModalDept').innerText);
+                sessionStorage.setItem('tr_tech', document.getElementById('modalTechSelector').value);
+                sessionStorage.setItem('tr_month', document.getElementById('ratingMonth').value);
+                sessionStorage.setItem('tr_year', document.getElementById('ratingYear').value);
+            }
+
+            // ถ้าแก้ไขชื่อแอดมินหรือช่าง (Form) เปิดอยู่ ไม่ต้องจำ เพราะระบบมันต้องปิด Pop-up ให้เอง
+        });
+
+        // ✨ คืนค่าระบบเมื่อโหลดหน้าจอเสร็จ ✨
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTab = sessionStorage.getItem('activeTabBeforeRefresh');
+            // เช็คว่าถ้ามีค่า Parameter Tab ที่ส่งมากับการกดปุ่มให้ใช้อันนั้นก่อน ถ้าไม่มีให้ใช้ของที่จำไว้
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentTabUrl = urlParams.get('tab');
+            
+            if (savedTab && !currentTabUrl) {
+                show(savedTab); // กลับมาเปิดแท็บเดิมที่ถูกจำไว้
+            }
+
+            setTimeout(() => {
+                const savedScrollY = sessionStorage.getItem('pageScrollY');
+                if (savedScrollY !== null) {
+                    window.scrollTo(0, parseInt(savedScrollY));
+                    sessionStorage.removeItem('pageScrollY');
+                }
+
+                const savedRepairsScrollX = sessionStorage.getItem('repairsScrollX');
+                if (savedRepairsScrollX !== null) {
+                    const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
+                    if (repairsTableWrap) repairsTableWrap.scrollLeft = parseInt(savedRepairsScrollX);
+                    sessionStorage.removeItem('repairsScrollX');
+                }
+
+                const openModal = sessionStorage.getItem('modalOpen');
+                if (openModal === 'historyModal') {
+                    const titleStr = sessionStorage.getItem('historyModalTitle');
+                    if (titleStr) {
+                        let fullName = titleStr.replace('ประวัติงานช่าง: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
+                        let type = titleStr.includes('ช่าง') ? 'technician' : 'reporter';
+                        viewHistory(fullName, type);
+                        
+                        setTimeout(() => {
+                            const savedHistoryScrollX = sessionStorage.getItem('historyScrollX');
+                            const historyTableBody = document.getElementById('historyTableBody');
+                            if (historyTableBody && savedHistoryScrollX !== null) {
+                                historyTableBody.parentElement.parentElement.scrollLeft = parseInt(savedHistoryScrollX);
+                            }
+                            sessionStorage.removeItem('historyScrollX');
+                        }, 50);
+                    }
+                    sessionStorage.removeItem('modalOpen');
+                    sessionStorage.removeItem('historyModalTitle');
+                }
+
+                const reopenReviews = sessionStorage.getItem('reopenTechReviewsModal');
+                if (reopenReviews === 'true') {
+                    sessionStorage.removeItem('reopenTechReviewsModal');
+                    const trDept = sessionStorage.getItem('tr_dept');
+                    const trTech = sessionStorage.getItem('tr_tech');
+                    const trMonth = sessionStorage.getItem('tr_month');
+                    const trYear = sessionStorage.getItem('tr_year');
+                    
+                    if(trMonth) document.getElementById('ratingMonth').value = trMonth;
+                    if(trYear) document.getElementById('ratingYear').value = trYear;
+                    
+                    setTimeout(() => {
+                        openTechReviewsModal(trDept, trMonth, trYear);
+                        setTimeout(() => {
+                            if (trTech) {
+                                document.getElementById('modalTechSelector').value = trTech;
+                                changeModalTech(trTech);
+                            }
+                        }, 200);
+                    }, 300);
+                }
+            }, 100);
+        });
+
         function searchHistoryTable() {
             let input = document.getElementById('searchHistoryInput');
             if(!input) return;
