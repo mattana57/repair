@@ -2919,7 +2919,11 @@ $dept_icons = [
                 sessionStorage.setItem('activeTabBeforeRefresh', activeSection.id);
             }
             
-            sessionStorage.setItem('pageScrollY', window.scrollY);
+            // 🚨 แก้ไข: ดึงตำแหน่ง Scroll จากกล่องเนื้อหาหลัก แทน window ที่มีค่าเป็น 0 เสมอ
+            const scrollContainer = document.querySelector('main > div.overflow-y-auto');
+            if (scrollContainer) {
+                sessionStorage.setItem('pageScrollY', scrollContainer.scrollTop);
+            }
             
             const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
             if (repairsTableWrap) sessionStorage.setItem('repairsScrollX', repairsTableWrap.scrollLeft);
@@ -2940,25 +2944,29 @@ $dept_icons = [
                 sessionStorage.setItem('tr_month', document.getElementById('ratingMonth').value);
                 sessionStorage.setItem('tr_year', document.getElementById('ratingYear').value);
             }
-
-            // ถ้าแก้ไขชื่อแอดมินหรือช่าง (Form) เปิดอยู่ ไม่ต้องจำ เพราะระบบมันต้องปิด Pop-up ให้เอง
         });
 
         // ✨ คืนค่าระบบเมื่อโหลดหน้าจอเสร็จ ✨
         document.addEventListener('DOMContentLoaded', () => {
             const savedTab = sessionStorage.getItem('activeTabBeforeRefresh');
-            // เช็คว่าถ้ามีค่า Parameter Tab ที่ส่งมากับการกดปุ่มให้ใช้อันนั้นก่อน ถ้าไม่มีให้ใช้ของที่จำไว้
             const urlParams = new URLSearchParams(window.location.search);
             const currentTabUrl = urlParams.get('tab');
             
-            if (savedTab && !currentTabUrl) {
-                show(savedTab); // กลับมาเปิดแท็บเดิมที่ถูกจำไว้
+            // 🚨 แก้ไข: บังคับให้โหลดกลับแท็บเดิมที่จำไว้เสมอ! ฉากหลังจะได้ไม่เด้งเปลี่ยนไปหน้าอื่น
+            if (savedTab) {
+                show(savedTab);
+            } else if (currentTabUrl) {
+                show(currentTabUrl);
             }
 
             setTimeout(() => {
                 const savedScrollY = sessionStorage.getItem('pageScrollY');
                 if (savedScrollY !== null) {
-                    window.scrollTo(0, parseInt(savedScrollY));
+                    // 🚨 แก้ไข: คืนค่าตำแหน่งไปที่กล่องเนื้อหาหลัก ให้จอหยุดนิ่ง 100% เป๊ะๆ ตามรูปที่ 1
+                    const scrollContainer = document.querySelector('main > div.overflow-y-auto');
+                    if (scrollContainer) {
+                        scrollContainer.scrollTop = parseInt(savedScrollY);
+                    }
                     sessionStorage.removeItem('pageScrollY');
                 }
 
