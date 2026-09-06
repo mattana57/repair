@@ -2203,23 +2203,6 @@ $dept_icons = [
 
     <!-- ================== JAVASCRIPT ================== -->
     <script>
-        // 🚨 สกัดกั้น (Interceptor) SweetAlert เพื่อล็อกตำแหน่งจอ "ก่อน" ที่ Pop-up จะเด้ง 100%
-        const originalSwal = Swal.fire;
-        Swal.fire = function(...args) {
-            const scrollContainer = document.querySelector('main > div.overflow-y-auto');
-            const targetY = sessionStorage.getItem('dashboardScrollY');
-            if (scrollContainer && targetY !== null) {
-                scrollContainer.scrollTop = parseInt(targetY);
-            }
-            return originalSwal.apply(this, args);
-        };
-
-        // 🚨 บันทึกตำแหน่งจอลง Session ตลอดเวลาที่เลื่อนหรือก่อนกดปุ่ม Save
-        document.addEventListener('mousedown', function() {
-            const scrollContainer = document.querySelector('main > div.overflow-y-auto');
-            if (scrollContainer) sessionStorage.setItem('dashboardScrollY', scrollContainer.scrollTop);
-        });
-
         const allRepairs = <?php echo $all_repairs_json; ?>;
         const techDeptMap = <?php echo $tech_dept_map_json; ?>;
         const techInfoMap = <?php echo $tech_info_map_json; ?>; 
@@ -2647,9 +2630,7 @@ $dept_icons = [
             filterDeptCard(dept);
         }
 
-        let isInitialLoad = true; // ✨ ตัวแปรป้องกันการรีเซ็ต Scroll ตอนโหลดเว็บ
-
-        function show(id) {
+        function show(id, preventScrollReset = false) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
@@ -2657,10 +2638,11 @@ $dept_icons = [
             if(activeBtn) activeBtn.classList.add('active-btn');
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'System Management';
             
+            // อัปเดต URL เงียบๆ ให้ตรงกับแท็บที่กดเสมอ
             history.replaceState(null, '', '?tab=' + id);
             
-            // 🚨 แก้ไขจุดสำคัญ: รีเซ็ต Scroll เฉพาะตอนคนกดเปลี่ยนแท็บจริงๆ เท่านั้น! (ไม่ทำตอนโหลดหน้าใหม่)
-            if (!isInitialLoad) {
+            // ✨ รีเซ็ต Scroll กลับไปบนสุดเมื่อ "กดเปลี่ยนแท็บ" แต่ "ไม่รีเซ็ต" ตอนโหลดหน้าเว็บครั้งแรก ✨
+            if (!preventScrollReset) {
                 const scrollContainer = document.querySelector('main > div.overflow-y-auto');
                 if (scrollContainer) {
                     scrollContainer.scrollTop = 0;
@@ -2693,6 +2675,7 @@ $dept_icons = [
             document.getElementById('sidebarOverlay').classList.toggle('hidden');
         }
 
+        // ✨ ฟังก์ชันจัดการปุ่มกดเลือกอันดับ ✨
         function setTopReportersFilter(limit) {
             currentTopReportersLimit = limit;
             
@@ -2719,220 +2702,7 @@ $dept_icons = [
             renderTopReporters();
         }
 
-        // ✨ ติดตาม Scroll แบบ Real-time ✨
-        const mainScrollWrapper = document.querySelector('main > div.overflow-y-auto');
-        if (mainScrollWrapper) {
-            mainScrollWrapper.addEventListener('scroll', () => {
-                sessionStorage.setItem('dashboardScrollY', mainScrollWrapper.scrollTop);
-            });
-        }
-
-        // ✨ จำสถานะ Pop-up และ Tab ก่อนโหลดหน้าจอ ✨
-        window.addEventListener('beforeunload', function() {
-            const activeSection = document.querySelector('.section:not(.hidden)');
-            if (activeSection) {
-                sessionStorage.setItem('activeTabBeforeRefresh', activeSection.id);
-            }
-            
-            const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
-            if (repairsTableWrap) sessionStorage.setItem('repairsScrollX', repairsTableWrap.scrollLeft);
-
-            const historyTableBody = document.getElementById('historyTableBody');
-            if (historyTableBody && !document.getElementById('historyModal').classList.contains('opacity-0')) {
-                sessionStorage.setItem('historyScrollX', historyTableBody.parentElement.parentElement.scrollLeft);
-                sessionStorage.setItem('modalOpen', 'historyModal');
-                sessionStorage.setItem('historyModalTitle', document.getElementById('historyModalTitle').innerText);
-            }
-
-            const techReviewsModal = document.getElementById('techReviewsModal');
-            if (techReviewsModal && !techReviewsModal.classList.contains('opacity-0')) {
-                sessionStorage.setItem('reopenTechReviewsModal', 'true');
-                sessionStorage.setItem('tr_dept', document.getElementById('techReviewsModalDept').innerText);
-                sessionStorage.setItem('tr_tech', document.getElementById('modalTechSelector').value);
-                sessionStorage.setItem('tr_month', document.getElementById('ratingMonth').value);
-                sessionStorage.setItem('tr_year', document.getElementById('ratingYear').value);
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tab = urlParams.get('tab');
-            window.chartsRendered = false;
-            
-            if(tab) { show(tab); } else { show('dash'); }
-
-            // 🚨 ล็อกตำแหน่งจอ "ทันที" หลังโหลด DOM เสร็จ
-            const targetY = sessionStorage.getItem('dashboardScrollY');
-            const container = document.querySelector('main > div.overflow-y-auto');
-            if (container && targetY !== null) {
-                container.scrollTop = parseInt(targetY);
-            }
-
-            // ปลดล็อก InitialLoad
-            setTimeout(() => { isInitialLoad = false; }, 100);
-
-            const inputElement = document.getElementById('searchInput');
-            if(inputElement) {
-                inputElement.addEventListener('input', function() {
-                    let filter = this.value.toLowerCase();
-                    let activeSection = document.querySelector('.section:not(.hidden)');
-                    if (!activeSection) return;
-                    let rows = activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)');
-                    rows.forEach(row => {
-                        row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
-                    });
-                });
-            }
-            
-            const reportInput = document.getElementById('reportSearchInput');
-            if(reportInput) reportInput.value = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
-            
-            if(document.getElementById('topReportersList')) {
-                renderTopReporters();
-            }
-
-            // ✨ คืนค่าสถานะ Pop-up และ Scroll ตาราง ✨
-            setTimeout(() => {
-                const savedRepairsScrollX = sessionStorage.getItem('repairsScrollX');
-                if (savedRepairsScrollX !== null) {
-                    const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
-                    if (repairsTableWrap) repairsTableWrap.scrollLeft = parseInt(savedRepairsScrollX);
-                    sessionStorage.removeItem('repairsScrollX');
-                }
-
-                const openModal = sessionStorage.getItem('modalOpen');
-                if (openModal === 'historyModal') {
-                    const titleStr = sessionStorage.getItem('historyModalTitle');
-                    if (titleStr) {
-                        let fullName = titleStr.replace('ประวัติงานช่าง: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
-                        let type = titleStr.includes('ช่าง') ? 'technician' : 'reporter';
-                        viewHistory(fullName, type);
-                        
-                        setTimeout(() => {
-                            const savedHistoryScrollX = sessionStorage.getItem('historyScrollX');
-                            const historyTableBody = document.getElementById('historyTableBody');
-                            if (historyTableBody && savedHistoryScrollX !== null) {
-                                historyTableBody.parentElement.parentElement.scrollLeft = parseInt(savedHistoryScrollX);
-                            }
-                            sessionStorage.removeItem('historyScrollX');
-                        }, 50);
-                    }
-                    sessionStorage.removeItem('modalOpen');
-                    sessionStorage.removeItem('historyModalTitle');
-                }
-
-                const reopenReviews = sessionStorage.getItem('reopenTechReviewsModal');
-                if (reopenReviews === 'true') {
-                    sessionStorage.removeItem('reopenTechReviewsModal');
-                    const trDept = sessionStorage.getItem('tr_dept');
-                    const trTech = sessionStorage.getItem('tr_tech');
-                    const trMonth = sessionStorage.getItem('tr_month');
-                    const trYear = sessionStorage.getItem('tr_year');
-                    
-                    if(trMonth) document.getElementById('ratingMonth').value = trMonth;
-                    if(trYear) document.getElementById('ratingYear').value = trYear;
-                    
-                    setTimeout(() => {
-                        openTechReviewsModal(trDept, trMonth, trYear);
-                        setTimeout(() => {
-                            if (trTech) {
-                                document.getElementById('modalTechSelector').value = trTech;
-                                changeModalTech(trTech);
-                            }
-                        }, 200);
-                    }, 300);
-                }
-            }, 100);
-        });
-            }
-            
-            const reportInput = document.getElementById('reportSearchInput');
-            if(reportInput) reportInput.value = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
-            
-            if(document.getElementById('topReportersList')) {
-                renderTopReporters();
-            }
-
-            // ✨ คืนค่าตำแหน่ง Scroll หลังจาก Auto-Refresh กลับมา ✨
-            setTimeout(() => {
-                const savedScrollY = sessionStorage.getItem('pageScrollY');
-                if (savedScrollY !== null) {
-                    window.scrollTo(0, parseInt(savedScrollY));
-                    sessionStorage.removeItem('pageScrollY');
-                }
-
-                const savedRepairsScrollX = sessionStorage.getItem('repairsScrollX');
-                if (savedRepairsScrollX !== null) {
-                    const repairsTableWrap = document.getElementById('repairsTable').parentElement;
-                    if (repairsTableWrap) repairsTableWrap.scrollLeft = parseInt(savedRepairsScrollX);
-                    sessionStorage.removeItem('repairsScrollX');
-                }
-
-                const savedHistoryScrollX = sessionStorage.getItem('historyScrollX');
-                if (savedHistoryScrollX !== null) {
-                    const historyTableBody = document.getElementById('historyTableBody');
-                    if (historyTableBody && historyTableBody.parentElement.parentElement) {
-                        historyTableBody.parentElement.parentElement.scrollLeft = parseInt(savedHistoryScrollX);
-                    }
-                    sessionStorage.removeItem('historyScrollX');
-                }
-
-                // ถ้าก่อนหน้านี้เปิด Modal ประวัติค้างไว้ ให้เปิดขึ้นมาเหมือนเดิม
-                const openModal = sessionStorage.getItem('modalOpen');
-                if (openModal === 'historyModal') {
-                    const titleStr = sessionStorage.getItem('historyModalTitle');
-                    if (titleStr) {
-                        let fullName = titleStr.replace('ประวัติงานช่าง: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
-                        let type = titleStr.includes('ช่าง') ? 'technician' : 'reporter';
-                        viewHistory(fullName, type);
-                        
-                        // คืนค่า Scroll แนวนอนของ Modal อีกครั้งหลังจากเปิด
-                        setTimeout(() => {
-                            const historyWrap = document.getElementById('historyTableBody').parentElement.parentElement;
-                            if (historyWrap && savedHistoryScrollX !== null) {
-                                historyWrap.scrollLeft = parseInt(savedHistoryScrollX);
-                            }
-                        }, 50);
-                    }
-                    sessionStorage.removeItem('modalOpen');
-                    sessionStorage.removeItem('historyModalTitle');
-                }
-
-                // ✨ โค้ดสำหรับดึง Pop-up รีวิวช่าง กลับมาแสดงอัตโนมัติ
-                const reopenReviews = sessionStorage.getItem('reopenTechReviewsModal');
-                if (reopenReviews === 'true') {
-                    sessionStorage.removeItem('reopenTechReviewsModal');
-                    const trDept = sessionStorage.getItem('tr_dept');
-                    const trTech = sessionStorage.getItem('tr_tech');
-                    const trMonth = sessionStorage.getItem('tr_month');
-                    const trYear = sessionStorage.getItem('tr_year');
-                    
-                    if(trMonth) document.getElementById('ratingMonth').value = trMonth;
-                    if(trYear) document.getElementById('ratingYear').value = trYear;
-                    
-                    setTimeout(() => {
-                        openTechReviewsModal(trDept, trMonth, trYear);
-                        setTimeout(() => {
-                            if (trTech) {
-                                document.getElementById('modalTechSelector').value = trTech;
-                                changeModalTech(trTech);
-                            }
-                        }, 200);
-                    }, 300);
-                }
-
-            }, 150); // ดีเลย์นิดนึงให้ข้อมูลเรนเดอร์เสร็จก่อน
-        });
-
-        // ✨ ตรวจจับการคลิกเปิดหน้า Edit เพื่อสั่งให้ระบบเตรียม Refresh ✨
-        document.addEventListener('click', function(e) {
-            const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"]');
-            if (target) {
-                sessionStorage.setItem('needsRefresh', 'true');
-            }
-        });
-
-        // ✨ ติดตาม Scroll แบบ Real-time ตลอดเวลา ไม่ต้องรอ event ตอนกด Save ✨
+        // ✨ ติดตาม Scroll แบบ Real-time ตลอดเวลา ✨
         const mainScrollWrapper = document.querySelector('main > div.overflow-y-auto');
         if (mainScrollWrapper) {
             mainScrollWrapper.addEventListener('scroll', () => {
@@ -2976,8 +2746,21 @@ $dept_icons = [
             }
         });
 
+        // ✨ ระบบคืนค่าทั้งหมดเมื่อโหลดเสร็จ (ใช้ตัวเดียว ลบตัวซ้ำออกหมดแล้ว!) ✨
         document.addEventListener('DOMContentLoaded', () => {
-            // 🚨 ย้ำอีกรอบเพื่อความชัวร์ (เผื่อบางเบราว์เซอร์ล้างค่า Scroll ตอนโหลด DOM เสร็จ)
+            window.chartsRendered = false;
+            
+            const savedTab = sessionStorage.getItem('activeTabBeforeRefresh');
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentTabUrl = urlParams.get('tab');
+            
+            // 🚨 บังคับให้โหลดกลับแท็บเป้าหมาย โดยให้ความสำคัญกับ URL ก่อน (เพราะ Form Submit ส่งค่ามา)
+            const finalTab = currentTabUrl ? currentTabUrl : (savedTab ? savedTab : 'dash');
+            
+            // เรียกฟังก์ชันเปลี่ยนแท็บ โดยสั่ง "ห้ามล้างค่า Scroll (true)" 
+            show(finalTab, true);
+
+            // 🚨 ย้ำคืนค่า Scroll อีกรอบเผื่อเบราว์เซอร์ลืม
             const container = document.querySelector('main > div.overflow-y-auto');
             const targetY = sessionStorage.getItem('dashboardScrollY');
             if (container && targetY !== null) {
@@ -2990,6 +2773,24 @@ $dept_icons = [
                 if (repairsTableWrap) repairsTableWrap.scrollLeft = parseInt(savedRepairsScrollX);
                 sessionStorage.removeItem('repairsScrollX');
             }
+
+            const inputElement = document.getElementById('searchInput');
+            if(inputElement) {
+                inputElement.addEventListener('input', function() {
+                    let filter = this.value.toLowerCase();
+                    let activeSection = document.querySelector('.section:not(.hidden)');
+                    if (!activeSection) return;
+                    let rows = activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)');
+                    rows.forEach(row => {
+                        row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+                    });
+                });
+            }
+            
+            const reportInput = document.getElementById('reportSearchInput');
+            if(reportInput) reportInput.value = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
+            
+            if(document.getElementById('topReportersList')) renderTopReporters();
 
             const openModal = sessionStorage.getItem('modalOpen');
             if (openModal === 'historyModal') {
@@ -3033,33 +2834,6 @@ $dept_icons = [
                     }, 200);
                 }, 300);
             }
-
-            const urlParams = new URLSearchParams(window.location.search);
-            let tab = urlParams.get('tab') || 'dash';
-            window.chartsRendered = false;
-            
-            if(tab === 'dash') {
-                renderAllCharts();
-                window.chartsRendered = true;
-            }
-
-            const inputElement = document.getElementById('searchInput');
-            if(inputElement) {
-                inputElement.addEventListener('input', function() {
-                    let filter = this.value.toLowerCase();
-                    let activeSection = document.querySelector('.section:not(.hidden)');
-                    if (!activeSection) return;
-                    let rows = activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)');
-                    rows.forEach(row => {
-                        row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
-                    });
-                });
-            }
-            
-            const reportInput = document.getElementById('reportSearchInput');
-            if(reportInput) reportInput.value = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
-            
-            if(document.getElementById('topReportersList')) renderTopReporters();
         });
         
         function searchHistoryTable() {
