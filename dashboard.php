@@ -2641,6 +2641,13 @@ $dept_icons = [
             // ✨ อัปเดต URL เงียบๆ ให้ตรงกับแท็บที่กดเสมอ เวลา Refresh จะได้กลับมาหน้าเดิมเป๊ะๆ
             history.replaceState(null, '', '?tab=' + id);
             
+            // ✨ รีเซ็ตค่า Scroll กลับไปบนสุดเมื่อคลิกเปลี่ยนแท็บใหม่ ✨
+            const scrollContainer = document.querySelector('main > div.overflow-y-auto');
+            if (scrollContainer) {
+                scrollContainer.scrollTop = 0;
+                sessionStorage.setItem('dashboardScrollY', 0);
+            }
+            
             if (window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
                 document.getElementById('sidebarOverlay').classList.add('hidden');
@@ -2804,23 +2811,32 @@ $dept_icons = [
             }
         });
 
-        // ✨ จำสถานะหน้าจอก่อนโหลดใหม่ (เช่น ตอนกด Save / อัปเดต / ลบ ข้อมูล) ✨
+        // ✨ ติดตาม Scroll แบบ Real-time ตลอดเวลา ไม่ต้องรอ event ตอนกด Save ✨
+        const mainScrollWrapper = document.querySelector('main > div.overflow-y-auto');
+        if (mainScrollWrapper) {
+            mainScrollWrapper.addEventListener('scroll', () => {
+                sessionStorage.setItem('dashboardScrollY', mainScrollWrapper.scrollTop);
+            });
+        }
+
+        // ✨ คืนค่าตำแหน่งหน้าจอ "ทันทีแบบ Hardcore" ไม่ให้มีจังหวะกระพริบไปจุดอื่นเลย ✨
+        (function forceRestoreScroll() {
+            const container = document.querySelector('main > div.overflow-y-auto');
+            const targetY = sessionStorage.getItem('dashboardScrollY');
+            if (container && targetY !== null) {
+                container.scrollTop = parseInt(targetY);
+            }
+        })();
+
+        // ✨ จำสถานะ Pop-up และ Tab ก่อนโหลดหน้าจอ ✨
         window.addEventListener('beforeunload', function() {
             const activeSection = document.querySelector('.section:not(.hidden)');
             if (activeSection) {
                 sessionStorage.setItem('activeTabBeforeRefresh', activeSection.id);
             }
             
-            // 🚨 แก้ไข: ดึงตำแหน่ง Scroll จากกล่องเนื้อหาหลัก (ไม่ใช่ window)
-            const scrollContainer = document.querySelector('main > div.overflow-y-auto');
-            if (scrollContainer) {
-                sessionStorage.setItem('pageScrollY', scrollContainer.scrollTop);
-            }
-            
             const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
-            if (repairsTableWrap) {
-                sessionStorage.setItem('repairsScrollX', repairsTableWrap.scrollLeft);
-            }
+            if (repairsTableWrap) sessionStorage.setItem('repairsScrollX', repairsTableWrap.scrollLeft);
 
             const historyTableBody = document.getElementById('historyTableBody');
             if (historyTableBody && !document.getElementById('historyModal').classList.contains('opacity-0')) {
@@ -2839,18 +2855,13 @@ $dept_icons = [
             }
         });
 
-        // ✨ คืนค่าตำแหน่งหน้าจอ "ทันที" ไม่ต้องรอโหลดเสร็จ (ป้องกันจอเด้ง) ✨
-        (function restoreScrollImmediately() {
-            const scrollContainer = document.querySelector('main > div.overflow-y-auto');
-            const savedScrollY = sessionStorage.getItem('pageScrollY');
-            if (scrollContainer && savedScrollY !== null) {
-                scrollContainer.scrollTop = parseInt(savedScrollY);
-            }
-        })();
-
         document.addEventListener('DOMContentLoaded', () => {
-            // ลบค่า Scroll ออกหลังจากโหลดเสร็จแล้ว 1 วิ เผื่อมีการรีเฟรชซ้ำ
-            setTimeout(() => sessionStorage.removeItem('pageScrollY'), 1000);
+            // 🚨 ย้ำอีกรอบเพื่อความชัวร์ (เผื่อบางเบราว์เซอร์ล้างค่า Scroll ตอนโหลด DOM เสร็จ)
+            const container = document.querySelector('main > div.overflow-y-auto');
+            const targetY = sessionStorage.getItem('dashboardScrollY');
+            if (container && targetY !== null) {
+                container.scrollTop = parseInt(targetY);
+            }
 
             const savedRepairsScrollX = sessionStorage.getItem('repairsScrollX');
             if (savedRepairsScrollX !== null) {
@@ -2902,7 +2913,6 @@ $dept_icons = [
                 }, 300);
             }
 
-            // เรนเดอร์กราฟเฉพาะถ้าอยู่หน้า dash
             const urlParams = new URLSearchParams(window.location.search);
             let tab = urlParams.get('tab') || 'dash';
             window.chartsRendered = false;
@@ -2929,21 +2939,6 @@ $dept_icons = [
             if(reportInput) reportInput.value = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
             
             if(document.getElementById('topReportersList')) renderTopReporters();
-        });
-
-        document.addEventListener('click', function(e) {
-            const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"], a[href*="view_repair.php"]');
-            if (target) {
-                // หยุดการทำงานรีเฟรชหน้าจอกลับมา
-            }
-        });
-
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") {
-                if (sessionStorage.getItem('needsRefresh') === 'true') {
-                    sessionStorage.removeItem('needsRefresh');
-                }
-            }
         });
         
         function searchHistoryTable() {
