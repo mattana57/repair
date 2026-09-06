@@ -309,10 +309,13 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
 // ระบบบันทึกและลบข้อมูล
 // =====================================================================
 
+// ✨ ดึงค่า Tab ปัจจุบันเสมอ เพื่อไม่ให้จอเด้งกลับไปผิดหน้า ✨
+$js_redirect = "let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash'; window.location.href='dashboard.php?tab=' + t;";
+
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
     $conn->query("DELETE FROM assets WHERE id = $del_id");
-    echo "<script>window.location.href='dashboard.php?tab=assets';</script>";
+    echo "<script>$js_redirect</script>";
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
@@ -330,26 +333,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
         $stmt->bind_param("ssssi", $asset_code, $asset_name, $category, $status, $asset_id);
     }
     $stmt->execute();
-    echo "<script>window.location.href='dashboard.php?tab=assets';</script>";
+    echo "<script>$js_redirect</script>";
 }
 
 if (isset($_GET['delete_tech'])) {
     $del_id = intval($_GET['delete_tech']);
     $conn->query("DELETE FROM technicians WHERE id = $del_id");
-    echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
+    echo "<script>$js_redirect</script>";
 }
 
 if (isset($_GET['unlink_tech'])) {
     $unlink_id = intval($_GET['unlink_tech']);
     $new_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
     $conn->query("UPDATE technicians SET line_user_id = NULL, approval_status = 'รอผูกบัญชี', secret_code = '$new_code' WHERE id = $unlink_id");
-    echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
+    echo "<script>$js_redirect</script>";
 }
 
 if (isset($_GET['delete_user'])) {
     $del_id = intval($_GET['delete_user']);
     $conn->query("DELETE FROM users WHERE id = $del_id");
-    echo "<script>window.location.href='dashboard.php?tab=technicians';</script>";
+    echo "<script>$js_redirect</script>";
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
@@ -402,7 +405,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 $stmt->bind_param("sssssss", $full_name, $english_name, $position, $phone, $department, $avatar_url, $secret_code);
                 if ($stmt->execute()) {
                     $msg = "เพิ่มข้อมูลช่างสำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
-                    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg\", confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+                    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg\", confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
                 } else {
                     $err = addslashes($stmt->error);
                     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการบันทึก', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
@@ -421,7 +424,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             }
             
             if ($stmt && $stmt->execute()) {
-                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
             } else {
                 $err = addslashes($stmt ? $stmt->error : $conn->error);
                 echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการอัปเดต', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
@@ -445,7 +448,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             if ($stmt) {
                 $stmt->bind_param("ssssssss", $username, $password, $full_name, $english_name, $position, $phone, $department, $role);
                 if ($stmt->execute()) {
-                    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'เพิ่มข้อมูลผู้ดูแลระบบสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+                    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'เพิ่มข้อมูลผู้ดูแลระบบสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
                 } else {
                     $err = addslashes($stmt->error);
                     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการบันทึก', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
@@ -460,7 +463,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 if ($stmt) $stmt->bind_param("sssssssi", $username, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
             }
             if ($stmt && $stmt->execute()) {
-                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=technicians'; }); });</script>";
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
             } else {
                 $err = addslashes($stmt ? $stmt->error : $conn->error);
                 echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
@@ -474,7 +477,7 @@ if (isset($_GET['delete_reporter'])) {
     $stmt = $conn->prepare("DELETE FROM repairs WHERE reporter_name = ?");
     $stmt->bind_param("s", $del_name);
     $stmt->execute();
-    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบประวัติสำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
+    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบประวัติสำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect }); });</script>";
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
@@ -482,11 +485,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_reporter'])) {
     $new_name = $_POST['new_name'];
     $new_phone = $_POST['new_phone'];
     
-    // อัปเดตข้อมูลลงตาราง line_users โดยใช้ line_display_name เป็นตัวอ้างอิง
     $stmt = $conn->prepare("UPDATE line_users SET real_name = ?, phone_number = ? WHERE line_display_name = ?");
     $stmt->bind_param("sss", $new_name, $new_phone, $old_name);
     $stmt->execute();
-    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลผู้แจ้งสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { window.location.href='dashboard.php?tab=users'; }); });</script>";
+    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลผู้แจ้งสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
 }
 
 $tech_options = [];
@@ -1900,7 +1902,7 @@ $dept_icons = [
                 <p class="text-lg font-extrabold text-slate-800" id="assetModalTitle">Add Asset</p>
                 <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            <form action="dashboard.php?tab=assets" method="POST" class="p-6">
+            <form action="" method="POST" class="p-6">
                 <input type="hidden" name="save_asset" value="1"><input type="hidden" name="asset_id" id="asset_id" value="">
                 <div class="space-y-5">
                     <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Code</label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
@@ -1943,7 +1945,7 @@ $dept_icons = [
                 <button type="button" onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full w-8 h-8 flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
             </div>
 
-            <form action="dashboard.php?tab=technicians" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-hidden min-h-0">
+            <form action="" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-hidden min-h-0">
                 <input type="hidden" name="save_user" value="1">
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
                 <input type="hidden" name="role" id="techAdmin_role" value="">
@@ -2078,7 +2080,7 @@ $dept_icons = [
                 <p class="text-lg font-extrabold text-slate-800">Edit Reporter</p>
                 <button onclick="toggleModal('editReporterModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
-            <form action="dashboard.php?tab=users" method="POST" class="p-6">
+            <form action="" method="POST" class="p-6">
                 <input type="hidden" name="edit_reporter" value="1">
                 <input type="hidden" name="old_name" id="edit_rep_old_name" value="">
                 
@@ -2464,7 +2466,8 @@ $dept_icons = [
                 hiddenInput.type = 'hidden';
                 hiddenInput.id = 'final_avatar_position';
                 hiddenInput.name = 'position';
-                const form = document.querySelector('form[action="dashboard.php?tab=technicians"]');
+                // 🚨 แก้ไขการอ้างอิง Form ให้ถูกต้อง
+                const form = document.querySelector('#techAdminModal form');
                 if(form) form.appendChild(hiddenInput);
             }
             hiddenInput.value = val;
@@ -3815,22 +3818,31 @@ $dept_icons = [
 
         function confirmUnlink(id) { 
             Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "ช่างจะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
-                if(r.isConfirmed) window.location.href = 'dashboard.php?unlink_tech=' + id; 
+                if(r.isConfirmed) {
+                    let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
+                    window.location.href = '?unlink_tech=' + id + '&tab=' + t; 
+                }
             }); 
         }
 
         function confirmDelete(type, id) { 
             Swal.fire({ title: 'ยืนยันการลบข้อมูล?', text: "เมื่อลบแล้วจะไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { 
                 if(r.isConfirmed) {
-                    if(type === 'tech') window.location.href = 'dashboard.php?delete_tech=' + id;
-                    else if(type === 'user') window.location.href = 'dashboard.php?delete_user=' + id;
-                    else if(type === 'asset') window.location.href = 'dashboard.php?delete_asset=' + id;
+                    let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
+                    if(type === 'tech') window.location.href = '?delete_tech=' + id + '&tab=' + t;
+                    else if(type === 'user') window.location.href = '?delete_user=' + id + '&tab=' + t;
+                    else if(type === 'asset') window.location.href = '?delete_asset=' + id + '&tab=' + t;
                 }
             }); 
         }
 
         function confirmDeleteReporter(name) { 
-            Swal.fire({ title: 'ยืนยันลบผู้แจ้ง?', text: "ประวัติการแจ้งซ่อมทั้งหมดของบุคคลนี้จะถูกเคลียร์ชื่อออก!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { if(r.isConfirmed) window.location.href = 'dashboard.php?delete_reporter=' + encodeURIComponent(name); }); 
+            Swal.fire({ title: 'ยืนยันลบผู้แจ้ง?', text: "ประวัติการแจ้งซ่อมทั้งหมดของบุคคลนี้จะถูกเคลียร์ชื่อออก!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { 
+                if(r.isConfirmed) {
+                    let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
+                    window.location.href = '?delete_reporter=' + encodeURIComponent(name) + '&tab=' + t;
+                }
+            }); 
         }
 
         let currentSelectedName = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
