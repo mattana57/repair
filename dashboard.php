@@ -658,7 +658,8 @@ $dept_icons = [
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <!-- ✨ ซ่อนความทึบเป็น 0 ไว้ชั่วคราวก่อน เพื่อไม่ให้เห็นจังหวะจอเด้งขึ้นบนสุด ✨ -->
+        <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" style="opacity: 0;">
             
             <div id="dash" class="section <?php echo $active_tab === 'dash' ? '' : 'hidden'; ?> space-y-6 animate-fade-in no-print">
 
@@ -2715,23 +2716,22 @@ $dept_icons = [
             history.scrollRestoration = 'manual';
         }
 
-        // ✨ คืนค่าตำแหน่งหน้าจอแบบเนียนกริบ (ซ่อนจอเสี้ยววิ -> เลื่อน -> โชว์จอ) ✨
-        const mainScrollWrapper = document.querySelector('main > div.overflow-y-auto');
+        // ✨ คืนค่าตำแหน่งหน้าจอแบบเนียนกริบ ไร้รอยต่อ ✨
+        const mainScrollWrapper = document.getElementById('mainScrollContainer') || document.querySelector('main > div.overflow-y-auto');
         if (mainScrollWrapper) {
+            // ดึงค่าการเลื่อนเดิมมาปรับก่อนที่จอจะโชว์
             const targetY = sessionStorage.getItem('dashboardScrollY');
             if (targetY !== null) {
-                // ซ่อนก่อนเลื่อน เพื่อไม่ให้เห็นจังหวะกระตุก
-                mainScrollWrapper.style.opacity = '0';
                 mainScrollWrapper.scrollTop = parseInt(targetY);
-                
-                // ค่อยโชว์กลับมาแบบสมูท
-                requestAnimationFrame(() => {
-                    mainScrollWrapper.style.transition = 'opacity 0.2s ease';
-                    mainScrollWrapper.style.opacity = '1';
-                });
             }
+            
+            // เปิดให้แสดงผล (เปลี่ยน opacity กลับเป็น 1) หลังจากตั้งค่า Scroll เสร็จแล้ว
+            requestAnimationFrame(() => {
+                mainScrollWrapper.style.transition = 'opacity 0.15s ease-in';
+                mainScrollWrapper.style.opacity = '1';
+            });
 
-            // แอบจำค่า Scroll แบบ Real-time
+            // แอบจำค่า Scroll แบบ Real-time ตลอดเวลา
             mainScrollWrapper.addEventListener('scroll', () => {
                 sessionStorage.setItem('dashboardScrollY', mainScrollWrapper.scrollTop);
             }, { passive: true });
