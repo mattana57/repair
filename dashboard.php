@@ -2746,7 +2746,7 @@ $dept_icons = [
             }
         });
 
-        // ✨ ระบบคืนค่าทั้งหมดเมื่อโหลดเสร็จ (ใช้ตัวเดียว ลบตัวซ้ำออกหมดแล้ว!) ✨
+        // ✨ ระบบคืนค่าทั้งหมดเมื่อโหลดเสร็จแบบ "ไร้รอยต่อ (Seamless)" ✨
         document.addEventListener('DOMContentLoaded', () => {
             window.chartsRendered = false;
             
@@ -2754,16 +2754,19 @@ $dept_icons = [
             const urlParams = new URLSearchParams(window.location.search);
             const currentTabUrl = urlParams.get('tab');
             
-            // 🚨 บังคับให้โหลดกลับแท็บเป้าหมาย โดยให้ความสำคัญกับ URL ก่อน (เพราะ Form Submit ส่งค่ามา)
-            const finalTab = currentTabUrl ? currentTabUrl : (savedTab ? savedTab : 'dash');
+            // 🚨 บังคับให้โหลดกลับแท็บเป้าหมาย โดยให้ความสำคัญกับค่าเดิมก่อน URL 
+            // ป้องกันการแว็บไปหน้าอื่นเวลาโดน PHP สั่ง Redirect มาที่ tab=technicians 
+            const finalTab = savedTab ? savedTab : (currentTabUrl ? currentTabUrl : 'dash');
             
-            // เรียกฟังก์ชันเปลี่ยนแท็บ โดยสั่ง "ห้ามล้างค่า Scroll (true)" 
+            // เรียกฟังก์ชันเปลี่ยนแท็บแบบไร้การขยับจอ
             show(finalTab, true);
 
-            // 🚨 ย้ำคืนค่า Scroll อีกรอบเผื่อเบราว์เซอร์ลืม
+            // 🚨 บังคับเซ็ต Scroll แบบ Hardcore อีกครั้งทันที ไม่ต้องรอ setTimeout
             const container = document.querySelector('main > div.overflow-y-auto');
             const targetY = sessionStorage.getItem('dashboardScrollY');
             if (container && targetY !== null) {
+                // บังคับให้ scrollBehavior เป็น auto เพื่อให้มันกระโดดไปทันทีแบบไม่มีแอนิเมชันเลื่อนลงมา
+                container.style.scrollBehavior = 'auto';
                 container.scrollTop = parseInt(targetY);
             }
 
