@@ -2203,6 +2203,23 @@ $dept_icons = [
 
     <!-- ================== JAVASCRIPT ================== -->
     <script>
+        // 🚨 สกัดกั้น (Interceptor) SweetAlert เพื่อล็อกตำแหน่งจอ "ก่อน" ที่ Pop-up จะเด้ง 100%
+        const originalSwal = Swal.fire;
+        Swal.fire = function(...args) {
+            const scrollContainer = document.querySelector('main > div.overflow-y-auto');
+            const targetY = sessionStorage.getItem('dashboardScrollY');
+            if (scrollContainer && targetY !== null) {
+                scrollContainer.scrollTop = parseInt(targetY);
+            }
+            return originalSwal.apply(this, args);
+        };
+
+        // 🚨 บันทึกตำแหน่งจอลง Session ตลอดเวลาที่เลื่อนหรือก่อนกดปุ่ม Save
+        document.addEventListener('mousedown', function() {
+            const scrollContainer = document.querySelector('main > div.overflow-y-auto');
+            if (scrollContainer) sessionStorage.setItem('dashboardScrollY', scrollContainer.scrollTop);
+        });
+
         const allRepairs = <?php echo $all_repairs_json; ?>;
         const techDeptMap = <?php echo $tech_dept_map_json; ?>;
         const techInfoMap = <?php echo $tech_info_map_json; ?>; 
@@ -2630,6 +2647,8 @@ $dept_icons = [
             filterDeptCard(dept);
         }
 
+        let isInitialLoad = true; // ✨ ตัวแปรป้องกันการรีเซ็ต Scroll ตอนโหลดเว็บ
+
         function show(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
@@ -2638,14 +2657,15 @@ $dept_icons = [
             if(activeBtn) activeBtn.classList.add('active-btn');
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'System Management';
             
-            // ✨ อัปเดต URL เงียบๆ ให้ตรงกับแท็บที่กดเสมอ เวลา Refresh จะได้กลับมาหน้าเดิมเป๊ะๆ
             history.replaceState(null, '', '?tab=' + id);
             
-            // ✨ รีเซ็ตค่า Scroll กลับไปบนสุดเมื่อคลิกเปลี่ยนแท็บใหม่ ✨
-            const scrollContainer = document.querySelector('main > div.overflow-y-auto');
-            if (scrollContainer) {
-                scrollContainer.scrollTop = 0;
-                sessionStorage.setItem('dashboardScrollY', 0);
+            // 🚨 แก้ไขจุดสำคัญ: รีเซ็ต Scroll เฉพาะตอนคนกดเปลี่ยนแท็บจริงๆ เท่านั้น! (ไม่ทำตอนโหลดหน้าใหม่)
+            if (!isInitialLoad) {
+                const scrollContainer = document.querySelector('main > div.overflow-y-auto');
+                if (scrollContainer) {
+                    scrollContainer.scrollTop = 0;
+                    sessionStorage.setItem('dashboardScrollY', 0);
+                }
             }
             
             if (window.innerWidth < 768) {
@@ -2673,7 +2693,6 @@ $dept_icons = [
             document.getElementById('sidebarOverlay').classList.toggle('hidden');
         }
 
-        // ✨ ฟังก์ชันจัดการปุ่มกดเลือกอันดับ ✨
         function setTopReportersFilter(limit) {
             currentTopReportersLimit = limit;
             
@@ -2700,6 +2719,41 @@ $dept_icons = [
             renderTopReporters();
         }
 
+        // ✨ ติดตาม Scroll แบบ Real-time ✨
+        const mainScrollWrapper = document.querySelector('main > div.overflow-y-auto');
+        if (mainScrollWrapper) {
+            mainScrollWrapper.addEventListener('scroll', () => {
+                sessionStorage.setItem('dashboardScrollY', mainScrollWrapper.scrollTop);
+            });
+        }
+
+        // ✨ จำสถานะ Pop-up และ Tab ก่อนโหลดหน้าจอ ✨
+        window.addEventListener('beforeunload', function() {
+            const activeSection = document.querySelector('.section:not(.hidden)');
+            if (activeSection) {
+                sessionStorage.setItem('activeTabBeforeRefresh', activeSection.id);
+            }
+            
+            const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
+            if (repairsTableWrap) sessionStorage.setItem('repairsScrollX', repairsTableWrap.scrollLeft);
+
+            const historyTableBody = document.getElementById('historyTableBody');
+            if (historyTableBody && !document.getElementById('historyModal').classList.contains('opacity-0')) {
+                sessionStorage.setItem('historyScrollX', historyTableBody.parentElement.parentElement.scrollLeft);
+                sessionStorage.setItem('modalOpen', 'historyModal');
+                sessionStorage.setItem('historyModalTitle', document.getElementById('historyModalTitle').innerText);
+            }
+
+            const techReviewsModal = document.getElementById('techReviewsModal');
+            if (techReviewsModal && !techReviewsModal.classList.contains('opacity-0')) {
+                sessionStorage.setItem('reopenTechReviewsModal', 'true');
+                sessionStorage.setItem('tr_dept', document.getElementById('techReviewsModalDept').innerText);
+                sessionStorage.setItem('tr_tech', document.getElementById('modalTechSelector').value);
+                sessionStorage.setItem('tr_month', document.getElementById('ratingMonth').value);
+                sessionStorage.setItem('tr_year', document.getElementById('ratingYear').value);
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
@@ -2707,22 +2761,89 @@ $dept_icons = [
             
             if(tab) { show(tab); } else { show('dash'); }
 
+            // 🚨 ล็อกตำแหน่งจอ "ทันที" หลังโหลด DOM เสร็จ
+            const targetY = sessionStorage.getItem('dashboardScrollY');
+            const container = document.querySelector('main > div.overflow-y-auto');
+            if (container && targetY !== null) {
+                container.scrollTop = parseInt(targetY);
+            }
+
+            // ปลดล็อก InitialLoad
+            setTimeout(() => { isInitialLoad = false; }, 100);
+
             const inputElement = document.getElementById('searchInput');
             if(inputElement) {
                 inputElement.addEventListener('input', function() {
                     let filter = this.value.toLowerCase();
                     let activeSection = document.querySelector('.section:not(.hidden)');
                     if (!activeSection) return;
-                    
                     let rows = activeSection.querySelectorAll('table tbody tr:not(.tech-dept-header)');
                     rows.forEach(row => {
-                        if (row.innerText.toLowerCase().includes(filter)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
+                        row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
                     });
                 });
+            }
+            
+            const reportInput = document.getElementById('reportSearchInput');
+            if(reportInput) reportInput.value = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
+            
+            if(document.getElementById('topReportersList')) {
+                renderTopReporters();
+            }
+
+            // ✨ คืนค่าสถานะ Pop-up และ Scroll ตาราง ✨
+            setTimeout(() => {
+                const savedRepairsScrollX = sessionStorage.getItem('repairsScrollX');
+                if (savedRepairsScrollX !== null) {
+                    const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
+                    if (repairsTableWrap) repairsTableWrap.scrollLeft = parseInt(savedRepairsScrollX);
+                    sessionStorage.removeItem('repairsScrollX');
+                }
+
+                const openModal = sessionStorage.getItem('modalOpen');
+                if (openModal === 'historyModal') {
+                    const titleStr = sessionStorage.getItem('historyModalTitle');
+                    if (titleStr) {
+                        let fullName = titleStr.replace('ประวัติงานช่าง: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
+                        let type = titleStr.includes('ช่าง') ? 'technician' : 'reporter';
+                        viewHistory(fullName, type);
+                        
+                        setTimeout(() => {
+                            const savedHistoryScrollX = sessionStorage.getItem('historyScrollX');
+                            const historyTableBody = document.getElementById('historyTableBody');
+                            if (historyTableBody && savedHistoryScrollX !== null) {
+                                historyTableBody.parentElement.parentElement.scrollLeft = parseInt(savedHistoryScrollX);
+                            }
+                            sessionStorage.removeItem('historyScrollX');
+                        }, 50);
+                    }
+                    sessionStorage.removeItem('modalOpen');
+                    sessionStorage.removeItem('historyModalTitle');
+                }
+
+                const reopenReviews = sessionStorage.getItem('reopenTechReviewsModal');
+                if (reopenReviews === 'true') {
+                    sessionStorage.removeItem('reopenTechReviewsModal');
+                    const trDept = sessionStorage.getItem('tr_dept');
+                    const trTech = sessionStorage.getItem('tr_tech');
+                    const trMonth = sessionStorage.getItem('tr_month');
+                    const trYear = sessionStorage.getItem('tr_year');
+                    
+                    if(trMonth) document.getElementById('ratingMonth').value = trMonth;
+                    if(trYear) document.getElementById('ratingYear').value = trYear;
+                    
+                    setTimeout(() => {
+                        openTechReviewsModal(trDept, trMonth, trYear);
+                        setTimeout(() => {
+                            if (trTech) {
+                                document.getElementById('modalTechSelector').value = trTech;
+                                changeModalTech(trTech);
+                            }
+                        }, 200);
+                    }, 300);
+                }
+            }, 100);
+        });
             }
             
             const reportInput = document.getElementById('reportSearchInput');
