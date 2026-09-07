@@ -644,14 +644,15 @@ $dept_icons = [
             </div>
             
             <div class="flex items-center">
-                <div class="flex items-center gap-3 cursor-pointer group">
+                <!-- ✨ ปรับเป็นกรอบขาววงรีมนๆ (Pill Shape) ✨ -->
+                <div class="flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg hover:bg-slate-50 transition-all group border border-slate-100">
                     <div class="text-right hidden sm:block">
-                        <span class="block text-sm font-bold text-white drop-shadow-sm leading-none mb-1 group-hover:text-indigo-100 transition-colors">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 group-hover:text-indigo-600 transition-colors">
                             <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <span class="block text-[11px] text-indigo-100 font-semibold">Administrator</span>
+                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white overflow-hidden border border-white/30 shadow-inner backdrop-blur-sm">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border-2 border-indigo-100 shadow-sm shrink-0">
                         <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
