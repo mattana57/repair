@@ -682,7 +682,7 @@ $dept_icons = [
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
 
                 <!-- 📱 สำหรับมือถือแนวตั้ง: แสดงเฉพาะรูปโปรไฟล์วงกลมเดี่ยวๆ มินิมอล (ขยายขนาดเป็น w-12 h-12 ให้ใหญ่ขึ้นตามที่ขอ) -->
-                <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-11 h-11 rounded-full bg-white p-[3px] shadow-sm border border-slate-200/60 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
+                <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-12 h-12 rounded-full bg-white p-[3px] shadow-sm border border-slate-200/60 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
                     <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full rounded-full object-cover shadow-inner">
                 </div>
                     <div class="bg-white px-2.5 py-0.5 rounded-full shadow-md border border-slate-100 text-center max-w-[85px] hover:scale-105 active:scale-95 transition-transform">
