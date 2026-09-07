@@ -2649,15 +2649,16 @@ $dept_icons = [
         }, { passive: false });
 
         // --- Touch Events (มือถือ/แท็บเล็ต) ---
-        // 🚨 สำคัญมาก: เพิ่ม passive: false และ preventDefault ทุกขั้นตอนเพื่อให้ระบบรู้ว่าเรากำลังทำงานกับรูป ไม่ใช่การเลื่อนหน้าจอ! 🚨
         dragLayer.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // บล็อกการ Scroll หน้าเว็บตอนเริ่มแตะ
+            // ห้ามใช้ preventDefault() ตรงนี้เด็ดขาด เพราะบางเบราว์เซอร์จะไม่ยอมให้จับตำแหน่งต่อ
             if (e.touches.length === 1) {
                 isDragging = true;
-                lastClientX = e.touches[0].clientX;
-                lastClientY = e.touches[0].clientY;
+                startPointX = e.touches[0].clientX;
+                startPointY = e.touches[0].clientY;
+                imageStartX = currentX;
+                imageStartY = currentY;
             } else if (e.touches.length === 2) {
-                isDragging = false; 
+                isDragging = false;
                 initialDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
@@ -2667,12 +2668,15 @@ $dept_icons = [
         }, { passive: false });
 
         dragLayer.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // บล็อกการ Scroll ตลอดการลาก
+            // บล็อกไม่ให้หน้าเว็บเลื่อน (Scroll) ขณะที่นิ้วถูไปมา
+            e.preventDefault();
+            
             if (e.touches.length === 1 && isDragging) {
-                currentX += (e.touches[0].clientX - lastClientX) / currentScale;
-                currentY += (e.touches[0].clientY - lastClientY) / currentScale;
-                lastClientX = e.touches[0].clientX;
-                lastClientY = e.touches[0].clientY;
+                const dx = e.touches[0].clientX - startPointX;
+                const dy = e.touches[0].clientY - startPointY;
+                // บวกระยะทางตรงๆ 1:1 กับนิ้วที่ลาก
+                currentX = imageStartX + (dx / currentScale);
+                currentY = imageStartY + (dy / currentScale);
                 updateTransform();
             } else if (e.touches.length === 2) {
                 const currentDistance = Math.hypot(
@@ -2687,24 +2691,25 @@ $dept_icons = [
         }, { passive: false });
 
         dragLayer.addEventListener('touchend', (e) => {
-            e.preventDefault(); // บล็อกการรวนตอนปล่อยนิ้ว
             if (e.touches.length < 2) initialDistance = 0;
             if (e.touches.length === 1) {
-                lastClientX = e.touches[0].clientX;
-                lastClientY = e.touches[0].clientY;
+                // เซ็ตค่าให้ลากต่อได้เนียนๆ กรณีปล่อยนิ้วออก 1 นิ้ว (จากที่ซูม 2 นิ้ว)
+                startPointX = e.touches[0].clientX;
+                startPointY = e.touches[0].clientY;
+                imageStartX = currentX;
+                imageStartY = currentY;
                 isDragging = true;
             } else {
                 isDragging = false;
             }
-        }, { passive: false });
+        });
         
         // --- ปิดการเลื่อนหน้าเว็บเวลาอยู่บนพรีวิว 100% (กันเหนียว) ---
         const modalElement = document.getElementById('avatarPreviewConfirmModal');
         modalElement.addEventListener('touchmove', (e) => {
-            e.preventDefault(); 
-        }, { passive: false });
-        modalElement.addEventListener('wheel', (e) => {
-            e.preventDefault(); 
+            if (e.target !== dragLayer) { // บล็อกเฉพาะจุดที่อยู่นอกพื้นที่ลากรูป
+                e.preventDefault(); 
+            }
         }, { passive: false });
 
         // ระบบจับการลากเมาส์ (Mouse Events)
