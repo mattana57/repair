@@ -2286,15 +2286,26 @@ $dept_icons = [
     <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[85vh] max-h-[850px]">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
-                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate pr-4" id="historyModalTitle">History</p>
-                <div class="flex items-center gap-4 md:gap-6 shrink-0">
-                    <button id="historyModalLinkBtn" class="text-[11px] md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 md:px-5 py-2 md:py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer">
-                        <i class="fas fa-address-book md:mr-2"></i> <span class="hidden md:inline">Contacts</span>
-                    </button>
-                    <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50"><i class="fas fa-times text-base md:text-lg"></i></button>
+            
+            <div class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-slate-50 rounded-t-3xl shrink-0">
+                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full md:w-auto" id="historyModalTitle">History</p>
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                    
+                    <!-- ✨ ช่องค้นหาใน Modal ประวัติ ✨ -->
+                    <div class="relative w-full md:w-60 flex-1 md:flex-none">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button id="historyModalLinkBtn" class="text-[11px] md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 md:px-4 py-2 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer">
+                            <i class="fas fa-address-book md:mr-1.5"></i> <span class="hidden md:inline">Contacts</span>
+                        </button>
+                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50"><i class="fas fa-times text-sm md:text-base"></i></button>
+                    </div>
                 </div>
             </div>
+            
             <div class="p-0 md:p-6 overflow-hidden flex-1 bg-[#f8fafc]">
                 <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
                     <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
@@ -4255,11 +4266,37 @@ $dept_icons = [
                     linkBtn.style.display = 'none'; // ซ่อนปุ่มถ้าเป็นประวัติช่าง หรือเปิดจากหน้า Contacts อยู่แล้ว
                 }
             }
+
+            // ✨ ล้างช่องค้นหาให้ว่างทุกครั้งที่กดเปิดดูประวัติคนใหม่ ✨
+            const searchInput = document.getElementById('searchHistoryModalInput');
+            if(searchInput) searchInput.value = '';
             
             toggleModal('historyModal');
         }
 
-        function confirmUnlink(id) { 
+        // ✨ ฟังก์ชันค้นหาข้อมูลในตารางประวัติ (History Modal) ✨
+        function searchHistoryModalTable() {
+            let input = document.getElementById('searchHistoryModalInput');
+            if(!input) return;
+            let filter = input.value.toLowerCase().replace(/\s+/g, '');
+            let tbody = document.getElementById('historyTableBody');
+            if(!tbody) return;
+            
+            let rows = tbody.querySelectorAll('tr');
+            rows.forEach(row => {
+                // ข้ามแถวที่บอกว่า "ไม่มีข้อมูล"
+                if(row.cells.length === 1) return;
+                
+                let text = row.innerText.toLowerCase().replace(/\s+/g, '');
+                if (text.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function confirmUnlink(id) {
             Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "ช่างจะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
                 if(r.isConfirmed) {
                     let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
