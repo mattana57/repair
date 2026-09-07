@@ -643,17 +643,84 @@ $dept_icons = [
                 <h3 class="textxl md:text-3xl font-extrabold text-slate-900 font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
             
-            <div class="flex items-center">
-                <!-- ✨ ปรับเป็นกรอบขาววงรีมนๆ (Pill Shape) ✨ -->
-                <div class="flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg hover:bg-slate-50 transition-all group border border-slate-100">
+            <div class="flex items-center relative" id="profileMenuWrapper">
+                <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 bg-white pl-5 pr-2 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none">
                     <div class="text-right hidden sm:block">
-                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 group-hover:text-indigo-600 transition-colors">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1">
                             <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
+                        <span class="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">Administrator</span>
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border-2 border-indigo-100 shadow-sm shrink-0">
-                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
+                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border-2 border-slate-200 shadow-sm shrink-0">
+                        <img id="headerAvatarImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
+                    </div>
+                    <i class="fas fa-chevron-down text-slate-400 text-xs mr-1 hidden sm:block"></i>
+                </div>
+
+                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 hidden flex-col z-50 animate-fade-in">
+                    <div class="px-5 py-3 border-b border-slate-100 flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center overflow-hidden border border-indigo-100 shrink-0">
+                            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-extrabold text-slate-800 truncate">
+                                <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'Administrator'; ?>
+                            </p>
+                            <p class="text-xs text-slate-400 truncate">@<?php echo htmlspecialchars($_SESSION['username'] ?? 'admin'); ?></p>
+                            <span class="inline-block mt-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-extrabold rounded-md border border-emerald-100">
+                                <i class="fas fa-shield-alt mr-1"></i>ผู้ดูแลระบบ
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="px-2 py-2 space-y-1">
+                        <button type="button" onclick="openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
+                                    <i class="fas fa-user-edit text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-800">แก้ไขข้อมูลส่วนตัว</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">ชื่อ, เบอร์โทร, รหัสผ่าน</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+                        </button>
+
+                        <button type="button" onclick="show('technicians'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                    <i class="fas fa-users-cog text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-800">จัดการสิทธิ์ผู้ใช้งาน</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">แอดมินและเจ้าหน้าที่ช่าง</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+                        </button>
+
+                        <button type="button" onclick="show('reports'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                                    <i class="fas fa-file-invoice text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-800">รายงานสรุปงานซ่อม</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">ออกเอกสารและดาวน์โหลด</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+                        </button>
+                    </div>
+
+                    <div class="px-2 pt-2 border-t border-slate-100">
+                        <a href="logout.php" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors">
+                            <div class="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500">
+                                <i class="fas fa-sign-out-alt text-xs"></i>
+                            </div>
+                            <span>ออกจากระบบ (Logout)</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -2684,6 +2751,36 @@ $dept_icons = [
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebarOverlay').classList.toggle('hidden');
         }
+
+        // ✨ ระบบควบคุมเปิด-ปิดเมนูโปรไฟล์มุมขวาบน ✨
+        function toggleProfileDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('profileDropdownMenu');
+            if (!menu) return;
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+            } else {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+            }
+        }
+
+        function closeProfileDropdown() {
+            const menu = document.getElementById('profileDropdownMenu');
+            if (menu) {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+            }
+        }
+
+        // คลิกพื้นที่อื่นเพื่อปิดเมนูโปรไฟล์อัตโนมัติ
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('profileMenuWrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                closeProfileDropdown();
+            }
+        });
 
         // ✨ ฟังก์ชันจัดการปุ่มกดเลือกอันดับ ✨
         function setTopReportersFilter(limit) {
