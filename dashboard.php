@@ -2021,22 +2021,30 @@ $dept_icons = [
         <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="showAvatarPreviewModal(this)">
     </form>
 
-    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col bg-[#0f0f0f] transition-opacity duration-300" style="touch-action: none;">
+    <!-- ✨ Modal หน้าจอพรีวิว (ดีไซน์จัดวางตำแหน่งรูป เลื่อนได้ ซูมได้ สมูท 100%) ✨ -->
+    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col bg-[#0f0f0f] transition-opacity duration-300">
         
+        <!-- Header ด้านบน -->
         <div class="absolute top-0 left-0 w-full flex justify-center items-center px-6 py-5 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
             <h3 class="text-white font-bold text-[16px] drop-shadow-md tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
         </div>
 
-        <div class="flex-1 relative overflow-hidden bg-[#0f0f0f] cursor-move z-10" id="dragTouchLayer" style="touch-action: none;">
-            
-            <img id="avatarCropImage" src="" class="absolute left-1/2 top-1/2 max-w-[95vw] max-h-[80vh] pointer-events-none select-none object-contain" style="transform: translate(-50%, -50%) scale(1); will-change: transform;">
+        <!-- พื้นที่จัดตำแหน่งรูปภาพ (ลากและซูมได้อิสระ) -->
+        <div class="flex-1 relative overflow-hidden bg-[#0f0f0f]" id="dragContainer">
+            <!-- 🚨 รูปภาพหลัก (เอา max-w ออกหมด เพื่อไม่ให้ CSS มาตีกับการซูมของ JS) 🚨 -->
+            <img id="avatarCropImage" src="" class="absolute left-1/2 top-1/2 pointer-events-none select-none" style="transform: translate(-50%, -50%) scale(1); will-change: transform;">
 
+            <!-- Overlay สีดำทะลุรูตรงกลาง (เลียนแบบหน้าจอครอป) -->
             <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-20 overflow-hidden">
+                <!-- วงกลมขนาด 320px คงที่ -->
                 <div id="cropCircleMask" class="w-[320px] h-[320px] rounded-full shadow-[0_0_0_9999px_rgba(15,15,15,0.85)] border-2 border-white/30"></div>
             </div>
-            
+
+            <!-- เลเยอร์รับคำสั่งสัมผัส (ลากนิ้ว/ซูม) -->
+            <div id="dragTouchLayer" class="absolute inset-0 z-30 cursor-move" style="touch-action: none;"></div>
         </div>
 
+        <!-- ปุ่ม Action ด้านล่าง (อยู่ตรงกลาง ห่างกันนิดนึง ปุ่มยกเลิกสีแดง) -->
         <div class="px-6 py-6 pb-10 shrink-0 flex justify-center items-center gap-5 bg-[#0f0f0f] relative z-40 border-t border-white/10">
             <button type="button" onclick="cancelAvatarUpload()" class="py-2.5 px-10 rounded-full bg-rose-600 text-white font-bold text-[15px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30">
                 ยกเลิก
@@ -2506,9 +2514,13 @@ $dept_icons = [
             toggleModal('imagePreviewModal');
         }
 
-        // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) รองรับ Touch 100% ✨
+        // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) ป้องกันกระตุก 100% ✨
         let isDragging = false;
-        let lastClientX = 0, lastClientY = 0;
+        
+        // ตัวแปรสำหรับจำ "ตำแหน่งที่กดครั้งแรก" เพื่อป้องกันการเลื่อนหลุดมือ
+        let startTouchX = 0, startTouchY = 0;
+        let startImgX = 0, startImgY = 0;
+        
         let currentX = 0, currentY = 0;
         let currentScale = 1;
         let minScale = 0.1;
@@ -2530,15 +2542,17 @@ $dept_icons = [
                     cropImage.src = e.target.result;
                     
                     cropImage.onload = () => {
+                        // 🚨 สำคัญมาก: เคลียร์ max-width เผื่อเหลือ เพื่อป้องกันเบราว์เซอร์บีบรูป 🚨
                         cropImage.style.width = cropImage.naturalWidth + 'px';
                         cropImage.style.height = cropImage.naturalHeight + 'px';
+                        cropImage.style.maxWidth = 'none';
+                        cropImage.style.maxHeight = 'none';
 
                         const circleElement = document.getElementById('cropCircleMask');
                         const circleSize = circleElement.getBoundingClientRect().width || 320; 
                         
-                        const rect = cropImage.getBoundingClientRect();
-                        const scaleX = circleSize / rect.width;
-                        const scaleY = circleSize / rect.height;
+                        const scaleX = circleSize / cropImage.naturalWidth;
+                        const scaleY = circleSize / cropImage.naturalHeight;
                         
                         minScale = Math.max(scaleX, scaleY);
                         currentScale = minScale; 
@@ -2579,7 +2593,6 @@ $dept_icons = [
 
                 const circleElement = document.getElementById('cropCircleMask');
                 const maskRect = circleElement.getBoundingClientRect();
-                const imgRect = cropImage.getBoundingClientRect();
                 
                 const ratio = outputSize / maskRect.width;
 
@@ -2604,17 +2617,21 @@ $dept_icons = [
 
         // --- Mouse Events (คอมพิวเตอร์) ---
         dragLayer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
             isDragging = true;
-            lastClientX = e.clientX;
-            lastClientY = e.clientY;
+            // 🚨 จำพิกัดแรกที่กด 🚨
+            startTouchX = e.clientX;
+            startTouchY = e.clientY;
+            startImgX = currentX;
+            startImgY = currentY;
         });
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            currentX += (e.clientX - lastClientX);
-            currentY += (e.clientY - lastClientY);
-            lastClientX = e.clientX;
-            lastClientY = e.clientY;
+            e.preventDefault();
+            // 🚨 ระยะปัจจุบัน = ตำแหน่งรูปตอนเริ่ม + (ตำแหน่งเมาส์ปัจจุบัน - ตำแหน่งเมาส์เริ่ม) 🚨
+            currentX = startImgX + (e.clientX - startTouchX);
+            currentY = startImgY + (e.clientY - startTouchY);
             updateTransform();
         });
 
@@ -2632,41 +2649,37 @@ $dept_icons = [
         }, { passive: false });
 
         // --- Touch Events (มือถือ/แท็บเล็ต) ---
-        // 🚨 สำคัญมาก: ใช้ addEventListener แบบดั้งเดิมใน Touch เพื่อให้ครอบคลุมเบราว์เซอร์เก่าและใหม่ 🚨
         dragLayer.addEventListener('touchstart', function(e) {
-            e.preventDefault(); // หยุดการซูมและเลื่อนหน้าเว็บของโทรศัพท์ทันทีที่นิ้วแตะ
+            e.preventDefault(); 
             if (e.touches.length === 1) {
                 isDragging = true;
-                lastClientX = e.touches[0].pageX;
-                lastClientY = e.touches[0].pageY;
+                // 🚨 จำพิกัดแรกที่กดนิ้ว 🚨
+                startTouchX = e.touches[0].clientX;
+                startTouchY = e.touches[0].clientY;
+                startImgX = currentX;
+                startImgY = currentY;
             } else if (e.touches.length === 2) {
                 isDragging = false; 
                 initialDistance = Math.hypot(
-                    e.touches[0].pageX - e.touches[1].pageX,
-                    e.touches[0].pageY - e.touches[1].pageY
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
                 );
                 initialScaleForZoom = currentScale;
             }
         }, { passive: false });
 
         dragLayer.addEventListener('touchmove', function(e) {
-            e.preventDefault(); // บล็อกชัวร์ๆ อีกรอบ
+            e.preventDefault(); 
             if (e.touches.length === 1 && isDragging) {
-                const newX = e.touches[0].pageX;
-                const newY = e.touches[0].pageY;
-                
-                // คำนวณระยะที่นิ้วขยับ แล้วบวกเข้าไปเลย 1:1
-                currentX += (newX - lastClientX);
-                currentY += (newY - lastClientY);
-                
-                lastClientX = newX;
-                lastClientY = newY;
-                
+                // 🚨 ระยะปัจจุบัน = ตำแหน่งรูปตอนเริ่ม + (ตำแหน่งนิ้วปัจจุบัน - ตำแหน่งนิ้วเริ่ม) 🚨
+                // สมูท 100% เพราะไม่ใช้การบวกทบค่าเดิม (ซึ่งทำให้กระโดดถ้าเฟรมเรตตก)
+                currentX = startImgX + (e.touches[0].clientX - startTouchX);
+                currentY = startImgY + (e.touches[0].clientY - startTouchY);
                 updateTransform();
             } else if (e.touches.length === 2) {
                 const currentDistance = Math.hypot(
-                    e.touches[0].pageX - e.touches[1].pageX,
-                    e.touches[0].pageY - e.touches[1].pageY
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
                 );
                 currentScale = initialScaleForZoom * (currentDistance / initialDistance);
                 if(currentScale < minScale) currentScale = minScale;
@@ -2679,13 +2692,21 @@ $dept_icons = [
             e.preventDefault();
             if (e.touches.length < 2) initialDistance = 0;
             if (e.touches.length === 1) {
-                // เอานิ้วออก 1 นิ้ว ให้เริ่มนับการลากใหม่ตรงจุดที่เหลืออยู่
-                lastClientX = e.touches[0].pageX;
-                lastClientY = e.touches[0].pageY;
+                // เมื่อปล่อยนิ้วที่สอง ให้ตั้งหลักลากต่อด้วยนิ้วที่เหลือ
+                startTouchX = e.touches[0].clientX;
+                startTouchY = e.touches[0].clientY;
+                startImgX = currentX;
+                startImgY = currentY;
                 isDragging = true;
             } else {
                 isDragging = false;
             }
+        }, { passive: false });
+        
+        // --- ปิดการเลื่อนหน้าเว็บเวลาอยู่บนพรีวิว 100% ---
+        const modalElement = document.getElementById('avatarPreviewConfirmModal');
+        modalElement.addEventListener('touchmove', (e) => {
+            if (e.target !== dragLayer) { e.preventDefault(); }
         }, { passive: false });
         
         // --- ปิดการเลื่อนหน้าเว็บเวลาอยู่บนพรีวิว 100% (กันเหนียว) ---
