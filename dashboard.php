@@ -644,16 +644,14 @@ $dept_icons = [
             </div>
             
             <div class="flex items-center relative" id="profileMenuWrapper">
-                <!-- ✨ แถบโปรไฟล์: สีกลมกลืนกับธีมม่วง ไม่มีพื้นหลังสีขาว ✨ -->
-                <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 cursor-pointer group select-none hover:opacity-80 transition-opacity">
+                <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
                     <div class="text-right hidden sm:block">
-                        <span class="block text-sm font-bold text-white drop-shadow-sm leading-none mb-1">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1">
                             <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <span class="block text-[11px] text-indigo-100 font-semibold tracking-wider uppercase">Administrator</span>
+                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
                     </div>
-                    <!-- รูปโปรไฟล์ด้านบน ทรงกลม ขนาดกำลังดี -->
-                    <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border border-white/30 shadow-inner shrink-0 backdrop-blur-sm">
+                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
                         <img id="headerAvatarImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
