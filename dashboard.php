@@ -2514,13 +2514,15 @@ $dept_icons = [
             toggleModal('imagePreviewModal');
         }
 
+        function openImageModal(imgSrc) {
+            document.getElementById('fullSizeImage').src = imgSrc;
+            toggleModal('imagePreviewModal');
+        }
+
         // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) ป้องกันกระตุก 100% ✨
         let isDragging = false;
-        
-        // ตัวแปรสำหรับจำ "ตำแหน่งที่กดครั้งแรก" เพื่อป้องกันการเลื่อนหลุดมือ
         let startTouchX = 0, startTouchY = 0;
         let startImgX = 0, startImgY = 0;
-        
         let currentX = 0, currentY = 0;
         let currentScale = 1;
         let minScale = 0.1;
@@ -2529,6 +2531,7 @@ $dept_icons = [
 
         const dragLayer = document.getElementById('dragTouchLayer');
         const cropImage = document.getElementById('avatarCropImage');
+        const dragWrapper = document.getElementById('draggableImageWrapper');
 
         function updateTransform() {
             cropImage.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px)) scale(${currentScale})`;
@@ -2542,7 +2545,6 @@ $dept_icons = [
                     cropImage.src = e.target.result;
                     
                     cropImage.onload = () => {
-                        // 🚨 สำคัญมาก: เคลียร์ max-width เผื่อเหลือ เพื่อป้องกันเบราว์เซอร์บีบรูป 🚨
                         cropImage.style.width = cropImage.naturalWidth + 'px';
                         cropImage.style.height = cropImage.naturalHeight + 'px';
                         cropImage.style.maxWidth = 'none';
@@ -2551,8 +2553,9 @@ $dept_icons = [
                         const circleElement = document.getElementById('cropCircleMask');
                         const circleSize = circleElement.getBoundingClientRect().width || 320; 
                         
-                        const scaleX = circleSize / cropImage.naturalWidth;
-                        const scaleY = circleSize / cropImage.naturalHeight;
+                        const rect = cropImage.getBoundingClientRect();
+                        const scaleX = circleSize / rect.width;
+                        const scaleY = circleSize / rect.height;
                         
                         minScale = Math.max(scaleX, scaleY);
                         currentScale = minScale; 
@@ -2616,140 +2619,96 @@ $dept_icons = [
         }
 
         // --- Mouse Events (คอมพิวเตอร์) ---
-        dragLayer.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            isDragging = true;
-            // 🚨 จำพิกัดแรกที่กด 🚨
-            startTouchX = e.clientX;
-            startTouchY = e.clientY;
-            startImgX = currentX;
-            startImgY = currentY;
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            // 🚨 ระยะปัจจุบัน = ตำแหน่งรูปตอนเริ่ม + (ตำแหน่งเมาส์ปัจจุบัน - ตำแหน่งเมาส์เริ่ม) 🚨
-            currentX = startImgX + (e.clientX - startTouchX);
-            currentY = startImgY + (e.clientY - startTouchY);
-            updateTransform();
-        });
-
-        document.addEventListener('mouseup', () => { isDragging = false; });
-        dragLayer.addEventListener('mouseleave', () => { isDragging = false; });
-
-        // --- Wheel Zoom (ลูกกลิ้งเมาส์) ---
-        dragLayer.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const zoomSensitivity = 0.0015;
-            currentScale -= e.deltaY * zoomSensitivity;
-            if(currentScale < minScale) currentScale = minScale;
-            if(currentScale > 5) currentScale = 5;
-            updateTransform();
-        }, { passive: false });
-
-        // --- Touch Events (มือถือ/แท็บเล็ต) ---
-        dragLayer.addEventListener('touchstart', function(e) {
-            e.preventDefault(); 
-            if (e.touches.length === 1) {
+        if (dragLayer) {
+            dragLayer.addEventListener('mousedown', (e) => {
+                e.preventDefault();
                 isDragging = true;
-                // 🚨 จำพิกัดแรกที่กดนิ้ว 🚨
-                startTouchX = e.touches[0].clientX;
-                startTouchY = e.touches[0].clientY;
+                startTouchX = e.clientX;
+                startTouchY = e.clientY;
                 startImgX = currentX;
                 startImgY = currentY;
-            } else if (e.touches.length === 2) {
-                isDragging = false; 
-                initialDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                initialScaleForZoom = currentScale;
-            }
-        }, { passive: false });
+            });
 
-        dragLayer.addEventListener('touchmove', function(e) {
-            e.preventDefault(); 
-            if (e.touches.length === 1 && isDragging) {
-                // 🚨 ระยะปัจจุบัน = ตำแหน่งรูปตอนเริ่ม + (ตำแหน่งนิ้วปัจจุบัน - ตำแหน่งนิ้วเริ่ม) 🚨
-                // สมูท 100% เพราะไม่ใช้การบวกทบค่าเดิม (ซึ่งทำให้กระโดดถ้าเฟรมเรตตก)
-                currentX = startImgX + (e.touches[0].clientX - startTouchX);
-                currentY = startImgY + (e.touches[0].clientY - startTouchY);
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                currentX = startImgX + (e.clientX - startTouchX);
+                currentY = startImgY + (e.clientY - startTouchY);
                 updateTransform();
-            } else if (e.touches.length === 2) {
-                const currentDistance = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                currentScale = initialScaleForZoom * (currentDistance / initialDistance);
+            });
+
+            document.addEventListener('mouseup', () => { isDragging = false; });
+            dragLayer.addEventListener('mouseleave', () => { isDragging = false; });
+
+            // --- Wheel Zoom (ลูกกลิ้งเมาส์) ---
+            dragLayer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomSensitivity = 0.0015;
+                currentScale -= e.deltaY * zoomSensitivity;
                 if(currentScale < minScale) currentScale = minScale;
                 if(currentScale > 5) currentScale = 5;
                 updateTransform();
-            }
-        }, { passive: false });
+            }, { passive: false });
 
-        dragLayer.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            if (e.touches.length < 2) initialDistance = 0;
-            if (e.touches.length === 1) {
-                // เมื่อปล่อยนิ้วที่สอง ให้ตั้งหลักลากต่อด้วยนิ้วที่เหลือ
-                startTouchX = e.touches[0].clientX;
-                startTouchY = e.touches[0].clientY;
-                startImgX = currentX;
-                startImgY = currentY;
-                isDragging = true;
-            } else {
-                isDragging = false;
-            }
-        }, { passive: false });
+            // --- Touch Events (มือถือ/แท็บเล็ต) ---
+            dragLayer.addEventListener('touchstart', function(e) {
+                e.preventDefault(); 
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    startTouchX = e.touches[0].clientX;
+                    startTouchY = e.touches[0].clientY;
+                    startImgX = currentX;
+                    startImgY = currentY;
+                } else if (e.touches.length === 2) {
+                    isDragging = false; 
+                    initialDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    initialScaleForZoom = currentScale;
+                }
+            }, { passive: false });
+
+            dragLayer.addEventListener('touchmove', function(e) {
+                e.preventDefault(); 
+                if (e.touches.length === 1 && isDragging) {
+                    currentX = startImgX + (e.touches[0].clientX - startTouchX);
+                    currentY = startImgY + (e.touches[0].clientY - startTouchY);
+                    updateTransform();
+                } else if (e.touches.length === 2) {
+                    const currentDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    currentScale = initialScaleForZoom * (currentDistance / initialDistance);
+                    if(currentScale < minScale) currentScale = minScale;
+                    if(currentScale > 5) currentScale = 5;
+                    updateTransform();
+                }
+            }, { passive: false });
+
+            dragLayer.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                if (e.touches.length < 2) initialDistance = 0;
+                if (e.touches.length === 1) {
+                    startTouchX = e.touches[0].clientX;
+                    startTouchY = e.touches[0].clientY;
+                    startImgX = currentX;
+                    startImgY = currentY;
+                    isDragging = true;
+                } else {
+                    isDragging = false;
+                }
+            }, { passive: false });
+        }
         
         // --- ปิดการเลื่อนหน้าเว็บเวลาอยู่บนพรีวิว 100% ---
-        const modalElement = document.getElementById('avatarPreviewConfirmModal');
-        modalElement.addEventListener('touchmove', (e) => {
-            if (e.target !== dragLayer) { e.preventDefault(); }
-        }, { passive: false });
-        
-        // --- ปิดการเลื่อนหน้าเว็บเวลาอยู่บนพรีวิว 100% (กันเหนียว) ---
-        const modalElement = document.getElementById('avatarPreviewConfirmModal');
-        modalElement.addEventListener('touchmove', (e) => {
-            if (e.target !== dragLayer) { // บล็อกเฉพาะจุดที่อยู่นอกพื้นที่ลากรูป
-                e.preventDefault(); 
-            }
-        }, { passive: false });
-
-        // ระบบจับการลากเมาส์ (Mouse Events)
-        dragLayer.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX - currentX;
-            startY = e.clientY - currentY;
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            currentX = e.clientX - startX;
-            currentY = e.clientY - startY;
-            dragWrapper.style.transform = `translate(${currentX}px, ${currentY}px)`;
-        });
-
-        document.addEventListener('mouseup', () => { isDragging = false; });
-
-        // ระบบจับการทัชสกรีนบนมือถือ (Touch Events)
-        dragLayer.addEventListener('touchstart', (e) => {
-            isDragging = true;
-            startX = e.touches[0].clientX - currentX;
-            startY = e.touches[0].clientX - currentY;
-        });
-
-        document.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            // e.preventDefault(); // ปิดไว้เพื่อให้หน้าจอมือถือไม่ค้าง
-            currentX = e.touches[0].clientX - startX;
-            currentY = e.touches[0].clientY - startY;
-            dragWrapper.style.transform = `translate(${currentX}px, ${currentY}px)`;
-        }, { passive: false });
-
-        document.addEventListener('touchend', () => { isDragging = false; });
+        const previewModalEl = document.getElementById('avatarPreviewConfirmModal');
+        if (previewModalEl) {
+            previewModalEl.addEventListener('touchmove', (e) => {
+                if (e.target !== dragLayer) { e.preventDefault(); }
+            }, { passive: false });
+        }
 
         // ระบบ Dropdown ตำแหน่งงานอัจฉริยะ
         let availablePositions = <?php echo $available_positions_json; ?>;
