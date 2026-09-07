@@ -2017,8 +2017,42 @@ $dept_icons = [
     <!-- ✨ ฟอร์มซ่อนสำหรับอัปโหลดรูปโปรไฟล์แอดมิน ✨ -->
     <form id="profileAvatarForm" action="" method="POST" enctype="multipart/form-data" class="hidden">
         <input type="hidden" name="update_profile_picture" value="1">
-        <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="document.getElementById('profileAvatarForm').submit();">
+        <!-- 🚨 เปลี่ยนคำสั่ง onchange ให้ไปเรียกหน้าต่างพรีวิวก่อน ห้าม Submit ทันที 🚨 -->
+        <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="showAvatarPreviewModal(this)">
     </form>
+
+    <!-- ✨ Modal หน้าจอพรีวิวรูปก่อนยืนยันอัปโหลด (ดีไซน์สีดำ สไตล์ IG/TikTok แบบในรูปตัวอย่าง) ✨ -->
+    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col bg-[#111111] transition-opacity duration-300">
+        <!-- Header -->
+        <div class="flex justify-between items-center px-4 py-4 shrink-0">
+            <button type="button" onclick="cancelAvatarUpload()" class="w-10 h-10 flex items-center justify-center text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <h3 class="text-white font-bold text-[16px] tracking-wide">ดูตัวอย่างรูปโปรไฟล์</h3>
+            <button type="button" onclick="confirmAvatarUpload()" class="w-10 h-10 flex items-center justify-center text-blue-400 bg-blue-500/20 rounded-full hover:bg-blue-500 hover:text-white transition-colors">
+                <i class="fas fa-check text-lg"></i>
+            </button>
+        </div>
+        
+        <!-- พื้นที่แสดงรูปภาพ (ทำเป็นกรอบวงกลม Crop เสมือนจริง) -->
+        <div class="flex-1 relative flex items-center justify-center overflow-hidden px-4">
+            <!-- กรอบวงกลมจำลองหน้าจอ Crop -->
+            <div class="relative w-full max-w-[340px] aspect-square rounded-full shadow-[0_0_0_9999px_rgba(17,17,17,0.85)] overflow-hidden z-10 flex items-center justify-center bg-slate-800 border-2 border-white/20">
+                <img id="avatarCropImage" src="" class="w-full h-full object-cover">
+            </div>
+            
+            <!-- รูปพื้นหลังเบลอๆ แบบในแอป -->
+            <img id="avatarCropBgBlur" src="" class="absolute inset-0 w-full h-full object-cover opacity-30 blur-2xl z-0">
+        </div>
+
+        <!-- ปุ่ม Action ด้านล่าง -->
+        <div class="px-6 py-8 shrink-0 flex gap-4 bg-[#111111] relative z-20">
+            <button type="button" onclick="cancelAvatarUpload()" class="flex-1 py-3.5 rounded-xl bg-[#2a2d36] text-white font-bold text-[14px] hover:bg-slate-700 transition-colors">ยกเลิก</button>
+            <button type="button" onclick="confirmAvatarUpload()" class="flex-1 py-3.5 rounded-xl bg-[#fe2c55] text-white font-bold text-[14px] hover:bg-[#e0264a] transition-colors shadow-lg shadow-[#fe2c55]/30 flex items-center justify-center gap-2">
+                <i class="fas fa-upload"></i> บันทึกและเปลี่ยนรูป
+            </button>
+        </div>
+    </div>
 
     <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[120] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
@@ -2477,6 +2511,51 @@ $dept_icons = [
         function openImageModal(imgSrc) {
             document.getElementById('fullSizeImage').src = imgSrc;
             toggleModal('imagePreviewModal');
+        }
+
+        // ✨ ระบบควบคุมการพรีวิวรูปภาพก่อนอัปโหลดโปรไฟล์ ✨
+        function showAvatarPreviewModal(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    // เอารูปที่เลือกไปใส่ในวงกลมพรีวิว และรูปพื้นหลังเบลอ
+                    document.getElementById('avatarCropImage').src = e.target.result;
+                    document.getElementById('avatarCropBgBlur').src = e.target.result;
+                    
+                    // ปิดเมนูย่อยเดิม (ถ้าเปิดอยู่)
+                    closeAvatarMenu();
+                    closeProfileDropdown();
+                    
+                    // เปิดหน้าต่างพรีวิวสีดำ
+                    toggleModal('avatarPreviewConfirmModal');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function cancelAvatarUpload() {
+            // ล้างค่า input เพื่อให้เลือกไฟล์เดิมซ้ำได้ถ้ายกเลิก
+            document.getElementById('profileAvatarInput').value = '';
+            // ปิด Modal
+            toggleModal('avatarPreviewConfirmModal');
+        }
+
+        function confirmAvatarUpload() {
+            // ปิด Modal พรีวิว
+            toggleModal('avatarPreviewConfirmModal');
+            
+            // แสดง Loading เล็กน้อยระหว่างส่งข้อมูล เพื่อให้ดูเนียนตา
+            Swal.fire({
+                title: 'กำลังเปลี่ยนรูปโปรไฟล์...',
+                text: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // สั่ง Submit แบบ Manual หลังจากดูพรีวิวเสร็จแล้ว!
+            document.getElementById('profileAvatarForm').submit();
         }
 
         // ระบบ Dropdown ตำแหน่งงานอัจฉริยะ
