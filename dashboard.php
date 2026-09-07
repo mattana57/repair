@@ -2025,12 +2025,12 @@ $dept_icons = [
     <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col bg-[#0f0f0f] transition-opacity duration-300">
         
         <!-- Header ด้านบน -->
-        <div class="absolute top-0 left-0 w-full flex justify-between items-center px-6 py-5 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-            <button type="button" onclick="cancelAvatarUpload()" class="w-10 h-10 flex items-center justify-start text-white hover:text-slate-300 transition-colors pointer-events-auto">
-                <i class="fas fa-chevron-left text-2xl"></i>
+        <div class="absolute top-0 left-0 w-full flex justify-between items-center px-6 md:px-12 lg:px-16 py-5 md:py-6 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+            <button type="button" onclick="cancelAvatarUpload()" class="w-12 h-12 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors pointer-events-auto cursor-pointer">
+                <i class="fas fa-chevron-left text-2xl pr-1"></i>
             </button>
-            <h3 class="text-white font-bold text-[16px] drop-shadow-md tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
-            <div class="w-10"></div> <!-- Spacer กั้นให้ตัวหนังสืออยู่ตรงกลางพอดี -->
+            <h3 class="text-white font-bold text-[16px] md:text-[18px] drop-shadow-md tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
+            <div class="w-12"></div> <!-- Spacer กั้นให้ตัวหนังสืออยู่ตรงกลางพอดี -->
         </div>
 
         <!-- พื้นที่จัดตำแหน่งรูปภาพ (ลากและซูมได้อิสระ) -->
