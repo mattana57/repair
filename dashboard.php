@@ -670,25 +670,26 @@ $dept_icons = [
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
-        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50">
-            <div class="flex items-center">
-                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
+        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50 gap-2">
+            <div class="flex items-center min-w-0 pr-2">
+                <button onclick="toggleSidebar()" class="md:hidden mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h3 class="textxl md:text-3xl font-extrabold text-slate-900 font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle"><?php echo $currentTitle; ?></h3>
+                <!-- ปรับขนาดและตัดคำอัตโนมัติ ไม่ให้ชนกับปุ่มโปรไฟล์ในจอมือถือ -->
+                <h3 class="text-[15px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
             
-            <div class="flex items-center relative" id="profileMenuWrapper">
-                <!-- ✨ แถบโปรไฟล์วงรีมนๆ (Pill Shape) พื้นหลังสีขาว ✨ -->
-                <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
-                    <div class="text-right hidden sm:block">
-                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1">
+            <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
+                <!-- ✨ แถบโปรไฟล์วงรีมนๆ (Pill Shape) แสดงผลเหมือนกันทั้งมือถือและคอม ✨ -->
+                <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-2 sm:gap-3 bg-white pl-3 sm:pl-5 pr-1 sm:pr-1.5 py-1 sm:py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
+                    <div class="text-right block">
+                        <span class="block text-[11px] sm:text-sm font-extrabold text-slate-800 leading-none mb-0.5 sm:mb-1">
                             <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
+                        <span class="block text-[8px] sm:text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
                     </div>
-                    <!-- รูปโปรไฟล์วงกลม (w-12 h-12) เปลี่ยนไปใช้รูปที่เรียกจากฐานข้อมูล -->
-                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
+                    <!-- รูปโปรไฟล์วงกลม ย่อสัดส่วนในมือถือให้พอดี -->
+                    <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
                         <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
