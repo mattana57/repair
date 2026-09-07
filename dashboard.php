@@ -680,22 +680,28 @@ $dept_icons = [
             </div>
             
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
-                <!-- ✨ แถบโปรไฟล์วงรีมนๆ (Pill Shape) ปรับมือถือให้ซ้อนบน-ล่าง / คอมให้เรียงซ้าย-ขวา ✨ -->
-                <div onclick="toggleProfileDropdown(event)" class="flex flex-col sm:flex-row items-center gap-1 sm:gap-3 bg-white px-2.5 sm:px-0 pt-1.5 sm:pt-0 pb-2 sm:pb-0 sm:pl-5 sm:pr-1.5 sm:py-1.5 rounded-[24px] sm:rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
-                    
-                    <!-- รูปโปรไฟล์วงกลม (มือถือจัดให้อยู่ด้านบน / คอมจัดให้อยู่ขวาสุด) -->
-                    <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100 order-1 sm:order-2">
-                        <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
+                <div onclick="toggleProfileDropdown(event)" class="flex flex-col items-center gap-1 cursor-pointer select-none sm:hidden">
+                    <div class="w-10 h-10 rounded-full bg-white p-0.5 shadow-md border border-slate-100 flex items-center justify-center overflow-hidden shrink-0 hover:scale-105 active:scale-95 transition-transform">
+                        <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full rounded-full object-cover">
                     </div>
-
-                    <!-- ชื่อและยศ (มือถือจัดให้อยู่ด้านล่างรูป / คอมจัดให้อยู่ซ้ายมือ) -->
-                    <div class="text-center sm:text-right block order-2 sm:order-1">
-                        <span class="block text-[10px] sm:text-sm font-extrabold text-slate-800 leading-none mb-0.5 sm:mb-1 max-w-[65px] sm:max-w-[150px] truncate">
+                    <div class="bg-white px-2.5 py-0.5 rounded-full shadow-md border border-slate-100 text-center max-w-[85px] hover:scale-105 active:scale-95 transition-transform">
+                        <span class="block text-[9px] font-extrabold text-slate-800 leading-tight truncate">
                             <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <span class="block text-[7px] sm:text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
+                        <span class="block text-[7px] text-indigo-500 font-bold uppercase tracking-wider leading-none">Admin</span>
                     </div>
+                </div>
 
+                <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
+                    <div class="text-right">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 max-w-[150px] truncate">
+                            <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
+                        </span>
+                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
+                        <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
+                    </div>
                 </div>
 
                 <!-- ✨ กล่องเมนูหลักด้านขวา (Profile Dropdown Panel) ✨ -->
