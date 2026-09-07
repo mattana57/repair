@@ -680,10 +680,10 @@ $dept_icons = [
             </div>
             
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
-                <div onclick="toggleProfileDropdown(event)" class="flex flex-col items-center gap-1 cursor-pointer select-none sm:hidden">
-                    <div class="w-10 h-10 rounded-full bg-white p-0.5 shadow-md border border-slate-100 flex items-center justify-center overflow-hidden shrink-0 hover:scale-105 active:scale-95 transition-transform">
-                        <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full rounded-full object-cover">
-                    </div>
+                <!-- 📱 สำหรับมือถือแนวตั้ง: แสดงเฉพาะรูปโปรไฟล์วงกลมเดี่ยวๆ มินิมอล -->
+                <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-11 h-11 rounded-full bg-white p-0.5 shadow-md border border-slate-100 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
+                    <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full rounded-full object-cover">
+                </div>
                     <div class="bg-white px-2.5 py-0.5 rounded-full shadow-md border border-slate-100 text-center max-w-[85px] hover:scale-105 active:scale-95 transition-transform">
                         <span class="block text-[9px] font-extrabold text-slate-800 leading-tight truncate">
                             <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
@@ -692,6 +692,7 @@ $dept_icons = [
                     </div>
                 </div>
 
+                <!-- 💻 สำหรับคอม / โน๊ตบุ๊ค / ไอแพด / แท็บเล็ต / จอแนวนอน: แสดงเป็นแถบแคปซูลแนวนอนชิ้นเดียวเหมือนเดิมเป๊ะ -->
                 <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
                     <div class="text-right">
                         <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 max-w-[150px] truncate">
