@@ -2021,40 +2021,35 @@ $dept_icons = [
         <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="showAvatarPreviewModal(this)">
     </form>
 
-    <!-- ✨ Modal หน้าจอพรีวิว (ดีไซน์จัดวางตำแหน่งรูป เลื่อนได้ ซูมได้) ✨ -->
+    <!-- ✨ Modal หน้าจอพรีวิว (ดีไซน์จัดวางตำแหน่งรูป เลื่อนได้ ซูมได้ สมูท 100%) ✨ -->
     <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col bg-[#0f0f0f] transition-opacity duration-300">
         
-        <!-- Header ด้านบน (ซ้อนอยู่บนรูปภาพ) -->
-        <div class="absolute top-0 left-0 w-full flex justify-between items-center px-6 py-5 shrink-0 z-40 bg-gradient-to-b from-black/70 to-transparent pointer-events-none">
-            <button type="button" onclick="cancelAvatarUpload()" class="w-10 h-10 flex items-center justify-start text-white hover:text-slate-300 transition-colors pointer-events-auto">
-                <i class="fas fa-chevron-left text-2xl"></i>
-            </button>
-            <h3 class="text-white font-bold text-[18px] drop-shadow-md">ตัวอย่างรูปโปรไฟล์</h3>
-            <div class="w-10"></div> <!-- Spacer -->
+        <!-- Header ด้านบน -->
+        <div class="absolute top-0 left-0 w-full flex justify-center items-center px-6 py-5 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+            <h3 class="text-white font-bold text-[16px] drop-shadow-md tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
         </div>
 
         <!-- พื้นที่จัดตำแหน่งรูปภาพ (ลากและซูมได้อิสระ) -->
-        <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-[#0f0f0f]" id="dragContainer">
-            <!-- กล่องใส่รูป (ใช้ GPU ช่วยประมวลผลให้เลื่อนลื่น 100%) -->
-            <div id="draggableImageWrapper" class="absolute flex items-center justify-center origin-center" style="transform: translate3d(0px, 0px, 0) scale(1); transition: none !important; will-change: transform;">
-                <img id="avatarCropImage" src="" class="max-w-none pointer-events-none select-none transition-none" style="transform-origin: center center;">
-            </div>
+        <div class="flex-1 relative overflow-hidden bg-[#0f0f0f]" id="dragContainer">
+            <!-- รูปภาพหลัก (ปรับให้ขนาดพอดีจอตั้งแต่เริ่มต้น) -->
+            <img id="avatarCropImage" src="" class="absolute left-1/2 top-1/2 max-w-[95vw] max-h-[80vh] pointer-events-none select-none object-contain" style="transform: translate(-50%, -50%) scale(1); will-change: transform;">
 
             <!-- Overlay สีดำทะลุรูตรงกลาง (เลียนแบบหน้าจอครอป) -->
             <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-20 overflow-hidden">
-                <div id="cropCircleMask" class="w-full max-w-[340px] sm:max-w-[420px] aspect-square rounded-full shadow-[0_0_0_9999px_rgba(15,15,15,0.85)] border-2 border-white/30"></div>
+                <!-- วงกลมขนาด 320px คงที่ -->
+                <div id="cropCircleMask" class="w-[320px] h-[320px] rounded-full shadow-[0_0_0_9999px_rgba(15,15,15,0.85)] border-2 border-white/30"></div>
             </div>
 
             <!-- เลเยอร์รับคำสั่งสัมผัส (ลากนิ้ว/ซูม) -->
             <div id="dragTouchLayer" class="absolute inset-0 z-30 cursor-move" style="touch-action: none;"></div>
         </div>
 
-        <!-- ปุ่ม Action ด้านล่าง (อยู่ตรงกลาง ห่างกันพอดี ปุ่มยกเลิกสีแดง) -->
-        <div class="px-6 py-6 pb-10 shrink-0 flex justify-center items-center gap-6 bg-[#0f0f0f] relative z-40 border-t border-white/10">
-            <button type="button" onclick="cancelAvatarUpload()" class="py-3 px-10 rounded-full bg-rose-600 text-white font-bold text-[16px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30">
+        <!-- ปุ่ม Action ด้านล่าง (อยู่ตรงกลาง ห่างกันนิดนึง ปุ่มยกเลิกสีแดง) -->
+        <div class="px-6 py-6 pb-10 shrink-0 flex justify-center items-center gap-5 bg-[#0f0f0f] relative z-40 border-t border-white/10">
+            <button type="button" onclick="cancelAvatarUpload()" class="py-2.5 px-10 rounded-full bg-rose-600 text-white font-bold text-[15px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30">
                 ยกเลิก
             </button>
-            <button type="button" onclick="processAndUploadCrop()" class="py-3 px-10 rounded-full bg-blue-600 text-white font-bold text-[16px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
+            <button type="button" onclick="processAndUploadCrop()" class="py-2.5 px-10 rounded-full bg-blue-600 text-white font-bold text-[15px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
                 บันทึก
             </button>
         </div>
@@ -2519,47 +2514,41 @@ $dept_icons = [
             toggleModal('imagePreviewModal');
         }
 
-        // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) ขั้นเทพ 100% ✨
+        // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) สมูทสุดๆ 100% ✨
         let isDragging = false;
-        // เก็บจุดเริ่มต้นของการกด
-        let startPointX = 0, startPointY = 0;
-        // เก็บตำแหน่งรูปตอนที่เริ่มกด
-        let imageStartX = 0, imageStartY = 0;
-        
+        let lastClientX = 0, lastClientY = 0;
         let currentX = 0, currentY = 0;
         let currentScale = 1;
         let initialDistance = 0;
         let initialScaleForZoom = 1;
 
         const dragLayer = document.getElementById('dragTouchLayer');
-        const dragWrapper = document.getElementById('draggableImageWrapper');
         const cropImage = document.getElementById('avatarCropImage');
 
         function updateTransform() {
-            // ใช้ GPU เร่งความเร็ว และไม่มีการหน่วงเวลา
-            dragWrapper.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) scale(${currentScale})`;
+            cropImage.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px)) scale(${currentScale})`;
         }
 
         function showAvatarPreviewModal(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
+                    // รีเซ็ตตำแหน่งให้กลับมาอยู่ตรงกลางเป๊ะๆ ทุกครั้งที่เปิดรูปใหม่
+                    cropImage.style.transform = `translate(-50%, -50%) scale(1)`;
                     cropImage.src = e.target.result;
                     
                     cropImage.onload = () => {
-                        // บังคับขนาดดั้งเดิม ไม่ให้ CSS กวนการทำงาน
-                        cropImage.style.width = cropImage.naturalWidth + 'px';
-                        cropImage.style.height = cropImage.naturalHeight + 'px';
-
+                        // คำนวณ Scale ให้ครอบคลุมวงกลมตั้งแต่เปิด
                         const circleElement = document.getElementById('cropCircleMask');
-                        const circleSize = circleElement.getBoundingClientRect().width || 340; 
+                        const circleSize = circleElement.getBoundingClientRect().width || 320; 
                         
-                        // คำนวณ Scale เริ่มต้น ให้รูปครอบคลุมวงกลมพอดีเป๊ะ
-                        const scaleX = circleSize / cropImage.naturalWidth;
-                        const scaleY = circleSize / cropImage.naturalHeight;
-                        currentScale = Math.max(scaleX, scaleY);
+                        const rect = cropImage.getBoundingClientRect();
+                        const scaleX = circleSize / rect.width;
+                        const scaleY = circleSize / rect.height;
                         
-                        // รีเซ็ตตำแหน่งกลางจอ
+                        // ถ้าภาพเล็กกว่าวงกลม ให้ซูมขึ้นไปให้เต็ม
+                        currentScale = Math.max(scaleX, scaleY, 1);
+                        
                         currentX = 0;
                         currentY = 0;
                         updateTransform();
@@ -2595,18 +2584,25 @@ $dept_icons = [
                 canvas.height = outputSize;
 
                 const circleElement = document.getElementById('cropCircleMask');
-                const circleRect = circleElement.getBoundingClientRect();
-                const circleSize = circleRect.width || 340;
+                const maskRect = circleElement.getBoundingClientRect();
+                const imgRect = cropImage.getBoundingClientRect();
                 
-                const ratio = outputSize / circleSize;
+                // คำนวณสัดส่วนรูปบนจอกับรูปต้นฉบับ
+                const scaleX = cropImage.naturalWidth / imgRect.width;
+                const scaleY = cropImage.naturalHeight / imgRect.height;
 
-                // ครอปรูปตามพิกัดที่เลื่อนไว้เป๊ะๆ
-                ctx.save();
-                ctx.translate(outputSize / 2, outputSize / 2);
-                ctx.translate(currentX * ratio, currentY * ratio); 
-                ctx.scale(currentScale * ratio, currentScale * ratio); 
-                ctx.drawImage(cropImage, -cropImage.naturalWidth / 2, -cropImage.naturalHeight / 2, cropImage.naturalWidth, cropImage.naturalHeight);
-                ctx.restore();
+                // หาจุดตัดของวงกลมบนรูปภาพ
+                const cropX = (maskRect.left - imgRect.left) * scaleX;
+                const cropY = (maskRect.top - imgRect.top) * scaleY;
+                const cropWidth = maskRect.width * scaleX;
+                const cropHeight = maskRect.height * scaleY;
+
+                // วาดรูปลง Canvas ให้ดึงเฉพาะส่วนในวงกลมมาตัดให้พอดี
+                ctx.drawImage(
+                    cropImage, 
+                    cropX, cropY, cropWidth, cropHeight, // จุดและขนาดบนไฟล์ต้นฉบับ
+                    0, 0, outputSize, outputSize         // จุดและขนาดบน Canvas
+                );
 
                 canvas.toBlob((blob) => {
                     const file = new File([blob], "avatar_cropped.jpg", { type: "image/jpeg", lastModified: new Date().getTime() });
@@ -2620,52 +2616,46 @@ $dept_icons = [
             }, 100);
         }
 
-        // --- Mouse Events (ลากในคอมพิวเตอร์) 1:1 Mapping ---
+        // --- Mouse Events (คอมพิวเตอร์) ---
         dragLayer.addEventListener('mousedown', (e) => {
             e.preventDefault();
             isDragging = true;
-            // จำจุดที่จิ้มเมาส์ลงไป
-            startPointX = e.clientX;
-            startPointY = e.clientY;
-            // จำตำแหน่งของรูป ณ ตอนที่จิ้ม
-            imageStartX = currentX;
-            imageStartY = currentY;
+            lastClientX = e.clientX;
+            lastClientY = e.clientY;
         });
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             e.preventDefault();
-            // เอาตำแหน่งปัจจุบัน ลบ ตำแหน่งที่จิ้มครั้งแรก = ระยะทางที่เลื่อนไป
-            const dx = e.clientX - startPointX;
-            const dy = e.clientY - startPointY;
-            // เอาระยะทางไปบวกกับตำแหน่งเดิมของรูป
-            currentX = imageStartX + dx;
-            currentY = imageStartY + dy;
+            // 🚨 หัวใจหลักความสมูท: หารระยะด้วย currentScale ทำให้เมาส์ลากแบบ 1:1 กับหน้าจอเสมอ 🚨
+            currentX += (e.clientX - lastClientX) / currentScale;
+            currentY += (e.clientY - lastClientY) / currentScale;
+            lastClientX = e.clientX;
+            lastClientY = e.clientY;
             updateTransform();
         });
 
         document.addEventListener('mouseup', () => { isDragging = false; });
-        dragLayer.addEventListener('mouseleave', () => { isDragging = false; }); // เผื่อเมาส์หลุดจอ
+        dragLayer.addEventListener('mouseleave', () => { isDragging = false; });
 
         // --- Wheel Zoom (ลูกกลิ้งเมาส์) ---
         dragLayer.addEventListener('wheel', (e) => {
             e.preventDefault();
             const zoomSensitivity = 0.0015;
             currentScale -= e.deltaY * zoomSensitivity;
-            if(currentScale < 0.05) currentScale = 0.05;
+            if(currentScale < 0.2) currentScale = 0.2;
+            if(currentScale > 5) currentScale = 5;
             updateTransform();
         }, { passive: false });
 
-        // --- Touch Events (นิ้วสัมผัส) 1:1 Mapping ---
+        // --- Touch Events (มือถือ/แท็บเล็ต) ---
         dragLayer.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 isDragging = true;
-                startPointX = e.touches[0].clientX;
-                startPointY = e.touches[0].clientY;
-                imageStartX = currentX;
-                imageStartY = currentY;
+                lastClientX = e.touches[0].clientX;
+                lastClientY = e.touches[0].clientY;
             } else if (e.touches.length === 2) {
-                isDragging = false;
+                isDragging = false; 
                 initialDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
@@ -2677,10 +2667,10 @@ $dept_icons = [
         dragLayer.addEventListener('touchmove', (e) => {
             e.preventDefault(); 
             if (e.touches.length === 1 && isDragging) {
-                const dx = e.touches[0].clientX - startPointX;
-                const dy = e.touches[0].clientY - startPointY;
-                currentX = imageStartX + dx;
-                currentY = imageStartY + dy;
+                currentX += (e.touches[0].clientX - lastClientX) / currentScale;
+                currentY += (e.touches[0].clientY - lastClientY) / currentScale;
+                lastClientX = e.touches[0].clientX;
+                lastClientY = e.touches[0].clientY;
                 updateTransform();
             } else if (e.touches.length === 2) {
                 const currentDistance = Math.hypot(
@@ -2688,7 +2678,8 @@ $dept_icons = [
                     e.touches[0].clientY - e.touches[1].clientY
                 );
                 currentScale = initialScaleForZoom * (currentDistance / initialDistance);
-                if(currentScale < 0.05) currentScale = 0.05;
+                if(currentScale < 0.2) currentScale = 0.2;
+                if(currentScale > 5) currentScale = 5;
                 updateTransform();
             }
         }, { passive: false });
@@ -2696,11 +2687,8 @@ $dept_icons = [
         dragLayer.addEventListener('touchend', (e) => {
             if (e.touches.length < 2) initialDistance = 0;
             if (e.touches.length === 1) {
-                // ถ้าเหลือนิ้วเดียว ให้ถือว่าเริ่มลากใหม่
-                startPointX = e.touches[0].clientX;
-                startPointY = e.touches[0].clientY;
-                imageStartX = currentX;
-                imageStartY = currentY;
+                lastClientX = e.touches[0].clientX;
+                lastClientY = e.touches[0].clientY;
                 isDragging = true;
             } else {
                 isDragging = false;
