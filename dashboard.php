@@ -699,8 +699,8 @@ $dept_icons = [
                     <!-- ส่วนหัว: รูปโปรไฟล์และข้อมูลผู้ดูแลระบบ -->
                     <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4 relative">
                         
-                        <!-- 🚨 กล่องเมนูย่อยสีเทาเข้ม: เด้งออกทางซ้ายของ Tapbar 🚨 -->
-                        <div id="avatarActionMenu" class="absolute right-full top-3 mr-3 w-48 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-50 text-white animate-fade-in">
+                        <!-- 🚨 กล่องเมนูย่อยสีเทาเข้ม: มือถือโชว์ด้านล่างรูป, คอม/ไอแพดโชว์ด้านซ้ายเหมือนเดิม 🚨 -->
+                        <div id="avatarActionMenu" class="absolute left-5 top-[85px] sm:left-auto sm:right-full sm:top-3 sm:mr-3 w-48 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-[60] text-white animate-fade-in">
                             <button type="button" onclick="openImageModal('<?php echo $current_user_avatar; ?>'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
                                 <i class="fas fa-eye text-slate-300 w-4 text-center"></i> ดูรูปภาพ
                             </button>
