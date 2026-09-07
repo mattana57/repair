@@ -2051,8 +2051,10 @@ $dept_icons = [
         </div>
 
         <!-- ปุ่ม Action ด้านล่าง -->
-        <div class="px-6 py-6 pb-8 shrink-0 flex justify-between items-center bg-[#0f0f0f] relative z-40 border-t border-white/10">
-            <button type="button" onclick="cancelAvatarUpload()" class="text-white font-bold text-[15px] hover:text-slate-300 transition-colors py-2 px-2">ยกเลิก</button>
+        <div class="px-6 py-6 pb-8 shrink-0 flex justify-center items-center gap-4 bg-[#0f0f0f] relative z-40 border-t border-white/10">
+            <button type="button" onclick="cancelAvatarUpload()" class="py-2.5 px-8 rounded-full bg-rose-600 text-white font-bold text-[15px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30">
+                ยกเลิก
+            </button>
             <button type="button" onclick="processAndUploadCrop()" class="py-2.5 px-8 rounded-full bg-blue-600 text-white font-bold text-[15px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
                 บันทึก
             </button>
@@ -2524,7 +2526,7 @@ $dept_icons = [
         let currentX = 0, currentY = 0;
         let currentScale = 1;
         let initialDistance = 0;
-        let initialScale = 1;
+        let initialScaleForZoom = 1;
 
         const dragLayer = document.getElementById('dragTouchLayer');
         const dragWrapper = document.getElementById('draggableImageWrapper');
@@ -2541,15 +2543,19 @@ $dept_icons = [
                     cropImage.src = e.target.result;
                     
                     cropImage.onload = () => {
+                        // 1. กำหนดขนาดที่แท้จริงของรูปให้ล็อกไว้ (ป้องกันการคูณ Scale ซ้อนทับ)
+                        cropImage.style.width = cropImage.naturalWidth + 'px';
+                        cropImage.style.height = cropImage.naturalHeight + 'px';
+
                         const circleElement = document.getElementById('cropCircleMask');
-                        const circleSize = circleElement.getBoundingClientRect().width; 
+                        const circleSize = circleElement.getBoundingClientRect().width || 320; 
                         
-                        // ปรับภาพให้สัดส่วนพอดีกับวงกลม
+                        // 2. คำนวณ Scale เริ่มต้น ให้รูปครอบคลุมวงกลมพอดี
                         const scaleX = circleSize / cropImage.naturalWidth;
                         const scaleY = circleSize / cropImage.naturalHeight;
                         currentScale = Math.max(scaleX, scaleY);
                         
-                        // ให้รูปมาอยู่ตรงกลางพอดี
+                        // 3. รีเซ็ตตำแหน่งให้อยู่ตรงกลาง
                         currentX = 0;
                         currentY = 0;
                         updateTransform();
@@ -2569,7 +2575,6 @@ $dept_icons = [
         }
 
         function processAndUploadCrop() {
-            // โชว์หน้าโหลดระหว่างประมวลผลตัดรูปภาพ
             Swal.fire({
                 title: 'กำลังเปลี่ยนรูปโปรไฟล์...',
                 text: 'ระบบกำลังประมวลผลรูปภาพ กรุณารอสักครู่',
@@ -2578,29 +2583,26 @@ $dept_icons = [
             });
 
             setTimeout(() => {
-                // สร้าง Canvas เพื่อตัดรูปจริงตามสัดส่วนที่คุณการ์ตูนเลื่อนไว้
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // กำหนดความละเอียดรูปที่จะเซฟลง Server เป็น 600x600 px (สวยคมชัด)
                 const outputSize = 600; 
                 canvas.width = outputSize;
                 canvas.height = outputSize;
 
                 const circleElement = document.getElementById('cropCircleMask');
                 const circleRect = circleElement.getBoundingClientRect();
+                const circleSize = circleRect.width || 320;
                 
-                const ratio = outputSize / circleRect.width;
+                const ratio = outputSize / circleSize;
 
-                // วาดรูปลง Canvas แบบเจาะจงจุด
                 ctx.save();
                 ctx.translate(outputSize / 2, outputSize / 2);
                 ctx.scale(currentScale * ratio, currentScale * ratio);
                 ctx.translate(currentX / currentScale, currentY / currentScale);
-                ctx.drawImage(cropImage, -cropImage.naturalWidth / 2, -cropImage.naturalHeight / 2);
+                ctx.drawImage(cropImage, -cropImage.naturalWidth / 2, -cropImage.naturalHeight / 2, cropImage.naturalWidth, cropImage.naturalHeight);
                 ctx.restore();
 
-                // แปลงไฟล์แล้วจับยัดกลับเข้าไปในช่อง Input ก่อนสั่ง Submit
                 canvas.toBlob((blob) => {
                     const file = new File([blob], "avatar_cropped.jpg", { type: "image/jpeg", lastModified: new Date().getTime() });
                     const dataTransfer = new DataTransfer();
@@ -2613,7 +2615,7 @@ $dept_icons = [
             }, 100);
         }
 
-        // --- Mouse Events (สำหรับลากบนคอมพิวเตอร์) ---
+        // --- Mouse Events ---
         dragLayer.addEventListener('mousedown', (e) => {
             e.preventDefault();
             isDragging = true;
@@ -2631,16 +2633,16 @@ $dept_icons = [
 
         document.addEventListener('mouseup', () => { isDragging = false; });
 
-        // --- Wheel Zoom (ซูมด้วยลูกกลิ้งเมาส์) ---
+        // --- Wheel Zoom ---
         dragLayer.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomSensitivity = 0.0015;
+            const zoomSensitivity = 0.002;
             currentScale -= e.deltaY * zoomSensitivity;
-            if(currentScale < 0.1) currentScale = 0.1;
+            if(currentScale < 0.05) currentScale = 0.05;
             updateTransform();
         }, { passive: false });
 
-        // --- Touch Events (ซูมแบบจีบนิ้ว และ เลื่อนรูปบนมือถือ/แท็บเล็ต) ---
+        // --- Touch Events ---
         dragLayer.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 isDragging = true;
@@ -2652,12 +2654,12 @@ $dept_icons = [
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
-                initialScale = currentScale;
+                initialScaleForZoom = currentScale;
             }
         }, { passive: false });
 
         dragLayer.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // ป้องกันจอมือถือเด้งขึ้นลง
+            e.preventDefault(); // ป้องกันจอเด้ง
             if (e.touches.length === 1 && isDragging) {
                 currentX = e.touches[0].clientX - startX;
                 currentY = e.touches[0].clientY - startY;
@@ -2667,8 +2669,8 @@ $dept_icons = [
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
-                currentScale = initialScale * (currentDistance / initialDistance);
-                if(currentScale < 0.1) currentScale = 0.1;
+                currentScale = initialScaleForZoom * (currentDistance / initialDistance);
+                if(currentScale < 0.05) currentScale = 0.05;
                 updateTransform();
             }
         }, { passive: false });
