@@ -175,7 +175,8 @@ $users_cols = [
     'english_name' => 'VARCHAR(255) NULL',
     'position' => 'VARCHAR(255) NULL',
     'phone' => 'VARCHAR(100) NULL',
-    'department' => 'VARCHAR(255) NULL'
+    'department' => 'VARCHAR(255) NULL',
+    'avatar_url' => 'VARCHAR(255) NULL' // ✨ เพิ่มการรองรับรูปโปรไฟล์ในตาราง users
 ];
 foreach ($users_cols as $col => $def) {
     $chk = $conn->query("SHOW COLUMNS FROM users LIKE '$col'");
@@ -309,8 +310,42 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
 // ระบบบันทึกและลบข้อมูล
 // =====================================================================
 
+// ✨ ดึงภาพโปรไฟล์ของ User ประจำเซสชั่น ✨
+$current_user_avatar = "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($_SESSION['username'] ?? 'admin')."&backgroundColor=e2e8f0";
+if(isset($_SESSION['user_id'])) {
+    $uid = intval($_SESSION['user_id']);
+    $u_q = $conn->query("SELECT avatar_url FROM users WHERE id = $uid");
+    if($u_q && $u_q->num_rows > 0) {
+        $u_row = $u_q->fetch_assoc();
+        if(!empty($u_row['avatar_url'])) {
+            $current_user_avatar = htmlspecialchars($u_row['avatar_url']);
+        }
+    }
+}
+
 // ✨ ปิดการโหลดหน้าซ้ำซ้อน เพื่อไม่ให้จอกระตุกแว็บหลังจากกด OK ใน SweetAlert ✨
 $js_redirect = "history.replaceState(null, '', '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash'));";
+
+// ✨ ระบบอัปโหลดเปลี่ยนรูปโปรไฟล์แอดมิน ✨
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture'])) {
+    $user_id = $_SESSION['user_id'];
+    if (isset($_FILES['profile_avatar']) && $_FILES['profile_avatar']['error'] === UPLOAD_ERR_OK) {
+        $file_extension = strtolower(pathinfo($_FILES["profile_avatar"]["name"], PATHINFO_EXTENSION));
+        $allowed_extensions = array("jpg", "jpeg", "png", "webp", "gif");
+        if (in_array($file_extension, $allowed_extensions)) {
+            $upload_dir = 'uploads/';
+            if (!is_dir($upload_dir)) @mkdir($upload_dir, 0777, true);
+            $file_name = 'admin_' . time() . '_' . uniqid() . '.' . $file_extension;
+            $target_path = $upload_dir . $file_name;
+            if (move_uploaded_file($_FILES['profile_avatar']['tmp_name'], $target_path)) {
+                $stmt = $conn->prepare("UPDATE users SET avatar_url=? WHERE id=?");
+                $stmt->bind_param("si", $target_path, $user_id);
+                $stmt->execute();
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect location.reload(); }); });</script>";
+            }
+        }
+    }
+}
 
 if (isset($_GET['delete_asset'])) {
     $del_id = intval($_GET['delete_asset']);
@@ -644,6 +679,7 @@ $dept_icons = [
             </div>
             
             <div class="flex items-center relative" id="profileMenuWrapper">
+                <!-- ✨ แถบโปรไฟล์วงรีมนๆ (Pill Shape) พื้นหลังสีขาว ✨ -->
                 <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
                     <div class="text-right hidden sm:block">
                         <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1">
@@ -651,29 +687,20 @@ $dept_icons = [
                         </span>
                         <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
                     </div>
+                    <!-- รูปโปรไฟล์วงกลม (w-12 h-12) เปลี่ยนไปใช้รูปที่เรียกจากฐานข้อมูล -->
                     <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
-                        <img id="headerAvatarImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
+                        <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
 
                 <!-- ✨ กล่องเมนูหลักด้านขวา (Profile Dropdown Panel) ✨ -->
                 <div id="profileDropdownMenu" class="absolute right-0 top-full mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 hidden flex-col z-50 animate-fade-in">
-                    
-                    <!-- 🚨 กล่องเมนูย่อยสีดำ 🚨 -->
-                    <div id="avatarActionMenu" class="absolute right-full top-3 mr-3 w-48 bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-50 text-white animate-fade-in">
-                        <button type="button" onclick="openImageModal('https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-xs font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
-                            <i class="fas fa-eye text-slate-300 w-4 text-center"></i> ดูรูปภาพ
-                        </button>
-                        <button type="button" onclick="openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="px-4 py-2.5 text-left text-xs font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
-                            <i class="fas fa-camera text-slate-300 w-4 text-center"></i> เปลี่ยนรูปภาพ
-                        </button>
-                    </div>
 
                     <!-- ส่วนหัว: รูปโปรไฟล์และข้อมูลผู้ดูแลระบบ -->
-                    <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4">
-                        <!-- ✨ เปลี่ยนรูปโปรไฟล์ใน Dropdown เป็นทรงวงกลม (rounded-full) ✨ -->
-                        <div onclick="toggleAvatarMenu(event)" class="relative w-[64px] h-[64px] rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0 cursor-pointer shadow-sm hover:ring-2 hover:ring-indigo-400 transition-all group" title="คลิกเพื่อจัดการรูปภาพ">
-                            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
+                    <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4 relative">
+                        <!-- ✨ รูปโปรไฟล์ใน Dropdown กดแล้วเด้ง Modal เปลี่ยนรูป (แยกเป็น Modal ตามรูปที่ 3) ✨ -->
+                        <div onclick="openAvatarOptionsModal(); closeProfileDropdown();" class="relative w-[64px] h-[64px] rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0 cursor-pointer shadow-sm hover:ring-2 hover:ring-indigo-400 transition-all group" title="คลิกเพื่อจัดการรูปภาพ">
+                            <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
                             <!-- แถบกล้องถ่ายรูปด้านล่าง -->
                             <div class="absolute inset-x-0 bottom-0 h-1/3 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center group-hover:bg-slate-900/80 transition-colors">
                                 <i class="fas fa-camera text-white text-[10px]"></i>
@@ -682,15 +709,16 @@ $dept_icons = [
 
                         <div class="min-w-0 flex-1">
                             <p class="text-[15px] font-extrabold text-slate-800 truncate">
-                                <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'Administrator'; ?>
+                                <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'Administrator'; ?>
                             </p>
-                            <p class="text-[12px] font-medium text-slate-400 truncate mt-0.5">@<?php echo htmlspecialchars($_SESSION['username'] ?? 'admin'); ?></p>
-                            <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-extrabold rounded-md border border-emerald-100 shadow-sm">
+                            <p class="text-[12px] font-medium text-slate-400 truncate mt-0.5">@<?php echo !empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'admin'; ?></p>
+                            <span class="inline-block mt-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-extrabold rounded-md border border-emerald-100 shadow-sm">
                                 <i class="fas fa-shield-alt mr-1"></i>ผู้ดูแลระบบ
                             </span>
                         </div>
                     </div>
 
+                    <!-- รายการคำสั่งของโปรไฟล์ -->
                     <div class="px-2 py-2 space-y-1">
                         <button type="button" onclick="openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
                             <div class="flex items-center gap-3">
@@ -731,6 +759,8 @@ $dept_icons = [
                             <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
                         </button>
                     </div>
+
+                    <!-- ปุ่มออกจากระบบด้านล่าง -->
 
                     <div class="px-2 pt-2 border-t border-slate-100">
                         <a href="logout.php" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors">
@@ -1973,7 +2003,35 @@ $dept_icons = [
 
     <!-- ================== MODALS ================== -->
     
-    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <!-- ✨ ฟอร์มซ่อนสำหรับอัปโหลดรูปโปรไฟล์แอดมิน ✨ -->
+    <form id="profileAvatarForm" action="" method="POST" enctype="multipart/form-data" class="hidden">
+        <input type="hidden" name="update_profile_picture" value="1">
+        <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="document.getElementById('profileAvatarForm').submit();">
+    </form>
+
+    <!-- ✨ Modal เมนูจัดการรูปโปรไฟล์ (ดีไซน์สีเทาเข้ม ถอดแบบจากรูปที่ 3) ✨ -->
+    <div id="avatarOptionsModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[110] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm cursor-pointer" onclick="toggleModal('avatarOptionsModal')"></div>
+        <div class="bg-[#2a2d36] w-full max-w-[280px] rounded-3xl shadow-2xl z-20 flex flex-col overflow-hidden text-white divide-y divide-slate-700/50 transform transition-all">
+            <!-- ปุ่มถ่ายภาพ (เรียกกล้องมือถือ) -->
+            <button type="button" onclick="document.getElementById('profileAvatarInput').setAttribute('capture', 'environment'); document.getElementById('profileAvatarInput').click(); toggleModal('avatarOptionsModal');" class="px-6 py-4 flex items-center gap-4 hover:bg-slate-700/50 transition-colors w-full text-left">
+                <i class="fas fa-camera text-slate-300 w-5 text-center text-lg"></i>
+                <span class="font-bold text-[15px]">ถ่ายภาพ</span>
+            </button>
+            <!-- ปุ่มอัปโหลด (เปิดคลังภาพ) -->
+            <button type="button" onclick="document.getElementById('profileAvatarInput').removeAttribute('capture'); document.getElementById('profileAvatarInput').click(); toggleModal('avatarOptionsModal');" class="px-6 py-4 flex items-center gap-4 hover:bg-slate-700/50 transition-colors w-full text-left">
+                <i class="fas fa-image text-slate-300 w-5 text-center text-lg"></i>
+                <span class="font-bold text-[15px]">อัปโหลดรูปภาพ</span>
+            </button>
+            <!-- ปุ่มดูรูปภาพเต็ม -->
+            <button type="button" onclick="toggleModal('avatarOptionsModal'); openImageModal('<?php echo $current_user_avatar; ?>');" class="px-6 py-4 flex items-center gap-4 hover:bg-slate-700/50 transition-colors w-full text-left">
+                <i class="fas fa-eye text-slate-300 w-5 text-center text-lg"></i>
+                <span class="font-bold text-[15px]">ดูรูปภาพ</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[120] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
         <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
             <i class="fas fa-times text-xl"></i>
@@ -2789,30 +2847,11 @@ $dept_icons = [
             if (menu) {
                 menu.classList.add('hidden');
                 menu.classList.remove('flex');
-                closeAvatarMenu(); // ปิดเมนูย่อยรูปภาพด้วย
             }
         }
 
-        // ✨ ระบบจัดการเมนูย่อยสำหรับคลิกที่รูปโปรไฟล์ ✨
-        function toggleAvatarMenu(e) {
-            if (e) e.stopPropagation();
-            const avatarMenu = document.getElementById('avatarActionMenu');
-            if (!avatarMenu) return;
-            if (avatarMenu.classList.contains('hidden')) {
-                avatarMenu.classList.remove('hidden');
-                avatarMenu.classList.add('flex');
-            } else {
-                avatarMenu.classList.add('hidden');
-                avatarMenu.classList.remove('flex');
-            }
-        }
-
-        function closeAvatarMenu() {
-            const avatarMenu = document.getElementById('avatarActionMenu');
-            if (avatarMenu) {
-                avatarMenu.classList.add('hidden');
-                avatarMenu.classList.remove('flex');
-            }
+        function openAvatarOptionsModal() {
+            toggleModal('avatarOptionsModal');
         }
 
         // คลิกพื้นที่อื่นเพื่อปิดเมนูต่างๆ อัตโนมัติ
@@ -2820,12 +2859,6 @@ $dept_icons = [
             const wrapper = document.getElementById('profileMenuWrapper');
             if (wrapper && !wrapper.contains(e.target)) {
                 closeProfileDropdown();
-            } else {
-                // ถ้าคลิกอยู่ในกล่อง Profile แต่ไม่ได้คลิกที่ปุ่มรูปภาพ ให้ปิดเมนูย่อยกล่องดำ
-                const avatarBtn = document.querySelector('[onclick*="toggleAvatarMenu"]');
-                if (avatarBtn && !avatarBtn.contains(e.target)) {
-                    closeAvatarMenu();
-                }
             }
         });
 
