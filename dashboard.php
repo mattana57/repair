@@ -675,32 +675,38 @@ $dept_icons = [
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h3 class="textxl md:text-3xl font-extrabold text-slate-900 font-bold text-white tracking-tight drop-shadow-sm" id="headerTitle"><?php echo $currentTitle; ?></h3>
+                <h3 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
             
             <div class="flex items-center relative" id="profileMenuWrapper">
-                <!-- ✨ แถบโปรไฟล์วงรีมนๆ (Pill Shape) พื้นหลังสีขาว ✨ -->
-                <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
+                <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-0 sm:gap-3 bg-white/0 sm:bg-white pl-0 sm:pl-5 pr-0 sm:pr-1.5 py-0 sm:py-1.5 rounded-full sm:shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-all sm:border sm:border-slate-100 select-none">
+                    
                     <div class="text-right hidden sm:block">
                         <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1">
                             <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
                         <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
                     </div>
-                    <!-- รูปโปรไฟล์วงกลม (w-12 h-12) เปลี่ยนไปใช้รูปที่เรียกจากฐานข้อมูล -->
-                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
+
+                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-md sm:shadow-sm shrink-0 border-2 border-white sm:border-indigo-100">
                         <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
 
-                <!-- ✨ กล่องเมนูหลักด้านขวา (Profile Dropdown Panel) ✨ -->
-                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 hidden flex-col z-50 animate-fade-in">
+                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-3 w-[280px] bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 hidden flex-col z-50 animate-fade-in origin-top-right">
 
-                    <!-- ส่วนหัว: รูปโปรไฟล์และข้อมูลผู้ดูแลระบบ -->
-                    <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4 relative">
+                    <div class="sm:hidden px-5 mb-4 mt-1 flex justify-center">
+                        <div class="bg-slate-50 border border-slate-100 rounded-full px-5 py-2.5 flex flex-col items-center justify-center shadow-sm w-full">
+                            <span class="block text-[15px] font-extrabold text-slate-800 truncate w-full text-center">
+                                <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
+                            </span>
+                            <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider mt-0.5">Administrator</span>
+                        </div>
+                    </div>
+
+                    <div class="px-5 pb-4 border-b border-slate-100 flex items-center gap-4 relative">
                         
-                        <!-- 🚨 กล่องเมนูย่อยสีเทาเข้ม: มือถือโชว์ด้านล่างรูป, คอม/ไอแพดโชว์ด้านซ้ายเหมือนเดิม 🚨 -->
-                        <div id="avatarActionMenu" class="absolute left-5 top-[85px] sm:left-auto sm:right-full sm:top-3 sm:mr-3 w-48 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-[60] text-white animate-fade-in">
+                        <div id="avatarActionMenu" class="absolute left-[70px] top-[40px] sm:left-auto sm:right-full sm:top-3 sm:mr-3 w-[170px] sm:w-48 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-[60] text-white animate-fade-in origin-top-left sm:origin-top-right">
                             <button type="button" onclick="openImageModal('<?php echo $current_user_avatar; ?>'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
                                 <i class="fas fa-eye text-slate-300 w-4 text-center"></i> ดูรูปภาพ
                             </button>
@@ -709,27 +715,21 @@ $dept_icons = [
                             </button>
                         </div>
 
-                        <!-- ✨ รูปโปรไฟล์ใน Dropdown กดแล้วเปิดเมนูย่อยด้านซ้าย ✨ -->
                         <div onclick="toggleAvatarMenu(event)" class="relative w-[64px] h-[64px] rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0 cursor-pointer shadow-sm hover:ring-2 hover:ring-indigo-400 transition-all group" title="คลิกเพื่อจัดการรูปภาพ">
                             <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
-                            <!-- แถบกล้องถ่ายรูปด้านล่าง -->
                             <div class="absolute inset-x-0 bottom-0 h-1/3 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center group-hover:bg-slate-900/80 transition-colors">
                                 <i class="fas fa-camera text-white text-[10px]"></i>
                             </div>
                         </div>
 
                         <div class="min-w-0 flex-1">
-                            <p class="text-[15px] font-extrabold text-slate-800 truncate">
-                                <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'Administrator'; ?>
-                            </p>
-                            <p class="text-[12px] font-medium text-slate-400 truncate mt-0.5">@<?php echo !empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'admin'; ?></p>
-                            <span class="inline-block mt-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-extrabold rounded-md border border-emerald-100 shadow-sm">
-                                <i class="fas fa-shield-alt mr-1"></i>ผู้ดูแลระบบ
+                            <p class="text-[13px] font-bold text-slate-500 mb-1">จัดการโปรไฟล์</p>
+                            <span class="inline-flex px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-extrabold rounded-md border border-emerald-100 shadow-sm items-center">
+                                <i class="fas fa-shield-alt mr-1"></i> สิทธิ์แอดมิน
                             </span>
                         </div>
                     </div>
 
-                    <!-- รายการคำสั่งของโปรไฟล์ -->
                     <div class="px-2 py-2 space-y-1">
                         <button type="button" onclick="openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
                             <div class="flex items-center gap-3">
@@ -770,8 +770,6 @@ $dept_icons = [
                             <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
                         </button>
                     </div>
-
-                    <!-- ปุ่มออกจากระบบด้านล่าง -->
 
                     <div class="px-2 pt-2 border-t border-slate-100">
                         <a href="logout.php" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors">
