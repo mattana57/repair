@@ -670,7 +670,7 @@ $dept_icons = [
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
-        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-10 sticky top-0 no-print shadow-md shadow-indigo-200/50">
+        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50">
             <div class="flex items-center">
                 <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
