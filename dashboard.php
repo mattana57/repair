@@ -675,22 +675,14 @@ $dept_icons = [
                 <button onclick="toggleSidebar()" class="md:hidden mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <!-- ปรับขนาดและตัดคำอัตโนมัติ ไม่ให้ชนกับปุ่มโปรไฟล์ในจอมือถือ -->
                 <h3 class="text-[15px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
             
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
-
-                <!-- 📱 สำหรับมือถือแนวตั้ง: แสดงเฉพาะรูปโปรไฟล์วงกลมเดี่ยวๆ มินิมอล (ขยายขนาดเป็น w-12 h-12 ให้ใหญ่ขึ้นตามที่ขอ) -->
+                
+                <!-- 📱 สำหรับมือถือแนวตั้ง: แสดงเฉพาะรูปโปรไฟล์วงกลมเดี่ยวๆ มินิมอล ใหญ่ขึ้นนิดนึง -->
                 <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-12 h-12 rounded-full bg-white p-[3px] shadow-sm border border-slate-200/60 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
                     <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full rounded-full object-cover shadow-inner">
-                </div>
-                    <div class="bg-white px-2.5 py-0.5 rounded-full shadow-md border border-slate-100 text-center max-w-[85px] hover:scale-105 active:scale-95 transition-transform">
-                        <span class="block text-[9px] font-extrabold text-slate-800 leading-tight truncate">
-                            <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
-                        </span>
-                        <span class="block text-[7px] text-indigo-500 font-bold uppercase tracking-wider leading-none">Admin</span>
-                    </div>
                 </div>
 
                 <!-- 💻 สำหรับคอม / โน๊ตบุ๊ค / ไอแพด / แท็บเล็ต / จอแนวนอน: แสดงเป็นแถบแคปซูลแนวนอนชิ้นเดียวเหมือนเดิมเป๊ะ -->
@@ -785,7 +777,6 @@ $dept_icons = [
                     </div>
 
                     <!-- ปุ่มออกจากระบบด้านล่าง -->
-
                     <div class="px-2 pt-2 border-t border-slate-100">
                         <a href="logout.php" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors">
                             <div class="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500">
