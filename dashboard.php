@@ -2514,11 +2514,12 @@ $dept_icons = [
             toggleModal('imagePreviewModal');
         }
 
-        // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) สมูทสุดๆ 100% ✨
+        // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) 1:1 สมูท 100% ✨
         let isDragging = false;
         let lastClientX = 0, lastClientY = 0;
         let currentX = 0, currentY = 0;
         let currentScale = 1;
+        let minScale = 0.1; // ตัวแปรเก็บขีดจำกัดการซูมออกสุด
         let initialDistance = 0;
         let initialScaleForZoom = 1;
 
@@ -2533,12 +2534,13 @@ $dept_icons = [
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    // รีเซ็ตตำแหน่งให้กลับมาอยู่ตรงกลางเป๊ะๆ ทุกครั้งที่เปิดรูปใหม่
                     cropImage.style.transform = `translate(-50%, -50%) scale(1)`;
                     cropImage.src = e.target.result;
                     
                     cropImage.onload = () => {
-                        // คำนวณ Scale ให้ครอบคลุมวงกลมตั้งแต่เปิด
+                        cropImage.style.width = cropImage.naturalWidth + 'px';
+                        cropImage.style.height = cropImage.naturalHeight + 'px';
+
                         const circleElement = document.getElementById('cropCircleMask');
                         const circleSize = circleElement.getBoundingClientRect().width || 320; 
                         
@@ -2546,8 +2548,9 @@ $dept_icons = [
                         const scaleX = circleSize / rect.width;
                         const scaleY = circleSize / rect.height;
                         
-                        // ถ้าภาพเล็กกว่าวงกลม ให้ซูมขึ้นไปให้เต็ม
-                        currentScale = Math.max(scaleX, scaleY, 1);
+                        // 🚨 คำนวณ Scale ที่เล็กที่สุดที่จะทำให้รูปไม่หลุดขอบวงกลม
+                        minScale = Math.max(scaleX, scaleY);
+                        currentScale = minScale; // ให้เริ่มมาขนาดพอดีเป๊ะ
                         
                         currentX = 0;
                         currentY = 0;
@@ -2587,22 +2590,14 @@ $dept_icons = [
                 const maskRect = circleElement.getBoundingClientRect();
                 const imgRect = cropImage.getBoundingClientRect();
                 
-                // คำนวณสัดส่วนรูปบนจอกับรูปต้นฉบับ
-                const scaleX = cropImage.naturalWidth / imgRect.width;
-                const scaleY = cropImage.naturalHeight / imgRect.height;
+                const ratio = outputSize / maskRect.width;
 
-                // หาจุดตัดของวงกลมบนรูปภาพ
-                const cropX = (maskRect.left - imgRect.left) * scaleX;
-                const cropY = (maskRect.top - imgRect.top) * scaleY;
-                const cropWidth = maskRect.width * scaleX;
-                const cropHeight = maskRect.height * scaleY;
-
-                // วาดรูปลง Canvas ให้ดึงเฉพาะส่วนในวงกลมมาตัดให้พอดี
-                ctx.drawImage(
-                    cropImage, 
-                    cropX, cropY, cropWidth, cropHeight, // จุดและขนาดบนไฟล์ต้นฉบับ
-                    0, 0, outputSize, outputSize         // จุดและขนาดบน Canvas
-                );
+                ctx.save();
+                ctx.translate(outputSize / 2, outputSize / 2);
+                ctx.translate(currentX * ratio, currentY * ratio); 
+                ctx.scale(currentScale * ratio, currentScale * ratio); 
+                ctx.drawImage(cropImage, -cropImage.naturalWidth / 2, -cropImage.naturalHeight / 2, cropImage.naturalWidth, cropImage.naturalHeight);
+                ctx.restore();
 
                 canvas.toBlob((blob) => {
                     const file = new File([blob], "avatar_cropped.jpg", { type: "image/jpeg", lastModified: new Date().getTime() });
@@ -2627,9 +2622,9 @@ $dept_icons = [
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             e.preventDefault();
-            // 🚨 หัวใจหลักความสมูท: หารระยะด้วย currentScale ทำให้เมาส์ลากแบบ 1:1 กับหน้าจอเสมอ 🚨
-            currentX += (e.clientX - lastClientX) / currentScale;
-            currentY += (e.clientY - lastClientY) / currentScale;
+            // 🚨 แก้สมการเป็น 1:1 (บวกระยะทางโดยตรง ไม่หาร Scale) ทำให้เลื่อนเป๊ะ 100% 🚨
+            currentX += (e.clientX - lastClientX);
+            currentY += (e.clientY - lastClientY);
             lastClientX = e.clientX;
             lastClientY = e.clientY;
             updateTransform();
@@ -2643,22 +2638,20 @@ $dept_icons = [
             e.preventDefault();
             const zoomSensitivity = 0.0015;
             currentScale -= e.deltaY * zoomSensitivity;
-            if(currentScale < 0.2) currentScale = 0.2;
+            // 🚨 บล็อกไม่ให้ซูมออกจนเห็นขอบดำ
+            if(currentScale < minScale) currentScale = minScale;
             if(currentScale > 5) currentScale = 5;
             updateTransform();
         }, { passive: false });
 
         // --- Touch Events (มือถือ/แท็บเล็ต) ---
         dragLayer.addEventListener('touchstart', (e) => {
-            // ห้ามใช้ preventDefault() ตรงนี้เด็ดขาด เพราะบางเบราว์เซอร์จะไม่ยอมให้จับตำแหน่งต่อ
             if (e.touches.length === 1) {
                 isDragging = true;
-                startPointX = e.touches[0].clientX;
-                startPointY = e.touches[0].clientY;
-                imageStartX = currentX;
-                imageStartY = currentY;
+                lastClientX = e.touches[0].clientX;
+                lastClientY = e.touches[0].clientY;
             } else if (e.touches.length === 2) {
-                isDragging = false;
+                isDragging = false; 
                 initialDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
@@ -2668,15 +2661,13 @@ $dept_icons = [
         }, { passive: false });
 
         dragLayer.addEventListener('touchmove', (e) => {
-            // บล็อกไม่ให้หน้าเว็บเลื่อน (Scroll) ขณะที่นิ้วถูไปมา
-            e.preventDefault();
-            
+            e.preventDefault(); // 🚨 สำคัญมาก: ป้องกันไม่ให้หน้าเว็บเลื่อน 🚨
             if (e.touches.length === 1 && isDragging) {
-                const dx = e.touches[0].clientX - startPointX;
-                const dy = e.touches[0].clientY - startPointY;
-                // บวกระยะทางตรงๆ 1:1 กับนิ้วที่ลาก
-                currentX = imageStartX + (dx / currentScale);
-                currentY = imageStartY + (dy / currentScale);
+                // 🚨 แก้สมการเป็น 1:1 เช่นเดียวกัน
+                currentX += (e.touches[0].clientX - lastClientX);
+                currentY += (e.touches[0].clientY - lastClientY);
+                lastClientX = e.touches[0].clientX;
+                lastClientY = e.touches[0].clientY;
                 updateTransform();
             } else if (e.touches.length === 2) {
                 const currentDistance = Math.hypot(
@@ -2684,7 +2675,8 @@ $dept_icons = [
                     e.touches[0].clientY - e.touches[1].clientY
                 );
                 currentScale = initialScaleForZoom * (currentDistance / initialDistance);
-                if(currentScale < 0.2) currentScale = 0.2;
+                // 🚨 บล็อกการซูมออก
+                if(currentScale < minScale) currentScale = minScale;
                 if(currentScale > 5) currentScale = 5;
                 updateTransform();
             }
@@ -2693,11 +2685,8 @@ $dept_icons = [
         dragLayer.addEventListener('touchend', (e) => {
             if (e.touches.length < 2) initialDistance = 0;
             if (e.touches.length === 1) {
-                // เซ็ตค่าให้ลากต่อได้เนียนๆ กรณีปล่อยนิ้วออก 1 นิ้ว (จากที่ซูม 2 นิ้ว)
-                startPointX = e.touches[0].clientX;
-                startPointY = e.touches[0].clientY;
-                imageStartX = currentX;
-                imageStartY = currentY;
+                lastClientX = e.touches[0].clientX;
+                lastClientY = e.touches[0].clientY;
                 isDragging = true;
             } else {
                 isDragging = false;
