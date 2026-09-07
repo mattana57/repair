@@ -2021,30 +2021,39 @@ $dept_icons = [
         <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="showAvatarPreviewModal(this)">
     </form>
 
-    <!-- ✨ Modal หน้าจอพรีวิวรูปก่อนยืนยันอัปโหลด (ดีไซน์สีดำ สไตล์ IG/TikTok แบบในรูปตัวอย่าง) ✨ -->
-    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col bg-black transition-opacity duration-300">
-        <div class="flex justify-between items-center px-4 py-4 shrink-0 bg-black/50 absolute top-0 w-full z-30">
-            <button type="button" onclick="cancelAvatarUpload()" class="text-white hover:text-slate-300 transition-colors">
-                <i class="fas fa-chevron-left text-xl"></i>
-            </button>
-            <h3 class="text-white font-bold text-[16px]">ตัวอย่างรูปโปรไฟล์</h3>
-            <div class="w-5"></div> </div>
+    <!-- ✨ Modal หน้าจอพรีวิว (ดีไซน์จัดวางตำแหน่งรูป เลื่อนได้ ซูมได้) ✨ -->
+    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col bg-[#0f0f0f] transition-opacity duration-300">
         
-        <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-black" id="dragContainer">
-            <div id="draggableImageWrapper" class="absolute cursor-move" style="transform: translate(0px, 0px);">
-                <img id="avatarCropImage" src="" class="max-w-none pointer-events-none select-none" style="width: auto; height: auto;">
+        <!-- พื้นที่จัดตำแหน่งรูปภาพ (ลากและซูมได้) -->
+        <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-[#0f0f0f]" id="dragContainer">
+            <!-- คอนเทนเนอร์รูปภาพที่ใช้ลาก -->
+            <div id="draggableImageWrapper" class="absolute flex items-center justify-center origin-center" style="transform: translate(0px, 0px) scale(1);">
+                <!-- ใช้ pointer-events-none เพื่อให้เมาส์และนิ้วทะลุไปโดน Layer รับคำสั่งด้านบน -->
+                <img id="avatarCropImage" src="" class="max-w-none pointer-events-none select-none transition-none" style="transform-origin: center center;">
             </div>
 
-            <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
-                <div class="w-full max-w-[320px] aspect-square rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] border-2 border-white/50"></div>
+            <!-- Overlay สีดำกึ่งโปร่งใสเจาะรูวงกลมตรงกลาง (ขอบมืด ตรงกลางสว่าง) -->
+            <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-20 overflow-hidden">
+                <div id="cropCircleMask" class="w-full max-w-[320px] sm:max-w-[400px] aspect-square rounded-full shadow-[0_0_0_9999px_rgba(15,15,15,0.85)] border border-white/20"></div>
             </div>
-            
+
+            <!-- เลเยอร์รับ Event การลากและซูม (ซ้อนทับ Overlay) -->
             <div id="dragTouchLayer" class="absolute inset-0 z-30 cursor-move" style="touch-action: none;"></div>
         </div>
 
-        <div class="px-6 py-6 pb-8 shrink-0 flex justify-between items-center bg-black relative z-40">
-            <button type="button" onclick="cancelAvatarUpload()" class="text-white font-bold text-[15px] hover:text-slate-300 transition-colors py-2 px-4">ยกเลิก</button>
-            <button type="button" onclick="confirmAvatarUpload()" class="py-2.5 px-6 rounded-full bg-blue-600 text-white font-bold text-[15px] hover:bg-blue-500 transition-colors shadow-lg">
+        <!-- Header ด้านบน (ปุ่มกลับ และ หัวข้อ) ซ้อนอยู่บนรูป -->
+        <div class="absolute top-0 left-0 w-full flex justify-between items-center px-4 py-4 shrink-0 z-40 bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
+            <button type="button" onclick="cancelAvatarUpload()" class="w-10 h-10 flex items-center justify-start text-white hover:text-slate-300 transition-colors pointer-events-auto">
+                <i class="fas fa-chevron-left text-xl"></i>
+            </button>
+            <h3 class="text-white font-bold text-[16px] drop-shadow-md">ตัวอย่างรูปโปรไฟล์</h3>
+            <div class="w-10"></div> <!-- Spacer -->
+        </div>
+
+        <!-- ปุ่ม Action ด้านล่าง -->
+        <div class="px-6 py-6 pb-8 shrink-0 flex justify-between items-center bg-[#0f0f0f] relative z-40 border-t border-white/10">
+            <button type="button" onclick="cancelAvatarUpload()" class="text-white font-bold text-[15px] hover:text-slate-300 transition-colors py-2 px-2">ยกเลิก</button>
+            <button type="button" onclick="processAndUploadCrop()" class="py-2.5 px-8 rounded-full bg-blue-600 text-white font-bold text-[15px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
                 บันทึก
             </button>
         </div>
@@ -2509,12 +2518,21 @@ $dept_icons = [
             toggleModal('imagePreviewModal');
         }
 
-        // ✨ ระบบควบคุมการพรีวิว และ ลากเลื่อนรูปภาพ ✨
+        // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) ✨
         let isDragging = false;
-        let startX, startY, currentX = 0, currentY = 0;
-        const dragWrapper = document.getElementById('draggableImageWrapper');
+        let startX, startY;
+        let currentX = 0, currentY = 0;
+        let currentScale = 1;
+        let initialDistance = 0;
+        let initialScale = 1;
+
         const dragLayer = document.getElementById('dragTouchLayer');
+        const dragWrapper = document.getElementById('draggableImageWrapper');
         const cropImage = document.getElementById('avatarCropImage');
+
+        function updateTransform() {
+            dragWrapper.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
+        }
 
         function showAvatarPreviewModal(input) {
             if (input.files && input.files[0]) {
@@ -2522,25 +2540,19 @@ $dept_icons = [
                 reader.onload = function (e) {
                     cropImage.src = e.target.result;
                     
-                    // เมื่อรูปโหลดเสร็จ ให้คำนวณการแสดงผล (Fit ขนาดให้ด้านที่สั้นกว่าเต็มจอ)
                     cropImage.onload = () => {
-                        const winWidth = window.innerWidth;
-                        const winHeight = window.innerHeight;
-                        const imgRatio = cropImage.naturalWidth / cropImage.naturalHeight;
+                        const circleElement = document.getElementById('cropCircleMask');
+                        const circleSize = circleElement.getBoundingClientRect().width; 
                         
-                        // ปรับขนาดรูปให้ด้านสั้นสุดกว้างเท่ากับหน้าจอ เพื่อไม่ให้เห็นขอบดำ
-                        if (imgRatio > 1) {
-                            cropImage.style.height = winHeight * 0.7 + 'px';
-                            cropImage.style.width = 'auto';
-                        } else {
-                            cropImage.style.width = winWidth + 'px';
-                            cropImage.style.height = 'auto';
-                        }
+                        // ปรับภาพให้สัดส่วนพอดีกับวงกลม
+                        const scaleX = circleSize / cropImage.naturalWidth;
+                        const scaleY = circleSize / cropImage.naturalHeight;
+                        currentScale = Math.max(scaleX, scaleY);
                         
-                        // รีเซ็ตตำแหน่งให้อยู่ตรงกลาง
+                        // ให้รูปมาอยู่ตรงกลางพอดี
                         currentX = 0;
                         currentY = 0;
-                        dragWrapper.style.transform = `translate(0px, 0px)`;
+                        updateTransform();
                     };
 
                     closeAvatarMenu();
@@ -2556,16 +2568,121 @@ $dept_icons = [
             toggleModal('avatarPreviewConfirmModal');
         }
 
-        function confirmAvatarUpload() {
-            toggleModal('avatarPreviewConfirmModal');
+        function processAndUploadCrop() {
+            // โชว์หน้าโหลดระหว่างประมวลผลตัดรูปภาพ
             Swal.fire({
                 title: 'กำลังเปลี่ยนรูปโปรไฟล์...',
-                text: 'กรุณารอสักครู่',
+                text: 'ระบบกำลังประมวลผลรูปภาพ กรุณารอสักครู่',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
-            document.getElementById('profileAvatarForm').submit();
+
+            setTimeout(() => {
+                // สร้าง Canvas เพื่อตัดรูปจริงตามสัดส่วนที่คุณการ์ตูนเลื่อนไว้
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // กำหนดความละเอียดรูปที่จะเซฟลง Server เป็น 600x600 px (สวยคมชัด)
+                const outputSize = 600; 
+                canvas.width = outputSize;
+                canvas.height = outputSize;
+
+                const circleElement = document.getElementById('cropCircleMask');
+                const circleRect = circleElement.getBoundingClientRect();
+                
+                const ratio = outputSize / circleRect.width;
+
+                // วาดรูปลง Canvas แบบเจาะจงจุด
+                ctx.save();
+                ctx.translate(outputSize / 2, outputSize / 2);
+                ctx.scale(currentScale * ratio, currentScale * ratio);
+                ctx.translate(currentX / currentScale, currentY / currentScale);
+                ctx.drawImage(cropImage, -cropImage.naturalWidth / 2, -cropImage.naturalHeight / 2);
+                ctx.restore();
+
+                // แปลงไฟล์แล้วจับยัดกลับเข้าไปในช่อง Input ก่อนสั่ง Submit
+                canvas.toBlob((blob) => {
+                    const file = new File([blob], "avatar_cropped.jpg", { type: "image/jpeg", lastModified: new Date().getTime() });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    document.getElementById('profileAvatarInput').files = dataTransfer.files;
+                    
+                    toggleModal('avatarPreviewConfirmModal');
+                    document.getElementById('profileAvatarForm').submit();
+                }, 'image/jpeg', 0.9);
+            }, 100);
         }
+
+        // --- Mouse Events (สำหรับลากบนคอมพิวเตอร์) ---
+        dragLayer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            startX = e.clientX - currentX;
+            startY = e.clientY - currentY;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            currentX = e.clientX - startX;
+            currentY = e.clientY - startY;
+            updateTransform();
+        });
+
+        document.addEventListener('mouseup', () => { isDragging = false; });
+
+        // --- Wheel Zoom (ซูมด้วยลูกกลิ้งเมาส์) ---
+        dragLayer.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomSensitivity = 0.0015;
+            currentScale -= e.deltaY * zoomSensitivity;
+            if(currentScale < 0.1) currentScale = 0.1;
+            updateTransform();
+        }, { passive: false });
+
+        // --- Touch Events (ซูมแบบจีบนิ้ว และ เลื่อนรูปบนมือถือ/แท็บเล็ต) ---
+        dragLayer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                startX = e.touches[0].clientX - currentX;
+                startY = e.touches[0].clientY - currentY;
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                initialDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                initialScale = currentScale;
+            }
+        }, { passive: false });
+
+        dragLayer.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // ป้องกันจอมือถือเด้งขึ้นลง
+            if (e.touches.length === 1 && isDragging) {
+                currentX = e.touches[0].clientX - startX;
+                currentY = e.touches[0].clientY - startY;
+                updateTransform();
+            } else if (e.touches.length === 2) {
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                currentScale = initialScale * (currentDistance / initialDistance);
+                if(currentScale < 0.1) currentScale = 0.1;
+                updateTransform();
+            }
+        }, { passive: false });
+
+        dragLayer.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) initialDistance = 0;
+            if (e.touches.length === 1) {
+                startX = e.touches[0].clientX - currentX;
+                startY = e.touches[0].clientY - currentY;
+                isDragging = true;
+            } else {
+                isDragging = false;
+            }
+        });
 
         // ระบบจับการลากเมาส์ (Mouse Events)
         dragLayer.addEventListener('mousedown', (e) => {
