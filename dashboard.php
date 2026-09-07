@@ -698,8 +698,19 @@ $dept_icons = [
 
                     <!-- ส่วนหัว: รูปโปรไฟล์และข้อมูลผู้ดูแลระบบ -->
                     <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4 relative">
-                        <!-- ✨ รูปโปรไฟล์ใน Dropdown กดแล้วเด้ง Modal เปลี่ยนรูป (แยกเป็น Modal ตามรูปที่ 3) ✨ -->
-                        <div onclick="openAvatarOptionsModal(); closeProfileDropdown();" class="relative w-[64px] h-[64px] rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0 cursor-pointer shadow-sm hover:ring-2 hover:ring-indigo-400 transition-all group" title="คลิกเพื่อจัดการรูปภาพ">
+                        
+                        <!-- 🚨 กล่องเมนูย่อยสีเทาเข้ม: เด้งออกทางซ้ายของ Tapbar 🚨 -->
+                        <div id="avatarActionMenu" class="absolute right-full top-3 mr-3 w-48 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-50 text-white animate-fade-in">
+                            <button type="button" onclick="openImageModal('<?php echo $current_user_avatar; ?>'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
+                                <i class="fas fa-eye text-slate-300 w-4 text-center"></i> ดูรูปภาพ
+                            </button>
+                            <button type="button" onclick="document.getElementById('profileAvatarInput').removeAttribute('capture'); document.getElementById('profileAvatarInput').click(); toggleModal('avatarOptionsModal');" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
+                                <i class="fas fa-camera text-slate-300 w-4 text-center"></i> เปลี่ยนรูปภาพ
+                            </button>
+                        </div>
+
+                        <!-- ✨ รูปโปรไฟล์ใน Dropdown กดแล้วเปิดเมนูย่อยด้านซ้าย ✨ -->
+                        <div onclick="toggleAvatarMenu(event)" class="relative w-[64px] h-[64px] rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0 cursor-pointer shadow-sm hover:ring-2 hover:ring-indigo-400 transition-all group" title="คลิกเพื่อจัดการรูปภาพ">
                             <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
                             <!-- แถบกล้องถ่ายรูปด้านล่าง -->
                             <div class="absolute inset-x-0 bottom-0 h-1/3 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center group-hover:bg-slate-900/80 transition-colors">
@@ -2009,28 +2020,6 @@ $dept_icons = [
         <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="document.getElementById('profileAvatarForm').submit();">
     </form>
 
-    <!-- ✨ Modal เมนูจัดการรูปโปรไฟล์ (ดีไซน์สีเทาเข้ม ถอดแบบจากรูปที่ 3) ✨ -->
-    <div id="avatarOptionsModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[110] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm cursor-pointer" onclick="toggleModal('avatarOptionsModal')"></div>
-        <div class="bg-[#2a2d36] w-full max-w-[280px] rounded-3xl shadow-2xl z-20 flex flex-col overflow-hidden text-white divide-y divide-slate-700/50 transform transition-all">
-            <!-- ปุ่มถ่ายภาพ (เรียกกล้องมือถือ) -->
-            <button type="button" onclick="document.getElementById('profileAvatarInput').setAttribute('capture', 'environment'); document.getElementById('profileAvatarInput').click(); toggleModal('avatarOptionsModal');" class="px-6 py-4 flex items-center gap-4 hover:bg-slate-700/50 transition-colors w-full text-left">
-                <i class="fas fa-camera text-slate-300 w-5 text-center text-lg"></i>
-                <span class="font-bold text-[15px]">ถ่ายภาพ</span>
-            </button>
-            <!-- ปุ่มอัปโหลด (เปิดคลังภาพ) -->
-            <button type="button" onclick="document.getElementById('profileAvatarInput').removeAttribute('capture'); document.getElementById('profileAvatarInput').click(); toggleModal('avatarOptionsModal');" class="px-6 py-4 flex items-center gap-4 hover:bg-slate-700/50 transition-colors w-full text-left">
-                <i class="fas fa-image text-slate-300 w-5 text-center text-lg"></i>
-                <span class="font-bold text-[15px]">อัปโหลดรูปภาพ</span>
-            </button>
-            <!-- ปุ่มดูรูปภาพเต็ม -->
-            <button type="button" onclick="toggleModal('avatarOptionsModal'); openImageModal('<?php echo $current_user_avatar; ?>');" class="px-6 py-4 flex items-center gap-4 hover:bg-slate-700/50 transition-colors w-full text-left">
-                <i class="fas fa-eye text-slate-300 w-5 text-center text-lg"></i>
-                <span class="font-bold text-[15px]">ดูรูปภาพ</span>
-            </button>
-        </div>
-    </div>
-
     <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[120] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
         <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
@@ -2850,8 +2839,26 @@ $dept_icons = [
             }
         }
 
-        function openAvatarOptionsModal() {
-            toggleModal('avatarOptionsModal');
+        // ✨ ระบบจัดการเมนูย่อยสำหรับคลิกที่รูปโปรไฟล์ ✨
+        function toggleAvatarMenu(e) {
+            if (e) e.stopPropagation();
+            const avatarMenu = document.getElementById('avatarActionMenu');
+            if (!avatarMenu) return;
+            if (avatarMenu.classList.contains('hidden')) {
+                avatarMenu.classList.remove('hidden');
+                avatarMenu.classList.add('flex');
+            } else {
+                avatarMenu.classList.add('hidden');
+                avatarMenu.classList.remove('flex');
+            }
+        }
+
+        function closeAvatarMenu() {
+            const avatarMenu = document.getElementById('avatarActionMenu');
+            if (avatarMenu) {
+                avatarMenu.classList.add('hidden');
+                avatarMenu.classList.remove('flex');
+            }
         }
 
         // คลิกพื้นที่อื่นเพื่อปิดเมนูต่างๆ อัตโนมัติ
@@ -2859,6 +2866,12 @@ $dept_icons = [
             const wrapper = document.getElementById('profileMenuWrapper');
             if (wrapper && !wrapper.contains(e.target)) {
                 closeProfileDropdown();
+            } else {
+                // ถ้าคลิกอยู่ในกล่อง Profile แต่ไม่ได้คลิกที่ปุ่มรูปภาพ ให้ปิดเมนูย่อยกล่องดำ
+                const avatarBtn = document.querySelector('[onclick*="toggleAvatarMenu"]');
+                if (avatarBtn && !avatarBtn.contains(e.target)) {
+                    closeAvatarMenu();
+                }
             }
         });
 
