@@ -2022,34 +2022,30 @@ $dept_icons = [
     </form>
 
     <!-- ✨ Modal หน้าจอพรีวิวรูปก่อนยืนยันอัปโหลด (ดีไซน์สีดำ สไตล์ IG/TikTok แบบในรูปตัวอย่าง) ✨ -->
-    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col bg-[#111111] transition-opacity duration-300">
-        <!-- Header -->
-        <div class="flex justify-between items-center px-4 py-4 shrink-0">
-            <button type="button" onclick="cancelAvatarUpload()" class="w-10 h-10 flex items-center justify-center text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-                <i class="fas fa-times text-lg"></i>
+    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col bg-black transition-opacity duration-300">
+        <div class="flex justify-between items-center px-4 py-4 shrink-0 bg-black/50 absolute top-0 w-full z-30">
+            <button type="button" onclick="cancelAvatarUpload()" class="text-white hover:text-slate-300 transition-colors">
+                <i class="fas fa-chevron-left text-xl"></i>
             </button>
-            <h3 class="text-white font-bold text-[16px] tracking-wide">ดูตัวอย่างรูปโปรไฟล์</h3>
-            <button type="button" onclick="confirmAvatarUpload()" class="w-10 h-10 flex items-center justify-center text-blue-400 bg-blue-500/20 rounded-full hover:bg-blue-500 hover:text-white transition-colors">
-                <i class="fas fa-check text-lg"></i>
-            </button>
-        </div>
+            <h3 class="text-white font-bold text-[16px]">ตัวอย่างรูปโปรไฟล์</h3>
+            <div class="w-5"></div> </div>
         
-        <!-- พื้นที่แสดงรูปภาพ (ทำเป็นกรอบวงกลม Crop เสมือนจริง) -->
-        <div class="flex-1 relative flex items-center justify-center overflow-hidden px-4">
-            <!-- กรอบวงกลมจำลองหน้าจอ Crop -->
-            <div class="relative w-full max-w-[340px] aspect-square rounded-full shadow-[0_0_0_9999px_rgba(17,17,17,0.85)] overflow-hidden z-10 flex items-center justify-center bg-slate-800 border-2 border-white/20">
-                <img id="avatarCropImage" src="" class="w-full h-full object-cover">
+        <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-black" id="dragContainer">
+            <div id="draggableImageWrapper" class="absolute cursor-move" style="transform: translate(0px, 0px);">
+                <img id="avatarCropImage" src="" class="max-w-none pointer-events-none select-none" style="width: auto; height: auto;">
+            </div>
+
+            <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
+                <div class="w-full max-w-[320px] aspect-square rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] border-2 border-white/50"></div>
             </div>
             
-            <!-- รูปพื้นหลังเบลอๆ แบบในแอป -->
-            <img id="avatarCropBgBlur" src="" class="absolute inset-0 w-full h-full object-cover opacity-30 blur-2xl z-0">
+            <div id="dragTouchLayer" class="absolute inset-0 z-30 cursor-move" style="touch-action: none;"></div>
         </div>
 
-        <!-- ปุ่ม Action ด้านล่าง -->
-        <div class="px-6 py-8 shrink-0 flex gap-4 bg-[#111111] relative z-20">
-            <button type="button" onclick="cancelAvatarUpload()" class="flex-1 py-3.5 rounded-xl bg-[#2a2d36] text-white font-bold text-[14px] hover:bg-slate-700 transition-colors">ยกเลิก</button>
-            <button type="button" onclick="confirmAvatarUpload()" class="flex-1 py-3.5 rounded-xl bg-[#fe2c55] text-white font-bold text-[14px] hover:bg-[#e0264a] transition-colors shadow-lg shadow-[#fe2c55]/30 flex items-center justify-center gap-2">
-                <i class="fas fa-upload"></i> บันทึกและเปลี่ยนรูป
+        <div class="px-6 py-6 pb-8 shrink-0 flex justify-between items-center bg-black relative z-40">
+            <button type="button" onclick="cancelAvatarUpload()" class="text-white font-bold text-[15px] hover:text-slate-300 transition-colors py-2 px-4">ยกเลิก</button>
+            <button type="button" onclick="confirmAvatarUpload()" class="py-2.5 px-6 rounded-full bg-blue-600 text-white font-bold text-[15px] hover:bg-blue-500 transition-colors shadow-lg">
+                บันทึก
             </button>
         </div>
     </div>
@@ -2513,20 +2509,42 @@ $dept_icons = [
             toggleModal('imagePreviewModal');
         }
 
-        // ✨ ระบบควบคุมการพรีวิวรูปภาพก่อนอัปโหลดโปรไฟล์ ✨
+        // ✨ ระบบควบคุมการพรีวิว และ ลากเลื่อนรูปภาพ ✨
+        let isDragging = false;
+        let startX, startY, currentX = 0, currentY = 0;
+        const dragWrapper = document.getElementById('draggableImageWrapper');
+        const dragLayer = document.getElementById('dragTouchLayer');
+        const cropImage = document.getElementById('avatarCropImage');
+
         function showAvatarPreviewModal(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    // เอารูปที่เลือกไปใส่ในวงกลมพรีวิว และรูปพื้นหลังเบลอ
-                    document.getElementById('avatarCropImage').src = e.target.result;
-                    document.getElementById('avatarCropBgBlur').src = e.target.result;
+                    cropImage.src = e.target.result;
                     
-                    // ปิดเมนูย่อยเดิม (ถ้าเปิดอยู่)
+                    // เมื่อรูปโหลดเสร็จ ให้คำนวณการแสดงผล (Fit ขนาดให้ด้านที่สั้นกว่าเต็มจอ)
+                    cropImage.onload = () => {
+                        const winWidth = window.innerWidth;
+                        const winHeight = window.innerHeight;
+                        const imgRatio = cropImage.naturalWidth / cropImage.naturalHeight;
+                        
+                        // ปรับขนาดรูปให้ด้านสั้นสุดกว้างเท่ากับหน้าจอ เพื่อไม่ให้เห็นขอบดำ
+                        if (imgRatio > 1) {
+                            cropImage.style.height = winHeight * 0.7 + 'px';
+                            cropImage.style.width = 'auto';
+                        } else {
+                            cropImage.style.width = winWidth + 'px';
+                            cropImage.style.height = 'auto';
+                        }
+                        
+                        // รีเซ็ตตำแหน่งให้อยู่ตรงกลาง
+                        currentX = 0;
+                        currentY = 0;
+                        dragWrapper.style.transform = `translate(0px, 0px)`;
+                    };
+
                     closeAvatarMenu();
                     closeProfileDropdown();
-                    
-                    // เปิดหน้าต่างพรีวิวสีดำ
                     toggleModal('avatarPreviewConfirmModal');
                 }
                 reader.readAsDataURL(input.files[0]);
@@ -2534,29 +2552,54 @@ $dept_icons = [
         }
 
         function cancelAvatarUpload() {
-            // ล้างค่า input เพื่อให้เลือกไฟล์เดิมซ้ำได้ถ้ายกเลิก
             document.getElementById('profileAvatarInput').value = '';
-            // ปิด Modal
             toggleModal('avatarPreviewConfirmModal');
         }
 
         function confirmAvatarUpload() {
-            // ปิด Modal พรีวิว
             toggleModal('avatarPreviewConfirmModal');
-            
-            // แสดง Loading เล็กน้อยระหว่างส่งข้อมูล เพื่อให้ดูเนียนตา
             Swal.fire({
                 title: 'กำลังเปลี่ยนรูปโปรไฟล์...',
                 text: 'กรุณารอสักครู่',
                 allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                didOpen: () => { Swal.showLoading(); }
             });
-
-            // สั่ง Submit แบบ Manual หลังจากดูพรีวิวเสร็จแล้ว!
             document.getElementById('profileAvatarForm').submit();
         }
+
+        // ระบบจับการลากเมาส์ (Mouse Events)
+        dragLayer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - currentX;
+            startY = e.clientY - currentY;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            currentX = e.clientX - startX;
+            currentY = e.clientY - startY;
+            dragWrapper.style.transform = `translate(${currentX}px, ${currentY}px)`;
+        });
+
+        document.addEventListener('mouseup', () => { isDragging = false; });
+
+        // ระบบจับการทัชสกรีนบนมือถือ (Touch Events)
+        dragLayer.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX - currentX;
+            startY = e.touches[0].clientX - currentY;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            // e.preventDefault(); // ปิดไว้เพื่อให้หน้าจอมือถือไม่ค้าง
+            currentX = e.touches[0].clientX - startX;
+            currentY = e.touches[0].clientY - startY;
+            dragWrapper.style.transform = `translate(${currentX}px, ${currentY}px)`;
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => { isDragging = false; });
 
         // ระบบ Dropdown ตำแหน่งงานอัจฉริยะ
         let availablePositions = <?php echo $available_positions_json; ?>;
