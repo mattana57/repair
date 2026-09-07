@@ -2519,9 +2519,13 @@ $dept_icons = [
             toggleModal('imagePreviewModal');
         }
 
-        // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) สมูท 100% ✨
+        // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) ขั้นเทพ 100% ✨
         let isDragging = false;
-        let lastClientX = 0, lastClientY = 0;
+        // เก็บจุดเริ่มต้นของการกด
+        let startPointX = 0, startPointY = 0;
+        // เก็บตำแหน่งรูปตอนที่เริ่มกด
+        let imageStartX = 0, imageStartY = 0;
+        
         let currentX = 0, currentY = 0;
         let currentScale = 1;
         let initialDistance = 0;
@@ -2532,7 +2536,7 @@ $dept_icons = [
         const cropImage = document.getElementById('avatarCropImage');
 
         function updateTransform() {
-            // ใช้ GPU เร่งความเร็ว ป้องกันการกระตุก
+            // ใช้ GPU เร่งความเร็ว และไม่มีการหน่วงเวลา
             dragWrapper.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) scale(${currentScale})`;
         }
 
@@ -2543,7 +2547,7 @@ $dept_icons = [
                     cropImage.src = e.target.result;
                     
                     cropImage.onload = () => {
-                        // บังคับให้รูปเป็นขนาดดั้งเดิมเพื่อไม่ให้ CSS ขยายรูปอัตโนมัติ (แก้รูปรวนตอนลาก)
+                        // บังคับขนาดดั้งเดิม ไม่ให้ CSS กวนการทำงาน
                         cropImage.style.width = cropImage.naturalWidth + 'px';
                         cropImage.style.height = cropImage.naturalHeight + 'px';
 
@@ -2586,7 +2590,7 @@ $dept_icons = [
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                const outputSize = 600; // ความคมชัดภาพที่จะเซฟเข้า Server
+                const outputSize = 600; 
                 canvas.width = outputSize;
                 canvas.height = outputSize;
 
@@ -2596,7 +2600,7 @@ $dept_icons = [
                 
                 const ratio = outputSize / circleSize;
 
-                // ครอปรูปตามพิกัดที่นิ้วเลื่อนไว้เป๊ะๆ
+                // ครอปรูปตามพิกัดที่เลื่อนไว้เป๊ะๆ
                 ctx.save();
                 ctx.translate(outputSize / 2, outputSize / 2);
                 ctx.translate(currentX * ratio, currentY * ratio); 
@@ -2616,25 +2620,32 @@ $dept_icons = [
             }, 100);
         }
 
-        // --- Mouse Events (ลากในคอมพิวเตอร์) ---
+        // --- Mouse Events (ลากในคอมพิวเตอร์) 1:1 Mapping ---
         dragLayer.addEventListener('mousedown', (e) => {
             e.preventDefault();
             isDragging = true;
-            lastClientX = e.clientX;
-            lastClientY = e.clientY;
+            // จำจุดที่จิ้มเมาส์ลงไป
+            startPointX = e.clientX;
+            startPointY = e.clientY;
+            // จำตำแหน่งของรูป ณ ตอนที่จิ้ม
+            imageStartX = currentX;
+            imageStartY = currentY;
         });
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             e.preventDefault();
-            currentX += (e.clientX - lastClientX);
-            currentY += (e.clientY - lastClientY);
-            lastClientX = e.clientX;
-            lastClientY = e.clientY;
+            // เอาตำแหน่งปัจจุบัน ลบ ตำแหน่งที่จิ้มครั้งแรก = ระยะทางที่เลื่อนไป
+            const dx = e.clientX - startPointX;
+            const dy = e.clientY - startPointY;
+            // เอาระยะทางไปบวกกับตำแหน่งเดิมของรูป
+            currentX = imageStartX + dx;
+            currentY = imageStartY + dy;
             updateTransform();
         });
 
         document.addEventListener('mouseup', () => { isDragging = false; });
+        dragLayer.addEventListener('mouseleave', () => { isDragging = false; }); // เผื่อเมาส์หลุดจอ
 
         // --- Wheel Zoom (ลูกกลิ้งเมาส์) ---
         dragLayer.addEventListener('wheel', (e) => {
@@ -2645,14 +2656,16 @@ $dept_icons = [
             updateTransform();
         }, { passive: false });
 
-        // --- Touch Events (นิ้วสัมผัส) ---
+        // --- Touch Events (นิ้วสัมผัส) 1:1 Mapping ---
         dragLayer.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 isDragging = true;
-                lastClientX = e.touches[0].clientX;
-                lastClientY = e.touches[0].clientY;
+                startPointX = e.touches[0].clientX;
+                startPointY = e.touches[0].clientY;
+                imageStartX = currentX;
+                imageStartY = currentY;
             } else if (e.touches.length === 2) {
-                isDragging = false; // ป้องกันการลากตอนกำลังซูม
+                isDragging = false;
                 initialDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
@@ -2662,12 +2675,12 @@ $dept_icons = [
         }, { passive: false });
 
         dragLayer.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // ป้องกันหน้าจอเด้งขึ้นลง
+            e.preventDefault(); 
             if (e.touches.length === 1 && isDragging) {
-                currentX += (e.touches[0].clientX - lastClientX);
-                currentY += (e.touches[0].clientY - lastClientY);
-                lastClientX = e.touches[0].clientX;
-                lastClientY = e.touches[0].clientY;
+                const dx = e.touches[0].clientX - startPointX;
+                const dy = e.touches[0].clientY - startPointY;
+                currentX = imageStartX + dx;
+                currentY = imageStartY + dy;
                 updateTransform();
             } else if (e.touches.length === 2) {
                 const currentDistance = Math.hypot(
@@ -2683,8 +2696,11 @@ $dept_icons = [
         dragLayer.addEventListener('touchend', (e) => {
             if (e.touches.length < 2) initialDistance = 0;
             if (e.touches.length === 1) {
-                lastClientX = e.touches[0].clientX;
-                lastClientY = e.touches[0].clientY;
+                // ถ้าเหลือนิ้วเดียว ให้ถือว่าเริ่มลากใหม่
+                startPointX = e.touches[0].clientX;
+                startPointY = e.touches[0].clientY;
+                imageStartX = currentX;
+                imageStartY = currentY;
                 isDragging = true;
             } else {
                 isDragging = false;
