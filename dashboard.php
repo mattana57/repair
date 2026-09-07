@@ -2649,7 +2649,9 @@ $dept_icons = [
         }, { passive: false });
 
         // --- Touch Events (มือถือ/แท็บเล็ต) ---
+        // 🚨 สำคัญมาก: เพิ่ม passive: false และ preventDefault ทุกขั้นตอนเพื่อให้ระบบรู้ว่าเรากำลังทำงานกับรูป ไม่ใช่การเลื่อนหน้าจอ! 🚨
         dragLayer.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // บล็อกการ Scroll หน้าเว็บตอนเริ่มแตะ
             if (e.touches.length === 1) {
                 isDragging = true;
                 lastClientX = e.touches[0].clientX;
@@ -2665,7 +2667,7 @@ $dept_icons = [
         }, { passive: false });
 
         dragLayer.addEventListener('touchmove', (e) => {
-            e.preventDefault(); 
+            e.preventDefault(); // บล็อกการ Scroll ตลอดการลาก
             if (e.touches.length === 1 && isDragging) {
                 currentX += (e.touches[0].clientX - lastClientX) / currentScale;
                 currentY += (e.touches[0].clientY - lastClientY) / currentScale;
@@ -2685,6 +2687,7 @@ $dept_icons = [
         }, { passive: false });
 
         dragLayer.addEventListener('touchend', (e) => {
+            e.preventDefault(); // บล็อกการรวนตอนปล่อยนิ้ว
             if (e.touches.length < 2) initialDistance = 0;
             if (e.touches.length === 1) {
                 lastClientX = e.touches[0].clientX;
@@ -2693,7 +2696,16 @@ $dept_icons = [
             } else {
                 isDragging = false;
             }
-        });
+        }, { passive: false });
+        
+        // --- ปิดการเลื่อนหน้าเว็บเวลาอยู่บนพรีวิว 100% (กันเหนียว) ---
+        const modalElement = document.getElementById('avatarPreviewConfirmModal');
+        modalElement.addEventListener('touchmove', (e) => {
+            e.preventDefault(); 
+        }, { passive: false });
+        modalElement.addEventListener('wheel', (e) => {
+            e.preventDefault(); 
+        }, { passive: false });
 
         // ระบบจับการลากเมาส์ (Mouse Events)
         dragLayer.addEventListener('mousedown', (e) => {
