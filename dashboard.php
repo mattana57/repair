@@ -644,7 +644,7 @@ $dept_icons = [
             </div>
             
             <div class="flex items-center relative" id="profileMenuWrapper">
-                <!-- ✨ แถบโปรไฟล์วงรีมนๆ: เอารูปลูกศรออก ลดขอบด้านขวาให้กะทัดรัด ✨ -->
+                <!-- ✨ แถบโปรไฟล์วงรีมนๆ แบบมินิมอล ✨ -->
                 <div onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none">
                     <div class="text-right hidden sm:block">
                         <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1">
@@ -652,8 +652,8 @@ $dept_icons = [
                         </span>
                         <span class="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">Administrator</span>
                     </div>
-                    <!-- รูปโปรไฟล์ -->
-                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border-2 border-slate-200 shadow-sm shrink-0">
+                    <!-- รูปโปรไฟล์ขยายให้ใหญ่ขึ้นอีกนิด (w-14 h-14) -->
+                    <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
                         <img id="headerAvatarImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
@@ -661,29 +661,40 @@ $dept_icons = [
                 <!-- ✨ กล่องเมนูด้านขวา (Profile Dropdown Panel) ✨ -->
                 <div id="profileDropdownMenu" class="absolute right-0 top-full mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 hidden flex-col z-50 animate-fade-in">
                     <!-- หัวเมนู: แสดงภาพและข้อมูลบัญชี -->
-                    <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4">
+                    <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4 relative">
                         
-                        <!-- ✨ รูปโปรไฟล์ใหญ่ขึ้น และกดแก้ไขได้ ✨ -->
-                        <div onclick="openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="relative w-[60px] h-[60px] rounded-2xl bg-indigo-50 flex items-center justify-center overflow-hidden border-2 border-indigo-100 shrink-0 cursor-pointer group shadow-sm hover:border-indigo-400 transition-all" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์หรือแก้ไขข้อมูล">
-                            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
-                            <!-- Overlay สีดำตอนชี้ พร้อมไอคอนกล้อง -->
-                            <div class="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/40 backdrop-blur-[1px]">
-                                <i class="fas fa-camera text-white text-sm drop-shadow-md"></i>
-                                <span class="text-white text-[9px] font-bold mt-1 drop-shadow-md tracking-wide">เปลี่ยนรูป</span>
+                        <!-- ✨ รูปโปรไฟล์กดแล้วเด้งเมนูย่อย ✨ -->
+                        <div onclick="toggleAvatarMenu(event)" class="relative w-[64px] h-[64px] rounded-[20px] bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0 cursor-pointer shadow-sm transition-all" title="จัดการรูปโปรไฟล์">
+                            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
+                            <!-- Overlay กล้องถ่ายรูป -->
+                            <div class="absolute inset-x-0 bottom-0 h-1/3 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+                                <i class="fas fa-camera text-white text-[10px] opacity-80"></i>
                             </div>
                         </div>
 
+                        <!-- ✨ เมนูย่อยสำหรับจัดการรูปภาพ (ลอยทับขึ้นมา) ✨ -->
+                        <div id="avatarActionMenu" class="absolute left-4 top-16 mt-2 w-48 bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-50 text-white">
+                            <button onclick="openImageModal('https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo $_SESSION['username'] ?? 'admin'; ?>&backgroundColor=e2e8f0'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
+                                <i class="fas fa-eye text-slate-300 w-4 text-center"></i> ดูรูปภาพ
+                            </button>
+                            <!-- ปุ่มนี้จะไปกระตุ้นเปิด Modal แก้ไขข้อมูลแอดมิน เพื่อให้อัปโหลดรูปได้ตามระบบเดิม -->
+                            <button onclick="openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
+                                <i class="fas fa-image text-slate-300 w-4 text-center"></i> อัปโหลดรูปภาพใหม่
+                            </button>
+                        </div>
+
                         <div class="min-w-0 flex-1">
-                            <p class="text-sm font-extrabold text-slate-800 truncate">
+                            <p class="text-[15px] font-extrabold text-slate-800 truncate">
                                 <?php echo isset($_SESSION['full_name']) && !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'Administrator'; ?>
                             </p>
-                            <p class="text-[11px] font-medium text-slate-400 truncate mt-0.5">@<?php echo htmlspecialchars($_SESSION['username'] ?? 'admin'); ?></p>
-                            <span class="inline-block mt-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-extrabold rounded-md border border-emerald-100 shadow-sm">
+                            <p class="text-[12px] font-medium text-slate-400 truncate mt-0.5">@<?php echo htmlspecialchars($_SESSION['username'] ?? 'admin'); ?></p>
+                            <span class="inline-block mt-2 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-extrabold rounded-md border border-emerald-100 shadow-sm">
                                 <i class="fas fa-shield-alt mr-1"></i>ผู้ดูแลระบบ
                             </span>
                         </div>
                     </div>
 
+                    <!-- รายการคำสั่งของโปรไฟล์ -->
                     <div class="px-2 py-2 space-y-1">
                         <button type="button" onclick="openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
                             <div class="flex items-center gap-3">
@@ -724,6 +735,8 @@ $dept_icons = [
                             <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
                         </button>
                     </div>
+
+                    <!-- ปุ่มออกจากระบบด้านล่าง -->
 
                     <div class="px-2 pt-2 border-t border-slate-100">
                         <a href="logout.php" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors">
@@ -2782,14 +2795,43 @@ $dept_icons = [
             if (menu) {
                 menu.classList.add('hidden');
                 menu.classList.remove('flex');
+                closeAvatarMenu(); // ปิดเมนูย่อยรูปภาพด้วย
             }
         }
 
-        // คลิกพื้นที่อื่นเพื่อปิดเมนูโปรไฟล์อัตโนมัติ
+        // ✨ ระบบจัดการเมนูย่อยสำหรับคลิกที่รูปโปรไฟล์ ✨
+        function toggleAvatarMenu(e) {
+            if (e) e.stopPropagation();
+            const avatarMenu = document.getElementById('avatarActionMenu');
+            if (!avatarMenu) return;
+            if (avatarMenu.classList.contains('hidden')) {
+                avatarMenu.classList.remove('hidden');
+                avatarMenu.classList.add('flex');
+            } else {
+                avatarMenu.classList.add('hidden');
+                avatarMenu.classList.remove('flex');
+            }
+        }
+
+        function closeAvatarMenu() {
+            const avatarMenu = document.getElementById('avatarActionMenu');
+            if (avatarMenu) {
+                avatarMenu.classList.add('hidden');
+                avatarMenu.classList.remove('flex');
+            }
+        }
+
+        // คลิกพื้นที่อื่นเพื่อปิดเมนูต่างๆ อัตโนมัติ
         document.addEventListener('click', function(e) {
             const wrapper = document.getElementById('profileMenuWrapper');
             if (wrapper && !wrapper.contains(e.target)) {
                 closeProfileDropdown();
+            } else {
+                // ถ้าคลิกอยู่ในกล่อง Profile แต่ไม่ได้คลิกที่ปุ่มรูปภาพ ให้ปิดเมนูย่อยกล่องดำ
+                const avatarBtn = document.querySelector('[onclick*="toggleAvatarMenu"]');
+                if (avatarBtn && !avatarBtn.contains(e.target)) {
+                    closeAvatarMenu();
+                }
             }
         });
 
