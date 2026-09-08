@@ -814,7 +814,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
 
                     <!-- ส่วนตาราง Body มีขอบเทาหุ้มรอบนอกเหมือนแอดมิน -->
                     <div class="p-0 md:p-6 overflow-hidden flex-1 bg-[#f8fafc] flex flex-col transition-all duration-300">
-                        <div class="w-full overflow-x-auto max-h-[70vh] md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white flex-1" id="repairsTableContainer">
+                        
+                        <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white flex-1" id="repairsTableContainer">
                             <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
                                 <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                     <tr>
@@ -2617,6 +2618,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             const card = document.getElementById('repairsMainCard');
             const icon = document.getElementById('maximizeRepairsIcon');
             const tableContainer = document.getElementById('repairsTableContainer');
+            const header = document.getElementById('repairsHeader');
             
             if (card.classList.contains('fixed')) {
                 // 1. ลูกเล่นก่อนย่อ: เล่น Animation โปร่งแสง (ต้องคงคำสั่ง translate ไว้เพื่อไม่ให้หลุดขอบ)
@@ -2626,14 +2628,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 setTimeout(() => {
                     // ถอดโหมดหน้าต่างลอย
                     card.classList.remove('fixed', 'top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2', 'w-[98vw]', 'h-[95vh]', 'z-[100]', 'shadow-[0_0_0_9999px_rgba(15,15,15,0.7)]');
-                    card.style.borderRadius = '20px'; // คืนค่ามุมมนเดิมของ .modern-card
-                    if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
+                    card.style.borderRadius = ''; 
+                    
+                    if (header) {
+                        header.classList.remove('rounded-t-3xl');
+                    }
+                    
+                    if (tableContainer) {
+                        // กลับมาใช้ความสูงแบบมี Scroll ปกติ
+                        tableContainer.classList.add('max-h-[70vh]');
+                        tableContainer.classList.remove('h-full');
+                    }
                     
                     icon.classList.add('fa-expand');
                     icon.classList.remove('fa-compress');
                     document.body.classList.remove('overflow-hidden');
 
-                    // แสดงผลปกติ (คืนค่า scale ปกติ โดยไม่ต้องมี translate เพราะกลับไปอยู่ใน layout เดิมแล้ว)
+                    // แสดงผลปกติ
                     card.style.transform = 'scale(1)';
                     card.style.opacity = '1';
                 }, 250); 
@@ -2646,7 +2657,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 // แปลงเป็นหน้าต่างลอย (เหมือน Modal) กลางจอพร้อมเงาดำ
                 card.classList.add('fixed', 'top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2', 'w-[98vw]', 'h-[95vh]', 'z-[100]', 'shadow-[0_0_0_9999px_rgba(15,15,15,0.7)]');
                 card.style.borderRadius = '24px'; 
-                if (tableContainer) tableContainer.classList.remove('max-h-[70vh]');
+                
+                if (header) {
+                    header.classList.add('rounded-t-3xl');
+                }
+
+                if (tableContainer) {
+                    // ลบ max-h ออก เพื่อให้ตารางใช้พื้นที่เต็มจอ
+                    tableContainer.classList.remove('max-h-[70vh]');
+                    tableContainer.classList.add('h-full');
+                }
 
                 icon.classList.remove('fa-expand');
                 icon.classList.add('fa-compress');
@@ -2655,7 +2675,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 // ล็อกตำแหน่งไว้กลางจอก่อนเด้ง
                 card.style.transform = 'translate(-50%, -50%) scale(0.95)';
 
-                // 2. เด้งเข้าสู่หน้าจอ (Bouncy effect) แบบรักษาจุดกึ่งกลางจอเป๊ะๆ
+                // 2. เด้งเข้าสู่หน้าจอ (Bouncy effect)
                 void card.offsetWidth; // บังคับเบราว์เซอร์รีเฟรช
                 card.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 card.style.transform = 'translate(-50%, -50%) scale(1)';
