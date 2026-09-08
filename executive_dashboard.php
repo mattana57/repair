@@ -2254,7 +2254,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             let displayTitleName = fullName;
             if (type === 'reporter' && lineUsers
 
-        }
+        
 
         function setReviewFilter(val) {
             currentReviewFilter = val;
