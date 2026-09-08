@@ -1151,17 +1151,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
     </main>
 
     <!-- ✨ Modal ประวัติการซ่อม ✨ -->
-    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('historyModal')"></div>
-        <div class="modal-container bg-white w-full max-w-5xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[85vh] max-h-[850px]">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl shrink-0">
-                <p class="text-lg font-extrabold text-slate-800 truncate pr-4" id="historyModalTitle">History</p>
-                <div class="flex items-center gap-6 shrink-0">
-                    <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-10 h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50"><i class="fas fa-times text-lg"></i></button>
+    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
+        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
+            
+            <div class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
+                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full md:w-auto" id="historyModalTitle">History</p>
+                <div class="flex items-center w-full md:w-auto justify-between md:justify-end">
+                    
+                    <!-- ✨ ช่องค้นหา ✨ -->
+                    <div class="flex items-center gap-2 md:gap-3 w-full md:w-auto flex-1 md:flex-none">
+                        <div class="relative w-full md:w-64 flex-1 md:flex-none">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        </div>
+                    </div>
+
+                    <!-- ✨ ปุ่มขยายหน้าจอ และ ปุ่มกากบาท (เว้นระยะห่าง) ✨ -->
+                    <div class="flex items-center gap-2 ml-4 md:ml-8 shrink-0">
+                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                            <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
+                        </button>
+                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                            <i class="fas fa-times text-sm md:text-base"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-           <div class="p-6 overflow-y-auto flex-1 bg-white">
-                <div class="w-full overflow-x-auto rounded-2xl border border-slate-100 shadow-sm max-h-[65vh] overflow-y-auto custom-scrollbar relative">
+            
+           <div class="p-0 md:p-6 overflow-y-auto flex-1 bg-[#f8fafc]">
+                <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
                     <table class="w-full text-left whitespace-nowrap min-w-[1100px]">
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
@@ -2249,6 +2268,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
             document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
             
+            // ✨ ล้างช่องค้นหาให้ว่างทุกครั้งที่กดเปิดดูประวัติคนใหม่ ✨
+            const searchInput = document.getElementById('searchHistoryModalInput');
+            if(searchInput) searchInput.value = '';
+
+            // ✨ รีเซ็ตขนาดหน้าต่างให้กลับเป็นปกติเสมอ (กรณีที่เคยกดขยายจอไว้) ✨
+            const wrapper = document.getElementById('historyModal');
+            const modalContainer = wrapper.querySelector('.modal-container');
+            const icon = document.getElementById('maximizeHistoryIcon');
+            const header = modalContainer.querySelector('div:first-child');
+            if (modalContainer && modalContainer.classList.contains('w-full')) {
+                wrapper.classList.add('px-4');
+                wrapper.classList.remove('p-0');
+                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                modalContainer.classList.remove('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
+                if (header) {
+                    header.classList.add('rounded-t-3xl');
+                    header.classList.remove('rounded-none');
+                }
+                if(icon) {
+                    icon.classList.add('fa-expand');
+                    icon.classList.remove('fa-compress');
+                }
+            }
+
             toggleModal('historyModal');
         }
 
@@ -2546,32 +2589,95 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) ✨
-        function toggleMaximizeRepairs() {
-            const card = document.getElementById('repairsMainCard');
-            const icon = document.getElementById('maximizeRepairsIcon');
-            const tableContainer = document.getElementById('repairsTableContainer');
+        // ✨ ฟังก์ชันค้นหาข้อมูลในตารางประวัติ (History Modal) ✨
+        function searchHistoryModalTable() {
+            let input = document.getElementById('searchHistoryModalInput');
+            if(!input) return;
+            let filter = input.value.toLowerCase().replace(/\s+/g, '');
+            let tbody = document.getElementById('historyTableBody');
+            if(!tbody) return;
             
-            if (card.classList.contains('fixed')) {
-                // ย่อกลับขนาดเดิม
-                card.classList.remove('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
-                card.style.borderRadius = ''; // คืนค่ามุมมนเดิมของ .modern-card
-                if (tableContainer) {
-                    tableContainer.classList.add('max-h-[70vh]');
+            let rows = tbody.querySelectorAll('tr');
+            rows.forEach(row => {
+                // ข้ามแถวที่บอกว่า "ไม่มีข้อมูล"
+                if(row.cells.length === 1) return;
+                
+                let text = row.innerText.toLowerCase().replace(/\s+/g, '');
+                if (text.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
                 }
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
-                document.body.classList.remove('overflow-hidden');
+            });
+        }
+
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้าประวัติ (History Modal) พร้อมลูกเล่นเด้งซูมเข้าออกเหมือนแอป ✨
+        function toggleMaximizeHistoryModal() {
+            const wrapper = document.getElementById('historyModal');
+            const modalContainer = wrapper.querySelector('.modal-container');
+            const icon = document.getElementById('maximizeHistoryIcon');
+            const header = modalContainer.querySelector('div:first-child');
+            
+            if (!modalContainer.classList.contains('max-w-[95%]')) {
+                // 1. ลูกเล่น: เล่น Animation ย่อลงและจางออกนิดๆ ก่อนกลับเป็นหน้าต่างเดิม
+                modalContainer.style.transform = 'scale(0.95)';
+                modalContainer.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // ย่อกลับขนาดเดิม
+                    wrapper.classList.add('px-4');
+                    wrapper.classList.remove('p-0');
+                    
+                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.remove('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
+                    
+                    if (header) {
+                        header.classList.add('rounded-t-3xl');
+                        header.classList.remove('rounded-none');
+                    }
+                    
+                    if(icon) {
+                        icon.classList.add('fa-expand');
+                        icon.classList.remove('fa-compress');
+                    }
+
+                    // เด้งกลับเข้าที่
+                    modalContainer.style.transform = 'scale(1)';
+                    modalContainer.style.opacity = '1';
+                }, 250); 
             } else {
-                // ขยายเต็มจอ
-                card.classList.add('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
-                card.style.borderRadius = '0px'; // เอาขอบมนออกให้เต็มตาชิดขอบจอ
-                if (tableContainer) {
-                    tableContainer.classList.remove('max-h-[70vh]');
+                // 1. ลูกเล่น: ซ่อนโครงร่างเดิมก่อนชั่วคราว
+                modalContainer.style.transition = 'none'; 
+                modalContainer.style.transform = 'scale(0.95)';
+                modalContainer.style.opacity = '0';
+                
+                // จัดโครงสร้างเป็น Fullscreen
+                wrapper.classList.remove('px-4');
+                wrapper.classList.add('p-0');
+                
+                modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                modalContainer.classList.add('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
+                
+                if (header) {
+                    header.classList.remove('rounded-t-3xl');
+                    header.classList.add('rounded-none');
                 }
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-                document.body.classList.add('overflow-hidden');
+                
+                if(icon) {
+                    icon.classList.remove('fa-expand');
+                    icon.classList.add('fa-compress');
+                }
+
+                // 2. ให้แสดงผลแบบซูมเด้งเข้ามา (Bouncy effect)
+                void modalContainer.offsetWidth; // บังคับเบราว์เซอร์รีเฟรช
+                modalContainer.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; // หนืดเด้ง
+                modalContainer.style.transform = 'scale(1)';
+                modalContainer.style.opacity = '1';
+                
+                // 3. คืนค่าสมูทแบบปกติเพื่อใช้งานต่อ
+                setTimeout(() => {
+                    modalContainer.style.transition = 'all 0.3s ease-in-out';
+                }, 400);
             }
         }
 
