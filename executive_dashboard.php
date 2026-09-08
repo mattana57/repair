@@ -1073,26 +1073,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                     $phone = !empty($tech['phone']) ? $tech['phone'] : '- ไม่ระบุเบอร์โทร -';
                                 ?>
                                 <!-- ขนาดการ์ด ระยะห่าง และ Hover แสงสีฟ้าเหมือนฝั่งแอดมินเป๊ะ -->
-                                <div class="bg-white rounded-[24px] overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-sky-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[260px] w-full sm:w-[260px] tech-card-item cursor-pointer" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>" onclick="viewHistory('<?php echo $safeName; ?>', 'technician')">
+                                <div class="bg-white rounded-[24px] overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-sky-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[260px] w-full sm:w-[260px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                                     
                                     <div class="relative w-full aspect-square bg-slate-50 overflow-hidden">
                                         <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
                                              onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
+                                             onclick="openImageModal(this.src)"
                                              alt="<?php echo htmlspecialchars($tech['th']); ?>" 
-                                             class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out">
-                                    
+                                             class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out cursor-pointer" title="คลิกเพื่อดูรูปขยาย">
+                                
                                         <!-- เงาดำไล่ระดับด้านล่างรูป -->
                                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                                        
-                                        <!-- ปุ่ม View เล็กๆ ด้านบนขวา -->
-                                        <div class='absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
-                                            <button class='w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-indigo-600 shadow-sm transition-colors' title='คลิกเพื่อดูประวัติงานช่าง'>
-                                                <i class='fas fa-eye text-sm'></i>
-                                            </button>
-                                        </div>
                                     </div>
 
                                     <div class="p-5 flex-1 flex flex-col relative z-10 bg-white text-left">
+                                        
                                         <h5 class="font-extrabold text-slate-800 text-[17px] leading-tight group-hover:text-sky-500 transition-colors duration-300">
                                             <?php echo htmlspecialchars($tech['th']); ?>
                                         </h5>
@@ -1135,7 +1130,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                         <?php endif; ?>
                                         </div>
 
+                                        <div class="mt-auto pt-4">
+                                            <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" 
+                                                    class="w-full text-[11px] font-bold text-sky-600 bg-white border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn">
+                                                <i class="fas fa-history mr-1.5 text-sky-400 group-hover/btn:text-white transition-colors"></i> 
+                                                ดูประวัติงาน
+                                            </button>
+                                        </div>
                                     </div>
+
                                 </div>
                                 <?php endforeach; ?>
                             </div>
