@@ -1150,7 +1150,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
         </div>
     </main>
 
-    <!-- ✨ Modal ประวัติการซ่อม ✨ -->
+    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[140] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
+        <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+        <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
+    </div>
+
+    <form id="profileAvatarForm" action="" method="POST" enctype="multipart/form-data" class="hidden">
+        <input type="hidden" name="update_profile_picture" value="1">
+        <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="showAvatarPreviewModal(this)">
+    </form>
+
+    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col justify-center items-center bg-[#0f0f0f]/95 sm:bg-[#0f0f0f] transition-opacity duration-300">
+        <div class="hidden sm:flex absolute top-0 left-0 w-full justify-between items-center px-6 md:px-12 lg:px-16 py-5 md:py-6 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+            <button type="button" onclick="cancelAvatarUpload()" class="w-12 h-12 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors pointer-events-auto cursor-pointer">
+                <i class="fas fa-chevron-left text-2xl pr-1"></i>
+            </button>
+            <h3 class="text-white font-bold text-[16px] md:text-[18px] drop-shadow-md tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
+            <div class="w-12"></div>
+        </div>
+        <div class="relative w-full max-w-[400px] h-[550px] sm:max-w-none sm:w-full sm:h-full flex flex-col bg-[#0f0f0f] sm:bg-transparent rounded-[40px] sm:rounded-none overflow-hidden shadow-2xl sm:shadow-none mx-4 sm:mx-0">
+            <div class="absolute top-4 left-0 w-full flex justify-center z-50 sm:hidden pointer-events-none">
+                <div class="bg-white/90 backdrop-blur-md px-6 py-2 rounded-full shadow-lg border border-white/20">
+                    <h3 class="text-slate-800 font-extrabold text-[14px] tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
+                </div>
+            </div>
+            <div class="flex-1 relative overflow-hidden bg-[#0f0f0f]" id="dragContainer">
+                <img id="avatarCropImage" src="" class="absolute left-1/2 top-1/2 pointer-events-none select-none" style="transform: translate(-50%, -50%) scale(1); will-change: transform;">
+                <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-20 overflow-hidden">
+                    <div id="cropCircleMask" class="w-[320px] h-[320px] rounded-full shadow-[0_0_0_9999px_rgba(15,15,15,0.85)] border-2 border-white/30"></div>
+                </div>
+                <div id="dragTouchLayer" class="absolute inset-0 z-30 cursor-move" style="touch-action: none;"></div>
+            </div>
+            <div class="px-6 py-6 sm:pb-10 shrink-0 flex justify-center items-center gap-5 bg-[#0f0f0f] relative z-40 sm:border-t sm:border-white/10 sm:w-full sm:absolute sm:bottom-0 sm:left-0">
+                <button type="button" onclick="cancelAvatarUpload()" class="py-2.5 px-8 sm:px-10 rounded-full bg-rose-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30">
+                    ยกเลิก
+                </button>
+                <button type="button" onclick="processAndUploadCrop()" class="py-2.5 px-8 sm:px-10 rounded-full bg-blue-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
+                    บันทึก
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
@@ -1159,7 +1203,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full md:w-auto" id="historyModalTitle">History</p>
                 <div class="flex items-center w-full md:w-auto justify-between md:justify-end">
                     
-                    <!-- ✨ ช่องค้นหา ✨ -->
                     <div class="flex items-center gap-2 md:gap-3 w-full md:w-auto flex-1 md:flex-none">
                         <div class="relative w-full md:w-64 flex-1 md:flex-none">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
@@ -1167,7 +1210,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                         </div>
                     </div>
 
-                    <!-- ✨ ปุ่มขยายหน้าจอ และ ปุ่มกากบาท (เว้นระยะห่าง) ✨ -->
                     <div class="flex items-center gap-2 ml-4 md:ml-8 shrink-0">
                         <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
@@ -1179,7 +1221,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 </div>
             </div>
             
-           <div class="p-0 md:p-6 overflow-y-auto flex-1 bg-[#f8fafc]">
+           <div class="p-0 md:p-6 overflow-hidden flex-1 bg-[#f8fafc]">
                 <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
                     <table class="w-full text-left whitespace-nowrap min-w-[1100px]">
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
@@ -1205,7 +1247,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
         </div>
     </div>
 
-    <!-- ✨ Modal สำหรับแสดงรีวิวของช่างรายบุคคล ✨ -->
     <div id="techReviewsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techReviewsModal')"></div>
         <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px]">
@@ -1257,56 +1298,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
         </div>
     </div>
 
-    <!-- ✨ ฟอร์มซ่อนสำหรับอัปโหลดรูปโปรไฟล์ผู้บริหาร ✨ -->
-    <form id="profileAvatarForm" action="" method="POST" enctype="multipart/form-data" class="hidden">
-        <input type="hidden" name="update_profile_picture" value="1">
-        <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="showAvatarPreviewModal(this)">
-    </form>
-
-    <!-- ✨ Modal หน้าจอพรีวิว (เลื่อนได้ ซูมได้ สมูท 100%) ✨ -->
-    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col justify-center items-center bg-[#0f0f0f]/95 sm:bg-[#0f0f0f] transition-opacity duration-300">
-        <div class="hidden sm:flex absolute top-0 left-0 w-full justify-between items-center px-6 md:px-12 lg:px-16 py-5 md:py-6 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-            <button type="button" onclick="cancelAvatarUpload()" class="w-12 h-12 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors pointer-events-auto cursor-pointer">
-                <i class="fas fa-chevron-left text-2xl pr-1"></i>
-            </button>
-            <h3 class="text-white font-bold text-[16px] md:text-[18px] drop-shadow-md tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
-            <div class="w-12"></div>
-        </div>
-        <div class="relative w-full max-w-[400px] h-[550px] sm:max-w-none sm:w-full sm:h-full flex flex-col bg-[#0f0f0f] sm:bg-transparent rounded-[40px] sm:rounded-none overflow-hidden shadow-2xl sm:shadow-none mx-4 sm:mx-0">
-            <div class="absolute top-4 left-0 w-full flex justify-center z-50 sm:hidden pointer-events-none">
-                <div class="bg-white/90 backdrop-blur-md px-6 py-2 rounded-full shadow-lg border border-white/20">
-                    <h3 class="text-slate-800 font-extrabold text-[14px] tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
-                </div>
-            </div>
-            <div class="flex-1 relative overflow-hidden bg-[#0f0f0f]" id="dragContainer">
-                <img id="avatarCropImage" src="" class="absolute left-1/2 top-1/2 pointer-events-none select-none" style="transform: translate(-50%, -50%) scale(1); will-change: transform;">
-                <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-20 overflow-hidden">
-                    <div id="cropCircleMask" class="w-[320px] h-[320px] rounded-full shadow-[0_0_0_9999px_rgba(15,15,15,0.85)] border-2 border-white/30"></div>
-                </div>
-                <div id="dragTouchLayer" class="absolute inset-0 z-30 cursor-move" style="touch-action: none;"></div>
-            </div>
-            <div class="px-6 py-6 sm:pb-10 shrink-0 flex justify-center items-center gap-5 bg-[#0f0f0f] relative z-40 sm:border-t sm:border-white/10 sm:w-full sm:absolute sm:bottom-0 sm:left-0">
-                <button type="button" onclick="cancelAvatarUpload()" class="py-2.5 px-8 sm:px-10 rounded-full bg-rose-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30">
-                    ยกเลิก
-                </button>
-                <button type="button" onclick="processAndUploadCrop()" class="py-2.5 px-8 sm:px-10 rounded-full bg-blue-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
-                    บันทึก
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ✨ Modal สำหรับดูรูปภาพขนาดเต็ม ✨ -->
-    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[140] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
-        <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
-            <i class="fas fa-times text-xl"></i>
-        </button>
-        <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
-    </div>
-
-    <!-- ================== JAVASCRIPT ================== -->
-
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
         const techDeptMap = <?php echo $tech_dept_map_json; ?>;
@@ -1356,7 +1347,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
         }
 
-        // ✨ ระบบจัดการเมนูย่อยสำหรับคลิกที่รูปโปรไฟล์ (เฉพาะดูรูป) ✨
+        // ✨ ระบบจัดการเมนูย่อยสำหรับคลิกที่รูปโปรไฟล์ ✨
         function toggleAvatarMenu(e) {
             if (e) e.stopPropagation();
             const avatarMenu = document.getElementById('avatarActionMenu');
@@ -2084,7 +2075,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             const selector = document.getElementById('modalTechSelector');
             selector.innerHTML = '';
 
-            // ✨ นำโค้ดดรอปดาวน์และลูกศรของฝั่งแอดมินมาใช้ เพื่อให้หน้าตาเหมือนกัน 100% ✨
             selector.className = "w-max min-w-[200px] max-w-[320px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
             selector.style.backgroundImage = "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')";
             selector.style.backgroundRepeat = "no-repeat";
@@ -2254,7 +2244,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                         </td>
                         <td class="px-5 py-4 align-middle text-center">
                             <div class='flex items-center justify-center'>
-                                <!-- ✨ เปลี่ยนมาใช้ openReviewTab เพื่อบังคับเปิดแท็บใหม่ และส่งรหัสลับไปสั่งปิดแท็บทันทีเวลากดปุ่มกลับ ✨ -->
                                 <div onclick='openReviewTab(${r.id})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
                             </div>
                         </td>
@@ -2273,19 +2262,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             if(searchInput) searchInput.value = '';
 
             // ✨ รีเซ็ตขนาดหน้าต่างให้กลับเป็นปกติเสมอ (กรณีที่เคยกดขยายจอไว้) ✨
-            const wrapper = document.getElementById('historyModal');
-            const modalContainer = wrapper.querySelector('.modal-container');
+            const modalContainer = document.querySelector('#historyModal .modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
-            const header = modalContainer.querySelector('div:first-child');
-            if (modalContainer && modalContainer.classList.contains('w-full')) {
-                wrapper.classList.add('px-4');
-                wrapper.classList.remove('p-0');
-                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
-                if (header) {
-                    header.classList.add('rounded-t-3xl');
-                    header.classList.remove('rounded-none');
-                }
+            if (modalContainer && modalContainer.classList.contains('max-w-[98vw]')) {
+                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]');
+                modalContainer.classList.remove('max-w-[98vw]', 'h-[95vh]', 'max-h-none');
                 if(icon) {
                     icon.classList.add('fa-expand');
                     icon.classList.remove('fa-compress');
@@ -2611,82 +2592,115 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             });
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้าประวัติ (History Modal) พร้อมลูกเล่นเด้งซูมเข้าออกเหมือนแอป ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) ✨
+        function toggleMaximizeRepairs() {
+            const card = document.getElementById('repairsMainCard');
+            const icon = document.getElementById('maximizeRepairsIcon');
+            const tableContainer = document.getElementById('repairsTableContainer');
+            
+            if (card.classList.contains('fixed')) {
+                // 1. ลูกเล่นก่อนย่อ: เล่น Animation โปร่งแสง
+                card.style.transform = 'scale(0.95)';
+                card.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // ถอดโหมดหน้าต่างลอย
+                    card.classList.remove('fixed', 'top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2', 'w-[98vw]', 'h-[95vh]', 'z-[100]', 'shadow-[0_0_0_9999px_rgba(15,15,15,0.7)]');
+                    card.style.borderRadius = '20px'; // คืนค่ามุมมนเดิมของ .modern-card
+                    if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
+                    
+                    icon.classList.add('fa-expand');
+                    icon.classList.remove('fa-compress');
+                    document.body.classList.remove('overflow-hidden');
+
+                    // แสดงผลปกติ
+                    card.style.transform = 'scale(1)';
+                    card.style.opacity = '1';
+                }, 250); 
+            } else {
+                // 1. ลูกเล่นก่อนขยาย: ซ่อนเพื่อเตรียมแอนิเมชัน
+                card.style.transition = 'none'; 
+                card.style.transform = 'scale(0.95)';
+                card.style.opacity = '0';
+                
+                // แปลงเป็นหน้าต่างลอย (เหมือน Modal) กลางจอพร้อมเงาดำ
+                card.classList.add('fixed', 'top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2', 'w-[98vw]', 'h-[95vh]', 'z-[100]', 'shadow-[0_0_0_9999px_rgba(15,15,15,0.7)]');
+                card.style.borderRadius = '24px'; 
+                if (tableContainer) tableContainer.classList.remove('max-h-[70vh]');
+
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+                document.body.classList.add('overflow-hidden');
+
+                // 2. เด้งเข้าสู่หน้าจอ (Bouncy effect)
+                void card.offsetWidth; // บังคับเบราว์เซอร์รีเฟรช
+                card.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                card.style.transform = 'scale(1)';
+                card.style.opacity = '1';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.3s ease-in-out';
+                }, 400);
+            }
+        }
+
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้าประวัติ (History Modal) พร้อมลูกเล่นเด้งซูม ✨
         function toggleMaximizeHistoryModal() {
             const wrapper = document.getElementById('historyModal');
             const modalContainer = wrapper.querySelector('.modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
-            const header = modalContainer.querySelector('div:first-child');
             
-            if (!modalContainer.classList.contains('max-w-[95%]')) {
-                // 1. ลูกเล่น: เล่น Animation ย่อลงและจางออกนิดๆ ก่อนกลับเป็นหน้าต่างเดิม
+            if (modalContainer.classList.contains('max-w-[98vw]')) {
+                // 1. ลูกเล่นก่อนย่อ
                 modalContainer.style.transform = 'scale(0.95)';
                 modalContainer.style.opacity = '0';
                 
                 setTimeout(() => {
-                    // ย่อกลับขนาดเดิม
-                    wrapper.classList.add('px-4');
-                    wrapper.classList.remove('p-0');
-                    
-                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                    modalContainer.classList.remove('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
-                    
-                    if (header) {
-                        header.classList.add('rounded-t-3xl');
-                        header.classList.remove('rounded-none');
-                    }
+                    // ย่อกลับขนาดเดิม (ยังคงเป็น Modal)
+                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]');
+                    modalContainer.classList.remove('max-w-[98vw]', 'h-[95vh]', 'max-h-none');
                     
                     if(icon) {
                         icon.classList.add('fa-expand');
                         icon.classList.remove('fa-compress');
                     }
 
-                    // เด้งกลับเข้าที่
+                    // แสดงผลปกติ
                     modalContainer.style.transform = 'scale(1)';
                     modalContainer.style.opacity = '1';
                 }, 250); 
             } else {
-                // 1. ลูกเล่น: ซ่อนโครงร่างเดิมก่อนชั่วคราว
+                // 1. ลูกเล่นก่อนขยาย
                 modalContainer.style.transition = 'none'; 
                 modalContainer.style.transform = 'scale(0.95)';
                 modalContainer.style.opacity = '0';
                 
-                // จัดโครงสร้างเป็น Fullscreen
-                wrapper.classList.remove('px-4');
-                wrapper.classList.add('p-0');
-                
-                modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.add('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
-                
-                if (header) {
-                    header.classList.remove('rounded-t-3xl');
-                    header.classList.add('rounded-none');
-                }
+                // ขยายหน้าต่าง (แต่ไม่ทื่อชิดขอบจอ)
+                modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]');
+                modalContainer.classList.add('max-w-[98vw]', 'h-[95vh]', 'max-h-none');
                 
                 if(icon) {
                     icon.classList.remove('fa-expand');
                     icon.classList.add('fa-compress');
                 }
 
-                // 2. ให้แสดงผลแบบซูมเด้งเข้ามา (Bouncy effect)
+                // 2. เด้งเข้าสู่หน้าจอ (Bouncy effect)
                 void modalContainer.offsetWidth; // บังคับเบราว์เซอร์รีเฟรช
-                modalContainer.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; // หนืดเด้ง
+                modalContainer.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                 modalContainer.style.transform = 'scale(1)';
                 modalContainer.style.opacity = '1';
                 
-                // 3. คืนค่าสมูทแบบปกติเพื่อใช้งานต่อ
                 setTimeout(() => {
                     modalContainer.style.transition = 'all 0.3s ease-in-out';
                 }, 400);
             }
         }
 
-        // ✨ ตรวจจับการคลิกเปิดหน้า Edit หรือ View (อัปเดต: บล็อกการรีเฟรชหน้าจอเพื่อไม่ให้กระตุกแว็บ)
+        // ✨ ตรวจจับการคลิกเปิดหน้า Edit หรือ View (บล็อกการรีเฟรชหน้าจอเพื่อไม่ให้กระตุกแว็บ)
         document.addEventListener('click', function(e) {
             const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"], a[href*="view_repair.php"]');
             if (target) {
-                // 🚫 ยกเลิกคำสั่งสั่งรีเฟรชหน้าจอทิ้งไปเลย เพื่อให้พอกลับมาแท็บเดิมแล้ว ทุกอย่างหยุดนิ่ง 100% 
-                // ไม่มีอาการกระตุกหรือแว็บไปหน้าอื่นอีกต่อไปครับ!
+                // ป้องกันอาการกระตุกเมื่อสลับหน้า
             }
         });
 
