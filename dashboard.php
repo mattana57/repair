@@ -2283,11 +2283,11 @@ $dept_icons = [
         </div>
     </div>
 
-    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
+    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('historyModal')"></div>
-        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[85vh] max-h-[850px]">
+        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 flex flex-col h-[85vh] max-h-[850px]">
             
-            <div class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0">
+            <div class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
                 <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full md:w-auto" id="historyModalTitle">History</p>
                 <div class="flex items-center w-full md:w-auto justify-between md:justify-end">
                     
@@ -2302,10 +2302,15 @@ $dept_icons = [
                         </button>
                     </div>
 
-                    <!-- ✨ แยกปุ่มกากบาท ให้ห่างออกไปชัดเจนด้วย margin-left ✨ -->
-                    <button onclick="toggleModal('historyModal')" class="ml-4 md:ml-12 text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50">
-                        <i class="fas fa-times text-sm md:text-base"></i>
-                    </button>
+                    <!-- ✨ แยกปุ่มขยายหน้าจอ และ ปุ่มกากบาท ให้ห่างออกไปชัดเจนด้วย margin-left ✨ -->
+                    <div class="flex items-center gap-2 ml-4 md:ml-12 shrink-0">
+                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                            <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
+                        </button>
+                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                            <i class="fas fa-times text-sm md:text-base"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -4273,8 +4278,68 @@ $dept_icons = [
             // ✨ ล้างช่องค้นหาให้ว่างทุกครั้งที่กดเปิดดูประวัติคนใหม่ ✨
             const searchInput = document.getElementById('searchHistoryModalInput');
             if(searchInput) searchInput.value = '';
+
+            // ✨ รีเซ็ตขนาดหน้าต่างให้กลับเป็นปกติเสมอ (กรณีที่เคยกดขยายจอไว้) ✨
+            const wrapper = document.getElementById('historyModal');
+            const modalContainer = wrapper.querySelector('.modal-container');
+            const icon = document.getElementById('maximizeHistoryIcon');
+            const header = modalContainer.querySelector('div:first-child');
+            if (modalContainer.classList.contains('w-full')) {
+                wrapper.classList.add('px-4');
+                wrapper.classList.remove('p-0');
+                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                if (header) {
+                    header.classList.add('rounded-t-3xl');
+                    header.classList.remove('rounded-none');
+                }
+                if(icon) {
+                    icon.classList.add('fa-expand');
+                    icon.classList.remove('fa-compress');
+                }
+            }
             
             toggleModal('historyModal');
+        }
+
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ✨
+        function toggleMaximizeHistoryModal() {
+            const wrapper = document.getElementById('historyModal');
+            const modalContainer = wrapper.querySelector('.modal-container');
+            const icon = document.getElementById('maximizeHistoryIcon');
+            const header = modalContainer.querySelector('div:first-child');
+            
+            if (modalContainer.classList.contains('max-w-[95%]')) {
+                // ขยายจอ
+                wrapper.classList.remove('px-4');
+                wrapper.classList.add('p-0');
+                
+                modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                
+                if (header) {
+                    header.classList.remove('rounded-t-3xl');
+                    header.classList.add('rounded-none');
+                }
+                
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+            } else {
+                // ย่อกลับขนาดเดิม
+                wrapper.classList.add('px-4');
+                wrapper.classList.remove('p-0');
+                
+                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                
+                if (header) {
+                    header.classList.add('rounded-t-3xl');
+                    header.classList.remove('rounded-none');
+                }
+                
+                icon.classList.add('fa-expand');
+                icon.classList.remove('fa-compress');
+            }
         }
 
         // ✨ ฟังก์ชันค้นหาข้อมูลในตารางประวัติ (History Modal) ✨
