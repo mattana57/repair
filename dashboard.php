@@ -2289,20 +2289,23 @@ $dept_icons = [
             
             <div class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0">
                 <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full md:w-auto" id="historyModalTitle">History</p>
-                <div class="flex items-center gap-4 md:gap-16 w-full md:w-auto justify-between md:justify-end">
+                <div class="flex items-center w-full md:w-auto justify-between md:justify-end">
                     
-                    <!-- ✨ ช่องค้นหาใน Modal ประวัติ ✨ -->
-                    <div class="relative w-full md:w-64 flex-1 md:flex-none">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                    </div>
-
-                    <div class="flex items-center gap-3 shrink-0">
-                        <button id="historyModalLinkBtn" class="text-[11px] md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 md:px-5 py-2 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer">
+                    <!-- ✨ จับกลุ่ม ช่องค้นหา + ปุ่ม Contacts ให้อยู่ใกล้กัน ✨ -->
+                    <div class="flex items-center gap-2 md:gap-3 w-full md:w-auto flex-1 md:flex-none">
+                        <div class="relative w-full md:w-64 flex-1 md:flex-none">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        </div>
+                        <button id="historyModalLinkBtn" class="text-[11px] md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 md:px-5 py-2 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
                             <i class="fas fa-address-book md:mr-1.5"></i> <span class="hidden md:inline">Contacts</span>
                         </button>
-                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50"><i class="fas fa-times text-sm md:text-base"></i></button>
                     </div>
+
+                    <!-- ✨ แยกปุ่มกากบาท ให้ห่างออกไปชัดเจนด้วย margin-left ✨ -->
+                    <button onclick="toggleModal('historyModal')" class="ml-4 md:ml-12 text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50">
+                        <i class="fas fa-times text-sm md:text-base"></i>
+                    </button>
                 </div>
             </div>
             
