@@ -169,6 +169,8 @@ if($years_query && $years_query->num_rows > 0) {
 }
 $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 
+$thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
+
 $pageTitles = [
     'dash' => 'Dashboard Overview',
     'repairs' => 'All Repairs List'
@@ -1258,7 +1260,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
         </div>
     </div>
 
+    <!-- ✨ ฟอร์มซ่อนสำหรับอัปโหลดรูปโปรไฟล์ผู้บริหาร ✨ -->
+    <form id="profileAvatarForm" action="" method="POST" enctype="multipart/form-data" class="hidden">
+        <input type="hidden" name="update_profile_picture" value="1">
+        <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="showAvatarPreviewModal(this)">
+    </form>
+
+    <!-- ✨ Modal หน้าจอพรีวิว (เลื่อนได้ ซูมได้ สมูท 100%) ✨ -->
+    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col justify-center items-center bg-[#0f0f0f]/95 sm:bg-[#0f0f0f] transition-opacity duration-300">
+        <div class="hidden sm:flex absolute top-0 left-0 w-full justify-between items-center px-6 md:px-12 lg:px-16 py-5 md:py-6 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+            <button type="button" onclick="cancelAvatarUpload()" class="w-12 h-12 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors pointer-events-auto cursor-pointer">
+                <i class="fas fa-chevron-left text-2xl pr-1"></i>
+            </button>
+            <h3 class="text-white font-bold text-[16px] md:text-[18px] drop-shadow-md tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
+            <div class="w-12"></div>
+        </div>
+        <div class="relative w-full max-w-[400px] h-[550px] sm:max-w-none sm:w-full sm:h-full flex flex-col bg-[#0f0f0f] sm:bg-transparent rounded-[40px] sm:rounded-none overflow-hidden shadow-2xl sm:shadow-none mx-4 sm:mx-0">
+            <div class="absolute top-4 left-0 w-full flex justify-center z-50 sm:hidden pointer-events-none">
+                <div class="bg-white/90 backdrop-blur-md px-6 py-2 rounded-full shadow-lg border border-white/20">
+                    <h3 class="text-slate-800 font-extrabold text-[14px] tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
+                </div>
+            </div>
+            <div class="flex-1 relative overflow-hidden bg-[#0f0f0f]" id="dragContainer">
+                <img id="avatarCropImage" src="" class="absolute left-1/2 top-1/2 pointer-events-none select-none" style="transform: translate(-50%, -50%) scale(1); will-change: transform;">
+                <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-20 overflow-hidden">
+                    <div id="cropCircleMask" class="w-[320px] h-[320px] rounded-full shadow-[0_0_0_9999px_rgba(15,15,15,0.85)] border-2 border-white/30"></div>
+                </div>
+                <div id="dragTouchLayer" class="absolute inset-0 z-30 cursor-move" style="touch-action: none;"></div>
+            </div>
+            <div class="px-6 py-6 sm:pb-10 shrink-0 flex justify-center items-center gap-5 bg-[#0f0f0f] relative z-40 sm:border-t sm:border-white/10 sm:w-full sm:absolute sm:bottom-0 sm:left-0">
+                <button type="button" onclick="cancelAvatarUpload()" class="py-2.5 px-8 sm:px-10 rounded-full bg-rose-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30">
+                    ยกเลิก
+                </button>
+                <button type="button" onclick="processAndUploadCrop()" class="py-2.5 px-8 sm:px-10 rounded-full bg-blue-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
+                    บันทึก
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ================== JAVASCRIPT ================== -->
+
     <script>
         const allRepairs = <?php echo $all_repairs_json; ?>;
         const techDeptMap = <?php echo $tech_dept_map_json; ?>;
@@ -1338,6 +1380,202 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 imgEl.src = imgSrc;
                 toggleModal('imagePreviewModal');
             }
+        }
+
+        // ✨ ระบบควบคุมการพรีวิว และ ซูม/ลากรูปภาพ (Canvas Crop) ป้องกันกระตุก 100% ✨
+        let isDragging = false;
+        let startTouchX = 0, startTouchY = 0;
+        let startImgX = 0, startImgY = 0;
+        let currentX = 0, currentY = 0;
+        let currentScale = 1;
+        let minScale = 0.1;
+        let initialDistance = 0;
+        let initialScaleForZoom = 1;
+
+        const dragLayer = document.getElementById('dragTouchLayer');
+        const cropImage = document.getElementById('avatarCropImage');
+
+        function updateTransform() {
+            if(cropImage) cropImage.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px)) scale(${currentScale})`;
+        }
+
+        function showAvatarPreviewModal(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    if(cropImage) {
+                        cropImage.style.transform = `translate(-50%, -50%) scale(1)`;
+                        cropImage.src = e.target.result;
+                        
+                        cropImage.onload = () => {
+                            cropImage.style.width = cropImage.naturalWidth + 'px';
+                            cropImage.style.height = cropImage.naturalHeight + 'px';
+                            cropImage.style.maxWidth = 'none';
+                            cropImage.style.maxHeight = 'none';
+
+                            const circleElement = document.getElementById('cropCircleMask');
+                            const circleSize = circleElement ? circleElement.getBoundingClientRect().width : 320; 
+                            
+                            const rect = cropImage.getBoundingClientRect();
+                            const scaleX = circleSize / rect.width;
+                            const scaleY = circleSize / rect.height;
+                            
+                            minScale = Math.max(scaleX, scaleY);
+                            currentScale = minScale; 
+                            
+                            currentX = 0;
+                            currentY = 0;
+                            updateTransform();
+                        };
+                    }
+
+                    closeAvatarMenu();
+                    closeProfileDropdown();
+                    toggleModal('avatarPreviewConfirmModal');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function cancelAvatarUpload() {
+            const input = document.getElementById('profileAvatarInput');
+            if(input) input.value = '';
+            toggleModal('avatarPreviewConfirmModal');
+        }
+
+        function processAndUploadCrop() {
+            Swal.fire({
+                title: 'กำลังเปลี่ยนรูปโปรไฟล์...',
+                text: 'ระบบกำลังประมวลผลรูปภาพ กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            setTimeout(() => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                const outputSize = 600; 
+                canvas.width = outputSize;
+                canvas.height = outputSize;
+
+                const circleElement = document.getElementById('cropCircleMask');
+                const maskRect = circleElement ? circleElement.getBoundingClientRect() : {width: 320};
+                
+                const ratio = outputSize / maskRect.width;
+
+                ctx.save();
+                ctx.translate(outputSize / 2, outputSize / 2);
+                ctx.translate(currentX * ratio, currentY * ratio); 
+                ctx.scale(currentScale * ratio, currentScale * ratio); 
+                ctx.drawImage(cropImage, -cropImage.naturalWidth / 2, -cropImage.naturalHeight / 2, cropImage.naturalWidth, cropImage.naturalHeight);
+                ctx.restore();
+
+                canvas.toBlob((blob) => {
+                    const file = new File([blob], "avatar_cropped.jpg", { type: "image/jpeg", lastModified: new Date().getTime() });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    
+                    const input = document.getElementById('profileAvatarInput');
+                    if(input) input.files = dataTransfer.files;
+                    
+                    toggleModal('avatarPreviewConfirmModal');
+                    const form = document.getElementById('profileAvatarForm');
+                    if(form) form.submit();
+                }, 'image/jpeg', 0.9);
+            }, 100);
+        }
+
+        // --- Mouse Events (คอมพิวเตอร์) ---
+        if (dragLayer) {
+            dragLayer.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isDragging = true;
+                startTouchX = e.clientX;
+                startTouchY = e.clientY;
+                startImgX = currentX;
+                startImgY = currentY;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                currentX = startImgX + (e.clientX - startTouchX);
+                currentY = startImgY + (e.clientY - startTouchY);
+                updateTransform();
+            });
+
+            document.addEventListener('mouseup', () => { isDragging = false; });
+            dragLayer.addEventListener('mouseleave', () => { isDragging = false; });
+
+            // --- Wheel Zoom (ลูกกลิ้งเมาส์) ---
+            dragLayer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomSensitivity = 0.0015;
+                currentScale -= e.deltaY * zoomSensitivity;
+                if(currentScale < minScale) currentScale = minScale;
+                if(currentScale > 5) currentScale = 5;
+                updateTransform();
+            }, { passive: false });
+
+            // --- Touch Events (มือถือ/แท็บเล็ต) ---
+            dragLayer.addEventListener('touchstart', function(e) {
+                e.preventDefault(); 
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    startTouchX = e.touches[0].clientX;
+                    startTouchY = e.touches[0].clientY;
+                    startImgX = currentX;
+                    startImgY = currentY;
+                } else if (e.touches.length === 2) {
+                    isDragging = false; 
+                    initialDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    initialScaleForZoom = currentScale;
+                }
+            }, { passive: false });
+
+            dragLayer.addEventListener('touchmove', function(e) {
+                e.preventDefault(); 
+                if (e.touches.length === 1 && isDragging) {
+                    currentX = startImgX + (e.touches[0].clientX - startTouchX);
+                    currentY = startImgY + (e.touches[0].clientY - startTouchY);
+                    updateTransform();
+                } else if (e.touches.length === 2) {
+                    const currentDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    currentScale = initialScaleForZoom * (currentDistance / initialDistance);
+                    if(currentScale < minScale) currentScale = minScale;
+                    if(currentScale > 5) currentScale = 5;
+                    updateTransform();
+                }
+            }, { passive: false });
+
+            dragLayer.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                if (e.touches.length < 2) initialDistance = 0;
+                if (e.touches.length === 1) {
+                    startTouchX = e.touches[0].clientX;
+                    startTouchY = e.touches[0].clientY;
+                    startImgX = currentX;
+                    startImgY = currentY;
+                    isDragging = true;
+                } else {
+                    isDragging = false;
+                }
+            }, { passive: false });
+        }
+        
+        // --- ปิดการเลื่อนหน้าเว็บเวลาอยู่บนพรีวิว 100% ---
+        const previewModalEl = document.getElementById('avatarPreviewConfirmModal');
+        if (previewModalEl) {
+            previewModalEl.addEventListener('touchmove', (e) => {
+                if (e.target !== dragLayer) { e.preventDefault(); }
+            }, { passive: false });
         }
 
         // คลิกพื้นที่อื่นเพื่อปิดเมนูต่างๆ อัตโนมัติ
