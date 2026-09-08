@@ -2252,8 +2252,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
             
             let displayTitleName = fullName;
-            if (type === 'reporter' && lineUsers
+            if (type === 'reporter' && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
+                displayTitleName = lineUsersMap[fullName].real_name;
+            }
+            document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
+            
+            // ✨ ล้างช่องค้นหาให้ว่างทุกครั้งที่กดเปิดดูประวัติคนใหม่ ✨
+            const searchInput = document.getElementById('searchHistoryModalInput');
+            if(searchInput) searchInput.value = '';
 
+            // ✨ รีเซ็ตขนาดหน้าต่างให้กลับเป็นปกติเสมอ (กรณีที่เคยกดขยายจอไว้) ✨
+            const wrapper = document.getElementById('historyModal');
+            const modalContainer = wrapper.querySelector('.modal-container');
+            const icon = document.getElementById('maximizeHistoryIcon');
+            const header = modalContainer.querySelector('div:first-child');
+            
+            if (modalContainer && modalContainer.classList.contains('w-full')) {
+                wrapper.classList.add('px-4');
+                wrapper.classList.remove('p-0');
+                
+                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                modalContainer.classList.remove('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
+                
+                if (header) {
+                    header.classList.add('rounded-t-3xl');
+                    header.classList.remove('rounded-none');
+                }
+                
+                if(icon) {
+                    icon.classList.add('fa-expand');
+                    icon.classList.remove('fa-compress');
+                }
+            }
+
+            toggleModal('historyModal');
         }
 
         function setReviewFilter(val) {
