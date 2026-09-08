@@ -670,12 +670,12 @@ $dept_icons = [
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
-        <header class="top-header bg-white flex items-center justify-between z-30 sticky top-0 no-print border-b border-slate-200 shadow-sm gap-2">
+        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50 gap-2">
             <div class="flex items-center min-w-0 pr-2">
-                <button onclick="toggleSidebar()" class="md:hidden mr-3 text-slate-400 hover:text-indigo-600 focus:outline-none shrink-0 transition-colors">
+                <button onclick="toggleSidebar()" class="md:hidden mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h3 class="text-[15px] sm:text-xl md:text-3xl font-extrabold text-slate-800 tracking-tight truncate" id="headerTitle"><?php echo $currentTitle; ?></h3>
+                <h3 class="text-[15px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
             
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
