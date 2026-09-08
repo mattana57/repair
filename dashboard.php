@@ -2292,8 +2292,8 @@ $dept_icons = [
     </div>
 
     <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('historyModal')"></div>
-        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 flex flex-col h-[85vh] max-h-[850px]">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
+        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
             <div class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
                 <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full md:w-auto" id="historyModalTitle">History</p>
@@ -4310,7 +4310,7 @@ $dept_icons = [
             toggleModal('historyModal');
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ให้ยืดขยายแบบแอปพลิเคชัน ✨
         function toggleMaximizeHistoryModal() {
             const wrapper = document.getElementById('historyModal');
             const modalContainer = wrapper.querySelector('.modal-container');
@@ -4318,35 +4318,63 @@ $dept_icons = [
             const header = modalContainer.querySelector('div:first-child');
             
             if (modalContainer.classList.contains('max-w-[95%]')) {
-                // ขยายจอ
+                // 1. ลูกเล่นก่อนขยาย: ย่อตัวนิดนึงและจางลง 
+                modalContainer.style.transition = 'none'; 
+                modalContainer.style.transform = 'scale(0.95)';
+                modalContainer.style.opacity = '0';
+                
+                // เปลี่ยนคลาสเป็นแบบเต็มจอ
                 wrapper.classList.remove('px-4');
                 wrapper.classList.add('p-0');
                 
                 modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                modalContainer.classList.add('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
                 
                 if (header) {
                     header.classList.remove('rounded-t-3xl');
                     header.classList.add('rounded-none');
                 }
-                
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-            } else {
-                // ย่อกลับขนาดเดิม
-                wrapper.classList.add('px-4');
-                wrapper.classList.remove('p-0');
-                
-                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
-                
-                if (header) {
-                    header.classList.add('rounded-t-3xl');
-                    header.classList.remove('rounded-none');
+                if (icon) {
+                    icon.classList.remove('fa-expand');
+                    icon.classList.add('fa-compress');
                 }
                 
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
+                // 2. ให้แสดงผลแบบซูมเด้งเข้ามา (Bouncy effect)
+                void modalContainer.offsetWidth; // บังคับให้ browser รีเฟรชตำแหน่งใหม่
+                modalContainer.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                modalContainer.style.transform = 'scale(1)';
+                modalContainer.style.opacity = '1';
+                
+                setTimeout(() => {
+                    modalContainer.style.transition = 'all 0.3s ease-in-out';
+                }, 400);
+
+            } else {
+                // 1. ลูกเล่นก่อนหดตัว: เด้งลงไปเล็กน้อย
+                modalContainer.style.transform = 'scale(0.95)';
+                modalContainer.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // เปลี่ยนคลาสเป็นขนาดย่อ
+                    wrapper.classList.add('px-4');
+                    wrapper.classList.remove('p-0');
+                    
+                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.remove('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
+                    
+                    if (header) {
+                        header.classList.add('rounded-t-3xl');
+                        header.classList.remove('rounded-none');
+                    }
+                    if (icon) {
+                        icon.classList.add('fa-expand');
+                        icon.classList.remove('fa-compress');
+                    }
+                    
+                    // 2. ซูมกลับเข้ามาจากขนาดเดิมที่ย่อไว้
+                    modalContainer.style.transform = 'scale(1)';
+                    modalContainer.style.opacity = '1';
+                }, 250);
             }
         }
 
