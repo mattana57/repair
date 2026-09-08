@@ -1206,7 +1206,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     <div class="flex items-center gap-2 md:gap-3 w-full md:w-auto flex-1 md:flex-none">
                         <div class="relative w-full md:w-64 flex-1 md:flex-none">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            <input type="text" id="searchHistoryModalInput" onkeyup="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                         </div>
                     </div>
 
@@ -2147,7 +2147,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             setReviewFilter('all'); 
         }
 
-        // ✨ ประวัติ Modal การคลิกจาก Top Reporters ✨
+        // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟช่าง ✨
         function viewHistory(fullName, type) {
             const tbody = document.getElementById('historyTableBody'); 
             tbody.innerHTML = '';
@@ -2155,7 +2155,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
 
             if(userRepairs.length === 0) {
-                let emptyMsg = type === 'reporter' ? 'No repair history found.' : 'No tasks assigned yet.';
+                let emptyMsg = type === 'reporter' ? 'ยังไม่มีประวัติการแจ้งซ่อม' : 'ยังไม่เคยรับงานซ่อมในระบบ';
                 tbody.innerHTML = `<tr><td colspan="11" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
             } else {
                 userRepairs.forEach(r => {
@@ -2167,7 +2167,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
 
                     let createdDate = '-';
                     let createdTime = '';
-                    if(r.created_at) {
+                    if(r.created_at && r.created_at != '0000-00-00 00:00:00') {
                         let parts = r.created_at.split(' ');
                         createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
                         createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
@@ -2216,7 +2216,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     let pDesc = formatValJS(r.problem_desc);
 
                     // ✨ ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว ✨
-                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors">
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors search-row">
                         <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
                             ${createdTime}
@@ -2252,28 +2252,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
             
             let displayTitleName = fullName;
-            if (type === 'reporter' && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
-                displayTitleName = lineUsersMap[fullName].real_name;
-            }
-            document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
-            
-            // ✨ ล้างช่องค้นหาให้ว่างทุกครั้งที่กดเปิดดูประวัติคนใหม่ ✨
-            const searchInput = document.getElementById('searchHistoryModalInput');
-            if(searchInput) searchInput.value = '';
+            if (type === 'reporter' && lineUsers
 
-            // ✨ รีเซ็ตขนาดหน้าต่างให้กลับเป็นปกติเสมอ (กรณีที่เคยกดขยายจอไว้) ✨
-            const modalContainer = document.querySelector('#historyModal .modal-container');
-            const icon = document.getElementById('maximizeHistoryIcon');
-            if (modalContainer && modalContainer.classList.contains('max-w-[98vw]')) {
-                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]');
-                modalContainer.classList.remove('max-w-[98vw]', 'h-[95vh]', 'max-h-none');
-                if(icon) {
-                    icon.classList.add('fa-expand');
-                    icon.classList.remove('fa-compress');
-                }
-            }
-
-            toggleModal('historyModal');
         }
 
         function setReviewFilter(val) {
