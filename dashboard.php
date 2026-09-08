@@ -4310,43 +4310,73 @@ $dept_icons = [
             toggleModal('historyModal');
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้าประวัติ (History Modal) พร้อมลูกเล่นเด้งซูมเข้าออกเหมือนแอป ✨
         function toggleMaximizeHistoryModal() {
             const wrapper = document.getElementById('historyModal');
             const modalContainer = wrapper.querySelector('.modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
             const header = modalContainer.querySelector('div:first-child');
             
-            if (modalContainer.classList.contains('max-w-[95%]')) {
-                // ขยายจอ
+            if (!modalContainer.classList.contains('max-w-[95%]')) {
+                // 1. ลูกเล่น: เล่น Animation ย่อลงและจางออกนิดๆ ก่อนกลับเป็นหน้าต่างเดิม
+                modalContainer.style.transform = 'scale(0.95)';
+                modalContainer.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // ย่อกลับขนาดเดิม
+                    wrapper.classList.add('px-4');
+                    wrapper.classList.remove('p-0');
+                    
+                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.remove('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
+                    
+                    if (header) {
+                        header.classList.add('rounded-t-3xl');
+                        header.classList.remove('rounded-none');
+                    }
+                    
+                    if(icon) {
+                        icon.classList.add('fa-expand');
+                        icon.classList.remove('fa-compress');
+                    }
+
+                    // เด้งกลับเข้าที่
+                    modalContainer.style.transform = 'scale(1)';
+                    modalContainer.style.opacity = '1';
+                }, 250); 
+            } else {
+                // 1. ลูกเล่น: ซ่อนโครงร่างเดิมก่อนชั่วคราว
+                modalContainer.style.transition = 'none'; 
+                modalContainer.style.transform = 'scale(0.95)';
+                modalContainer.style.opacity = '0';
+                
+                // จัดโครงสร้างเป็น Fullscreen
                 wrapper.classList.remove('px-4');
                 wrapper.classList.add('p-0');
                 
                 modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                modalContainer.classList.add('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
                 
                 if (header) {
                     header.classList.remove('rounded-t-3xl');
                     header.classList.add('rounded-none');
                 }
                 
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-            } else {
-                // ย่อกลับขนาดเดิม
-                wrapper.classList.add('px-4');
-                wrapper.classList.remove('p-0');
-                
-                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
-                
-                if (header) {
-                    header.classList.add('rounded-t-3xl');
-                    header.classList.remove('rounded-none');
+                if(icon) {
+                    icon.classList.remove('fa-expand');
+                    icon.classList.add('fa-compress');
                 }
+
+                // 2. ให้แสดงผลแบบซูมเด้งเข้ามา (Bouncy effect)
+                void modalContainer.offsetWidth; // บังคับเบราว์เซอร์รีเฟรช
+                modalContainer.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; // หนืดเด้ง
+                modalContainer.style.transform = 'scale(1)';
+                modalContainer.style.opacity = '1';
                 
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
+                // 3. คืนค่าสมูทแบบปกติเพื่อใช้งานต่อ
+                setTimeout(() => {
+                    modalContainer.style.transition = 'all 0.3s ease-in-out';
+                }, 400);
             }
         }
 
