@@ -173,6 +173,32 @@ $pageTitles = [
     'dash' => 'Dashboard Overview',
     'repairs' => 'All Repairs List'
 ];
+
+// ✨ ระบบอัปโหลดเปลี่ยนรูปโปรไฟล์ผู้บริหาร ✨
+$js_redirect = "history.replaceState(null, '', '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash'));";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture'])) {
+    $user_id = $_SESSION['user_id'];
+    if (isset($_FILES['profile_avatar']) && $_FILES['profile_avatar']['error'] === UPLOAD_ERR_OK) {
+        $file_extension = strtolower(pathinfo($_FILES["profile_avatar"]["name"], PATHINFO_EXTENSION));
+        $allowed_extensions = array("jpg", "jpeg", "png", "webp", "gif");
+        
+        if (in_array($file_extension, $allowed_extensions)) {
+            $upload_dir = 'uploads/';
+            if (!is_dir($upload_dir)) @mkdir($upload_dir, 0777, true);
+            $file_name = 'exec_' . time() . '_' . uniqid() . '.' . $file_extension;
+            $target_path = $upload_dir . $file_name;
+            
+            if (move_uploaded_file($_FILES['profile_avatar']['tmp_name'], $target_path)) {
+                $stmt = $conn->prepare("UPDATE users SET avatar_url=? WHERE id=?");
+                $stmt->bind_param("si", $target_path, $user_id);
+                $stmt->execute();
+                
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect location.reload(); }); });</script>";
+            }
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -290,10 +316,13 @@ $pageTitles = [
                     <!-- ส่วนหัว: รูปโปรไฟล์และข้อมูลผู้บริหาร -->
                     <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4 relative">
                         
-                        <!-- 🚨 กล่องเมนูย่อยสีเทาเข้ม (โชว์เฉพาะ "ดูรูปภาพ") 🚨 -->
-                        <div id="avatarActionMenu" class="absolute left-5 top-[85px] sm:left-auto sm:right-full sm:top-3 sm:mr-3 w-40 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-[60] text-white animate-fade-in">
+                        <!-- 🚨 กล่องเมนูย่อยสีเทาเข้ม (โชว์ทั้ง "ดูรูปภาพ" และ "เปลี่ยนรูปภาพ") 🚨 -->
+                        <div id="avatarActionMenu" class="absolute left-5 top-[85px] sm:left-auto sm:right-full sm:top-3 sm:mr-3 w-48 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-[60] text-white animate-fade-in">
                             <button type="button" onclick="openImageModal('<?php echo $current_user_avatar; ?>'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
                                 <i class="fas fa-eye text-slate-300 w-4 text-center"></i> ดูรูปภาพ
+                            </button>
+                            <button type="button" onclick="document.getElementById('profileAvatarInput').removeAttribute('capture'); document.getElementById('profileAvatarInput').click(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
+                                <i class="fas fa-camera text-slate-300 w-4 text-center"></i> เปลี่ยนรูปภาพ
                             </button>
                         </div>
 
