@@ -200,6 +200,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
     }
 }
 ?>
+
+// ✨ ระบบอัปโหลดเปลี่ยนรูปโปรไฟล์ผู้บริหาร ✨
+$js_redirect = "history.replaceState(null, '', '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash'));";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture'])) {
+    $user_id = $_SESSION['user_id'];
+    if (isset($_FILES['profile_avatar']) && $_FILES['profile_avatar']['error'] === UPLOAD_ERR_OK) {
+        $file_extension = strtolower(pathinfo($_FILES["profile_avatar"]["name"], PATHINFO_EXTENSION));
+        $allowed_extensions = array("jpg", "jpeg", "png", "webp", "gif");
+        
+        if (in_array($file_extension, $allowed_extensions)) {
+            $upload_dir = 'uploads/';
+            if (!is_dir($upload_dir)) @mkdir($upload_dir, 0777, true);
+            $file_name = 'exec_' . time() . '_' . uniqid() . '.' . $file_extension;
+            $target_path = $upload_dir . $file_name;
+            
+            if (move_uploaded_file($_FILES['profile_avatar']['tmp_name'], $target_path)) {
+                $stmt = $conn->prepare("UPDATE users SET avatar_url=? WHERE id=?");
+                $stmt->bind_param("si", $target_path, $user_id);
+                $stmt->execute();
+                
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect location.reload(); }); });</script>";
+            }
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
