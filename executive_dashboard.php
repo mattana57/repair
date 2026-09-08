@@ -286,11 +286,26 @@ $pageTitles = [
 
                 <!-- ✨ กล่องเมนูหลักด้านขวา (Profile Dropdown Panel) สำหรับผู้บริหาร (ดูได้อย่างเดียว) ✨ -->
                 <div id="profileDropdownMenu" class="absolute right-0 top-full mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 hidden flex-col z-50 animate-fade-in">
+                    
                     <!-- ส่วนหัว: รูปโปรไฟล์และข้อมูลผู้บริหาร -->
                     <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4 relative">
-                        <div class="relative w-[64px] h-[64px] rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0 shadow-sm pointer-events-none">
-                            <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
+                        
+                        <!-- 🚨 กล่องเมนูย่อยสีเทาเข้ม (โชว์เฉพาะ "ดูรูปภาพ") 🚨 -->
+                        <div id="avatarActionMenu" class="absolute left-5 top-[85px] sm:left-auto sm:right-full sm:top-3 sm:mr-3 w-40 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-[60] text-white animate-fade-in">
+                            <button type="button" onclick="openImageModal('<?php echo $current_user_avatar; ?>'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
+                                <i class="fas fa-eye text-slate-300 w-4 text-center"></i> ดูรูปภาพ
+                            </button>
                         </div>
+
+                        <!-- ✨ รูปโปรไฟล์ใน Dropdown กดแล้วเปิดเมนูย่อยด้านซ้าย ✨ -->
+                        <div onclick="toggleAvatarMenu(event)" class="relative w-[64px] h-[64px] rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0 cursor-pointer shadow-sm hover:ring-2 hover:ring-purple-400 transition-all group" title="คลิกเพื่อดูรูปภาพ">
+                            <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
+                            <!-- แถบไอคอนตาด้านล่าง (เพื่อให้รู้ว่ากดดูได้) -->
+                            <div class="absolute inset-x-0 bottom-0 h-1/3 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center group-hover:bg-slate-900/80 transition-colors">
+                                <i class="fas fa-eye text-white text-[10px]"></i>
+                            </div>
+                        </div>
+
                         <div class="min-w-0 flex-1">
                             <p class="text-[15px] font-extrabold text-slate-800 truncate">
                                 <?php echo htmlspecialchars($current_user_name); ?>
@@ -1237,14 +1252,52 @@ $pageTitles = [
             }
         }
 
-        // คลิกพื้นที่อื่นเพื่อปิดเมนูอัตโนมัติ
+        // ✨ ระบบจัดการเมนูย่อยสำหรับคลิกที่รูปโปรไฟล์ (เฉพาะดูรูป) ✨
+        function toggleAvatarMenu(e) {
+            if (e) e.stopPropagation();
+            const avatarMenu = document.getElementById('avatarActionMenu');
+            if (!avatarMenu) return;
+            if (avatarMenu.classList.contains('hidden')) {
+                avatarMenu.classList.remove('hidden');
+                avatarMenu.classList.add('flex');
+            } else {
+                avatarMenu.classList.add('hidden');
+                avatarMenu.classList.remove('flex');
+            }
+        }
+
+        function closeAvatarMenu() {
+            const avatarMenu = document.getElementById('avatarActionMenu');
+            if (avatarMenu) {
+                avatarMenu.classList.add('hidden');
+                avatarMenu.classList.remove('flex');
+            }
+        }
+
+        // ✨ ฟังก์ชันเปิดรูปลอยตรงกลาง (Modal) ✨
+        function openImageModal(imgSrc) {
+            const modal = document.getElementById('imagePreviewModal');
+            const imgEl = document.getElementById('fullSizeImage');
+            if (modal && imgEl) {
+                imgEl.src = imgSrc;
+                toggleModal('imagePreviewModal');
+            }
+        }
+
+        // คลิกพื้นที่อื่นเพื่อปิดเมนูต่างๆ อัตโนมัติ
         document.addEventListener('click', function(e) {
             const wrapper = document.getElementById('profileMenuWrapper');
             if (wrapper && !wrapper.contains(e.target)) {
                 closeProfileDropdown();
+            } else {
+                // ถ้าคลิกในเมนู Profile แต่ไม่ได้คลิกรูป ให้ปิดป๊อปอัปย่อย
+                const avatarBtn = document.querySelector('[onclick*="toggleAvatarMenu"]');
+                if (avatarBtn && !avatarBtn.contains(e.target)) {
+                    closeAvatarMenu();
+                }
             }
         });
-        
+
         function show(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
