@@ -926,7 +926,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                             </td>
                                             <td class='px-6 py-4 align-middle text-center'>
                                                 <div class='flex items-center justify-center'>
-                                                    <!-- ✨ ใช้ openReviewTab บังคับเปิดแท็บใหม่และสั่งปิดแท็บเวลาปิดหน้าต่าง ✨ -->
                                                     <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
                                                 </div>
                                             </td>
