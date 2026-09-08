@@ -628,9 +628,9 @@ $dept_icons = [
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
     <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
-        <!-- ✨ ปรับพื้นหลังเป็นสีม่วงอ่อนพาสเทล ให้ล้อกับธีมหลักและดูแยกส่วนจากเมนู ✨ -->
-        <div class="sidebar-logo-box flex items-center border-b border-indigo-50 bg-indigo-50/50">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/40 mr-3.5 shrink-0 hover:scale-105 transition-transform duration-300">
+        <!-- ✨ เพิ่มสีพื้นหลังม่วงอมฟ้าสว่างๆ ให้กล่องโลโก้ดูโดดเด่นและเข้าธีม ✨ -->
+        <div class="sidebar-logo-box flex items-center border-b border-indigo-50 bg-[#f4f4fd]">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3.5 shrink-0 hover:scale-105 transition-transform duration-300">
                 <i class="fas fa-tools text-white text-xl"></i>
             </div>
             <div class="overflow-hidden">
