@@ -4309,72 +4309,101 @@ $dept_icons = [
             toggleModal('historyModal');
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ให้ยืดขยายสมูท ✨
         function toggleMaximizeHistoryModal() {
             const wrapper = document.getElementById('historyModal');
             const modalContainer = wrapper.querySelector('.modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
             const header = modalContainer.querySelector('div:first-child');
             
+            // 🚨 ไม่ต้องตั้ง Opacity เป็น 0 แล้ว ให้ CSS ควบคุมการขยาย Width/Height ให้ลื่นไหลไปเลย 🚨
             if (modalContainer.classList.contains('max-w-[95%]')) {
-                // ขยายจอ
+                // โหมดขยายเต็มจอ
                 wrapper.classList.remove('px-4');
                 wrapper.classList.add('p-0');
                 
                 modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                modalContainer.classList.add('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
                 
                 if (header) {
                     header.classList.remove('rounded-t-3xl');
                     header.classList.add('rounded-none');
                 }
                 
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
+                if(icon) {
+                    icon.classList.remove('fa-expand');
+                    icon.classList.add('fa-compress');
+                }
             } else {
-                // ย่อกลับขนาดเดิม
+                // โหมดย่อกลับ
                 wrapper.classList.add('px-4');
                 wrapper.classList.remove('p-0');
                 
                 modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                modalContainer.classList.remove('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
                 
                 if (header) {
                     header.classList.add('rounded-t-3xl');
                     header.classList.remove('rounded-none');
                 }
                 
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
+                if(icon) {
+                    icon.classList.add('fa-expand');
+                    icon.classList.remove('fa-compress');
+                }
             }
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions พร้อมลูกเล่นเด้งซูมเข้าออกแบบแอป ✨
         function toggleMaximizeRepairs() {
             const card = document.getElementById('repairsMainCard');
             const icon = document.getElementById('maximizeRepairsIcon');
             const tableContainer = document.getElementById('repairsTableContainer');
             
             if (card.classList.contains('fixed')) {
-                // ย่อกลับขนาดเดิม
-                card.classList.remove('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
-                card.style.borderRadius = ''; // คืนค่ามุมมนเดิมของ .modern-card
-                if (tableContainer) {
-                    tableContainer.classList.add('max-h-[70vh]');
-                }
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
-                document.body.classList.remove('overflow-hidden');
+                // 1. ลูกเล่น: เล่น Animation ย่อลงและจางออกนิดๆ ก่อนกลับหน้าเดิม
+                card.style.transform = 'scale(0.95)';
+                card.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // ถอดโหมดเต็มจอ
+                    card.classList.remove('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
+                    card.style.borderRadius = ''; 
+                    if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
+
+                    icon.classList.add('fa-expand');
+                    icon.classList.remove('fa-compress');
+                    document.body.classList.remove('overflow-hidden');
+
+                    // เด้งกลับเข้าที่
+                    card.style.transform = 'scale(1)';
+                    card.style.opacity = '1';
+                }, 250); 
             } else {
-                // ขยายเต็มจอ
+                // 1. ลูกเล่น: ซ่อนโครงร่างเดิมก่อนชั่วคราว
+                card.style.transition = 'none'; 
+                card.style.transform = 'scale(0.95)';
+                card.style.opacity = '0';
+                
+                // จัดโครงสร้างเป็น Fullscreen
                 card.classList.add('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
-                card.style.borderRadius = '0px'; // เอาขอบมนออกให้เต็มตาชิดขอบจอ
-                if (tableContainer) {
-                    tableContainer.classList.remove('max-h-[70vh]');
-                }
+                card.style.borderRadius = '0px'; 
+                if (tableContainer) tableContainer.classList.remove('max-h-[70vh]');
+
                 icon.classList.remove('fa-expand');
                 icon.classList.add('fa-compress');
                 document.body.classList.add('overflow-hidden');
+
+                // 2. ให้แสดงผลแบบซูมเด้งเข้ามา (Bouncy effect)
+                void card.offsetWidth; // บังคับเบราว์เซอร์รีเฟรช
+                card.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; // หนืดเด้ง
+                card.style.transform = 'scale(1)';
+                card.style.opacity = '1';
+                
+                // 3. คืนค่าสมูทแบบปกติเพื่อใช้งานต่อ
+                setTimeout(() => {
+                    card.style.transition = 'all 0.3s ease-in-out';
+                }, 400);
             }
         }
 
