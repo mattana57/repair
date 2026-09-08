@@ -926,6 +926,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                             </td>
                                             <td class='px-6 py-4 align-middle text-center'>
                                                 <div class='flex items-center justify-center'>
+                                                    <!-- ✨ ใช้ openReviewTab บังคับเปิดแท็บใหม่และสั่งปิดแท็บเวลาปิดหน้าต่าง ✨ -->
                                                     <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
                                                 </div>
                                             </td>
@@ -2603,78 +2604,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             });
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) ให้สมูทเหมือนหน้าต่าง ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) ✨
         function toggleMaximizeRepairs() {
             const card = document.getElementById('repairsMainCard');
             const icon = document.getElementById('maximizeRepairsIcon');
             const tableContainer = document.getElementById('repairsTableContainer');
-            const header = document.getElementById('repairsHeader');
-            const overlay = document.getElementById('repairsOverlay');
             
             if (card.classList.contains('fixed')) {
-                // 1. ลูกเล่นก่อนย่อ: เล่น Animation โปร่งแสง + ซ่อนเงาดำ
-                card.style.transform = 'translate(-50%, -50%) scale(0.95)';
-                card.style.opacity = '0';
-                if (overlay) {
-                    overlay.style.opacity = '0';
-                    overlay.classList.add('pointer-events-none');
+                // ย่อกลับขนาดเดิม
+                card.classList.remove('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
+                card.style.borderRadius = ''; // คืนค่ามุมมนเดิมของ .modern-card
+                if (tableContainer) {
+                    tableContainer.classList.add('max-h-[70vh]');
                 }
-                
-                setTimeout(() => {
-                    // ถอดโหมดหน้าต่างลอย
-                    card.classList.remove('fixed', 'top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2', 'w-[95vw]', 'xl:w-[1200px]', 'h-[85vh]', 'max-h-[850px]', 'z-[100]', 'shadow-2xl');
-                    card.style.borderRadius = ''; 
-                    
-                    if (header) header.classList.remove('rounded-t-3xl');
-                    
-                    if (tableContainer) {
-                        tableContainer.classList.add('max-h-[70vh]');
-                        tableContainer.classList.remove('h-full');
-                    }
-                    
-                    icon.classList.add('fa-expand');
-                    icon.classList.remove('fa-compress');
-                    document.body.classList.remove('overflow-hidden');
-
-                    // แสดงผลปกติในหน้าเว็บ
-                    card.style.transform = 'scale(1)';
-                    card.style.opacity = '1';
-                }, 250); 
+                icon.classList.add('fa-expand');
+                icon.classList.remove('fa-compress');
+                document.body.classList.remove('overflow-hidden');
             } else {
-                // 1. ลูกเล่นก่อนขยาย: ซ่อนเพื่อเตรียมแอนิเมชัน + เปิดเงาดำ
-                card.style.transition = 'none'; 
-                card.style.transform = 'translate(-50%, -50%) scale(0.95)';
-                card.style.opacity = '0';
-                
-                if (overlay) {
-                    overlay.classList.remove('pointer-events-none');
-                    overlay.style.opacity = '1';
-                }
-                
-                // แปลงเป็นหน้าต่างลอย (Modal) ตรงกลางจอ แบบไม่ชิดขอบจนเกินไป
-                card.classList.add('fixed', 'top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2', 'w-[95vw]', 'xl:w-[1200px]', 'h-[85vh]', 'max-h-[850px]', 'z-[100]', 'shadow-2xl');
-                card.style.borderRadius = '24px'; 
-                
-                if (header) header.classList.add('rounded-t-3xl');
-
+                // ขยายเต็มจอ
+                card.classList.add('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
+                card.style.borderRadius = '0px'; // เอาขอบมนออกให้เต็มตาชิดขอบจอ
                 if (tableContainer) {
                     tableContainer.classList.remove('max-h-[70vh]');
-                    tableContainer.classList.add('h-full');
                 }
-
                 icon.classList.remove('fa-expand');
                 icon.classList.add('fa-compress');
                 document.body.classList.add('overflow-hidden');
-
-                // 2. เด้งเข้าสู่หน้าจอ (Bouncy effect)
-                void card.offsetWidth; 
-                card.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                card.style.transform = 'translate(-50%, -50%) scale(1)';
-                card.style.opacity = '1';
-                
-                setTimeout(() => {
-                    card.style.transition = 'all 0.3s ease-in-out';
-                }, 400);
             }
         }
 
