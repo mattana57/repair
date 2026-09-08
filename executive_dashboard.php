@@ -789,18 +789,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
 
             <!-- ✨ หน้า Transactions (All Repairs List) ให้ผู้บริหาร ✨ -->
             <div id="repairs" class="section hidden space-y-6 no-print animate-fade-in">
-                <div class="modern-card overflow-hidden flex flex-col">
-                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
+                <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
+                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions (View Only)</p>
                         </div>
-                        <div class="w-full md:w-auto relative">
-                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
+                        <div class="flex items-center w-full md:w-auto justify-between md:justify-end">
+                            <div class="relative w-full md:w-64 flex-1 md:flex-none">
+                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            </div>
+                            
+                            <!-- ✨ ปุ่มขยายหน้าจอสำหรับ Repairs List (ห่างเยอะนิดนึงตามที่ขอ) ✨ -->
+                            <button onclick="toggleMaximizeRepairs()" class="ml-4 md:ml-8 text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                                <i class="fas fa-expand text-base" id="maximizeRepairsIcon"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative">
+                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1" id="repairsTableContainer">
                         <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
@@ -2536,6 +2543,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
         function removeChartActive(x) {
             for (let i = 0; i < x.length; i++) {
                 x[i].classList.remove("kb-active-item");
+            }
+        }
+
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) ✨
+        function toggleMaximizeRepairs() {
+            const card = document.getElementById('repairsMainCard');
+            const icon = document.getElementById('maximizeRepairsIcon');
+            const tableContainer = document.getElementById('repairsTableContainer');
+            
+            if (card.classList.contains('fixed')) {
+                // ย่อกลับขนาดเดิม
+                card.classList.remove('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
+                card.style.borderRadius = ''; // คืนค่ามุมมนเดิมของ .modern-card
+                if (tableContainer) {
+                    tableContainer.classList.add('max-h-[70vh]');
+                }
+                icon.classList.add('fa-expand');
+                icon.classList.remove('fa-compress');
+                document.body.classList.remove('overflow-hidden');
+            } else {
+                // ขยายเต็มจอ
+                card.classList.add('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
+                card.style.borderRadius = '0px'; // เอาขอบมนออกให้เต็มตาชิดขอบจอ
+                if (tableContainer) {
+                    tableContainer.classList.remove('max-h-[70vh]');
+                }
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+                document.body.classList.add('overflow-hidden');
             }
         }
 
