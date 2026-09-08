@@ -2291,9 +2291,10 @@ $dept_icons = [
         </div>
     </div>
 
-    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('historyModal')"></div>
-        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 flex flex-col h-[85vh] max-h-[850px]">
+    <<div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
+        <!-- ✨ เพิ่ม transition-all duration-300 ease-in-out ให้ container โหลดสมูท ✨ -->
+        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
             <div class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
                 <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full md:w-auto" id="historyModalTitle">History</p>
@@ -2321,7 +2322,6 @@ $dept_icons = [
                     </div>
                 </div>
             </div>
-            
             <div class="p-0 md:p-6 overflow-hidden flex-1 bg-[#f8fafc]">
                 <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
                     <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
