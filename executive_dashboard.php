@@ -2611,8 +2611,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             const tableContainer = document.getElementById('repairsTableContainer');
             
             if (card.classList.contains('fixed')) {
-                // 1. ลูกเล่นก่อนย่อ: เล่น Animation โปร่งแสง
-                card.style.transform = 'scale(0.95)';
+                // 1. ลูกเล่นก่อนย่อ: เล่น Animation โปร่งแสง (ต้องคงคำสั่ง translate ไว้เพื่อไม่ให้หลุดขอบ)
+                card.style.transform = 'translate(-50%, -50%) scale(0.95)';
                 card.style.opacity = '0';
                 
                 setTimeout(() => {
@@ -2625,7 +2625,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     icon.classList.remove('fa-compress');
                     document.body.classList.remove('overflow-hidden');
 
-                    // แสดงผลปกติ
+                    // แสดงผลปกติ (คืนค่า scale ปกติ โดยไม่ต้องมี translate เพราะกลับไปอยู่ใน layout เดิมแล้ว)
                     card.style.transform = 'scale(1)';
                     card.style.opacity = '1';
                 }, 250); 
@@ -2644,10 +2644,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 icon.classList.add('fa-compress');
                 document.body.classList.add('overflow-hidden');
 
-                // 2. เด้งเข้าสู่หน้าจอ (Bouncy effect)
+                // ล็อกตำแหน่งไว้กลางจอก่อนเด้ง
+                card.style.transform = 'translate(-50%, -50%) scale(0.95)';
+
+                // 2. เด้งเข้าสู่หน้าจอ (Bouncy effect) แบบรักษาจุดกึ่งกลางจอเป๊ะๆ
                 void card.offsetWidth; // บังคับเบราว์เซอร์รีเฟรช
                 card.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                card.style.transform = 'scale(1)';
+                card.style.transform = 'translate(-50%, -50%) scale(1)';
                 card.style.opacity = '1';
                 
                 setTimeout(() => {
