@@ -21,13 +21,21 @@ $conn->set_charset("utf8mb4");
 $current_user_name = 'ยังไม่กำหนดผู้บริหาร';
 $current_user_role = 'Executive';
 $current_username = 'exec';
+$current_user_avatar = "https://api.dicebear.com/7.x/notionists/svg?seed=exec&backgroundColor=e2e8f0";
 
-$exec_res = $conn->query("SELECT username, full_name, role, position FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
+$exec_res = $conn->query("SELECT username, full_name, role, position, avatar_url FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
 if ($exec_res && $exec_res->num_rows > 0) {
     $exec_data = $exec_res->fetch_assoc();
     $current_username = $exec_data['username'];
     $current_user_name = !empty($exec_data['full_name']) ? $exec_data['full_name'] : $exec_data['username'];
     $current_user_role = !empty($exec_data['position']) ? $exec_data['position'] : 'Executive';
+    
+    // ดึงรูปโปรไฟล์ที่แอดมินอัปโหลดไว้ ถ้าไม่มีให้ใช้รูปการ์ตูน
+    if (!empty($exec_data['avatar_url'])) {
+        $current_user_avatar = htmlspecialchars($exec_data['avatar_url']);
+    } else {
+        $current_user_avatar = "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($current_username)."&backgroundColor=e2e8f0";
+    }
 }
 
 // ฟังก์ชันต่างๆ สำหรับ Format ข้อมูล
@@ -256,17 +264,68 @@ $pageTitles = [
                 <h3 class="text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
 
-            <div class="flex items-center space-x-3 md:space-x-6">
-                <div class="flex items-center gap-3 cursor-pointer group">
-                    <div class="text-right hidden sm:block">
-                        <!-- ✨ ดึงชื่อและตำแหน่งผู้บริหารที่แอดมินตั้งค่าไว้มาแสดงอัตโนมัติ ✨ -->
-                        <span class="block text-sm font-bold text-white drop-shadow-sm leading-none mb-1 group-hover:text-indigo-100 transition-colors">
+            <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
+                
+                <!-- 📱 สำหรับมือถือแนวตั้ง: แสดงเฉพาะรูปโปรไฟล์วงกลมเดี่ยวๆ -->
+                <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-12 h-12 rounded-full bg-white p-[3px] shadow-sm border border-slate-200/60 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
+                    <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full rounded-full object-cover shadow-inner">
+                </div>
+
+                <!-- 💻 สำหรับคอม / ไอแพด: แสดงเป็นแถบแคปซูลแนวนอนสีขาว -->
+                <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
+                    <div class="text-right">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 max-w-[150px] truncate">
                             <?php echo htmlspecialchars($current_user_name); ?>
                         </span>
-                        <span class="block text-[11px] text-indigo-100 font-semibold"><?php echo htmlspecialchars($current_user_role); ?></span>
+                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">EXECUTIVE</span>
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white overflow-hidden border border-white/30 shadow-inner backdrop-blur-sm">
-                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($current_username); ?>&backgroundColor=e2e8f0" alt="Avatar" class="w-full h-full object-cover">
+                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
+                        <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
+                    </div>
+                </div>
+
+                <!-- ✨ กล่องเมนูหลักด้านขวา (Profile Dropdown Panel) สำหรับผู้บริหาร (ดูได้อย่างเดียว) ✨ -->
+                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 hidden flex-col z-50 animate-fade-in">
+                    <!-- ส่วนหัว: รูปโปรไฟล์และข้อมูลผู้บริหาร -->
+                    <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4 relative">
+                        <div class="relative w-[64px] h-[64px] rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0 shadow-sm pointer-events-none">
+                            <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[15px] font-extrabold text-slate-800 truncate">
+                                <?php echo htmlspecialchars($current_user_name); ?>
+                            </p>
+                            <p class="text-[12px] font-medium text-slate-400 truncate mt-0.5">@<?php echo htmlspecialchars($current_username); ?></p>
+                            <span class="inline-block mt-1.5 px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-extrabold rounded-md border border-purple-100 shadow-sm">
+                                <i class="fas fa-user-tie mr-1"></i><?php echo htmlspecialchars($current_user_role); ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- รายการคำสั่ง (ดูสรุปรายงานอย่างเดียว) -->
+                    <div class="px-2 py-2 space-y-1">
+                        <a href="executive_report.php" target="_blank" onclick="closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                                    <i class="fas fa-file-alt text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-800">Summary Reports</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">ดูรายงานสรุปผล</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
+                        </a>
+                    </div>
+
+                    <!-- ปุ่มออกจากระบบด้านล่าง -->
+                    <div class="px-2 pt-2 border-t border-slate-100">
+                        <a href="logout.php" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors">
+                            <div class="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500">
+                                <i class="fas fa-sign-out-alt text-xs"></i>
+                            </div>
+                            <span>ออกจากระบบ (Logout)</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -1156,6 +1215,36 @@ $pageTitles = [
             document.getElementById('sidebarOverlay').classList.toggle('hidden');
         }
 
+        // ✨ ระบบควบคุมเปิด-ปิดเมนูโปรไฟล์มุมขวาบน ✨
+        function toggleProfileDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('profileDropdownMenu');
+            if (!menu) return;
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+            } else {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+            }
+        }
+
+        function closeProfileDropdown() {
+            const menu = document.getElementById('profileDropdownMenu');
+            if (menu) {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+            }
+        }
+
+        // คลิกพื้นที่อื่นเพื่อปิดเมนูอัตโนมัติ
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('profileMenuWrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                closeProfileDropdown();
+            }
+        });
+        
         function show(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
