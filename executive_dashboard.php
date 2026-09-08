@@ -1270,6 +1270,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
         </div>
     </div>
 
+    <!-- ✨ Modal สำหรับดูรูปภาพขนาดเต็ม ✨ -->
+    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[140] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
+        <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+        <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
+    </div>
+
     <!-- ================== JAVASCRIPT ================== -->
 
     <script>
