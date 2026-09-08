@@ -789,153 +789,161 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
 
             <!-- ✨ หน้า Transactions (All Repairs List) ให้ผู้บริหาร ✨ -->
             <div id="repairs" class="section hidden space-y-6 no-print animate-fade-in">
-                <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0">
+                <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white border-none shadow-md" id="repairsMainCard">
+                    
+                    <!-- ส่วนหัว Header ปรับสีและ Layout ให้เหมือนฝั่งแอดมิน -->
+                    <div class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50 shrink-0 transition-all duration-300" id="repairsHeader">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions (View Only)</p>
                         </div>
                         <div class="flex items-center w-full md:w-auto justify-between md:justify-end">
                             <div class="relative w-full md:w-64 flex-1 md:flex-none">
-                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
                             
-                            <!-- ✨ ปุ่มขยายหน้าจอสำหรับ Repairs List (ห่างเยอะนิดนึงตามที่ขอ) ✨ -->
-                            <button onclick="toggleMaximizeRepairs()" class="ml-4 md:ml-8 text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
-                                <i class="fas fa-expand text-base" id="maximizeRepairsIcon"></i>
-                            </button>
+                            <!-- ✨ ปุ่มขยายหน้าจอสำหรับ Repairs List ✨ -->
+                            <div class="flex items-center gap-2 ml-4 md:ml-8 shrink-0">
+                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                                    <i class="fas fa-expand text-base" id="maximizeRepairsIcon"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1" id="repairsTableContainer">
-                        <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
-                                <tr>
-                                    <th class="px-6 py-4">Date / Time</th>
-                                    <th class="px-6 py-4">Ticket No.</th>
-                                    <th class="px-6 py-4">Reporter</th>
-                                    <th class="px-6 py-4">Equipment</th>
-                                    <th class="px-6 py-4">Department</th>
-                                    <th class="px-6 py-4">Technician</th>
-                                    <th class="px-6 py-4">Received At</th>
-                                    <th class="px-6 py-4">Root Cause</th>
-                                    <th class="px-6 py-4 text-center">Status</th>
-                                    <th class="px-6 py-4">Completed At</th>
-                                    <th class="px-6 py-4 text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
-                                <?php
-                                $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
-                                $res = $conn->query($select_query);
 
-                                if($res && $res->num_rows > 0){
-                                    while($row = $res->fetch_assoc()) {
-                                        $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
-                                        
-                                        $ticket_no = formatEmptyOrDash($row['ticket_no']);
-                                        $raw_rep = trim((string)$row['reporter_name']);
-                                        $disp_name = $raw_rep;
-                                        if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['real_name'])) {
-                                            $disp_name = $line_users_map[$raw_rep]['real_name'];
-                                        }
-                                        $reporter_name = formatEmptyOrDash($disp_name);
-                                        $phone_number = formatEmptyOrDash($row['phone_number']);
-                                        $equipment_type = formatEmptyOrDash($row['equipment_type']);
-                                        $problem_desc = formatEmptyOrDash($row['problem_desc']);
-                                        
-                                        $t_pos = ''; $t_eng = ''; $t_th = '';
-                                        if (!empty($row['technician_name']) && $row['technician_name'] !== '-') {
-                                            $t_raw = $row['technician_name'];
-                                            if (isset($tech_info_map[$t_raw])) {
-                                                $t_th = htmlspecialchars($tech_info_map[$t_raw]['th']);
-                                                $t_eng = htmlspecialchars($tech_info_map[$t_raw]['eng']);
-                                                $t_pos = htmlspecialchars($tech_info_map[$t_raw]['pos']);
+                    <!-- ส่วนตาราง Body มีขอบเทาหุ้มรอบนอกเหมือนแอดมิน -->
+                    <div class="p-0 md:p-6 overflow-hidden flex-1 bg-[#f8fafc] flex flex-col transition-all duration-300">
+                        <div class="w-full overflow-x-auto max-h-[70vh] md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white flex-1" id="repairsTableContainer">
+                            <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
+                                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                                    <tr>
+                                        <th class="px-6 py-4">Date / Time</th>
+                                        <th class="px-6 py-4">Ticket No.</th>
+                                        <th class="px-6 py-4">Reporter</th>
+                                        <th class="px-6 py-4">Equipment</th>
+                                        <th class="px-6 py-4">Department</th>
+                                        <th class="px-6 py-4">Technician</th>
+                                        <th class="px-6 py-4">Received At</th>
+                                        <th class="px-6 py-4">Root Cause</th>
+                                        <th class="px-6 py-4 text-center">Status</th>
+                                        <th class="px-6 py-4">Completed At</th>
+                                        <th class="px-6 py-4 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                    <?php
+                                    $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
+                                    $res = $conn->query($select_query);
+
+                                    if($res && $res->num_rows > 0){
+                                        while($row = $res->fetch_assoc()) {
+                                            $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
+                                            
+                                            $ticket_no = formatEmptyOrDash($row['ticket_no']);
+                                            $raw_rep = trim((string)$row['reporter_name']);
+                                            $disp_name = $raw_rep;
+                                            if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['real_name'])) {
+                                                $disp_name = $line_users_map[$raw_rep]['real_name'];
+                                            }
+                                            $reporter_name = formatEmptyOrDash($disp_name);
+                                            $phone_number = formatEmptyOrDash($row['phone_number']);
+                                            $equipment_type = formatEmptyOrDash($row['equipment_type']);
+                                            $problem_desc = formatEmptyOrDash($row['problem_desc']);
+                                            
+                                            $t_pos = ''; $t_eng = ''; $t_th = '';
+                                            if (!empty($row['technician_name']) && $row['technician_name'] !== '-') {
+                                                $t_raw = $row['technician_name'];
+                                                if (isset($tech_info_map[$t_raw])) {
+                                                    $t_th = htmlspecialchars($tech_info_map[$t_raw]['th']);
+                                                    $t_eng = htmlspecialchars($tech_info_map[$t_raw]['eng']);
+                                                    $t_pos = htmlspecialchars($tech_info_map[$t_raw]['pos']);
+                                                } else {
+                                                    list($th_name, $en_name) = splitThaiEngName($t_raw, '');
+                                                    $t_th = htmlspecialchars($th_name);
+                                                    $t_eng = htmlspecialchars($en_name);
+                                                    $t_pos = htmlspecialchars(getAutoPosition($th_name));
+                                                }
+                                                $techHtml = "<div class='text-blue-600 font-bold cursor-default'>{$t_th}</div>";
+                                                if (!empty($t_eng)) {
+                                                    $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
+                                                }
+                                                $techName = $techHtml;
                                             } else {
-                                                list($th_name, $en_name) = splitThaiEngName($t_raw, '');
-                                                $t_th = htmlspecialchars($th_name);
-                                                $t_eng = htmlspecialchars($en_name);
-                                                $t_pos = htmlspecialchars(getAutoPosition($th_name));
+                                                $techName = "<span class='text-rose-500 font-bold'>-</span>";
                                             }
-                                            $techHtml = "<div class='text-blue-600 font-bold cursor-default'>{$t_th}</div>";
-                                            if (!empty($t_eng)) {
-                                                $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
+
+                                            $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
+                                            if (empty($row['technician_name']) || $row['technician_name'] === '-') {
+                                                $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
+                                            } else {
+                                                $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
+                                                if (!empty($t_pos)) {
+                                                    $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
+                                                }
                                             }
-                                            $techName = $techHtml;
-                                        } else {
-                                            $techName = "<span class='text-rose-500 font-bold'>-</span>";
-                                        }
 
-                                        $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
-                                        if (empty($row['technician_name']) || $row['technician_name'] === '-') {
-                                            $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
-                                        } else {
-                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
-                                            if (!empty($t_pos)) {
-                                                $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
+                                            $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
+                                            $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                            $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
+                                            $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
+
+                                            $has_received = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
+                                            $received_date = $has_received ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                            $received_time = $has_received ? date('H:i', strtotime($row['created_at'])) : '';
+                                            $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
+
+                                            $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
+                                            $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                            $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
+                                            $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
+
+                                            $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
+
+                                            $imageIcon = "";
+                                            if(isset($row['image_path']) && !empty($row['image_path'])) {
+                                                $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
                                             }
+
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+                                                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                    <div class='font-medium text-slate-700'>{$created_date}</div>
+                                                    {$created_time_html}
+                                                </td>
+                                                <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
+                                                <td class='px-6 py-4 align-top'>
+                                                    <div class='text-slate-800 font-bold'>{$reporter_name}</div>
+                                                    <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
+                                                </td>
+                                                <td class='px-6 py-4 align-top'>
+                                                    <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
+                                                    <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='".strip_tags($problem_desc)."'>{$problem_desc}</div>
+                                                </td>
+                                                <td class='px-6 py-4 align-top'>{$deptEng}</td>
+                                                <td class='px-6 py-4 align-top'>{$techName}</td>
+                                                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                    <div class='font-medium text-slate-700'>{$received_date}</div>
+                                                    {$received_time_html}
+                                                </td>
+                                                <td class='px-6 py-4 align-top'>{$rootCause}</td>
+                                                <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
+                                                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                    <div class='font-medium text-emerald-700'>{$completed_date}</div>
+                                                    {$completed_time_html}
+                                                </td>
+                                                <td class='px-6 py-4 align-middle text-center'>
+                                                    <div class='flex items-center justify-center'>
+                                                        <!-- ✨ ใช้ openReviewTab บังคับเปิดแท็บใหม่และสั่งปิดแท็บเวลาปิดหน้าต่าง ✨ -->
+                                                        <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
+                                                    </div>
+                                                </td>
+                                            </tr>";
                                         }
-
-                                        $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-                                        $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
-                                        $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
-
-                                        $has_received = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-                                        $received_date = $has_received ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $received_time = $has_received ? date('H:i', strtotime($row['created_at'])) : '';
-                                        $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
-
-                                        $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
-                                        $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
-                                        $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
-
-                                        $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
-
-                                        $imageIcon = "";
-                                        if(isset($row['image_path']) && !empty($row['image_path'])) {
-                                            $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                                        }
-
-                                        echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-slate-700'>{$created_date}</div>
-                                                {$created_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
-                                            <td class='px-6 py-4 align-top'>
-                                                <div class='text-slate-800 font-bold'>{$reporter_name}</div>
-                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>
-                                                <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
-                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='".strip_tags($problem_desc)."'>{$problem_desc}</div>
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>{$deptEng}</td>
-                                            <td class='px-6 py-4 align-top'>{$techName}</td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-slate-700'>{$received_date}</div>
-                                                {$received_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>{$rootCause}</td>
-                                            <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-emerald-700'>{$completed_date}</div>
-                                                {$completed_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-middle text-center'>
-                                                <div class='flex items-center justify-center'>
-                                                    <!-- ✨ ใช้ openReviewTab บังคับเปิดแท็บใหม่และสั่งปิดแท็บเวลาปิดหน้าต่าง ✨ -->
-                                                    <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
-                                                </div>
-                                            </td>
-                                        </tr>";
-                                    }
-                                } else { echo "<tr><td colspan='11' class='px-6 py-16 text-center text-slate-400 font-medium'>No records found</td></tr>"; }
-                                ?>
-                            </tbody>
-                        </table>
+                                    } else { echo "<tr><td colspan='11' class='px-6 py-16 text-center text-slate-400 font-medium'>No records found</td></tr>"; }
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
