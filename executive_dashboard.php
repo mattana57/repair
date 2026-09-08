@@ -793,7 +793,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 <!-- ✨ พื้นหลังดำโปร่งแสงตอนขยายจอ (ซ่อนไว้ก่อน) ✨ -->
                 <div id="repairsOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[90] opacity-0 pointer-events-none transition-opacity duration-300" onclick="toggleMaximizeRepairs()"></div>
                 
-                <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white border-none shadow-md" id="repairsMainCard">
+                <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
                     
                     <!-- ส่วนหัว Header ปรับสีและ Layout ให้เหมือนฝั่งแอดมิน -->
                     <div class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50 shrink-0 transition-all duration-300" id="repairsHeader">
@@ -802,15 +802,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                             <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions (View Only)</p>
                         </div>
                         <div class="flex items-center w-full md:w-auto justify-between md:justify-end">
-                            <div class="relative w-full md:w-64 flex-1 md:flex-none">
-                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            
+                            <div class="flex items-center gap-2 md:gap-3 w-full md:w-auto flex-1 md:flex-none">
+                                <div class="relative w-full md:w-64 flex-1 md:flex-none">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                    <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                </div>
                             </div>
                             
                             <!-- ✨ ปุ่มขยายหน้าจอสำหรับ Repairs List ✨ -->
                             <div class="flex items-center gap-2 ml-4 md:ml-8 shrink-0">
-                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
-                                    <i class="fas fa-expand text-base" id="maximizeRepairsIcon"></i>
+                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                                    <i class="fas fa-expand text-sm md:text-base" id="maximizeRepairsIcon"></i>
                                 </button>
                             </div>
                         </div>
@@ -823,20 +826,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                             <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
                                 <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                     <tr>
-                                        <th class="px-6 py-4">Date / Time</th>
-                                        <th class="px-6 py-4">Ticket No.</th>
-                                        <th class="px-6 py-4">Reporter</th>
-                                        <th class="px-6 py-4">Equipment</th>
-                                        <th class="px-6 py-4">Department</th>
-                                        <th class="px-6 py-4">Technician</th>
-                                        <th class="px-6 py-4">Received At</th>
-                                        <th class="px-6 py-4">Root Cause</th>
-                                        <th class="px-6 py-4 text-center">Status</th>
-                                        <th class="px-6 py-4">Completed At</th>
-                                        <th class="px-6 py-4 text-center">Action</th>
+                                        <th class="px-5 py-4">Date / Time</th>
+                                        <th class="px-5 py-4">Ticket No.</th>
+                                        <th class="px-5 py-4">Reporter</th>
+                                        <th class="px-5 py-4">Equipment</th>
+                                        <th class="px-5 py-4">Department</th>
+                                        <th class="px-5 py-4">Technician</th>
+                                        <th class="px-5 py-4">Received At</th>
+                                        <th class="px-5 py-4">Root Cause</th>
+                                        <th class="px-5 py-4 text-center">Status</th>
+                                        <th class="px-5 py-4">Completed At</th>
+                                        <th class="px-5 py-4 text-center">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <tbody class="text-sm divide-y divide-slate-50 bg-white">
                                     <?php
                                     $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
                                     $res = $conn->query($select_query);
@@ -882,7 +885,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                             if (empty($row['technician_name']) || $row['technician_name'] === '-') {
                                                 $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
                                             } else {
-                                                $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold mb-1 shadow-sm'>{$dept_str}</div>";
+                                                $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>{$dept_str}</div>";
                                                 if (!empty($t_pos)) {
                                                     $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
                                                 }
@@ -910,47 +913,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                                 $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
                                             }
 
+                                            // ✨ ปรับ padding px-5 ให้พอดีกับ History Modal และเปลี่ยนสีเส้นคั่นให้ละมุนขึ้น ✨
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
-                                                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                <td class='px-5 py-4 align-top text-xs whitespace-nowrap'>
                                                     <div class='font-medium text-slate-700'>{$created_date}</div>
                                                     {$created_time_html}
                                                 </td>
-                                                <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
-                                                <td class='px-6 py-4 align-top'>
+                                                <td class='px-5 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
+                                                <td class='px-5 py-4 align-top'>
                                                     <div class='text-slate-800 font-bold'>{$reporter_name}</div>
                                                     <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
                                                 </td>
-                                                <td class='px-6 py-4 align-top'>
+                                                <td class='px-5 py-4 align-top'>
                                                     <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
                                                     <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='".strip_tags($problem_desc)."'>{$problem_desc}</div>
                                                 </td>
-                                                <td class='px-6 py-4 align-top'>{$deptEng}</td>
-                                                <td class='px-6 py-4 align-top'>{$techName}</td>
-                                                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                <td class='px-5 py-4 align-top'>{$deptEng}</td>
+                                                <td class='px-5 py-4 align-top'>{$techName}</td>
+                                                <td class='px-5 py-4 align-top text-xs whitespace-nowrap'>
                                                     <div class='font-medium text-slate-700'>{$received_date}</div>
                                                     {$received_time_html}
                                                 </td>
-                                                <td class='px-6 py-4 align-top'>{$rootCause}</td>
-                                                <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
-                                                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                <td class='px-5 py-4 align-top'>{$rootCause}</td>
+                                                <td class='px-5 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
+                                                <td class='px-5 py-4 align-top text-xs whitespace-nowrap'>
                                                     <div class='font-medium text-emerald-700'>{$completed_date}</div>
                                                     {$completed_time_html}
                                                 </td>
-                                                <td class='px-6 py-4 align-middle text-center'>
+                                                <td class='px-5 py-4 align-middle text-center'>
                                                     <div class='flex items-center justify-center'>
-                                                        <!-- ✨ ใช้ openReviewTab บังคับเปิดแท็บใหม่และสั่งปิดแท็บเวลาปิดหน้าต่าง ✨ -->
                                                         <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
                                                     </div>
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='11' class='px-6 py-16 text-center text-slate-400 font-medium'>No records found</td></tr>"; }
+                                    } else { echo "<tr><td colspan='11' class='px-5 py-16 text-center text-slate-400 font-medium'>No records found</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
+
             </div>
 
             <!-- ✨ หน้า Technician (Team Management) ให้ผู้บริหาร ✨ -->
