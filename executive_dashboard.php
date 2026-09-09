@@ -2222,8 +2222,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                         imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
                     }
 
-                    // ✨ ตารางใส่ไอคอนผู้ใช้ด้านซ้ายมือแบบแอดมิน ✨
-                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0 search-row">
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors search-row border-b border-slate-100 last:border-0">
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
                             ${createdTime}
@@ -2277,22 +2276,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             const icon = document.getElementById('maximizeHistoryIcon');
             const header = modalContainer.querySelector('div:first-child');
             
-            if (modalContainer && modalContainer.classList.contains('w-full') && !modalContainer.classList.contains('max-w-[95%]')) {
-                wrapper.classList.add('px-4');
-                wrapper.classList.remove('p-0');
-                
-                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-full', 'max-w-none', 'max-h-none', 'rounded-none');
-                
-                if (header) {
-                    header.classList.add('rounded-t-3xl');
-                    header.classList.remove('rounded-none');
-                }
-                
-                if(icon) {
-                    icon.classList.add('fa-expand');
-                    icon.classList.remove('fa-compress');
-                }
+            // ✨ รีเซ็ตขนาดหน้าต่างให้กลับเป็นปกติเสมอทุกครั้งที่กดเปิด ✨
+            wrapper.classList.add('px-4');
+            wrapper.classList.remove('p-0');
+            
+            modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+            modalContainer.classList.remove('max-w-none', 'max-h-none', 'h-full', 'rounded-none');
+            
+            if (header) {
+                header.classList.add('rounded-t-3xl');
+                header.classList.remove('rounded-none');
+            }
+            
+            if(icon) {
+                icon.classList.add('fa-expand');
+                icon.classList.remove('fa-compress');
             }
 
             toggleModal('historyModal');
@@ -2643,72 +2641,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้าประวัติ (History Modal) ให้ชิดขอบจอแบบแอดมิน 100% ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ✨
         function toggleMaximizeHistoryModal() {
             const wrapper = document.getElementById('historyModal');
             const modalContainer = wrapper.querySelector('.modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
             const header = modalContainer.querySelector('div:first-child');
             
-            if (modalContainer.classList.contains('w-full') && !modalContainer.classList.contains('max-w-[95%]')) {
-                // 1. ลูกเล่นก่อนย่อ
-                modalContainer.style.transform = 'scale(0.95)';
-                modalContainer.style.opacity = '0';
-                
-                setTimeout(() => {
-                    // ย่อกลับขนาดเดิมแบบ Modal (มีขอบมน มีช่องว่าง)
-                    wrapper.classList.add('px-4');
-                    wrapper.classList.remove('p-0');
-                    
-                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                    modalContainer.classList.remove('w-full', 'h-full', 'max-w-none', 'max-h-none', 'rounded-none');
-                    
-                    if (header) {
-                        header.classList.add('rounded-t-3xl');
-                        header.classList.remove('rounded-none');
-                    }
-
-                    if(icon) {
-                        icon.classList.add('fa-expand');
-                        icon.classList.remove('fa-compress');
-                    }
-
-                    // แสดงผลปกติ
-                    modalContainer.style.transform = 'scale(1)';
-                    modalContainer.style.opacity = '1';
-                }, 250); 
-            } else {
-                // 1. ลูกเล่นก่อนขยาย
-                modalContainer.style.transition = 'none'; 
-                modalContainer.style.transform = 'scale(0.95)';
-                modalContainer.style.opacity = '0';
-                
-                // ขยายหน้าต่าง ชิดขอบจอเต็มๆ ทะลุแบบหน้าแอดมินเป๊ะ
+            if (modalContainer.classList.contains('max-w-[95%]')) {
+                // ขยายจอ
                 wrapper.classList.remove('px-4');
                 wrapper.classList.add('p-0');
                 
                 modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.add('w-full', 'h-full', 'max-w-none', 'max-h-none', 'rounded-none');
+                modalContainer.classList.add('max-w-none', 'max-h-none', 'h-full', 'rounded-none');
                 
                 if (header) {
                     header.classList.remove('rounded-t-3xl');
                     header.classList.add('rounded-none');
                 }
                 
-                if(icon) {
+                if (icon) {
                     icon.classList.remove('fa-expand');
                     icon.classList.add('fa-compress');
                 }
-
-                // 2. เด้งเข้าสู่หน้าจอ (Bouncy effect)
-                void modalContainer.offsetWidth; // บังคับเบราว์เซอร์รีเฟรช
-                modalContainer.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                modalContainer.style.transform = 'scale(1)';
-                modalContainer.style.opacity = '1';
+            } else {
+                // ย่อกลับขนาดเดิม
+                wrapper.classList.add('px-4');
+                wrapper.classList.remove('p-0');
                 
-                setTimeout(() => {
-                    modalContainer.style.transition = 'all 0.3s ease-in-out';
-                }, 400);
+                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                modalContainer.classList.remove('max-w-none', 'max-h-none', 'h-full', 'rounded-none');
+                
+                if (header) {
+                    header.classList.add('rounded-t-3xl');
+                    header.classList.remove('rounded-none');
+                }
+                
+                if (icon) {
+                    icon.classList.add('fa-expand');
+                    icon.classList.remove('fa-compress');
+                }
             }
         }
 
