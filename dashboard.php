@@ -3348,7 +3348,11 @@ $dept_icons = [
             data.forEach(r => {
                 if(r.equipment_type) map[r.equipment_type] = (map[r.equipment_type] || 0) + 1;
             });
-            let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 7);
+            // ✨ แก้ไข: ตัดชื่ออุปกรณ์ที่ยาวเกินไป ป้องกันแกน X ล้นทับกัน
+            let sorted = Object.keys(map).map(k => {
+                let shortName = k.length > 12 ? k.substring(0, 12) + '...' : k;
+                return { name: shortName, count: map[k] };
+            }).sort((a,b) => b.count - a.count).slice(0, 7);
             
             const ctx = document.getElementById('mainEquipChart').getContext('2d');
             if(chartEquipInstance) chartEquipInstance.destroy();
@@ -3434,7 +3438,11 @@ $dept_icons = [
             data.forEach(r => {
                 if(r.location && r.location !== 'ไม่ระบุสถานที่') map[r.location] = (map[r.location] || 0) + 1;
             });
-            let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
+            // ✨ แก้ไข: ตัดชื่อห้องที่ยาวเกิน 15 ตัวอักษร ไม่ให้ดันแท่งแนวนอน
+            let sorted = Object.keys(map).map(k => {
+                let shortName = k.length > 15 ? k.substring(0, 15) + '...' : k;
+                return { name: shortName, count: map[k] };
+            }).sort((a,b) => b.count - a.count).slice(0, 5);
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
             if(chartLocInstance) chartLocInstance.destroy();
@@ -3472,11 +3480,15 @@ $dept_icons = [
                 let tName = r.technician_name ? r.technician_name : 'ไม่ระบุช่าง';
                 map[tName] = (map[tName] || 0) + 1;
             });
-            let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
+            // ✨ แก้ไข: ตัดชื่อช่างยาวๆ (เช่นที่มีอีโมจิเยอะๆ) ให้เหลือ 12 ตัวอักษร
+            let sorted = Object.keys(map).map(k => {
+                let shortName = k.length > 12 ? k.substring(0, 12) + '...' : k;
+                return { name: shortName, count: map[k] };
+            }).sort((a,b) => b.count - a.count).slice(0, 5);
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
-            
+
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
@@ -3493,7 +3505,15 @@ $dept_icons = [
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
-                        x: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
+                        x: { 
+                            ticks: { 
+                                font: { family: "'Kanit', sans-serif" },
+                                maxRotation: 45, // ✨ บังคับเอียงสุดแค่ 45 องศา จะได้ไม่ทับกัน
+                                minRotation: 0
+                            }, 
+                            grid: { display: false }, 
+                            border: {display: false} 
+                        } 
                     } 
                 }
             });
@@ -3638,8 +3658,12 @@ $dept_icons = [
                     }
                 }],
                 data: {
-                    // เติม Space หน้าตัวเลขเพื่อให้มีพื้นที่วาดดาว
-                    labels: deptArr.length ? deptArr.map(d => ['   ' + d.topTechAvg, d.topTech, d.name]) : [['ไม่มีข้อมูล']],
+                    // ✨ แก้ไข 1: ตัดคำชื่อช่างและแผนกให้สั้นลง ป้องกันการทะลุไปทับกราฟ
+                    labels: deptArr.length ? deptArr.map(d => {
+                        let shortTech = d.topTech.length > 15 ? d.topTech.substring(0, 15) + '...' : d.topTech;
+                        let shortDept = d.name.length > 15 ? d.name.substring(0, 15) + '...' : d.name;
+                        return ['   ' + d.topTechAvg, shortTech, shortDept];
+                    }) : [['ไม่มีข้อมูล']],
                     datasets: [
                         { 
                             label: 'คะแนนเฉลี่ยฝ่าย', 
@@ -3708,8 +3732,12 @@ $dept_icons = [
                             border: {display: false} 
                         }, 
                         y: { 
+                            // ✨ แก้ไข 2: บังคับความกว้างแกน Y คงที่ กราฟจะถูกถอยร่นไปทางขวา ไม่ให้ข้อความทับแท่งกราฟเด็ดขาด!
+                            afterFit: function(scaleInstance) {
+                                scaleInstance.width = window.innerWidth < 768 ? 140 : 170; 
+                            },
                             ticks: { 
-                                color: 'transparent', // ซ่อน text จริง เพื่อให้ Plugin วาดทับ
+                                color: 'transparent',
                                 font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' } 
                             }, 
                             grid: { display: false }, 
