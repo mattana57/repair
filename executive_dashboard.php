@@ -2276,30 +2276,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             const icon = document.getElementById('maximizeHistoryIcon');
             const header = modalContainer.querySelector('div:first-child');
             
-            // ✨ รีเซ็ตขนาดหน้าต่างให้กลับเป็นปกติเสมอทุกครั้งที่กดเปิด ✨
-            modalContainer.style.transition = 'none'; // ปิดแอนิเมชันก่อนรีเซ็ต จะได้ไม่กระตุก
-            
-            wrapper.classList.add('px-4');
-            wrapper.classList.remove('p-0');
-            
-            modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-            modalContainer.classList.remove('max-w-none', 'max-h-none', 'h-full', 'rounded-none');
-            
-            if (header) {
-                header.classList.add('rounded-t-3xl');
-                header.classList.remove('rounded-none');
+            if (modalContainer.classList.contains('w-full')) {
+                wrapper.classList.add('px-4');
+                wrapper.classList.remove('p-0');
+                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                if (header) {
+                    header.classList.add('rounded-t-3xl');
+                    header.classList.remove('rounded-none');
+                }
+                if(icon) {
+                    icon.classList.add('fa-expand');
+                    icon.classList.remove('fa-compress');
+                }
             }
-            
-            if(icon) {
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
-            }
-
-            // บังคับให้เบราว์เซอร์รับรู้การเปลี่ยนแปลงก่อนโชว์
-            void modalContainer.offsetWidth; 
-            
-            // เปิดแอนิเมชันกลับมา
-            modalContainer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 
             toggleModal('historyModal');
         }
@@ -2649,53 +2639,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ให้แอนิเมชันตรงกับแอดมิน 100% ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ✨
         function toggleMaximizeHistoryModal() {
             const wrapper = document.getElementById('historyModal');
             const modalContainer = wrapper.querySelector('.modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
             const header = modalContainer.querySelector('div:first-child');
             
-            // ใช้ style.transition ให้เหมือนฝั่งแอดมิน
-            modalContainer.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            
             if (modalContainer.classList.contains('max-w-[95%]')) {
-                // ขยายจอเต็ม (ลบ padding, ลบมุมมน, ลบ max-width)
+                // ขยายจอ
                 wrapper.classList.remove('px-4');
                 wrapper.classList.add('p-0');
                 
                 modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.add('max-w-none', 'max-h-none', 'h-full', 'rounded-none');
+                modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
                 
                 if (header) {
                     header.classList.remove('rounded-t-3xl');
                     header.classList.add('rounded-none');
                 }
                 
-                if(icon) {
-                    icon.classList.remove('fa-expand');
-                    icon.classList.add('fa-compress');
-                }
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
             } else {
-                // ย่อกลับเป็น Modal (เพิ่ม padding, เพิ่มมุมมน, จำกัดขนาด)
+                // ย่อกลับขนาดเดิม
                 wrapper.classList.add('px-4');
                 wrapper.classList.remove('p-0');
                 
                 modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('max-w-none', 'max-h-none', 'h-full', 'rounded-none');
+                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
                 
                 if (header) {
                     header.classList.add('rounded-t-3xl');
                     header.classList.remove('rounded-none');
                 }
                 
-                if(icon) {
-                    icon.classList.add('fa-expand');
-                    icon.classList.remove('fa-compress');
-                }
+                icon.classList.add('fa-expand');
+                icon.classList.remove('fa-compress');
             }
         }
-
         // ✨ ตรวจจับการคลิกเปิดหน้า Edit หรือ View (บล็อกการรีเฟรชหน้าจอเพื่อไม่ให้กระตุกแว็บ)
         document.addEventListener('click', function(e) {
             const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"], a[href*="view_repair.php"]');
