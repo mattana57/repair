@@ -765,17 +765,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             <!-- ✨ หน้า Transactions (All Repairs List) ให้ผู้บริหาร ✨ -->
             <div id="repairs" class="section hidden space-y-6 no-print animate-fade-in">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0">
-                        <div class="shrink-0">
+                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4 bg-white shrink-0">
+                        <div class="min-w-[200px] flex-1 sm:flex-none">
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions (View Only)</p>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
                         </div>
-                        <div class="flex items-center w-full md:w-auto gap-3">
-                            <div class="relative flex-1 md:w-64 md:flex-none">
+                        <div class="flex flex-wrap items-center w-full sm:w-auto gap-3">
+                            <div class="relative flex-1 min-w-[200px]">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
-                            
                             <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-10 h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                                 <i class="fas fa-expand text-base" id="maximizeRepairsIcon"></i>
                             </button>
@@ -1171,20 +1170,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
-            <div class="px-5 py-4 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
-                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full xl:w-auto" id="historyModalTitle">History</p>
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto xl:justify-end">
-                    
-                    <div class="relative flex-1 min-w-[150px] xl:w-64">
+            <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
+                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate min-w-[120px] flex-1 sm:flex-none" id="historyModalTitle">History</p>
+                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                    <div class="relative flex-1 min-w-[180px]">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
-                    
                     <button id="historyModalLinkBtn" class="text-xs md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
-                        <i class="fas fa-address-book md:mr-1.5"></i> <span class="hidden md:inline">Contacts</span>
+                        <i class="fas fa-address-book sm:mr-1.5"></i> <span class="hidden sm:inline">Contacts</span>
                     </button>
-
-                    <div class="flex items-center gap-2 shrink-0 ml-auto xl:ml-2">
+                    <div class="flex items-center gap-2 shrink-0">
                         <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
                         </button>
