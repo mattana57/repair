@@ -1081,7 +1081,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                              alt="<?php echo htmlspecialchars($tech['th']); ?>" 
                                              class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out cursor-pointer" title="คลิกเพื่อดูรูปขยาย">
                                 
-                                        <!-- เงาดำไล่ระดับด้านล่างรูป -->
                                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                                     </div>
 
@@ -1136,18 +1135,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                                 ดูประวัติงาน
                                             </button>
                                         </div>
-                                    </div>
 
+                                    </div>
                                 </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php 
-                        endforeach; 
-                    } 
-                    ?>
-                </div>
-            </div>
 
         </div>
     </main>
@@ -2635,22 +2625,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้าประวัติ (History Modal) พร้อมลูกเล่นเด้งซูม ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้าประวัติ (History Modal) ให้ชิดขอบจอแบบแอดมิน 100% ✨
         function toggleMaximizeHistoryModal() {
             const wrapper = document.getElementById('historyModal');
             const modalContainer = wrapper.querySelector('.modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
+            const header = modalContainer.querySelector('div:first-child');
             
-            if (modalContainer.classList.contains('max-w-[98vw]')) {
+            if (modalContainer.classList.contains('w-full') && !modalContainer.classList.contains('max-w-[95%]')) {
                 // 1. ลูกเล่นก่อนย่อ
                 modalContainer.style.transform = 'scale(0.95)';
                 modalContainer.style.opacity = '0';
                 
                 setTimeout(() => {
-                    // ย่อกลับขนาดเดิม (ยังคงเป็น Modal)
-                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]');
-                    modalContainer.classList.remove('max-w-[98vw]', 'h-[95vh]', 'max-h-none');
+                    // ย่อกลับขนาดเดิมแบบ Modal (มีขอบมน มีช่องว่าง)
+                    wrapper.classList.add('px-4');
+                    wrapper.classList.remove('p-0');
                     
+                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.remove('w-full', 'h-full', 'max-w-none', 'max-h-none', 'rounded-none');
+                    
+                    if (header) {
+                        header.classList.add('rounded-t-3xl');
+                        header.classList.remove('rounded-none');
+                    }
+
                     if(icon) {
                         icon.classList.add('fa-expand');
                         icon.classList.remove('fa-compress');
@@ -2666,9 +2665,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 modalContainer.style.transform = 'scale(0.95)';
                 modalContainer.style.opacity = '0';
                 
-                // ขยายหน้าต่าง (แต่ไม่ทื่อชิดขอบจอ)
-                modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]');
-                modalContainer.classList.add('max-w-[98vw]', 'h-[95vh]', 'max-h-none');
+                // ขยายหน้าต่าง ชิดขอบจอเต็มๆ ทะลุแบบหน้าแอดมินเป๊ะ
+                wrapper.classList.remove('px-4');
+                wrapper.classList.add('p-0');
+                
+                modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                modalContainer.classList.add('w-full', 'h-full', 'max-w-none', 'max-h-none', 'rounded-none');
+                
+                if (header) {
+                    header.classList.remove('rounded-t-3xl');
+                    header.classList.add('rounded-none');
+                }
                 
                 if(icon) {
                     icon.classList.remove('fa-expand');
