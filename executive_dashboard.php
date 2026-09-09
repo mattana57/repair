@@ -1179,9 +1179,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูล..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
                     
-                    <button id="historyModalLinkBtn" class="text-xs md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 sm:px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
-                        <i class="fas fa-address-book sm:mr-1.5"></i> <span class="hidden sm:inline">Contacts</span>
-                    </button>
+                    
 
                     <div class="flex items-center gap-2 shrink-0">
                         <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm hover:bg-indigo-50" title="สลับเต็มจอ">
