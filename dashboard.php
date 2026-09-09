@@ -664,7 +664,9 @@ $dept_icons = [
             <button onclick="show('reports')" class="nav-btn <?php echo $active_tab === 'reports' ? 'active-btn' : ''; ?>" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
-                <a href="logout.php" class="nav-btn text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <a href="logout.php" class="nav-btn group text-slate-500 hover:!bg-rose-50 hover:!text-rose-600">
+                    <i class="fas fa-sign-out-alt group-hover:!text-rose-600"></i> Logout
+                </a>
             </div>
         </nav>
     </aside>
