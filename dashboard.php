@@ -1436,17 +1436,19 @@ $dept_icons = [
                             <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center leading-none">Technicians</h3>
                             <p class="text-sm font-medium text-slate-500 mt-1.5">Manage technicians</p>
                         </div>
-                        <div class="flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-center w-full lg:w-auto">
-                        <div class="relative w-full sm:w-56 lg:w-64 shrink-0">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="search-tech-card" oninput="searchTechCards()" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                        </div>
-
-                        <div class="flex flex-wrap gap-2.5 flex-1 w-full sm:w-auto">
-                            <button onclick="filterDeptCard('all')" id="btn-filter-all-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
-                            <button onclick="filterDeptCard('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDeptCard('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
-                            <button onclick="filterDeptCard('ฝ่ายงานยานยนต์')" id="btn-filter-auto-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
+                            <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
+                            <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="search-tech-table" oninput="searchTeamTable()" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-2.5">
+                                <button onclick="filterDeptTable('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
+                                <button onclick="filterDeptTable('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
+                                <button onclick="filterDeptTable('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
+                                <button onclick="filterDeptTable('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                            </div>
                         </div>
                     </div>
                     
@@ -2280,13 +2282,11 @@ $dept_icons = [
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
-            <div class="px-5 py-4 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
-                <div class="w-full xl:w-auto shrink-0 flex-1 min-w-0">
-                    <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate" id="historyModalTitle">History</p>
-                </div>
-                <div class="flex flex-row items-center gap-2 sm:gap-3 w-full xl:w-auto shrink-0 flex-wrap sm:flex-nowrap">
+            <div class="px-5 py-4 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
+                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full lg:w-auto shrink-0" id="historyModalTitle">History</p>
+                <div class="flex flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
                     
-                    <div class="relative flex-1 min-w-[150px] xl:w-64">
+                    <div class="relative flex-1 min-w-0 lg:w-64">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูล..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
