@@ -99,13 +99,6 @@
                 </span>
             </button>
         </form>
-        
-        <!-- ลิงก์กลับหน้าหลัก -->
-        <div class="mt-8 text-center border-t border-slate-100/60 pt-6">
-            <a href="index.php" class="inline-flex items-center justify-center gap-2 text-sm font-medium text-slate-400 hover:text-indigo-600 transition-colors group">
-                <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform text-xs"></i> กลับสู่หน้าหลัก
-            </a>
-        </div>
     </div>
 
     <!-- Script สำหรับปุ่มแสดงรหัสผ่าน[cite: 2] -->
