@@ -2139,16 +2139,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             setReviewFilter('all'); 
         }
 
-        // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟช่าง ✨
+        // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
         function viewHistory(fullName, type) {
             const tbody = document.getElementById('historyTableBody'); 
             tbody.innerHTML = '';
 
-            const userRepairs = allRepairs.filter(r => type === 'reporter' ? r.reporter_name === fullName : r.technician_name === fullName);
+            const userRepairs = allRepairs.filter(r => {
+                let nameToCompare = (type === 'reporter') ? r.reporter_name : r.technician_name;
+                if (!nameToCompare) return false;
+                nameToCompare = nameToCompare.trim();
+                return nameToCompare === fullName;
+            });
 
             if(userRepairs.length === 0) {
                 let emptyMsg = type === 'reporter' ? 'ยังไม่มีประวัติการแจ้งซ่อม' : 'ยังไม่เคยรับงานซ่อมในระบบ';
-                tbody.innerHTML = `<tr><td colspan="11" class="px-5 py-8 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-16 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
             } else {
                 userRepairs.forEach(r => {
                     let statusClass = 'badge-pending';
@@ -2156,6 +2161,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'badge-success';
 
                     let statusText = formatValJS(r.status);
+                    let ticket_no = formatValJS(r.ticket_no);
 
                     let createdDate = '-';
                     let createdTime = '';
@@ -2203,38 +2209,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     let rName = formatValJS(dispName);
                     let rPhone = formatValJS(r.phone_number);
                     
-                    let tNo = formatValJS(r.ticket_no);
                     let eqType = formatValJS(r.equipment_type);
                     let pDesc = formatValJS(r.problem_desc);
 
-                    // ✨ ลิงก์บังคับไปหน้า view_repair.php อย่างเดียว ✨
-                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors search-row">
-                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                    let imageIcon = "";
+                    if(r.image_path && r.image_path !== '') {
+                        imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
+                    }
+
+                    // ✨ ตารางนี้เพิ่มคลาส search-row ให้ฝั่งผู้บริหาร เพื่อให้ค้นหาข้อมูลตารางใน Modal ได้ ✨
+                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0 search-row">
+                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
                             ${createdTime}
                         </td>
-                        <td class="px-5 py-4 align-top font-mono font-semibold text-slate-600">${tNo}</td>
-                        <td class="px-5 py-4 align-top">
-                            <div class="text-slate-800 font-bold">${rName}</div>
-                            <div class="text-slate-500 text-[11px] font-medium mt-0.5">${rPhone}</div>
+                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${ticket_no}</td>
+                        <td class="px-6 py-4 align-top">
+                            <div class='flex items-center'>
+                                <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas fa-user text-xs text-slate-400'></i></div>
+                                <div>
+                                    <div class="text-slate-800 font-bold">${rName}</div>
+                                    <div class="text-slate-500 text-[11px] font-medium mt-0.5">${rPhone}</div>
+                                </div>
+                            </div>
                         </td>
-                        <td class="px-5 py-4 align-top">
-                            <div class="text-slate-800 font-bold">${eqType}</div>
+                        <td class="px-6 py-4 align-top">
+                            <div class="text-slate-800 font-bold">${eqType} ${imageIcon}</div>
                             <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${pDesc.replace(/<[^>]*>?/gm, '')}">${pDesc}</div>
                         </td>
-                        <td class="px-5 py-4 align-top">${deptEng}</td>
-                        <td class="px-5 py-4 align-top">${techName}</td>
-                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                        <td class="px-6 py-4 align-top">${deptEng}</td>
+                        <td class="px-6 py-4 align-top">${techName}</td>
+                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class='font-medium text-slate-700'>${received_date}</div>
                             ${received_time}
                         </td>
-                        <td class="px-5 py-4 align-top">${rootCause}</td>
-                        <td class="px-5 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
-                        <td class="px-5 py-4 align-top text-xs whitespace-nowrap">
+                        <td class="px-6 py-4 align-top">${rootCause}</td>
+                        <td class="px-6 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
+                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class='font-medium text-emerald-700'>${completed_date}</div>
                             ${completed_time}
                         </td>
-                        <td class="px-5 py-4 align-middle text-center">
+                        <td class="px-6 py-4 align-middle text-center">
                             <div class='flex items-center justify-center'>
                                 <div onclick='openReviewTab(${r.id})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
                             </div>
@@ -2249,34 +2264,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
             document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
             
-            // ✨ ล้างช่องค้นหาให้ว่างทุกครั้งที่กดเปิดดูประวัติคนใหม่ ✨
+            const linkBtn = document.getElementById('historyModalLinkBtn');
+            if (linkBtn) {
+                const isContactsPage = !document.getElementById('users').classList.contains('hidden');
+                if (type === 'reporter' && !isContactsPage) {
+                    linkBtn.style.display = ''; 
+                    linkBtn.innerHTML = '<i class="fas fa-address-book md:mr-2"></i> <span class="hidden md:inline">Contacts</span>';
+                    linkBtn.onclick = function() { toggleModal('historyModal'); show('users'); };
+                } else {
+                    linkBtn.style.display = 'none'; 
+                }
+            }
+
             const searchInput = document.getElementById('searchHistoryModalInput');
             if(searchInput) searchInput.value = '';
 
-            // ✨ รีเซ็ตขนาดหน้าต่างให้กลับเป็นปกติเสมอ (กรณีที่เคยกดขยายจอไว้) ✨
             const wrapper = document.getElementById('historyModal');
             const modalContainer = wrapper.querySelector('.modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
             const header = modalContainer.querySelector('div:first-child');
             
-            if (modalContainer && modalContainer.classList.contains('w-full')) {
+            if (modalContainer.classList.contains('w-full') && !modalContainer.classList.contains('max-w-[95%]')) {
                 wrapper.classList.add('px-4');
                 wrapper.classList.remove('p-0');
-                
                 modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-[100vh]', 'max-w-none', 'max-h-none', 'rounded-none');
+                
+                // ✨ แก้ไข h-[100vh] และ max-w-full เป็น h-full และ max-w-none เพื่อให้สมบูรณ์ ✨
+                modalContainer.classList.remove('w-full', 'h-full', 'max-w-none', 'max-h-none', 'rounded-none');
                 
                 if (header) {
                     header.classList.add('rounded-t-3xl');
                     header.classList.remove('rounded-none');
                 }
-                
                 if(icon) {
                     icon.classList.add('fa-expand');
                     icon.classList.remove('fa-compress');
                 }
             }
-
+            
             toggleModal('historyModal');
         }
 
