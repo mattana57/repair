@@ -1040,7 +1040,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     ?>
                         <div class="mb-10 tech-dept-section" data-dept="<?php echo htmlspecialchars($dept_name); ?>">
                             
-                            <!-- แถบหัวข้อฝ่ายงานเหมือนแอดมิน 100% -->
                             <div class="relative overflow-hidden flex items-center justify-between mb-5 bg-blue-500 p-3 rounded-2xl shadow-md shadow-blue-200/50 tech-dept-header">
                                 <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                                 <div class="absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
@@ -1064,13 +1063,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                 </div>
                             </div>
                             
-                            <!-- การจัดเรียงการ์ดแบบแอดมิน (flex flex-wrap) -->
                             <div class="flex flex-wrap gap-6 items-start justify-center sm:justify-start">
                                 <?php foreach ($techs as $tech): 
                                     $search_name = preg_replace('/\s+/', '', strtolower($tech['raw_name'] . $tech['eng'] . $tech['th'] . $dept_name));
                                     $phone = !empty($tech['phone']) ? $tech['phone'] : '- ไม่ระบุเบอร์โทร -';
                                 ?>
-                                <!-- ขนาดการ์ด ระยะห่าง และ Hover แสงสีฟ้าเหมือนฝั่งแอดมินเป๊ะ -->
                                 <div class="bg-white rounded-[24px] overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-sky-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[260px] w-full sm:w-[260px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                                     
                                     <div class="relative w-full aspect-square bg-slate-50 overflow-hidden">
@@ -1080,7 +1077,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                              alt="<?php echo htmlspecialchars($tech['th']); ?>" 
                                              class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out cursor-pointer" title="คลิกเพื่อดูรูปขยาย">
                                 
-                                        <!-- เงาดำไล่ระดับด้านล่างรูป -->
                                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                                     </div>
 
@@ -2226,6 +2222,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                         imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
                     }
 
+                    // ✨ ตารางใส่ไอคอนผู้ใช้ด้านซ้ายมือแบบแอดมิน ✨
                     tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0 search-row">
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
@@ -2271,7 +2268,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 displayTitleName = lineUsersMap[fullName].real_name;
             }
             document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
-
+            
             const searchInput = document.getElementById('searchHistoryModalInput');
             if(searchInput) searchInput.value = '';
 
@@ -2280,7 +2277,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             const icon = document.getElementById('maximizeHistoryIcon');
             const header = modalContainer.querySelector('div:first-child');
             
-            if (modalContainer && modalContainer.classList.contains('w-full')) {
+            if (modalContainer && modalContainer.classList.contains('w-full') && !modalContainer.classList.contains('max-w-[95%]')) {
                 wrapper.classList.add('px-4');
                 wrapper.classList.remove('p-0');
                 
@@ -2646,45 +2643,62 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้าประวัติ (History Modal) ให้ชิดขอบจอแบบแอดมิน 100% ✨
         function toggleMaximizeHistoryModal() {
             const wrapper = document.getElementById('historyModal');
             const modalContainer = wrapper.querySelector('.modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
             const header = modalContainer.querySelector('div:first-child');
             
-            if (modalContainer.classList.contains('max-w-[95%]')) {
-                // ขยายจอ
+            if (modalContainer.classList.contains('w-full') && !modalContainer.classList.contains('max-w-[95%]')) {
+                // 1. ลูกเล่นก่อนย่อ
+                modalContainer.style.transform = 'scale(0.95)';
+                modalContainer.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // ย่อกลับขนาดเดิมแบบ Modal (มีขอบมน มีช่องว่าง)
+                    wrapper.classList.add('px-4');
+                    wrapper.classList.remove('p-0');
+                    
+                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.remove('w-full', 'h-full', 'max-w-none', 'max-h-none', 'rounded-none');
+                    
+                    if (header) {
+                        header.classList.add('rounded-t-3xl');
+                        header.classList.remove('rounded-none');
+                    }
+
+                    if(icon) {
+                        icon.classList.add('fa-expand');
+                        icon.classList.remove('fa-compress');
+                    }
+
+                    // แสดงผลปกติ
+                    modalContainer.style.transform = 'scale(1)';
+                    modalContainer.style.opacity = '1';
+                }, 250); 
+            } else {
+                // 1. ลูกเล่นก่อนขยาย
+                modalContainer.style.transition = 'none'; 
+                modalContainer.style.transform = 'scale(0.95)';
+                modalContainer.style.opacity = '0';
+                
+                // ขยายหน้าต่าง ชิดขอบจอเต็มๆ ทะลุแบบหน้าแอดมินเป๊ะ
                 wrapper.classList.remove('px-4');
                 wrapper.classList.add('p-0');
                 
                 modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                modalContainer.classList.add('w-full', 'h-full', 'max-w-none', 'max-h-none', 'rounded-none');
                 
                 if (header) {
                     header.classList.remove('rounded-t-3xl');
                     header.classList.add('rounded-none');
                 }
                 
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-            } else {
-                // ย่อกลับขนาดเดิม
-                wrapper.classList.add('px-4');
-                wrapper.classList.remove('p-0');
-                
-                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
-                
-                if (header) {
-                    header.classList.add('rounded-t-3xl');
-                    header.classList.remove('rounded-none');
+                if(icon) {
+                    icon.classList.remove('fa-expand');
+                    icon.classList.add('fa-compress');
                 }
-                
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
-            }
-        }
 
                 // 2. เด้งเข้าสู่หน้าจอ (Bouncy effect)
                 void modalContainer.offsetWidth; // บังคับเบราว์เซอร์รีเฟรช
