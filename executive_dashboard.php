@@ -2610,32 +2610,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             });
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) พร้อมจังหวะเด้งเข้า-ออก ✨
         function toggleMaximizeRepairs() {
             const card = document.getElementById('repairsMainCard');
             const icon = document.getElementById('maximizeRepairsIcon');
             const tableContainer = document.getElementById('repairsTableContainer');
             
             if (card.classList.contains('fixed')) {
-                // ย่อกลับขนาดเดิม
-                card.classList.remove('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
-                card.style.borderRadius = ''; // คืนค่ามุมมนเดิมของ .modern-card
-                if (tableContainer) {
-                    tableContainer.classList.add('max-h-[70vh]');
-                }
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
-                document.body.classList.remove('overflow-hidden');
+                // 1. แอนิเมชันตอนย่อ (สเกลเล็กลงแล้วจาง)
+                card.style.transform = 'scale(0.95)';
+                card.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // ย่อกลับขนาดเดิมใน DOM
+                    card.classList.remove('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
+                    card.style.borderRadius = ''; // คืนค่ามุมมน
+                    
+                    if (tableContainer) {
+                        tableContainer.classList.add('max-h-[70vh]');
+                    }
+                    
+                    icon.classList.add('fa-expand');
+                    icon.classList.remove('fa-compress');
+                    document.body.classList.remove('overflow-hidden');
+                    
+                    // แสดงการ์ดกลับมาในขนาดปกติอย่างนุ่มนวล
+                    card.style.transition = 'all 0.3s ease-in-out';
+                    card.style.transform = 'scale(1)';
+                    card.style.opacity = '1';
+                }, 250);
             } else {
+                // 1. ซ่อนและลดขนาดการ์ดก่อนเด้งขยาย
+                card.style.transition = 'none'; 
+                card.style.transform = 'scale(0.95)';
+                card.style.opacity = '0';
+                
                 // ขยายเต็มจอ
                 card.classList.add('fixed', 'inset-0', 'z-[100]', 'w-screen', 'h-screen');
-                card.style.borderRadius = '0px'; // เอาขอบมนออกให้เต็มตาชิดขอบจอ
+                card.style.borderRadius = '0px'; // ลบขอบมน
+                
                 if (tableContainer) {
                     tableContainer.classList.remove('max-h-[70vh]');
                 }
+                
                 icon.classList.remove('fa-expand');
                 icon.classList.add('fa-compress');
                 document.body.classList.add('overflow-hidden');
+
+                // 2. แอนิเมชันเด้งเข้า (Bouncy effect)
+                void card.offsetWidth; // บังคับเบราว์เซอร์ให้รับรู้คลาสที่เปลี่ยนไป
+                card.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                card.style.transform = 'scale(1)';
+                card.style.opacity = '1';
+                
+                // เคลียร์ค่า transition ให้กลับเป็นปกติหลังแอนิเมชันจบ
+                setTimeout(() => {
+                    card.style.transition = 'all 0.3s ease-in-out';
+                }, 400);
             }
         }
 
