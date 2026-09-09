@@ -362,15 +362,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                         </a>
                     </div>
 
-                    <!-- ปุ่มออกจากระบบด้านล่าง -->
-                    <div class="px-2 pt-2 border-t border-slate-100">
-                        <a href="logout.php" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors">
-                            <div class="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500">
-                                <i class="fas fa-sign-out-alt text-xs"></i>
-                            </div>
-                            <span>ออกจากระบบ (Logout)</span>
-                        </a>
-                    </div>
                 </div>
             </div>
         </header>
