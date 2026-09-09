@@ -936,32 +936,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 });
                 ?>
 
-                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-5 mb-8">
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-5 mb-8 w-full">
                     <div class="w-full xl:w-auto shrink-0">
                         <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Technicians</h3>
                         <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
                     
-                    <div class="w-full xl:w-auto flex flex-col md:flex-row gap-3 items-start md:items-center">
+                    <div class="w-full xl:w-auto flex flex-col md:flex-row gap-3 items-start md:items-center flex-wrap md:flex-nowrap">
                         <div class="relative w-full md:w-64 shrink-0">
                             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="ค้นหาชื่อไทย, อังกฤษ, ฝ่าย..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="ค้นหาชื่อไทย, อังกฤษ, ฝ่าย..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                         </div>
 
-                        <div class="flex flex-wrap gap-2.5 w-full md:w-auto">
-                            <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
+                        <div class="flex flex-wrap gap-2.5 w-full md:w-auto flex-1">
+                            <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer whitespace-nowrap">ทั้งหมด</button>
                             <?php
                             foreach(array_keys($grouped_technicians) as $d_name) {
                                 // ✨ ซ่อนปุ่มแม่บ้าน ฝ่ายงานทั่วไป และ อื่นๆ ให้เหมือนหน้าแอดมิน ✨
                                 if ($d_name === 'แม่บ้าน' || $d_name === 'ฝ่ายงานทั่วไป' || $d_name === 'อื่นๆ') continue;
                                 $short_name = str_replace('ฝ่ายงาน', '', $d_name); // ตัดคำว่าฝ่ายงานออกเหมือนแอดมิน
-                                echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer shrink-0'>{$short_name}</button>";
+                                echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer whitespace-nowrap'>{$short_name}</button>";
                             }
                             ?>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="space-y-6" id="techCardsContainer">
                     <?php 
                     $departments_data = [];
