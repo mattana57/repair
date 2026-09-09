@@ -766,12 +766,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             <div id="repairs" class="section hidden space-y-6 no-print animate-fade-in">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0">
-                        <div class="w-full md:w-auto shrink-0">
-                            <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions (View Only)</p>
+                        <div class="w-full md:w-auto shrink-0 flex-1 min-w-0">
+                            <h2 class="text-xl font-extrabold text-slate-800 truncate">Repairs List</h2>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5 truncate">All repair transactions (View Only)</p>
                         </div>
-                        <div class="flex flex-row items-center w-full md:w-auto gap-3">
-                            <div class="relative flex-1 min-w-0 md:w-72">
+                        <div class="flex flex-row items-center w-full md:w-auto gap-3 shrink-0">
+                            <div class="relative flex-1 min-w-[200px] md:w-64">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
@@ -936,31 +936,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 });
                 ?>
 
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
-                    <div>
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-5 mb-8">
+                    <div class="w-full xl:w-auto shrink-0">
                         <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Technicians</h3>
                         <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
-                    <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
-                        <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="ค้นหาชื่อไทย, อังกฤษ, ฝ่าย..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                    
+                    <div class="w-full xl:w-auto flex flex-col md:flex-row gap-3 items-start md:items-center">
+                        <div class="relative w-full md:w-64 shrink-0">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards()" placeholder="ค้นหาชื่อไทย, อังกฤษ, ฝ่าย..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                         </div>
 
-                        <div class="flex flex-wrap gap-2.5">
+                        <div class="flex flex-wrap gap-2.5 w-full md:w-auto">
                             <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
                             <?php
                             foreach(array_keys($grouped_technicians) as $d_name) {
                                 // ✨ ซ่อนปุ่มแม่บ้าน ฝ่ายงานทั่วไป และ อื่นๆ ให้เหมือนหน้าแอดมิน ✨
                                 if ($d_name === 'แม่บ้าน' || $d_name === 'ฝ่ายงานทั่วไป' || $d_name === 'อื่นๆ') continue;
                                 $short_name = str_replace('ฝ่ายงาน', '', $d_name); // ตัดคำว่าฝ่ายงานออกเหมือนแอดมิน
-                                echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer'>{$short_name}</button>";
+                                echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer shrink-0'>{$short_name}</button>";
                             }
                             ?>
                         </div>
                     </div>
                 </div>
-
+                
                 <div class="space-y-6" id="techCardsContainer">
                     <?php 
                     $departments_data = [];
@@ -1170,11 +1171,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
-            <div class="px-5 py-4 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
-                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full lg:w-auto shrink-0" id="historyModalTitle">History</p>
-                <div class="flex flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
+            <<div class="px-5 py-4 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
+                <div class="w-full xl:w-auto shrink-0 flex-1 min-w-0">
+                    <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate" id="historyModalTitle">History</p>
+                </div>
+                <div class="flex flex-row items-center gap-2 sm:gap-3 w-full xl:w-auto shrink-0 flex-wrap sm:flex-nowrap">
                     
-                    <div class="relative flex-1 min-w-0 lg:w-64">
+                    <div class="relative flex-1 min-w-[150px] xl:w-64">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูล..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
