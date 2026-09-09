@@ -390,7 +390,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                         $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     ?>
                     <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
-                        <div class="flex justify-between items-start mb-4">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
                             <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
                             <span class="text-xs font-bold text-slate-400">TOTAL</span>
                         </div>
@@ -401,7 +401,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     </div>
 
                     <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
-                        <div class="flex justify-between items-start mb-4">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
                             <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-xl"><i class="fas fa-clock"></i></div>
                             <span class="text-xs font-bold text-slate-400">WAITING</span>
                         </div>
@@ -412,7 +412,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     </div>
 
                     <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
-                        <div class="flex justify-between items-start mb-4">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
                             <div class="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-xl"><i class="fas fa-spinner"></i></div>
                             <span class="text-xs font-bold text-slate-400">ACTIVE</span>
                         </div>
@@ -423,7 +423,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     </div>
 
                     <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
-                        <div class="flex justify-between items-start mb-4">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
                             <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl"><i class="fas fa-check-circle"></i></div>
                             <span class="text-xs font-bold text-slate-400">DONE</span>
                         </div>
@@ -437,7 +437,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 <!-- Equipment & Work Status -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start mb-4">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
@@ -478,7 +478,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     </div>
 
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start mb-4">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Work Status</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
@@ -521,7 +521,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 <!-- Locations & Workload -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start mb-4">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Top Locations</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
@@ -561,7 +561,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     </div>
                     
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start mb-4">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
+
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Technician Workload</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
@@ -604,7 +605,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 <!-- Customer Satisfaction & Top Reporters -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
-                        <div class="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
                             <div class="flex flex-col">
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
                                 <span class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ</span>
@@ -790,18 +791,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             <!-- ✨ หน้า Transactions (All Repairs List) ให้ผู้บริหาร ✨ -->
             <div id="repairs" class="section hidden space-y-6 no-print animate-fade-in">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0">
-                        <div class="shrink-0">
+                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white shrink-0">
+                        <div class="w-full xl:w-auto">
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions (View Only)</p>
                         </div>
-                        <div class="flex items-center w-full md:w-auto md:justify-end gap-3 md:gap-4 mt-2 md:mt-0">
-                            <div class="relative w-full md:w-64 flex-1">
+                        <div class="flex items-center w-full xl:w-auto gap-3">
+                            <div class="relative flex-1 xl:w-72">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
                             
-                            <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                            <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-10 h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                                 <i class="fas fa-expand text-base" id="maximizeRepairsIcon"></i>
                             </button>
                         </div>
@@ -1196,22 +1197,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
-            <div class="px-5 py-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
-                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full md:w-auto" id="historyModalTitle">History</p>
-                <div class="flex items-center w-full md:w-auto justify-between md:justify-end">
+            <div class="px-5 py-4 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
+                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full xl:w-auto" id="historyModalTitle">History</p>
+                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto xl:justify-end">
                     
-                    <div class="flex items-center gap-2 md:gap-3 w-full md:w-auto flex-1 md:flex-none">
-                        <div class="relative w-full md:w-64 flex-1 md:flex-none">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchHistoryModalInput" onkeyup="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                        </div>
+                    <div class="relative flex-1 min-w-[150px] xl:w-64">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
+                    
+                    <button id="historyModalLinkBtn" class="text-xs md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
+                        <i class="fas fa-address-book md:mr-1.5"></i> <span class="hidden md:inline">Contacts</span>
+                    </button>
 
-                    <div class="flex items-center gap-2 ml-4 md:ml-8 shrink-0">
-                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                    <div class="flex items-center gap-2 shrink-0 ml-auto xl:ml-2">
+                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
                         </button>
-                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-8 h-8 md:w-9 md:h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
                             <i class="fas fa-times text-sm md:text-base"></i>
                         </button>
                     </div>
