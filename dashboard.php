@@ -1108,13 +1108,6 @@ $dept_icons = [
                             </div>
                             <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mt-1 sm:mt-0">ทั้งหมด</button>
                         </div>
-                            <div class="flex items-center gap-2">
-                                <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
-                                    ทั้งหมด
-                                </button>
-                            </div>
-                        </div>
-
                         <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar max-h-[380px]">
                             <div class="divide-y divide-slate-100" id="topReportersList">
                             </div>
