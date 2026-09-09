@@ -1194,12 +1194,12 @@ $dept_icons = [
             <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0">
-                        <div class="w-full md:w-auto shrink-0 flex-1 min-w-0">
-                            <h2 class="text-xl font-extrabold text-slate-800 truncate">Repairs List</h2>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5 truncate">All repair transactions</p>
+                        <div class="w-full md:w-auto shrink-0">
+                            <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
                         </div>
-                        <div class="flex flex-row items-center w-full md:w-auto gap-3 shrink-0">
-                            <div class="relative flex-1 min-w-[200px] md:w-64">
+                        <div class="flex flex-row items-center w-full md:w-auto gap-3">
+                            <div class="relative flex-1 min-w-0 md:w-72">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
