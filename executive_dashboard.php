@@ -1068,7 +1068,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                             <div class="flex flex-wrap gap-6 items-start justify-center sm:justify-start">
                                 <?php foreach ($techs as $tech): 
                                     $search_name = preg_replace('/\s+/', '', strtolower($tech['raw_name'] . $tech['eng'] . $tech['th'] . $dept_name));
-                                    $safeName = addslashes($tech['raw_name']);
                                     $phone = !empty($tech['phone']) ? $tech['phone'] : '- ไม่ระบุเบอร์โทร -';
                                 ?>
                                 <!-- ขนาดการ์ด ระยะห่าง และ Hover แสงสีฟ้าเหมือนฝั่งแอดมินเป๊ะ -->
@@ -1081,6 +1080,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                              alt="<?php echo htmlspecialchars($tech['th']); ?>" 
                                              class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out cursor-pointer" title="คลิกเพื่อดูรูปขยาย">
                                 
+                                        <!-- เงาดำไล่ระดับด้านล่างรูป -->
                                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                                     </div>
 
@@ -1138,6 +1138,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
 
                                     </div>
                                 </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php 
+                        endforeach; 
+                    } 
+                    ?>
+                </div>
+            </div>
 
         </div>
     </main>
@@ -1213,25 +1222,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 </div>
             </div>
             
-           <div class="p-0 md:p-6 overflow-hidden flex-1 bg-[#f8fafc]">
+            <div class="p-0 md:p-6 overflow-hidden flex-1 bg-[#f8fafc]">
                 <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
-                    <table class="w-full text-left whitespace-nowrap min-w-[1100px]">
+                    <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
-                                <th class="px-5 py-4">Date / Time</th>
-                                <th class="px-5 py-4">Ticket No.</th>
-                                <th class="px-5 py-4">Reporter</th>
-                                <th class="px-5 py-4">Equipment</th>
-                                <th class="px-5 py-4">Department</th>
-                                <th class="px-5 py-4">Technician</th>
-                                <th class="px-5 py-4">Received At</th>
-                                <th class="px-5 py-4">Root Cause</th>
-                                <th class="px-5 py-4 text-center">Status</th>
-                                <th class="px-5 py-4">Completed At</th>
-                                <th class="px-5 py-4 text-center">Action</th>
+                                <th class="px-6 py-4">Date / Time</th>
+                                <th class="px-6 py-4">Ticket No.</th>
+                                <th class="px-6 py-4">Reporter</th>
+                                <th class="px-6 py-4">Equipment</th>
+                                <th class="px-6 py-4">Department</th>
+                                <th class="px-6 py-4">Technician</th>
+                                <th class="px-6 py-4">Received At</th>
+                                <th class="px-6 py-4">Root Cause</th>
+                                <th class="px-6 py-4 text-center">Status</th>
+                                <th class="px-6 py-4">Completed At</th>
+                                <th class="px-6 py-4 text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="text-sm divide-y divide-slate-50" id="historyTableBody">
+                        <tbody class="text-sm divide-y divide-slate-100 bg-white" id="historyTableBody">
                         </tbody>
                     </table>
                 </div>
