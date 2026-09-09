@@ -1737,11 +1737,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             data.forEach(r => {
                 if(r.location && r.location !== 'ไม่ระบุสถานที่') map[r.location] = (map[r.location] || 0) + 1;
             });
-            // ✨ แก้ไข: ตัดชื่อห้องที่ยาวเกิน 15 ตัวอักษร ไม่ให้ดันแท่งแนวนอน
-            let sorted = Object.keys(map).map(k => {
-                let shortName = k.length > 15 ? k.substring(0, 15) + '...' : k;
-                return { name: shortName, count: map[k] };
-            }).sort((a,b) => b.count - a.count).slice(0, 5);
+            let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
             if(chartLocInstance) chartLocInstance.destroy();
