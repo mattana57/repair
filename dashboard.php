@@ -853,12 +853,12 @@ $dept_icons = [
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <<div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
-                            <div>
+                        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4 w-full">
+                            <div class="w-full xl:w-auto">
                                 <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-row items-center gap-2 w-full xl:w-auto">
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Month')">
                                         <span id="equip-MonthText" class="truncate">เดือน</span>
@@ -893,12 +893,12 @@ $dept_icons = [
                     </div>
                     
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
-                            <div>
+                        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4 w-full">
+                            <div class="w-full xl:w-auto">
                                 <h3 class="font-extrabold text-slate-800 text-lg">Work Status</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สัดส่วนสถานะการดำเนินงาน</p>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-row items-center gap-2 w-full xl:w-auto">
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Month', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Month')">
                                         <span id="status-MonthText" class="truncate">เดือน</span>
@@ -935,12 +935,12 @@ $dept_icons = [
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
-                            <div>
+                        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4 w-full">
+                            <div class="w-full xl:w-auto">
                                 <h3 class="font-extrabold text-slate-800 text-lg">Top Locations</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-row items-center gap-2 w-full xl:w-auto">
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Month', renderLocChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'loc-Month')">
                                         <span id="loc-MonthText" class="truncate">เดือน</span>
@@ -975,12 +975,12 @@ $dept_icons = [
                     </div>
                     
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
-                            <div>
+                        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4 w-full">
+                            <div class="w-full xl:w-auto">
                                 <h3 class="font-extrabold text-slate-800 text-lg">Technician Workload</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-row items-center gap-2 w-full xl:w-auto">
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Month', renderTechChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'tech-Month')">
                                         <span id="tech-MonthText" class="truncate">เดือน</span>
@@ -1018,13 +1018,13 @@ $dept_icons = [
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                     
                     <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
-                            <div class="flex flex-col">
+                        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4 w-full">
+                            <div class="flex flex-col w-full xl:w-auto">
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
                                 <span class="text-sm font-medium text-slate-400 mt-0.5">คะแนนความพึงพอใจการให้บริการ</span>
                                 <span class="text-[12px] text-indigo-500 font-bold mt-1"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-row items-center gap-2 w-full xl:w-auto">
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Month')">
                                         <span id="rating-MonthText" class="truncate">เดือน</span>
@@ -1062,12 +1062,12 @@ $dept_icons = [
                     </div>
 
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
-                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3">
-                            <div>
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-4 w-full">
+                            <div class="w-full xl:w-auto">
                                 <h3 class="font-extrabold text-slate-800 text-lg">Top Reporters</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-row items-center gap-2 w-full xl:w-auto">
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Month', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'reporter-Month')">
                                         <span id="reporter-MonthText" class="truncate">เดือน</span>
@@ -1097,15 +1097,17 @@ $dept_icons = [
                             </div>
                         </div>
                         
-                        <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
-                            <div class="flex items-center gap-2">
+                        <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row flex-wrap sm:justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-3">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">จัดอันดับ:</span>
-                                <div class="flex items-center gap-1.5" id="topReportersFilterContainer">
+                                <div class="flex flex-wrap items-center gap-1.5" id="topReportersFilterContainer">
                                     <button id="btnFilterTop3" onclick="setTopReportersFilter(3)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 3</button>
                                     <button id="btnFilterTop5" onclick="setTopReportersFilter(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">Top 5</button>
                                     <button id="btnFilterTop10" onclick="setTopReportersFilter(10)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 10</button>
                                 </div>
                             </div>
+                            <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mt-1 sm:mt-0">ทั้งหมด</button>
+                        </div>
                             <div class="flex items-center gap-2">
                                 <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
                                     ทั้งหมด
