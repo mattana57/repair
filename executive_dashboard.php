@@ -791,17 +791,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             <div id="repairs" class="section hidden space-y-6 no-print animate-fade-in">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0">
-                        <div>
+                        <div class="shrink-0">
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions (View Only)</p>
                         </div>
-                        <div class="flex items-center w-full md:w-auto justify-between md:justify-end">
-                            <div class="relative w-full md:w-64 flex-1 md:flex-none">
+                        <div class="flex items-center w-full md:w-auto md:justify-end gap-3 md:gap-4 mt-2 md:mt-0">
+                            <div class="relative w-full md:w-64 flex-1">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
                             
-                            <button onclick="toggleMaximizeRepairs()" class="ml-4 md:ml-8 text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                            <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                                 <i class="fas fa-expand text-base" id="maximizeRepairsIcon"></i>
                             </button>
                         </div>
