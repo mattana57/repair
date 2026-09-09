@@ -1193,13 +1193,13 @@ $dept_icons = [
             <!-- ✨ เริ่มต้นส่วนหน้า Transactions ที่หายไป (นำกลับมาให้แล้วครับ!) ✨ -->
             <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4 bg-white shrink-0">
-                        <div class="min-w-[200px] flex-1 sm:flex-none">
+                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0">
+                        <div class="w-full md:w-auto shrink-0">
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
                         </div>
-                        <div class="flex flex-wrap items-center w-full sm:w-auto gap-3">
-                            <div class="relative flex-1 min-w-[200px]">
+                        <div class="flex flex-row items-center w-full md:w-auto gap-3">
+                            <div class="relative flex-1 min-w-0 md:w-72">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
@@ -2282,21 +2282,24 @@ $dept_icons = [
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
-            <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
-                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate min-w-[120px] flex-1 sm:flex-none" id="historyModalTitle">History</p>
-                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                    <div class="relative flex-1 min-w-[180px]">
+            <div class="px-5 py-4 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
+                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full lg:w-auto shrink-0" id="historyModalTitle">History</p>
+                <div class="flex flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto">
+                    
+                    <div class="relative flex-1 min-w-0 lg:w-64">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูล..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
-                    <button id="historyModalLinkBtn" class="text-xs md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
+                    
+                    <button id="historyModalLinkBtn" class="text-xs md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 sm:px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
                         <i class="fas fa-address-book sm:mr-1.5"></i> <span class="hidden sm:inline">Contacts</span>
                     </button>
+
                     <div class="flex items-center gap-2 shrink-0">
-                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm hover:bg-indigo-50" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
                         </button>
-                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm hover:bg-rose-50" title="ปิด">
                             <i class="fas fa-times text-sm md:text-base"></i>
                         </button>
                     </div>
