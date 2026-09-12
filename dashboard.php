@@ -1181,24 +1181,26 @@ $dept_icons = [
 
             <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0">
+                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0 z-30 relative">
                         <div class="shrink-0">
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions<?php echo ($active_tab === 'repairs' && isset($current_user_role) && $current_user_role === 'Executive') ? ' (View Only)' : ''; ?></p>
                         </div>
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-end w-full md:w-auto gap-3">
+                        
+                        <div class="flex flex-col sm:flex-row items-center justify-end w-full md:w-auto gap-3">
                             <div class="relative w-full sm:w-64">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
                             
-                            <div class="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                                <div class="relative w-[100px] sm:w-[110px] flex-1 sm:flex-none outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                            <div class="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 relative z-40">
+                                
+                                <div class="relative w-full sm:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-[13px] text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Month')">
                                         <span id="table-MonthText" class="truncate">เดือน</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="table-MonthList" class="chart-dropdown-list absolute z-50 min-w-[120px] max-w-[200px] right-0 sm:left-0 sm:right-auto mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('table-Month', 'all', 'เดือน', filterRepairsTable)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
                                         </div>
@@ -1207,12 +1209,12 @@ $dept_icons = [
                                     <input type="hidden" id="tableMonth" value="all">
                                 </div>
 
-                                <div class="relative w-[100px] sm:w-[110px] flex-1 sm:flex-none outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="relative w-full sm:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-[13px] text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
                                         <span id="table-YearText" class="truncate">ปี (พ.ศ.)</span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="table-YearList" class="chart-dropdown-list absolute z-50 min-w-[120px] max-w-[150px] right-0 sm:left-0 sm:right-auto mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('table-Year', 'all', 'ปี (พ.ศ.)', filterRepairsTable)">
                                             <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                         </div>
@@ -1220,9 +1222,10 @@ $dept_icons = [
                                     </div>
                                     <input type="hidden" id="tableYear" value="all">
                                 </div>
+
                             </div>
                             
-                            <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-10 h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50 hidden md:flex ml-2" title="สลับเต็มจอ">
+                            <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-10 h-10 items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50 hidden sm:flex ml-2" title="สลับเต็มจอ">
                                 <i class="fas fa-expand text-base" id="maximizeRepairsIcon"></i>
                             </button>
                         </div>
