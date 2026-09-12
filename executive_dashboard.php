@@ -2376,6 +2376,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             const searchInput = document.getElementById('searchHistoryModalInput');
             if(searchInput) searchInput.value = '';
 
+            // ✨ โชว์/ซ่อน ตัวกรองเดือนและปีตอนเปิด Modal ขนาดปกติ ✨
+            const filterGroup = document.getElementById('historyModalFilterGroup');
+            if (filterGroup) {
+                if (type === 'technician') {
+                    // ถ้าเป็นประวัติช่าง ให้โชว์เลย
+                    filterGroup.classList.remove('hidden');
+                    filterGroup.classList.add('flex');
+                } else {
+                    // ถ้าเป็นผู้แจ้งซ่อม ให้ซ่อนไว้ก่อน (รอเปิดตอนขยายจอ)
+                    filterGroup.classList.add('hidden');
+                    filterGroup.classList.remove('flex');
+                }
+            }
+
             const wrapper = document.getElementById('historyModal');
             const modalContainer = wrapper.querySelector('.modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
@@ -2878,12 +2892,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     header.classList.remove('rounded-none');
                 }
                 
-                // ✨ ซ่อน Dropdown เดือน/ปี เมื่อย่อจอ
+                // ✨ จัดการ Dropdown เดือน/ปี เมื่อย่อจอ ✨
                 if(filterGroup) {
-                    filterGroup.classList.add('hidden');
-                    filterGroup.classList.remove('flex');
+                    const titleText = document.getElementById('historyModalTitle').innerText;
+                    if (titleText.includes('ประวัติงานช่าง')) {
+                        // ถ้าเป็นช่าง ให้โชว์ไว้เหมือนเดิม
+                        filterGroup.classList.remove('hidden');
+                        filterGroup.classList.add('flex');
+                    } else {
+                        // ถ้าเป็นผู้แจ้งซ่อม ให้ซ่อนเพื่อไม่ให้รก
+                        filterGroup.classList.add('hidden');
+                        filterGroup.classList.remove('flex');
+                    }
                     
-                    // รีเซ็ตค่ากลับเป็น ทั้งหมด (ถ้าต้องการให้รีเซ็ตตอนย่อจอ)
+                    // รีเซ็ตค่ากลับเป็น ทั้งหมด
                     selectChartDropdown('history-Month', 'all', 'เดือน', searchHistoryModalTable);
                     selectChartDropdown('history-Year', 'all', 'ปี (พ.ศ.)', searchHistoryModalTable);
                 }
