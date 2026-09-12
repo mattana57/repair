@@ -768,7 +768,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shrink-0">
                         <div class="shrink-0">
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions (View Only)</p>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
                         </div>
                         <div class="flex items-center justify-end w-full md:w-auto">
                             <div class="relative flex-1 md:w-64 md:flex-none">
