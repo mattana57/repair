@@ -2237,36 +2237,6 @@ $dept_icons = [
         </div>
     </div>
 
-    <div id="editReporterModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('editReporterModal')"></div>
-        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
-                <p class="text-lg font-extrabold text-slate-800">Edit Reporter</p>
-                <button onclick="toggleModal('editReporterModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
-            </div>
-            <form action="" method="POST" class="p-6">
-                <input type="hidden" name="edit_reporter" value="1">
-                <input type="hidden" name="old_name" id="edit_rep_old_name" value="">
-                
-                <div class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">LINE ID (Cannot be changed)</label>
-                        <input type="text" id="display_old_name_ui" disabled class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-500 cursor-not-allowed font-medium">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
-                        <input type="text" name="new_name" id="edit_rep_new_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
-                        <input type="text" name="new_phone" id="edit_rep_new_phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
-                    </div>
-                </div>
-                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('editReporterModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Update</button></div>
-            </form>
-        </div>
-    </div>
-
     <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
@@ -4103,18 +4073,6 @@ $dept_icons = [
             document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
             setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
             toggleModal('techAdminModal'); 
-        }
-
-        function openEditReporterModal(line_id, real_name, old_phone) {
-            document.getElementById('edit_rep_old_name').value = line_id; 
-            document.getElementById('edit_rep_new_name').value = real_name; 
-            document.getElementById('edit_rep_new_phone').value = old_phone; 
-            
-            // ให้แสดงชื่อ ID LINE ในช่องที่ไม่ให้แก้
-            let displayOldUi = document.getElementById('display_old_name_ui');
-            if(displayOldUi) displayOldUi.value = line_id;
-            
-            toggleModal('editReporterModal');
         }
 
         // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
