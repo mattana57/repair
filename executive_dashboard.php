@@ -765,7 +765,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             <!-- ✨ หน้า Transactions (All Repairs List) ให้ผู้บริหาร ✨ -->
             <div id="repairs" class="section hidden space-y-6 no-print animate-fade-in">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white shrink-0 z-30">
+                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white shrink-0 relative z-30">
                         <div class="shrink-0">
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
@@ -1626,12 +1626,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             if(!tbody) return;
 
             let rows = tbody.querySelectorAll('tr.search-row');
+            let visibleCount = 0; // ✨ เพิ่มตัวแปรนับจำนวนแถวที่แสดงผล
             
             rows.forEach(row => {
                 let textMatch = true;
                 let dateMatch = true;
 
-                // 1. กรองช่องค้นหาข้อความ (เปลี่ยนเป็น textContent ป้องกันบั๊กเวลาถูกซ่อน)
+                // 1. กรองช่องค้นหาข้อความ
                 if (searchFilter !== '') {
                     let text = row.textContent.toLowerCase().replace(/\s+/g, '');
                     if (!text.includes(searchFilter)) {
@@ -1639,7 +1640,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     }
                 }
 
-                // 2. กรองเดือน/ปี (เปลี่ยนเป็น textContent ป้องกันบั๊กเวลาถูกซ่อน)
+                // 2. กรองเดือน/ปี
                 if (monthFilter !== 'all' || yearFilter !== 'all') {
                     let dateText = row.cells[0].textContent.trim();
                     let dateMatchObj = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
@@ -1655,12 +1656,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                     }
                 }
 
+                // แสดงแถวก็ต่อเมื่อตรงกับเงื่อนไขทั้งคู่
                 if (textMatch && dateMatch) {
                     row.style.display = '';
+                    visibleCount++; // ✨ นับเพิ่มถ้ามีข้อมูลแสดง
                 } else {
                     row.style.display = 'none';
                 }
             });
+
+            // ✨ โลจิกจัดการข้อความเมื่อซ่อนข้อมูลจนหมดตาราง ✨
+            let emptyRow = tbody.querySelector('.empty-filter-row');
+            if (visibleCount === 0 && rows.length > 0) {
+                if (!emptyRow) {
+                    emptyRow = document.createElement('tr');
+                    emptyRow.className = 'empty-filter-row';
+                    // สร้างข้อความตามดีไซน์รูปที่ 3
+                    emptyRow.innerHTML = `<td colspan="11" class="px-6 py-16 text-center text-slate-400 font-medium">ยังไม่เคยรับงานซ่อมในระบบ</td>`;
+                    tbody.appendChild(emptyRow);
+                } else {
+                    emptyRow.style.display = '';
+                }
+            } else if (emptyRow) {
+                emptyRow.style.display = 'none';
+            }
         }
 
         function formatValJS(val) {
