@@ -807,7 +807,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                                 </div>
                             </div>
                             
-                            <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-[42px] h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50 ml-2" title="สลับเต็มจอ">
+                            <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-[42px] h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50 ml-6 md:ml-10" title="สลับเต็มจอ">
                                 <i class="fas fa-expand text-base" id="maximizeRepairsIcon"></i>
                             </button>
                         </div>
