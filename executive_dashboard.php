@@ -1241,9 +1241,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                             </div>
                             <input type="hidden" id="historyYear" value="all">
                         </div>
-                    </div>
-                    
-                
+                    </div>  
 
                     <div class="flex items-center gap-2 shrink-0 ml-auto md:ml-4">
                         <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
