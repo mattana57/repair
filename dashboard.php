@@ -4334,137 +4334,93 @@ $dept_icons = [
             if (type === 'reporter' && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
                 displayTitleName = lineUsersMap[fullName].real_name;
             }
-            document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
             
-            const linkBtn = document.getElementById('historyModalLinkBtn');
-            if (linkBtn) {
-                // ✨ เช็คว่าตอนนี้กำลังเปิดหน้า Contacts (id="users") อยู่หรือไม่
-                const isContactsPage = !document.getElementById('users').classList.contains('hidden');
+            // ใช้ querySelectorAll เพื่อแก้ปัญหากล่อง Modal ซ้ำซ้อนใน HTML
+            document.querySelectorAll('[id="historyModalTitle"]').forEach(el => {
+                el.innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
+            });
+            document.querySelectorAll('[id="searchHistoryModalInput"]').forEach(el => el.value = '');
 
+            const isContactsPage = !document.getElementById('users').classList.contains('hidden');
+            let isLinkBtnHidden = true;
+            
+            document.querySelectorAll('[id="historyModalLinkBtn"]').forEach(btn => {
                 if (type === 'reporter' && !isContactsPage) {
-                    linkBtn.style.display = ''; // แสดงปุ่มเฉพาะตอนอยู่หน้าอื่น (เช่น หน้า Overview)
-                    linkBtn.innerHTML = '<i class="fas fa-address-book md:mr-2"></i> <span class="hidden md:inline">Contacts</span>';
-                    linkBtn.onclick = function() { toggleModal('historyModal'); show('users'); };
-                } else {
-                    linkBtn.style.display = 'none'; // ซ่อนปุ่มถ้าเป็นประวัติช่าง หรือเปิดจากหน้า Contacts อยู่แล้ว
-                }
-            }
-
-            const linkBtn = document.getElementById('historyModalLinkBtn');
-            let isLinkBtnHidden = true; // ✨ ตัวแปรเก็บสถานะปุ่ม Contacts
-            if (linkBtn) {
-                const isContactsPage = !document.getElementById('users').classList.contains('hidden');
-                if (type === 'reporter' && !isContactsPage) {
-                    linkBtn.style.display = ''; 
-                    linkBtn.innerHTML = '<i class="fas fa-address-book md:mr-2"></i> <span class="hidden md:inline">Contacts</span>';
-                    linkBtn.onclick = function() { toggleModal('historyModal'); show('users'); };
+                    btn.style.display = ''; 
+                    btn.innerHTML = '<i class="fas fa-address-book md:mr-2"></i> <span class="hidden md:inline">Contacts</span>';
+                    btn.onclick = function() { toggleModal('historyModal'); show('users'); };
                     isLinkBtnHidden = false; // มีปุ่ม
                 } else {
-                    linkBtn.style.display = 'none'; // ซ่อนปุ่ม
-                    isLinkBtnHidden = true; // ไม่มีปุ่ม
+                    btn.style.display = 'none'; // ซ่อนปุ่ม
+                    isLinkBtnHidden = true;
                 }
-            }
+            });
 
-            const searchInput = document.getElementById('searchHistoryModalInput');
-            if(searchInput) searchInput.value = '';
-
-            // ✨ โชว์ตัวกรองอัตโนมัติ ถ้า "ไม่มี" ปุ่ม Contacts ขวางอยู่ ✨
-            const filterGroup = document.getElementById('historyModalFilterGroup');
-            if (filterGroup) {
+            document.querySelectorAll('[id="historyModalFilterGroup"]').forEach(group => {
                 if (type === 'technician' || isLinkBtnHidden) {
-                    filterGroup.classList.remove('hidden');
-                    filterGroup.classList.add('flex');
+                    group.classList.remove('hidden');
+                    group.classList.add('flex');
                 } else {
-                    filterGroup.classList.add('hidden');
-                    filterGroup.classList.remove('flex');
+                    group.classList.add('hidden');
+                    group.classList.remove('flex');
                 }
-            }
+            });
 
-            const wrapper = document.getElementById('historyModal');
-            const modalContainer = wrapper.querySelector('.modal-container');
-            const icon = document.getElementById('maximizeHistoryIcon');
-            const header = modalContainer.querySelector('div:first-child');
-            if (modalContainer.classList.contains('w-full')) {
-                wrapper.classList.add('px-4');
-                wrapper.classList.remove('p-0');
-                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
-                if (header) {
-                    header.classList.add('rounded-t-3xl');
-                    header.classList.remove('rounded-none');
+            document.querySelectorAll('[id="historyModal"]').forEach(wrapper => {
+                const modalContainer = wrapper.querySelector('.modal-container');
+                const icon = wrapper.querySelector('[id="maximizeHistoryIcon"]');
+                const header = modalContainer.querySelector('div:first-child');
+                if (modalContainer.classList.contains('w-full')) {
+                    wrapper.classList.add('px-4'); wrapper.classList.remove('p-0');
+                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                    if (header) { header.classList.add('rounded-t-3xl'); header.classList.remove('rounded-none'); }
+                    if (icon) { icon.classList.add('fa-expand'); icon.classList.remove('fa-compress'); }
                 }
-                if(icon) {
-                    icon.classList.add('fa-expand');
-                    icon.classList.remove('fa-compress');
-                }
-            }
+            });
             
             toggleModal('historyModal');
         }
 
         // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ✨
         function toggleMaximizeHistoryModal() {
-            const wrapper = document.getElementById('historyModal');
-            const modalContainer = wrapper.querySelector('.modal-container');
-            const icon = document.getElementById('maximizeHistoryIcon');
-            const header = modalContainer.querySelector('div:first-child');
-            const filterGroup = document.getElementById('historyModalFilterGroup'); // ดึงกลุ่ม Dropdown มา
-            
-            if (modalContainer.classList.contains('max-w-[95%]')) {
-                // ขยายจอ
-                wrapper.classList.remove('px-4');
-                wrapper.classList.add('p-0');
+            document.querySelectorAll('[id="historyModal"]').forEach(wrapper => {
+                const modalContainer = wrapper.querySelector('.modal-container');
+                const icon = wrapper.querySelector('[id="maximizeHistoryIcon"]');
+                const header = modalContainer.querySelector('div:first-child');
+                const filterGroup = wrapper.querySelector('[id="historyModalFilterGroup"]');
                 
-                modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
-                
-                if (header) {
-                    header.classList.remove('rounded-t-3xl');
-                    header.classList.add('rounded-none');
-                }
-                
-                // ✨ แสดง Dropdown เดือน/ปี เมื่อขยายจอ
-                if(filterGroup) {
-                    filterGroup.classList.remove('hidden');
-                    filterGroup.classList.add('flex');
-                }
-                
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-            } else {
-                // ย่อกลับขนาดเดิม
-                wrapper.classList.add('px-4');
-                wrapper.classList.remove('p-0');
-                
-                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
-                
-                if (header) {
-                    header.classList.add('rounded-t-3xl');
-                    header.classList.remove('rounded-none');
-                }
-                
-                // ✨ จัดการ Dropdown เดือน/ปี เมื่อย่อจอ ✨
-                if(filterGroup) {
-                    const titleText = document.getElementById('historyModalTitle').innerText;
-                    if (titleText.includes('ประวัติงานช่าง')) {
-                        // ถ้าเป็นช่าง ให้โชว์ไว้เหมือนเดิม
-                        filterGroup.classList.remove('hidden');
-                        filterGroup.classList.add('flex');
-                    } else {
-                        // ถ้าเป็นผู้แจ้งซ่อม ให้ซ่อนเพื่อไม่ให้รก
-                        filterGroup.classList.add('hidden');
-                        filterGroup.classList.remove('flex');
-                    }
+                if (modalContainer.classList.contains('max-w-[95%]')) {
+                    // ขยายจอ
+                    wrapper.classList.remove('px-4'); wrapper.classList.add('p-0');
+                    modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                    if (header) { header.classList.remove('rounded-t-3xl'); header.classList.add('rounded-none'); }
+                    if (filterGroup) { filterGroup.classList.remove('hidden'); filterGroup.classList.add('flex'); }
+                    if (icon) { icon.classList.remove('fa-expand'); icon.classList.add('fa-compress'); }
+                } else {
+                    // ย่อกลับขนาดเดิม
+                    wrapper.classList.add('px-4'); wrapper.classList.remove('p-0');
+                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                    if (header) { header.classList.add('rounded-t-3xl'); header.classList.remove('rounded-none'); }
                     
-                    // รีเซ็ตค่ากลับเป็น ทั้งหมด
-                    selectChartDropdown('history-Month', 'all', 'เดือน', searchHistoryModalTable);
-                    selectChartDropdown('history-Year', 'all', 'ปี (พ.ศ.)', searchHistoryModalTable);
+                    if (filterGroup) {
+                        const titleText = wrapper.querySelector('[id="historyModalTitle"]').innerText;
+                        const linkBtn = wrapper.querySelector('[id="historyModalLinkBtn"]');
+                        const isLinkBtnHidden = !linkBtn || linkBtn.style.display === 'none';
+
+                        if (titleText.includes('ประวัติงานช่าง') || isLinkBtnHidden) {
+                            filterGroup.classList.remove('hidden'); filterGroup.classList.add('flex');
+                        } else {
+                            filterGroup.classList.add('hidden'); filterGroup.classList.remove('flex');
+                        }
+                        selectChartDropdown('history-Month', 'all', 'เดือน', searchHistoryModalTable);
+                        selectChartDropdown('history-Year', 'all', 'ปี (พ.ศ.)', searchHistoryModalTable);
+                    }
+                    if (icon) { icon.classList.add('fa-expand'); icon.classList.remove('fa-compress'); }
                 }
-                
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
-            }
+            });
         }
 
         // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) สมูท 100% เหมือนหน้าต่างประวัติ ✨

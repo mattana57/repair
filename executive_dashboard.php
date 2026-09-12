@@ -1206,14 +1206,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full xl:w-auto" id="historyModalTitle">History</p>
                 <div class="flex flex-wrap items-center gap-4 md:gap-6 w-full xl:w-auto xl:justify-end">
                     
-                    <!-- ส่วนค้นหาและปุ่ม Contacts จัดกลุ่มให้อยู่ใกล้กันแบบไม่มีเส้นกั้น -->
                     <div class="relative flex-1 min-w-[150px] xl:w-64">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
 
-                    <!-- ✨ ชุด Dropdown เดือน/ปี (ซ่อนไว้ก่อน โชว์เฉพาะตอนเต็มจอ) ✨ -->
-                    <div id="historyModalFilterGroup" class="hidden items-center gap-2 shrink-0">
+                    <div id="historyModalFilterGroup" class="flex items-center gap-2 shrink-0">
                         <div class="relative w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Month', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
                             <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm text-slate-700 rounded-xl px-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Month')">
                                 <span id="history-MonthText" class="truncate">เดือน</span>
@@ -1241,36 +1239,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                             </div>
                             <input type="hidden" id="historyYear" value="all">
                         </div>
-                    </div>
-                            <div id="history-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('history-Month', 'all', 'เดือน', searchHistoryModalTable)">
-                                    <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
-                                </div>
-                                <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('history-Month', '{$num_pad}', '{$name}', searchHistoryModalTable)\">{$name}</div>"; } ?>
-                            </div>
-                            <input type="hidden" id="historyMonth" value="all">
-                        </div>
-
-                        <div class="relative w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Year', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
-                            <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-xs text-slate-700 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Year')">
-                                <span id="history-YearText" class="truncate">ปี (พ.ศ.)</span>
-                                <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
-                            </div>
-                            <div id="history-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('history-Year', 'all', 'ปี (พ.ศ.)', searchHistoryModalTable)">
-                                    <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
-                                </div>
-                                <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('history-Year', '{$y}', 'พ.ศ. {$thai_y}', searchHistoryModalTable)\">พ.ศ. {$thai_y}</div>"; } ?>
-                            </div>
-                            <input type="hidden" id="historyYear" value="all">
-                        </div>
                     </div>  
 
                     <div class="flex items-center gap-2 shrink-0 ml-auto md:ml-4">
-                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
                         </button>
-                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
                             <i class="fas fa-times text-sm md:text-base"></i>
                         </button>
                     </div>
@@ -2394,42 +2369,66 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             if (type === 'reporter' && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
                 displayTitleName = lineUsersMap[fullName].real_name;
             }
-            document.getElementById('historyModalTitle').innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
             
-            const linkBtn = document.getElementById('historyModalLinkBtn');
-            if(linkBtn) linkBtn.style.display = 'none'; // ฝั่งผู้บริหารไม่มีหน้า Contacts ซ่อนปุ่มเสมอ
-
-            const searchInput = document.getElementById('searchHistoryModalInput');
-            if(searchInput) searchInput.value = '';
-
-            // ✨ ฝั่งผู้บริหารโชว์ตัวกรองเสมอ เพราะไม่มีปุ่ม Contacts ขวาง ✨
-            const filterGroup = document.getElementById('historyModalFilterGroup');
-            if (filterGroup) {
-                filterGroup.classList.remove('hidden');
-                filterGroup.classList.add('flex');
-            }
-
-            const wrapper = document.getElementById('historyModal');
-            const modalContainer = wrapper.querySelector('.modal-container');
-            const icon = document.getElementById('maximizeHistoryIcon');
-            const header = modalContainer.querySelector('div:first-child');
+            // ใช้ querySelectorAll ป้องกันบั๊กเวลามี ID ซ้ำ
+            document.querySelectorAll('[id="historyModalTitle"]').forEach(el => {
+                el.innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
+            });
             
-            if (modalContainer.classList.contains('w-full')) {
-                wrapper.classList.add('px-4');
-                wrapper.classList.remove('p-0');
-                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
-                if (header) {
-                    header.classList.add('rounded-t-3xl');
-                    header.classList.remove('rounded-none');
-                }
-                if(icon) {
-                    icon.classList.add('fa-expand');
-                    icon.classList.remove('fa-compress');
-                }
-            }
+            document.querySelectorAll('[id="searchHistoryModalInput"]').forEach(el => el.value = '');
 
+            // ฝั่งผู้บริหารให้แสดงตัวกรองดรอปดาวน์เสมอ
+            document.querySelectorAll('[id="historyModalFilterGroup"]').forEach(group => {
+                group.classList.remove('hidden');
+                group.classList.add('flex');
+            });
+
+            // รีเซ็ตการตั้งค่าจอ
+            document.querySelectorAll('[id="historyModal"]').forEach(wrapper => {
+                const modalContainer = wrapper.querySelector('.modal-container');
+                const icon = wrapper.querySelector('[id="maximizeHistoryIcon"]');
+                const header = modalContainer.querySelector('div:first-child');
+                
+                if (modalContainer.classList.contains('w-full')) {
+                    wrapper.classList.add('px-4'); wrapper.classList.remove('p-0');
+                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                    if (header) { header.classList.add('rounded-t-3xl'); header.classList.remove('rounded-none'); }
+                    if (icon) { icon.classList.add('fa-expand'); icon.classList.remove('fa-compress'); }
+                }
+            });
+            
             toggleModal('historyModal');
+        }
+
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ (Executive) ✨
+        function toggleMaximizeHistoryModal() {
+            document.querySelectorAll('[id="historyModal"]').forEach(wrapper => {
+                const modalContainer = wrapper.querySelector('.modal-container');
+                const icon = wrapper.querySelector('[id="maximizeHistoryIcon"]');
+                const header = modalContainer.querySelector('div:first-child');
+                
+                if (modalContainer.classList.contains('max-w-[95%]')) {
+                    // ขยายจอ
+                    wrapper.classList.remove('px-4'); wrapper.classList.add('p-0');
+                    modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                    if (header) { header.classList.remove('rounded-t-3xl'); header.classList.add('rounded-none'); }
+                    if (icon) { icon.classList.remove('fa-expand'); icon.classList.add('fa-compress'); }
+                } else {
+                    // ย่อกลับขนาดเดิม
+                    wrapper.classList.add('px-4'); wrapper.classList.remove('p-0');
+                    modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
+                    modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
+                    if (header) { header.classList.add('rounded-t-3xl'); header.classList.remove('rounded-none'); }
+                    
+                    // รีเซ็ตตัวกรองเวลากลับมาจอเล็ก (ถ้าต้องการ)
+                    selectChartDropdown('history-Month', 'all', 'เดือน', searchHistoryModalTable);
+                    selectChartDropdown('history-Year', 'all', 'ปี (พ.ศ.)', searchHistoryModalTable);
+                    
+                    if (icon) { icon.classList.add('fa-expand'); icon.classList.remove('fa-compress'); }
+                }
+            });
         }
 
         function setReviewFilter(val) {
@@ -2869,70 +2868,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ✨
-        function toggleMaximizeHistoryModal() {
-            const wrapper = document.getElementById('historyModal');
-            const modalContainer = wrapper.querySelector('.modal-container');
-            const icon = document.getElementById('maximizeHistoryIcon');
-            const header = modalContainer.querySelector('div:first-child');
-            const filterGroup = document.getElementById('historyModalFilterGroup'); // ดึงกลุ่ม Dropdown มา
-            
-            if (modalContainer.classList.contains('max-w-[95%]')) {
-                // ขยายจอ
-                wrapper.classList.remove('px-4');
-                wrapper.classList.add('p-0');
-                
-                modalContainer.classList.remove('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
-                
-                if (header) {
-                    header.classList.remove('rounded-t-3xl');
-                    header.classList.add('rounded-none');
-                }
-                
-                // ✨ แสดง Dropdown เดือน/ปี เมื่อขยายจอ
-                if(filterGroup) {
-                    filterGroup.classList.remove('hidden');
-                    filterGroup.classList.add('flex');
-                }
-                
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-            } else {
-                // ย่อกลับขนาดเดิม
-                wrapper.classList.add('px-4');
-                wrapper.classList.remove('p-0');
-                
-                modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
-                modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
-                
-                if (header) {
-                    header.classList.add('rounded-t-3xl');
-                    header.classList.remove('rounded-none');
-                }
-                
-                // ✨ จัดการ Dropdown เดือน/ปี เมื่อย่อจอ ✨
-                if(filterGroup) {
-                    const titleText = document.getElementById('historyModalTitle').innerText;
-                    if (titleText.includes('ประวัติงานช่าง')) {
-                        // ถ้าเป็นช่าง ให้โชว์ไว้เหมือนเดิม
-                        filterGroup.classList.remove('hidden');
-                        filterGroup.classList.add('flex');
-                    } else {
-                        // ถ้าเป็นผู้แจ้งซ่อม ให้ซ่อนเพื่อไม่ให้รก
-                        filterGroup.classList.add('hidden');
-                        filterGroup.classList.remove('flex');
-                    }
-                    
-                    // รีเซ็ตค่ากลับเป็น ทั้งหมด
-                    selectChartDropdown('history-Month', 'all', 'เดือน', searchHistoryModalTable);
-                    selectChartDropdown('history-Year', 'all', 'ปี (พ.ศ.)', searchHistoryModalTable);
-                }
-                
-                icon.classList.add('fa-expand');
-                icon.classList.remove('fa-compress');
-            }
-        }
         // ✨ ตรวจจับการคลิกเปิดหน้า Edit หรือ View (บล็อกการรีเฟรชหน้าจอเพื่อไม่ให้กระตุกแว็บ)
         document.addEventListener('click', function(e) {
             const target = e.target.closest('a[href*="update_repair.php"], div[onclick*="update_repair.php"], a[href*="view_repair.php"]');
