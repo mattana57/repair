@@ -1173,14 +1173,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             
             <div class="px-5 py-4 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
                 <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full xl:w-auto" id="historyModalTitle">History</p>
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto xl:justify-end">
+                <div class="flex flex-wrap items-center gap-3 md:gap-5 w-full xl:w-auto xl:justify-end">
                     
-                    <div class="relative flex-1 min-w-[150px] xl:w-64">
+                    <div class="relative flex-1 min-w-[150px] xl:w-72 mr-1 md:mr-4">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
 
-                    <div class="flex items-center gap-2 shrink-0 ml-auto xl:ml-2">
+                    <div class="flex items-center gap-2 shrink-0 ml-auto xl:ml-0 pl-1 md:pl-3 border-l border-slate-200">
                         <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
                         </button>
