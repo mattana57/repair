@@ -1859,7 +1859,7 @@ $dept_icons = [
                                     <th class="px-6 py-4">Name</th>
                                     <th class="px-6 py-4">Contact</th>
                                     <th class="px-6 py-4 text-center">Reports</th>
-                                    <th class="px-6 py-4 text-right">Action</th>
+                                    <th class="py-4 pl-6 pr-[68px] text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
