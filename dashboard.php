@@ -3070,17 +3070,17 @@ $dept_icons = [
                 let textMatch = true;
                 let dateMatch = true;
 
-                // 1. กรองช่องค้นหาข้อความ
+                // 1. กรองช่องค้นหาข้อความ (เปลี่ยนจาก innerText เป็น textContent ป้องกันบั๊กแถวซ่อน)
                 if (searchFilter !== '') {
-                    let text = row.innerText.toLowerCase().replace(/\s+/g, '');
+                    let text = row.textContent.toLowerCase().replace(/\s+/g, '');
                     if (!text.includes(searchFilter)) {
                         textMatch = false;
                     }
                 }
 
-                // 2. กรองเดือน/ปี
+                // 2. กรองเดือน/ปี (เปลี่ยนจาก innerText เป็น textContent ป้องกันบั๊กแถวซ่อน)
                 if (monthFilter !== 'all' || yearFilter !== 'all') {
-                    let dateText = row.cells[0].innerText.trim();
+                    let dateText = row.cells[0].textContent.trim();
                     let dateMatchObj = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
                     
                     if (dateMatchObj) {
