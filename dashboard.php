@@ -1361,7 +1361,7 @@ $dept_icons = [
                                             </td>
                                         </tr>";
                                     }
-                                } else { echo "<tr><td colspan='11' class='px-6 py-16 text-center text-slate-400 font-medium'>No records found</td></tr>"; }
+                                } else { echo "<tr><td colspan='11' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>"; }
                                 ?>
                             </tbody>
                         </table>
@@ -3111,8 +3111,8 @@ $dept_icons = [
                 if (!emptyRow) {
                     emptyRow = document.createElement('tr');
                     emptyRow.className = 'empty-filter-row';
-                    // สร้างข้อความตามดีไซน์รูปที่ 3
-                    emptyRow.innerHTML = `<td colspan="11" class="px-6 py-16 text-center text-slate-400 font-medium">ยังไม่เคยรับงานซ่อมในระบบ</td>`;
+                    // สร้างข้อความพร้อมขยายความสูง 400px
+                    emptyRow.innerHTML = `<td colspan="11" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">ยังไม่เคยรับงานซ่อมในระบบ</td>`;
                     tbody.appendChild(emptyRow);
                 } else {
                     emptyRow.style.display = '';
@@ -4170,7 +4170,7 @@ $dept_icons = [
 
             if(userRepairs.length === 0) {
                 let emptyMsg = type === 'reporter' ? 'ยังไม่มีประวัติการแจ้งซ่อม' : 'ยังไม่เคยรับงานซ่อมในระบบ';
-                tbody.innerHTML = `<tr><td colspan="11" class="px-6 py-16 text-center text-slate-400 font-medium">${emptyMsg}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">${emptyMsg}</td></tr>`;
             } else {
                 userRepairs.forEach(r => {
                     let statusClass = 'badge-pending';
