@@ -3098,6 +3098,12 @@ $dept_icons = [
             });
         }
 
+            if(id === 'dash' && !window.chartsRendered) {
+                renderAllCharts();
+                window.chartsRendered = true;
+            }
+        }
+
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
             document.getElementById('sidebarOverlay').classList.toggle('hidden');

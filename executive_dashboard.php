@@ -1657,6 +1657,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 }
             });
         }
+        
+        }
 
         function formatValJS(val) {
             if (!val || String(val).trim() === '-' || String(val).trim() === '') return "<span class='text-rose-500 font-bold'>-</span>";
