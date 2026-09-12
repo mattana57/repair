@@ -2285,18 +2285,22 @@ $dept_icons = [
             
             <div class="px-5 py-4 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
                 <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full xl:w-auto" id="historyModalTitle">History</p>
-                <div class="flex flex-wrap items-center gap-4 md:gap-6 w-full xl:w-auto xl:justify-end">
+                <div class="flex flex-wrap items-center justify-between xl:justify-end w-full xl:w-auto">
                     
-                    <div class="relative flex-1 min-w-[150px] xl:w-64">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                    <!-- ส่วนค้นหาและปุ่ม Contacts จัดกลุ่มให้อยู่ใกล้กันแบบไม่มีเส้นกั้น -->
+                    <div class="flex items-center justify-end gap-2 flex-1 xl:flex-none">
+                        <div class="relative w-full sm:w-56 xl:w-64">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        </div>
+                        
+                        <button id="historyModalLinkBtn" class="text-xs md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
+                            <i class="fas fa-address-book md:mr-1.5"></i> <span class="hidden md:inline">Contacts</span>
+                        </button>
                     </div>
-                    
-                    <button id="historyModalLinkBtn" class="text-xs md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0 md:ml-2">
-                        <i class="fas fa-address-book md:mr-1.5"></i> <span class="hidden md:inline">Contacts</span>
-                    </button>
 
-                    <div class="flex items-center gap-2 shrink-0 ml-auto md:ml-4">
+                    <!-- ปุ่มขยาย/ปิด ดันให้ห่างออกมาอีกนิดตามความต้องการ -->
+                    <div class="flex items-center gap-2 shrink-0 ml-4 md:ml-8">
                         <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-10 md:h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
                         </button>
