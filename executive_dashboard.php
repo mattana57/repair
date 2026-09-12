@@ -770,13 +770,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                             <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
                         </div>
-                        <div class="flex items-center justify-end w-full md:w-auto">
-                            <div class="relative flex-1 md:w-64 md:flex-none">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-end w-full md:w-auto gap-3">
+                            <div class="relative w-full sm:w-64">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
                             
-                            <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-10 h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50 ml-4 md:ml-8" title="สลับเต็มจอ">
+                            <div class="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                                <div class="relative w-[100px] sm:w-[110px] flex-1 sm:flex-none outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-[13px] text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Month')">
+                                        <span id="table-MonthText" class="truncate">เดือน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('table-Month', 'all', 'เดือน', filterRepairsTable)">
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
+                                        </div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600 truncate' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('table-Month', '{$num_pad}', '{$name}', filterRepairsTable)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="tableMonth" value="all">
+                                </div>
+
+                                <div class="relative w-[100px] sm:w-[110px] flex-1 sm:flex-none outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-[13px] text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
+                                        <span id="table-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('table-Year', 'all', 'ปี (พ.ศ.)', filterRepairsTable)">
+                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
+                                        </div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', 'พ.ศ. {$thai_y}', filterRepairsTable)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="tableYear" value="all">
+                                </div>
+                            </div>
+                            
+                            <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-10 h-10 flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50 hidden md:flex ml-2" title="สลับเต็มจอ">
                                 <i class="fas fa-expand text-base" id="maximizeRepairsIcon"></i>
                             </button>
                         </div>
@@ -1573,12 +1603,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             }
 
             let searchInput = document.getElementById('searchInput');
-            if(searchInput && id === 'repairs') {
-                searchInput.value = '';
-                let activeSection = document.getElementById(id);
-                if(activeSection) {
-                    activeSection.querySelectorAll('table tbody tr').forEach(row => row.style.display = '');
-                }
+            if(searchInput) {
+                searchInput.addEventListener('input', filterRepairsTable);
+            }
+
+            // ✨ ฟังก์ชันกรองตารางหลัก (ค้นหาข้อความ + เดือน/ปี) ✨
+            function filterRepairsTable() {
+                let searchFilter = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase().replace(/\s+/g, '') : '';
+                let monthFilter = document.getElementById('tableMonth') ? document.getElementById('tableMonth').value : 'all';
+                let yearFilter = document.getElementById('tableYear') ? document.getElementById('tableYear').value : 'all';
+
+                let tbody = document.querySelector('#repairsTable tbody');
+                if(!tbody) return;
+
+                let rows = tbody.querySelectorAll('tr.search-row');
+                
+                rows.forEach(row => {
+                    let textMatch = true;
+                    let dateMatch = true;
+
+                    // 1. ตรวจสอบเงื่อนไขข้อความ (ช่องค้นหา)
+                    if (searchFilter !== '') {
+                        let text = row.innerText.toLowerCase().replace(/\s+/g, '');
+                        if (!text.includes(searchFilter)) {
+                            textMatch = false;
+                        }
+                    }
+
+                    // 2. ตรวจสอบเงื่อนไขเดือน/ปี
+                    if (monthFilter !== 'all' || yearFilter !== 'all') {
+                        // ดึงวันที่จากคอลัมน์แรก (Date / Time) ออกมา YYYY-MM-DD
+                        let dateText = row.cells[0].innerText.trim();
+                        let dateMatchObj = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
+                        
+                        if (dateMatchObj) {
+                            let rowYear = dateMatchObj[1];
+                            let rowMonth = dateMatchObj[2];
+
+                            if (monthFilter !== 'all' && rowMonth !== monthFilter) dateMatch = false;
+                            if (yearFilter !== 'all' && rowYear !== yearFilter) dateMatch = false;
+                        } else {
+                            // ถ้าแถวไหนไม่มีวันที่ หรือเกิดข้อผิดพลาดในการดึง ให้ซ่อนไปเลยเมื่อมีการใช้ตัวกรอง
+                            dateMatch = false; 
+                        }
+                    }
+
+                    // แสดงผลเมื่อตรงทั้งข้อความและเดือน/ปี
+                    if (textMatch && dateMatch) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
             }
         }
 
