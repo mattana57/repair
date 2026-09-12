@@ -1206,9 +1206,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full xl:w-auto" id="historyModalTitle">History</p>
                 <div class="flex flex-wrap items-center gap-4 md:gap-6 w-full xl:w-auto xl:justify-end">
                     
+                    <!-- ส่วนค้นหาและปุ่ม Contacts จัดกลุ่มให้อยู่ใกล้กันแบบไม่มีเส้นกั้น -->
                     <div class="relative flex-1 min-w-[150px] xl:w-64">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-xs md:text-sm rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                    </div>
+
+                    <!-- ✨ ชุด Dropdown เดือน/ปี (ซ่อนไว้ก่อน โชว์เฉพาะตอนเต็มจอ) ✨ -->
+                    <div id="historyModalFilterGroup" class="hidden items-center gap-2 shrink-0">
+                        <div class="relative w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Month', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                            <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-xs text-slate-700 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Month')">
+                                <span id="history-MonthText" class="truncate">เดือน</span>
+                                <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                            </div>
+                            <div id="history-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('history-Month', 'all', 'เดือน', searchHistoryModalTable)">
+                                    <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
+                                </div>
+                                <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('history-Month', '{$num_pad}', '{$name}', searchHistoryModalTable)\">{$name}</div>"; } ?>
+                            </div>
+                            <input type="hidden" id="historyMonth" value="all">
+                        </div>
+
+                        <div class="relative w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Year', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                            <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-xs text-slate-700 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Year')">
+                                <span id="history-YearText" class="truncate">ปี (พ.ศ.)</span>
+                                <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                            </div>
+                            <div id="history-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('history-Year', 'all', 'ปี (พ.ศ.)', searchHistoryModalTable)">
+                                    <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
+                                </div>
+                                <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('history-Year', '{$y}', 'พ.ศ. {$thai_y}', searchHistoryModalTable)\">พ.ศ. {$thai_y}</div>"; } ?>
+                            </div>
+                            <input type="hidden" id="historyYear" value="all">
+                        </div>
                     </div>
                     
                     <button id="historyModalLinkBtn" class="text-xs md:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
@@ -2668,19 +2700,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
         // ✨ ฟังก์ชันค้นหาข้อมูลในตารางประวัติ (History Modal) ✨
         function searchHistoryModalTable() {
             let input = document.getElementById('searchHistoryModalInput');
-            if(!input) return;
-            let filter = input.value.toLowerCase().replace(/\s+/g, '');
+            let filter = input ? input.value.toLowerCase().replace(/\s+/g, '') : '';
+            
+            let monthFilter = document.getElementById('historyMonth') ? document.getElementById('historyMonth').value : 'all';
+            let yearFilter = document.getElementById('historyYear') ? document.getElementById('historyYear').value : 'all';
+
             let tbody = document.getElementById('historyTableBody');
             if(!tbody) return;
             
             let rows = tbody.querySelectorAll('tr');
+            let visibleCount = 0;
+
             rows.forEach(row => {
-                // ข้ามแถวที่บอกว่า "ไม่มีข้อมูล"
-                if(row.cells.length === 1) return;
+                // ข้ามแถวที่ใช้บอกว่าไม่มีข้อมูล (ถ้ามี)
+                if(row.classList.contains('empty-filter-row') || row.cells.length === 1) return;
                 
-                let text = row.innerText.toLowerCase().replace(/\s+/g, '');
-                if (text.includes(filter)) {
+                let textMatch = true;
+                let dateMatch = true;
+
+                // 1. กรองช่องค้นหาข้อความ
+                if (filter !== '') {
+                    let text = row.textContent.toLowerCase().replace(/\s+/g, '');
+                    if (!text.includes(filter)) {
+                        textMatch = false;
+                    }
+                }
+
+                // 2. กรองเดือน/ปี
+                if (monthFilter !== 'all' || yearFilter !== 'all') {
+                    // ข้อมูลวันที่อยู่ในคอลัมน์แรกสุด
+                    let dateText = row.cells[0].textContent.trim();
+                    let dateMatchObj = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
+                    
+                    if (dateMatchObj) {
+                        let rowYear = dateMatchObj[1];
+                        let rowMonth = dateMatchObj[2];
+
+                        if (monthFilter !== 'all' && rowMonth !== monthFilter) dateMatch = false;
+                        if (yearFilter !== 'all' && rowYear !== yearFilter) dateMatch = false;
+                    } else {
+                        dateMatch = false; 
+                    }
+                }
+
+                // สรุปการแสดงผล
+                if (textMatch && dateMatch) {
                     row.style.display = '';
+                    visibleCount++;
                 } else {
                     row.style.display = 'none';
                 }
@@ -2780,6 +2846,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
             const modalContainer = wrapper.querySelector('.modal-container');
             const icon = document.getElementById('maximizeHistoryIcon');
             const header = modalContainer.querySelector('div:first-child');
+            const filterGroup = document.getElementById('historyModalFilterGroup'); // ดึงกลุ่ม Dropdown มา
             
             if (modalContainer.classList.contains('max-w-[95%]')) {
                 // ขยายจอ
@@ -2792,6 +2859,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 if (header) {
                     header.classList.remove('rounded-t-3xl');
                     header.classList.add('rounded-none');
+                }
+                
+                // ✨ แสดง Dropdown เดือน/ปี เมื่อขยายจอ
+                if(filterGroup) {
+                    filterGroup.classList.remove('hidden');
+                    filterGroup.classList.add('flex');
                 }
                 
                 icon.classList.remove('fa-expand');
@@ -2807,6 +2880,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 if (header) {
                     header.classList.add('rounded-t-3xl');
                     header.classList.remove('rounded-none');
+                }
+                
+                // ✨ ซ่อน Dropdown เดือน/ปี เมื่อย่อจอ
+                if(filterGroup) {
+                    filterGroup.classList.add('hidden');
+                    filterGroup.classList.remove('flex');
+                    
+                    // รีเซ็ตค่ากลับเป็น ทั้งหมด (ถ้าต้องการให้รีเซ็ตตอนย่อจอ)
+                    selectChartDropdown('history-Month', 'all', 'เดือน', searchHistoryModalTable);
+                    selectChartDropdown('history-Year', 'all', 'ปี (พ.ศ.)', searchHistoryModalTable);
                 }
                 
                 icon.classList.add('fa-expand');
