@@ -17,22 +17,55 @@ include 'db_connect.php';
 
 $conn->set_charset("utf8mb4");
 
-// ✨ ดึงข้อมูล "ผู้บริหาร" (Executive) จากฐานข้อมูลโดยตรง เพื่อให้เชื่อมกับที่แอดมินตั้งค่าไว้อัตโนมัติ ✨
+// ✨ ระบบอัปโหลดรูปโปรไฟล์ผู้บริหาร (ล็อกเป้าบันทึกลงบัญชีผู้บริหารโดยตรง) ✨
+$js_redirect = "history.replaceState(null, '', '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash'));";
+
+// 1. ค้นหา ID ของแถวผู้บริหารในตาราง users
+$target_exec_id = null;
+$exec_chk = $conn->query("SELECT id FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
+if ($exec_chk && $exec_chk->num_rows > 0) {
+    $target_exec_id = $exec_chk->fetch_assoc()['id'];
+}
+$target_user_id = $target_exec_id ? $target_exec_id : $_SESSION['user_id'];
+
+// 2. ถ้ามีการกดบันทึกรูปภาพ ให้บันทึกใส่ ID ของผู้บริหารทันที
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture'])) {
+    if (isset($_FILES['profile_avatar']) && $_FILES['profile_avatar']['error'] === UPLOAD_ERR_OK) {
+        $file_extension = strtolower(pathinfo($_FILES["profile_avatar"]["name"], PATHINFO_EXTENSION));
+        $allowed_extensions = array("jpg", "jpeg", "png", "webp", "gif");
+        
+        if (in_array($file_extension, $allowed_extensions)) {
+            $upload_dir = 'uploads/';
+            if (!is_dir($upload_dir)) @mkdir($upload_dir, 0777, true);
+            $file_name = 'exec_' . time() . '_' . uniqid() . '.' . $file_extension;
+            $target_path = $upload_dir . $file_name;
+            
+            if (move_uploaded_file($_FILES['profile_avatar']['tmp_name'], $target_path)) {
+                $stmt = $conn->prepare("UPDATE users SET avatar_url=? WHERE id=?");
+                $stmt->bind_param("si", $target_path, $target_user_id);
+                $stmt->execute();
+                
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect location.reload(); }); });</script>";
+            }
+        }
+    }
+}
+
+// ✨ ดึงข้อมูลผู้บริหารจากฐานข้อมูลมาแสดงผล ✨
 $current_user_name = 'ยังไม่กำหนดผู้บริหาร';
 $current_user_role = 'Executive';
 $current_username = 'exec';
 $current_user_avatar = "https://api.dicebear.com/7.x/notionists/svg?seed=exec&backgroundColor=e2e8f0";
 
-$exec_res = $conn->query("SELECT username, full_name, role, position, avatar_url FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
+$exec_res = $conn->query("SELECT id, username, full_name, role, position, avatar_url FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
 if ($exec_res && $exec_res->num_rows > 0) {
     $exec_data = $exec_res->fetch_assoc();
     $current_username = $exec_data['username'];
     $current_user_name = !empty($exec_data['full_name']) ? $exec_data['full_name'] : $exec_data['username'];
     $current_user_role = !empty($exec_data['position']) ? $exec_data['position'] : 'Executive';
     
-    // ดึงรูปโปรไฟล์ที่แอดมินอัปโหลดไว้ ถ้าไม่มีให้ใช้รูปการ์ตูน
+    // ดึงรูปโปรไฟล์มาแสดง พร้อมป้องกัน Cache
     if (!empty($exec_data['avatar_url'])) {
-        // ✨ เติม ?v=time() ท้ายลิงก์รูป เพื่อป้องกันการจำ Cache ของเบราว์เซอร์ ✨
         $current_user_avatar = htmlspecialchars($exec_data['avatar_url']) . "?v=" . time();
     } else {
         $current_user_avatar = "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($current_username)."&backgroundColor=e2e8f0";
@@ -174,32 +207,6 @@ $pageTitles = [
     'dash' => 'Dashboard Overview',
     'repairs' => 'All Repairs List'
 ];
-
-// ✨ ระบบอัปโหลดเปลี่ยนรูปโปรไฟล์ผู้บริหาร ✨
-$js_redirect = "history.replaceState(null, '', '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash'));";
-
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture'])) {
-    $user_id = $_SESSION['user_id'];
-    if (isset($_FILES['profile_avatar']) && $_FILES['profile_avatar']['error'] === UPLOAD_ERR_OK) {
-        $file_extension = strtolower(pathinfo($_FILES["profile_avatar"]["name"], PATHINFO_EXTENSION));
-        $allowed_extensions = array("jpg", "jpeg", "png", "webp", "gif");
-        
-        if (in_array($file_extension, $allowed_extensions)) {
-            $upload_dir = 'uploads/';
-            if (!is_dir($upload_dir)) @mkdir($upload_dir, 0777, true);
-            $file_name = 'exec_' . time() . '_' . uniqid() . '.' . $file_extension;
-            $target_path = $upload_dir . $file_name;
-            
-            if (move_uploaded_file($_FILES['profile_avatar']['tmp_name'], $target_path)) {
-                $stmt = $conn->prepare("UPDATE users SET avatar_url=? WHERE id=?");
-                $stmt->bind_param("si", $target_path, $user_id);
-                $stmt->execute();
-                
-                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect location.reload(); }); });</script>";
-            }
-        }
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="th">
