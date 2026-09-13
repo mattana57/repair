@@ -311,6 +311,7 @@ $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=
 // =====================================================================
 
 // ✨ ดึงภาพโปรไฟล์ของ User ประจำเซสชั่น ✨
+$has_custom_avatar = false;
 $current_user_avatar = "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($_SESSION['username'] ?? 'admin')."&backgroundColor=e2e8f0";
 if(isset($_SESSION['user_id'])) {
     $uid = intval($_SESSION['user_id']);
@@ -318,13 +319,30 @@ if(isset($_SESSION['user_id'])) {
     if($u_q && $u_q->num_rows > 0) {
         $u_row = $u_q->fetch_assoc();
         if(!empty($u_row['avatar_url'])) {
-            $current_user_avatar = htmlspecialchars($u_row['avatar_url']);
+            $current_user_avatar = htmlspecialchars($u_row['avatar_url']) . "?v=" . time();
+            $has_custom_avatar = true; // มีรูปที่เคยอัปโหลดไว้
         }
     }
 }
 
 // ✨ ปิดการโหลดหน้าซ้ำซ้อน เพื่อไม่ให้จอกระตุกแว็บหลังจากกด OK ใน SweetAlert ✨
 $js_redirect = "history.replaceState(null, '', '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash'));";
+
+// ✨ ระบบลบรูปโปรไฟล์แอดมิน ✨
+if (isset($_GET['delete_profile_picture'])) {
+    $user_id = $_SESSION['user_id'];
+    $q_old = $conn->query("SELECT avatar_url FROM users WHERE id = $user_id");
+    if ($q_old && $q_old->num_rows > 0) {
+        $old_avatar = $q_old->fetch_assoc()['avatar_url'];
+        if (!empty($old_avatar) && file_exists($old_avatar)) {
+            @unlink($old_avatar);
+        }
+    }
+    $stmt = $conn->prepare("UPDATE users SET avatar_url=NULL WHERE id=?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect location.href = '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || 'dash'); }); });</script>";
+}
 
 // ✨ ระบบอัปโหลดเปลี่ยนรูปโปรไฟล์แอดมิน ✨
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture'])) {
@@ -701,9 +719,14 @@ $dept_icons = [
                             <button type="button" onclick="openImageModal('<?php echo $current_user_avatar; ?>'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
                                 <i class="fas fa-eye text-slate-300 w-4 text-center"></i> ดูรูปภาพ
                             </button>
-                            <button type="button" onclick="document.getElementById('profileAvatarInput').removeAttribute('capture'); document.getElementById('profileAvatarInput').click(); toggleModal('avatarOptionsModal');" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
+                            <button type="button" onclick="document.getElementById('profileAvatarInput').removeAttribute('capture'); document.getElementById('profileAvatarInput').click(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
                                 <i class="fas fa-camera text-slate-300 w-4 text-center"></i> เปลี่ยนรูปภาพ
                             </button>
+                            <?php if ($has_custom_avatar): ?>
+                            <button type="button" onclick="confirmDeleteProfileAvatar(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold text-rose-400 hover:bg-slate-700 transition-colors flex items-center gap-3">
+                                <i class="fas fa-trash-alt text-rose-400 w-4 text-center"></i> ลบรูปภาพ
+                            </button>
+                            <?php endif; ?>
                         </div>
 
                         <!-- ✨ รูปโปรไฟล์ใน Dropdown กดแล้วเปิดเมนูย่อยด้านซ้าย ✨ -->
@@ -3198,6 +3221,24 @@ $dept_icons = [
                 avatarMenu.classList.add('hidden');
                 avatarMenu.classList.remove('flex');
             }
+        }
+
+        // ✨ ฟังก์ชันกดยืนยันลบรูปโปรไฟล์ ✨
+        function confirmDeleteProfileAvatar() {
+            Swal.fire({
+                title: 'ลบรูปโปรไฟล์?',
+                text: "ต้องการลบรูปโปรไฟล์และเปลี่ยนกลับเป็นรูปเริ่มต้นใช่หรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'ยืนยัน ลบรูป',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
+                    window.location.href = '?delete_profile_picture=1&tab=' + t;
+                }
+            });
         }
 
         // คลิกพื้นที่อื่นเพื่อปิดเมนูต่างๆ อัตโนมัติ
