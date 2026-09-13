@@ -4291,10 +4291,10 @@ $dept_icons = [
                         }
                     }
 
-                    // ✨ แก้ไขให้ดึงเวลาจากคอลัมน์ received_at ของจริง ในหน้า History ✨
-                    let has_received = (r.received_at && r.received_at != '0000-00-00 00:00:00' && r.received_at !== null);
-                    let received_date = has_received ? r.received_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    let received_time = has_received && r.received_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.received_at.split(' ')[1].substring(0, 5)}</div>` : '';
+                    // เวลาเข้างานและเสร็จงาน
+                    let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
+                    let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
+                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
 
                     let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
