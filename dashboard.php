@@ -7,15 +7,24 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-if (strtolower($_SESSION['role']) === 'executive') {
+include 'db_connect.php';
+$conn->set_charset("utf8mb4");
+
+// ✨ อัปเดตสิทธิ์ (Role) ล่าสุดจากฐานข้อมูลโดยตรง ป้องกัน Session เพี้ยนแล้วเด้งไปหน้าผู้บริหาร ✨
+$uid_chk = intval($_SESSION['user_id']);
+$user_chk_q = $conn->query("SELECT role, full_name, username FROM users WHERE id = $uid_chk");
+if ($user_chk_q && $user_chk_q->num_rows > 0) {
+    $u_data = $user_chk_q->fetch_assoc();
+    $_SESSION['role'] = $u_data['role'];
+    if (!empty($u_data['full_name'])) $_SESSION['full_name'] = $u_data['full_name'];
+    if (!empty($u_data['username'])) $_SESSION['username'] = $u_data['username'];
+}
+
+// ถ้าเป็นสิทธิ์ Executive ตัวจริง ถึงจะยอมให้ไปหน้า executive_dashboard.php
+if (strtolower($_SESSION['role'] ?? '') === 'executive') {
     header("Location: executive_dashboard.php");
     exit();
 }
-
-include 'db_connect.php';
-
-$conn->set_charset("utf8mb4");
-
 // ✨ ฟังก์ชันจัดการค่าว่าง (-) และ (ไม่ระบุ) ให้เป็นสีแดง ✨
 function formatEmptyOrDash($val) {
     $val = trim((string)$val);
@@ -4731,51 +4740,55 @@ $dept_icons = [
         });
 
         // ✨ ฟังก์ชันจัดการปุ่มลูกศร ขึ้น-ลง และ Enter ในช่องค้นหา (หน้า Report) ✨
-        document.getElementById('reportSearchInput').addEventListener('keydown', function(e) {
-            const list = document.getElementById('reportDropdownList');
-            
-            // ถ้า Dropdown ปิดอยู่ แล้วกดลูกศรลงหรือ Enter ให้เปิด Dropdown
-            if (list.classList.contains('hidden')) {
-                if (e.key === "ArrowDown" || e.key === "Enter") {
-                    toggleReportDropdown(null, true);
+        const reportInputEl = document.getElementById('reportSearchInput');
+        if (reportInputEl) {
+            reportInputEl.addEventListener('keydown', function(e) {
+                const list = document.getElementById('reportDropdownList');
+                if (!list) return;
+                
+                // ถ้า Dropdown ปิดอยู่ แล้วกดลูกศรลงหรือ Enter ให้เปิด Dropdown
+                if (list.classList.contains('hidden')) {
+                    if (e.key === "ArrowDown" || e.key === "Enter") {
+                        toggleReportDropdown(null, true);
+                    }
+                    return;
                 }
-                return;
-            }
 
-            let items = list.querySelectorAll('.report-dropdown-item');
-            let visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
+                let items = list.querySelectorAll('.report-dropdown-item');
+                let visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
 
-            if (e.key === "ArrowDown") {
-                currentReportFocus++;
-                addReportActive(visibleItems);
-                e.preventDefault(); // ป้องกันไม่ให้ cursor ในช่องพิมพ์ขยับ
-            } else if (e.key === "ArrowUp") {
-                currentReportFocus--;
-                addReportActive(visibleItems);
-                e.preventDefault();
-            } else if (e.key === "Enter") {
-                e.preventDefault();
-                if (currentReportFocus > -1) {
-                    if (visibleItems[currentReportFocus]) {
-                        const val = visibleItems[currentReportFocus].getAttribute('data-value');
+                if (e.key === "ArrowDown") {
+                    currentReportFocus++;
+                    addReportActive(visibleItems);
+                    e.preventDefault();
+                } else if (e.key === "ArrowUp") {
+                    currentReportFocus--;
+                    addReportActive(visibleItems);
+                    e.preventDefault();
+                } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (currentReportFocus > -1) {
+                        if (visibleItems[currentReportFocus]) {
+                            const val = visibleItems[currentReportFocus].getAttribute('data-value');
+                            let disp = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
+                            if (val !== 'all') {
+                                const span = visibleItems[currentReportFocus].querySelector('span');
+                                if(span) disp = span.innerText;
+                            }
+                            selectReportTech(val, disp);
+                        }
+                    } else if (visibleItems.length === 1) {
+                        const val = visibleItems[0].getAttribute('data-value');
                         let disp = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
                         if (val !== 'all') {
-                            const span = visibleItems[currentReportFocus].querySelector('span');
+                            const span = visibleItems[0].querySelector('span');
                             if(span) disp = span.innerText;
                         }
                         selectReportTech(val, disp);
                     }
-                } else if (visibleItems.length === 1) {
-                    const val = visibleItems[0].getAttribute('data-value');
-                    let disp = 'รวมทุกฝ่ายงาน (ทั้งหมด)';
-                    if (val !== 'all') {
-                        const span = visibleItems[0].querySelector('span');
-                        if(span) disp = span.innerText;
-                    }
-                    selectReportTech(val, disp);
                 }
-            }
-        });
+            });
+        }
 
         function addReportActive(x) {
             if (!x) return false;
@@ -4783,7 +4796,6 @@ $dept_icons = [
             if (currentReportFocus >= x.length) currentReportFocus = 0;
             if (currentReportFocus < 0) currentReportFocus = (x.length - 1);
             x[currentReportFocus].classList.add("kb-active-item");
-            // เปลี่ยนเป็น auto เพื่อให้ไม่มีแอนิเมชันหน่วงเวลากดปุ่มลูกศรค้าง
             x[currentReportFocus].scrollIntoView({ behavior: 'auto', block: 'nearest' });
         }
 
@@ -4802,7 +4814,6 @@ $dept_icons = [
             const list = document.getElementById(idPrefix + 'List');
             const container = document.getElementById(idPrefix + 'Container');
 
-            // ปิดกล่องอื่นให้หมดก่อนเปิด
             document.querySelectorAll('.chart-dropdown-list').forEach(l => {
                 if (l.id !== list.id) { l.classList.add('hidden'); l.classList.remove('flex'); }
             });
@@ -4822,25 +4833,21 @@ $dept_icons = [
 
         function selectChartDropdown(idPrefix, val, display, renderCallback) {
             const list = document.getElementById(idPrefix + 'List');
-            const actualInputId = idPrefix.replace('-', ''); // ลบขีดออก เช่น equip-Month -> equipMonth
+            const actualInputId = idPrefix.replace('-', ''); 
             document.getElementById(actualInputId).value = val;
             document.getElementById(idPrefix + 'Text').innerText = display;
             list.classList.add('hidden'); list.classList.remove('flex');
 
-            // ล้างแถบสีอันเก่าออกก่อน แต่ต้องเก็บสีของหัวข้อ (data-value="all") ไว้
             list.querySelectorAll('.chart-dropdown-item').forEach(item => {
-                // ✨ ป้องกันไม่ให้ลบสีพื้นหลังของแถบหัวข้อ (เดือน/ปี)
                 if (item.getAttribute('data-value') === 'all') {
                     item.classList.add('bg-indigo-50', 'text-indigo-600');
                     item.classList.remove('text-slate-700', 'hover:bg-slate-100');
                 } else {
-                    // รีเซ็ตสีตัวเลือกอื่นๆ ตามปกติ
                     item.classList.remove('bg-indigo-50', 'text-indigo-600');
                     item.classList.add('text-slate-700', 'hover:bg-slate-100', 'hover:text-indigo-600');
                 }
             });
 
-            // ไฮไลท์อันที่เพิ่งเลือก (ถ้าไม่ได้เลือกคำว่า เดือน/ปี)
             if (val !== 'all') {
                 const selectedItem = list.querySelector(`.chart-dropdown-item[data-value="${val}"]`);
                 if (selectedItem) {
@@ -4852,7 +4859,7 @@ $dept_icons = [
             if (typeof renderCallback === 'function') renderCallback();
         }
 
-        let lastChartKeyTime = 0; // ✨ ตัวแปรหน่วงเวลา
+        let lastChartKeyTime = 0;
         function handleChartKeydown(e, idPrefix, renderCallback) {
             const list = document.getElementById(idPrefix + 'List');
             if (list.classList.contains('hidden')) {
@@ -4860,10 +4867,9 @@ $dept_icons = [
                 return;
             }
 
-            // ✨ ป้องกันการวิ่งเร็วเกินไปตอนกดค้าง
             if (e.key === "ArrowDown" || e.key === "ArrowUp") {
                 const now = Date.now();
-                if (now - lastChartKeyTime < 120) { // 120ms คือกำลังดีครับ
+                if (now - lastChartKeyTime < 120) {
                     e.preventDefault();
                     return; 
                 }
