@@ -918,9 +918,10 @@ $pageTitles = [
                                         $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
                                         $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
 
-                                        $has_received = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-                                        $received_date = $has_received ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $received_time = $has_received ? date('H:i', strtotime($row['created_at'])) : '';
+                                        // ✨ แก้ไขให้ดึงเวลาจากคอลัมน์ received_at ของจริง ✨
+                                        $has_received = (!empty($row['received_at']) && $row['received_at'] != '0000-00-00 00:00:00');
+                                        $received_date = $has_received ? date('Y-m-d', strtotime($row['received_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $received_time = $has_received ? date('H:i', strtotime($row['received_at'])) : '';
                                         $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
 
                                         $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
@@ -2340,9 +2341,10 @@ $pageTitles = [
 
                     let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-rose-500 font-bold'>-</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
 
-                    let has_received = (r.created_at && r.created_at != '0000-00-00 00:00:00');
-                    let received_date = has_received ? createdDate : "<span class='text-rose-500 font-bold'>-</span>";
-                    let received_time = has_received && r.created_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.created_at.split(' ')[1].substring(0, 5)}</div>` : '';
+                    // ✨ แก้ไขให้ดึงเวลาจากคอลัมน์ received_at ของจริง ในหน้า History ✨
+                    let has_received = (r.received_at && r.received_at != '0000-00-00 00:00:00' && r.received_at !== null);
+                    let received_date = has_received ? r.received_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
+                    let received_time = has_received && r.received_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.received_at.split(' ')[1].substring(0, 5)}</div>` : '';
 
                     let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
