@@ -1416,6 +1416,8 @@ $dept_icons = [
                                             $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); 
                                             $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES); 
                                             $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
+                                            // ✨ เพิ่มการดึงค่ารูปภาพโปรไฟล์แอดมิน เพื่อส่งเข้าหน้าต่างแก้ไข
+                                            $js_avatar = !empty($u['avatar_url']) ? htmlspecialchars($u['avatar_url'], ENT_QUOTES) : '';
                                             
                                             $u_username = formatEmptyOrDash($u['username']);
                                             $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
@@ -1436,7 +1438,8 @@ $dept_icons = [
                                                 <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 align-middle text-center'>
                                                     <div class='flex items-center justify-center space-x-2'>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <!-- ✨ แก้ไขพารามิเตอร์ตัวสุดท้ายให้ส่งค่า $js_avatar เข้าไปด้วย -->
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '$js_avatar')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
