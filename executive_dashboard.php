@@ -32,7 +32,8 @@ if ($exec_res && $exec_res->num_rows > 0) {
     
     // ดึงรูปโปรไฟล์ที่แอดมินอัปโหลดไว้ ถ้าไม่มีให้ใช้รูปการ์ตูน
     if (!empty($exec_data['avatar_url'])) {
-        $current_user_avatar = htmlspecialchars($exec_data['avatar_url']);
+        // ✨ เติม ?v=time() ท้ายลิงก์รูป เพื่อป้องกันการจำ Cache ของเบราว์เซอร์ ✨
+        $current_user_avatar = htmlspecialchars($exec_data['avatar_url']) . "?v=" . time();
     } else {
         $current_user_avatar = "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($current_username)."&backgroundColor=e2e8f0";
     }
