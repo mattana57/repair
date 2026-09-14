@@ -335,7 +335,8 @@ if(isset($_SESSION['user_id'])) {
 }
 
 // ✨ ปรับคำสั่งให้รีโหลดหน้าเว็บอัตโนมัติไปยังแท็บเดิมทันที ข้อมูลและรูปภาพจะอัปเดตเอง 100% ✨
-$js_redirect = "window.location.href = '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'technicians');";
+$target_tab = isset($_GET['tab']) ? $_GET['tab'] : 'dash';
+$js_redirect = "window.location.replace('?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || '{$target_tab}') + '&t=' + new Date().getTime());";
 
 // ✨ ระบบลบรูปโปรไฟล์แอดมิน ✨
 if (isset($_GET['delete_profile_picture'])) {
@@ -350,7 +351,7 @@ if (isset($_GET['delete_profile_picture'])) {
     $stmt = $conn->prepare("UPDATE users SET avatar_url=NULL WHERE id=?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect }); });</script>";
+    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1000 }).then(() => { window.location.replace('?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || 'technicians') + '&t=' + new Date().getTime()); }); });</script>";
 }
 
 // ✨ ระบบอัปโหลดเปลี่ยนรูปโปรไฟล์แอดมิน ✨
@@ -368,7 +369,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 $stmt = $conn->prepare("UPDATE users SET avatar_url=? WHERE id=?");
                 $stmt->bind_param("si", $target_path, $user_id);
                 $stmt->execute();
-                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect }); });</script>";
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1000 }).then(() => { window.location.replace('?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || 'technicians') + '&t=' + new Date().getTime()); }); });</script>";
             }
         }
     }
@@ -1479,9 +1480,10 @@ $dept_icons = [
                                             $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES); 
                                             $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
                                             
-                                            // ✨ เตรียมลิงก์รูปภาพโปรไฟล์จริงพร้อมโค้ดป้องกันแคช ?v=time() ถ้าไม่มีรูปจะใช้การ์ตูนตาม Username ✨
-                                            $admin_img_src = !empty($u['avatar_url']) ? htmlspecialchars($u['avatar_url']) . "?v=" . time() : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($u['username'])."&backgroundColor=e2e8f0";
-                                            $js_avatar = !empty($u['avatar_url']) ? htmlspecialchars($u['avatar_url'], ENT_QUOTES) . "?v=" . time() : '';
+                                            // ✨ ตรวจสอบไฟล์จริงบน Server ถ้ามีรูปให้ใส่ timestamp ทันที ป้องกันเบราว์เซอร์จำภาพแคชเก่า ✨
+                                            $has_real_avatar = (!empty($u['avatar_url']) && file_exists($u['avatar_url']));
+                                            $admin_img_src = $has_real_avatar ? (htmlspecialchars($u['avatar_url']) . "?v=" . filemtime($u['avatar_url'])) : "https://api.dicebear.com/7.x/notionists/svg?seed=" . urlencode($u['username']) . "&backgroundColor=e2e8f0";
+                                            $js_avatar_param = $has_real_avatar ? (htmlspecialchars($u['avatar_url'], ENT_QUOTES) . "?v=" . filemtime($u['avatar_url'])) : '';
 
                                             $u_username = formatEmptyOrDash($u['username']);
                                             $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
@@ -1502,7 +1504,7 @@ $dept_icons = [
                                                 <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 align-middle text-center'>
                                                     <div class='flex items-center justify-center space-x-2'>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '{$admin_img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '{$js_avatar_param}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
@@ -4254,9 +4256,10 @@ $dept_icons = [
             document.getElementById('techAdmin_englishname').value = en;
             document.getElementById('techAdmin_phone').value = p; 
             
-            // ✨ สุ่มรูปตาม Username (u) ก่อน เพื่อให้รูปตรงกับในตาราง 100% ✨
-            const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(u || f || 'admin') + '&backgroundColor=e2e8f0';
-            document.getElementById('avatarPreviewImg').src = avatarUrl ? avatarUrl : defaultImg;
+            // ✨ กำหนดรูปเริ่มต้นตาม username (u) หรือชื่อช่าง (f) ให้ตรงกับตารางเป๊ะๆ ✨
+            let seedKey = u ? u : (f ? f : 'admin');
+            const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(seedKey) + '&backgroundColor=e2e8f0';
+            document.getElementById('avatarPreviewImg').src = (avatarUrl && avatarUrl.trim() !== '') ? avatarUrl : defaultImg;
             document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
             
             const avatarInput = document.getElementById('techAdmin_avatar');
