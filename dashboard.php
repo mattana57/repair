@@ -32,12 +32,11 @@ if (isset($_GET['api_get_admin_avatars'])) {
 
 // ✨ อัปเดตสิทธิ์ (Role) ล่าสุดจากฐานข้อมูลโดยตรง ป้องกัน Session เพี้ยนแล้วเด้งไปหน้าผู้บริหาร ✨
 $uid_chk = intval($_SESSION['user_id']);
-$user_chk_q = $conn->query("SELECT role, full_name, english_name, username FROM users WHERE id = $uid_chk");
+$user_chk_q = $conn->query("SELECT role, full_name, username FROM users WHERE id = $uid_chk");
 if ($user_chk_q && $user_chk_q->num_rows > 0) {
     $u_data = $user_chk_q->fetch_assoc();
     $_SESSION['role'] = $u_data['role'];
     if (!empty($u_data['full_name'])) $_SESSION['full_name'] = $u_data['full_name'];
-    if (!empty($u_data['english_name'])) $_SESSION['english_name'] = $u_data['english_name'];
     if (!empty($u_data['username'])) $_SESSION['username'] = $u_data['username'];
 }
 
@@ -788,14 +787,11 @@ $dept_icons = [
 
                 <!-- 💻 สำหรับคอม / โน๊ตบุ๊ค / ไอแพด / แท็บเล็ต / จอแนวนอน: แสดงเป็นแถบแคปซูลแนวนอนชิ้นเดียวเหมือนเดิมเป๊ะ -->
                 <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
-                    <div class="text-right flex flex-col justify-center">
-                        <span class="block text-sm font-extrabold text-slate-800 leading-none max-w-[150px] truncate">
+                    <div class="text-right">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 max-w-[150px] truncate">
                             <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <?php if (!empty($_SESSION['english_name'])): ?>
-                            <span class="block text-[10px] font-bold text-slate-400 leading-none mt-1 max-w-[150px] truncate"><?php echo htmlspecialchars($_SESSION['english_name']); ?></span>
-                        <?php endif; ?>
-                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider mt-1.5">Administrator</span>
+                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
                     </div>
                     <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
                         <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
