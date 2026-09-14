@@ -505,10 +505,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             $department = $_POST['department_custom'];
         }
 
+        // ✨ จัดการอัปโหลดไฟล์รูปภาพโปรไฟล์ของ Admin และ Executive ✨
+        $avatar_url = NULL;
+        $upload_dir = 'uploads/';
+        if (!is_dir($upload_dir)) {
+            @mkdir($upload_dir, 0777, true);
+        }
+
+        if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+            $file_extension = strtolower(pathinfo($_FILES["avatar"]["name"], PATHINFO_EXTENSION));
+            $allowed_extensions = array("jpg", "jpeg", "png", "webp", "gif");
+            
+            if (in_array($file_extension, $allowed_extensions)) {
+                $file_name = 'admin_' . time() . '_' . uniqid() . '.' . $file_extension;
+                $target_path = $upload_dir . $file_name;
+                if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_path)) {
+                    $avatar_url = $target_path;
+                }
+            }
+        }
+
         if (empty($user_id)) {
-            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, english_name, position, phone, department, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, english_name, position, phone, department, role, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             if ($stmt) {
-                $stmt->bind_param("ssssssss", $username, $password, $full_name, $english_name, $position, $phone, $department, $role);
+                $stmt->bind_param("sssssssss", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $avatar_url);
                 if ($stmt->execute()) {
                     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'เพิ่มข้อมูลผู้ดูแลระบบสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
                 } else {
@@ -518,11 +538,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             }
         } else {
             if (!empty($password)) {
-                $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=? WHERE id=?");
-                if ($stmt) $stmt->bind_param("ssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
+                if ($avatar_url) {
+                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=?, avatar_url=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $avatar_url, $user_id);
+                } else {
+                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("ssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
+                }
             } else {
-                $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=? WHERE id=?");
-                if ($stmt) $stmt->bind_param("sssssssi", $username, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
+                if ($avatar_url) {
+                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=?, avatar_url=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("ssssssssi", $username, $full_name, $english_name, $position, $phone, $department, $role, $avatar_url, $user_id);
+                } else {
+                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("sssssssi", $username, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
+                }
             }
             if ($stmt && $stmt->execute()) {
                 echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
@@ -4176,9 +4206,15 @@ $dept_icons = [
                 deptDiv.classList.add('hidden'); 
                 document.getElementById('techAdmin_department_select').required = false;
                 
-                let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; document.getElementById('techAdmin_level').value = exactRole;
-                loginCredsDiv.classList.remove('hidden'); document.getElementById('techAdmin_username').required = true;
-                if(avatarDiv) avatarDiv.classList.add('hidden');
+                let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; 
+                document.getElementById('techAdmin_level').value = exactRole;
+                loginCredsDiv.classList.remove('hidden'); 
+                document.getElementById('techAdmin_username').required = true;
+                
+                // ✨ เปิดกล่องอัปโหลดรูปภาพโปรไฟล์ให้เหมือนฝั่งช่างเป๊ะๆ ✨
+                if(avatarDiv) avatarDiv.classList.remove('hidden');
+                if(avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
+                if(avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
                 if(positionDiv) positionDiv.classList.add('hidden');
             } else {
                 adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
