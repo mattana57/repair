@@ -1462,7 +1462,8 @@ $dept_icons = [
                                                 <td class='px-6 py-4 align-top font-bold text-slate-700'>{$u_username}</td>
                                                 <td class='px-6 py-4 align-top'>
                                                     <div class='flex items-center'>
-                                                        <img src='{$admin_img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($u['username'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
+                                                        <!-- ✨ แสดงรูปโปรไฟล์ของผู้บริหารและแอดมิน เหมือนกับช่างซ่อม ✨ -->
+                                                        <img src='{$admin_img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($u['username'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                         <div>
                                                             <div class='text-slate-800 font-bold'>{$th_name_html}</div>
                                                             {$en_name_html}
