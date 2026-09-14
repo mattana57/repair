@@ -723,9 +723,9 @@ $dept_icons = [
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
-    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden xl:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
+    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
         <!-- ✨ เพิ่มสีพื้นหลังม่วงอมฟ้าสว่างๆ ให้กล่องโลโก้ดูโดดเด่นและเข้าธีม ✨ -->
         <div class="sidebar-logo-box flex items-center border-b border-indigo-50 bg-[#f4f4fd]">
             <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3.5 shrink-0 hover:scale-105 transition-transform duration-300">
@@ -773,7 +773,7 @@ $dept_icons = [
         
         <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50 gap-2">
             <div class="flex items-center min-w-0 pr-2">
-                <button onclick="toggleSidebar()" class="md:hidden mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0">
+                <button onclick="toggleSidebar()" class="xl:hidden mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
                 <h3 class="text-[15px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate" id="headerTitle"><?php echo $currentTitle; ?></h3>
@@ -954,9 +954,9 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex flex-wrap justify-between items-start md:items-center gap-3 mb-4 w-full">
+                        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 mb-4 w-full">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
@@ -1036,7 +1036,7 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex flex-wrap justify-between items-start md:items-center gap-3 mb-4 w-full">
                             <div>
@@ -1118,9 +1118,9 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-6">
                     
-                    <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
+                    <div class="modern-card p-6 flex flex-col xl:col-span-7 justify-between">
                         <div class="flex flex-wrap justify-between items-start md:items-center gap-3 mb-4 w-full">
                             <div class="flex flex-col">
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
@@ -1164,8 +1164,8 @@ $dept_icons = [
                         </div>
                     </div>
 
-                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
-                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-wrap justify-between items-start md:items-center shrink-0 gap-3 w-full">
+                    <div class="modern-card overflow-hidden flex flex-col xl:col-span-5 h-full">
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3 w-full">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Top Reporters</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
@@ -3254,7 +3254,7 @@ $dept_icons = [
                 }
             }
             
-            if (window.innerWidth < 768) {
+            if (window.innerWidth < 1280) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
                 document.getElementById('sidebarOverlay').classList.add('hidden');
             }

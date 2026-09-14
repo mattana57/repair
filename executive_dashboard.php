@@ -313,7 +313,7 @@ $pageTitles = [
 
         <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-10 sticky top-0 shadow-md shadow-indigo-200/50">
             <div class="flex items-center">
-                <button onclick="toggleSidebar()" class="md:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
+                <button onclick="toggleSidebar()" class="xl:hidden mr-4 text-white hover:text-indigo-100 focus:outline-none">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
                 <!-- ✨ ปรับขนาดตัวอักษรให้ใหญ่เท่าหน้าแอดมิน (md:text-3xl) และให้เปลี่ยนชื่อแท็บอัตโนมัติ ✨ -->
@@ -452,9 +452,9 @@ $pageTitles = [
                 </div>
 
                 <!-- Equipment & Work Status -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex flex-wrap justify-between items-start md:items-center gap-3 mb-4 w-full">
+                        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 mb-4 w-full">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
@@ -536,7 +536,7 @@ $pageTitles = [
                 </div>
 
                 <!-- Locations & Workload -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex flex-wrap justify-between items-start md:items-center gap-3 mb-4 w-full">
                             <div>
@@ -619,8 +619,9 @@ $pageTitles = [
                 </div>
 
                 <!-- Customer Satisfaction & Top Reporters -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-                    <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-6">
+                    
+                    <div class="modern-card p-6 flex flex-col xl:col-span-7 justify-between">
                         <div class="flex flex-wrap justify-between items-start md:items-center gap-3 mb-4 w-full">
                             <div class="flex flex-col">
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
@@ -663,8 +664,8 @@ $pageTitles = [
                         </div>
                     </div>
 
-                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
-                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-wrap justify-between items-start md:items-center shrink-0 gap-3 w-full">
+                    <div class="modern-card overflow-hidden flex flex-col xl:col-span-5 h-full">
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3 w-full">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Top Reporters</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
@@ -1686,7 +1687,7 @@ $pageTitles = [
             if(activeBtn) activeBtn.classList.add('active-btn');
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'Executive View';
             
-            if (window.innerWidth < 768) {
+            if (window.innerWidth < 1280) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
                 document.getElementById('sidebarOverlay').classList.add('hidden');
             }
