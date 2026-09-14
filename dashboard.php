@@ -10,6 +10,26 @@ if (!isset($_SESSION['user_id'])) {
 include 'db_connect.php';
 $conn->set_charset("utf8mb4");
 
+// ✨ API ส่งข้อมูลรูปภาพล่าสุดแบบเรียลไทม์ สำหรับอัปเดตหน้าจออัตโนมัติไม่ต้องกดรีเฟรช ✨
+if (isset($_GET['api_get_admin_avatars'])) {
+    header('Content-Type: application/json; charset=utf-8');
+    $avatars_data = [];
+    $res_avatars = $conn->query("SELECT id, username, avatar_url FROM users WHERE LOWER(role) IN ('admin', 'executive')");
+    if ($res_avatars) {
+        while ($row_av = $res_avatars->fetch_assoc()) {
+            $has_file = (!empty($row_av['avatar_url']) && file_exists($row_av['avatar_url']));
+            $avatars_data[] = [
+                'id' => (int)$row_av['id'],
+                'username' => $row_av['username'],
+                'avatar_url' => $has_file ? ($row_av['avatar_url'] . '?v=' . filemtime($row_av['avatar_url'])) : '',
+                'default_avatar' => "https://api.dicebear.com/7.x/notionists/svg?seed=" . urlencode($row_av['username']) . "&backgroundColor=e2e8f0"
+            ];
+        }
+    }
+    echo json_encode($avatars_data);
+    exit();
+}
+
 // ✨ อัปเดตสิทธิ์ (Role) ล่าสุดจากฐานข้อมูลโดยตรง ป้องกัน Session เพี้ยนแล้วเด้งไปหน้าผู้บริหาร ✨
 $uid_chk = intval($_SESSION['user_id']);
 $user_chk_q = $conn->query("SELECT role, full_name, username FROM users WHERE id = $uid_chk");
@@ -1489,11 +1509,11 @@ $dept_icons = [
                                             $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
                                             $en_name_html = (!empty($en_name) && $en_name !== '-') ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>".htmlspecialchars($en_name)."</div>" : "";
 
-                                            echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors' data-admin-row-uid='{$u['id']}'>
                                                 <td class='px-6 py-4 align-top font-bold text-slate-700'>{$u_username}</td>
                                                 <td class='px-6 py-4 align-top'>
                                                     <div class='flex items-center'>
-                                                        <img src='{$admin_img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($u['username'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
+                                                        <img id='admin-avatar-{$u['id']}' data-admin-username='".htmlspecialchars($u['username'], ENT_QUOTES)."' src='{$admin_img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($u['username'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='admin-live-avatar w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                         <div>
                                                             <div class='text-slate-800 font-bold'>{$th_name_html}</div>
                                                             {$en_name_html}
@@ -1504,7 +1524,7 @@ $dept_icons = [
                                                 <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 align-middle text-center'>
                                                     <div class='flex items-center justify-center space-x-2'>
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '{$js_avatar_param}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button id='btn-edit-admin-{$u['id']}' onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '{$js_avatar_param}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
@@ -4945,6 +4965,44 @@ $dept_icons = [
                 x[i].classList.remove("kb-active-item");
             }
         }
+
+        // ✨ ระบบ Live Sync: ตรวจจับรูปโปรไฟล์แอดมิน/ผู้บริหาร และเปลี่ยนรูปในตารางทันทีอัตโนมัติไม่ต้องกดรีหน้า ✨
+        async function syncAdminAvatarsLive() {
+            try {
+                const response = await fetch('?api_get_admin_avatars=1&_=' + new Date().getTime());
+                if (!response.ok) return;
+                const admins = await response.json();
+
+                admins.forEach(adm => {
+                    const imgEl = document.getElementById('admin-avatar-' + adm.id);
+                    if (imgEl) {
+                        const newSrc = adm.avatar_url ? adm.avatar_url : adm.default_avatar;
+                        // ถ้าตรวจพบว่ารูปในฐานข้อมูลเปลี่ยนไปจากที่โชว์อยู่ ให้สลับรูปใหม่ทันที
+                        if (imgEl.src !== newSrc && !imgEl.src.includes(adm.avatar_url)) {
+                            imgEl.src = newSrc;
+                        }
+                    }
+                    // อัปเดตรูปของตัวเองที่มุมขวาบนด้วย ถ้าเป็นบัญชีที่ล็อกอินอยู่
+                    const currentUid = <?php echo intval($_SESSION['user_id'] ?? 0); ?>;
+                    if (adm.id === currentUid) {
+                        const topAvatar = document.getElementById('headerAvatarImg');
+                        if (topAvatar) {
+                            const mySrc = adm.avatar_url ? adm.avatar_url : adm.default_avatar;
+                            if (topAvatar.src !== mySrc && !topAvatar.src.includes(adm.avatar_url)) {
+                                topAvatar.src = mySrc;
+                            }
+                        }
+                    }
+                });
+            } catch (err) {
+                // ข้ามเงียบๆ ไม่ให้รบกวนการทำงาน
+            }
+        }
+
+        // เช็คการเปลี่ยนรูปทุกๆ 3 วินาทีแบบเบาเครื่องสุดๆ
+        setInterval(syncAdminAvatarsLive, 3000);
+        // เช็คทันทีเมื่อสลับหน้าต่างกลับมา
+        window.addEventListener('focus', syncAdminAvatarsLive);
     </script>
 </body>
 </html>
