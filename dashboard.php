@@ -1543,7 +1543,7 @@ $dept_icons = [
                                                 <td class='px-6 py-4 align-top font-bold text-slate-700'>{$u_username}</td>
                                                 <td class='px-6 py-4 align-top'>
                                                     <div class='flex items-center'>
-                                                        <img id='admin-avatar-{$u['id']}' data-admin-username='".htmlspecialchars($u['username'], ENT_QUOTES)."' src='{$admin_img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($u['username'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='admin-live-avatar w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
+                                                        <img id='admin-avatar-{$u['id']}' data-admin-username='".htmlspecialchars($u['username'], ENT_QUOTES)."' src='{$admin_img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($u['username'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='admin-live-avatar w-12 h-12 rounded-full object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                         <div>
                                                             <div class='text-slate-800 font-bold'>{$th_name_html}</div>
                                                             {$en_name_html}
@@ -2297,7 +2297,7 @@ $dept_icons = [
                         </select>
                         
                         <div class="flex items-center gap-5 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 shadow-sm">
-                            <div class="w-[100px] h-[100px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
+                            <div id="avatarPreviewWrapper" class="w-[100px] h-[100px] rounded-2xl bg-white border-2 border-slate-100 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
                             </div>
                             <div class="flex-1 min-w-0">
@@ -2723,6 +2723,17 @@ $dept_icons = [
                         cropImage.style.maxHeight = 'none';
 
                         const circleElement = document.getElementById('cropCircleMask');
+                        
+                        // ✨ ปรับกรอบตัดรูป (Crop Mask) ให้เป็นวงกลมสำหรับ Admin และ สี่เหลี่ยมขอบมนสำหรับช่าง ✨
+                        const roleVal = document.getElementById('techAdmin_role') ? document.getElementById('techAdmin_role').value : '';
+                        if (target === 'profile' || roleVal === 'Admin') {
+                            circleElement.classList.remove('rounded-[40px]');
+                            circleElement.classList.add('rounded-full');
+                        } else {
+                            circleElement.classList.remove('rounded-full');
+                            circleElement.classList.add('rounded-[40px]');
+                        }
+
                         const circleSize = circleElement.getBoundingClientRect().width || 320; 
                         
                         const rect = cropImage.getBoundingClientRect();
@@ -4278,6 +4289,7 @@ $dept_icons = [
             const avatarPositionWrapper = document.getElementById('avatarPositionWrapper');
             const positionDiv = document.getElementById('positionDiv');
             const displayPositionLabel = document.getElementById('displayPositionLabel');
+            const avatarPreviewWrapper = document.getElementById('avatarPreviewWrapper');
             
             let oldHidden = document.getElementById('final_avatar_position');
             if(oldHidden) oldHidden.remove();
@@ -4297,10 +4309,18 @@ $dept_icons = [
                 if(avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
                 if(avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
                 if(positionDiv) positionDiv.classList.add('hidden');
+                if(avatarPreviewWrapper) {
+                    avatarPreviewWrapper.classList.remove('rounded-2xl');
+                    avatarPreviewWrapper.classList.add('rounded-full');
+                }
             } else {
                 adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
                 loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
+                if(avatarPreviewWrapper) {
+                    avatarPreviewWrapper.classList.remove('rounded-full');
+                    avatarPreviewWrapper.classList.add('rounded-2xl');
+                }
                 
                 if (id === '') {
                     if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
