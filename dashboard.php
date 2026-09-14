@@ -447,6 +447,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
     
     $position = !empty($_POST['position']) ? $_POST['position'] : NULL;
+    $delete_avatar_flag = isset($_POST['delete_avatar_flag']) ? $_POST['delete_avatar_flag'] : '0';
     if (isset($_POST['position_select'])) {
         $pos_val = $_POST['position_select'];
         if ($pos_val === 'อื่นๆ' && !empty($_POST['position_custom'])) {
@@ -498,12 +499,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ฐานข้อมูลมีปัญหา', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
             }
         } else {
-            if ($avatar_url) {
-                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=?, avatar_url=? WHERE id=?");
-                if ($stmt) $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $department, $avatar_url, $user_id);
-            } else {
-                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=? WHERE id=?");
+            if ($delete_avatar_flag === '1' && !$avatar_url) {
+                $q_old = $conn->query("SELECT avatar_url FROM technicians WHERE id = $user_id");
+                if ($q_old && $q_old->num_rows > 0) {
+                    $old_avatar = $q_old->fetch_assoc()['avatar_url'];
+                    if (!empty($old_avatar) && file_exists($old_avatar)) @unlink($old_avatar);
+                }
+                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=?, avatar_url=NULL WHERE id=?");
                 if ($stmt) $stmt->bind_param("sssssi", $full_name, $english_name, $position, $phone, $department, $user_id);
+            } else {
+                if ($avatar_url) {
+                    $q_old = $conn->query("SELECT avatar_url FROM technicians WHERE id = $user_id");
+                    if ($q_old && $q_old->num_rows > 0) {
+                        $old_avatar = $q_old->fetch_assoc()['avatar_url'];
+                        if (!empty($old_avatar) && file_exists($old_avatar)) @unlink($old_avatar);
+                    }
+                    $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=?, avatar_url=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $department, $avatar_url, $user_id);
+                } else {
+                    $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("sssssi", $full_name, $english_name, $position, $phone, $department, $user_id);
+                }
             }
             
             if ($stmt && $stmt->execute()) {
@@ -558,8 +574,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 }
             }
         } else {
+            if (($delete_avatar_flag === '1' && !$avatar_url) || $avatar_url) {
+                $q_old = $conn->query("SELECT avatar_url FROM users WHERE id = $user_id");
+                if ($q_old && $q_old->num_rows > 0) {
+                    $old_avatar = $q_old->fetch_assoc()['avatar_url'];
+                    if (!empty($old_avatar) && file_exists($old_avatar)) @unlink($old_avatar);
+                }
+            }
+
             if (!empty($password)) {
-                if ($avatar_url) {
+                if ($delete_avatar_flag === '1' && !$avatar_url) {
+                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=?, avatar_url=NULL WHERE id=?");
+                    if ($stmt) $stmt->bind_param("ssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
+                } elseif ($avatar_url) {
                     $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=?, avatar_url=? WHERE id=?");
                     if ($stmt) $stmt->bind_param("sssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $avatar_url, $user_id);
                 } else {
@@ -567,7 +594,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     if ($stmt) $stmt->bind_param("ssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
                 }
             } else {
-                if ($avatar_url) {
+                if ($delete_avatar_flag === '1' && !$avatar_url) {
+                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=?, avatar_url=NULL WHERE id=?");
+                    if ($stmt) $stmt->bind_param("sssssssi", $username, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
+                } elseif ($avatar_url) {
                     $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=?, avatar_url=? WHERE id=?");
                     if ($stmt) $stmt->bind_param("ssssssssi", $username, $full_name, $english_name, $position, $phone, $department, $role, $avatar_url, $user_id);
                 } else {
@@ -2231,6 +2261,7 @@ $dept_icons = [
                 <input type="hidden" name="save_user" value="1">
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
                 <input type="hidden" name="role" id="techAdmin_role" value="">
+                <input type="hidden" name="delete_avatar_flag" id="delete_avatar_flag" value="0">
                 
                 <!-- ✨ เปลี่ยนมาใช้ pt-4 และ flex-col gap-5 เพื่อแก้ปัญหาช่องว่างโล่งๆ ด้านบน ✨ -->
                 <div class="px-6 pt-2 pb-6 overflow-y-auto custom-scrollbar flex-1 flex flex-col gap-5">
@@ -2270,14 +2301,17 @@ $dept_icons = [
                                 <img id="avatarPreviewImg" src="https://api.dicebear.com/7.x/notionists/svg?seed=admin&backgroundColor=e2e8f0" alt="Preview" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity hover:scale-105" onclick="openImageModal(this.src)" title="คลิกเพื่อดูรูปขยาย">
                             </div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-3 mb-2">
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
                                     <label for="techAdmin_avatar" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl text-sm font-bold transition-colors whitespace-nowrap">
                                         เลือกไฟล์รูปภาพ
                                     </label>
-                                    <span id="fileNameDisplay" class="text-sm text-slate-500 truncate">ไม่ได้เลือกไฟล์ใด</span>
+                                    <button type="button" id="btnRemoveAvatar" onclick="removeTechAdminAvatar()" class="hidden cursor-pointer inline-flex items-center justify-center w-9 h-9 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl text-sm transition-all shadow-sm shrink-0" title="ลบรูปภาพ">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                    <span id="fileNameDisplay" class="text-sm text-slate-500 truncate w-full sm:w-auto mt-1 sm:mt-0">ไม่ได้เลือกไฟล์ใด</span>
                                 </div>
                                 <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="hidden" onchange="previewAvatar(event)">
-                                <p class="text-[11px] text-slate-400 mt-2">แนะนำรูปภาพขนาด 1:1 หรือ 4:5 (JPG, PNG)</p>
+                                <p class="text-[11px] text-slate-400 mt-1">แนะนำรูปภาพขนาด 1:1 หรือ 4:5 (JPG, PNG)</p>
                             </div>
                         </div>
                     </div>
@@ -2634,9 +2668,30 @@ $dept_icons = [
                     document.getElementById('avatarPreviewImg').src = e.target.result;
                 }
                 reader.readAsDataURL(file);
+                const btnRemove = document.getElementById('btnRemoveAvatar');
+                if(btnRemove) btnRemove.classList.remove('hidden');
+                document.getElementById('delete_avatar_flag').value = '0';
             } else {
                 document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
             }
+        }
+
+        // ✨ ฟังก์ชันสำหรับลบรูปภาพออกจากพรีวิวและเซ็ตค่าเพื่อลบในฐานข้อมูล ✨
+        function removeTechAdminAvatar() {
+            const avatarInput = document.getElementById('techAdmin_avatar');
+            if(avatarInput) avatarInput.value = '';
+            
+            document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
+            
+            let u = document.getElementById('techAdmin_username').value;
+            let f = document.getElementById('techAdmin_fullname').value;
+            let seedKey = u ? u : (f ? f : 'admin');
+            document.getElementById('avatarPreviewImg').src = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(seedKey) + '&backgroundColor=e2e8f0';
+            
+            const btnRemove = document.getElementById('btnRemoveAvatar');
+            if(btnRemove) btnRemove.classList.add('hidden');
+            
+            document.getElementById('delete_avatar_flag').value = '1';
         }
 
         function openImageModal(imgSrc) {
@@ -4279,8 +4334,16 @@ $dept_icons = [
             // ✨ กำหนดรูปเริ่มต้นตาม username (u) หรือชื่อช่าง (f) ให้ตรงกับตารางเป๊ะๆ ✨
             let seedKey = u ? u : (f ? f : 'admin');
             const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(seedKey) + '&backgroundColor=e2e8f0';
-            document.getElementById('avatarPreviewImg').src = (avatarUrl && avatarUrl.trim() !== '') ? avatarUrl : defaultImg;
+            let hasAvatar = (avatarUrl && avatarUrl.trim() !== '');
+            document.getElementById('avatarPreviewImg').src = hasAvatar ? avatarUrl : defaultImg;
             document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
+            
+            const btnRemove = document.getElementById('btnRemoveAvatar');
+            if(btnRemove) {
+                if(hasAvatar) btnRemove.classList.remove('hidden');
+                else btnRemove.classList.add('hidden');
+            }
+            document.getElementById('delete_avatar_flag').value = '0';
             
             const avatarInput = document.getElementById('techAdmin_avatar');
             if(avatarInput) avatarInput.value = '';
