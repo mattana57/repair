@@ -4381,13 +4381,16 @@ $dept_icons = [
             // ✨ กำหนดรูปเริ่มต้นตาม username (u) หรือชื่อช่าง (f) ให้ตรงกับตารางเป๊ะๆ ✨
             let seedKey = u ? u : (f ? f : 'admin');
             const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(seedKey) + '&backgroundColor=e2e8f0';
-            let hasAvatar = (avatarUrl && avatarUrl.trim() !== '');
-            document.getElementById('avatarPreviewImg').src = hasAvatar ? avatarUrl : defaultImg;
-            document.getElementById('fileNameDisplay').textContent = hasAvatar ? 'มีรูปภาพในระบบ' : 'ไม่ได้เลือกไฟล์ใด';
+            
+            // เช็คว่าเป็นรูปที่อัปโหลดเองจริงๆ (ไม่ใช่รูปการ์ตูน Dicebear)
+            let isUploadedAvatar = (avatarUrl && avatarUrl.trim() !== '' && !avatarUrl.includes('dicebear.com'));
+            
+            document.getElementById('avatarPreviewImg').src = (avatarUrl && avatarUrl.trim() !== '') ? avatarUrl : defaultImg;
+            document.getElementById('fileNameDisplay').textContent = isUploadedAvatar ? 'มีรูปภาพในระบบ' : 'ไม่ได้เลือกไฟล์ใด';
             
             const btnRemove = document.getElementById('btnRemoveAvatar');
             if(btnRemove) {
-                if(hasAvatar) btnRemove.classList.remove('hidden');
+                if(isUploadedAvatar) btnRemove.classList.remove('hidden');
                 else btnRemove.classList.add('hidden');
             }
             document.getElementById('delete_avatar_flag').value = '0';
