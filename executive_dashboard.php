@@ -329,18 +329,11 @@ $pageTitles = [
 
                 <!-- 💻 สำหรับคอม / ไอแพด: แสดงเป็นแถบแคปซูลแนวนอนสีขาว -->
                 <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
-                    <div class="text-right flex flex-col justify-center">
-                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-0.5 max-w-[150px] truncate">
+                    <div class="text-right">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 max-w-[150px] truncate">
                             <?php echo htmlspecialchars($current_user_name); ?>
                         </span>
-                        <?php if (!empty($current_user_eng_name)): ?>
-                            <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-widest max-w-[150px] truncate mb-0.5">
-                                <?php echo htmlspecialchars($current_user_eng_name); ?>
-                            </span>
-                        <?php endif; ?>
-                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">
-                            @<?php echo htmlspecialchars($current_username); ?>
-                        </span>
+                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">EXECUTIVE</span>
                     </div>
                     <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
                         <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
