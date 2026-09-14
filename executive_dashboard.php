@@ -452,7 +452,7 @@ $pageTitles = [
                 </div>
 
                 <!-- Equipment & Work Status -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full">
                             <div class="flex-1 min-w-0 pr-2">
@@ -537,7 +537,7 @@ $pageTitles = [
                 </div>
 
                 <!-- Locations & Workload -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full">
                             <div class="flex-1 min-w-0 pr-2">
