@@ -73,11 +73,12 @@ $current_user_role = 'Executive';
 $current_username = 'exec';
 $current_user_avatar = "https://api.dicebear.com/7.x/notionists/svg?seed=exec&backgroundColor=e2e8f0";
 
-$exec_res = $conn->query("SELECT id, username, full_name, role, position, avatar_url FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
+$exec_res = $conn->query("SELECT id, username, full_name, english_name, role, position, avatar_url FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
 if ($exec_res && $exec_res->num_rows > 0) {
     $exec_data = $exec_res->fetch_assoc();
     $current_username = $exec_data['username'];
     $current_user_name = !empty($exec_data['full_name']) ? $exec_data['full_name'] : $exec_data['username'];
+    $current_user_english_name = !empty($exec_data['english_name']) ? $exec_data['english_name'] : '';
     $current_user_role = !empty($exec_data['position']) ? $exec_data['position'] : 'Executive';
     
     // ดึงรูปโปรไฟล์มาแสดง พร้อมป้องกัน Cache
@@ -327,11 +328,14 @@ $pageTitles = [
 
                 <!-- 💻 สำหรับคอม / ไอแพด: แสดงเป็นแถบแคปซูลแนวนอนสีขาว -->
                 <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
-                    <div class="text-right">
-                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 max-w-[150px] truncate">
+                    <div class="text-right flex flex-col justify-center">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none max-w-[150px] truncate">
                             <?php echo htmlspecialchars($current_user_name); ?>
                         </span>
-                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">EXECUTIVE</span>
+                        <?php if (!empty($current_user_english_name)): ?>
+                            <span class="block text-[10px] font-bold text-slate-400 leading-none mt-1 max-w-[150px] truncate"><?php echo htmlspecialchars($current_user_english_name); ?></span>
+                        <?php endif; ?>
+                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider mt-1.5">EXECUTIVE</span>
                     </div>
                     <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
                         <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
