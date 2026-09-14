@@ -1504,8 +1504,8 @@ $dept_icons = [
                                                 <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 align-middle text-center'>
                                                     <div class='flex items-center justify-center space-x-2'>
-                                                        <!-- ✨ แก้ไขพารามิเตอร์ตัวสุดท้ายให้ส่งค่า $js_avatar เข้าไปด้วย -->
-                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '$js_avatar')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <!-- ✨ แก้ไขพารามิเตอร์ตัวสุดท้ายให้ส่งค่า $admin_img_src แทน เพื่อให้รูปใน Modal ตรงกับในตารางเป๊ะๆ ✨ -->
+                                                        <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '{$admin_img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
@@ -4257,7 +4257,8 @@ $dept_icons = [
             document.getElementById('techAdmin_englishname').value = en;
             document.getElementById('techAdmin_phone').value = p; 
             
-            const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(f || 'admin') + '&backgroundColor=e2e8f0';
+            // ✨ ปรับการดึง Seed ให้ฉลาดขึ้น โดยดึงจาก u (Username) ก่อน ถ้าไม่มีค่อยเอา f (Full Name) รูปจะได้เหมือนกัน 100% ✨
+            const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(u || f || 'admin') + '&backgroundColor=e2e8f0';
             document.getElementById('avatarPreviewImg').src = avatarUrl ? avatarUrl : defaultImg;
             document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
             
