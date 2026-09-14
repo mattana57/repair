@@ -32,11 +32,12 @@ if (isset($_GET['api_get_admin_avatars'])) {
 
 // ✨ อัปเดตสิทธิ์ (Role) ล่าสุดจากฐานข้อมูลโดยตรง ป้องกัน Session เพี้ยนแล้วเด้งไปหน้าผู้บริหาร ✨
 $uid_chk = intval($_SESSION['user_id']);
-$user_chk_q = $conn->query("SELECT role, full_name, username FROM users WHERE id = $uid_chk");
+$user_chk_q = $conn->query("SELECT role, full_name, english_name, username FROM users WHERE id = $uid_chk");
 if ($user_chk_q && $user_chk_q->num_rows > 0) {
     $u_data = $user_chk_q->fetch_assoc();
     $_SESSION['role'] = $u_data['role'];
     if (!empty($u_data['full_name'])) $_SESSION['full_name'] = $u_data['full_name'];
+    if (!empty($u_data['english_name'])) $_SESSION['english_name'] = $u_data['english_name'];
     if (!empty($u_data['username'])) $_SESSION['username'] = $u_data['username'];
 }
 
@@ -787,11 +788,18 @@ $dept_icons = [
 
                 <!-- 💻 สำหรับคอม / โน๊ตบุ๊ค / ไอแพด / แท็บเล็ต / จอแนวนอน: แสดงเป็นแถบแคปซูลแนวนอนชิ้นเดียวเหมือนเดิมเป๊ะ -->
                 <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
-                    <div class="text-right">
-                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 max-w-[150px] truncate">
-                            <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
+                    <div class="text-right flex flex-col justify-center">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-0.5 max-w-[150px] truncate">
+                            <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'Administrator'; ?>
                         </span>
-                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
+                        <?php if (!empty($_SESSION['english_name'])): ?>
+                            <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-widest max-w-[150px] truncate mb-0.5">
+                                <?php echo htmlspecialchars($_SESSION['english_name']); ?>
+                            </span>
+                        <?php endif; ?>
+                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">
+                            @<?php echo !empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'admin'; ?>
+                        </span>
                     </div>
                     <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
                         <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
@@ -829,13 +837,20 @@ $dept_icons = [
                         </div>
 
                         <div class="min-w-0 flex-1">
-                            <p class="text-[15px] font-extrabold text-slate-800 truncate">
+                            <p class="text-[15px] font-extrabold text-slate-800 truncate leading-tight">
                                 <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : 'Administrator'; ?>
                             </p>
-                            <p class="text-[12px] font-medium text-slate-400 truncate mt-0.5">@<?php echo !empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'admin'; ?></p>
-                            <span class="inline-block mt-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-extrabold rounded-md border border-emerald-100 shadow-sm">
-                                <i class="fas fa-shield-alt mr-1"></i>ผู้ดูแลระบบ
-                            </span>
+                            <?php if (!empty($_SESSION['english_name'])): ?>
+                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">
+                                    <?php echo htmlspecialchars($_SESSION['english_name']); ?>
+                                </p>
+                            <?php endif; ?>
+                            <div class="flex items-center gap-1.5 mt-1.5">
+                                <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-extrabold rounded-md border border-emerald-100 shadow-sm whitespace-nowrap">
+                                    <i class="fas fa-shield-alt mr-1"></i>ผู้ดูแลระบบ
+                                </span>
+                                <span class="text-[11px] font-bold text-slate-500 truncate">@<?php echo !empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'admin'; ?></span>
+                            </div>
                         </div>
                     </div>
 

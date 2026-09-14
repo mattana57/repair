@@ -69,15 +69,17 @@ if (isset($_GET['delete_profile_picture'])) {
 // ✨ ดึงข้อมูลผู้บริหารจากฐานข้อมูลมาแสดงผล ✨
 $has_custom_avatar = false;
 $current_user_name = 'ยังไม่กำหนดผู้บริหาร';
+$current_user_eng_name = '';
 $current_user_role = 'Executive';
 $current_username = 'exec';
 $current_user_avatar = "https://api.dicebear.com/7.x/notionists/svg?seed=exec&backgroundColor=e2e8f0";
 
-$exec_res = $conn->query("SELECT id, username, full_name, role, position, avatar_url FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
+$exec_res = $conn->query("SELECT id, username, full_name, english_name, role, position, avatar_url FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
 if ($exec_res && $exec_res->num_rows > 0) {
     $exec_data = $exec_res->fetch_assoc();
     $current_username = $exec_data['username'];
     $current_user_name = !empty($exec_data['full_name']) ? $exec_data['full_name'] : $exec_data['username'];
+    $current_user_eng_name = !empty($exec_data['english_name']) ? $exec_data['english_name'] : '';
     $current_user_role = !empty($exec_data['position']) ? $exec_data['position'] : 'Executive';
     
     // ดึงรูปโปรไฟล์มาแสดง พร้อมป้องกัน Cache
@@ -327,11 +329,18 @@ $pageTitles = [
 
                 <!-- 💻 สำหรับคอม / ไอแพด: แสดงเป็นแถบแคปซูลแนวนอนสีขาว -->
                 <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
-                    <div class="text-right">
-                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 max-w-[150px] truncate">
+                    <div class="text-right flex flex-col justify-center">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-0.5 max-w-[150px] truncate">
                             <?php echo htmlspecialchars($current_user_name); ?>
                         </span>
-                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">EXECUTIVE</span>
+                        <?php if (!empty($current_user_eng_name)): ?>
+                            <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-widest max-w-[150px] truncate mb-0.5">
+                                <?php echo htmlspecialchars($current_user_eng_name); ?>
+                            </span>
+                        <?php endif; ?>
+                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">
+                            @<?php echo htmlspecialchars($current_username); ?>
+                        </span>
                     </div>
                     <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
                         <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
@@ -369,13 +378,20 @@ $pageTitles = [
                         </div>
 
                         <div class="min-w-0 flex-1">
-                            <p class="text-[15px] font-extrabold text-slate-800 truncate">
+                            <p class="text-[15px] font-extrabold text-slate-800 truncate leading-tight">
                                 <?php echo htmlspecialchars($current_user_name); ?>
                             </p>
-                            <p class="text-[12px] font-medium text-slate-400 truncate mt-0.5">@<?php echo htmlspecialchars($current_username); ?></p>
-                            <span class="inline-block mt-1.5 px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-extrabold rounded-md border border-purple-100 shadow-sm">
-                                <i class="fas fa-user-tie mr-1"></i><?php echo htmlspecialchars($current_user_role); ?>
-                            </span>
+                            <?php if (!empty($current_user_eng_name)): ?>
+                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">
+                                    <?php echo htmlspecialchars($current_user_eng_name); ?>
+                                </p>
+                            <?php endif; ?>
+                            <div class="flex items-center gap-1.5 mt-1.5">
+                                <span class="px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-extrabold rounded-md border border-purple-100 shadow-sm whitespace-nowrap">
+                                    <i class="fas fa-user-tie mr-1"></i><?php echo htmlspecialchars($current_user_role); ?>
+                                </span>
+                                <span class="text-[11px] font-bold text-slate-500 truncate">@<?php echo htmlspecialchars($current_username); ?></span>
+                            </div>
                         </div>
                     </div>
 
