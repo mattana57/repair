@@ -2269,7 +2269,7 @@ $dept_icons = [
                     <!-- ✨ ย้ายส่วนอัปโหลดรูปภาพขึ้นมาเป็นอันดับ 1 ให้โชว์บนสุดเสมอ ✨ -->
                     <div id="avatarDiv" class="hidden space-y-3">
                         <div id="avatarLabelWrapper">
-                             <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
+                             <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE</label>
                         </div>
                         
                         <div id="avatarPositionWrapper" class="hidden w-max relative z-30">
