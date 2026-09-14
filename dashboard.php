@@ -2310,7 +2310,7 @@ $dept_icons = [
                                     </button>
                                     <span id="fileNameDisplay" class="text-sm text-slate-500 truncate w-full sm:w-auto mt-1 sm:mt-0">ไม่ได้เลือกไฟล์ใด</span>
                                 </div>
-                                <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="hidden" onchange="showAvatarPreviewModal(this, 'modal')">
+                                <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="hidden" onchange="handleModalAvatarChange(event, this)">
                                 <p class="text-[11px] text-slate-400 mt-1">แนะนำรูปภาพขนาด 1:1 หรือ 4:5 (JPG, PNG)</p>
                             </div>
                         </div>
@@ -2659,7 +2659,28 @@ $dept_icons = [
             return `${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
         }
         
-        // (ฟังก์ชัน previewAvatar ถูกนำออกเพราะใช้ระบบ ครอปภาพ แทนแล้ว)
+        // ✨ ฟังก์ชันจัดการเวลาเลือกรูปใน Modal Add/Edit (แยก Admin ไป Crop / Tech พรีวิวปกติ) ✨
+        function handleModalAvatarChange(event, input) {
+            let roleVal = document.getElementById('techAdmin_role') ? document.getElementById('techAdmin_role').value : '';
+            if (roleVal === 'Admin') {
+                showAvatarPreviewModal(input, 'modal');
+            } else {
+                const file = event.target.files[0];
+                if (file) {
+                    document.getElementById('fileNameDisplay').textContent = file.name;
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('avatarPreviewImg').src = e.target.result;
+                    }
+                    reader.readAsDataURL(file);
+                    const btnRemove = document.getElementById('btnRemoveAvatar');
+                    if(btnRemove) btnRemove.classList.remove('hidden');
+                    document.getElementById('delete_avatar_flag').value = '0';
+                } else {
+                    document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
+                }
+            }
+        }
 
         // ✨ ฟังก์ชันสำหรับลบรูปภาพออกจากพรีวิวและเซ็ตค่าเพื่อลบในฐานข้อมูล ✨
         function removeTechAdminAvatar() {
