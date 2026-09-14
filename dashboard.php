@@ -2154,7 +2154,7 @@ $dept_icons = [
     <form id="profileAvatarForm" action="" method="POST" enctype="multipart/form-data" class="hidden">
         <input type="hidden" name="update_profile_picture" value="1">
         <!-- 🚨 เปลี่ยนคำสั่ง onchange ให้ไปเรียกหน้าต่างพรีวิวก่อน ห้าม Submit ทันที 🚨 -->
-        <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="showAvatarPreviewModal(this)">
+        <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="showAvatarPreviewModal(this, 'profile')">
     </form>
 
     <!-- ✨ Modal หน้าจอพรีวิว (ดีไซน์จัดวางตำแหน่งรูป เลื่อนได้ ซูมได้ สมูท 100%) ✨ -->
@@ -2310,7 +2310,7 @@ $dept_icons = [
                                     </button>
                                     <span id="fileNameDisplay" class="text-sm text-slate-500 truncate w-full sm:w-auto mt-1 sm:mt-0">ไม่ได้เลือกไฟล์ใด</span>
                                 </div>
-                                <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="hidden" onchange="previewAvatar(event)">
+                                <input type="file" name="avatar" id="techAdmin_avatar" accept="image/*" class="hidden" onchange="showAvatarPreviewModal(this, 'modal')">
                                 <p class="text-[11px] text-slate-400 mt-1">แนะนำรูปภาพขนาด 1:1 หรือ 4:5 (JPG, PNG)</p>
                             </div>
                         </div>
@@ -2659,22 +2659,7 @@ $dept_icons = [
             return `${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
         }
         
-        function previewAvatar(event) {
-            const file = event.target.files[0];
-            if (file) {
-                document.getElementById('fileNameDisplay').textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('avatarPreviewImg').src = e.target.result;
-                }
-                reader.readAsDataURL(file);
-                const btnRemove = document.getElementById('btnRemoveAvatar');
-                if(btnRemove) btnRemove.classList.remove('hidden');
-                document.getElementById('delete_avatar_flag').value = '0';
-            } else {
-                document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
-            }
-        }
+        // (ฟังก์ชัน previewAvatar ถูกนำออกเพราะใช้ระบบ ครอปภาพ แทนแล้ว)
 
         // ✨ ฟังก์ชันสำหรับลบรูปภาพออกจากพรีวิวและเซ็ตค่าเพื่อลบในฐานข้อมูล ✨
         function removeTechAdminAvatar() {
@@ -2722,7 +2707,9 @@ $dept_icons = [
             cropImage.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px)) scale(${currentScale})`;
         }
 
-        function showAvatarPreviewModal(input) {
+        let currentCropTarget = 'profile'; // ✨ ตัวแปรเก็บว่ากำลังครอปให้ใคร (โปรไฟล์หลัก หรือ ฟอร์มแอดมิน)
+        function showAvatarPreviewModal(input, target = 'profile') {
+            currentCropTarget = target;
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
@@ -2759,7 +2746,11 @@ $dept_icons = [
         }
 
         function cancelAvatarUpload() {
-            document.getElementById('profileAvatarInput').value = '';
+            if (currentCropTarget === 'profile') {
+                document.getElementById('profileAvatarInput').value = '';
+            } else {
+                document.getElementById('techAdmin_avatar').value = '';
+            }
             toggleModal('avatarPreviewConfirmModal');
         }
 
@@ -2795,10 +2786,25 @@ $dept_icons = [
                     const file = new File([blob], "avatar_cropped.jpg", { type: "image/jpeg", lastModified: new Date().getTime() });
                     const dataTransfer = new DataTransfer();
                     dataTransfer.items.add(file);
-                    document.getElementById('profileAvatarInput').files = dataTransfer.files;
                     
                     toggleModal('avatarPreviewConfirmModal');
-                    document.getElementById('profileAvatarForm').submit();
+                    
+                    if (currentCropTarget === 'profile') {
+                        document.getElementById('profileAvatarInput').files = dataTransfer.files;
+                        document.getElementById('profileAvatarForm').submit();
+                    } else if (currentCropTarget === 'modal') {
+                        // ส่งไฟล์ที่ครอปกลับไปที่ input ของฟอร์ม Add/Edit
+                        document.getElementById('techAdmin_avatar').files = dataTransfer.files;
+                        // อัปเดตพรีวิวที่กรอบสี่เหลี่ยมใน Modal
+                        document.getElementById('avatarPreviewImg').src = URL.createObjectURL(blob);
+                        document.getElementById('fileNameDisplay').textContent = "avatar_cropped.jpg";
+                        
+                        const btnRemove = document.getElementById('btnRemoveAvatar');
+                        if (btnRemove) btnRemove.classList.remove('hidden');
+                        document.getElementById('delete_avatar_flag').value = '0';
+                        
+                        Swal.close(); // ปิดหน้าต่างโหลด
+                    }
                 }, 'image/jpeg', 0.9);
             }, 100);
         }
