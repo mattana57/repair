@@ -4966,7 +4966,7 @@ $dept_icons = [
             }
         }
 
-        // ✨ ระบบ Live Sync: ตรวจจับรูปโปรไฟล์แอดมิน/ผู้บริหาร และเปลี่ยนรูปในตารางทันทีอัตโนมัติไม่ต้องกดรีหน้า ✨
+        // ✨ ระบบ Live Sync: ตรวจจับรูปโปรไฟล์แอดมิน/ผู้บริหาร ทั้งตอนเปลี่ยนรูปและลบรูปให้สลับอัตโนมัติ 100% ✨
         async function syncAdminAvatarsLive() {
             try {
                 const response = await fetch('?api_get_admin_avatars=1&_=' + new Date().getTime());
@@ -4975,23 +4975,52 @@ $dept_icons = [
 
                 admins.forEach(adm => {
                     const imgEl = document.getElementById('admin-avatar-' + adm.id);
+                    const btnEdit = document.getElementById('btn-edit-admin-' + adm.id);
+                    const hasAvatar = (adm.avatar_url && adm.avatar_url.trim() !== '');
+                    const targetSrc = hasAvatar ? adm.avatar_url : adm.default_avatar;
+
                     if (imgEl) {
-                        const newSrc = adm.avatar_url ? adm.avatar_url : adm.default_avatar;
-                        // ถ้าตรวจพบว่ารูปในฐานข้อมูลเปลี่ยนไปจากที่โชว์อยู่ ให้สลับรูปใหม่ทันที
-                        if (imgEl.src !== newSrc && !imgEl.src.includes(adm.avatar_url)) {
-                            imgEl.src = newSrc;
+                        let isMatching = false;
+                        if (hasAvatar) {
+                            // กรณีมีรูป: ตรวจดูว่ารูปที่แสดงอยู่เป็นไฟล์ล่าสุดนี้แล้วหรือไม่
+                            const purePath = adm.avatar_url.split('?')[0];
+                            isMatching = imgEl.src.includes(purePath);
+                        } else {
+                            // กรณีลบรูปแล้ว (เป็นค่าว่าง): ตรวจดูว่ารูปที่แสดงอยู่กลับเป็นรูปการ์ตูน Dicebear แล้วหรือไม่
+                            isMatching = imgEl.src.includes('dicebear.com');
+                        }
+
+                        // ถ้าตรวจพบว่ารูปยังไม่ตรงกับฐานข้อมูลล่าสุด (ทั้งตอนเปลี่ยนรูป หรือตอนลบรูป) ให้เปลี่ยนรูปทันที!
+                        if (!isMatching) {
+                            imgEl.src = targetSrc;
                         }
                     }
-                    // อัปเดตรูปของตัวเองที่มุมขวาบนด้วย ถ้าเป็นบัญชีที่ล็อกอินอยู่
+
+                    if (btnEdit) {
+                        const targetParam = hasAvatar ? adm.avatar_url : '';
+                        let currentOnClick = btnEdit.getAttribute('onclick') || '';
+                        currentOnClick = currentOnClick.replace(/,[^,]*\)$/, `,'${targetParam}')`);
+                        btnEdit.setAttribute('onclick', currentOnClick);
+                    }
+
+                    // อัปเดตรูปของตัวเองที่มุมขวาบนด้วยทันที
                     const currentUid = <?php echo intval($_SESSION['user_id'] ?? 0); ?>;
                     if (adm.id === currentUid) {
-                        const topAvatar = document.getElementById('headerAvatarImg');
-                        if (topAvatar) {
-                            const mySrc = adm.avatar_url ? adm.avatar_url : adm.default_avatar;
-                            if (topAvatar.src !== mySrc && !topAvatar.src.includes(adm.avatar_url)) {
-                                topAvatar.src = mySrc;
+                        const myAvatars = document.querySelectorAll('#headerAvatarImg, #profileMenuWrapper img');
+                        myAvatars.forEach(av => {
+                            if (av) {
+                                let isMatchingMy = false;
+                                if (hasAvatar) {
+                                    const purePath = adm.avatar_url.split('?')[0];
+                                    isMatchingMy = av.src.includes(purePath);
+                                } else {
+                                    isMatchingMy = av.src.includes('dicebear.com');
+                                }
+                                if (!isMatchingMy) {
+                                    av.src = targetSrc;
+                                }
                             }
-                        }
+                        });
                     }
                 });
             } catch (err) {
@@ -4999,8 +5028,8 @@ $dept_icons = [
             }
         }
 
-        // เช็คการเปลี่ยนรูปทุกๆ 3 วินาทีแบบเบาเครื่องสุดๆ
-        setInterval(syncAdminAvatarsLive, 3000);
+        // เช็คการเปลี่ยนหรือลบรูปทุกๆ 2 วินาทีแบบเรียลไทม์
+        setInterval(syncAdminAvatarsLive, 2000);
         // เช็คทันทีเมื่อสลับหน้าต่างกลับมา
         window.addEventListener('focus', syncAdminAvatarsLive);
     </script>
