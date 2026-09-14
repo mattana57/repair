@@ -4383,7 +4383,7 @@ $dept_icons = [
             const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(seedKey) + '&backgroundColor=e2e8f0';
             let hasAvatar = (avatarUrl && avatarUrl.trim() !== '');
             document.getElementById('avatarPreviewImg').src = hasAvatar ? avatarUrl : defaultImg;
-            document.getElementById('fileNameDisplay').textContent = 'ไม่ได้เลือกไฟล์ใด';
+            document.getElementById('fileNameDisplay').textContent = hasAvatar ? 'มีรูปภาพในระบบ' : 'ไม่ได้เลือกไฟล์ใด';
             
             const btnRemove = document.getElementById('btnRemoveAvatar');
             if(btnRemove) {
