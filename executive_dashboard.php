@@ -454,12 +454,12 @@ $pageTitles = [
                 <!-- Equipment & Work Status -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start xl:items-center gap-2 mb-4 w-full flex-col xl:flex-row">
+                        <div class="flex justify-between items-start xl:items-center gap-3 mb-4 w-full flex-col xl:flex-row">
                             <div class="flex-1 min-w-0 pr-2 w-full">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Equipment Analytics</h3>
                                 <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0">
+                            <div class="flex items-center justify-end gap-2 w-full xl:w-auto shrink-0">
                                 <!-- ✨ Custom Dropdown ✨ -->
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Month')">
@@ -495,12 +495,12 @@ $pageTitles = [
                     </div>
 
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start xl:items-center gap-2 mb-4 w-full flex-col xl:flex-row">
+                        <div class="flex justify-between items-start xl:items-center gap-3 mb-4 w-full flex-col xl:flex-row">
                             <div class="flex-1 min-w-0 pr-2 w-full">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Work Status</h3>
                                 <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">สัดส่วนสถานะการดำเนินงาน</p>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0">
+                            <div class="flex items-center justify-end gap-2 w-full xl:w-auto shrink-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Month', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Month')">
@@ -539,12 +539,12 @@ $pageTitles = [
                 <!-- Locations & Workload -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start xl:items-center gap-2 mb-4 w-full flex-col xl:flex-row">
+                        <div class="flex justify-between items-start xl:items-center gap-3 mb-4 w-full flex-col xl:flex-row">
                             <div class="flex-1 min-w-0 pr-2 w-full">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Top Locations</h3>
                                 <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0">
+                            <div class="flex items-center justify-end gap-2 w-full xl:w-auto shrink-0">
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Month', renderLocChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'loc-Month')">
                                         <span id="loc-MonthText" class="truncate font-bold">เดือน</span>
@@ -579,12 +579,12 @@ $pageTitles = [
                     </div>
                     
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start xl:items-center gap-2 mb-4 w-full flex-col xl:flex-row">
+                        <div class="flex justify-between items-start xl:items-center gap-3 mb-4 w-full flex-col xl:flex-row">
                             <div class="flex-1 min-w-0 pr-2 w-full">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Technician Workload</h3>
                                 <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0">
+                            <div class="flex items-center justify-end gap-2 w-full xl:w-auto shrink-0">
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Month', renderTechChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'tech-Month')">
                                         <span id="tech-MonthText" class="truncate font-bold">เดือน</span>
@@ -623,13 +623,13 @@ $pageTitles = [
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                     
                     <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
-                        <div class="flex justify-between items-start xl:items-center gap-2 mb-4 w-full flex-col xl:flex-row">
+                        <div class="flex justify-between items-start lg:items-center gap-3 mb-4 w-full flex-col lg:flex-row">
                             <div class="flex flex-col flex-1 min-w-0 pr-2 w-full">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Customer Satisfaction</h3>
                                 <span class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">คะแนนความพึงพอใจการให้บริการ</span>
                                 <span class="text-[11px] md:text-[12px] text-indigo-500 font-bold mt-1 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0">
+                            <div class="flex items-center justify-end gap-2 w-full lg:w-auto shrink-0">
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Month')">
                                         <span id="rating-MonthText" class="truncate font-bold">เดือน</span>
@@ -666,12 +666,12 @@ $pageTitles = [
                     </div>
 
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
-                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start xl:items-center shrink-0 gap-2 w-full flex-col xl:flex-row">
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start lg:items-center shrink-0 gap-3 w-full flex-col lg:flex-row">
                             <div class="flex-1 min-w-0 pr-2 w-full">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Top Reporters</h3>
                                 <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0">
+                            <div class="flex items-center justify-end gap-2 w-full lg:w-auto shrink-0">
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Month', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'reporter-Month')">
                                         <span id="reporter-MonthText" class="truncate font-bold">เดือน</span>
