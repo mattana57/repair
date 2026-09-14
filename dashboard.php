@@ -1451,6 +1451,9 @@ $dept_icons = [
                                             // ✨ เพิ่มการดึงค่ารูปภาพโปรไฟล์แอดมิน เพื่อส่งเข้าหน้าต่างแก้ไข
                                             $js_avatar = !empty($u['avatar_url']) ? htmlspecialchars($u['avatar_url'], ENT_QUOTES) : '';
                                             
+                                            // ✨ เตรียมลิงก์รูปภาพโปรไฟล์ หรือรูปการ์ตูนตั้งต้นถ้าไม่มีรูป ✨
+                                            $admin_img_src = !empty($u['avatar_url']) ? htmlspecialchars($u['avatar_url']) : "https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($u['username'])."&backgroundColor=e2e8f0";
+
                                             $u_username = formatEmptyOrDash($u['username']);
                                             $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
                                             $en_name_html = (!empty($en_name) && $en_name !== '-') ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>".htmlspecialchars($en_name)."</div>" : "";
@@ -1459,7 +1462,7 @@ $dept_icons = [
                                                 <td class='px-6 py-4 align-top font-bold text-slate-700'>{$u_username}</td>
                                                 <td class='px-6 py-4 align-top'>
                                                     <div class='flex items-center'>
-                                                        <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas {$icon} text-xs'></i></div>
+                                                        <img src='{$admin_img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($u['username'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                         <div>
                                                             <div class='text-slate-800 font-bold'>{$th_name_html}</div>
                                                             {$en_name_html}
