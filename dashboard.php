@@ -2216,30 +2216,7 @@ $dept_icons = [
                 <!-- ✨ เปลี่ยนมาใช้ pt-4 และ flex-col gap-5 เพื่อแก้ปัญหาช่องว่างโล่งๆ ด้านบน ✨ -->
                 <div class="px-6 pt-2 pb-6 overflow-y-auto custom-scrollbar flex-1 flex flex-col gap-5">
                     
-                    <div id="loginCredsDiv" class="flex flex-col gap-5">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
-                            <input type="text" name="username" id="techAdmin_username" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span></label>
-                            <div class="relative">
-                                <input type="password" name="password" id="techAdmin_password" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="••••••••">
-                                <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
-                                    <i id="eyeIcon" class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="adminLevelDiv" class="hidden">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Role Level</label>
-                        <select name="admin_level" id="techAdmin_level" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
-                            <option value="Admin">Admin</option>
-                            <option value="Executive">Executive</option>
-                        </select>
-                    </div>
-
+                    <!-- ✨ ย้ายส่วนอัปโหลดรูปภาพขึ้นมาเป็นอันดับ 1 ให้โชว์บนสุดเสมอ ✨ -->
                     <div id="avatarDiv" class="hidden space-y-3">
                         <div id="avatarLabelWrapper">
                              <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE (รูปประจำตัว)</label>
@@ -2284,6 +2261,30 @@ $dept_icons = [
                                 <p class="text-[11px] text-slate-400 mt-2">แนะนำรูปภาพขนาด 1:1 หรือ 4:5 (JPG, PNG)</p>
                             </div>
                         </div>
+                    </div>
+
+                    <div id="loginCredsDiv" class="flex flex-col gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
+                            <input type="text" name="username" id="techAdmin_username" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span></label>
+                            <div class="relative">
+                                <input type="password" name="password" id="techAdmin_password" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="••••••••">
+                                <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
+                                    <i id="eyeIcon" class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="adminLevelDiv" class="hidden">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Role Level</label>
+                        <select name="admin_level" id="techAdmin_level" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
+                            <option value="Admin">Admin</option>
+                            <option value="Executive">Executive</option>
+                        </select>
                     </div>
 
                     <div>
