@@ -454,12 +454,12 @@ $pageTitles = [
                 <!-- Equipment & Work Status -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start xl:items-center gap-3 mb-4 w-full flex-col xl:flex-row">
-                            <div class="flex-1 min-w-0 pr-2 w-full">
+                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full">
+                            <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Equipment Analytics</h3>
                                 <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
-                            <div class="flex items-center justify-end gap-2 w-full xl:w-auto shrink-0">
+                            <div class="flex items-center gap-2 shrink-0">
                                 <!-- ✨ Custom Dropdown ✨ -->
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Month')">
@@ -495,12 +495,12 @@ $pageTitles = [
                     </div>
 
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start xl:items-center gap-3 mb-4 w-full flex-col xl:flex-row">
-                            <div class="flex-1 min-w-0 pr-2 w-full">
+                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full">
+                            <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Work Status</h3>
                                 <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">สัดส่วนสถานะการดำเนินงาน</p>
                             </div>
-                            <div class="flex items-center justify-end gap-2 w-full xl:w-auto shrink-0">
+                            <div class="flex items-center gap-2 shrink-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Month', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Month')">
@@ -539,8 +539,8 @@ $pageTitles = [
                 <!-- Locations & Workload -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start xl:items-center gap-2 mb-4 w-full flex-col xl:flex-row">
-                            <div class="flex-1 min-w-0 pr-2 w-full">
+                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full">
+                            <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Top Locations</h3>
                                 <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
                             </div>
@@ -579,8 +579,8 @@ $pageTitles = [
                     </div>
                     
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start xl:items-center gap-2 mb-4 w-full flex-col xl:flex-row">
-                            <div class="flex-1 min-w-0 pr-2 w-full">
+                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full">
+                            <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Technician Workload</h3>
                                 <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
                             </div>
@@ -620,11 +620,11 @@ $pageTitles = [
                 </div>
 
                 <!-- Customer Satisfaction & Top Reporters -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-6">
                     
-                    <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
-                        <div class="flex justify-between items-start xl:items-center gap-2 mb-4 w-full flex-col xl:flex-row">
-                            <div class="flex flex-col flex-1 min-w-0 pr-2 w-full">
+                    <div class="modern-card p-6 flex flex-col xl:col-span-7 justify-between">
+                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full">
+                            <div class="flex flex-col flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Customer Satisfaction</h3>
                                 <span class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">คะแนนความพึงพอใจการให้บริการ</span>
                                 <span class="text-[11px] md:text-[12px] text-indigo-500 font-bold mt-1 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</span>
@@ -665,9 +665,9 @@ $pageTitles = [
                         </div>
                     </div>
 
-                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
-                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start xl:items-center shrink-0 gap-2 w-full flex-col xl:flex-row">
-                            <div class="flex-1 min-w-0 pr-2 w-full">
+                    <div class="modern-card overflow-hidden flex flex-col xl:col-span-5 h-full">
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start sm:items-center shrink-0 gap-2 w-full">
+                            <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-base md:text-lg truncate">Top Reporters</h3>
                                 <p class="text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
