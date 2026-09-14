@@ -30,15 +30,15 @@ if (isset($_GET['api_get_admin_avatars'])) {
     exit();
 }
 
-// ✨ อัปเดตสิทธิ์ (Role) ล่าสุดจากฐานข้อมูลโดยตรง ป้องกัน Session เพี้ยนแล้วเด้งไปหน้าผู้บริหาร ✨
+// ✨ อัปเดตข้อมูล Session ให้ตรงกับฐานข้อมูลล่าสุดเสมอ (อัปเดตชื่อไทย-อังกฤษ-Username อัตโนมัติ) ✨
 $uid_chk = intval($_SESSION['user_id']);
 $user_chk_q = $conn->query("SELECT role, full_name, english_name, username FROM users WHERE id = $uid_chk");
 if ($user_chk_q && $user_chk_q->num_rows > 0) {
     $u_data = $user_chk_q->fetch_assoc();
     $_SESSION['role'] = $u_data['role'];
-    if (!empty($u_data['full_name'])) $_SESSION['full_name'] = $u_data['full_name'];
-    if (!empty($u_data['english_name'])) $_SESSION['english_name'] = $u_data['english_name'];
-    if (!empty($u_data['username'])) $_SESSION['username'] = $u_data['username'];
+    $_SESSION['full_name'] = $u_data['full_name'];
+    $_SESSION['english_name'] = $u_data['english_name'];
+    $_SESSION['username'] = $u_data['username'];
 }
 
 // ถ้าเป็นสิทธิ์ Executive ตัวจริง ถึงจะยอมให้ไปหน้า executive_dashboard.php
