@@ -3714,53 +3714,52 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
+            // แก้ปัญหาฝั่งไอแพด: จัดการข้อความที่ยาวเกินไปให้ขึ้นบรรทัดใหม่
+            let locLabels = sorted.length ? sorted.map(e => {
+                let text = e.name;
+                return window.innerWidth <= 1024 && text.length > 18 ? text.match(/.{1,18}/g) : text;
+            }) : ['ไม่มีข้อมูล'];
+
             const ctx = document.getElementById('mainLocChart').getContext('2d');
             if(chartLocInstance) chartLocInstance.destroy();
             
             chartLocInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
+                    labels: locLabels,
                     datasets: [{ 
                         label: 'แจ้งซ่อม (ครั้ง)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
                         backgroundColor: '#f43f5e', 
-                        borderRadius: 8,
-                        barThickness: 20,
-                        maxBarThickness: 26
+                        borderRadius: 6
                     }]
                 },
                 options: { 
                     indexAxis: 'y',
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return ' ' + context.formattedValue + ' ครั้ง';
-                                }
-                            }
-                        }
-                    }, 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
                     scales: { 
                         x: { 
                             beginAtZero: true, 
-                            ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif", weight: '600' } }, 
+                            ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, 
                             grid: { color: '#f8fafc' }, 
                             border: {display: false} 
                         }, 
                         y: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: 12, weight: '500' },
-                                color: '#475569',
-                                autoSkip: false,
-                                maxRotation: 0,
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1024 ? 11 : 12 }, 
+                                autoSkip: false, 
+                                maxRotation: 0, 
                                 minRotation: 0 
                             }, 
                             grid: { display: false }, 
-                            border: {display: false} 
+                            border: {display: false},
+                            afterFit: function(scaleInstance) {
+                                // บังคับความกว้างแกน Y ฝั่งไอแพด เพื่อไม่ให้ข้อความตกขอบ
+                                if (window.innerWidth <= 1024) {
+                                    scaleInstance.width = 110; 
+                                }
+                            }
                         } 
                     } 
                 }
@@ -3779,13 +3778,18 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
+            // แก้ปัญหาฝั่งไอแพด: จับชื่อนามสกุลแยกขึ้นบรรทัดใหม่ เพื่อให้ตำแหน่งอยู่ตรงกลางแท่งพอดี ไม่เบี้ยวซ้ายขวา
+            let techLabels = sorted.length ? sorted.map(e => {
+                return window.innerWidth <= 1024 ? e.name.split(' ') : e.name;
+            }) : ['ไม่มีข้อมูล'];
+
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
             
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
+                    labels: techLabels,
                     datasets: [{ 
                         label: 'รับผิดชอบ (งาน)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
@@ -3805,16 +3809,15 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif" },
-                                autoSkip: false, // บังคับให้แสดงข้อความทั้งหมด
-                                maxRotation: 0, // ห้ามหมุนตัวอักษรเด็ดขาด
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1024 ? 11 : 12 }, 
+                                autoSkip: false, 
+                                maxRotation: 0, 
                                 minRotation: 0 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    // เพิ่มความกว้างให้แต่ละแท่งกราฟ เพื่อไม่ให้ข้อความเบียดกัน
                     categoryPercentage: 0.8,
                     barPercentage: 0.9
                 }
@@ -3910,19 +3913,25 @@ $dept_icons = [
                                 const tName = labelArray[1];
                                 const dName = labelArray[2];
                                 
+                                // ปรับขนาดฟอนต์ให้ไอแพดเล็กลงเล็กน้อย เพื่อไม่ให้ล้นหรือเบียดแท่งกราฟเกินไป
+                                let fSizeDept = window.innerWidth <= 1024 ? 12 : 14;
+                                let fSizeTech = window.innerWidth <= 1024 ? 11 : 13;
+                                let fSizeScore = window.innerWidth <= 1024 ? 11 : 12;
+                                let fSizeStar = window.innerWidth <= 1024 ? 11 : 13;
+
                                 // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
-                                ctx.font = '800 14px "Sarabun", sans-serif';
+                                ctx.font = `800 ${fSizeDept}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#4f46e5';
-                                ctx.fillText(dName, yAxis.right - 10, y + 18);
+                                ctx.fillText(dName, yAxis.right - 10, y + 16);
 
                                 // 2. วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
-                                ctx.font = 'bold 13px "Sarabun", sans-serif';
+                                ctx.font = `bold ${fSizeTech}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#475569';
                                 ctx.fillText(tName, yAxis.right - 10, y);
 
                                 // 3. วาดคะแนนตัวเลข (บรรทัดบน)
-                                const textY = y - 18; 
-                                ctx.font = 'bold 12px "Sarabun", sans-serif';
+                                const textY = y - 16; 
+                                ctx.font = `bold ${fSizeScore}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#64748b';
                                 ctx.fillText(scoreStr, yAxis.right - 10, textY);
                                 
@@ -3930,7 +3939,7 @@ $dept_icons = [
                                 const scoreWidth = ctx.measureText(scoreStr).width;
                                 const starX = yAxis.right - 10 - scoreWidth - 4; 
                                 
-                                ctx.font = '900 13px "Font Awesome 6 Free"';
+                                ctx.font = `900 ${fSizeStar}px "Font Awesome 6 Free"`;
                                 const starIcon = '\uf005'; 
                                 const starWidth = ctx.measureText(starIcon).width;
                                 const startX = starX - starWidth;
@@ -4031,14 +4040,20 @@ $dept_icons = [
                         }, 
                         y: { 
                             ticks: { 
-                                color: 'transparent', // ซ่อน text จริง เพื่อให้ Plugin วาดทับ
+                                color: 'transparent', 
                                 font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' },
-                                autoSkip: false, // บังคับให้แสดงทุกรายการ
-                                maxRotation: 0, // ห้ามหมุนแกน Y
+                                autoSkip: false, 
+                                maxRotation: 0, 
                                 minRotation: 0
                             }, 
                             grid: { display: false }, 
-                            border: {display: false} 
+                            border: {display: false},
+                            afterFit: function(scaleInstance) {
+                                // แก้ปัญหาฝั่งไอแพด: บังคับแกน Y ให้มีพื้นที่พอดีสำหรับข้อความ 3 บรรทัด ไม่ให้โดนตัดขอบซ้าย
+                                if (window.innerWidth <= 1024) {
+                                    scaleInstance.width = 175;
+                                }
+                            }
                         } 
                     } 
                 }
