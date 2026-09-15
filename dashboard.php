@@ -3740,16 +3740,17 @@ $dept_icons = [
                             border: {display: false} 
                         }, 
                         y: { 
+                            afterFit: function(scale) {
+                                scale.width = 150; // ✨ บังคับจองพื้นที่ฝั่งซ้าย 150px กราฟจะได้ไม่ทับตัวหนังสือ
+                            },
                             ticks: { 
                                 font: { family: "'Kanit', sans-serif" },
-                                autoSkip: false, // บังคับให้แสดงข้อความทั้งหมด
-                                maxRotation: 0, // ห้ามหมุนตัวอักษร
-                                minRotation: 0 
+                                autoSkip: false
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
-                    } 
+                    }
                 }
             });
         }
@@ -3793,15 +3794,14 @@ $dept_icons = [
                         x: { 
                             ticks: { 
                                 font: { family: "'Kanit', sans-serif" },
-                                autoSkip: false, // บังคับให้แสดงข้อความทั้งหมด
-                                maxRotation: 0, // ห้ามหมุนตัวอักษรเด็ดขาด
-                                minRotation: 0 
+                                autoSkip: false, 
+                                maxRotation: 45, // ✨ ปรับให้เอียง 45 องศาเสมอ เพื่อให้ตำแหน่งสวยงามและไม่ทับกันแบบฝั่งคอม
+                                minRotation: 45 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    // เพิ่มความกว้างให้แต่ละแท่งกราฟ เพื่อไม่ให้ข้อความเบียดกัน
                     categoryPercentage: 0.8,
                     barPercentage: 0.9
                 }
@@ -4017,12 +4017,13 @@ $dept_icons = [
                             border: {display: false} 
                         }, 
                         y: { 
+                            afterFit: function(scale) {
+                                scale.width = 170; // ✨ บังคับจองพื้นที่ฝั่งซ้าย 170px เพื่อให้มีที่ว่างสำหรับดาวและชื่อช่างแน่นอน 100%
+                            },
                             ticks: { 
-                                color: 'transparent', // ซ่อน text จริง เพื่อให้ Plugin วาดทับ
+                                color: 'transparent', 
                                 font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' },
-                                autoSkip: false, // บังคับให้แสดงทุกรายการ
-                                maxRotation: 0, // ห้ามหมุนแกน Y
-                                minRotation: 0
+                                autoSkip: false
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
