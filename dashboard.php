@@ -3733,8 +3733,22 @@ $dept_icons = [
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
-                        x: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
-                        y: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
+                        x: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, 
+                            grid: { color: '#f8fafc' }, 
+                            border: {display: false} 
+                        }, 
+                        y: { 
+                            ticks: { 
+                                font: { family: "'Kanit', sans-serif" },
+                                autoSkip: false, // บังคับให้แสดงข้อความทั้งหมด
+                                maxRotation: 0, // ห้ามหมุนตัวอักษร
+                                minRotation: 0 
+                            }, 
+                            grid: { display: false }, 
+                            border: {display: false} 
+                        } 
                     } 
                 }
             });
@@ -3770,9 +3784,26 @@ $dept_icons = [
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
-                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
-                        x: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
-                    } 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, 
+                            grid: { color: '#f8fafc' }, 
+                            border: {display: false} 
+                        }, 
+                        x: { 
+                            ticks: { 
+                                font: { family: "'Kanit', sans-serif" },
+                                autoSkip: false, // บังคับให้แสดงข้อความทั้งหมด
+                                maxRotation: 0, // ห้ามหมุนตัวอักษรเด็ดขาด
+                                minRotation: 0 
+                            }, 
+                            grid: { display: false }, 
+                            border: {display: false} 
+                        } 
+                    },
+                    // เพิ่มความกว้างให้แต่ละแท่งกราฟ เพื่อไม่ให้ข้อความเบียดกัน
+                    categoryPercentage: 0.8,
+                    barPercentage: 0.9
                 }
             });
         }
@@ -3988,7 +4019,10 @@ $dept_icons = [
                         y: { 
                             ticks: { 
                                 color: 'transparent', // ซ่อน text จริง เพื่อให้ Plugin วาดทับ
-                                font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' } 
+                                font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' },
+                                autoSkip: false, // บังคับให้แสดงทุกรายการ
+                                maxRotation: 0, // ห้ามหมุนแกน Y
+                                minRotation: 0
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
