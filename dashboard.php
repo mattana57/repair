@@ -956,7 +956,7 @@ $dept_icons = [
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row">
+                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Equipment Analytics</h3>
                                 <p class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
@@ -996,7 +996,7 @@ $dept_icons = [
                     </div>
                     
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row">
+                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Work Status</h3>
                                 <p class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">สัดส่วนสถานะการดำเนินงาน</p>
@@ -1038,7 +1038,7 @@ $dept_icons = [
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col">
-                       <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row">
+                       <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Top Locations</h3>
                                 <p class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">ห้อง/สถานที่ ที่เกิดปัญหาบ่อยที่สุด</p>
@@ -1078,7 +1078,7 @@ $dept_icons = [
                     </div>
                     
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row">
+                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Technician Workload</h3>
                                 <p class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">ปริมาณงานที่รับผิดชอบรายบุคคล</p>
@@ -1121,7 +1121,7 @@ $dept_icons = [
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                     
                     <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
-                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row">
+                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex flex-col flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Customer Satisfaction</h3>
                                 <span class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">คะแนนความพึงพอใจการให้บริการ</span>
@@ -1165,7 +1165,7 @@ $dept_icons = [
                     </div>
 
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
-                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start sm:items-center shrink-0 gap-2 w-full flex-col sm:flex-row">
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start sm:items-center shrink-0 gap-2 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Top Reporters</h3>
                                 <p class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
