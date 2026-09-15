@@ -3714,19 +3714,13 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // แก้ปัญหาฝั่งไอแพด: จัดการข้อความที่ยาวเกินไปให้ขึ้นบรรทัดใหม่
-            let locLabels = sorted.length ? sorted.map(e => {
-                let text = e.name;
-                return window.innerWidth <= 1024 && text.length > 18 ? text.match(/.{1,18}/g) : text;
-            }) : ['ไม่มีข้อมูล'];
-
             const ctx = document.getElementById('mainLocChart').getContext('2d');
             if(chartLocInstance) chartLocInstance.destroy();
             
             chartLocInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: locLabels,
+                    labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{ 
                         label: 'แจ้งซ่อม (ครั้ง)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
@@ -3747,17 +3741,17 @@ $dept_icons = [
                         }, 
                         y: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1024 ? 11 : 12 }, 
-                                autoSkip: false, 
-                                maxRotation: 0, 
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1024 ? 11 : 12 },
+                                autoSkip: false, // บังคับให้แสดงข้อความทั้งหมด
+                                maxRotation: 0, // ห้ามหมุนตัวอักษร
                                 minRotation: 0 
                             }, 
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
-                                // บังคับความกว้างแกน Y ฝั่งไอแพด เพื่อไม่ให้ข้อความตกขอบ
+                                // ✨ บังคับความกว้างของแกน Y ฝั่งไอแพดให้กว้างพอ เพื่อไม่ให้ข้อความโดนตัดเป็น "ห้อ..."
                                 if (window.innerWidth <= 1024) {
-                                    scaleInstance.width = 110; 
+                                    scaleInstance.width = 140; 
                                 }
                             }
                         } 
@@ -3778,9 +3772,13 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // แก้ปัญหาฝั่งไอแพด: จับชื่อนามสกุลแยกขึ้นบรรทัดใหม่ เพื่อให้ตำแหน่งอยู่ตรงกลางแท่งพอดี ไม่เบี้ยวซ้ายขวา
+            // ✨ ไอแพดจอแคบ ถ้าชื่อยาวให้ตัดขึ้นบรรทัดใหม่สวยๆ แต่ฝั่ง PC ปล่อยยาวปกติ
             let techLabels = sorted.length ? sorted.map(e => {
-                return window.innerWidth <= 1024 ? e.name.split(' ') : e.name;
+                if (window.innerWidth <= 1024) {
+                    if (e.name.includes(' ')) return e.name.split(' ');
+                    if (e.name.length > 12) return [e.name.substring(0, 10) + '..']; // ตัดคำถ้ายาวไปและไม่มีเว้นวรรค
+                }
+                return e.name;
             }) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
@@ -3809,17 +3807,18 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1024 ? 11 : 12 }, 
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1024 ? 10 : 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0 
+                                minRotation: 0,
+                                align: 'center' // ✨ บังคับให้อยู่กึ่งกลางแท่งกราฟเป๊ะๆ
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
                     categoryPercentage: 0.8,
-                    barPercentage: 0.9
+                    barPercentage: window.innerWidth <= 1024 ? 0.7 : 0.9 // ✨ ปรับขนาดแท่งฝั่งไอแพดให้เล็กลงนิดนึง เพื่อเพิ่มระยะห่างไม่ให้ตัวอักษรชนกัน
                 }
             });
         }
@@ -3913,31 +3912,32 @@ $dept_icons = [
                                 const tName = labelArray[1];
                                 const dName = labelArray[2];
                                 
-                                // ปรับขนาดฟอนต์ให้ไอแพดเล็กลงเล็กน้อย เพื่อไม่ให้ล้นหรือเบียดแท่งกราฟเกินไป
-                                let fSizeDept = window.innerWidth <= 1024 ? 12 : 14;
-                                let fSizeTech = window.innerWidth <= 1024 ? 11 : 13;
-                                let fSizeScore = window.innerWidth <= 1024 ? 11 : 12;
-                                let fSizeStar = window.innerWidth <= 1024 ? 11 : 13;
+                                // ✨ ปรับขนาดฟอนต์ให้ไอแพดเล็กลงเล็กน้อย เพื่อไม่ให้ล้นหรือเบียดแท่งกราฟเกินไป
+                                let isIPad = window.innerWidth <= 1024;
+                                let fSizeDept = isIPad ? 11 : 14;
+                                let fSizeTech = isIPad ? 11 : 13;
+                                let fSizeScore = isIPad ? 11 : 12;
+                                let fSizeStar = isIPad ? 11 : 13;
 
                                 // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
                                 ctx.font = `800 ${fSizeDept}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#4f46e5';
-                                ctx.fillText(dName, yAxis.right - 10, y + 16);
+                                ctx.fillText(dName, yAxis.right - 8, y + 16);
 
                                 // 2. วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
                                 ctx.font = `bold ${fSizeTech}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(tName, yAxis.right - 10, y);
+                                ctx.fillText(tName, yAxis.right - 8, y);
 
                                 // 3. วาดคะแนนตัวเลข (บรรทัดบน)
                                 const textY = y - 16; 
                                 ctx.font = `bold ${fSizeScore}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#64748b';
-                                ctx.fillText(scoreStr, yAxis.right - 10, textY);
+                                ctx.fillText(scoreStr, yAxis.right - 8, textY);
                                 
                                 // 4. วาดดาวไล่สี
                                 const scoreWidth = ctx.measureText(scoreStr).width;
-                                const starX = yAxis.right - 10 - scoreWidth - 4; 
+                                const starX = yAxis.right - 8 - scoreWidth - 4; 
                                 
                                 ctx.font = `900 ${fSizeStar}px "Font Awesome 6 Free"`;
                                 const starIcon = '\uf005'; 
@@ -3962,7 +3962,7 @@ $dept_icons = [
                             } else {
                                 ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, yAxis.right - 10, y);
+                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, yAxis.right - 8, y);
                             }
                         });
                         ctx.restore();
@@ -4049,9 +4049,9 @@ $dept_icons = [
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
-                                // แก้ปัญหาฝั่งไอแพด: บังคับแกน Y ให้มีพื้นที่พอดีสำหรับข้อความ 3 บรรทัด ไม่ให้โดนตัดขอบซ้าย
+                                // ✨ บังคับแกน Y ให้กว้างพอ เพื่อดึงข้อความรีวิวให้ถอยห่างจากแท่งกราฟ (เฉพาะฝั่งไอแพด)
                                 if (window.innerWidth <= 1024) {
-                                    scaleInstance.width = 175;
+                                    scaleInstance.width = 185; 
                                 }
                             }
                         } 
