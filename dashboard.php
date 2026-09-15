@@ -3774,25 +3774,10 @@ $dept_icons = [
 
             let map = {};
             data.forEach(r => {
-                let tName = r.technician_name && r.technician_name.trim() !== '' ? r.technician_name.trim() : 'ไม่ระบุช่าง';
+                let tName = r.technician_name ? r.technician_name : 'ไม่ระบุช่าง';
                 map[tName] = (map[tName] || 0) + 1;
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
-
-            // จัดรูปแบบป้ายชื่อแกน X ให้แสดงผลตรงตำแหน่ง สวยงามทั้ง iPad และคอมพิวเตอร์
-            let formattedLabels = sorted.length ? sorted.map(e => {
-                let rawName = e.name;
-                if (rawName === 'ไม่ระบุช่าง') return ['ไม่ระบุช่าง'];
-                
-                let thOnly = (techInfoMap[rawName] && techInfoMap[rawName].th) ? techInfoMap[rawName].th : rawName.split(' (')[0].trim();
-                let deptName = techDeptMap[rawName] || '';
-                if (deptName.startsWith('ฝ่ายงาน')) {
-                    deptName = deptName.replace('ฝ่ายงาน', '');
-                }
-                
-                // แยกเป็น 2 บรรทัด: [ชื่อช่าง, ฝ่ายงาน] ป้องกันข้อความชนกันและแสดงผลตรงเผง
-                return deptName ? [thOnly, '(' + deptName + ')'] : [thOnly];
-            }) : [['ไม่มีข้อมูล']];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
@@ -3800,58 +3785,38 @@ $dept_icons = [
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: formattedLabels,
+                    labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{ 
                         label: 'รับผิดชอบ (งาน)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
                         backgroundColor: '#6366f1', 
-                        borderRadius: 8,
-                        barThickness: 28,
-                        maxBarThickness: 36
+                        borderRadius: 6
                     }]
                 },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                title: function(context) {
-                                    let item = sorted[context[0].dataIndex];
-                                    return item ? item.name : '';
-                                },
-                                label: function(context) {
-                                    return ' ' + context.formattedValue + ' งาน';
-                                }
-                            }
-                        }
-                    }, 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
                             beginAtZero: true, 
-                            ticks: { 
-                                stepSize: 1, 
-                                font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif", weight: '600' } 
-                            }, 
+                            ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, 
                             grid: { color: '#f8fafc' }, 
                             border: {display: false} 
                         }, 
                         x: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: 11, weight: '600' },
-                                color: '#475569',
-                                autoSkip: false,
-                                maxRotation: 0,
-                                minRotation: 0,
-                                padding: 6
+                                font: { family: "'Kanit', sans-serif" },
+                                autoSkip: false, // บังคับให้แสดงข้อความทั้งหมด
+                                maxRotation: 0, // ห้ามหมุนตัวอักษรเด็ดขาด
+                                minRotation: 0 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    categoryPercentage: 0.7,
-                    barPercentage: 0.85
+                    // เพิ่มความกว้างให้แต่ละแท่งกราฟ เพื่อไม่ให้ข้อความเบียดกัน
+                    categoryPercentage: 0.8,
+                    barPercentage: 0.9
                 }
             });
         }
@@ -3939,9 +3904,6 @@ $dept_icons = [
                             const labelArray = chart.data.labels[index];
                             if (!labelArray) return;
                             
-                            // ปรับตำแหน่งแกนข้อความให้มีระยะห่างที่คงที่แน่นอนทุกขนาดหน้าจอ
-                            const drawRightX = Math.max(yAxis.right - 12, 160);
-
                             if (Array.isArray(labelArray) && labelArray.length === 3) {
                                 const scoreStr = labelArray[0].trim();
                                 const scoreVal = parseFloat(scoreStr) || 0;
@@ -3949,26 +3911,26 @@ $dept_icons = [
                                 const dName = labelArray[2];
                                 
                                 // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
-                                ctx.font = '800 13px "Sarabun", sans-serif';
+                                ctx.font = '800 14px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#4f46e5';
-                                ctx.fillText(dName, drawRightX, y + 17);
+                                ctx.fillText(dName, yAxis.right - 10, y + 18);
 
                                 // 2. วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
-                                ctx.font = 'bold 12px "Sarabun", sans-serif';
+                                ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(tName, drawRightX, y);
+                                ctx.fillText(tName, yAxis.right - 10, y);
 
                                 // 3. วาดคะแนนตัวเลข (บรรทัดบน)
-                                const textY = y - 17; 
-                                ctx.font = 'bold 11px "Sarabun", sans-serif';
+                                const textY = y - 18; 
+                                ctx.font = 'bold 12px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#64748b';
-                                ctx.fillText(scoreStr, drawRightX, textY);
+                                ctx.fillText(scoreStr, yAxis.right - 10, textY);
                                 
                                 // 4. วาดดาวไล่สี
                                 const scoreWidth = ctx.measureText(scoreStr).width;
-                                const starX = drawRightX - scoreWidth - 4; 
+                                const starX = yAxis.right - 10 - scoreWidth - 4; 
                                 
-                                ctx.font = '900 12px "Font Awesome 6 Free"';
+                                ctx.font = '900 13px "Font Awesome 6 Free"';
                                 const starIcon = '\uf005'; 
                                 const starWidth = ctx.measureText(starIcon).width;
                                 const startX = starX - starWidth;
@@ -3989,15 +3951,16 @@ $dept_icons = [
                                     ctx.restore();
                                 }
                             } else {
-                                ctx.font = 'bold 12px "Sarabun", sans-serif';
+                                ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, drawRightX, y);
+                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, yAxis.right - 10, y);
                             }
                         });
                         ctx.restore();
                     }
                 }],
                 data: {
+                    // เติม Space หน้าตัวเลขเพื่อให้มีพื้นที่วาดดาว
                     labels: deptArr.length ? deptArr.map(d => ['   ' + d.topTechAvg, d.topTech, d.name]) : [['ไม่มีข้อมูล']],
                     datasets: [
                         { 
@@ -4005,8 +3968,8 @@ $dept_icons = [
                             data: deptArr.length ? deptArr.map(d => d.avg) : [0], 
                             backgroundColor: deptArr.length ? deptArr.map(d => getRatingColor(d.avg)) : ['#e2e8f0'], 
                             borderRadius: 10,
-                            barThickness: 22,
-                            maxBarThickness: 28,
+                            barThickness: 24,
+                            maxBarThickness: 32,
                             borderSkipped: false,
                             z: 2
                         },
@@ -4015,8 +3978,8 @@ $dept_icons = [
                             data: deptArr.length ? deptArr.map(d => 5.0) : [5.0],
                             backgroundColor: '#f1f5f9',
                             borderRadius: 10,
-                            barThickness: 22,
-                            maxBarThickness: 28,
+                            barThickness: 24,
+                            maxBarThickness: 32,
                             borderSkipped: false,
                             z: 1
                         }
@@ -4041,7 +4004,7 @@ $dept_icons = [
                     onHover: (event, chartElement) => {
                         event.native.target.style.cursor = chartElement.length > 0 ? 'pointer' : 'default';
                     },
-                    layout: { padding: { top: 10, bottom: 10, left: 10, right: 15 } },
+                    layout: { padding: { top: 10, bottom: 10, left: 0, right: 20 } },
                     plugins: { 
                         legend: { display: false },
                         tooltip: {
@@ -4068,10 +4031,10 @@ $dept_icons = [
                         }, 
                         y: { 
                             ticks: { 
-                                color: 'transparent',
-                                font: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' },
-                                autoSkip: false,
-                                maxRotation: 0,
+                                color: 'transparent', // ซ่อน text จริง เพื่อให้ Plugin วาดทับ
+                                font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' },
+                                autoSkip: false, // บังคับให้แสดงทุกรายการ
+                                maxRotation: 0, // ห้ามหมุนแกน Y
                                 minRotation: 0
                             }, 
                             grid: { display: false }, 
@@ -4081,7 +4044,7 @@ $dept_icons = [
                 }
             });
         }
-        
+
         function setReviewFilter(val) {
             currentReviewFilter = val;
             
