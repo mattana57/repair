@@ -3714,13 +3714,19 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
+            // ใช้ชื่อสถานที่เต็มๆ ไม่มีการตัดคำ (เหมือนฝั่งคอม)
+            let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
+
             const ctx = document.getElementById('mainLocChart').getContext('2d');
             if(chartLocInstance) chartLocInstance.destroy();
             
+            const container = document.getElementById('mainLocChart').parentNode;
+            container.style.height = window.innerWidth <= 1366 ? '300px' : '250px';
+
             chartLocInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
-                    labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
+                    labels: locLabels,
                     datasets: [{ 
                         label: 'แจ้งซ่อม (ครั้ง)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
@@ -3730,7 +3736,9 @@ $dept_icons = [
                 },
                 options: { 
                     indexAxis: 'y',
-                    responsive: true, maintainAspectRatio: false, 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    layout: { padding: { left: 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         x: { 
@@ -3741,7 +3749,7 @@ $dept_icons = [
                         }, 
                         y: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth < 1280 ? 11 : 12 },
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 },
                                 autoSkip: false, 
                                 maxRotation: 0, 
                                 minRotation: 0 
@@ -3749,9 +3757,9 @@ $dept_icons = [
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scale) {
-                                // ✨ บังคับจองพื้นที่แกน Y ฝั่งไอแพด เพื่อไม่ให้ชื่อสถานที่โดนตัด
-                                if (window.innerWidth < 1280) {
-                                   scale.width = 110; 
+                                // ✨ ขยายเพดานดักจับเป็น 1366px (คลุม iPad Pro) และบังคับความกว้าง 160px ป้องกันคำตกขอบ
+                                if (window.innerWidth <= 1366) {
+                                   scale.width = 160; 
                                 }
                             }
                         } 
@@ -3772,17 +3780,15 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ แยกชื่อกับนามสกุลให้ขึ้นบรรทัดใหม่ เฉพาะบนไอแพด/แท็บเล็ต
-            let techLabels = sorted.length ? sorted.map(e => {
-                if (window.innerWidth < 1280 && e.name.includes(' ')) {
-                    return e.name.split(' '); 
-                }
-                return e.name;
-            }) : ['ไม่มีข้อมูล'];
+            // ใช้ชื่อเต็มๆ บรรทัดเดียว เหมือนฝั่งคอมพิวเตอร์เป๊ะๆ
+            let techLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
             
+            const container = document.getElementById('mainTechChart').parentNode;
+            container.style.height = window.innerWidth <= 1366 ? '280px' : '250px';
+
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
                 data: {
@@ -3795,7 +3801,9 @@ $dept_icons = [
                     }]
                 },
                 options: { 
-                    responsive: true, maintainAspectRatio: false, 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    layout: { padding: { bottom: 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3806,17 +3814,19 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth < 1280 ? 10 : 12 }, 
+                                // ย่อฟอนต์เป็น 10px สำหรับ iPad เพื่อไม่ให้ตัวหนังสือชนกัน
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
                                 autoSkip: false, 
-                                maxRotation: window.innerWidth < 1280 ? 45 : 0, // ป้องกันการชนกันขั้นสุดด้วยการเอียง 45 องศาบนไอแพด
-                                minRotation: window.innerWidth < 1280 ? 45 : 0
+                                maxRotation: 0, 
+                                minRotation: 0,
+                                align: 'center' 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    categoryPercentage: window.innerWidth < 1280 ? 0.7 : 0.8,
-                    barPercentage: window.innerWidth < 1280 ? 0.8 : 0.9
+                    categoryPercentage: window.innerWidth <= 1366 ? 0.7 : 0.8,
+                    barPercentage: window.innerWidth <= 1366 ? 0.8 : 0.9 
                 }
             });
         }
@@ -3834,16 +3844,13 @@ $dept_icons = [
                 let rating = parseFloat(r.rating);
                 if (!isNaN(rating) && rating > 0) {
                     let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
-                    
                     let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
                     if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
                         dName = 'ฝ่ายงาน' + dName;
                     }
-
                     if (!techMap[tName]) techMap[tName] = { sum: 0, count: 0, dept: dName };
                     techMap[tName].sum += rating;
                     techMap[tName].count++;
-
                     if (!deptMap[dName]) deptMap[dName] = { sum: 0, count: 0, techs: new Set() };
                     deptMap[dName].sum += rating;
                     deptMap[dName].count++;
@@ -3853,10 +3860,8 @@ $dept_icons = [
 
             let deptArr = Object.keys(deptMap).map(dName => {
                 let dAvg = (deptMap[dName].sum / deptMap[dName].count).toFixed(1);
-                
                 let topTechName = '-';
                 let topTechAvg = 0;
-                
                 deptMap[dName].techs.forEach(t => {
                     let tAvg = (techMap[t].sum / techMap[t].count);
                     if (tAvg > topTechAvg) {
@@ -3864,7 +3869,6 @@ $dept_icons = [
                         topTechName = t;
                     }
                 });
-
                 return {
                     name: dName,
                     avg: dAvg,
@@ -3887,6 +3891,9 @@ $dept_icons = [
             const ctx = document.getElementById('mainRatingChart').getContext('2d');
             if(chartRatingInstance) chartRatingInstance.destroy();
             
+            const container = document.getElementById('mainRatingChart').parentNode;
+            container.style.height = window.innerWidth <= 1366 ? '420px' : '380px';
+
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
                 plugins: [{
@@ -3910,43 +3917,41 @@ $dept_icons = [
                                 const tName = labelArray[1];
                                 const dName = labelArray[2];
                                 
-                                // ✨ ย่อฟอนต์ไอแพดลงมานิดนึงเพื่อความสวยงาม
-                                let isTablet = window.innerWidth < 1280;
+                                let isTablet = window.innerWidth <= 1366;
                                 let fSizeDept = isTablet ? 11 : 14;
                                 let fSizeTech = isTablet ? 11 : 13;
                                 let fSizeScore = isTablet ? 11 : 12;
                                 let fSizeStar = isTablet ? 11 : 13;
 
-                                // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
+                                const textDrawX = yAxis.right - 8; 
+                                
+                                const yOffsetTop = isTablet ? -16 : -16;
+                                const yOffsetBottom = isTablet ? 16 : 16;
+
                                 ctx.font = `800 ${fSizeDept}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#4f46e5';
-                                ctx.fillText(dName, yAxis.right - 10, y + (isTablet ? 16 : 18));
+                                ctx.fillText(dName, textDrawX, y + yOffsetBottom);
 
-                                // 2. วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
                                 ctx.font = `bold ${fSizeTech}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(tName, yAxis.right - 10, y);
+                                ctx.fillText(tName, textDrawX, y);
 
-                                // 3. วาดคะแนนตัวเลข (บรรทัดบน)
-                                const textY = y - (isTablet ? 16 : 18); 
+                                const textY = y + yOffsetTop; 
                                 ctx.font = `bold ${fSizeScore}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#64748b';
-                                ctx.fillText(scoreStr, yAxis.right - 10, textY);
+                                ctx.fillText(scoreStr, textDrawX, textY);
                                 
-                                // 4. วาดดาวไล่สี
                                 const scoreWidth = ctx.measureText(scoreStr).width;
-                                const starX = yAxis.right - 10 - scoreWidth - 4; 
+                                const starX = textDrawX - scoreWidth - 4; 
                                 
                                 ctx.font = `900 ${fSizeStar}px "Font Awesome 6 Free"`;
                                 const starIcon = '\uf005'; 
                                 const starWidth = ctx.measureText(starIcon).width;
                                 const startX = starX - starWidth;
                                 
-                                // ดาวพื้นหลัง (สีเทา)
                                 ctx.fillStyle = '#e2e8f0';
                                 ctx.fillText(starIcon, starX, textY);
                                 
-                                // ดาวทับ (สีเหลือง ไล่ตาม %)
                                 if (scoreVal > 0) {
                                     const fillPercent = scoreVal / 5.0;
                                     ctx.save();
@@ -3960,14 +3965,13 @@ $dept_icons = [
                             } else {
                                 ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, yAxis.right - 10, y);
+                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, yAxis.right - 8, y);
                             }
                         });
                         ctx.restore();
                     }
                 }],
                 data: {
-                    // เติม Space หน้าตัวเลขเพื่อให้มีพื้นที่วาดดาว
                     labels: deptArr.length ? deptArr.map(d => ['   ' + d.topTechAvg, d.topTech, d.name]) : [['ไม่มีข้อมูล']],
                     datasets: [
                         { 
@@ -3975,7 +3979,7 @@ $dept_icons = [
                             data: deptArr.length ? deptArr.map(d => d.avg) : [0], 
                             backgroundColor: deptArr.length ? deptArr.map(d => getRatingColor(d.avg)) : ['#e2e8f0'], 
                             borderRadius: 10,
-                            barThickness: window.innerWidth < 1280 ? 18 : 24, 
+                            barThickness: window.innerWidth <= 1366 ? 20 : 24, 
                             maxBarThickness: 32,
                             borderSkipped: false,
                             z: 2
@@ -3985,7 +3989,7 @@ $dept_icons = [
                             data: deptArr.length ? deptArr.map(d => 5.0) : [5.0],
                             backgroundColor: '#f1f5f9',
                             borderRadius: 10,
-                            barThickness: window.innerWidth < 1280 ? 18 : 24,
+                            barThickness: window.innerWidth <= 1366 ? 20 : 24,
                             maxBarThickness: 32,
                             borderSkipped: false,
                             z: 1
@@ -3996,7 +4000,8 @@ $dept_icons = [
                     indexAxis: 'y', 
                     grouped: false,
                     responsive: true, 
-                    maintainAspectRatio: false,
+                    maintainAspectRatio: false, 
+                    layout: { padding: { left: 0, right: 20 } },
                     interaction: { mode: 'y', intersect: false },
                     onClick: (e, elements, chart) => {
                         const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
@@ -4011,23 +4016,8 @@ $dept_icons = [
                     onHover: (event, chartElement) => {
                         event.native.target.style.cursor = chartElement.length > 0 ? 'pointer' : 'default';
                     },
-                    layout: { padding: { top: 10, bottom: 10, left: 0, right: 20 } },
                     plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            filter: function(tooltipItem) { return tooltipItem.datasetIndex === 0; },
-                            callbacks: {
-                                title: function(context) {
-                                    if (!deptArr.length) return '';
-                                    return deptArr[context[0].dataIndex].name;
-                                },
-                                label: function(context) {
-                                    if (!deptArr.length) return ' ไม่มีข้อมูล';
-                                    let dept = deptArr[context.dataIndex];
-                                    return [' ช่าง ' + dept.topTech + ' (⭐ ' + parseFloat(dept.topTechAvg).toFixed(1) + ')', ' จำนวน: ' + dept.count + ' รีวิว'];
-                                }
-                            }
-                        }
+                        legend: { display: false }
                     }, 
                     scales: { 
                         x: { 
@@ -4038,20 +4028,18 @@ $dept_icons = [
                         }, 
                         y: { 
                             ticks: { 
-                                color: 'transparent', // ซ่อน text จริง เพื่อให้ Plugin วาดทับ
+                                color: 'transparent', 
                                 font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' },
-                                autoSkip: false, // บังคับให้แสดงทุกรายการ
-                                maxRotation: 0, // ห้ามหมุนแกน Y
+                                autoSkip: false, 
+                                maxRotation: 0, 
                                 minRotation: 0
                             }, 
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
-                                // ✨ ไม้ตาย: บังคับจองพื้นที่แกน Y กว้าง 160px บนไอแพด ดันแท่งกราฟออกไปให้พ้นตัวอักษรเด็ดขาด!
-                                if (window.innerWidth < 1280) {
-                                    scaleInstance.width = 160; 
-                                } else {
-                                    scaleInstance.width = 190;
+                                // ✨ บังคับความกว้างแกน Y ให้กว้างที่สุด (220px) สำหรับไอแพด เพื่อดันแท่งกราฟออกไปเลย ไม่ให้ทับซ้อนกันแน่นอน!
+                                if (window.innerWidth <= 1366) {
+                                    scaleInstance.width = 220; 
                                 }
                             }
                         } 
