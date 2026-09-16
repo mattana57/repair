@@ -3773,14 +3773,15 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
+            // บังคับให้เป็นข้อความยาวบรรทัดเดียวเหมือนคอมพิวเตอร์
             let techLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
             
             const container = document.getElementById('mainTechChart').parentNode;
-            // ✨ ทำให้ความสูงของกราฟ Technician Workload เท่ากับกราฟ Top Locations
-            container.style.height = window.innerWidth <= 1366 ? '280px' : '250px';
+            // ✨ ปรับความสูงให้เป๊ะเท่ากับกราฟ Top Locations (กราฟอื่นใช้ 280px บนไอแพด) ✨
+            container.style.height = window.innerWidth <= 1366 ? '280px' : '250px'; 
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
@@ -3807,23 +3808,23 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
-                                autoSkip: false, // ปิดการซ่อนชื่ออัตโนมัติ
-                                maxRotation: 0, 
-                                minRotation: 0, 
-                                align: 'center',
-                                // ✨ โค้ดพระเอก! บังคับให้ Chart.js ไม่พยายามขยับซ้ายขวาเพื่อหลบกัน 
-                                // ✨ ให้ตัวหนังสือตรงกับกึ่งกลางของแท่งกราฟเป๊ะๆ 100%
-                                labelOffset: 0,
-                                crossAlign: 'center',
-                                padding: 5 
+                                // ✨ บังคับฟอนต์ให้เล็กลงนิดหน่อยบนไอแพด เพื่อไม่ให้เบียดกัน
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
+                                autoSkip: false, 
+                                maxRotation: 0, // ✨ บังคับตั้งตรง 0 องศาเด็ดขาด
+                                minRotation: 0, // ✨ บังคับตั้งตรง 0 องศาเด็ดขาด
+                                align: 'center', // ✨ บังคับให้อยู่ตรงกลาง
+                                callback: function(value, index, values) {
+                                    // ✨ บังคับให้ส่งออกไปเป็นข้อความบรรทัดเดียว ห้าม Chart.js หั่นคำเอง
+                                    return this.getLabelForValue(value);
+                                }
                             }, 
-                            grid: { display: false, drawTicks: false }, 
+                            grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    categoryPercentage: 0.8, 
-                    barPercentage: 0.9 
+                    categoryPercentage: window.innerWidth <= 1366 ? 0.7 : 0.8, 
+                    barPercentage: window.innerWidth <= 1366 ? 0.8 : 0.9 
                 }
             });
         }
