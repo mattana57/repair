@@ -3714,7 +3714,7 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ ยกเลิกการตัดคำ คืนค่าเป็นบรรทัดเดียวปกติ
+            // ✨ ยกเลิกการตัดคำ คืนค่าเป็นบรรทัดเดียวปกติเหมือนฝั่งคอมพิวเตอร์ 100%
             let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
@@ -3756,11 +3756,13 @@ $dept_icons = [
                             }, 
                             grid: { display: false }, 
                             border: {display: false},
-                            // ✨ พระเอกอยู่ตรงนี้: จองพื้นที่ฝั่งซ้ายของแกน Y เพื่อผลักกราฟและเลขแกน X ไปทางขวา ✨
+                            // ✨ พระเอกตัวจริง: จองพื้นที่ฝั่งซ้ายของแกน Y ✨
                             afterFit: function(scaleInstance) {
                                 if (window.innerWidth <= 1366) {
-                                    // จองพื้นที่ 110px สำหรับตัวหนังสือยาวๆ กราฟจะถูกดันไปทางขวาอัตโนมัติ
-                                    scaleInstance.width = 110; 
+                                    // 🚨 ปรับจาก 110 เป็น 150 🚨
+                                    // ความกว้างนี้จะทำให้ข้อความ "ห้องปฏิบัติการคอมพิวเตอร์" แสดงได้เต็มบรรทัด
+                                    // และผลักกราฟ + เลข 0,1,2,3,4 ให้ขยับไปทางขวาตามที่คุณต้องการเป๊ะๆ!
+                                    scaleInstance.width = 150; 
                                 }
                             }
                         } 
