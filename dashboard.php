@@ -3773,14 +3773,12 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // บังคับให้เป็นข้อความยาวบรรทัดเดียวเหมือนคอมพิวเตอร์
             let techLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
             
             const container = document.getElementById('mainTechChart').parentNode;
-            // ✨ ปรับความสูงให้เป๊ะเท่ากับกราฟ Top Locations (กราฟอื่นใช้ 280px บนไอแพด) ✨
             container.style.height = window.innerWidth <= 1366 ? '280px' : '250px'; 
 
             chartTechInstance = new Chart(ctx, {
@@ -3797,7 +3795,8 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    layout: { padding: { bottom: 0 } }, 
+                    // ✨ เพิ่ม padding ซ้าย-ขวา เพื่อไม่ให้ชื่อแท่งแรกและแท่งสุดท้ายชิดขอบเกินไปจนหลุดจอ
+                    layout: { padding: { left: 10, right: 10, bottom: 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3808,14 +3807,12 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                // ✨ บังคับฟอนต์ให้เล็กลงนิดหน่อยบนไอแพด เพื่อไม่ให้เบียดกัน
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
-                                autoSkip: false, 
-                                maxRotation: 0, // ✨ บังคับตั้งตรง 0 องศาเด็ดขาด
-                                minRotation: 0, // ✨ บังคับตั้งตรง 0 องศาเด็ดขาด
-                                align: 'center', // ✨ บังคับให้อยู่ตรงกลาง
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
+                                autoSkip: false, // ✨ บังคับห้ามซ่อนชื่อเด็ดขาด (ให้แสดงครบทุกแท่ง)
+                                maxRotation: 0, 
+                                minRotation: 0, 
+                                align: 'center',
                                 callback: function(value, index, values) {
-                                    // ✨ บังคับให้ส่งออกไปเป็นข้อความบรรทัดเดียว ห้าม Chart.js หั่นคำเอง
                                     return this.getLabelForValue(value);
                                 }
                             }, 
@@ -3823,8 +3820,8 @@ $dept_icons = [
                             border: {display: false} 
                         } 
                     },
-                    categoryPercentage: window.innerWidth <= 1366 ? 0.7 : 0.8, 
-                    barPercentage: window.innerWidth <= 1366 ? 0.8 : 0.9 
+                    categoryPercentage: window.innerWidth <= 1366 ? 0.75 : 0.8, 
+                    barPercentage: window.innerWidth <= 1366 ? 0.85 : 0.9 
                 }
             });
         }
