@@ -3779,7 +3779,8 @@ $dept_icons = [
             if(chartTechInstance) chartTechInstance.destroy();
             
             const container = document.getElementById('mainTechChart').parentNode;
-            container.style.height = '250px';
+            // ✨ ทำให้ความสูงของกราฟ Technician Workload เท่ากับกราฟ Top Locations
+            container.style.height = window.innerWidth <= 1366 ? '280px' : '250px';
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
@@ -3806,14 +3807,18 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                // ✨ ปรับฟอนต์ให้เล็กลงเฉพาะในไอแพด/แท็บเล็ต (ลดเหลือ 10) เพื่อไม่ให้ชื่อชนกัน
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
-                                autoSkip: false, 
+                                autoSkip: false, // ปิดการซ่อนชื่ออัตโนมัติ
                                 maxRotation: 0, 
                                 minRotation: 0, 
-                                align: 'center' 
+                                align: 'center',
+                                // ✨ โค้ดพระเอก! บังคับให้ Chart.js ไม่พยายามขยับซ้ายขวาเพื่อหลบกัน 
+                                // ✨ ให้ตัวหนังสือตรงกับกึ่งกลางของแท่งกราฟเป๊ะๆ 100%
+                                labelOffset: 0,
+                                crossAlign: 'center',
+                                padding: 5 
                             }, 
-                            grid: { display: false }, 
+                            grid: { display: false, drawTicks: false }, 
                             border: {display: false} 
                         } 
                     },
