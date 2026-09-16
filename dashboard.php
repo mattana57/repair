@@ -3714,8 +3714,15 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ ยกเลิกการตัดคำ คืนค่าเป็นบรรทัดเดียวปกติ
-            let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
+            // ✨ บนไอแพด: จัดการชื่อที่ยาวเกินไปให้แสดงผลพอดี ไม่ทะลุกราฟ และคงความเป็น 1 บรรทัด ✨
+            let locLabels = sorted.length ? sorted.map(e => {
+                let name = e.name;
+                if (window.innerWidth <= 1366 && name.length > 12) {
+                    // ถ้าชื่อยาวเกิน 12 ตัวอักษร ให้ตัดแล้วใส่ '...' ต่อท้าย
+                    return name.substring(0, 12) + '...';
+                }
+                return name;
+            }) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
             if(chartLocInstance) chartLocInstance.destroy();
@@ -3738,8 +3745,8 @@ $dept_icons = [
                     indexAxis: 'y',
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    // ✨ เพิ่ม padding ซ้ายให้พอดีกับความยาวตัวหนังสือ (เฉพาะแท็บเล็ต) ✨
-                    layout: { padding: { left: window.innerWidth <= 1366 ? 30 : 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
+                    // ✨ จัดการ Padding ให้แกน y มีพื้นที่แสดงข้อความมากขึ้นบนไอแพด ✨
+                    layout: { padding: { left: window.innerWidth <= 1366 ? 10 : 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         x: { 
@@ -3754,11 +3761,18 @@ $dept_icons = [
                                 autoSkip: false, 
                                 maxRotation: 0, 
                                 minRotation: 0,
-                                // ✨ บังคับให้ข้อความชิดขวากับแท่งกราฟเสมอ ✨
-                                align: 'right'
+                                // ✨ บังคับให้ข้อความชิดขวาเสมอ ✨
+                                align: 'right', 
+                                crossAlign: 'near' 
                             }, 
                             grid: { display: false }, 
-                            border: {display: false}
+                            border: {display: false},
+                            // ✨ จองพื้นที่ฝั่งซ้ายของแกน Y ให้เพียงพอสำหรับข้อความ ✨
+                            afterFit: function(scaleInstance) {
+                                if (window.innerWidth <= 1366) {
+                                    scaleInstance.width = 100; // ปรับขนาดพื้นที่ฝั่งซ้ายให้พอดีกับข้อความ
+                                }
+                            }
                         } 
                     } 
                 }
