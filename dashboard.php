@@ -3714,7 +3714,7 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ ยกเลิกการตัดคำ คืนค่าเป็นบรรทัดเดียวปกติเหมือนฝั่งคอมพิวเตอร์ 100%
+            // ✨ ใช้ชื่อบรรทัดเดียวปกติเหมือนฝั่งคอมพิวเตอร์เป๊ะๆ ไม่มีตัด 2 บรรทัด
             let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
@@ -3738,8 +3738,7 @@ $dept_icons = [
                     indexAxis: 'y',
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    // ✨ ดันกราฟและเลขแกน X ไปทางขวานิดนึง เพื่อเปิดพื้นที่ให้ตัวหนังสือหลุดออกมาอยู่ด้านหน้ากราฟ (เฉพาะบนไอแพด)
-                    layout: { padding: { left: window.innerWidth <= 1366 ? 10 : 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
+                    layout: { padding: { left: 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         x: { 
@@ -3753,12 +3752,17 @@ $dept_icons = [
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 },
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0,
-                                // ✨ บังคับให้ตัวหนังสือทุกบรรทัด "ชิดซ้าย" ตรงกันเป๊ะๆ ตามที่คุณต้องการ ✨
-                                crossAlign: 'near'
+                                minRotation: 0 
                             }, 
                             grid: { display: false }, 
-                            border: {display: false}
+                            border: {display: false},
+                            // ✨ ตัวแปรสำคัญ: บังคับจองพื้นที่ฝั่งซ้ายบนไอแพด 140 พิกเซล เพื่อกันไม่ให้ข้อความโดนตัดเป็น ...
+                            // ทำให้ข้อความแสดงเต็มๆ และกราฟจะถูกดันไปขวาเองเหมือนในคอมพิวเตอร์ครับ
+                            afterFit: function(scaleInstance) {
+                                if (window.innerWidth <= 1366) {
+                                    scaleInstance.width = 140; 
+                                }
+                            }
                         } 
                     } 
                 }
