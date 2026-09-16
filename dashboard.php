@@ -3714,15 +3714,8 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ บนไอแพด: จัดการชื่อที่ยาวเกินไปให้แสดงผลพอดี ไม่ทะลุกราฟ และคงความเป็น 1 บรรทัด ✨
-            let locLabels = sorted.length ? sorted.map(e => {
-                let name = e.name;
-                if (window.innerWidth <= 1366 && name.length > 12) {
-                    // ถ้าชื่อยาวเกิน 12 ตัวอักษร ให้ตัดแล้วใส่ '...' ต่อท้าย
-                    return name.substring(0, 12) + '...';
-                }
-                return name;
-            }) : ['ไม่มีข้อมูล'];
+            // ✨ คืนค่าเป็นบรรทัดเดียวปกติเหมือนฝั่งคอมพิวเตอร์
+            let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
             if(chartLocInstance) chartLocInstance.destroy();
@@ -3745,8 +3738,8 @@ $dept_icons = [
                     indexAxis: 'y',
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    // ✨ จัดการ Padding ให้แกน y มีพื้นที่แสดงข้อความมากขึ้นบนไอแพด ✨
-                    layout: { padding: { left: window.innerWidth <= 1366 ? 10 : 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
+                    // ✨ ปล่อยให้ Chart.js ดันกราฟไปทางขวาเองอัตโนมัติ (เพิ่ม padding ซ้ายนิดนึงกันข้อความติดขอบจอเกินไปบนไอแพด)
+                    layout: { padding: { left: window.innerWidth <= 1366 ? 5 : 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         x: { 
@@ -3760,19 +3753,11 @@ $dept_icons = [
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 },
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0,
-                                // ✨ บังคับให้ข้อความชิดขวาเสมอ ✨
-                                align: 'right', 
-                                crossAlign: 'near' 
+                                minRotation: 0 
                             }, 
                             grid: { display: false }, 
-                            border: {display: false},
-                            // ✨ จองพื้นที่ฝั่งซ้ายของแกน Y ให้เพียงพอสำหรับข้อความ ✨
-                            afterFit: function(scaleInstance) {
-                                if (window.innerWidth <= 1366) {
-                                    scaleInstance.width = 100; // ปรับขนาดพื้นที่ฝั่งซ้ายให้พอดีกับข้อความ
-                                }
-                            }
+                            border: {display: false}
+                            // 🚨 ลบโค้ดเจ้าปัญหา (afterFit) ออกไปแล้ว! ข้อความจะเด้งออกมายืนเรียงสวยงามหน้ากราฟ 100% 🚨
                         } 
                     } 
                 }
