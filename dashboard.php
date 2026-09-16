@@ -3773,7 +3773,17 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            let techLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
+            // ✨ บนไอแพด: ถ้าชื่อยาว ให้แทรก \n เพื่อตัดเป็น 2 บรรทัด (ชื่อบน นามสกุลล่าง) จะได้ไม่ชนกันและโชว์ครบทุกแท่ง ✨
+            let techLabels = sorted.length ? sorted.map(e => {
+                let fullName = e.name;
+                if (window.innerWidth <= 1366 && fullName.length > 6) {
+                    let parts = fullName.split(' ');
+                    if (parts.length > 1) {
+                        return [parts[0], parts.slice(1).join(' ')]; // ตัดแบ่งชื่อกับนามสกุลคนละบรรทัด
+                    }
+                }
+                return fullName;
+            }) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
@@ -3807,26 +3817,17 @@ $dept_icons = [
                         x: { 
                             ticks: { 
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
-                                autoSkip: false, // ✨ ปิดระบบซ่อนข้อความอัตโนมัติ 100%
-                                maxRotation: 0, 
-                                minRotation: 0, 
-                                align: 'center',
-                                // ✨ ใช้ฟังก์ชัน callback บังคับสลับฟันปลา (ขึ้น-ลง) บนไอแพด เพื่อให้ชื่อยาวๆ แสดงครบและไม่ทับกัน
-                                callback: function(value, index) {
-                                    let label = this.getLabelForValue(value);
-                                    if (window.innerWidth <= 1366) {
-                                        // ถ้าจอไอแพด ให้สลับบรรทัดคู่คี่ เพื่อไม่ให้เบียดกัน
-                                        return index % 2 === 0 ? [label, ''] : ['', label];
-                                    }
-                                    return label;
-                                }
+                                autoSkip: false, // ✨ บังคับแสดงผลครบทุกแท่ง 100% ห้ามซ่อน
+                                maxRotation: 0,  // ✨ ตั้งตรง 0 องศา
+                                minRotation: 0,  // ✨ ตั้งตรง 0 องศา
+                                align: 'center'
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    categoryPercentage: window.innerWidth <= 1366 ? 0.7 : 0.8, 
-                    barPercentage: window.innerWidth <= 1366 ? 0.8 : 0.9 
+                    categoryPercentage: window.innerWidth <= 1366 ? 0.75 : 0.8, 
+                    barPercentage: window.innerWidth <= 1366 ? 0.85 : 0.9 
                 }
             });
         }
