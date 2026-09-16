@@ -3754,7 +3754,14 @@ $dept_icons = [
                                 minRotation: 0 
                             }, 
                             grid: { display: false }, 
-                            border: {display: false}
+                            border: {display: false},
+                            // ✨ ไม้ตาย: จองพื้นที่แกน Y บนไอแพด/แท็บเล็ต ให้กว้างขึ้น ป้องกันชื่อโดนตัดเป็น ...
+                            afterFit: function(scaleInstance) {
+                                if (window.innerWidth <= 1366) {
+                                    // ความกว้างระดับ 200px จะพอดีกับคำว่า "สำนักวิทยบริการและเทคโนโลยีสารสนเทศ"
+                                    scaleInstance.width = 200; 
+                                }
+                            }
                         } 
                     } 
                 }
