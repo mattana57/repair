@@ -3773,30 +3773,16 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ แก้ไขระบบจัดกึ่งกลางชื่อ 2 บรรทัดเฉพาะบนไอแพด/แท็บเล็ต โดยไม่แตะต้องฝั่งคอมพิวเตอร์
-            let techLabels = sorted.length ? sorted.map(e => {
-                let fullName = e.name;
-                if (window.innerWidth <= 1366 && fullName.length > 6) {
-                    let parts = fullName.split(' ');
-                    if (parts.length > 1) {
-                        let l1 = parts[0];
-                        let l2 = parts.slice(1).join(' ');
-                        
-                        // เติมช่องว่างซ้าย-ขวาเพื่อให้บรรทัดสั้นมีความกว้างเท่ากับบรรทัดยาว เป๊ะๆ
-                        if (l1.length < l2.length) {
-                            let diff = l2.length - l1.length;
-                            let pad = '\u00A0'.repeat(diff * 2);
-                            l1 = pad + l1 + pad;
-                        } else if (l2.length < l1.length) {
-                            let diff = l1.length - l2.length;
-                            let pad = '\u00A0'.repeat(diff * 2);
-                            l2 = pad + l2 + pad;
-                        }
-                        return [l1, l2];
-                    }
+            let rawLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
+
+            // ✨ บนไอแพด: เคลียร์ชื่อเดิมออก แล้วใช้ Plugin วาดข้อความเองเพื่อให้จัดกึ่งกลางตรงเป๊ะทุกแท่ง 100%
+            let techLabels = (window.innerWidth <= 1366) ? rawLabels.map(name => {
+                if (name.length > 6) {
+                    let parts = name.split(' ');
+                    if (parts.length > 1) return [parts[0], parts.slice(1).join(' ')];
                 }
-                return fullName;
-            }) : ['ไม่มีข้อมูล'];
+                return [name, ''];
+            }) : rawLabels;
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
@@ -3818,7 +3804,8 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    layout: { padding: { left: 10, right: 10, bottom: 0 } }, 
+                    // เพิ่มพื้นที่ด้านล่างบนไอแพดเพื่อให้มีที่สำหรับชื่อ 2 บรรทัด
+                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 15 : 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3833,7 +3820,14 @@ $dept_icons = [
                                 autoSkip: false, 
                                 maxRotation: 0, 
                                 minRotation: 0, 
-                                align: 'center'
+                                align: 'center',
+                                // ซ่อน Label เดิมของ Chart.js บนไอแพด เพื่อให้ Plugin วาดทับแบบจัดกึ่งกลางสมบูรณ์แบบ
+                                callback: function(value, index) {
+                                    if (window.innerWidth <= 1366) {
+                                        return ''; 
+                                    }
+                                    return this.getLabelForValue(value);
+                                }
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
@@ -3841,7 +3835,34 @@ $dept_icons = [
                     },
                     categoryPercentage: window.innerWidth <= 1366 ? 0.75 : 0.8, 
                     barPercentage: window.innerWidth <= 1366 ? 0.85 : 0.9 
-                }
+                },
+                plugins: [{
+                    id: 'centerAlignedLabelsTablet',
+                    afterDraw: (chart) => {
+                        if (window.innerWidth > 1366) return; // ทำงานเฉพาะไอแพด/แท็บเล็ตเท่านั้น ฝั่งคอมไม่เกี่ยว
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        ctx.font = '10px "Kanit", sans-serif';
+                        ctx.fillStyle = '#64748b';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'top';
+
+                        const meta = chart.getDatasetMeta(0);
+                        meta.data.forEach((bar, index) => {
+                            let labelData = techLabels[index];
+                            let x = bar.x; // กึ่งกลางแท่งกราฟเป๊ะๆ
+                            let y = chart.scales.x.top + 4; // ใต้แกน X ลงมาเล็กน้อย
+
+                            if (Array.isArray(labelData)) {
+                                ctx.fillText(labelData[0], x, y);
+                                ctx.fillText(labelData[1], x, y + 13); // บรรทัดที่ 2 ห่างลงมา 13 พิกเซล
+                            } else {
+                                ctx.fillText(labelData, x, y);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }]
             });
         }
 
