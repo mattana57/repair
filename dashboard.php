@@ -3773,8 +3773,17 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ กฎเหล็ก: ใช้ชื่อบรรทัดเดียวล้วนๆ ห้ามตัดเป็น 2 บรรทัดเด็ดขาด
-            let techLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
+            // ✨ บนไอแพด: ถ้าชื่อมีเว้นวรรค ให้ตัดเป็น 2 บรรทัดแบบคลีนๆ ไม่ต้องเติมช่องว่างหลอก
+            let techLabels = sorted.length ? sorted.map(e => {
+                let fullName = e.name;
+                if (window.innerWidth <= 1366 && fullName.length > 5) {
+                    let parts = fullName.split(' ');
+                    if (parts.length > 1) {
+                        return [parts[0], parts.slice(1).join(' ')];
+                    }
+                }
+                return fullName;
+            }) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
@@ -3796,7 +3805,7 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    layout: { padding: { left: 10, right: 10, bottom: 0 } }, 
+                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 10 : 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3807,12 +3816,12 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                // ✨ ปรับฟอนต์ให้เล็กลงนิดหน่อย (10px) เฉพาะบนไอแพด เพื่อให้บรรทัดเดียวพอดีเป๊ะ ไม่ซ้อนทับกัน
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
-                                autoSkip: false, // บังคับโชว์ครบทุกแท่ง ไม่ให้หาย
-                                maxRotation: 0,  // บังคับแนวนอน ห้ามเอียงเด็ดขาด
-                                minRotation: 0,  // บังคับแนวนอน ห้ามเอียงเด็ดขาด
-                                align: 'center'  // บังคับกึ่งกลางตรงเป๊ะ 100%
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
+                                autoSkip: false, // บังคับโชว์ให้ครบทุกแท่ง
+                                maxRotation: 0, 
+                                minRotation: 0, 
+                                align: 'center',       // วางกล่องข้อความไว้ตรงกลางแท่งกราฟ
+                                crossAlign: 'center'   // ✨ คำสั่งวิเศษ! บังคับให้ข้อความ 2 บรรทัดจัดกึ่งกลาง Center-aligned ซึ่งกันและกัน 100% ✨
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
