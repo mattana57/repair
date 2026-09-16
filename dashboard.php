@@ -3714,7 +3714,7 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ ยกเลิกการตัดคำ คืนค่าเป็นบรรทัดเดียวปกติเหมือนฝั่งคอมพิวเตอร์ 100%
+            // ✨ ยกเลิกการตัดคำ คืนค่าเป็นบรรทัดเดียวปกติ
             let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
@@ -3738,7 +3738,8 @@ $dept_icons = [
                     indexAxis: 'y',
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    layout: { padding: { left: 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
+                    // ✨ เพิ่ม padding ซ้ายให้พอดีกับความยาวตัวหนังสือ (เฉพาะแท็บเล็ต) ✨
+                    layout: { padding: { left: window.innerWidth <= 1366 ? 30 : 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         x: { 
@@ -3752,19 +3753,12 @@ $dept_icons = [
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 },
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0 
+                                minRotation: 0,
+                                // ✨ บังคับให้ข้อความชิดขวากับแท่งกราฟเสมอ ✨
+                                align: 'right'
                             }, 
                             grid: { display: false }, 
-                            border: {display: false},
-                            // ✨ พระเอกตัวจริง: จองพื้นที่ฝั่งซ้ายของแกน Y ✨
-                            afterFit: function(scaleInstance) {
-                                if (window.innerWidth <= 1366) {
-                                    // 🚨 ปรับจาก 110 เป็น 150 🚨
-                                    // ความกว้างนี้จะทำให้ข้อความ "ห้องปฏิบัติการคอมพิวเตอร์" แสดงได้เต็มบรรทัด
-                                    // และผลักกราฟ + เลข 0,1,2,3,4 ให้ขยับไปทางขวาตามที่คุณต้องการเป๊ะๆ!
-                                    scaleInstance.width = 150; 
-                                }
-                            }
+                            border: {display: false}
                         } 
                     } 
                 }
