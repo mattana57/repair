@@ -3779,8 +3779,7 @@ $dept_icons = [
             if(chartTechInstance) chartTechInstance.destroy();
             
             const container = document.getElementById('mainTechChart').parentNode;
-            // ✨ ใช้ความสูง 250px เท่าคอมพิวเตอร์เป๊ะๆ ไม่มีแบ่งแยก
-            container.style.height = '250px';
+            container.style.height = '250px'; // ใช้ความสูงเดียวกับคอมพิวเตอร์
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
@@ -3796,7 +3795,7 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    layout: { padding: { bottom: 0 } },
+                    layout: { padding: { bottom: 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3807,19 +3806,17 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                // ✨ ใช้ฟอนต์ 12 เท่าคอมพิวเตอร์เป๊ะๆ ไม่มีแบ่งแยก
-                                font: { family: "'Kanit', sans-serif", size: 12 }, 
+                                font: { family: "'Kanit', sans-serif", size: 12 }, // ใช้ฟอนต์ขนาดเท่าคอมพิวเตอร์
                                 autoSkip: false, 
-                                maxRotation: 0, 
-                                minRotation: 0,
+                                maxRotation: 0, // ✨ บังคับตั้งตรง 0 องศา ทุกอุปกรณ์
+                                minRotation: 0, // ✨ บังคับตั้งตรง 0 องศา ทุกอุปกรณ์
                                 align: 'center' 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    // ✨ ขนาดแท่งกราฟเท่าคอมพิวเตอร์เป๊ะๆ ไม่มีแบ่งแยก
-                    categoryPercentage: 0.8,
+                    categoryPercentage: 0.8, // ใช้ขนาดแท่งเท่าคอมพิวเตอร์
                     barPercentage: 0.9 
                 }
             });
