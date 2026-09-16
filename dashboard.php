@@ -3773,14 +3773,14 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ใช้ชื่อตรงๆ บรรทัดเดียวยาวๆ เหมือนฝั่งคอมพิวเตอร์
+            // ✨ บังคับใช้ชื่อตรงๆ บรรทัดเดียวยาวๆ ไม่มีเงื่อนไขหั่นคำอีกต่อไป
             let techLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
             
             const container = document.getElementById('mainTechChart').parentNode;
-            container.style.height = '250px';
+            container.style.height = '250px'; // ใช้ความสูงคงที่เท่าคอมพิวเตอร์
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
@@ -3807,7 +3807,6 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                // ใช้ฟอนต์ 12 และการตั้งค่าเหมือนคอมพิวเตอร์ 100%
                                 font: { family: "'Kanit', sans-serif", size: 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
