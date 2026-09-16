@@ -3738,7 +3738,6 @@ $dept_icons = [
                     indexAxis: 'y',
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    // ✨ ปล่อยให้ Chart.js ดันกราฟไปทางขวาเองอัตโนมัติ (เพิ่ม padding ซ้ายนิดนึงกันข้อความติดขอบจอเกินไปบนไอแพด)
                     layout: { padding: { left: window.innerWidth <= 1366 ? 5 : 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
@@ -3753,11 +3752,12 @@ $dept_icons = [
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 },
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0 
+                                minRotation: 0,
+                                crossAlign: 'far' // ✨ บังคับให้ตัวหนังสือ "ชิดซ้าย" 100% ตามคำสั่งเป๊ะๆ
                             }, 
                             grid: { display: false }, 
-                            border: {display: false}
-                            // 🚨 ลบโค้ดเจ้าปัญหา (afterFit) ออกไปแล้ว! ข้อความจะเด้งออกมายืนเรียงสวยงามหน้ากราฟ 100% 🚨
+                            border: {display: false},
+                            z: 10 // ✨ ดึงตัวหนังสือให้ลอยออกมาอยู่หน้ากราฟ แก้ปัญหาตัวหนังสือซ้อนอยู่ข้างหลัง
                         } 
                     } 
                 }
