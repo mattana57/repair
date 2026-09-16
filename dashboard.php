@@ -3773,18 +3773,8 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ บังคับตัดคำและเติมช่องว่างจัดกึ่งกลางแบบฮาร์ดโค้ดเฉพาะบนไอแพด ให้ชื่ออยู่ตรงกลางแท่งเป๊ะๆ
-            let techLabels = sorted.length ? sorted.map(e => {
-                let name = e.name;
-                if (window.innerWidth <= 1366) {
-                    if (name === 'สมชาย ใจงาม') return ['สมชาย', '\u00A0\u00A0ใจงาม\u00A0\u00A0'];
-                    if (name === 'สมชาย ใจดี') return ['สมชาย', '\u00A0\u00A0ใจดี\u00A0\u00A0'];
-                    if (name === 'cartoon') return ['cartoon', ''];
-                    if (name === 'ไม่ระบุช่าง') return ['ไม่ระบุ', 'ช่าง'];
-                    if (name === 'nattam') return ['nattam', ''];
-                }
-                return name;
-            }) : ['ไม่มีข้อมูล'];
+            // ✨ กฎเหล็ก: ใช้ชื่อบรรทัดเดียวล้วนๆ ห้ามตัดเป็น 2 บรรทัดเด็ดขาด
+            let techLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
@@ -3817,11 +3807,12 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
+                                // ✨ ปรับฟอนต์ให้เล็กลงนิดหน่อย (10px) เฉพาะบนไอแพด เพื่อให้บรรทัดเดียวพอดีเป๊ะ ไม่ซ้อนทับกัน
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
-                                autoSkip: false, 
-                                maxRotation: 0, 
-                                minRotation: 0, 
-                                align: 'center'
+                                autoSkip: false, // บังคับโชว์ครบทุกแท่ง ไม่ให้หาย
+                                maxRotation: 0,  // บังคับแนวนอน ห้ามเอียงเด็ดขาด
+                                minRotation: 0,  // บังคับแนวนอน ห้ามเอียงเด็ดขาด
+                                align: 'center'  // บังคับกึ่งกลางตรงเป๊ะ 100%
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
