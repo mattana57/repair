@@ -3773,13 +3773,22 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ บนไอแพด: ถ้าชื่อยาว ให้แทรก \n เพื่อตัดเป็น 2 บรรทัด (ชื่อบน นามสกุลล่าง) จะได้ไม่ชนกันและโชว์ครบทุกแท่ง ✨
             let techLabels = sorted.length ? sorted.map(e => {
                 let fullName = e.name;
                 if (window.innerWidth <= 1366 && fullName.length > 6) {
                     let parts = fullName.split(' ');
                     if (parts.length > 1) {
-                        return [parts[0], parts.slice(1).join(' ')]; // ตัดแบ่งชื่อกับนามสกุลคนละบรรทัด
+                        let line1 = parts[0];
+                        let line2 = parts.slice(1).join(' ');
+                        // ✨ เคล็ดลับจัดกึ่งกลาง: เติมช่องว่างให้อัตโนมัติเพื่อให้บรรทัดสั้นมีความกว้างสมดุลกับบรรทัดยาว
+                        if (line1.length < line2.length) {
+                            let diff = line2.length - line1.length;
+                            line1 = ' '.repeat(diff * 2) + line1 + ' '.repeat(diff * 2);
+                        } else if (line2.length < line1.length) {
+                            let diff = line1.length - line2.length;
+                            line2 = ' '.repeat(diff * 2) + line2 + ' '.repeat(diff * 2);
+                        }
+                        return [line1, line2];
                     }
                 }
                 return fullName;
@@ -3789,7 +3798,7 @@ $dept_icons = [
             if(chartTechInstance) chartTechInstance.destroy();
             
             const container = document.getElementById('mainTechChart').parentNode;
-            container.style.height = window.innerWidth <= 1366 ? '280px' : '250px'; 
+            container.style.height = window.innerWidth <= 1366 ? '290px' : '250px'; 
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
@@ -3817,9 +3826,9 @@ $dept_icons = [
                         x: { 
                             ticks: { 
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
-                                autoSkip: false, // ✨ บังคับแสดงผลครบทุกแท่ง 100% ห้ามซ่อน
-                                maxRotation: 0,  // ✨ ตั้งตรง 0 องศา
-                                minRotation: 0,  // ✨ ตั้งตรง 0 องศา
+                                autoSkip: false, 
+                                maxRotation: 0, 
+                                minRotation: 0, 
                                 align: 'center'
                             }, 
                             grid: { display: false }, 
