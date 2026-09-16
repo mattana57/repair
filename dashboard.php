@@ -3773,22 +3773,26 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
+            // ✨ แก้ไขระบบจัดกึ่งกลางชื่อ 2 บรรทัดเฉพาะบนไอแพด/แท็บเล็ต โดยไม่แตะต้องฝั่งคอมพิวเตอร์
             let techLabels = sorted.length ? sorted.map(e => {
                 let fullName = e.name;
                 if (window.innerWidth <= 1366 && fullName.length > 6) {
                     let parts = fullName.split(' ');
                     if (parts.length > 1) {
-                        let line1 = parts[0];
-                        let line2 = parts.slice(1).join(' ');
-                        // ✨ เคล็ดลับจัดกึ่งกลาง: เติมช่องว่างให้อัตโนมัติเพื่อให้บรรทัดสั้นมีความกว้างสมดุลกับบรรทัดยาว
-                        if (line1.length < line2.length) {
-                            let diff = line2.length - line1.length;
-                            line1 = ' '.repeat(diff * 2) + line1 + ' '.repeat(diff * 2);
-                        } else if (line2.length < line1.length) {
-                            let diff = line1.length - line2.length;
-                            line2 = ' '.repeat(diff * 2) + line2 + ' '.repeat(diff * 2);
+                        let l1 = parts[0];
+                        let l2 = parts.slice(1).join(' ');
+                        
+                        // เติมช่องว่างซ้าย-ขวาเพื่อให้บรรทัดสั้นมีความกว้างเท่ากับบรรทัดยาว เป๊ะๆ
+                        if (l1.length < l2.length) {
+                            let diff = l2.length - l1.length;
+                            let pad = '\u00A0'.repeat(diff * 2);
+                            l1 = pad + l1 + pad;
+                        } else if (l2.length < l1.length) {
+                            let diff = l1.length - l2.length;
+                            let pad = '\u00A0'.repeat(diff * 2);
+                            l2 = pad + l2 + pad;
                         }
-                        return [line1, line2];
+                        return [l1, l2];
                     }
                 }
                 return fullName;
