@@ -3773,13 +3773,14 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
+            // ใช้ชื่อตรงๆ บรรทัดเดียวยาวๆ เหมือนฝั่งคอมพิวเตอร์
             let techLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
             
             const container = document.getElementById('mainTechChart').parentNode;
-            container.style.height = '250px'; // ใช้ความสูงเดียวกับคอมพิวเตอร์
+            container.style.height = '250px';
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
@@ -3795,7 +3796,7 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    layout: { padding: { bottom: 0 } }, 
+                    layout: { padding: { bottom: 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3806,17 +3807,18 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: 12 }, // ใช้ฟอนต์ขนาดเท่าคอมพิวเตอร์
+                                // ใช้ฟอนต์ 12 และการตั้งค่าเหมือนคอมพิวเตอร์ 100%
+                                font: { family: "'Kanit', sans-serif", size: 12 }, 
                                 autoSkip: false, 
-                                maxRotation: 0, // ✨ บังคับตั้งตรง 0 องศา ทุกอุปกรณ์
-                                minRotation: 0, // ✨ บังคับตั้งตรง 0 องศา ทุกอุปกรณ์
+                                maxRotation: 0, 
+                                minRotation: 0,
                                 align: 'center' 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    categoryPercentage: 0.8, // ใช้ขนาดแท่งเท่าคอมพิวเตอร์
+                    categoryPercentage: 0.8,
                     barPercentage: 0.9 
                 }
             });
