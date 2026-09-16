@@ -3714,7 +3714,30 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
+            // ✨ บนไอแพด: ถ้าชื่อสถานที่ยาวเกินไป ให้ตัดเป็น 2 บรรทัด เพื่อไม่ให้ข้อความยาวทะลุไปซ้อนทับหลังแท่งกราฟ ✨
+            let locLabels = sorted.length ? sorted.map(e => {
+                let name = e.name;
+                if (window.innerWidth <= 1366 && name.length > 8) {
+                    if (name.includes(' ')) {
+                        let parts = name.split(' ');
+                        return [parts[0], parts.slice(1).join(' ')];
+                    } else if (name.startsWith('ห้องประชุม')) {
+                        return ['ห้องประชุม', name.substring(10)];
+                    } else if (name.startsWith('ห้องพักอาจารย์')) {
+                        return ['ห้องพักอาจารย์', name.substring(14)];
+                    } else if (name.startsWith('ห้องปฏิบัติการ')) {
+                        return ['ห้องปฏิบัติการ', name.substring(14)];
+                    } else if (name.startsWith('ห้องเรียน')) {
+                        return ['ห้องเรียน', name.substring(9)];
+                    } else if (name.startsWith('ห้อง')) {
+                        return ['ห้อง', name.substring(4)];
+                    } else {
+                        let mid = Math.ceil(name.length / 2);
+                        return [name.slice(0, mid), name.slice(mid)];
+                    }
+                }
+                return name;
+            }) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
             if(chartLocInstance) chartLocInstance.destroy();
@@ -3754,14 +3777,7 @@ $dept_icons = [
                                 minRotation: 0 
                             }, 
                             grid: { display: false }, 
-                            border: {display: false},
-                            // ✨ ไม้ตาย: จองพื้นที่แกน Y บนไอแพด/แท็บเล็ต ให้กว้างขึ้น ป้องกันชื่อโดนตัดเป็น ...
-                            afterFit: function(scaleInstance) {
-                                if (window.innerWidth <= 1366) {
-                                    // ความกว้างระดับ 200px จะพอดีกับคำว่า "สำนักวิทยบริการและเทคโนโลยีสารสนเทศ"
-                                    scaleInstance.width = 200; 
-                                }
-                            }
+                            border: {display: false}
                         } 
                     } 
                 }
