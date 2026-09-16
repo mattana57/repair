@@ -3795,7 +3795,6 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    // ✨ เพิ่ม padding ซ้าย-ขวา เพื่อไม่ให้ชื่อแท่งแรกและแท่งสุดท้ายชิดขอบเกินไปจนหลุดจอ
                     layout: { padding: { left: 10, right: 10, bottom: 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
@@ -3808,20 +3807,26 @@ $dept_icons = [
                         x: { 
                             ticks: { 
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
-                                autoSkip: false, // ✨ บังคับห้ามซ่อนชื่อเด็ดขาด (ให้แสดงครบทุกแท่ง)
+                                autoSkip: false, // ✨ ปิดระบบซ่อนข้อความอัตโนมัติ 100%
                                 maxRotation: 0, 
                                 minRotation: 0, 
                                 align: 'center',
-                                callback: function(value, index, values) {
-                                    return this.getLabelForValue(value);
+                                // ✨ ใช้ฟังก์ชัน callback บังคับสลับฟันปลา (ขึ้น-ลง) บนไอแพด เพื่อให้ชื่อยาวๆ แสดงครบและไม่ทับกัน
+                                callback: function(value, index) {
+                                    let label = this.getLabelForValue(value);
+                                    if (window.innerWidth <= 1366) {
+                                        // ถ้าจอไอแพด ให้สลับบรรทัดคู่คี่ เพื่อไม่ให้เบียดกัน
+                                        return index % 2 === 0 ? [label, ''] : ['', label];
+                                    }
+                                    return label;
                                 }
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    categoryPercentage: window.innerWidth <= 1366 ? 0.75 : 0.8, 
-                    barPercentage: window.innerWidth <= 1366 ? 0.85 : 0.9 
+                    categoryPercentage: window.innerWidth <= 1366 ? 0.7 : 0.8, 
+                    barPercentage: window.innerWidth <= 1366 ? 0.8 : 0.9 
                 }
             });
         }
