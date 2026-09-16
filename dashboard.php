@@ -3773,14 +3773,14 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ใช้ชื่อตรงๆ บรรทัดเดียวยาวๆ เหมือนฝั่งคอมพิวเตอร์
             let techLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
             
             const container = document.getElementById('mainTechChart').parentNode;
-            container.style.height = window.innerWidth <= 1366 ? '280px' : '250px';
+            // ✨ ใช้ความสูง 250px เท่าคอมพิวเตอร์เป๊ะๆ ไม่มีแบ่งแยก
+            container.style.height = '250px';
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
@@ -3807,18 +3807,20 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
+                                // ✨ ใช้ฟอนต์ 12 เท่าคอมพิวเตอร์เป๊ะๆ ไม่มีแบ่งแยก
+                                font: { family: "'Kanit', sans-serif", size: 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0, 
+                                minRotation: 0,
                                 align: 'center' 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    categoryPercentage: window.innerWidth <= 1366 ? 0.7 : 0.8,
-                    barPercentage: window.innerWidth <= 1366 ? 0.8 : 0.9 
+                    // ✨ ขนาดแท่งกราฟเท่าคอมพิวเตอร์เป๊ะๆ ไม่มีแบ่งแยก
+                    categoryPercentage: 0.8,
+                    barPercentage: 0.9 
                 }
             });
         }
