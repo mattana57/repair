@@ -3714,7 +3714,7 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ คืนค่าเป็นบรรทัดเดียวปกติเหมือนฝั่งคอมพิวเตอร์
+            // ✨ ยกเลิกการตัดคำ คืนค่าเป็นบรรทัดเดียวปกติ
             let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
@@ -3738,7 +3738,7 @@ $dept_icons = [
                     indexAxis: 'y',
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    layout: { padding: { left: window.innerWidth <= 1366 ? 5 : 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
+                    layout: { padding: { left: 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         x: { 
@@ -3752,12 +3752,17 @@ $dept_icons = [
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 },
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0,
-                                crossAlign: 'far' // ✨ บังคับให้ตัวหนังสือ "ชิดซ้าย" 100% ตามคำสั่งเป๊ะๆ
+                                minRotation: 0 
                             }, 
                             grid: { display: false }, 
                             border: {display: false},
-                            z: 10 // ✨ ดึงตัวหนังสือให้ลอยออกมาอยู่หน้ากราฟ แก้ปัญหาตัวหนังสือซ้อนอยู่ข้างหลัง
+                            // ✨ พระเอกอยู่ตรงนี้: จองพื้นที่ฝั่งซ้ายของแกน Y เพื่อผลักกราฟและเลขแกน X ไปทางขวา ✨
+                            afterFit: function(scaleInstance) {
+                                if (window.innerWidth <= 1366) {
+                                    // จองพื้นที่ 110px สำหรับตัวหนังสือยาวๆ กราฟจะถูกดันไปทางขวาอัตโนมัติ
+                                    scaleInstance.width = 110; 
+                                }
+                            }
                         } 
                     } 
                 }
