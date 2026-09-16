@@ -3720,8 +3720,7 @@ $dept_icons = [
             if(chartLocInstance) chartLocInstance.destroy();
             
             const container = document.getElementById('mainLocChart').parentNode;
-            // ปรับความสูงให้สัมพันธ์กัน ไม่ให้ดูแคบไป
-            container.style.height = window.innerWidth < 1280 ? '280px' : '250px';
+            container.style.height = window.innerWidth <= 1366 ? '280px' : '250px';
 
             chartLocInstance = new Chart(ctx, {
                 type: 'bar', 
@@ -3738,8 +3737,7 @@ $dept_icons = [
                     indexAxis: 'y',
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    // ✨ ให้พื้นที่ว่างฝั่งซ้ายมากขึ้นบนไอแพด เพื่อไม่ให้ข้อความชิดขอบจอเกินไป
-                    layout: { padding: { left: window.innerWidth < 1280 ? 15 : 0 } },
+                    layout: { padding: { left: 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         x: { 
@@ -3750,19 +3748,13 @@ $dept_icons = [
                         }, 
                         y: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth < 1280 ? 11 : 12 },
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 },
                                 autoSkip: false, 
                                 maxRotation: 0, 
                                 minRotation: 0 
                             }, 
                             grid: { display: false }, 
-                            border: {display: false},
-                            afterFit: function(scale) {
-                                // ✨ บังคับความกว้างให้พอดีกับข้อความ ไม่ให้โดนตัด
-                                if (window.innerWidth < 1280) {
-                                   scale.width = 170; 
-                                }
-                            }
+                            border: {display: false}
                         } 
                     } 
                 }
@@ -3781,25 +3773,14 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ ไอแพด: บังคับตัดคำเว้นวรรค (ชื่อ นามสกุล) ให้ขึ้นบรรทัดใหม่แนวดิ่ง
-            // เพื่อไม่ให้ตัวหนังสือเอียง และอยู่ตรงกลางแท่งกราฟสวยงาม
-            let techLabels = sorted.length ? sorted.map(e => {
-                if (window.innerWidth < 1280) {
-                    let parts = e.name.split(' ');
-                    // ถ้าบางคนไม่มีเว้นวรรคและชื่อยาวไป ให้บังคับหั่นครึ่ง
-                    if (parts.length === 1 && e.name.length > 8) {
-                        return [e.name.substring(0, 8), e.name.substring(8)];
-                    }
-                    return parts;
-                }
-                return e.name;
-            }) : ['ไม่มีข้อมูล'];
+            // ใช้ชื่อตรงๆ บรรทัดเดียวยาวๆ เหมือนฝั่งคอมพิวเตอร์
+            let techLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
             
             const container = document.getElementById('mainTechChart').parentNode;
-            container.style.height = window.innerWidth < 1280 ? '300px' : '250px';
+            container.style.height = window.innerWidth <= 1366 ? '280px' : '250px';
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
@@ -3815,10 +3796,7 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    layout: {
-                        // เพิ่มพื้นที่ด้านล่างกราฟให้ตัวอักษร
-                        padding: { bottom: window.innerWidth < 1280 ? 15 : 0 }
-                    },
+                    layout: { padding: { bottom: 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3829,18 +3807,18 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth < 1280 ? 10 : 12 }, 
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 10 : 12 }, 
                                 autoSkip: false, 
-                                maxRotation: 0, // ✨ ห้ามเอียงเด็ดขาด
-                                minRotation: 0, // ✨ ห้ามเอียงเด็ดขาด
-                                align: 'center' // ให้อยู่กึ่งกลาง
+                                maxRotation: 0, 
+                                minRotation: 0, 
+                                align: 'center' 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         } 
                     },
-                    categoryPercentage: window.innerWidth < 1280 ? 0.7 : 0.8,
-                    barPercentage: window.innerWidth < 1280 ? 0.8 : 0.9 
+                    categoryPercentage: window.innerWidth <= 1366 ? 0.7 : 0.8,
+                    barPercentage: window.innerWidth <= 1366 ? 0.8 : 0.9 
                 }
             });
         }
@@ -3858,13 +3836,16 @@ $dept_icons = [
                 let rating = parseFloat(r.rating);
                 if (!isNaN(rating) && rating > 0) {
                     let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                    
                     let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
                     if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
                         dName = 'ฝ่ายงาน' + dName;
                     }
+
                     if (!techMap[tName]) techMap[tName] = { sum: 0, count: 0, dept: dName };
                     techMap[tName].sum += rating;
                     techMap[tName].count++;
+
                     if (!deptMap[dName]) deptMap[dName] = { sum: 0, count: 0, techs: new Set() };
                     deptMap[dName].sum += rating;
                     deptMap[dName].count++;
@@ -3874,8 +3855,10 @@ $dept_icons = [
 
             let deptArr = Object.keys(deptMap).map(dName => {
                 let dAvg = (deptMap[dName].sum / deptMap[dName].count).toFixed(1);
+                
                 let topTechName = '-';
                 let topTechAvg = 0;
+                
                 deptMap[dName].techs.forEach(t => {
                     let tAvg = (techMap[t].sum / techMap[t].count);
                     if (tAvg > topTechAvg) {
@@ -3883,6 +3866,7 @@ $dept_icons = [
                         topTechName = t;
                     }
                 });
+
                 return {
                     name: dName,
                     avg: dAvg,
@@ -3906,7 +3890,7 @@ $dept_icons = [
             if(chartRatingInstance) chartRatingInstance.destroy();
             
             const container = document.getElementById('mainRatingChart').parentNode;
-            container.style.height = window.innerWidth < 1280 ? '420px' : '380px';
+            container.style.height = window.innerWidth <= 1366 ? '400px' : '380px';
 
             chartRatingInstance = new Chart(ctx, {
                 type: 'bar', 
@@ -3931,24 +3915,24 @@ $dept_icons = [
                                 const tName = labelArray[1];
                                 const dName = labelArray[2];
                                 
-                                let isTablet = window.innerWidth < 1280;
-                                let fSizeDept = isTablet ? 11 : 14;
+                                let isTablet = window.innerWidth <= 1366;
+                                let fSizeDept = isTablet ? 12 : 14;
                                 let fSizeTech = isTablet ? 11 : 13;
                                 let fSizeScore = isTablet ? 11 : 12;
                                 let fSizeStar = isTablet ? 11 : 13;
 
-                                // ✨ ดึงตำแหน่งอ้างอิงจาก ขอบซ้ายสุดของแท่งกราฟ แล้วขยับไปทางซ้ายอีก 10px
-                                const textDrawX = chart.chartArea.left - 10; 
+                                // ✨ อ้างอิงจุดวางข้อความจาก yAxis.right แทน ป้องกันการทับกราฟ 100%
+                                const textDrawX = yAxis.right - 10; 
                                 
-                                const yOffsetTop = isTablet ? -16 : -16;
-                                const yOffsetBottom = isTablet ? 16 : 16;
+                                const yOffsetTop = isTablet ? -18 : -16;
+                                const yOffsetBottom = isTablet ? 18 : 16;
 
-                                // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง)
+                                // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
                                 ctx.font = `800 ${fSizeDept}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#4f46e5';
                                 ctx.fillText(dName, textDrawX, y + yOffsetBottom);
 
-                                // 2. วาดชื่อช่าง (บรรทัดกลาง)
+                                // 2. วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
                                 ctx.font = `bold ${fSizeTech}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#475569';
                                 ctx.fillText(tName, textDrawX, y);
@@ -3968,9 +3952,11 @@ $dept_icons = [
                                 const starWidth = ctx.measureText(starIcon).width;
                                 const startX = starX - starWidth;
                                 
+                                // ดาวพื้นหลัง (สีเทา)
                                 ctx.fillStyle = '#e2e8f0';
                                 ctx.fillText(starIcon, starX, textY);
                                 
+                                // ดาวทับ (สีเหลือง ไล่ตาม %)
                                 if (scoreVal > 0) {
                                     const fillPercent = scoreVal / 5.0;
                                     ctx.save();
@@ -3984,7 +3970,7 @@ $dept_icons = [
                             } else {
                                 ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, chart.chartArea.left - 10, y);
+                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, yAxis.right - 10, y);
                             }
                         });
                         ctx.restore();
@@ -3998,7 +3984,7 @@ $dept_icons = [
                             data: deptArr.length ? deptArr.map(d => d.avg) : [0], 
                             backgroundColor: deptArr.length ? deptArr.map(d => getRatingColor(d.avg)) : ['#e2e8f0'], 
                             borderRadius: 10,
-                            barThickness: window.innerWidth < 1280 ? 20 : 24, 
+                            barThickness: window.innerWidth <= 1366 ? 20 : 24, 
                             maxBarThickness: 32,
                             borderSkipped: false,
                             z: 2
@@ -4008,7 +3994,7 @@ $dept_icons = [
                             data: deptArr.length ? deptArr.map(d => 5.0) : [5.0],
                             backgroundColor: '#f1f5f9',
                             borderRadius: 10,
-                            barThickness: window.innerWidth < 1280 ? 20 : 24,
+                            barThickness: window.innerWidth <= 1366 ? 20 : 24,
                             maxBarThickness: 32,
                             borderSkipped: false,
                             z: 1
@@ -4020,15 +4006,7 @@ $dept_icons = [
                     grouped: false,
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    layout: { 
-                        padding: { 
-                            top: 10, 
-                            bottom: 10, 
-                            // ✨ สร้างกำแพงดันแท่งกราฟไปทางขวา 200px บนไอแพด เพื่อไม่ให้เบียดกับข้อความ
-                            left: window.innerWidth < 1280 ? 200 : 0, 
-                            right: 20 
-                        } 
-                    },
+                    layout: { padding: { left: 0, right: 20 } }, // ✨ ไม่ใช้ padding left หลอกๆ แล้ว
                     interaction: { mode: 'y', intersect: false },
                     onClick: (e, elements, chart) => {
                         const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
@@ -4064,9 +4042,9 @@ $dept_icons = [
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
-                                // บีบแกนเดิมทิ้งไปเลย เพราะเราใช้ layout.padding.left แบกพื้นที่แทนแล้ว
-                                if (window.innerWidth < 1280) {
-                                    scaleInstance.width = 10; 
+                                // ✨ บังคับจองพื้นที่แกน Y ให้กว้าง 190px บนไอแพด ข้อความจะได้มีพื้นที่อยู่สบายๆ ไม่ทับแท่งกราฟ
+                                if (window.innerWidth <= 1366) {
+                                    scaleInstance.width = 190; 
                                 }
                             }
                         } 
