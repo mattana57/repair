@@ -3745,9 +3745,9 @@ $dept_icons = [
                                 ctx.textAlign = 'left';
                                 ctx.fillText(labelText, 5, y);
                             } else {
-                                // ✨ ฝั่งคอมพิวเตอร์: จัดข้อความ "ชิดขวา" หน้ากราฟเหมือนเดิมเป๊ะ ไม่กระทบ!
-                                ctx.textAlign = 'right';
-                                ctx.fillText(labelText, chart.chartArea.left - 10, y);
+                                // ✨ จัดข้อความ "ชิดซ้าย" (Left Align) เริ่มจากขอบซ้ายสุด 5px ให้เหมือนกันทุกอุปกรณ์
+                            ctx.textAlign = 'left';
+                            ctx.fillText(labelText, 5, y);
                             }
                         });
                         ctx.restore();
