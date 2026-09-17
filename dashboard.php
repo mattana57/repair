@@ -3829,35 +3829,35 @@ $dept_icons = [
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
-                // ✨ 1. เรียกใช้ไม้ตาย "Custom Plugin" (แบบเดียวกับกราฟรีวิวที่แก้ได้ผล!)
+                // ✨ 1. เพิ่ม Plugin ช่วยดันภาษาไทยกลับมาตรงกลาง (ทำงานเฉพาะบนไอแพด)
                 plugins: [{
-                    id: 'custom_tech_x_labels',
+                    id: 'fix_ipad_thai_alignment',
                     afterDraw: (chart) => {
-                        // ✨ ล็อคให้ทำเฉพาะไอแพด ฝั่งคอมพิวเตอร์ข้ามไปเลย ไม่กระทบ 100%
-                        if (window.innerWidth > 1366) return; 
+                        if (window.innerWidth > 1366) return; // ฝั่งคอมพิวเตอร์ข้ามไปเลย ไม่กระทบแน่นอน 100%
 
                         const ctx = chart.ctx;
                         const xAxis = chart.scales.x;
                         
                         ctx.save();
-                        ctx.textAlign = 'center'; // บังคับจัดกึ่งกลาง
+                        ctx.textAlign = 'center';
                         ctx.textBaseline = 'top';
-                        ctx.fillStyle = '#64748b'; // สีเทาเดียวกับต้นฉบับ
-                        ctx.font = `bold 11px "Kanit", sans-serif`;
+                        ctx.fillStyle = '#64748b'; 
+                        ctx.font = `600 11px "Kanit", sans-serif`;
                         
-                        // วางตำแหน่งตัวหนังสือให้อยู่ใต้เส้นกราฟ 10px พอดีๆ
-                        const yPos = chart.chartArea.bottom + 10; 
-
+                        const yPos = chart.chartArea.bottom + 8; 
+                        
                         chart.data.labels.forEach((label, index) => {
-                            // ✨ หาพิกัด "ตรงกลาง" ของแต่ละแท่งกราฟแบบเป๊ะๆ
                             const xCenter = xAxis.getPixelForTick(index);
                             
                             if (Array.isArray(label)) {
                                 label.forEach((line, i) => {
-                                    ctx.fillText(line, xCenter, yPos + (i * 15)); 
+                                    // ✨ ถ้าเป็นภาษาไทย ให้ดันกลับไปทางขวา 8px เพื่อชดเชยบั๊กของ Safari
+                                    const shiftX = /[\u0E00-\u0E7F]/.test(line) ? 8 : 0;
+                                    ctx.fillText(line, xCenter + shiftX, yPos + (i * 14)); 
                                 });
                             } else {
-                                ctx.fillText(label, xCenter, yPos);
+                                const shiftX = /[\u0E00-\u0E7F]/.test(label) ? 8 : 0;
+                                ctx.fillText(label, xCenter + shiftX, yPos);
                             }
                         });
                         ctx.restore();
@@ -3875,7 +3875,7 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 10 : 0 } }, 
+                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 25 : 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3886,7 +3886,7 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                // ✨ 2. ซ่อนตัวหนังสือเก่าจอมเพี้ยนเฉพาะในไอแพดให้ "โปร่งใส" (คอมพิวเตอร์เห็นปกติ)
+                                // ✨ 2. ซ่อนตัวหนังสือที่เบี้ยวของระบบเดิมทิ้งไปเฉพาะบนไอแพด (ฝั่งคอมพิวเตอร์ยังแสดงสีปกติ)
                                 color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
                                 autoSkip: false, 
