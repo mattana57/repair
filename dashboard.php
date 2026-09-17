@@ -3805,17 +3805,18 @@ $dept_icons = [
 
             let map = {};
             data.forEach(r => {
-                // ✨ ตัดช่องว่างส่วนเกินตั้งแต่ตอนดึงข้อมูล ป้องกันบั๊กชื่อเพี้ยน
-                let tName = r.technician_name ? r.technician_name.trim() : 'ไม่ระบุช่าง';
+                let tName = r.technician_name ? r.technician_name : 'ไม่ระบุช่าง';
                 map[tName] = (map[tName] || 0) + 1;
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ โลจิกแยกบรรทัดแบบคลีนที่สุด (คอมพิวเตอร์บรรทัดเดียวปกติ / ไอแพด 2 บรรทัด)
             let techLabels = sorted.length ? sorted.map(e => {
-                let fullName = e.name; 
-                if (window.innerWidth <= 1366 && fullName.includes(' ')) {
-                    return fullName.split(/\s+/); // ตัดคำที่ช่องว่างให้เป็น 2 บรรทัดอัตโนมัติ
+                let fullName = e.name.trim(); 
+                if (window.innerWidth <= 1366 && fullName.length > 5) {
+                    let parts = fullName.split(/\s+/); 
+                    if (parts.length > 1) {
+                        return [parts[0], parts.slice(1).join(' ')];
+                    }
                 }
                 return fullName;
             }) : ['ไม่มีข้อมูล'];
@@ -3828,6 +3829,40 @@ $dept_icons = [
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
+                plugins: [{
+                    id: 'custom_tech_x_labels',
+                    afterDraw: (chart) => {
+                        // ✨ ล็อคให้ทำเฉพาะไอแพด ฝั่งคอมพิวเตอร์ข้ามไปเลย ไม่กระทบ 100%
+                        if (window.innerWidth > 1366) return; 
+
+                        const ctx = chart.ctx;
+                        const xAxis = chart.scales.x;
+                        
+                        ctx.save();
+                        ctx.textAlign = 'center'; 
+                        ctx.textBaseline = 'top';
+                        ctx.fillStyle = '#64748b'; 
+                        ctx.font = `bold 11px "Kanit", sans-serif`;
+                        
+                        const yPos = chart.chartArea.bottom + 10; 
+
+                        chart.data.labels.forEach((label, index) => {
+                            const xCenter = xAxis.getPixelForTick(index);
+                            
+                            if (Array.isArray(label)) {
+                                label.forEach((line, i) => {
+                                    // ✨ ไม้ตาย: ถ้าเป็นภาษาไทย ให้ดึงกลับมาซ้าย 6 พิกเซล (-6) แก้บั๊กเบ้ขวาของไอแพด!
+                                    const shiftX = /[\u0E00-\u0E7F]/.test(line) ? -6 : 0;
+                                    ctx.fillText(line, xCenter + shiftX, yPos + (i * 14)); 
+                                });
+                            } else {
+                                const shiftX = /[\u0E00-\u0E7F]/.test(label) ? -6 : 0;
+                                ctx.fillText(label, xCenter + shiftX, yPos);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }],
                 data: {
                     labels: techLabels,
                     datasets: [{ 
@@ -3835,13 +3870,12 @@ $dept_icons = [
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
                         backgroundColor: '#6366f1', 
                         borderRadius: 6
-                        // ✨ ลบการบังคับความกว้างแท่งกราฟทิ้ง ปล่อยให้กราฟคำนวณจุดกึ่งกลางเอง
                     }]
                 },
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    layout: { padding: { left: 0, right: 0, bottom: window.innerWidth <= 1366 ? 10 : 0 } }, 
+                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 10 : 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3851,20 +3885,20 @@ $dept_icons = [
                             border: {display: false} 
                         }, 
                         x: { 
-                            offset: true, // ✨ คำสั่งสำคัญ: บังคับให้แกน X จับคู่แท่งกราฟกับตัวหนังสือให้อยู่ตรงกลางเป๊ะๆ เสมอ
                             ticks: { 
-                                color: '#64748b', // กลับมาใช้สีข้อความปกติ ไม่ต้องซ่อนแล้ว
+                                // ✨ ซ่อนตัวหนังสือเก่าจอมเพี้ยนเฉพาะในไอแพด ฝั่งคอมใช้ของเดิม ไม่กระทบ!
+                                color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0,
-                                align: 'center',      // จัดกึ่งกลางตัวหนังสือกับแท่ง
-                                crossAlign: 'center'  // จัดกึ่งกลางระหว่างบรรทัดที่ 1 กับ 2
+                                minRotation: 0
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         }
-                    }
+                    },
+                    categoryPercentage: window.innerWidth <= 1366 ? 0.75 : 0.8, 
+                    barPercentage: window.innerWidth <= 1366 ? 0.85 : 0.9 
                 }
             });
         }
@@ -4067,8 +4101,36 @@ $dept_icons = [
                         event.native.target.style.cursor = chartElement.length > 0 ? 'pointer' : 'default';
                     },
                     plugins: { 
-                        legend: { display: false }
-                    }, 
+                        legend: { display: false },
+                        // ✨ เพิ่มระบบจัดการ Tooltip คืนชีพกล่องข้อความให้กลับมาเป็นแบบรูปที่ 1
+                        tooltip: {
+                            filter: function(tooltipItem) {
+                                return tooltipItem.datasetIndex === 0; // ซ่อนกล่องข้อความของแท่งพื้นหลังสีเทา
+                            },
+                            callbacks: {
+                                title: function(context) {
+                                    let idx = context[0].dataIndex;
+                                    return deptArr[idx] ? deptArr[idx].name : '';
+                                },
+                                label: function(context) {
+                                    let idx = context.dataIndex;
+                                    if (!deptArr[idx]) return '';
+                                    return ` ช่าง ${deptArr[idx].topTech} (⭐ ${deptArr[idx].topTechAvg})`;
+                                },
+                                afterLabel: function(context) {
+                                    let idx = context.dataIndex;
+                                    if (!deptArr[idx]) return '';
+                                    return `จำนวน: ${deptArr[idx].count} รีวิว`;
+                                }
+                            },
+                            titleFont: { family: "'Kanit', sans-serif", size: 14, weight: 'bold' },
+                            bodyFont: { family: "'Kanit', sans-serif", size: 13, weight: 'bold' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            backgroundColor: 'rgba(30, 41, 59, 0.95)', // สีเทาเข้มแบบพรีเมียม
+                            displayColors: true
+                        }
+                    },
                     scales: { 
                         x: { 
                             min: 0, max: 5,
