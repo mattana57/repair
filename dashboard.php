@@ -3923,8 +3923,7 @@ $dept_icons = [
                         const yAxis = chart.scales.y;
                         
                         ctx.save();
-                        // ✨ 1. เปลี่ยนมาใช้จัดชิดซ้าย (Left-aligned) เพื่อให้ตัวหนังสือเกาะขอบซ้ายเป๊ะเหมือนในคอมโน้ตบุ๊ค
-                        ctx.textAlign = 'left'; 
+                        ctx.textAlign = 'right';
                         ctx.textBaseline = 'middle';
                         
                         yAxis.ticks.forEach((tick, index) => {
@@ -3944,54 +3943,62 @@ $dept_icons = [
                                 let fSizeScore = isTablet ? 11 : 12;
                                 let fSizeStar = isTablet ? 11 : 13;
 
-                                // ✨ 2. ล็อคพิกัดให้ตัวหนังสือเริ่มวาดที่ตำแหน่งคงที่เสมอ
-                                // การันตีว่าตัวหนังสือจะอยู่ริมซ้ายสวยงาม ไม่ลอยไปทับกราฟตรงกลางแน่นอน
-                                const textDrawX = 10; 
+                                // ✨ ไม้ตาย 100%: ล็อกพิกัด X ตายตัวเฉพาะบนไอแพด ป้องกันกราฟทับกัน!
+                                let textDrawX = chart.chartArea.left - 15; 
+                                if (isTablet) {
+                                    textDrawX = 195; // บังคับตัวหนังสือให้อยู่หน้าแท่งกราฟเสมอ (แท่งกราฟจะเริ่มที่ 210)
+                                }
                                 
                                 const yOffsetTop = isTablet ? -18 : -16;
                                 const yOffsetBottom = isTablet ? 18 : 16;
 
-                                // วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
+                                // 1. วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
                                 ctx.font = `800 ${fSizeDept}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#4f46e5';
                                 ctx.fillText(dName, textDrawX, y + yOffsetBottom);
 
-                                // วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
+                                // 2. วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
                                 ctx.font = `bold ${fSizeTech}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#475569';
                                 ctx.fillText(tName, textDrawX, y);
 
-                                // วาดดาว (บรรทัดบน)
+                                // 3. วาดคะแนนตัวเลข (บรรทัดบน)
                                 const textY = y + yOffsetTop; 
+                                ctx.font = `bold ${fSizeScore}px "Sarabun", sans-serif`;
+                                ctx.fillStyle = '#64748b';
+                                ctx.fillText(scoreStr, textDrawX, textY);
+                                
+                                // 4. วาดดาวไล่สี
+                                const scoreWidth = ctx.measureText(scoreStr).width;
+                                const starX = textDrawX - scoreWidth - 4; 
+                                
                                 ctx.font = `900 ${fSizeStar}px "Font Awesome 6 Free"`;
                                 const starIcon = '\uf005'; 
                                 const starWidth = ctx.measureText(starIcon).width;
+                                const startX = starX - starWidth;
                                 
                                 // ดาวพื้นหลัง (สีเทา)
                                 ctx.fillStyle = '#e2e8f0';
-                                ctx.fillText(starIcon, textDrawX, textY);
+                                ctx.fillText(starIcon, starX, textY);
                                 
                                 // ดาวทับ (สีเหลือง ไล่ตาม %)
                                 if (scoreVal > 0) {
                                     const fillPercent = scoreVal / 5.0;
                                     ctx.save();
                                     ctx.beginPath();
-                                    ctx.rect(textDrawX, textY - 10, starWidth * fillPercent, 20);
+                                    ctx.rect(startX, textY - 10, starWidth * fillPercent, 20);
                                     ctx.clip(); 
                                     ctx.fillStyle = '#f59e0b'; 
-                                    ctx.fillText(starIcon, textDrawX, textY);
+                                    ctx.fillText(starIcon, starX, textY);
                                     ctx.restore();
                                 }
-                                
-                                // วาดคะแนนตัวเลข
-                                ctx.font = `bold ${fSizeScore}px "Sarabun", sans-serif`;
-                                ctx.fillStyle = '#64748b';
-                                ctx.fillText(scoreStr, textDrawX + starWidth + 6, textY);
-                                
                             } else {
+                                let isTablet = window.innerWidth <= 1366;
                                 ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, 10, y);
+                                let textDrawX = chart.chartArea.left - 15;
+                                if (isTablet) textDrawX = 195;
+                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, textDrawX, y);
                             }
                         });
                         ctx.restore();
@@ -4027,7 +4034,7 @@ $dept_icons = [
                     grouped: false,
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    layout: { padding: { left: 0, right: window.innerWidth <= 1366 ? 10 : 20 } },
+                    layout: { padding: { left: 0, right: 20 } },
                     interaction: { mode: 'y', intersect: false },
                     onClick: (e, elements, chart) => {
                         const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
@@ -4055,23 +4062,18 @@ $dept_icons = [
                         y: { 
                             ticks: { 
                                 color: 'transparent', 
-                                font: { family: "'Sarabun', sans-serif", size: 1, weight: 'bold' }, // หลอกให้กินพื้นที่น้อยสุด
+                                font: { family: "'Sarabun', sans-serif", size: window.innerWidth <= 1366 ? 11 : 14, weight: 'bold' },
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0,
-                                padding: 0
+                                minRotation: 0
                             }, 
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
-                                // ✨ 3. สร้าง "กำแพง" แบบเป๊ะๆ:
-                                // บนไอแพด ให้กันพื้นที่ซ้ายไว้ 160px (พอดีกับความยาวตัวหนังสือ ไม่เหลือที่ว่างเกินไป)
-                                // บนคอม ให้กันไว้ 190px (เหมือนรูปที่ 2 เป๊ะๆ)
-                                // แท่งกราฟจะถูกดันไปเริ่มที่หลังกำแพงนี้ 100% ตัวหนังสือจะไม่ซ้อนทับอีกต่อไป
+                                // ✨ ไม้ตายขั้นสุด: ล็อกความกว้างฝั่งซ้ายของกราฟในไอแพดให้เป็น 210px เสมอ
+                                // ซึ่งกว้างพอดีสำหรับให้แท่งสีเขียวถอยห่างจากตัวหนังสือ (ที่วาดไว้ตรงพิกเซล 195)
                                 if (window.innerWidth <= 1366) {
-                                    scaleInstance.width = 160; 
-                                } else {
-                                    scaleInstance.width = 190; 
+                                    scaleInstance.width = 210; 
                                 }
                             }
                         } 
