@@ -4062,14 +4062,8 @@ $dept_icons = [
                                 minRotation: 0
                             }, 
                             grid: { display: false }, 
-                            border: {display: false},
-                            afterFit: function(scaleInstance) {
-                                // ✨ บังคับจองพื้นที่แกน Y ให้กว้าง 190px บนไอแพด ข้อความจะได้มีพื้นที่อยู่สบายๆ ไม่ทับแท่งกราฟ
-                                if (window.innerWidth <= 1366) {
-                                    scaleInstance.width = 190; 
-                                }
-                            }
-                        } 
+                            border: {display: false}
+                        }
                     } 
                 }
             });
