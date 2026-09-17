@@ -3854,15 +3854,15 @@ $dept_icons = [
                         x: { 
                             ticks: { 
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
-                                autoSkip: false, // บังคับโชว์ให้ครบทุกแท่ง
+                                autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0, 
-                                align: 'center',       // วางกล่องข้อความไว้ตรงกลางแท่งกราฟ
-                                crossAlign: 'center'   // ✨ คำสั่งวิเศษ! บังคับให้ข้อความ 2 บรรทัดจัดกึ่งกลาง Center-aligned ซึ่งกันและกัน 100% ✨
+                                minRotation: 0
+                                // ✨ ลบ align และ crossAlign ทิ้งไปเลยครับ! 
+                                // ปล่อยให้ระบบของ Chart.js จัดกึ่งกลางอัตโนมัติตามค่า Default มันจะตรงเผง 100%
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
-                        } 
+                        }
                     },
                     categoryPercentage: window.innerWidth <= 1366 ? 0.75 : 0.8, 
                     barPercentage: window.innerWidth <= 1366 ? 0.85 : 0.9 
