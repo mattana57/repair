@@ -3810,6 +3810,7 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
+            // ✨ ตัดช่องว่างส่วนเกินและแยกบรรทัดเฉพาะไอแพด (ฝั่งคอมพิวเตอร์จะไม่ได้รับผลกระทบ)
             let techLabels = sorted.length ? sorted.map(e => {
                 let fullName = e.name.trim(); 
                 if (window.innerWidth <= 1366 && fullName.length > 5) {
@@ -3829,40 +3830,7 @@ $dept_icons = [
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
-                plugins: [{
-                    id: 'custom_tech_labels',
-                    afterDraw: (chart) => {
-                        // ✨ ล็อคให้โค้ดนี้ทำงานเฉพาะบนไอแพด/แท็บเล็ต! ฝั่งคอมพิวเตอร์จะข้ามไปเลย ไม่กระทบ 100%
-                        if (window.innerWidth > 1366) return; 
-
-                        const ctx = chart.ctx;
-                        const meta = chart.getDatasetMeta(0);
-                        
-                        ctx.save();
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'top';
-                        ctx.fillStyle = '#64748b'; // สีข้อความเดิม
-                        ctx.font = `600 11px "Kanit", sans-serif`;
-                        
-                        chart.data.labels.forEach((label, index) => {
-                            const bar = meta.data[index];
-                            if(!bar) return;
-                            
-                            // ✨ หาพิกัด X กึ่งกลางของ "แท่งกราฟ" เป๊ะๆ แล้ววาดตัวหนังสือลงไปตรงนั้น
-                            const xCenter = bar.x;
-                            const yPos = chart.chartArea.bottom + 8; 
-                            
-                            if (Array.isArray(label)) {
-                                label.forEach((line, i) => {
-                                    ctx.fillText(line, xCenter, yPos + (i * 14)); 
-                                });
-                            } else {
-                                ctx.fillText(label, xCenter, yPos);
-                            }
-                        });
-                        ctx.restore();
-                    }
-                }],
+                // ✨ ลบ plugin ต้นตอของปัญหาออกไปทั้งหมด แล้วให้ Chart.js จัดการเอง!
                 data: {
                     labels: techLabels,
                     datasets: [{ 
@@ -3875,8 +3843,7 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    // ✨ เพิ่มพื้นที่ด้านล่างเฉพาะไอแพด เพื่อเว้นที่ให้ตัวหนังสือที่เราวาดเอง
-                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 20 : 0 } }, 
+                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 10 : 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3887,8 +3854,8 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                // ✨ ซ่อนตัวหนังสือระบบเดิมเฉพาะบนไอแพด ฝั่งคอมใช้ของเดิม ไม่กระทบ!
-                                color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
+                                // ✨ เปิดใช้งานสีข้อความตามปกติ เพื่อให้ Chart.js วาดกึ่งกลางอัตโนมัติ 100%
+                                color: '#64748b',
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
