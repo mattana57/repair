@@ -3829,7 +3829,6 @@ $dept_icons = [
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
-                // ✨ 1. เรียกใช้ไม้ตาย "Custom Plugin" (แบบเดียวกับกราฟรีวิวที่แก้ได้ผล!)
                 plugins: [{
                     id: 'custom_tech_x_labels',
                     afterDraw: (chart) => {
@@ -3840,12 +3839,11 @@ $dept_icons = [
                         const xAxis = chart.scales.x;
                         
                         ctx.save();
-                        ctx.textAlign = 'center'; // บังคับจัดกึ่งกลาง
+                        ctx.textAlign = 'center'; 
                         ctx.textBaseline = 'top';
-                        ctx.fillStyle = '#64748b'; // สีเทาเดียวกับต้นฉบับ
+                        ctx.fillStyle = '#64748b'; 
                         ctx.font = `bold 11px "Kanit", sans-serif`;
                         
-                        // วางตำแหน่งตัวหนังสือให้อยู่ใต้เส้นกราฟ 10px พอดีๆ
                         const yPos = chart.chartArea.bottom + 10; 
 
                         chart.data.labels.forEach((label, index) => {
@@ -3853,11 +3851,13 @@ $dept_icons = [
                             
                             if (Array.isArray(label)) {
                                 label.forEach((line, i) => {
-                                    // จัดกึ่งกลางตรงกับแกนแท่งกราฟ xCenter พอดี ไม่ต้องทดระยะ
-                                    ctx.fillText(line, xCenter, yPos + (i * 14)); 
+                                    // ✨ ไม้ตาย: ถ้าเป็นภาษาไทย ให้ดึงกลับมาซ้าย 6 พิกเซล (-6) แก้บั๊กเบ้ขวาของไอแพด!
+                                    const shiftX = /[\u0E00-\u0E7F]/.test(line) ? -6 : 0;
+                                    ctx.fillText(line, xCenter + shiftX, yPos + (i * 14)); 
                                 });
                             } else {
-                                ctx.fillText(label, xCenter, yPos);
+                                const shiftX = /[\u0E00-\u0E7F]/.test(label) ? -6 : 0;
+                                ctx.fillText(label, xCenter + shiftX, yPos);
                             }
                         });
                         ctx.restore();
@@ -3886,7 +3886,7 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                // ✨ 2. ซ่อนตัวหนังสือเก่าจอมเพี้ยนเฉพาะในไอแพดให้ "โปร่งใส" (คอมพิวเตอร์เห็นปกติ)
+                                // ✨ ซ่อนตัวหนังสือเก่าจอมเพี้ยนเฉพาะในไอแพด ฝั่งคอมใช้ของเดิม ไม่กระทบ!
                                 color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
                                 autoSkip: false, 
