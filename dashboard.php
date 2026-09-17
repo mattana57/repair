@@ -4102,10 +4102,9 @@ $dept_icons = [
                     },
                     plugins: { 
                         legend: { display: false },
-                        // ✨ เพิ่มระบบจัดการ Tooltip คืนชีพกล่องข้อความให้กลับมาเป็นแบบรูปที่ 1
                         tooltip: {
                             filter: function(tooltipItem) {
-                                return tooltipItem.datasetIndex === 0; // ซ่อนกล่องข้อความของแท่งพื้นหลังสีเทา
+                                return tooltipItem.datasetIndex === 0;
                             },
                             callbacks: {
                                 title: function(context) {
@@ -4123,8 +4122,12 @@ $dept_icons = [
                                     return `จำนวน: ${deptArr[idx].count} รีวิว`;
                                 }
                             },
+                            // ✨ ให้ตัวหนาเฉพาะชื่อฝ่ายงาน (titleFont) ส่วนเนื้อหา (bodyFont) ใช้ตัวบางปกติ
                             titleFont: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' },
-                            bodyFont: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' },
+                            bodyFont: { family: "'Sarabun', sans-serif", size: 13, weight: 'normal' }
+                            // ✨ ลบสีพื้นหลังและกรอบตกแต่งทิ้ง ปล่อยให้ใช้สีดำโปร่งใสอัตโนมัติเหมือนกราฟอื่นๆ
+                        }
+                    },
                             padding: 12,
                             cornerRadius: 8,
                             backgroundColor: 'rgba(30, 41, 59, 0.95)', // สีเทาเข้มแบบพรีเมียม
