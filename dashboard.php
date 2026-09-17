@@ -3714,7 +3714,6 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ ใช้ชื่อบรรทัดเดียวปกติเหมือนฝั่งคอมพิวเตอร์เป๊ะๆ ไม่มีตัด 2 บรรทัด
             let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
@@ -3725,6 +3724,35 @@ $dept_icons = [
 
             chartLocInstance = new Chart(ctx, {
                 type: 'bar', 
+                plugins: [{
+                    id: 'custom_loc_labels',
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const yAxis = chart.scales.y;
+                        let isTablet = window.innerWidth <= 1366;
+
+                        ctx.save();
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = '#475569'; // สีเทาเข้ม
+                        ctx.font = `bold ${isTablet ? 11 : 12}px "Kanit", sans-serif`;
+
+                        yAxis.ticks.forEach((tick, index) => {
+                            const y = yAxis.getPixelForTick(index);
+                            const labelText = chart.data.labels[index];
+
+                            if (isTablet) {
+                                // ✨ ฝั่งไอแพด: จัดข้อความ "ชิดซ้าย" ป้องกันการทับกราฟ 100%
+                                ctx.textAlign = 'left';
+                                ctx.fillText(labelText, 5, y);
+                            } else {
+                                // ✨ ฝั่งคอมพิวเตอร์: จัดข้อความ "ชิดขวา" หน้ากราฟเหมือนเดิมเป๊ะ ไม่กระทบ!
+                                ctx.textAlign = 'right';
+                                ctx.fillText(labelText, chart.chartArea.left - 10, y);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }],
                 data: {
                     labels: locLabels,
                     datasets: [{ 
@@ -3749,25 +3777,21 @@ $dept_icons = [
                         }, 
                         y: { 
                             ticks: { 
+                                color: 'transparent', // ✨ ซ่อนตัวอักษรเก่าที่ชอบมีปัญหาทับกราฟ
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 },
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0,
-                                padding: 8  // ✨ ดันตัวหนังสือให้ถอยห่างจากแท่งกราฟออกมาอีกนิดจะได้สวยๆ
+                                minRotation: 0 
                             }, 
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
+                                // ✨ จองพื้นที่ให้ตัวหนังสือ "ชิดซ้าย" บนไอแพด เพื่อดันแท่งกราฟออกไปไม่ให้ทับกัน
                                 if (window.innerWidth <= 1366) {
-                                    // ✨ ไม้ตายขั้นสุด: ปลดล็อคเพดานให้สูงปรี๊ด แล้วขยายพื้นที่ให้กว้างสุดๆ
-                                    scaleInstance.maxWidth = 400; // ทุบเพดานที่กราฟแอบจำกัดไว้ทิ้งซะ
-                                    scaleInstance.width = 180;    // กางพื้นที่ให้ชื่อห้องกว้าง 180px การันตีว่าไม่ทับ 100%
-                                }
-                                if (window.innerWidth <= 768) {
-                                    scaleInstance.width = 120;    // เผื่อไว้สำหรับหน้าจอมือถือ
+                                    scaleInstance.width = 130; 
                                 }
                             }
-                        }
+                        } 
                     } 
                 }
             });
