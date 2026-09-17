@@ -3752,10 +3752,19 @@ $dept_icons = [
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 },
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0 
+                                minRotation: 0,
+                                z: 10,             // ✨ 1. ไม้ตาย: ดันตัวหนังสือให้อยู่เลเยอร์บนสุด ป้องกันกราฟทับ 100%
+                                padding: 5         // ✨ 2. เว้นระยะห่างตัวหนังสือกับแท่งกราฟ
                             }, 
                             grid: { display: false }, 
-                            border: {display: false}
+                            border: {display: false},
+                            afterFit: function(scaleInstance) {
+                                // ✨ 3. บังคับจองพื้นที่ฝั่งซ้ายให้กว้าง 180px 
+                                // (กว้างพอให้ชื่อสถานที่ยาวๆ แสดงผลได้เต็มที่ แท่งกราฟจะได้ถูกดันไปเริ่มที่ฝั่งขวา)
+                                if (window.innerWidth <= 1366) {
+                                    scaleInstance.width = 180; 
+                                }
+                            }
                         }
                     } 
                 }
