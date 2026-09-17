@@ -3943,8 +3943,9 @@ $dept_icons = [
                                 let fSizeScore = isTablet ? 11 : 12;
                                 let fSizeStar = isTablet ? 11 : 13;
 
-                                // ✨ อ้างอิงจุดวางข้อความจาก yAxis.right แทน ป้องกันการทับกราฟ 100%
-                                const textDrawX = yAxis.right - 10; 
+                                // ✨ ไม้ตาย 100%: อ้างอิงจุดวางข้อความจาก "ขอบของกราฟแท่ง (chartArea.left)" โดยตรง!
+                                // ไม่ว่าหน้าจอจะขนาดเท่าไหร่ ตัวหนังสือจะอยู่ "หน้ากราฟ" ห่างออกมา 15px เสมอ ไม่มีทางทับกัน!
+                                const textDrawX = chart.chartArea.left - 15; 
                                 
                                 const yOffsetTop = isTablet ? -18 : -16;
                                 const yOffsetBottom = isTablet ? 18 : 16;
@@ -3992,7 +3993,8 @@ $dept_icons = [
                             } else {
                                 ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, yAxis.right - 10, y);
+                                // ✨ อ้างอิง chartArea.left สำหรับกรณี "ไม่มีข้อมูล" ด้วย
+                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, chart.chartArea.left - 15, y);
                             }
                         });
                         ctx.restore();
@@ -4028,7 +4030,7 @@ $dept_icons = [
                     grouped: false,
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    layout: { padding: { left: 0, right: 20 } }, // ✨ ไม่ใช้ padding left หลอกๆ แล้ว
+                    layout: { padding: { left: 0, right: 20 } },
                     interaction: { mode: 'y', intersect: false },
                     onClick: (e, elements, chart) => {
                         const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
@@ -4056,16 +4058,16 @@ $dept_icons = [
                         y: { 
                             ticks: { 
                                 color: 'transparent', 
-                                // ✨ ปรับขนาดฟอนต์ล่องหนให้สัมพันธ์กับไอแพด เพื่อให้ระบบคำนวณพื้นที่อัตโนมัติได้พอดีเป๊ะ
-                                font: { family: "'Sarabun', sans-serif", size: window.innerWidth <= 1366 ? 12 : 14, weight: 'bold' },
+                                font: { family: "'Sarabun', sans-serif", size: window.innerWidth <= 1366 ? 11 : 14, weight: 'bold' },
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0
+                                minRotation: 0,
+                                padding: 10 // เว้นระยะเผื่อความปลอดภัย
                             }, 
                             grid: { display: false }, 
                             border: {display: false}
-                            // ✨ ลบ afterFit ที่บังคับ 190px ทิ้งไปเลย! ปล่อยให้มัน Auto ชิดซ้ายเหมือนฝั่งคอมพิวเตอร์ 100%
-                        }
+                            // ✨ ลบคำสั่ง afterFit ตัวปัญหาทิ้งไปเลยครับ! ปล่อยให้มัน Auto-width ให้เป๊ะแบบคอมพิวเตอร์
+                        } 
                     } 
                 }
             });
