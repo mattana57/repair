@@ -3786,9 +3786,10 @@ $dept_icons = [
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
-                                // ✨ จองพื้นที่ให้ตัวหนังสือ "ชิดซ้าย" บนไอแพด เพื่อดันแท่งกราฟออกไปไม่ให้ทับกัน
+                                // ✨ จองพื้นที่ให้ตัวหนังสือ "ชิดซ้าย" บนไอแพด 
                                 if (window.innerWidth <= 1366) {
-                                    scaleInstance.width = 130; 
+                                    // ✨ ลดพื้นที่จองจาก 130 เหลือ 100 เพื่อดึงกราฟสีแดงและเลข 0, 1, 2 ขยับมาทางซ้ายให้ชิดตัวหนังสือมากขึ้น
+                                    scaleInstance.width = 100; 
                                 }
                             }
                         } 
