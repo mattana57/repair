@@ -3755,16 +3755,7 @@ $dept_icons = [
                                 minRotation: 0 
                             }, 
                             grid: { display: false }, 
-                            border: {display: false},
-                            // ✨ แก้ไข: ขยายพื้นที่ฝั่งซ้ายสำหรับไอแพด/แท็บเล็ตแนวนอนเป็น 240 พิกเซล
-                            // เพื่อให้พื้นที่กว้างพอสำหรับชื่อสถานที่ยาวๆ ตัวหนังสือจะได้ไม่ซ้อนและไม่โดนตัด
-                            afterFit: function(scaleInstance) {
-                                if (window.innerWidth <= 768) {
-                                    scaleInstance.width = 120; // สำหรับมือถือแนวตั้ง
-                                } else if (window.innerWidth <= 1366) {
-                                    scaleInstance.width = 240; // ✨ ไอแพดแนวนอน: ให้พื้นที่แกน Y กว้าง 240px ดันกราฟไปทางขวาเหมือนในคอมเป๊ะๆ
-                                }
-                            }
+                            border: {display: false}
                         }
                     } 
                 }
