@@ -3829,7 +3829,40 @@ $dept_icons = [
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
-                // ✨ ลบ Plugin ที่วาดมือทิ้งไป ปล่อยให้กราฟทำงานตามธรรมชาติ
+                // ✨ 1. เรียกใช้ไม้ตาย "Custom Plugin" (แบบเดียวกับกราฟรีวิวที่แก้ได้ผล!)
+                plugins: [{
+                    id: 'custom_tech_x_labels',
+                    afterDraw: (chart) => {
+                        // ✨ ล็อคให้ทำเฉพาะไอแพด ฝั่งคอมพิวเตอร์ข้ามไปเลย ไม่กระทบ 100%
+                        if (window.innerWidth > 1366) return; 
+
+                        const ctx = chart.ctx;
+                        const xAxis = chart.scales.x;
+                        
+                        ctx.save();
+                        ctx.textAlign = 'center'; // บังคับจัดกึ่งกลาง
+                        ctx.textBaseline = 'top';
+                        ctx.fillStyle = '#64748b'; // สีเทาเดียวกับต้นฉบับ
+                        ctx.font = `bold 11px "Kanit", sans-serif`;
+                        
+                        // วางตำแหน่งตัวหนังสือให้อยู่ใต้เส้นกราฟ 10px พอดีๆ
+                        const yPos = chart.chartArea.bottom + 10; 
+
+                        chart.data.labels.forEach((label, index) => {
+                            const xCenter = xAxis.getPixelForTick(index);
+                            
+                            if (Array.isArray(label)) {
+                                label.forEach((line, i) => {
+                                    // จัดกึ่งกลางตรงกับแกนแท่งกราฟ xCenter พอดี ไม่ต้องทดระยะ
+                                    ctx.fillText(line, xCenter, yPos + (i * 14)); 
+                                });
+                            } else {
+                                ctx.fillText(label, xCenter, yPos);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }],
                 data: {
                     labels: techLabels,
                     datasets: [{ 
@@ -3853,13 +3886,12 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                color: '#64748b',
+                                // ✨ 2. ซ่อนตัวหนังสือเก่าจอมเพี้ยนเฉพาะในไอแพดให้ "โปร่งใส" (คอมพิวเตอร์เห็นปกติ)
+                                color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0,
-                                // ✨ พระเอกของเราอยู่ตรงนี้ครับ! สั่งให้ข้อความที่มี 2 บรรทัด (ภาษาไทย) จัดกึ่งกลางตรงกันเป๊ะ
-                                crossAlign: 'center' 
+                                minRotation: 0
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
