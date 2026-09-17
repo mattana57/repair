@@ -3810,17 +3810,21 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ บนไอแพด: ถ้าชื่อมีเว้นวรรค ให้ตัดเป็น 2 บรรทัดแบบคลีนๆ ไม่ต้องเติมช่องว่างหลอก
+            // ✨ แก้ไขเรื่องตัวหนังสือใต้กราฟไม่ตรงกลาง ✨
             let techLabels = sorted.length ? sorted.map(e => {
                 let fullName = e.name;
+                // ถ้าไอแพดและชื่อยาว ให้ตัดเป็น 2 บรรทัด
                 if (window.innerWidth <= 1366 && fullName.length > 5) {
                     let parts = fullName.split(' ');
                     if (parts.length > 1) {
-                        return [parts[0], parts.slice(1).join(' ')];
+                        return [parts[0], parts.slice(1).join(' ')]; 
                     }
                 }
-                return fullName;
-            }) : ['ไม่มีข้อมูล'];
+                // 🚨 ไม้ตายแก้เบี้ยว: บังคับครอบเครื่องหมายก้ามปู [ ] ให้เป็น Array เสมอ 
+                // แม้จะมีแค่บรรทัดเดียว (เช่น 'ไม่ระบุช่าง' หรือ 'nattam') 
+                // ระบบจะได้มองเป็นรูปแบบเดียวกันทั้งหมดและคำนวณจุดกึ่งกลางได้เป๊ะ 100%
+                return [fullName]; 
+            }) : [['ไม่มีข้อมูล']];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
@@ -3856,9 +3860,9 @@ $dept_icons = [
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0
-                                // ✨ ลบ align และ crossAlign ทิ้งไปเลยครับ! 
-                                // ปล่อยให้ระบบของ Chart.js จัดกึ่งกลางอัตโนมัติตามค่า Default มันจะตรงเผง 100%
+                                minRotation: 0,
+                                align: 'center',       // บังคับกึ่งกลางแนวนอน
+                                crossAlign: 'center'   // บังคับกึ่งกลางแนวตั้ง (เผื่อไว้ให้ 2 บรรทัดตรงกันพอดี)
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
