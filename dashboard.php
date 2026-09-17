@@ -4064,17 +4064,12 @@ $dept_icons = [
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
-                                // 🔥 คำสั่งเด็ดขาด: ปลดเพดานและดันแท่งกราฟออกไปทางขวา 250px
-                                // ป้องกันกราฟวิ่งกลับมาทับข้อความบน iPad 100%
+                                // ✨ บังคับจองพื้นที่แกน Y ให้กว้าง 190px บนไอแพด ข้อความจะได้มีพื้นที่อยู่สบายๆ ไม่ทับแท่งกราฟ
                                 if (window.innerWidth <= 1366) {
-                                    scaleInstance.maxWidth = 400; // ทุบเพดานกั้นความกว้างทิ้ง
-                                    scaleInstance.width = 250;    // กางพื้นที่ข้อความออก 250px ให้เหมือนฝั่งคอมพิวเตอร์
-                                }
-                                if (window.innerWidth <= 768) {
-                                    scaleInstance.width = 160;    // ระยะเผื่อสำหรับมือถือ
+                                    scaleInstance.width = 190; 
                                 }
                             }
-                        }
+                        } 
                     } 
                 }
             });
