@@ -3714,7 +3714,7 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ ใช้ชื่อบรรทัดเดียวปกติเหมือนฝั่งคอมพิวเตอร์เป๊ะๆ ไม่มีตัด 2 บรรทัด
+            // ใช้ชื่อบรรทัดเดียวปกติเหมือนฝั่งคอมพิวเตอร์ ไม่มีการตัดแบ่งบรรทัด
             let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainLocChart').getContext('2d');
@@ -3756,11 +3756,11 @@ $dept_icons = [
                             }, 
                             grid: { display: false }, 
                             border: {display: false},
-                            // ✨ ตัวแปรสำคัญ: บังคับจองพื้นที่ฝั่งซ้ายบนไอแพด 140 พิกเซล เพื่อกันไม่ให้ข้อความโดนตัดเป็น ...
-                            // ทำให้ข้อความแสดงเต็มๆ และกราฟจะถูกดันไปขวาเองเหมือนในคอมพิวเตอร์ครับ
+                            // ✨ พระเอกในการจบปัญหา: บังคับจองพื้นที่ฝั่งซ้ายบนไอแพดให้กว้าง 170px 
+                            // เพื่อแหกกฎ 33% ของ Chart.js ทำให้ตัวหนังสือไม่โดนตัดเป็น ... และแสดงผลเหมือนคอม 100%
                             afterFit: function(scaleInstance) {
                                 if (window.innerWidth <= 1366) {
-                                    scaleInstance.width = 140; 
+                                    scaleInstance.width = 170; 
                                 }
                             }
                         } 
