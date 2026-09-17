@@ -3728,7 +3728,7 @@ $dept_icons = [
                 data: {
                     labels: locLabels,
                     datasets: [{ 
-                        label: 'แจ้งซ่อม  (ครั้ง)', 
+                        label: 'แจ้งซ่อม (ครั้ง)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
                         backgroundColor: '#f43f5e', 
                         borderRadius: 6
