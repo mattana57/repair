@@ -3810,7 +3810,6 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ ตัดช่องว่างส่วนเกินและแยกบรรทัดเฉพาะไอแพด (ฝั่งคอมพิวเตอร์จะไม่ได้รับผลกระทบ)
             let techLabels = sorted.length ? sorted.map(e => {
                 let fullName = e.name.trim(); 
                 if (window.innerWidth <= 1366 && fullName.length > 5) {
@@ -3830,7 +3829,40 @@ $dept_icons = [
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
-                // ✨ ลบ plugin ต้นตอของปัญหาออกไปทั้งหมด แล้วให้ Chart.js จัดการเอง!
+                // ✨ 1. เรียกใช้ไม้ตาย "Custom Plugin" (แบบเดียวกับกราฟรีวิวที่แก้ได้ผล!)
+                plugins: [{
+                    id: 'custom_tech_x_labels',
+                    afterDraw: (chart) => {
+                        // ✨ ล็อคให้ทำเฉพาะไอแพด ฝั่งคอมพิวเตอร์ข้ามไปเลย ไม่กระทบ 100%
+                        if (window.innerWidth > 1366) return; 
+
+                        const ctx = chart.ctx;
+                        const xAxis = chart.scales.x;
+                        
+                        ctx.save();
+                        ctx.textAlign = 'center'; // บังคับจัดกึ่งกลาง
+                        ctx.textBaseline = 'top';
+                        ctx.fillStyle = '#64748b'; // สีเทาเดียวกับต้นฉบับ
+                        ctx.font = `bold 11px "Kanit", sans-serif`;
+                        
+                        // วางตำแหน่งตัวหนังสือให้อยู่ใต้เส้นกราฟ 10px พอดีๆ
+                        const yPos = chart.chartArea.bottom + 10; 
+
+                        chart.data.labels.forEach((label, index) => {
+                            // ✨ หาพิกัด "ตรงกลาง" ของแต่ละแท่งกราฟแบบเป๊ะๆ
+                            const xCenter = xAxis.getPixelForTick(index);
+                            
+                            if (Array.isArray(label)) {
+                                label.forEach((line, i) => {
+                                    ctx.fillText(line, xCenter, yPos + (i * 15)); 
+                                });
+                            } else {
+                                ctx.fillText(label, xCenter, yPos);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }],
                 data: {
                     labels: techLabels,
                     datasets: [{ 
@@ -3854,8 +3886,8 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                // ✨ เปิดใช้งานสีข้อความตามปกติ เพื่อให้ Chart.js วาดกึ่งกลางอัตโนมัติ 100%
-                                color: '#64748b',
+                                // ✨ 2. ซ่อนตัวหนังสือเก่าจอมเพี้ยนเฉพาะในไอแพดให้ "โปร่งใส" (คอมพิวเตอร์เห็นปกติ)
+                                color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
