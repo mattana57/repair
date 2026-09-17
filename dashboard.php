@@ -4123,8 +4123,8 @@ $dept_icons = [
                                     return `จำนวน: ${deptArr[idx].count} รีวิว`;
                                 }
                             },
-                            titleFont: { family: "'Kanit', sans-serif", size: 14, weight: 'bold' },
-                            bodyFont: { family: "'Kanit', sans-serif", size: 13, weight: 'bold' },
+                            titleFont: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' },
+                            bodyFont: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' },
                             padding: 12,
                             cornerRadius: 8,
                             backgroundColor: 'rgba(30, 41, 59, 0.95)', // สีเทาเข้มแบบพรีเมียม
