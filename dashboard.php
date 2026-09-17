@@ -3810,17 +3810,15 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ บนไอแพด: จัดการช่องว่างล่องหนส่วนเกินที่ทำให้ตัวหนังสือเบี้ยว
             let techLabels = sorted.length ? sorted.map(e => {
-                let fullName = e.name.trim(); // ✨ ตัดช่องว่างหัว-ท้ายออกให้หมด (แก้ปัญหาคำว่า 'ไม่ระบุช่าง' เบ้ซ้าย)
+                let fullName = e.name.trim(); 
                 if (window.innerWidth <= 1366 && fullName.length > 5) {
-                    // ✨ ใช้ \s+ ตัดช่องว่างตรงกลางกี่ตัวก็ได้ ป้องกันคนพิมพ์ชื่อแล้วเคาะวรรค 2 ที
                     let parts = fullName.split(/\s+/); 
                     if (parts.length > 1) {
                         return [parts[0], parts.slice(1).join(' ')];
                     }
                 }
-                return fullName; // ฝั่งคอมพิวเตอร์จะคืนค่าเป็นบรรทัดเดียวปกติ ไม่ได้รับผลกระทบ
+                return fullName;
             }) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
@@ -3831,6 +3829,40 @@ $dept_icons = [
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
+                plugins: [{
+                    id: 'custom_tech_labels',
+                    afterDraw: (chart) => {
+                        // ✨ ล็อคให้โค้ดนี้ทำงานเฉพาะบนไอแพด/แท็บเล็ต! ฝั่งคอมพิวเตอร์จะข้ามไปเลย ไม่กระทบ 100%
+                        if (window.innerWidth > 1366) return; 
+
+                        const ctx = chart.ctx;
+                        const meta = chart.getDatasetMeta(0);
+                        
+                        ctx.save();
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'top';
+                        ctx.fillStyle = '#64748b'; // สีข้อความเดิม
+                        ctx.font = `600 11px "Kanit", sans-serif`;
+                        
+                        chart.data.labels.forEach((label, index) => {
+                            const bar = meta.data[index];
+                            if(!bar) return;
+                            
+                            // ✨ หาพิกัด X กึ่งกลางของ "แท่งกราฟ" เป๊ะๆ แล้ววาดตัวหนังสือลงไปตรงนั้น
+                            const xCenter = bar.x;
+                            const yPos = chart.chartArea.bottom + 8; 
+                            
+                            if (Array.isArray(label)) {
+                                label.forEach((line, i) => {
+                                    ctx.fillText(line, xCenter, yPos + (i * 14)); 
+                                });
+                            } else {
+                                ctx.fillText(label, xCenter, yPos);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }],
                 data: {
                     labels: techLabels,
                     datasets: [{ 
@@ -3843,7 +3875,8 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 10 : 0 } }, 
+                    // ✨ เพิ่มพื้นที่ด้านล่างเฉพาะไอแพด เพื่อเว้นที่ให้ตัวหนังสือที่เราวาดเอง
+                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 20 : 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3854,11 +3887,12 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
+                                // ✨ ซ่อนตัวหนังสือระบบเดิมเฉพาะบนไอแพด ฝั่งคอมใช้ของเดิม ไม่กระทบ!
+                                color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0,
-                                align: 'center' // ✨ บังคับจัดกึ่งกลางทับลงไปอีกรอบเพื่อความชัวร์ 100%
+                                minRotation: 0
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
