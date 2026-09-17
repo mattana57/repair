@@ -4125,11 +4125,7 @@ $dept_icons = [
                             // ✨ ให้ตัวหนาเฉพาะชื่อฝ่ายงาน (titleFont) ส่วนเนื้อหา (bodyFont) ใช้ตัวบางปกติ
                             titleFont: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' },
                             bodyFont: { family: "'Sarabun', sans-serif", size: 13, weight: 'normal' }
-                            // ✨ ลบสีพื้นหลังและกรอบตกแต่งทิ้ง ปล่อยให้ใช้สีดำโปร่งใสอัตโนมัติเหมือนกราฟอืนๆ
-                            padding: 12,
-                            cornerRadius: 8,
-                            backgroundColor: 'rgba(30, 41, 59, 0.95)', // สีเทาเข้มแบบพรีเมียม
-                            displayColors: true
+                            // ✨ ลบสีพื้นหลังและกรอบตกแต่งทิ้ง ปล่อยให้ใช้สีดำโปร่งใสอัตโนมัติเหมือนกราฟอื่นๆ
                         }
                     },
                     scales: { 
