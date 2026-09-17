@@ -1036,7 +1036,7 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="modern-card p-6 flex flex-col justify-between">
                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
