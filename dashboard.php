@@ -3810,16 +3810,17 @@ $dept_icons = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
-            // ✨ บนไอแพด: ถ้าชื่อมีเว้นวรรค ให้ตัดเป็น 2 บรรทัดแบบคลีนๆ ไม่ต้องเติมช่องว่างหลอก
+            // ✨ บนไอแพด: จัดการช่องว่างล่องหนส่วนเกินที่ทำให้ตัวหนังสือเบี้ยว
             let techLabels = sorted.length ? sorted.map(e => {
-                let fullName = e.name;
+                let fullName = e.name.trim(); // ✨ ตัดช่องว่างหัว-ท้ายออกให้หมด (แก้ปัญหาคำว่า 'ไม่ระบุช่าง' เบ้ซ้าย)
                 if (window.innerWidth <= 1366 && fullName.length > 5) {
-                    let parts = fullName.split(' ');
+                    // ✨ ใช้ \s+ ตัดช่องว่างตรงกลางกี่ตัวก็ได้ ป้องกันคนพิมพ์ชื่อแล้วเคาะวรรค 2 ที
+                    let parts = fullName.split(/\s+/); 
                     if (parts.length > 1) {
                         return [parts[0], parts.slice(1).join(' ')];
                     }
                 }
-                return fullName;
+                return fullName; // ฝั่งคอมพิวเตอร์จะคืนค่าเป็นบรรทัดเดียวปกติ ไม่ได้รับผลกระทบ
             }) : ['ไม่มีข้อมูล'];
 
             const ctx = document.getElementById('mainTechChart').getContext('2d');
@@ -3856,9 +3857,8 @@ $dept_icons = [
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0
-                                // ✨ ลบ align และ crossAlign ทิ้งไปเลยครับ! 
-                                // ปล่อยให้ระบบของ Chart.js จัดกึ่งกลางอัตโนมัติตามค่า Default มันจะตรงเผง 100%
+                                minRotation: 0,
+                                align: 'center' // ✨ บังคับจัดกึ่งกลางทับลงไปอีกรอบเพื่อความชัวร์ 100%
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
