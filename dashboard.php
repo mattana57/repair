@@ -4056,7 +4056,7 @@ $dept_icons = [
                         y: { 
                             ticks: { 
                                 color: 'transparent', 
-                                font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' },
+                                font: { family: "'Sarabun', sans-serif", size: window.innerWidth <= 1366 ? 12 : 14, weight: 'bold' },
                                 autoSkip: false, 
                                 maxRotation: 0, 
                                 minRotation: 0
@@ -4064,15 +4064,14 @@ $dept_icons = [
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
-                                // ✨ 1. ไม้ตายขั้นสุด: ปลดล็อคเพดานความกว้างของ Chart.js ทิ้งทั้งหมด
-                                scaleInstance.maxWidth = 800; 
+                                // ✨ 1. ทำลายกำแพงของ Chart.js ทิ้ง (สำคัญมาก ถ้าไม่มีบรรทัดนี้กราฟจะดื้อไม่ยอมขยาย)
+                                scaleInstance.maxWidth = 600; 
                                 
+                                // ✨ 2. กางพื้นที่ฝั่งซ้ายให้กว้างจุใจเพื่อดันแท่งกราฟหนีตัวหนังสือ
                                 if (window.innerWidth <= 768) {
-                                    scaleInstance.width = 130; // สำหรับมือถือ
-                                } else {
-                                    // ✨ 2. สำหรับไอแพดแนวนอนและคอมพิวเตอร์: บังคับพื้นที่ซ้ายกว้าง 260px เท่ากันเป๊ะ!
-                                    // แท่งกราฟจะถูกดันไปฝั่งขวา ตัวหนังสือจะกางออกได้เต็มที่ไม่ทับกราฟ 100%
-                                    scaleInstance.width = 260; 
+                                    scaleInstance.width = 140; // สำหรับมือถือแนวตั้ง
+                                } else if (window.innerWidth <= 1366) {
+                                    scaleInstance.width = 250; // สำหรับไอแพดแนวนอน กว้าง 250px รับรองไม่ทับ 100%
                                 }
                             }
                         } 
