@@ -3832,32 +3832,38 @@ $dept_icons = [
                 plugins: [{
                     id: 'custom_tech_x_labels',
                     afterDraw: (chart) => {
-                        // ✨ ล็อคให้ทำเฉพาะไอแพด ฝั่งคอมพิวเตอร์ข้ามไปเลย ไม่กระทบ 100%
                         if (window.innerWidth > 1366) return; 
 
                         const ctx = chart.ctx;
                         const xAxis = chart.scales.x;
                         
                         ctx.save();
-                        ctx.textAlign = 'center'; 
+                        // ✨ 1. เปลี่ยนมาวาดจากขอบซ้าย เพื่อให้เราคุมพิกัด X ได้เองแบบ 100%
+                        ctx.textAlign = 'left'; 
                         ctx.textBaseline = 'top';
                         ctx.fillStyle = '#64748b'; 
                         ctx.font = `bold 11px "Kanit", sans-serif`;
                         
                         const yPos = chart.chartArea.bottom + 10; 
 
+                        // ✨ 2. ฟังก์ชันไม้ตาย: ตัดสระบน/ล่างและวรรณยุกต์ทิ้ง "เฉพาะตอนคำนวณความกว้าง"
+                        const getVisualWidth = (text) => {
+                            const cleanText = text.replace(/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/g, '');
+                            return ctx.measureText(cleanText).width;
+                        };
+
                         chart.data.labels.forEach((label, index) => {
                             const xCenter = xAxis.getPixelForTick(index);
                             
                             if (Array.isArray(label)) {
                                 label.forEach((line, i) => {
-                                    // ✨ ไม้ตาย: ถ้าเป็นภาษาไทย ให้ดึงกลับมาซ้าย 6 พิกเซล (-6) แก้บั๊กเบ้ขวาของไอแพด!
-                                    const shiftX = /[\u0E00-\u0E7F]/.test(line) ? -6 : 0;
-                                    ctx.fillText(line, xCenter + shiftX, yPos + (i * 14)); 
+                                    // ✨ 3. เอาพิกัดกึ่งกลางกราฟ ลบด้วย ครึ่งนึงของความกว้างข้อความ = ตรงกลางเป๊ะ!
+                                    const textWidth = getVisualWidth(line);
+                                    ctx.fillText(line, xCenter - (textWidth / 2), yPos + (i * 14)); 
                                 });
                             } else {
-                                const shiftX = /[\u0E00-\u0E7F]/.test(label) ? -6 : 0;
-                                ctx.fillText(label, xCenter + shiftX, yPos);
+                                const textWidth = getVisualWidth(label);
+                                ctx.fillText(label, xCenter - (textWidth / 2), yPos);
                             }
                         });
                         ctx.restore();
