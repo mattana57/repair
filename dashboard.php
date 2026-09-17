@@ -3829,40 +3829,7 @@ $dept_icons = [
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
-                // ✨ 1. เพิ่ม Plugin ช่วยดันภาษาไทยกลับมาตรงกลาง (ทำงานเฉพาะบนไอแพด)
-                plugins: [{
-                    id: 'fix_ipad_thai_alignment',
-                    afterDraw: (chart) => {
-                        if (window.innerWidth > 1366) return; // ฝั่งคอมพิวเตอร์ข้ามไปเลย ไม่กระทบแน่นอน 100%
-
-                        const ctx = chart.ctx;
-                        const xAxis = chart.scales.x;
-                        
-                        ctx.save();
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'top';
-                        ctx.fillStyle = '#64748b'; 
-                        ctx.font = `600 11px "Kanit", sans-serif`;
-                        
-                        const yPos = chart.chartArea.bottom + 8; 
-                        
-                        chart.data.labels.forEach((label, index) => {
-                            const xCenter = xAxis.getPixelForTick(index);
-                            
-                            if (Array.isArray(label)) {
-                                label.forEach((line, i) => {
-                                    // ✨ ถ้าเป็นภาษาไทย ให้ดันกลับไปทางขวา 8px เพื่อชดเชยบั๊กของ Safari
-                                    const shiftX = /[\u0E00-\u0E7F]/.test(line) ? 8 : 0;
-                                    ctx.fillText(line, xCenter + shiftX, yPos + (i * 14)); 
-                                });
-                            } else {
-                                const shiftX = /[\u0E00-\u0E7F]/.test(label) ? 8 : 0;
-                                ctx.fillText(label, xCenter + shiftX, yPos);
-                            }
-                        });
-                        ctx.restore();
-                    }
-                }],
+                // ✨ ลบ Plugin ที่วาดมือทิ้งไป ปล่อยให้กราฟทำงานตามธรรมชาติ
                 data: {
                     labels: techLabels,
                     datasets: [{ 
@@ -3875,7 +3842,7 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 25 : 0 } }, 
+                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 10 : 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3886,12 +3853,13 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                // ✨ 2. ซ่อนตัวหนังสือที่เบี้ยวของระบบเดิมทิ้งไปเฉพาะบนไอแพด (ฝั่งคอมพิวเตอร์ยังแสดงสีปกติ)
-                                color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
+                                color: '#64748b',
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0
+                                minRotation: 0,
+                                // ✨ พระเอกของเราอยู่ตรงนี้ครับ! สั่งให้ข้อความที่มี 2 บรรทัด (ภาษาไทย) จัดกึ่งกลางตรงกันเป๊ะ
+                                crossAlign: 'center' 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
