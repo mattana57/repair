@@ -3684,7 +3684,7 @@ $dept_icons = [
             chartStatusInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['รอดำเนินการ', 'กำลังแก้ไข', 'เสร็จสิ้น'],
+                    labels: ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'],
                     datasets: [{ 
                         data: isEmpty ? [1] : [pending, progress, completed], 
                         backgroundColor: isEmpty ? ['#f1f5f9'] : ['#f59e0b', '#38bdf8', '#10b981'],
