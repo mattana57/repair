@@ -4056,25 +4056,16 @@ $dept_icons = [
                         y: { 
                             ticks: { 
                                 color: 'transparent', 
+                                // ✨ ปรับขนาดฟอนต์ล่องหนให้สัมพันธ์กับไอแพด เพื่อให้ระบบคำนวณพื้นที่อัตโนมัติได้พอดีเป๊ะ
                                 font: { family: "'Sarabun', sans-serif", size: window.innerWidth <= 1366 ? 12 : 14, weight: 'bold' },
                                 autoSkip: false, 
                                 maxRotation: 0, 
                                 minRotation: 0
                             }, 
                             grid: { display: false }, 
-                            border: {display: false},
-                            afterFit: function(scaleInstance) {
-                                // ✨ 1. ทำลายกำแพงของ Chart.js ทิ้ง (สำคัญมาก ถ้าไม่มีบรรทัดนี้กราฟจะดื้อไม่ยอมขยาย)
-                                scaleInstance.maxWidth = 600; 
-                                
-                                // ✨ 2. กางพื้นที่ฝั่งซ้ายให้กว้างจุใจเพื่อดันแท่งกราฟหนีตัวหนังสือ
-                                if (window.innerWidth <= 768) {
-                                    scaleInstance.width = 140; // สำหรับมือถือแนวตั้ง
-                                } else if (window.innerWidth <= 1366) {
-                                    scaleInstance.width = 250; // สำหรับไอแพดแนวนอน กว้าง 250px รับรองไม่ทับ 100%
-                                }
-                            }
-                        } 
+                            border: {display: false}
+                            // ✨ ลบ afterFit ที่บังคับ 190px ทิ้งไปเลย! ปล่อยให้มัน Auto ชิดซ้ายเหมือนฝั่งคอมพิวเตอร์ 100%
+                        }
                     } 
                 }
             });
