@@ -4064,14 +4064,12 @@ $dept_icons = [
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
+                                // ✨ บังคับจองพื้นที่แกน Y ให้กว้าง 190px บนไอแพด ข้อความจะได้มีพื้นที่อยู่สบายๆ ไม่ทับแท่งกราฟ
                                 if (window.innerWidth <= 1366) {
-                                    // ✨ ไม้ตายแก้ปัญหาไอแพด: ต้องปลดล็อคเพดาน (maxWidth) ก่อน!
-                                    // ระบบถึงจะยอมผลักแท่งกราฟออกไปทางขวาจริงๆ โดยไม่ดึงกลับมาทับตัวหนังสือ
-                                    scaleInstance.maxWidth = 500; 
-                                    scaleInstance.width = 260; // กางพื้นที่ให้กว้าง 260px เพื่อรองรับข้อความ 3 บรรทัดให้เหมือนคอมพิวเตอร์เป๊ะๆ
+                                    scaleInstance.width = 190; 
                                 }
                             }
-                        }
+                        } 
                     } 
                 }
             });
