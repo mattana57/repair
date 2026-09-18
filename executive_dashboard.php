@@ -484,7 +484,8 @@ $pageTitles = [
                                 </div>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[280px]">
+                       <!-- ✨ คืนค่า flex-1 เพื่อให้กล่องขาวขยายเต็มเท่ากับ Work Status 100% ✨ -->
+                        <div class="flex-1 relative w-full h-[280px] min-h-[280px] flex items-center justify-center">
                             <canvas id="mainEquipChart"></canvas>
                         </div>
                     </div>
@@ -1849,8 +1850,8 @@ $pageTitles = [
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
-                    layout: { padding: { bottom: window.innerWidth <= 1366 ? 10 : 0 } }, 
-                    plugins: { legend: { display: false } }, 
+                    layout: { padding: { bottom: 0 } }, // ✨ เอา Padding Bottom ออกเพื่อให้กราฟสูงเต็ม 280px ✨
+                    plugins: { legend: { display: false } },
                     scales: { 
                         y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
                         x: { 
