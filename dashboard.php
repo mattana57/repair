@@ -957,8 +957,7 @@ $dept_icons = [
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- ✨ 1. เพิ่ม h-full ให้กล่องขาวขยายเต็มพื้นที่แนวตั้งเสมอ ✨ -->
-                    <div class="modern-card p-6 flex flex-col h-full">
+                    <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Equipment Analytics</h3>
@@ -987,8 +986,7 @@ $dept_icons = [
                                 </div>
                             </div>
                         </div>
-                        <!-- ✨ 2. เพิ่ม flex-1 และจัดจุดศูนย์กลาง (justify-center items-center) เพื่อดันกล่องให้ตึงพอดีเหมือนฝั่งขวา ✨ -->
-                        <div class="flex-1 relative w-full h-[280px] flex justify-center items-center"> 
+                        <div class="relative w-full h-[280px] min-h-[280px] flex items-center justify-center">
                             <canvas id="mainEquipChart"></canvas>
                         </div>
                     </div>
