@@ -4888,14 +4888,16 @@ $dept_icons = [
 
             document.querySelectorAll('[id="historyModal"]').forEach(wrapper => {
                 const modalContainer = wrapper.querySelector('.modal-container');
-                const icon = wrapper.querySelector('[id="maximizeHistoryIcon"]');
+                const iconDesktop = wrapper.querySelector('[id="maximizeHistoryIcon_desktop"]');
+                const iconMobile = wrapper.querySelector('[id="maximizeHistoryIcon"]');
                 const header = modalContainer.querySelector('div:first-child');
                 if (modalContainer.classList.contains('w-full')) {
                     wrapper.classList.add('px-4'); wrapper.classList.remove('p-0');
                     modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
                     modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
                     if (header) { header.classList.add('rounded-t-3xl'); header.classList.remove('rounded-none'); }
-                    if (icon) { icon.classList.add('fa-expand'); icon.classList.remove('fa-compress'); }
+                    if (iconDesktop) { iconDesktop.classList.add('fa-expand'); iconDesktop.classList.remove('fa-compress'); }
+                    if (iconMobile) { iconMobile.classList.add('fa-expand'); iconMobile.classList.remove('fa-compress'); }
                 }
             });
             
@@ -4906,7 +4908,9 @@ $dept_icons = [
         function toggleMaximizeHistoryModal() {
             document.querySelectorAll('[id="historyModal"]').forEach(wrapper => {
                 const modalContainer = wrapper.querySelector('.modal-container');
-                const icon = wrapper.querySelector('[id="maximizeHistoryIcon"]');
+                // ✨ เปลี่ยนให้ดึงไอคอนทั้ง 2 ตัวมาเปลี่ยนคลาสพร้อมกัน
+                const iconDesktop = wrapper.querySelector('[id="maximizeHistoryIcon_desktop"]');
+                const iconMobile = wrapper.querySelector('[id="maximizeHistoryIcon"]');
                 const header = modalContainer.querySelector('div:first-child');
                 const filterGroup = wrapper.querySelector('[id="historyModalFilterGroup"]');
                 
@@ -4917,7 +4921,8 @@ $dept_icons = [
                     modalContainer.classList.add('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
                     if (header) { header.classList.remove('rounded-t-3xl'); header.classList.add('rounded-none'); }
                     if (filterGroup) { filterGroup.classList.remove('hidden'); filterGroup.classList.add('flex'); }
-                    if (icon) { icon.classList.remove('fa-expand'); icon.classList.add('fa-compress'); }
+                    if (iconDesktop) { iconDesktop.classList.remove('fa-expand'); iconDesktop.classList.add('fa-compress'); }
+                    if (iconMobile) { iconMobile.classList.remove('fa-expand'); iconMobile.classList.add('fa-compress'); }
                 } else {
                     // ย่อกลับขนาดเดิม
                     wrapper.classList.add('px-4'); wrapper.classList.remove('p-0');
@@ -4938,7 +4943,8 @@ $dept_icons = [
                         selectChartDropdown('history-Month', 'all', '<?php echo $current_month_name; ?>', searchHistoryModalTable);
                         selectChartDropdown('history-Year', 'all', '<?php echo $current_thai_year; ?>', searchHistoryModalTable);
                     }
-                    if (icon) { icon.classList.add('fa-expand'); icon.classList.remove('fa-compress'); }
+                    if (iconDesktop) { iconDesktop.classList.add('fa-expand'); iconDesktop.classList.remove('fa-compress'); }
+                    if (iconMobile) { iconMobile.classList.add('fa-expand'); iconMobile.classList.remove('fa-compress'); }
                 }
             });
         }
