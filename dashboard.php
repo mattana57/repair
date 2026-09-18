@@ -4754,12 +4754,8 @@ $dept_icons = [
                         } else {
                             filterGroup.classList.add('hidden'); filterGroup.classList.remove('flex');
                         }
-                        
-                        // ✨ รีเซ็ตกลับไปเป็นค่าเดือน/ปีปัจจุบันแทนคำว่า "เดือน" หรือ "ทั้งหมด"
-                        const d = new Date();
-                        const tm = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-                        selectChartDropdown('history-Month', String(d.getMonth() + 1).padStart(2, '0'), tm[d.getMonth()], searchHistoryModalTable);
-                        selectChartDropdown('history-Year', d.getFullYear().toString(), (d.getFullYear() + 543).toString(), searchHistoryModalTable);
+                        selectChartDropdown('history-Month', 'all', 'เดือน', searchHistoryModalTable);
+                        selectChartDropdown('history-Year', 'all', 'ปี (พ.ศ.)', searchHistoryModalTable);
                     }
                     if (icon) { icon.classList.add('fa-expand'); icon.classList.remove('fa-compress'); }
                 }
