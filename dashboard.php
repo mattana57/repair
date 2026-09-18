@@ -2367,35 +2367,15 @@ $dept_icons = [
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
-            <!-- ✨ แก้ไข Header ของ History Modal (จัด Layout ใหม่สำหรับ iPad แนวตั้ง) ✨ -->
             <div class="px-5 py-4 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
-                
-                <!-- 🌟 บรรทัดบน (iPad แนวตั้ง): หัวข้อ + ปุ่ม ขยาย/ปิด -->
-                <div class="flex justify-between items-center w-full xl:w-auto gap-4">
-                    <!-- หัวข้อ -->
-                    <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate flex-1" id="historyModalTitle">History</p>
+                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate w-full xl:w-auto" id="historyModalTitle">History</p>
+                <div class="flex flex-wrap items-center gap-4 md:gap-6 w-full xl:w-auto xl:justify-end">
                     
-                    <!-- ปุ่ม ขยาย/ปิด (ย้ายมาอยู่บรรทัดเดียวกับหัวข้อในจอเล็ก/iPad แนวตั้ง) -->
-                    <div class="flex items-center gap-2 shrink-0 xl:hidden">
-                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
-                            <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
-                        </button>
-                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
-                            <i class="fas fa-times text-sm md:text-base"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 🌟 บรรทัดล่าง (iPad แนวตั้ง): ค้นหา + ตัวกรอง + ปุ่ม Contacts + (ปุ่ม ขยาย/ปิด ของจอคอม) -->
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto xl:justify-end">
-                    
-                    <!-- ช่องค้นหา -->
                     <div class="relative flex-1 min-w-[150px] xl:w-64">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
 
-                    <!-- ตัวกรอง (ถ้ามี) -->
                     <div id="historyModalFilterGroup" class="hidden items-center gap-2 shrink-0">
                         <div class="relative w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Month', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
                             <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm text-slate-700 rounded-xl px-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Month')">
@@ -2420,15 +2400,13 @@ $dept_icons = [
                         </div>
                     </div>
 
-                    <!-- ปุ่ม Contacts -->
                     <button id="historyModalLinkBtn" class="h-[42px] text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
                         <i class="fas fa-address-book md:mr-1.5"></i> <span class="hidden md:inline">Contacts</span>
                     </button>
 
-                    <!-- ปุ่ม ขยาย/ปิด (ซ่อนในจอเล็ก โชว์เฉพาะจอคอม/iPad แนวนอน) -->
-                    <div class="hidden xl:flex items-center gap-2 shrink-0 ml-auto">
+                    <div class="flex items-center gap-2 shrink-0 ml-auto md:ml-4">
                         <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-[42px] h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
-                            <i class="fas fa-expand text-base" id="maximizeHistoryIcon_desktop"></i>
+                            <i class="fas fa-expand text-base" id="maximizeHistoryIcon"></i>
                         </button>
                         <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-[42px] h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
                             <i class="fas fa-times text-base"></i>
