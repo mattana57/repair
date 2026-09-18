@@ -1099,34 +1099,38 @@ $dept_icons = [
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                     
                     <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
-                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
-                            <div class="flex flex-col flex-1 min-w-0 pr-2">
-                                <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Customer Satisfaction</h3>
-                                <span class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">คะแนนความพึงพอใจการให้บริการ</span>
-                                <span class="text-[10px] sm:text-[11px] md:text-[12px] text-indigo-500 font-bold mt-1 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกแท่งกราฟเพื่อดูรีวิว</span>
-                            </div>
-                            <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0">
-                                <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Month')">
-                                        <span id="rating-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
-                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
-                                    </div>
-                                    <div id="rating-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('rating-Month', '{$num_pad}', '{$name}', renderRatingChart)\">{$name}</div>"; } ?>
-                                    </div>
-                                    <input type="hidden" id="ratingMonth" value="all">
+                        <!-- ✨ แก้ไข Header: แยกข้อความคลิกกราฟออก เพื่อให้ระดับแกน Y ตรงกับช่องอื่นๆ 100% ✨ -->
+                        <div class="mb-4 w-full">
+                            <div class="flex justify-between items-start sm:items-center gap-2 w-full flex-col sm:flex-row">
+                                <div class="flex-1 min-w-0 pr-2">
+                                    <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Customer Satisfaction</h3>
+                                    <p class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">คะแนนความพึงพอใจการให้บริการ</p>
                                 </div>
-                                <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="rating-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Year', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Year')">
-                                        <span id="rating-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
-                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0 mt-1 sm:mt-0">
+                                    <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Month')">
+                                            <span id="rating-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
+                                            <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                        </div>
+                                        <div id="rating-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                            <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('rating-Month', '{$num_pad}', '{$name}', renderRatingChart)\">{$name}</div>"; } ?>
+                                        </div>
+                                        <input type="hidden" id="ratingMonth" value="all">
                                     </div>
-                                    <div id="rating-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('rating-Year', '{$y}', '{$thai_y}', renderRatingChart)\">{$thai_y}</div>"; } ?>
+                                    <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="rating-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Year', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Year')">
+                                            <span id="rating-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
+                                            <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                        </div>
+                                        <div id="rating-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                            <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('rating-Year', '{$y}', '{$thai_y}', renderRatingChart)\">{$thai_y}</div>"; } ?>
+                                        </div>
+                                        <input type="hidden" id="ratingYear" value="all">
                                     </div>
-                                    <input type="hidden" id="ratingYear" value="all">
                                 </div>
                             </div>
+                            <!-- ✨ ย้ายบรรทัดคลิกกราฟออกมานอกกรอบ Flex เพื่อไม่ให้มันไปดันระดับของ Dropdown ให้ตกลงมา ✨ -->
+                            <p class="text-[10px] sm:text-[11px] md:text-[12px] text-indigo-500 font-bold mt-1 sm:mt-0.5 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
                         </div>
                         
                         <div class="flex items-center w-full mt-2 flex-1">
