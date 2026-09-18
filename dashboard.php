@@ -3612,8 +3612,8 @@ $dept_icons = [
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
-                        x: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
-                    } 
+                        x: { ticks: { font: { family: "'Kanit', sans-serif", weight: 'bold' } }, grid: { display: false }, border: {display: false} } 
+                    }
                 }
             });
         }
@@ -3845,13 +3845,15 @@ $dept_icons = [
                             border: {display: false} 
                         }, 
                         x: { 
+                            offset: true, // ✨ คำสั่งสำคัญ: บังคับให้แกน X จับคู่แท่งกราฟกับตัวหนังสือให้อยู่ตรงกลางเป๊ะๆ เสมอ
                             ticks: { 
-                                // ✨ ซ่อนตัวหนังสือเก่าจอมเพี้ยนเฉพาะในไอแพด ฝั่งคอมใช้ของเดิม ไม่กระทบ!
-                                color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 }, 
+                                color: '#64748b', // กลับมาใช้สีข้อความปกติ ไม่ต้องซ่อนแล้ว
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12, weight: 'bold' }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
-                                minRotation: 0
+                                minRotation: 0,
+                                align: 'center',      // จัดกึ่งกลางตัวหนังสือกับแท่ง
+                                crossAlign: 'center'  // จัดกึ่งกลางระหว่างบรรทัดที่ 1 กับ 2
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
