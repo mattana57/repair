@@ -2522,9 +2522,107 @@ $dept_icons = [
         }
 
         // ✨ ตัวแปรและฟังก์ชันจัดอันดับ Top Reporters ✨
-        let currentTopReportersLimit = 'all'; // ✨ เปลี่ยนเป็น 'all' เพื่อให้ค่าเริ่มต้นคือ ทั้งหมด ✨
+        let currentTopReportersLimit = 'all'; // ✨ เปลี่ยนค่าเริ่มต้นจาก 5 เป็น 'all'
+        
         function setTopReportersFilter(limit) {
             currentTopReportersLimit = limit;
+            
+            const btn3 = document.getElementById('btnFilterTop3');
+            const btn5 = document.getElementById('btnFilterTop5');
+            const btn10 = document.getElementById('btnFilterTop10');
+            const btnAll = document.getElementById('btnFilterTopAll');
+            
+            const activeClass = "px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            const inactiveClass = "px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            const activeAllClass = "px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
+            const inactiveAllClass = "px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            
+            if(btn3) btn3.className = inactiveClass;
+            if(btn5) btn5.className = inactiveClass;
+            if(btn10) btn10.className = inactiveClass;
+            if(btnAll) btnAll.className = inactiveAllClass;
+            
+            if (limit === 3 && btn3) btn3.className = activeClass;
+            else if (limit === 5 && btn5) btn5.className = activeClass;
+            else if (limit === 10 && btn10) btn10.className = activeClass;
+            else if (limit === 'all' && btnAll) btnAll.className = activeAllClass;
+            
+            renderTopReporters();
+        }
+
+        function renderTopReporters() {
+            const container = document.getElementById('topReportersList');
+            if(!container) return;
+            container.innerHTML = '';
+            let m = document.getElementById('reporterMonth') ? document.getElementById('reporterMonth').value : 'all';
+            let y = document.getElementById('reporterYear') ? document.getElementById('reporterYear').value : 'all';
+            let filteredRepairs = getFilteredRepairsByMonthYear(m, y);
+            let reporterMap = {};
+            
+            filteredRepairs.forEach(r => {
+                let name = formatValJS(r.reporter_name);
+                if (name.includes('ไม่ระบุ') || name.includes('span')) name = 'ไม่ระบุชื่อผู้แจ้ง';
+                else name = r.reporter_name.trim();
+                if (!reporterMap[name]) reporterMap[name] = 0;
+                reporterMap[name]++;
+            });
+
+            let reporterArr = Object.keys(reporterMap).map(k => ({ name: k, count: reporterMap[k] }));
+            reporterArr.sort((a,b) => b.count - a.count);
+
+            if (currentTopReportersLimit !== 'all') reporterArr = reporterArr.slice(0, parseInt(currentTopReportersLimit));
+
+            if(reporterArr.length === 0) {
+                container.innerHTML = `<div class='p-10 flex flex-col items-center justify-center text-center h-full min-h-[250px]'>
+                                            <i class='fas fa-user-tag text-4xl text-slate-200 mb-3'></i>
+                                            <p class='text-slate-400 font-medium text-sm mt-2'>ไม่พบข้อมูลผู้แจ้งในเดือน/ปีนี้</p>
+                                        </div>`;
+            } else {
+                reporterArr.forEach((rep, index) => {
+                    let rankColor = index === 0 ? 'text-[#eab308] bg-[#fefce8] border-[#fde047]' : 
+                                    index === 1 ? 'text-[#94a3b8] bg-[#f8fafc] border-[#e2e8f0]' : 
+                                    index === 2 ? 'text-[#d97706] bg-[#fffbeb] border-[#fde68a]' : 
+                                    'text-indigo-500 bg-indigo-50 border-indigo-100';
+
+                    let rankIcon = index === 0 ? '<i class="fas fa-trophy text-lg drop-shadow-sm"></i>' :
+                                   index === 1 ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>' :
+                                   index === 2 ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>' : 
+                                   `<span class="text-sm font-black">#${index + 1}</span>`;
+                    
+                    let displayName = rep.name;
+                    let lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>`;
+                    
+                    if (lineUsersMap[rep.name] && lineUsersMap[rep.name].real_name) {
+                        displayName = lineUsersMap[rep.name].real_name;
+                        if (rep.name !== displayName) {
+                            lineIdHtml = `<div class='text-[12px] font-bold text-indigo-600 mt-0.5 flex items-center'><i class='fab fa-line text-[#06C755] text-[14px] mr-1.5'></i> ${rep.name}</div>`;
+                        }
+                    }
+
+                    let safeName = rep.name.replace(/'/g, "\\'");
+                    let clickAction = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? '' : `onclick="viewHistory('${safeName}', 'reporter')" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group" title="คลิกเพื่อดูประวัติการแจ้งซ่อมของ ${displayName}"`;
+                    let disableClickClass = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? `class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 opacity-70"` : '';
+
+                    container.innerHTML += `
+                        <div ${clickAction || disableClickClass}>
+                            <div class='flex items-center gap-4'>
+                                <div class='w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${rankColor} shrink-0 group-hover:scale-110 transition-transform'>${rankIcon}</div>
+                                <div>
+                                    <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${displayName}</div>
+                                    ${lineIdHtml}
+                                </div>
+                            </div>
+                            <div class='text-right flex items-center'>
+                                <div class='flex flex-col items-end'>
+                                    <span class='text-xl font-extrabold text-indigo-600'>${rep.count}</span>
+                                    <span class='text-[11px] text-slate-500 font-medium ml-1'>รายการ</span>
+                                </div>
+                                ${rep.name !== 'ไม่ระบุชื่อผู้แจ้ง' ? `<div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div>` : '<div class="ml-4 w-8 h-8"></div>'}
+                            </div>
+                        </div>`;
+                });
+            }
+        }
         
         const pageTitles = {
             'dash': 'Dashboard Overview',
