@@ -986,7 +986,7 @@ $dept_icons = [
                                 </div>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[280px]">
+                        <div class="relative w-full h-[280px] min-h-[280px] flex items-center justify-center">
                             <canvas id="mainEquipChart"></canvas>
                         </div>
                     </div>
