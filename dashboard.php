@@ -1003,10 +1003,7 @@ $dept_icons = [
                                         <span id="status-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="status-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_month_name; ?>' onclick="selectChartDropdown('status-Month', 'all', '<?php echo $current_month_name; ?>', renderStatusChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_month_name; ?></span>
-                                        </div>
+                                    <div id="status-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('status-Month', '{$num_pad}', '{$name}', renderStatusChart)\">{$name}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="statusMonth" value="all">
@@ -1016,11 +1013,8 @@ $dept_icons = [
                                         <span id="status-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="status-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_thai_year; ?>' onclick="selectChartDropdown('status-Year', 'all', '<?php echo $current_thai_year; ?>', renderStatusChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_thai_year; ?></span>
-                                        </div>
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('status-Year', '{$y}', 'พ.ศ. {$thai_y}', renderStatusChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    <div id="status-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('status-Year', '{$y}', '{$thai_y}', renderStatusChart)\">{$thai_y}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="statusYear" value="all">
                                 </div>
@@ -1045,10 +1039,7 @@ $dept_icons = [
                                         <span id="loc-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="loc-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_month_name; ?>' onclick="selectChartDropdown('loc-Month', 'all', '<?php echo $current_month_name; ?>', renderLocChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_month_name; ?></span>
-                                        </div>
+                                    <div id="loc-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('loc-Month', '{$num_pad}', '{$name}', renderLocChart)\">{$name}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="locMonth" value="all">
@@ -1058,11 +1049,8 @@ $dept_icons = [
                                         <span id="loc-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="loc-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_thai_year; ?>' onclick="selectChartDropdown('loc-Year', 'all', '<?php echo $current_thai_year; ?>', renderLocChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_thai_year; ?></span>
-                                        </div>
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('loc-Year', '{$y}', 'พ.ศ. {$thai_y}', renderLocChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    <div id="loc-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('loc-Year', '{$y}', '{$thai_y}', renderLocChart)\">{$thai_y}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="locYear" value="all">
                                 </div>
@@ -1085,10 +1073,7 @@ $dept_icons = [
                                         <span id="tech-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="tech-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_month_name; ?>' onclick="selectChartDropdown('tech-Month', 'all', '<?php echo $current_month_name; ?>', renderTechChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_month_name; ?></span>
-                                        </div>
+                                    <div id="tech-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('tech-Month', '{$num_pad}', '{$name}', renderTechChart)\">{$name}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="techMonth" value="all">
@@ -1098,11 +1083,8 @@ $dept_icons = [
                                         <span id="tech-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="tech-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_thai_year; ?>' onclick="selectChartDropdown('tech-Year', 'all', '<?php echo $current_thai_year; ?>', renderTechChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_thai_year; ?></span>
-                                        </div>
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('tech-Year', '{$y}', 'พ.ศ. {$thai_y}', renderTechChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    <div id="tech-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('tech-Year', '{$y}', '{$thai_y}', renderTechChart)\">{$thai_y}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="techYear" value="all">
                                 </div>
@@ -1129,10 +1111,7 @@ $dept_icons = [
                                         <span id="rating-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="rating-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_month_name; ?>' onclick="selectChartDropdown('rating-Month', 'all', '<?php echo $current_month_name; ?>', renderRatingChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_month_name; ?></span>
-                                        </div>
+                                    <div id="rating-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('rating-Month', '{$num_pad}', '{$name}', renderRatingChart)\">{$name}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="ratingMonth" value="all">
@@ -1142,11 +1121,8 @@ $dept_icons = [
                                         <span id="rating-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="rating-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_thai_year; ?>' onclick="selectChartDropdown('rating-Year', 'all', '<?php echo $current_thai_year; ?>', renderRatingChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_thai_year; ?></span>
-                                        </div>
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('rating-Year', '{$y}', 'พ.ศ. {$thai_y}', renderRatingChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    <div id="rating-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('rating-Year', '{$y}', '{$thai_y}', renderRatingChart)\">{$thai_y}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="ratingYear" value="all">
                                 </div>
@@ -1172,10 +1148,7 @@ $dept_icons = [
                                         <span id="reporter-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="reporter-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_month_name; ?>' onclick="selectChartDropdown('reporter-Month', 'all', '<?php echo $current_month_name; ?>', renderTopReporters)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_month_name; ?></span>
-                                        </div>
+                                    <div id="reporter-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('reporter-Month', '{$num_pad}', '{$name}', renderTopReporters)\">{$name}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="reporterMonth" value="all">
@@ -1185,11 +1158,8 @@ $dept_icons = [
                                         <span id="reporter-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="reporter-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_thai_year; ?>' onclick="selectChartDropdown('reporter-Year', 'all', '<?php echo $current_thai_year; ?>', renderTopReporters)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_thai_year; ?></span>
-                                        </div>
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('reporter-Year', '{$y}', 'พ.ศ. {$thai_y}', renderTopReporters)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    <div id="reporter-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('reporter-Year', '{$y}', '{$thai_y}', renderTopReporters)\">{$thai_y}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="reporterYear" value="all">
                                 </div>
@@ -1316,10 +1286,7 @@ $dept_icons = [
                                         <span id="table-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_month_name; ?>' onclick="selectChartDropdown('table-Month', 'all', '<?php echo $current_month_name; ?>', filterRepairsTable)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_month_name; ?></span>
-                                        </div>
+                                    <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('table-Month', '{$num_pad}', '{$name}', filterRepairsTable)\">{$name}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="tableMonth" value="all">
@@ -1330,11 +1297,8 @@ $dept_icons = [
                                         <span id="table-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_thai_year; ?>' onclick="selectChartDropdown('table-Year', 'all', '<?php echo $current_thai_year; ?>', filterRepairsTable)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_thai_year; ?></span>
-                                        </div>
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', 'พ.ศ. {$thai_y}', filterRepairsTable)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', '{$thai_y}', filterRepairsTable)\">{$thai_y}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="tableYear" value="all">
                                 </div>
@@ -2413,10 +2377,7 @@ $dept_icons = [
                                 <span id="history-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                             </div>
-                            <div id="history-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_month_name; ?>' onclick="selectChartDropdown('history-Month', 'all', '<?php echo $current_month_name; ?>', searchHistoryModalTable)">
-                                    <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_month_name; ?></span>
-                                </div>
+                            <div id="history-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                 <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('history-Month', '{$num_pad}', '{$name}', searchHistoryModalTable)\">{$name}</div>"; } ?>
                             </div>
                             <input type="hidden" id="historyMonth" value="all">
@@ -2427,11 +2388,8 @@ $dept_icons = [
                                 <span id="history-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                             </div>
-                            <div id="history-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_thai_year; ?>' onclick="selectChartDropdown('history-Year', 'all', '<?php echo $current_thai_year; ?>', searchHistoryModalTable)">
-                                    <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_thai_year; ?></span>
-                                </div>
-                                <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('history-Year', '{$y}', 'พ.ศ. {$thai_y}', searchHistoryModalTable)\">พ.ศ. {$thai_y}</div>"; } ?>
+                            <div id="history-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('history-Year', '{$y}', '{$thai_y}', searchHistoryModalTable)\">{$thai_y}</div>"; } ?>
                             </div>
                             <input type="hidden" id="historyYear" value="all">
                         </div>
