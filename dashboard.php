@@ -773,12 +773,14 @@ $dept_icons = [
 
     <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
         
-        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50 gap-2">
+        <!-- ✨ แก้ไขพื้นที่กดของปุ่ม Sidebar ให้พอดีและป้องกันการคลิกทะลุ ✨ -->
+        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50 gap-2 pointer-events-auto">
             <div class="flex items-center min-w-0 pr-2">
-                <button onclick="toggleSidebar()" class="xl:hidden mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0">
+                <!-- ✨ เพิ่มการตีกรอบปุ่มให้ชัดเจน ป้องกันพื้นที่ด้านข้างโดนกด ✨ -->
+                <button onclick="toggleSidebar()" type="button" class="xl:hidden mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors z-50">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <h3 class="text-[15px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate" id="headerTitle"><?php echo $currentTitle; ?></h3>
+                <h3 class="text-[15px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate select-none pointer-events-none" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
             
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
