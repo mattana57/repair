@@ -3847,13 +3847,14 @@ $dept_icons = [
                         x: { 
                             offset: true, // ✨ คำสั่งสำคัญ: บังคับให้แกน X จับคู่แท่งกราฟกับตัวหนังสือให้อยู่ตรงกลางเป๊ะๆ เสมอ
                             ticks: { 
-                                color: '#64748b', // กลับมาใช้สีข้อความปกติ ไม่ต้องซ่อนแล้ว
+                                // ✨ ซ่อนข้อความระบบในไอแพดเพื่อไม่ให้ทับกับ Plugin (คอมพิวเตอร์แสดงตัวหนาปกติ ไม่กระทบ 100%)
+                                color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
                                 font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12, weight: 'bold' }, 
                                 autoSkip: false, 
                                 maxRotation: 0, 
                                 minRotation: 0,
-                                align: 'center',      // จัดกึ่งกลางตัวหนังสือกับแท่ง
-                                crossAlign: 'center'  // จัดกึ่งกลางระหว่างบรรทัดที่ 1 กับ 2
+                                align: 'center',      
+                                crossAlign: 'center'  
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
