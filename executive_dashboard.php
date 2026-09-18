@@ -637,6 +637,7 @@ $pageTitles = [
 
                     <!-- Top Reporters -->
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
+
                         <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3 w-full">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Top Reporters</h3>
@@ -676,6 +677,7 @@ $pageTitles = [
                             </div>
                             <!-- ✨ เปลี่ยนปุ่ม 'ทั้งหมด' ให้เป็นสีม่วงเป็นค่าเริ่มต้น ✨ -->
                             <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mt-1 sm:mt-0">ทั้งหมด</button>
+                        </div>
                         <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar max-h-[380px]">
                             <div class="divide-y divide-slate-100" id="topReportersList"></div>
                         </div>
@@ -2138,7 +2140,7 @@ $pageTitles = [
                         const yAxis = chart.scales.y;
                         
                         ctx.save();
-                        // ✨ 1. เปลี่ยนมาใช้จัดชิดซ้าย (Left-aligned) เพื่อให้ตัวหนังสือเกาะขอบซ้ายเป๊ะเหมือนในคอมโน้ตบุ๊ค
+                        // ✨ 1. เปลี่ยนมาใช้จัดชิดซ้าย (Left-aligned) ตามที่แอดมินใช้
                         ctx.textAlign = 'left'; 
                         ctx.textBaseline = 'middle';
                         
@@ -2159,8 +2161,7 @@ $pageTitles = [
                                 let fSizeScore = isTablet ? 11 : 12;
                                 let fSizeStar = isTablet ? 11 : 13;
 
-                                // ✨ 2. ล็อคพิกัดให้ตัวหนังสือเริ่มวาดที่ตำแหน่งคงที่เสมอ
-                                // การันตีว่าตัวหนังสือจะอยู่ริมซ้ายสวยงาม ไม่ลอยไปทับกราฟตรงกลางแน่นอน
+                                // ✨ 2. ล็อคพิกัดให้ตัวหนังสือเริ่มวาดที่ตำแหน่งริมซ้าย
                                 const textDrawX = 10; 
                                 
                                 const yOffsetTop = isTablet ? -18 : -16;
@@ -2302,7 +2303,7 @@ $pageTitles = [
                             grid: { display: false }, 
                             border: {display: false},
                             afterFit: function(scaleInstance) {
-                                // ✨ 3. สร้าง "กำแพง" แบบเป๊ะๆ:
+                                // ✨ 3. สร้าง "กำแพง" ดันตัวหนังสือไม่ให้ทับกราฟ ✨
                                 if (window.innerWidth <= 1366) {
                                     scaleInstance.width = 160; 
                                 } else {
@@ -2711,7 +2712,7 @@ $pageTitles = [
         }
 
         // ✨ ตัวแปรและฟังก์ชันจัดอันดับ Top Reporters ✨
-        let currentTopReportersLimit = 'all'; // ✨ เปลี่ยนค่าเริ่มต้นจาก 5 เป็น 'all'
+        let currentTopReportersLimit = 'all'; // ✨ เปลี่ยนเป็น 'all' เพื่อให้ค่าเริ่มต้นคือ ทั้งหมด ✨
         function setTopReportersFilter(limit) {
             currentTopReportersLimit = limit;
             const btn3 = document.getElementById('btnFilterTop3');

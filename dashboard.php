@@ -2515,8 +2515,16 @@ $dept_icons = [
         let currentTechReviewsData = [];
         let currentDeptReviewsData = []; // ✨ เก็บข้อมูลรีวิวของทั้งแผนก
         let currentReviewFilter = 'all'; // ✨ เติมตัวแปรนี้ เพื่อให้ Modal ทำงานได้ ✨
-        // ✨ ตัวแปรเก็บค่าเริ่มต้น ให้โชว์ Top 5 ✨
-        let currentTopReportersLimit = 5;
+
+        // ✨ เปิดแท็บใหม่แบบมีรหัสลับ: ส่งค่า source ไปด้วย เพื่อสั่งให้แท็บมันปิดตัวเองลงทันที 100% ไม่โหลดหน้าซ้อนทับ ✨
+        function openReviewTab(id) {
+            window.open('update_repair.php?id=' + id + '&source=tech_reviews', '_blank');
+        }
+
+        // ✨ ตัวแปรและฟังก์ชันจัดอันดับ Top Reporters ✨
+        let currentTopReportersLimit = 'all'; // ✨ เปลี่ยนเป็น 'all' เพื่อให้ค่าเริ่มต้นคือ ทั้งหมด ✨
+        function setTopReportersFilter(limit) {
+            currentTopReportersLimit = limit;
         
         const pageTitles = {
             'dash': 'Dashboard Overview',
@@ -2596,13 +2604,7 @@ $dept_icons = [
 
         // ✨ เปิดแท็บใหม่แบบมีรหัสลับ: ส่งค่า source ไปด้วย เพื่อสั่งให้แท็บมันปิดตัวเองลงทันที 100% ไม่โหลดหน้าซ้อนทับ ✨
         function openReviewTab(id) {
-            window.open('view_repair.php?id=' + id + '&source=tech_reviews', '_blank');
-        }
-
-        // ✨ ตัวแปรและฟังก์ชันจัดอันดับ Top Reporters ✨
-        let currentTopReportersLimit = 'all'; // ✨ เปลี่ยนค่าเริ่มต้นจาก 5 เป็น 'all'
-        function setTopReportersFilter(limit) {
-            currentTopReportersLimit = limit;
+            window.open('update_repair.php?id=' + id + '&source=tech_reviews', '_blank');
         }
 
         function formatValJS(val) {
