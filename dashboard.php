@@ -3854,7 +3854,9 @@ $dept_icons = [
                                 maxRotation: 0, 
                                 minRotation: 0,
                                 align: 'center',      
-                                crossAlign: 'center'  
+                                crossAlign: 'center',
+                                // ✨ ดันตัวหนังสือให้ห่างจากแท่งกราฟ 8 พิกเซล เฉพาะฝั่งคอมพิวเตอร์ (ไอแพดเป็น 0 ไม่กระทบแน่นอน)
+                                padding: window.innerWidth <= 1366 ? 0 : 8
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
