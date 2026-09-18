@@ -456,12 +456,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     
     <div class="flex-1 overflow-auto pb-10">
 
-        <!-- ✨ ปุ่ม พิมพ์ / โหลด PDF ลอยอยู่ด้านนอกกระดาษ มุมขวาบน เว้นระยะห่างตามรูปที่ 1 เป๊ะๆ ✨ -->
-        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex justify-end px-4 xl:px-0">
-            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-sm px-6 py-2.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5">
-                <i class="fas fa-print mr-2 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
-            </button>
-        </div>
+        <?php if ($page_index === 0): ?>
+                <!-- ✨ เพิ่มปุ่ม พิมพ์ / โหลด PDF ด้านบนขวาของกระดาษแผ่นแรก (ซ่อนอัตโนมัติเวลาปริ้นจริง) ✨ -->
+                <div class="no-print flex justify-end mb-8">
+                    <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5">
+                        <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
+                    </button>
+                </div>
+                <?php endif; ?>
 
         <?php if ($report_type === 'memo'): ?>
             <!-- บันทึกข้อความ -->
@@ -553,7 +555,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
         <?php else: ?>
             <!-- ==========================================
-                 รูปแบบที่ 2: ตารางรายงานทางการ
+                 ตารางรายงานทางการ
                  ========================================== -->
             <?php
             $first_page_limit = 14; 
