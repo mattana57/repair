@@ -454,7 +454,7 @@ $pageTitles = [
                 </div>
 
                 <!-- Equipment & Work Status -->
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 mb-4 w-full">
                             <div>
@@ -595,9 +595,10 @@ $pageTitles = [
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mt-6">
+                <!-- Customer Satisfaction -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                     
-                    <div class="modern-card p-6 flex flex-col xl:col-span-7 justify-between">
+                    <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
                         <div class="flex flex-wrap justify-between items-start md:items-center gap-3 mb-4 w-full">
                             <div class="flex flex-col">
                                 <h3 class="font-extrabold text-slate-800 text-lg">Customer Satisfaction</h3>
@@ -634,7 +635,8 @@ $pageTitles = [
                         </div>
                     </div>
 
-                    <div class="modern-card overflow-hidden flex flex-col xl:col-span-5 h-full">
+                    <!-- Top Reporters -->
+                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
                         <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3 w-full">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Top Reporters</h3>
@@ -2134,60 +2136,77 @@ $pageTitles = [
                     afterDraw: (chart) => {
                         const ctx = chart.ctx;
                         const yAxis = chart.scales.y;
-
+                        
                         ctx.save();
-                        ctx.textAlign = 'right';
+                        // ✨ 1. เปลี่ยนมาใช้จัดชิดซ้าย (Left-aligned) เพื่อให้ตัวหนังสือเกาะขอบซ้ายเป๊ะเหมือนในคอมโน้ตบุ๊ค
+                        ctx.textAlign = 'left'; 
                         ctx.textBaseline = 'middle';
-
+                        
                         yAxis.ticks.forEach((tick, index) => {
                             const y = yAxis.getPixelForTick(index);
                             const labelArray = chart.data.labels[index];
                             if (!labelArray) return;
-
+                            
                             if (Array.isArray(labelArray) && labelArray.length === 3) {
                                 const scoreStr = labelArray[0].trim();
                                 const scoreVal = parseFloat(scoreStr) || 0;
                                 const tName = labelArray[1];
                                 const dName = labelArray[2];
+                                
+                                let isTablet = window.innerWidth <= 1366;
+                                let fSizeDept = isTablet ? 12 : 14;
+                                let fSizeTech = isTablet ? 11 : 13;
+                                let fSizeScore = isTablet ? 11 : 12;
+                                let fSizeStar = isTablet ? 11 : 13;
 
-                                ctx.font = '800 14px "Sarabun", sans-serif';
+                                // ✨ 2. ล็อคพิกัดให้ตัวหนังสือเริ่มวาดที่ตำแหน่งคงที่เสมอ
+                                // การันตีว่าตัวหนังสือจะอยู่ริมซ้ายสวยงาม ไม่ลอยไปทับกราฟตรงกลางแน่นอน
+                                const textDrawX = 10; 
+                                
+                                const yOffsetTop = isTablet ? -18 : -16;
+                                const yOffsetBottom = isTablet ? 18 : 16;
+
+                                // วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
+                                ctx.font = `800 ${fSizeDept}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#4f46e5';
-                                ctx.fillText(dName, yAxis.right - 10, y + 18);
+                                ctx.fillText(dName, textDrawX, y + yOffsetBottom);
 
-                                ctx.font = 'bold 13px "Sarabun", sans-serif';
+                                // วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
+                                ctx.font = `bold ${fSizeTech}px "Sarabun", sans-serif`;
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(tName, yAxis.right - 10, y);
+                                ctx.fillText(tName, textDrawX, y);
 
-                                const textY = y - 18; 
-                                ctx.font = 'bold 12px "Sarabun", sans-serif';
-                                ctx.fillStyle = '#64748b';
-                                ctx.fillText(scoreStr, yAxis.right - 10, textY);
-
-                                const scoreWidth = ctx.measureText(scoreStr).width;
-                                const starX = yAxis.right - 10 - scoreWidth - 4; 
-
-                                ctx.font = '900 13px "Font Awesome 6 Free"';
+                                // วาดดาว (บรรทัดบน)
+                                const textY = y + yOffsetTop; 
+                                ctx.font = `900 ${fSizeStar}px "Font Awesome 6 Free"`;
                                 const starIcon = '\uf005'; 
                                 const starWidth = ctx.measureText(starIcon).width;
-                                const startX = starX - starWidth;
-
+                                
+                                // ดาวพื้นหลัง (สีเทา)
                                 ctx.fillStyle = '#e2e8f0';
-                                ctx.fillText(starIcon, starX, textY);
-
+                                ctx.fillText(starIcon, textDrawX, textY);
+                                
+                                // ดาวทับ (สีเหลือง ไล่ตาม %)
                                 if (scoreVal > 0) {
                                     const fillPercent = scoreVal / 5.0;
                                     ctx.save();
                                     ctx.beginPath();
-                                    ctx.rect(startX, textY - 10, starWidth * fillPercent, 20);
+                                    ctx.rect(textDrawX, textY - 10, starWidth * fillPercent, 20);
                                     ctx.clip(); 
                                     ctx.fillStyle = '#f59e0b'; 
-                                    ctx.fillText(starIcon, starX, textY);
+                                    ctx.fillText(starIcon, textDrawX, textY);
                                     ctx.restore();
                                 }
+                                
+                                // วาดคะแนนตัวเลข
+                                ctx.font = `bold ${fSizeScore}px "Sarabun", sans-serif`;
+                                ctx.fillStyle = '#64748b';
+                                ctx.fillText(scoreStr, textDrawX + starWidth + 6, textY);
+                                
                             } else {
                                 ctx.font = 'bold 13px "Sarabun", sans-serif';
                                 ctx.fillStyle = '#475569';
-                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, yAxis.right - 10, y);
+                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, 10, y);
                             }
                         });
                         ctx.restore();
@@ -2201,7 +2220,7 @@ $pageTitles = [
                             data: deptArr.length ? deptArr.map(d => d.avg) : [0], 
                             backgroundColor: deptArr.length ? deptArr.map(d => getRatingColor(d.avg)) : ['#e2e8f0'], 
                             borderRadius: 10,
-                            barThickness: 24,
+                            barThickness: window.innerWidth <= 1366 ? 20 : 24, 
                             maxBarThickness: 32,
                             borderSkipped: false,
                             z: 2
@@ -2211,7 +2230,7 @@ $pageTitles = [
                             data: deptArr.length ? deptArr.map(d => 5.0) : [5.0],
                             backgroundColor: '#f1f5f9',
                             borderRadius: 10,
-                            barThickness: 24,
+                            barThickness: window.innerWidth <= 1366 ? 20 : 24,
                             maxBarThickness: 32,
                             borderSkipped: false,
                             z: 1
@@ -2222,7 +2241,8 @@ $pageTitles = [
                     indexAxis: 'y', 
                     grouped: false,
                     responsive: true, 
-                    maintainAspectRatio: false,
+                    maintainAspectRatio: false, 
+                    layout: { padding: { left: 0, right: window.innerWidth <= 1366 ? 10 : 20 } },
                     interaction: { mode: 'y', intersect: false },
                     onClick: (e, elements, chart) => {
                         const activeElements = chart.getElementsAtEventForMode(e, 'y', { intersect: false }, true);
@@ -2237,24 +2257,32 @@ $pageTitles = [
                     onHover: (event, chartElement) => {
                         event.native.target.style.cursor = chartElement.length > 0 ? 'pointer' : 'default';
                     },
-                    layout: { padding: { top: 10, bottom: 10, left: 0, right: 20 } },
                     plugins: { 
                         legend: { display: false },
                         tooltip: {
-                            filter: function(tooltipItem) { return tooltipItem.datasetIndex === 0; },
+                            filter: function(tooltipItem) {
+                                return tooltipItem.datasetIndex === 0;
+                            },
                             callbacks: {
                                 title: function(context) {
-                                    if (!deptArr.length) return '';
-                                    return deptArr[context[0].dataIndex].name;
+                                    let idx = context[0].dataIndex;
+                                    return deptArr[idx] ? deptArr[idx].name : '';
                                 },
                                 label: function(context) {
-                                    if (!deptArr.length) return ' ไม่มีข้อมูล';
-                                    let dept = deptArr[context.dataIndex];
-                                    return [' ช่าง ' + dept.topTech + ' (⭐ ' + parseFloat(dept.topTechAvg).toFixed(1) + ')', ' จำนวน: ' + dept.count + ' รีวิว'];
+                                    let idx = context.dataIndex;
+                                    if (!deptArr[idx]) return '';
+                                    return ` ช่าง ${deptArr[idx].topTech} (⭐ ${deptArr[idx].topTechAvg})`;
+                                },
+                                afterLabel: function(context) {
+                                    let idx = context.dataIndex;
+                                    if (!deptArr[idx]) return '';
+                                    return `จำนวน: ${deptArr[idx].count} รีวิว`;
                                 }
-                            }
+                            },
+                            titleFont: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' },
+                            bodyFont: { family: "'Sarabun', sans-serif", size: 13, weight: 'normal' }
                         }
-                    }, 
+                    },
                     scales: { 
                         x: { 
                             min: 0, max: 5,
@@ -2264,11 +2292,23 @@ $pageTitles = [
                         }, 
                         y: { 
                             ticks: { 
-                                color: 'transparent',
-                                font: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' } 
+                                color: 'transparent', 
+                                font: { family: "'Sarabun', sans-serif", size: 1, weight: 'bold' }, // หลอกให้กินพื้นที่น้อยสุด
+                                autoSkip: false, 
+                                maxRotation: 0, 
+                                minRotation: 0,
+                                padding: 0
                             }, 
                             grid: { display: false }, 
-                            border: {display: false} 
+                            border: {display: false},
+                            afterFit: function(scaleInstance) {
+                                // ✨ 3. สร้าง "กำแพง" แบบเป๊ะๆ:
+                                if (window.innerWidth <= 1366) {
+                                    scaleInstance.width = 160; 
+                                } else {
+                                    scaleInstance.width = 190; 
+                                }
+                            }
                         } 
                     } 
                 }
