@@ -3724,37 +3724,6 @@ $dept_icons = [
             
             chartEquipInstance = new Chart(ctx, {
                 type: 'line', 
-                // ✨ 1. เพิ่ม Plugins สำหรับวาดตัวหนังสือแกน X ให้ตรงจุดเป๊ะๆ 100% ✨
-                plugins: [{
-                    id: 'custom_equip_x_labels',
-                    afterDraw: (chart) => {
-                        if (window.innerWidth > 1366) return; // ถ้าเป็นคอมพิวเตอร์ให้ใช้ระบบปกติ
-
-                        const ctx = chart.ctx;
-                        const xAxis = chart.scales.x;
-                        
-                        ctx.save();
-                        ctx.textAlign = 'left'; 
-                        ctx.textBaseline = 'top';
-                        ctx.fillStyle = '#64748b'; // สีเทาเหมือนระบบหลัก
-                        ctx.font = `bold 11px "Kanit", sans-serif`;
-                        
-                        const yPos = chart.chartArea.bottom + 10; 
-
-                        const getVisualWidth = (text) => {
-                            const cleanText = text.replace(/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/g, '');
-                            return ctx.measureText(cleanText).width;
-                        };
-
-                        chart.data.labels.forEach((label, index) => {
-                            const xCenter = xAxis.getPixelForTick(index);
-                            const textWidth = getVisualWidth(label);
-                            // วาดข้อความโดยให้กึ่งกลางข้อความอยู่ตรงจุด xCenter พอดี
-                            ctx.fillText(label, xCenter - (textWidth / 2), yPos);
-                        });
-                        ctx.restore();
-                    }
-                }],
                 data: {
                     labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{ 
@@ -3773,21 +3742,18 @@ $dept_icons = [
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
-                    layout: { padding: { bottom: window.innerWidth <= 1366 ? 10 : 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
-                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, 
+                            grid: { color: '#f8fafc' }, 
+                            border: {display: false} 
+                        }, 
                         x: { 
-                            // ✨ 2. บังคับให้แกน X จุดตรงกลางเสมอ และซ่อนข้อความออริจินัลบนไอแพด ✨
-                            offset: false, 
                             ticks: { 
-                                color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
-                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12, weight: 'bold' }, 
-                                autoSkip: false, 
-                                maxRotation: 0, 
-                                minRotation: 0,
-                                align: 'center',      
-                                crossAlign: 'center'
+                                color: '#64748b',
+                                font: { family: "'Kanit', sans-serif", weight: 'bold' } 
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
