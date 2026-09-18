@@ -969,10 +969,7 @@ $dept_icons = [
                                         <span id="equip-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_month_name; ?>' onclick="selectChartDropdown('equip-Month', 'all', '<?php echo $current_month_name; ?>', renderEquipChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_month_name; ?></span>
-                                        </div>
+                                    <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('equip-Month', '{$num_pad}', '{$name}', renderEquipChart)\">{$name}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="equipMonth" value="all">
@@ -982,11 +979,8 @@ $dept_icons = [
                                         <span id="equip-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='<?php echo $current_thai_year; ?>' onclick="selectChartDropdown('equip-Year', 'all', '<?php echo $current_thai_year; ?>', renderEquipChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'><?php echo $current_thai_year; ?></span>
-                                        </div>
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('equip-Year', '{$y}', 'พ.ศ. {$thai_y}', renderEquipChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('equip-Year', '{$y}', '{$thai_y}', renderEquipChart)\">{$thai_y}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="equipYear" value="all">
                                 </div>
