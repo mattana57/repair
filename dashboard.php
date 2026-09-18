@@ -986,7 +986,8 @@ $dept_icons = [
                                 </div>
                             </div>
                         </div>
-                        <div class="relative w-full h-[280px] min-h-[280px] flex items-center justify-center">
+                        <!-- ✨ คืนค่า flex-1 เพื่อให้กล่องขาวขยายเต็มเท่ากับ Work Status 100% ✨ -->
+                        <div class="flex-1 relative w-full h-[280px] min-h-[280px] flex items-center justify-center">
                             <canvas id="mainEquipChart"></canvas>
                         </div>
                     </div>
