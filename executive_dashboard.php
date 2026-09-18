@@ -462,30 +462,23 @@ $pageTitles = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
-                                <!-- ✨ Custom Dropdown ✨ -->
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Month')">
-                                        <span id="equip-MonthText" class="truncate font-bold">เดือน</span>
+                                        <span id="equip-MonthText" class="truncate font-bold"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('equip-Month', 'all', 'เดือน', renderEquipChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
-                                        </div>
+                                    <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('equip-Month', '{$num_pad}', '{$name}', renderEquipChart)\">{$name}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="equipMonth" value="all">
                                 </div>
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Year', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Year')">
-                                        <span id="equip-YearText" class="truncate font-bold">ปี (พ.ศ.)</span>
+                                        <span id="equip-YearText" class="truncate font-bold"><?php echo $current_thai_year; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('equip-Year', 'all', 'ปี (พ.ศ.)', renderEquipChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
-                                        </div>
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('equip-Year', '{$y}', 'พ.ศ. {$thai_y}', renderEquipChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('equip-Year', '{$y}', '{$thai_y}', renderEquipChart)\">{$thai_y}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="equipYear" value="all">
                                 </div>
@@ -505,27 +498,21 @@ $pageTitles = [
                             <div class="flex flex-wrap items-center gap-2">
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Month', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Month')">
-                                        <span id="status-MonthText" class="truncate font-bold">เดือน</span>
+                                        <span id="status-MonthText" class="truncate font-bold"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="status-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='เดือน' onclick="selectChartDropdown('status-Month', 'all', 'เดือน', renderStatusChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>เดือน</span>
-                                        </div>
+                                    <div id="status-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('status-Month', '{$num_pad}', '{$name}', renderStatusChart)\">{$name}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="statusMonth" value="all">
                                 </div>
                                 <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Year', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Year')">
-                                        <span id="status-YearText" class="truncate font-bold">ปี (พ.ศ.)</span>
+                                        <span id="status-YearText" class="truncate font-bold"><?php echo $current_thai_year; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
-                                    <div id="status-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col pb-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <div class='chart-dropdown-item flex justify-center items-center px-4 py-2 mb-1 bg-indigo-50 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer hover:bg-indigo-100 transition-colors' data-value='all' data-display='ปี (พ.ศ.)' onclick="selectChartDropdown('status-Year', 'all', 'ปี (พ.ศ.)', renderStatusChart)">
-                                            <span class='text-[11px] font-extrabold text-indigo-600 tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
-                                        </div>
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='พ.ศ. {$thai_y}' onclick=\"selectChartDropdown('status-Year', '{$y}', 'พ.ศ. {$thai_y}', renderStatusChart)\">พ.ศ. {$thai_y}</div>"; } ?>
+                                    <div id="status-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('status-Year', '{$y}', '{$thai_y}', renderStatusChart)\">{$thai_y}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="statusYear" value="all">
                                 </div>
@@ -537,7 +524,6 @@ $pageTitles = [
                     </div>
                 </div>
 
-                <!-- Locations & Workload -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     
                     <div class="modern-card p-6 flex flex-col">
@@ -1246,7 +1232,7 @@ $pageTitles = [
                             </div>
                             <input type="hidden" id="historyYear" value="all">
                         </div>
-                    </div>  
+                    </div>
 
                     <div class="flex items-center gap-2 shrink-0 ml-auto md:ml-4">
                         <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
@@ -1855,7 +1841,8 @@ $pageTitles = [
             chartStatusInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['รอดำเนินการ', 'กำลังแก้ไข', 'เสร็จสิ้น'],
+                    // ✨ เปลี่ยนคำศัพท์สถานะให้ตรงตามข้อตกลงเป๊ะๆ
+                    labels: ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'],
                     datasets: [{ 
                         data: isEmpty ? [1] : [pending, progress, completed], 
                         backgroundColor: isEmpty ? ['#f1f5f9'] : ['#f59e0b', '#38bdf8', '#10b981'],
@@ -1885,13 +1872,41 @@ $pageTitles = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
+            let locLabels = sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'];
+
             const ctx = document.getElementById('mainLocChart').getContext('2d');
             if(chartLocInstance) chartLocInstance.destroy();
+            
+            const container = document.getElementById('mainLocChart').parentNode;
+            container.style.height = window.innerWidth <= 1366 ? '280px' : '250px';
 
             chartLocInstance = new Chart(ctx, {
                 type: 'bar', 
+                plugins: [{
+                    id: 'custom_loc_labels',
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const yAxis = chart.scales.y;
+                        let isTablet = window.innerWidth <= 1366;
+
+                        ctx.save();
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = '#475569'; // สีเทาเข้ม
+                        ctx.font = `bold ${isTablet ? 11 : 12}px "Kanit", sans-serif`;
+
+                        yAxis.ticks.forEach((tick, index) => {
+                            const y = yAxis.getPixelForTick(index);
+                            const labelText = chart.data.labels[index];
+
+                            // ✨ จัดข้อความ "ชิดซ้าย" (Left Align) เริ่มจากขอบซ้ายสุด 5px ให้เหมือนกันทุกอุปกรณ์
+                            ctx.textAlign = 'left';
+                            ctx.fillText(labelText, 5, y);
+                        });
+                        ctx.restore();
+                    }
+                }],
                 data: {
-                    labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
+                    labels: locLabels,
                     datasets: [{ 
                         label: 'แจ้งซ่อม (ครั้ง)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
@@ -1901,11 +1916,33 @@ $pageTitles = [
                 },
                 options: { 
                     indexAxis: 'y',
-                    responsive: true, maintainAspectRatio: false, 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    layout: { padding: { left: 0, right: window.innerWidth <= 1366 ? 15 : 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
-                        x: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
-                        y: { ticks: { font: { family: "'Kanit', sans-serif" } }, grid: { display: false }, border: {display: false} } 
+                        x: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, 
+                            grid: { color: '#f8fafc' }, 
+                            border: {display: false} 
+                        }, 
+                        y: { 
+                            ticks: { 
+                                color: 'transparent', // ✨ ซ่อนตัวอักษรเก่าที่ชอบมีปัญหาทับกราฟ
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12 },
+                                autoSkip: false, 
+                                maxRotation: 0, 
+                                minRotation: 0 
+                            }, 
+                            grid: { display: false }, 
+                            border: {display: false},
+                            afterFit: function(scaleInstance) {
+                                if (window.innerWidth <= 1366) {
+                                    scaleInstance.width = 100; 
+                                }
+                            }
+                        } 
                     } 
                 }
             });
@@ -1923,13 +1960,67 @@ $pageTitles = [
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
 
+            let techLabels = sorted.length ? sorted.map(e => {
+                let fullName = e.name.trim(); 
+                if (window.innerWidth <= 1366 && fullName.length > 5) {
+                    let parts = fullName.split(/\s+/); 
+                    if (parts.length > 1) {
+                        return [parts[0], parts.slice(1).join(' ')];
+                    }
+                }
+                return fullName;
+            }) : ['ไม่มีข้อมูล'];
+
             const ctx = document.getElementById('mainTechChart').getContext('2d');
             if(chartTechInstance) chartTechInstance.destroy();
+            
+            const container = document.getElementById('mainTechChart').parentNode;
+            container.style.height = window.innerWidth <= 1366 ? '290px' : '250px'; 
 
             chartTechInstance = new Chart(ctx, {
                 type: 'bar', 
+                plugins: [{
+                    id: 'custom_tech_x_labels',
+                    afterDraw: (chart) => {
+                        if (window.innerWidth > 1366) return; 
+
+                        const ctx = chart.ctx;
+                        const xAxis = chart.scales.x;
+                        
+                        ctx.save();
+                        // ✨ 1. เปลี่ยนมาวาดจากขอบซ้าย เพื่อให้เราคุมพิกัด X ได้เองแบบ 100%
+                        ctx.textAlign = 'left'; 
+                        ctx.textBaseline = 'top';
+                        ctx.fillStyle = '#64748b'; 
+                        ctx.font = `bold 11px "Kanit", sans-serif`;
+                        
+                        const yPos = chart.chartArea.bottom + 10; 
+
+                        // ✨ 2. ฟังก์ชันไม้ตาย: ตัดสระบน/ล่างและวรรณยุกต์ทิ้ง "เฉพาะตอนคำนวณความกว้าง"
+                        const getVisualWidth = (text) => {
+                            const cleanText = text.replace(/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/g, '');
+                            return ctx.measureText(cleanText).width;
+                        };
+
+                        chart.data.labels.forEach((label, index) => {
+                            const xCenter = xAxis.getPixelForTick(index);
+                            
+                            if (Array.isArray(label)) {
+                                label.forEach((line, i) => {
+                                    // ✨ 3. เอาพิกัดกึ่งกลางกราฟ ลบด้วย ครึ่งนึงของความกว้างข้อความ = ตรงกลางเป๊ะ!
+                                    const textWidth = getVisualWidth(line);
+                                    ctx.fillText(line, xCenter - (textWidth / 2), yPos + (i * 14)); 
+                                });
+                            } else {
+                                const textWidth = getVisualWidth(label);
+                                ctx.fillText(label, xCenter - (textWidth / 2), yPos);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                }],
                 data: {
-                    labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
+                    labels: techLabels,
                     datasets: [{ 
                         label: 'รับผิดชอบ (งาน)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
@@ -1938,7 +2029,9 @@ $pageTitles = [
                     }]
                 },
                 options: { 
-                    responsive: true, maintainAspectRatio: false, 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 10 : 0 } }, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -1948,6 +2041,7 @@ $pageTitles = [
                             border: {display: false} 
                         }, 
                         x: { 
+                            offset: true, 
                             ticks: { 
                                 // ✨ ซ่อนข้อความระบบในไอแพดเพื่อไม่ให้ทับกับ Plugin (คอมพิวเตอร์แสดงตัวหนาปกติ ไม่กระทบ 100%)
                                 color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
@@ -1957,13 +2051,15 @@ $pageTitles = [
                                 minRotation: 0,
                                 align: 'center',      
                                 crossAlign: 'center',
-                                // ✨ ดันตัวหนังสือให้ห่างจากแท่งกราฟ 8 พิกเซล เฉพาะฝั่งคอมพิวเตอร์ (ไอแพดเป็น 0 ไม่กระทบแน่นอน)
+                                // ✨ ดันตัวหนังสือให้ห่างจากแท่งกราฟ 8 พิกเซล เฉพาะฝั่งคอมพิวเตอร์
                                 padding: window.innerWidth <= 1366 ? 0 : 8
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
                         }
-                    }, 
+                    },
+                    categoryPercentage: window.innerWidth <= 1366 ? 0.75 : 0.8, 
+                    barPercentage: window.innerWidth <= 1366 ? 0.85 : 0.9 
                 }
             });
         }
