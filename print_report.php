@@ -433,10 +433,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                        class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
                         <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
                     </a>
-                    
-                    <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md transition-all flex items-center ml-1 border border-slate-900 dark:border-rose-800">
-                        <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
-                    </button>
                 </div>
 
                 <div class="flex items-center justify-center sm:justify-end w-full sm:w-auto pr-1">
@@ -461,8 +457,16 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <div class="flex-1 overflow-auto pb-10">
 
         <?php if ($report_type === 'memo'): ?>
-            <!-- รูปแบบที่ 1: บันทึกข้อความ -->
+            <!-- บันทึกข้อความ -->
             <div class="a4-container">
+                
+                <!-- ✨ เพิ่มปุ่ม พิมพ์ / โหลด PDF ด้านบนขวาของกระดาษ (ซ่อนอัตโนมัติเวลาปริ้นจริง) ✨ -->
+                <div class="no-print flex justify-end mb-8">
+                    <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-sm px-6 py-2.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5">
+                        <i class="fas fa-print mr-2 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
+                    </button>
+                </div>
+
                 <div class="flex-1 flex flex-col">
                     <div class="memo-head-box">
                         <img src="uploads/garuda.png" alt="ตราครุฑ" class="garuda-img">
@@ -580,6 +584,16 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             ?>
             
             <div class="a4-container">
+                
+                <?php if ($page_index === 0): ?>
+                <!-- ✨ เพิ่มปุ่ม พิมพ์ / โหลด PDF ด้านบนขวาของกระดาษแผ่นแรก (ซ่อนอัตโนมัติเวลาปริ้นจริง) ✨ -->
+                <div class="no-print flex justify-end mb-8">
+                    <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-sm px-6 py-2.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5">
+                        <i class="fas fa-print mr-2 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
+                    </button>
+                </div>
+                <?php endif; ?>
+
                 <div class="flex-1 flex flex-col">
                     
                     <?php if ($page_index === 0): ?>
