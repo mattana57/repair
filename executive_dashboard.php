@@ -456,13 +456,13 @@ $pageTitles = [
                 <!-- Equipment & Work Status -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="modern-card p-6 flex flex-col">
-                        <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 mb-4 w-full">
-                            <div>
-                                <h3 class="font-extrabold text-slate-800 text-lg">Equipment Analytics</h3>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
+                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row">
+                            <div class="flex-1 min-w-0 pr-2">
+                                <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Equipment Analytics</h3>
+                                <p class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
+                            <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0">
+                                <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Month')">
                                         <span id="equip-MonthText" class="truncate font-bold"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
@@ -637,14 +637,13 @@ $pageTitles = [
 
                     <!-- Top Reporters -->
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
-
-                        <div class="p-4 md:p-5 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center shrink-0 gap-3 w-full">
-                            <div>
-                                <h3 class="font-extrabold text-slate-800 text-lg">Top Reporters</h3>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start sm:items-center shrink-0 gap-2 w-full flex-col sm:flex-row">
+                            <div class="flex-1 min-w-0 pr-2">
+                                <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Top Reporters</h3>
+                                <p class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Month', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
+                            <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0 mt-1 sm:mt-0">
+                                <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="reporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Month', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'reporter-Month')">
                                         <span id="reporter-MonthText" class="truncate font-bold"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
