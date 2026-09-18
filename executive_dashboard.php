@@ -1174,12 +1174,15 @@ $pageTitles = [
         <input type="file" id="profileAvatarInput" name="profile_avatar" accept="image/*" onchange="showAvatarPreviewModal(this)">
     </form>
 
+    <!-- ✨ Modal หน้าจอพรีวิว (ดีไซน์จัดวางตำแหน่งรูป เลื่อนได้ ซูมได้ สมูท 100%) ✨ -->
     <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col justify-center items-center bg-[#0f0f0f]/95 sm:bg-[#0f0f0f] transition-opacity duration-300">
-        <div class="hidden sm:flex absolute top-0 left-0 w-full justify-between items-center px-6 md:px-12 lg:px-16 py-5 md:py-6 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-            <button type="button" onclick="cancelAvatarUpload()" class="w-12 h-12 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors pointer-events-auto cursor-pointer">
+        
+        <!-- ✨ เอา pointer-events-none ออกจาก div และเอา pointer-events-auto ออกจาก button เพื่อไม่ให้ปุ่มล่องหนทะลุจอมาโดนคลิก ✨ -->
+        <div class="hidden sm:flex absolute top-0 left-0 w-full justify-between items-center px-6 md:px-12 lg:px-16 py-5 md:py-6 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent">
+            <button type="button" onclick="cancelAvatarUpload()" class="w-12 h-12 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer">
                 <i class="fas fa-chevron-left text-2xl pr-1"></i>
             </button>
-            <h3 class="text-white font-bold text-[16px] md:text-[18px] drop-shadow-md tracking-wide">ตัวอย่างรูปโปรไฟล์</h3>
+            <h3 class="text-white font-bold text-[16px] md:text-[18px] drop-shadow-md tracking-wide pointer-events-none">ตัวอย่างรูปโปรไฟล์</h3>
             <div class="w-12"></div>
         </div>
         <div class="relative w-full max-w-[400px] h-[550px] sm:max-w-none sm:w-full sm:h-full flex flex-col bg-[#0f0f0f] sm:bg-transparent rounded-[40px] sm:rounded-none overflow-hidden shadow-2xl sm:shadow-none mx-4 sm:mx-0">
