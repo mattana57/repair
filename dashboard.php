@@ -1171,11 +1171,12 @@ $dept_icons = [
                                 <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">จัดอันดับ:</span>
                                 <div class="flex flex-wrap items-center gap-1.5" id="topReportersFilterContainer">
                                     <button id="btnFilterTop3" onclick="setTopReportersFilter(3)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 3</button>
-                                    <button id="btnFilterTop5" onclick="setTopReportersFilter(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">Top 5</button>
+                                    <button id="btnFilterTop5" onclick="setTopReportersFilter(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 5</button>
                                     <button id="btnFilterTop10" onclick="setTopReportersFilter(10)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 10</button>
                                 </div>
                             </div>
-                            <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mt-1 sm:mt-0">ทั้งหมด</button>
+                            <!-- ✨ เปลี่ยนปุ่ม 'ทั้งหมด' ให้เป็นสีม่วงเป็นค่าเริ่มต้น ✨ -->
+                            <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mt-1 sm:mt-0">ทั้งหมด</button>
                         </div>
                         <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar max-h-[380px]">
                             <div class="divide-y divide-slate-100" id="topReportersList">
@@ -2595,7 +2596,13 @@ $dept_icons = [
 
         // ✨ เปิดแท็บใหม่แบบมีรหัสลับ: ส่งค่า source ไปด้วย เพื่อสั่งให้แท็บมันปิดตัวเองลงทันที 100% ไม่โหลดหน้าซ้อนทับ ✨
         function openReviewTab(id) {
-            window.open('update_repair.php?id=' + id + '&source=tech_reviews', '_blank');
+            window.open('view_repair.php?id=' + id + '&source=tech_reviews', '_blank');
+        }
+
+        // ✨ ตัวแปรและฟังก์ชันจัดอันดับ Top Reporters ✨
+        let currentTopReportersLimit = 'all'; // ✨ เปลี่ยนค่าเริ่มต้นจาก 5 เป็น 'all'
+        function setTopReportersFilter(limit) {
+            currentTopReportersLimit = limit;
         }
 
         function formatValJS(val) {
