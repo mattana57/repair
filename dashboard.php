@@ -2447,8 +2447,7 @@ $dept_icons = [
                 <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto xl:justify-end">
                     
                     <!-- ช่องค้นหา -->
-                    <!-- ✨ เพิ่ม max-w-[200px] ในมือถือแนวนอน เพื่อให้ปุ่ม Contacts มีที่อยู่ ✨ -->
-                    <div class="relative flex-1 min-w-[150px] max-w-full sm:max-w-[200px] xl:max-w-[256px]">
+                    <div class="relative flex-1 min-w-[150px] xl:w-64">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
@@ -2479,9 +2478,8 @@ $dept_icons = [
                     </div>
 
                     <!-- ปุ่ม Contacts -->
-                    <!-- ✨ เปลี่ยนการซ่อนข้อความจาก md:inline เป็น sm:inline เพื่อให้แนวนอนมือถือ (sm) โชว์ข้อความได้เลย ✨ -->
                     <button id="historyModalLinkBtn" class="h-[42px] text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
-                        <i class="fas fa-address-book sm:mr-1.5"></i> <span class="hidden sm:inline">Contacts</span>
+                        <i class="fas fa-address-book md:mr-1.5"></i> <span class="hidden md:inline">Contacts</span>
                     </button>
 
                     <!-- ปุ่ม ขยาย/ปิด (ซ่อนในจอเล็ก โชว์เฉพาะจอคอม/iPad แนวนอน) -->
