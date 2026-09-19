@@ -2451,7 +2451,7 @@ $dept_icons = [
                     <!-- ✨ เพิ่ม max-w-[200px] เฉพาะหน้าจอ sm (มือถือแนวนอน) เพื่อบีบให้ช่องสั้นลง แล้วปล่อยให้ปุ่ม Contacts มีพื้นที่ขยายตัว ✨ -->
                     <div class="relative flex-1 min-w-[150px] sm:max-w-[200px] md:max-w-none xl:w-64 shrink-0">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูล..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
 
                     <!-- ตัวกรอง (ถ้ามี) -->
