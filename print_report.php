@@ -456,24 +456,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     
     <div class="flex-1 overflow-auto pb-10">
 
-        <!-- ✨ โซนปุ่มเหนือกระดาษ (แสดงปุ่มสลับรายงานเฉพาะ iPad แนวตั้ง) และปุ่ม พิมพ์/โหลด PDF ชิดขวา ✨ -->
-        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex justify-between items-center px-4 xl:px-0">
-            
-            <!-- ✨ ปุ่ม ตาราง/บันทึก (โชว์เฉพาะ iPad แนวตั้ง ซ่อนใน แนวนอน/PC) จัดชิดซ้าย ✨ -->
-            <div class="flex lg:hidden flex-wrap items-center justify-start gap-2.5">
-                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-white text-slate-500 border-transparent shadow-sm hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'; ?>">
-                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
-                </a>
-                
-                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-white text-slate-500 border-transparent shadow-sm hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'; ?>">
-                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
-                </a>
-            </div>
-
-            <!-- ปุ่ม พิมพ์ / โหลด PDF ชิดขวาเสมอ ✨ -->
-            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5 ml-auto">
+        <!-- ✨ ปุ่ม พิมพ์ / โหลด PDF ลอยอยู่ด้านนอกกระดาษ มุมขวาบน เว้นระยะห่างตามรูปที่ 1 เป๊ะๆ ✨ -->
+        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex justify-end px-4 xl:px-0">
+            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5">
                 <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
             </button>
         </div>
