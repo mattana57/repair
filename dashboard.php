@@ -2480,9 +2480,9 @@ $dept_icons = [
                     </div>
 
                     <!-- ปุ่ม Contacts -->
-                    <!-- ✨ เพิ่ม landscape:inline และ landscape:mr-1.5 เพื่อบังคับให้คำว่า Contacts ขึ้นมาในมือถือแนวนอน ✨ -->
+                    <!-- ✨ เพิ่ม id ให้ไอคอนและข้อความ เพื่อให้ JS สั่งโชว์คำว่า Contacts ตอนขยายเต็มจอได้ ✨ -->
                     <button id="historyModalLinkBtn" class="h-[42px] text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
-                        <i class="fas fa-address-book landscape:mr-1.5 md:mr-1.5"></i> <span class="hidden landscape:inline md:inline">Contacts</span>
+                        <i id="historyModalLinkIcon" class="fas fa-address-book landscape:mr-1.5 md:mr-1.5"></i> <span id="historyModalLinkText" class="hidden landscape:inline md:inline">Contacts</span>
                     </button>
 
                     <!-- ปุ่ม ขยาย/ปิด (ซ่อนในจอเล็ก โชว์เฉพาะจอคอม/iPad แนวนอน) -->
@@ -4964,6 +4964,8 @@ $dept_icons = [
                 const iconDesktop = wrapper.querySelector('[id="maximizeHistoryIcon_desktop"]');
                 const iconMobile = wrapper.querySelector('[id="maximizeHistoryIcon"]');
                 const header = modalContainer.querySelector('div:first-child');
+                const linkIcon = wrapper.querySelector('[id="historyModalLinkIcon"]');
+                const linkText = wrapper.querySelector('[id="historyModalLinkText"]');
                 if (modalContainer.classList.contains('w-full')) {
                     wrapper.classList.add('px-4'); wrapper.classList.remove('p-0');
                     modalContainer.classList.add('max-w-[95%]', 'xl:max-w-6xl', 'h-[85vh]', 'max-h-[850px]', 'rounded-3xl');
@@ -4971,6 +4973,9 @@ $dept_icons = [
                     if (header) { header.classList.add('rounded-t-3xl'); header.classList.remove('rounded-none'); }
                     if (iconDesktop) { iconDesktop.classList.add('fa-expand'); iconDesktop.classList.remove('fa-compress'); }
                     if (iconMobile) { iconMobile.classList.add('fa-expand'); iconMobile.classList.remove('fa-compress'); }
+                    // ✨ รีเซ็ตปุ่ม Contacts กลับเป็นไอคอนอย่างเดียวตอนเปิดหน้าใหม่ ✨
+                    if (linkIcon) { linkIcon.classList.remove('portrait:mr-1.5'); }
+                    if (linkText) { linkText.classList.remove('portrait:inline'); }
                 }
             });
             
@@ -4987,6 +4992,10 @@ $dept_icons = [
                 const header = modalContainer.querySelector('div:first-child');
                 const filterGroup = wrapper.querySelector('[id="historyModalFilterGroup"]');
                 
+                // ✨ ดึงไอคอนและข้อความของปุ่ม Contacts ✨
+                const linkIcon = wrapper.querySelector('[id="historyModalLinkIcon"]');
+                const linkText = wrapper.querySelector('[id="historyModalLinkText"]');
+                
                 if (modalContainer.classList.contains('max-w-[95%]')) {
                     // ขยายจอ
                     wrapper.classList.remove('px-4'); wrapper.classList.add('p-0');
@@ -4996,6 +5005,9 @@ $dept_icons = [
                     if (filterGroup) { filterGroup.classList.remove('hidden'); filterGroup.classList.add('flex'); }
                     if (iconDesktop) { iconDesktop.classList.remove('fa-expand'); iconDesktop.classList.add('fa-compress'); }
                     if (iconMobile) { iconMobile.classList.remove('fa-expand'); iconMobile.classList.add('fa-compress'); }
+                    // ✨ แสดงข้อความปุ่ม Contacts เต็มๆ เมื่อขยายจอ (เฉพาะมือถือแนวตั้ง) ✨
+                    if (linkIcon) { linkIcon.classList.add('portrait:mr-1.5'); }
+                    if (linkText) { linkText.classList.add('portrait:inline'); }
                 } else {
                     // ย่อกลับขนาดเดิม
                     wrapper.classList.add('px-4'); wrapper.classList.remove('p-0');
@@ -5018,6 +5030,9 @@ $dept_icons = [
                     }
                     if (iconDesktop) { iconDesktop.classList.add('fa-expand'); iconDesktop.classList.remove('fa-compress'); }
                     if (iconMobile) { iconMobile.classList.add('fa-expand'); iconMobile.classList.remove('fa-compress'); }
+                    // ✨ ซ่อนข้อความปุ่ม Contacts กลับไปเป็นไอคอนอย่างเดียวเมื่อย่อจอ (เฉพาะมือถือแนวตั้ง) ✨
+                    if (linkIcon) { linkIcon.classList.remove('portrait:mr-1.5'); }
+                    if (linkText) { linkText.classList.remove('portrait:inline'); }
                 }
             });
         }
