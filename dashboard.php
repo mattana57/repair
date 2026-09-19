@@ -746,20 +746,6 @@ $dept_icons = [
             box-shadow: inset 0 -1px 0 #fef08a, 0 1px 2px 0 rgba(0,0,0,0.05) !important;
             background-clip: padding-box !important;
         }
-
-        /* ✨ ปรับ Layout ปุ่ม Contacts และช่องค้นหา แนวนอนในมือถือ (Mobile Landscape) ✨ */
-        @media (max-width: 932px) and (max-height: 500px) and (orientation: landscape) {
-            .mobile-landscape-search {
-                flex: none !important;
-                width: 65% !important; /* ย่อความยาวช่องค้นหาลงนิดนึง */
-            }
-            .mobile-landscape-contacts-text {
-                display: inline !important; /* บังคับแสดงข้อความ Contacts */
-            }
-            .mobile-landscape-contacts-icon {
-                margin-right: 0.375rem !important; /* เพิ่มช่องว่างระหว่างไอคอนกับข้อความ */
-            }
-        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -2457,14 +2443,15 @@ $dept_icons = [
                     </div>
                 </div>
 
-               <!-- 🌟 บรรทัดล่าง (iPad แนวตั้ง): ค้นหา + ตัวกรอง + ปุ่ม Contacts + (ปุ่ม ขยาย/ปิด ของจอคอม) -->
-                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto xl:justify-end">
+                <!-- 🌟 บรรทัดล่าง (iPad แนวตั้ง): ค้นหา + ตัวกรอง + ปุ่ม Contacts + (ปุ่ม ขยาย/ปิด ของจอคอม) -->
+                <!-- ✨ เพิ่ม flex-nowrap เฉพาะมือถือแนวนอน (sm:flex-nowrap) เพื่อไม่ให้ปุ่มตกบรรทัด ✨ -->
+                <div class="flex flex-wrap sm:flex-nowrap xl:flex-wrap items-center gap-3 w-full xl:w-auto xl:justify-end">
                     
                     <!-- ช่องค้นหา -->
-                    <!-- ✨ เพิ่มคลาส mobile-landscape-search ✨ -->
-                    <div class="relative flex-1 min-w-[150px] xl:w-64 mobile-landscape-search">
+                    <!-- ✨ เพิ่ม max-w-[200px] เฉพาะหน้าจอ sm (มือถือแนวนอน) เพื่อบีบให้ช่องสั้นลง แล้วปล่อยให้ปุ่ม Contacts มีพื้นที่ขยายตัว ✨ -->
+                    <div class="relative flex-1 min-w-[150px] sm:max-w-[200px] md:max-w-none xl:w-64 shrink-0">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูล..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
 
                     <!-- ตัวกรอง (ถ้ามี) -->
@@ -2493,9 +2480,8 @@ $dept_icons = [
                     </div>
 
                     <!-- ปุ่ม Contacts -->
-                    <!-- ✨ เพิ่มคลาส mobile-landscape-contacts-icon และ mobile-landscape-contacts-text ✨ -->
                     <button id="historyModalLinkBtn" class="h-[42px] text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
-                        <i class="fas fa-address-book md:mr-1.5 mobile-landscape-contacts-icon"></i> <span class="hidden md:inline mobile-landscape-contacts-text">Contacts</span>
+                        <i class="fas fa-address-book md:mr-1.5"></i> <span class="hidden md:inline">Contacts</span>
                     </button>
 
                     <!-- ปุ่ม ขยาย/ปิด (ซ่อนในจอเล็ก โชว์เฉพาะจอคอม/iPad แนวนอน) -->
