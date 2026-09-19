@@ -721,6 +721,23 @@ $dept_icons = [
             background-color: #eef2ff !important;
             color: #4f46e5 !important;
         }
+
+        /* ✨ แก้ไขบั๊กหัวตารางหลุด/เลื่อนเพี้ยนบน iPad & Tablet (Sticky Header Safari Fix) ✨ */
+        #repairsTable thead, #usersTable thead, #assets thead, #historyModal thead {
+            position: static !important;
+            box-shadow: none !important;
+        }
+        #repairsTable thead th, #usersTable thead th, #assets thead th, #historyModal thead th {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 20 !important;
+            background-color: #fef9c3 !important;
+            box-shadow: inset 0 -1px 0 #fef08a, 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+        #repairsTableContainer, #historyModal .overflow-x-auto, #assets .overflow-x-auto, #users .overflow-x-auto {
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x pan-y;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
