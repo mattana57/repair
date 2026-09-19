@@ -320,10 +320,10 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide hidden sm:block">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
-                <!-- ✨ เพิ่ม mt-3 lg:mt-0 เพื่อเว้นระยะห่างบรรทัดค้นหาออกจากบรรทัดบน ตามที่ต้องการใน iPad แนวตั้ง ✨ -->
-                <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5 mt-3 lg:mt-0">
-                    <!-- ✨ บังคับฟอร์มให้กว้าง 100% บน iPad และใช้ flex-nowrap เพื่อให้อยู่บรรทัดเดียวกัน ✨ -->
-                    <form method="GET" action="print_report.php" class="flex flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto overflow-x-auto custom-scrollbar">
+                <!-- ✨ เพิ่ม mt-6 lg:mt-0 เพื่อเว้นระยะห่างบรรทัดค้นหาให้ออกห่างจากบรรทัดบนอีกนิด ✨ -->
+                <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5 mt-6 lg:mt-0">
+                    <!-- ✨ เอา overflow-x-auto ออกเพื่อคืนชีพ Dropdown ข้อมูลช่างให้กลับมา และให้ Search ยืดเต็มที่ ✨ -->
+                    <form method="GET" action="print_report.php" class="flex flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto">
                         <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                         
                         <!-- ✨ ใส่ flex-1 ให้ช่องค้นหายืดเต็มพื้นที่ที่เหลือ ✨ -->
@@ -456,27 +456,24 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
         </div>
     </div>
-
-
-    <!-- ================== ส่วนแสดงผลรายงาน ================== -->
     
     <!-- ================== ส่วนแสดงผลรายงาน ================== -->
     
     <div class="flex-1 overflow-auto pb-10">
 
-        <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ: ซ้ายเป็นตาราง/บันทึก ขวาเป็นพิมพ์ (แสดงเฉพาะ iPad แนวตั้ง) ✨ -->
+        <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ (บรรทัดที่ 3) ซ้ายเป็น ตาราง/บันทึก ขวาเป็น พิมพ์ ✨ -->
         <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex justify-between items-center px-4 xl:px-0">
             
-            <!-- ✨ โชว์ปุ่ม ตาราง/บันทึกข้อความ เฉพาะบน iPad แนวตั้ง ชิดซ้าย ✨ -->
-            <div class="flex lg:hidden flex-wrap items-center justify-start gap-2.5">
+            <!-- ✨ โชว์ปุ่ม ตาราง/บันทึกข้อความ เฉพาะบน iPad แนวตั้ง ชิดซ้าย พร้อม Effect สมูทๆ เวลากด ✨ -->
+            <div class="flex lg:hidden items-center gap-2.5">
                 <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
-                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
+                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
+                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> ตารางรายงาน
                 </a>
                 
                 <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
-                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
+                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'memo' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
+                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> บันทึกข้อความ
                 </a>
             </div>
 
