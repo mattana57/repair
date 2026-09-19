@@ -463,8 +463,8 @@ $pageTitles = [
                     <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row">
                             <div class="flex-1 min-w-0 pr-2">
-                                <h3 class="font-extrabold text-slate-800 text-[18px] md:text-lg truncate">Equipment Analytics</h3>
-                                <p class="text-[13px] md:text-sm font-medium text-slate-400 mt-0.5 truncate">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
+                                <h3 class="font-extrabold text-slate-800 text-lg truncate">Equipment Analytics</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5 truncate">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0">
                                 <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="equip-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Month', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
@@ -609,10 +609,10 @@ $pageTitles = [
                         <div class="mb-4 w-full">
                             <div class="flex justify-between items-start sm:items-center gap-2 w-full flex-col sm:flex-row">
                                 <div class="flex-1 min-w-0 pr-2">
-                                    <h3 class="font-extrabold text-slate-800 text-[18px] md:text-lg truncate">Customer Satisfaction</h3>
-                                    <p class="text-[13px] md:text-sm font-medium text-slate-400 mt-0.5 truncate">คะแนนความพึงพอใจการให้บริการ</p>
+                                    <h3 class="font-extrabold text-slate-800 text-lg truncate">Customer Satisfaction</h3>
+                                    <p class="text-sm font-medium text-slate-400 mt-0.5 truncate">คะแนนความพึงพอใจการให้บริการ</p>
                                     <!-- ✨ แสดงข้อความเฉพาะมือถือ ให้อยู่ใต้หัวข้อทันที ✨ -->
-                                    <p class="sm:hidden text-[12px] text-indigo-500 font-bold mt-2 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
+                                    <p class="sm:hidden text-xs text-indigo-500 font-bold mt-2 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
                                 </div>
                                 <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0 mt-2 sm:mt-0">
                                     <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
@@ -651,8 +651,8 @@ $pageTitles = [
                     <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
                         <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start sm:items-center shrink-0 gap-2 w-full flex-col sm:flex-row">
                             <div class="flex-1 min-w-0 pr-2">
-                                <h3 class="font-extrabold text-slate-800 text-[18px] md:text-lg truncate">Top Reporters</h3>
-                                <p class="text-[13px] md:text-sm font-medium text-slate-400 mt-0.5 truncate">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
+                                <h3 class="font-extrabold text-slate-800 text-lg truncate">Top Reporters</h3>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5 truncate">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</p>
                             </div>
                             <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0 mt-1 sm:mt-0">
                                 <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="reporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Month', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
