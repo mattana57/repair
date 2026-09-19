@@ -320,8 +320,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide hidden sm:block">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
-                <!-- ✨ เพิ่ม mt-5 lg:mt-0 เพื่อเว้นระยะห่างบรรทัดค้นหาออกจากบรรทัดบน ตามที่ต้องการใน iPad แนวตั้ง ✨ -->
-                <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5 mt-5 lg:mt-0">
+                <!-- ✨ เพิ่ม mt-3 lg:mt-0 เพื่อเว้นระยะห่างบรรทัดค้นหาออกจากบรรทัดบน ตามที่ต้องการใน iPad แนวตั้ง ✨ -->
+                <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5 mt-3 lg:mt-0">
                     <!-- ✨ บังคับฟอร์มให้กว้าง 100% บน iPad และใช้ flex-nowrap เพื่อให้อยู่บรรทัดเดียวกัน ✨ -->
                     <form method="GET" action="print_report.php" class="flex flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto overflow-x-auto custom-scrollbar">
                         <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
@@ -440,64 +440,50 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </a>
                 </div>
 
-                <!-- ✨ ดึงลายเซ็นมาอยู่ใน div โดดๆ ซ่อนในหน้าจออื่นๆ โชว์แค่ iPad แนวตั้ง (ลอยคู่กับปุ่มพระจันทร์) ✨ -->
-            <div class="absolute top-1.5 right-11 lg:hidden flex items-center justify-end w-auto pr-1">
-                <label for="toggleSignature" class="flex items-center cursor-pointer">
-                    <span class="mr-2 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ลายเซ็นท้ายเอกสาร</span>
-                    <div class="relative flex items-center">
-                        <input type="checkbox" id="toggleSignature" class="sr-only peer" checked onchange="toggleSignature()">
-                        <div class="w-8 h-4 bg-slate-300 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:bg-indigo-500 transition-colors duration-300 shadow-inner"></div>
-                        <div class="absolute left-[2px] top-[2px] bg-white border border-slate-300 rounded-full h-3 w-3 transition-transform duration-300 peer-checked:translate-x-[16px] peer-checked:border-white shadow-sm"></div>
-                    </div>
-                </label>
-            </div>
-            
-        </div>
-    </div>
-
-
-    <!-- ================== ส่วนแสดงผลรายงาน ================== -->
-    
-    <div class="flex-1 overflow-auto pb-10">
-
-        <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ: ซ้ายเป็นตาราง/บันทึก ขวาเป็นพิมพ์ (แสดงทุกอุปกรณ์) ✨ -->
-        <!-- ✨ เพิ่มระยะห่าง mt-8 (คอมพิวเตอร์/แนวนอน) และ mt-10 (iPad แนวตั้ง) ✨ -->
-        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 lg:mt-10 mb-6 flex justify-between items-center px-4 xl:px-0">
-            
-            <!-- ✨ ปุ่ม ตาราง/บันทึกข้อความ แบบมีกรอบวงรีมนๆ หุ้มตลอดเวลา ✨ -->
-            <div class="flex flex-wrap items-center justify-start gap-2">
-                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 shadow-sm 
-                   <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'; ?>">
-                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-500'; ?>"></i> ตารางรายงาน
-                </a>
-                
-                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 shadow-sm 
-                   <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'; ?>">
-                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-500'; ?>"></i> บันทึกข้อความ
-                </a>
-            </div>
-
-            <div class="flex items-center gap-4 ml-auto">
-                <!-- ✨ โชว์ปุ่มลายเซ็นในคอมพิวเตอร์/แนวนอน ตรงนี้ ✨ -->
-                <div class="hidden lg:flex items-center pr-2 border-r border-slate-300 dark:border-slate-600">
-                    <label for="toggleSignature_desktop" class="flex items-center cursor-pointer">
-                        <span class="mr-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ลายเซ็นท้ายเอกสาร</span>
+                <!-- ✨ ดึงปุ่มลายเซ็นลอยขึ้นไปคู่กับปุ่มพระจันทร์บน iPad แนวตั้ง ✨ -->
+                <div class="absolute top-1.5 right-11 lg:static flex items-center justify-end w-auto pr-1">
+                    <label for="toggleSignature" class="flex items-center cursor-pointer">
+                        <span class="mr-2 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ลายเซ็นท้ายเอกสาร</span>
                         <div class="relative flex items-center">
-                            <!-- ✨ ใช้ id แยกกันป้องกันบั๊กเวลากด ✨ -->
-                            <input type="checkbox" id="toggleSignature_desktop" class="sr-only peer" checked onchange="document.getElementById('toggleSignature').click()">
+                            <input type="checkbox" id="toggleSignature" class="sr-only peer" checked onchange="toggleSignature()">
                             <div class="w-8 h-4 bg-slate-300 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:bg-indigo-500 transition-colors duration-300 shadow-inner"></div>
                             <div class="absolute left-[2px] top-[2px] bg-white border border-slate-300 rounded-full h-3 w-3 transition-transform duration-300 peer-checked:translate-x-[16px] peer-checked:border-white shadow-sm"></div>
                         </div>
                     </label>
                 </div>
 
-                <!-- ✨ ปุ่มพิมพ์ชิดขวาเสมอ ✨ -->
-                <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5">
-                    <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
-                </button>
             </div>
+
+        </div>
+    </div>
+
+
+    <!-- ================== ส่วนแสดงผลรายงาน ================== -->
+    
+    <!-- ================== ส่วนแสดงผลรายงาน ================== -->
+    
+    <div class="flex-1 overflow-auto pb-10">
+
+        <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ: ซ้ายเป็นตาราง/บันทึก ขวาเป็นพิมพ์ (แสดงเฉพาะ iPad แนวตั้ง) ✨ -->
+        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex justify-between items-center px-4 xl:px-0">
+            
+            <!-- ✨ โชว์ปุ่ม ตาราง/บันทึกข้อความ เฉพาะบน iPad แนวตั้ง ชิดซ้าย ✨ -->
+            <div class="flex lg:hidden flex-wrap items-center justify-start gap-2.5">
+                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
+                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
+                </a>
+                
+                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
+                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
+                </a>
+            </div>
+
+            <!-- ✨ ปุ่มพิมพ์ชิดขวาเสมอ ✨ -->
+            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5 ml-auto">
+                <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
+            </button>
         </div>
 
         <?php if ($report_type === 'memo'): ?>
