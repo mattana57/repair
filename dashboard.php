@@ -3777,20 +3777,20 @@ $dept_icons = [
             
             chartEquipInstance = new Chart(ctx, {
                 type: 'line', 
-                // ✨ เพิ่ม Plugin Custom Drawing ให้วาดข้อความแนวตรงในมือถือ ✨
                 plugins: [{
                     id: 'custom_equip_x_labels',
                     afterDraw: (chart) => {
-                        if (window.innerWidth > 1366) return; // ทำงานเฉพาะมือถือ/แท็บเล็ต
+                        if (window.innerWidth > 1366) return; // ทำเฉพาะมือถือและแท็บเล็ต
 
                         const ctx = chart.ctx;
                         const xAxis = chart.scales.x;
                         
                         ctx.save();
-                        ctx.textAlign = 'center'; // วาดให้อยู่ตรงกลางจุดเป๊ะๆ
+                        // ✨ จัดตัวอักษรให้อยู่กึ่งกลางจุดเป๊ะๆ
+                        ctx.textAlign = 'center'; 
                         ctx.textBaseline = 'top';
                         ctx.fillStyle = '#64748b'; 
-                        ctx.font = `bold 10px "Kanit", sans-serif`; // ปรับขนาดฟอนต์ให้พอดี
+                        ctx.font = `bold 11px "Kanit", sans-serif`;
                         
                         const yPos = chart.chartArea.bottom + 10; 
 
@@ -3820,8 +3820,8 @@ $dept_icons = [
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    // ✨ เพิ่ม padding ด้านล่างให้มือถือ เพื่อเว้นที่ให้ตัวหนังสือที่เราวาด ✨
-                    layout: { padding: { left: 10, right: 10, bottom: window.innerWidth <= 1366 ? 20 : 0 } },
+                    // ✨ เผื่อพื้นที่ด้านล่างให้ตัวหนังสือในมือถือ
+                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 25 : 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3831,10 +3831,11 @@ $dept_icons = [
                             border: {display: false} 
                         }, 
                         x: { 
+                            offset: true, // ดันให้จุดเริ่มต้นไม่ติดขอบเกินไป
                             ticks: { 
-                                // ✨ ซ่อนตัวหนังสือเดิมของระบบในมือถือ แล้วให้แสดงปกติในจอคอม ✨
+                                // ✨ ซ่อนตัวอักษรเอียงๆ แบบตั้งต้นในมือถือ
                                 color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
-                                font: { family: "'Kanit', sans-serif", weight: 'bold', size: window.innerWidth <= 1366 ? 10 : 12 },
+                                font: { family: "'Kanit', sans-serif", weight: 'bold', size: 12 },
                                 autoSkip: false,
                                 maxRotation: 0,
                                 minRotation: 0,
