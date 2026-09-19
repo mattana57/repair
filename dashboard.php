@@ -3806,7 +3806,11 @@ $dept_icons = [
                         x: { 
                             ticks: { 
                                 color: '#64748b',
-                                font: { family: "'Kanit', sans-serif", weight: 'bold' } 
+                                /* ✨ ปรับขนาดฟอนต์ในมือถือเป็น 10 เพื่อให้พอดี และบังคับไม่ให้ตัวหนังสือเอียง ✨ */
+                                font: { family: "'Kanit', sans-serif", weight: 'bold', size: window.innerWidth <= 768 ? 10 : 12 },
+                                maxRotation: 0,
+                                minRotation: 0,
+                                autoSkip: false
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
