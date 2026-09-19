@@ -326,8 +326,8 @@ $pageTitles = [
             
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
                 
-                <!-- 📱 สำหรับมือถือแนวตั้ง: แสดงเฉพาะรูปโปรไฟล์วงกลมเดี่ยวๆ -->
-                <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-12 h-12 rounded-full bg-white p-[3px] shadow-sm border border-slate-200/60 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
+                <!-- 📱 สำหรับมือถือแนวตั้ง: แสดงเฉพาะรูปโปรไฟล์วงกลมเดี่ยวๆ มินิมอล ใหญ่ขึ้นนิดนึง -->
+                <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-[54px] h-[54px] rounded-full bg-white p-[3.5px] shadow-sm border border-slate-200/60 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
                     <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full rounded-full object-cover shadow-inner">
                 </div>
 
