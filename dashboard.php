@@ -2426,9 +2426,11 @@ $dept_icons = [
             <div class="px-5 py-4 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300">
                 
                 <!-- 🌟 บรรทัดบน (iPad แนวตั้ง): หัวข้อ + ปุ่ม ขยาย/ปิด -->
-                <div class="flex justify-between items-center w-full xl:w-auto gap-4">
+                <!-- ✨ ปรับ items-center เป็น items-start sm:items-center เพื่อให้ปุ่มอยู่ด้านบนพอดีเวลาตัวหนังสือถูกดันลงบรรทัดใหม่ ✨ -->
+                <div class="flex justify-between items-start sm:items-center w-full xl:w-auto gap-4">
                     <!-- หัวข้อ -->
-                    <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate flex-1" id="historyModalTitle">History</p>
+                    <!-- ✨ เปลี่ยน truncate เป็น sm:truncate เพื่ออนุญาตให้มือถือขึ้นบรรทัดใหม่ได้ ✨ -->
+                    <p class="text-lg md:text-xl font-extrabold text-slate-800 sm:truncate flex-1 leading-tight" id="historyModalTitle">History</p>
                     
                     <!-- ปุ่ม ขยาย/ปิด (ย้ายมาอยู่บรรทัดเดียวกับหัวข้อในจอเล็ก/iPad แนวตั้ง) -->
                     <div class="flex items-center gap-2 shrink-0 xl:hidden">
@@ -4918,7 +4920,9 @@ $dept_icons = [
             
             // ใช้ querySelectorAll ป้องกันบั๊กเวลามี ID ซ้ำ
             document.querySelectorAll('[id="historyModalTitle"]').forEach(el => {
-                el.innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
+                let prefix = type === 'technician' ? 'ประวัติงานช่าง:' : 'ประวัติการแจ้งซ่อม:';
+                // ✨ แทรก <span class="block sm:inline"> เพื่อบังคับให้ชื่อถูกปัดลงบรรทัดใหม่เฉพาะในมือถือแนวตั้ง ✨
+                el.innerHTML = `${prefix} <span class="block sm:inline mt-0.5 sm:mt-0">${displayTitleName}</span>`;
             });
             document.querySelectorAll('[id="searchHistoryModalInput"]').forEach(el => el.value = '');
 
