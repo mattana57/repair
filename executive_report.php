@@ -237,21 +237,27 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
 
     <!-- แถบเมนูควบคุม -->
     <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
-        <div class="max-w-7xl mx-auto flex flex-col gap-4">
+        <!-- ✨ เพิ่ม relative เพื่อใช้ควบคุมตำแหน่ง Absolute บน iPad ✨ -->
+        <div class="max-w-7xl mx-auto flex flex-col gap-4 relative">
             
             <div class="flex flex-col lg:flex-row justify-between items-start md:items-center gap-4">
-                <div class="flex items-center space-x-4 w-full lg:w-auto justify-center lg:justify-start shrink-0">
+                
+                <!-- ✨ ปรับ pr-[50px] lg:pr-0 เพื่อเว้นที่ให้ปุ่มพระจันทร์ด้านขวาบน iPad แนวตั้ง ✨ -->
+                <div class="flex items-center space-x-4 w-full lg:w-auto justify-start shrink-0 pr-[50px] lg:pr-0">
                     <button type="button" onclick="window.close();" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center cursor-pointer">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </button>
-                    <!-- ✨ เปลี่ยนชื่อหัวข้อ ✨ -->
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide hidden sm:block">รายงานสรุปสำหรับผู้บริหาร</h1>
                 </div>
                 
-                <div class="flex flex-wrap items-center justify-center lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5">
-                    <form method="GET" action="executive_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                <!-- ✨ เพิ่ม mt-6 lg:mt-0 เพื่อดันบรรทัดค้นหาให้ห่างจากบรรทัดแรกใน iPad แนวตั้ง ✨ -->
+                <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5 mt-6 lg:mt-0">
+                    <!-- ✨ บังคับฟอร์มให้กว้าง 100% บน iPad และใช้ flex-nowrap เพื่อให้อยู่บรรทัดเดียวกัน ✨ -->
+                    <form method="GET" action="executive_report.php" class="flex flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto">
+                        <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                         
-                        <div class="relative w-full md:w-60" id="techDropdownContainer">
+                        <!-- ✨ ใส่ flex-1 ให้ช่องค้นหายืดเต็มพื้นที่ที่เหลือ ✨ -->
+                        <div class="relative flex-1 min-w-[200px] lg:w-60 lg:flex-none" id="techDropdownContainer">
                             <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
                                 <i class="fas fa-search pl-3 text-slate-400 dark:text-slate-300 opacity-80"></i>
                                 <input type="text" id="techSearchInput" class="w-full bg-transparent px-2 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
@@ -260,13 +266,15 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                                 </button>
                             </div>
                             
-                            <div id="techDropdownList" class="absolute z-50 w-full md:w-72 mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar right-0 md:right-auto md:left-0">
+                            <div id="techDropdownList" class="absolute z-50 w-full lg:w-72 mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar left-0">
+                                
                                 <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer transition-colors flex items-center" data-value="all" data-search="รวมทุกฝ่ายงานทั้งหมด" onmousedown="selectTech('all', 'รวมทุกฝ่ายงาน (ทั้งหมด)')">
                                     <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500 flex items-center justify-center mr-3 text-slate-400 dark:text-slate-300">
                                         <i class="fas fa-globe text-[10px]"></i>
                                     </div>
                                     รวมทุกฝ่ายงาน (ทั้งหมด)
                                 </div>
+                                
                                 <?php 
                                 foreach($grouped_techs as $dept => $techs) {
                                     $tech_count = count($techs);
@@ -295,13 +303,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                         </div>
 
                         <!-- Dropdown เดือนแบบกำหนดเอง -->
-                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
+                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
                                 <span id="monthDisplayText" class="truncate"><?php echo ($selected_month > 0 && isset($thai_months[$selected_month])) ? $thai_months[$selected_month] : 'เดือน'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
-                            <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl hidden flex-col pb-2">
-                                <!-- ✨ เปลี่ยนให้หัวข้อ "เดือน" กดได้เพื่อเคลียร์ค่า (ค้นหาทุกเดือน) ✨ -->
+                            <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl hidden flex-col pb-2 right-0 sm:left-0 sm:right-auto">
                                 <div class='month-dropdown-item flex justify-center items-center px-4 py-2 mb-1 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl cursor-pointer transition-colors <?php echo ($selected_month == 0) ? "bg-indigo-100 dark:bg-slate-600 text-indigo-700 dark:text-indigo-300" : "bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-slate-700"; ?>' data-value='0' data-display='เดือน' onclick="selectMonth(0, 'เดือน')">
                                     <span class='text-[11px] font-extrabold tracking-wide pointer-events-none'>เดือน</span>
                                 </div>
@@ -316,13 +323,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                         </div>
 
                         <!-- Dropdown ปีแบบกำหนดเอง -->
-                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
+                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white text-slate-700 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
                                 <span id="yearDisplayText" class="truncate"><?php echo ($selected_year > 0) ? 'พ.ศ. ' . ($selected_year + 543) : 'ปี (พ.ศ.)'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 ml-2"></i>
                             </div>
-                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar">
-                                <!-- ✨ ทำให้หัวข้อ "ปี (พ.ศ.)" กดได้เพื่อเคลียร์ค่า ✨ -->
+                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar right-0">
                                 <div class='year-dropdown-item flex justify-center items-center px-4 py-2 mb-1 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer transition-colors <?php echo ($selected_year == 0) ? "bg-indigo-100 text-indigo-700" : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"; ?>' data-value='0' data-display='ปี (พ.ศ.)' onclick="selectYear(0, 'ปี (พ.ศ.)')">
                                     <span class='text-[11px] font-extrabold tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                 </div>
@@ -337,34 +343,36 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                             <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
                         </div>
 
-                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-1.5 rounded-full font-extrabold transition-all shadow-sm">
+                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-1.5 rounded-full font-extrabold transition-all shadow-sm shrink-0">
                             ค้นหา
                         </button>
                     </form>
 
-                    <button id="theme-toggle" type="button" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                    <!-- ✨ ดึงปุ่มพระจันทร์ลอยขึ้นไปมุมขวาบนในจอ iPad แนวตั้ง ✨ -->
+                    <button id="theme-toggle" type="button" class="absolute top-0 right-0 lg:static w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
                         <i id="theme-toggle-icon" class="fas fa-moon"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-2 md:mt-0">
+            <!-- ✨ ซ่อนกลุ่มปุ่มตารางและ Export ใน iPad แนวตั้ง (จะไปโชว์ลอยอยู่เหนือกระดาษแทน) ✨ -->
+            <div class="hidden lg:flex flex-col sm:flex-row justify-between items-center gap-4 mt-2 md:mt-0">
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 w-full sm:w-auto">
                     <!-- ✨ สร้างปุ่มล่องหน เพื่อดันปุ่มอื่นๆ ให้ไปตกในตำแหน่งที่ 2 และ 3 ให้ตรงกับฝั่งแอดมินเป๊ะๆ ✨ -->
                     <div class="px-4 py-1.5 border-2 border-transparent opacity-0 pointer-events-none select-none hidden sm:flex items-center">
                         <i class="fas fa-table mr-1.5"></i> ตารางรายงาน
                     </div>
 
-                    <!-- ปุ่ม ตารางรายงาน (ถูกดันมาตำแหน่งที่ 2 แทนที่ "บันทึกข้อความ" ใต้หัวข้อพอดี) -->
+                    <!-- ปุ่ม ตารางรายงาน -->
                     <a href="executive_report.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm">
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm active:scale-95 hover:bg-indigo-100">
                         <i class="fas fa-table mr-1.5 text-indigo-600 dark:text-indigo-200"></i> ตารางรายงาน
                     </a>
                     
-                    <!-- ปุ่ม Export to Excel (ปรับขนาด py-2 ให้เท่ากับตำแหน่ง "พิมพ์ / โหลด PDF" เดิมพอดี) -->
+                    <!-- ปุ่ม Export to Excel (ปรับลดขนาดเป็น px-4 py-1.5 ให้เท่ากัน และเพิ่มเอฟเฟกต์คลิก) -->
                     <a href="export_excel.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                        target="_blank"
-                       class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-5 py-2 rounded-full font-bold shadow-md transition-all flex items-center border border-emerald-600 ml-1">
+                       class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-sm active:scale-95 transition-all duration-200 flex items-center border border-emerald-600 ml-1">
                         <i class="fas fa-file-excel mr-1.5 text-emerald-100"></i> Export to Excel
                     </a>
                 </div>
@@ -377,8 +385,23 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
     <!-- ================== ส่วนแสดงผลรายงาน ================== -->
     
     <div class="flex-1 overflow-auto pb-10">
+
+        <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ (บรรทัดที่ 3) ลอยอยู่บนพื้นเทา ชิดซ้าย (แสดงเฉพาะ iPad แนวตั้ง) ✨ -->
+        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex lg:hidden justify-start px-4 xl:px-0 gap-2.5">
+            <a href="executive_report.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+               class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600">
+                <i class="fas fa-table mr-1.5 text-indigo-700 dark:text-white"></i> ตารางรายงาน
+            </a>
+            
+            <a href="export_excel.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+               target="_blank"
+               class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center shadow-sm active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600">
+                <i class="fas fa-file-excel mr-1.5 text-emerald-100"></i> Export to Excel
+            </a>
+        </div>
+
         <?php
-        $first_page_limit = 14; 
+        $first_page_limit = 14;
         $other_page_limit = 25; 
         $pages = [];
         
