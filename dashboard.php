@@ -928,7 +928,8 @@ $dept_icons = [
             
             <div id="dash" class="section <?php echo $active_tab === 'dash' ? '' : 'hidden'; ?> space-y-6 animate-fade-in no-print">
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- ✨ ปรับ Grid เป็น 2 คอลัมน์ (grid-cols-2) ในมือถือ และเพิ่มความห่างให้สมดุล (gap-3) ✨ -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                     <?php 
                         $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
                         $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
@@ -939,47 +940,49 @@ $dept_icons = [
                         $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
                         $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     ?>
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('all')">
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
-                            <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl"><i class="fas fa-layer-group"></i></div>
-                            <span class="text-xs font-bold text-slate-400">TOTAL</span>
+                    
+                    <!-- ✨ ปรับ p-4 สำหรับมือถือ และคืนค่า p-6 สำหรับ iPad/PC เพื่อไม่ให้การ์ดอึดอัด ✨ -->
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('all')">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg sm:text-xl shrink-0"><i class="fas fa-layer-group"></i></div>
+                            <span class="text-[10px] sm:text-xs font-bold text-slate-400">TOTAL</span>
                         </div>
                         <div>
-                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
-                            <p class="text-sm font-medium text-slate-500 mt-1">Total Repairs</p>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
+                            <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Total Repairs</p>
                         </div>
                     </div>
                     
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('รอรับเรื่อง')">
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
-                            <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-xl"><i class="fas fa-clock"></i></div>
-                            <span class="text-xs font-bold text-slate-400">WAITING</span>
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('รอรับเรื่อง')">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-lg sm:text-xl shrink-0"><i class="fas fa-clock"></i></div>
+                            <span class="text-[10px] sm:text-xs font-bold text-slate-400">WAITING</span>
                         </div>
                         <div>
-                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
-                            <p class="text-sm font-medium text-slate-500 mt-1">Pending</p>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
+                            <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Pending</p>
                         </div>
                     </div>
 
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('กำลังดำเนินการ')">
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
-                            <div class="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-xl"><i class="fas fa-spinner"></i></div>
-                            <span class="text-xs font-bold text-slate-400">ACTIVE</span>
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('กำลังดำเนินการ')">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-lg sm:text-xl shrink-0"><i class="fas fa-spinner"></i></div>
+                            <span class="text-[10px] sm:text-xs font-bold text-slate-400">ACTIVE</span>
                         </div>
                         <div>
-                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
-                            <p class="text-sm font-medium text-slate-500 mt-1">In Progress</p>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
+                            <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">In Progress</p>
                         </div>
                     </div>
 
-                    <div class="modern-card p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-4 gap-4">
-                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl"><i class="fas fa-check-circle"></i></div>
-                            <span class="text-xs font-bold text-slate-400">DONE</span>
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-lg sm:text-xl shrink-0"><i class="fas fa-check-circle"></i></div>
+                            <span class="text-[10px] sm:text-xs font-bold text-slate-400">DONE</span>
                         </div>
                         <div>
-                            <h3 class="text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
-                            <p class="text-sm font-medium text-slate-500 mt-1">Completed</p>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
+                            <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Completed</p>
                         </div>
                     </div>
                 </div>
