@@ -2542,9 +2542,8 @@ $dept_icons = [
                         </div>
                         
                         <!-- ✨ Dropdown สำหรับเลือกดูช่างในฝ่ายงาน ✨ -->
-                        <!-- ✨ ย้าย Dropdown มาทางซ้ายให้ตรงกับดาวเฉพาะบนมือถือ ✨ -->
-                        <div class="mt-3 sm:mt-2.5 -ml-[64px] sm:ml-0">
-                            <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-[calc(100%+64px)] sm:w-max min-w-[200px] max-w-full sm:max-w-[320px] bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm appearance-none">
+                        <div class="mt-2.5">
+                            <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full max-w-[280px] bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm">
                                 <!-- Options จะถูกสร้างผ่าน JS -->
                             </select>
                         </div>
@@ -2558,9 +2557,8 @@ $dept_icons = [
             </div>
 
             <!-- ✨ Filter Sub-header (แบบรูปดาว) ✨ -->
-            <!-- ✨ แก้ไขการจัดวางให้ปุ่ม ทั้งหมด อยู่บรรทัดเดียวกับดาว และ เฉพาะคอมเมนต์ ปัดลงล่างขวา ✨ -->
-            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-row justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-3">
-                <div class="flex items-center gap-2 mt-1 sm:mt-0">
+            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
+                <div class="flex items-center gap-2">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
                     <div id="starFilterContainer" class="flex gap-1.5">
                         <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
@@ -2570,12 +2568,12 @@ $dept_icons = [
                         <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2">
-                    <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="order-1 sm:order-2 px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">
-                        ทั้งหมด
-                    </button>
-                    <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="order-2 sm:order-1 px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mt-2 sm:mt-0">
+                <div class="flex items-center gap-2">
+                    <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
                         เฉพาะคอมเมนต์
+                    </button>
+                    <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">
+                        ทั้งหมด
                     </button>
                 </div>
             </div>
@@ -4383,17 +4381,13 @@ $dept_icons = [
             const btnAll = document.getElementById('btnFilterAllReviews');
             const btnZero = document.getElementById('btnFilterZeroReviews');
             
-            // ✨ เก็บโครงสร้างคลาสหลักไว้เหมือนเดิม ป้องกันโครงสร้างปุ่มพังในมือถือ ✨
-            const baseAllClass = "order-1 sm:order-2 px-4 py-1.5 text-xs font-bold rounded-full transition-colors shadow-sm";
-            const baseZeroClass = "order-2 sm:order-1 px-3 py-1.5 text-xs font-bold rounded-full transition-colors shadow-sm mt-2 sm:mt-0";
-
-            if(btnAll) btnAll.className = baseAllClass + " bg-white text-slate-600 border border-slate-200 hover:bg-slate-50";
-            if(btnZero) btnZero.className = baseZeroClass + " bg-white text-slate-600 border border-slate-200 hover:bg-slate-50";
+            btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
             
             if(val === 'all') {
-                if(btnAll) btnAll.className = baseAllClass + " bg-indigo-600 text-white border border-indigo-600 hover:bg-indigo-700";
+                btnAll.className = "px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
             } else if (val === 0) {
-                if(btnZero) btnZero.className = baseZeroClass + " bg-indigo-600 text-white border border-indigo-600 hover:bg-indigo-700";
+                if(btnZero) btnZero.className = "px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
             }
             
             const stars = document.querySelectorAll('#starFilterContainer i');
@@ -4452,8 +4446,8 @@ $dept_icons = [
             const selector = document.getElementById('modalTechSelector');
             selector.innerHTML = '';
             
-            // ✨ อัปเดต className ให้ตรงกับโครงสร้างใหม่ที่ย้ายมาตรงกับดาว ✨
-            selector.className = "w-[calc(100%+64px)] sm:w-max min-w-[200px] max-w-full sm:max-w-[320px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none";
+            // ปรับขนาดให้เล็กกะทัดรัดเหมือนเดิม (w-max min-w-[200px] max-w-[280px])
+            selector.className = "w-max min-w-[200px] max-w-[320px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
             selector.style.backgroundImage = "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')";
             selector.style.backgroundRepeat = "no-repeat";
             selector.style.backgroundPosition = "right 0.5rem top 50%";
