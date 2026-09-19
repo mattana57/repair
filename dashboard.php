@@ -3777,26 +3777,33 @@ $dept_icons = [
             
             chartEquipInstance = new Chart(ctx, {
                 type: 'line', 
+                // ✨ 1. เพิ่ม Plugins สำหรับวาดตัวหนังสือแกน X ให้ตรงจุดเป๊ะๆ 100% ✨
                 plugins: [{
                     id: 'custom_equip_x_labels',
                     afterDraw: (chart) => {
-                        if (window.innerWidth > 1366) return; // ทำเฉพาะมือถือและแท็บเล็ต
+                        if (window.innerWidth > 1366) return; // ถ้าเป็นคอมพิวเตอร์ให้ใช้ระบบปกติ
 
                         const ctx = chart.ctx;
                         const xAxis = chart.scales.x;
                         
                         ctx.save();
-                        // ✨ จัดตัวอักษรให้อยู่กึ่งกลางจุดเป๊ะๆ
-                        ctx.textAlign = 'center'; 
+                        ctx.textAlign = 'left'; 
                         ctx.textBaseline = 'top';
-                        ctx.fillStyle = '#64748b'; 
+                        ctx.fillStyle = '#64748b'; // สีเทาเหมือนระบบหลัก
                         ctx.font = `bold 11px "Kanit", sans-serif`;
                         
                         const yPos = chart.chartArea.bottom + 10; 
 
+                        const getVisualWidth = (text) => {
+                            const cleanText = text.replace(/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/g, '');
+                            return ctx.measureText(cleanText).width;
+                        };
+
                         chart.data.labels.forEach((label, index) => {
                             const xCenter = xAxis.getPixelForTick(index);
-                            ctx.fillText(label, xCenter, yPos);
+                            const textWidth = getVisualWidth(label);
+                            // วาดข้อความโดยให้กึ่งกลางข้อความอยู่ตรงจุด xCenter พอดี
+                            ctx.fillText(label, xCenter - (textWidth / 2), yPos);
                         });
                         ctx.restore();
                     }
@@ -3818,28 +3825,22 @@ $dept_icons = [
                     }]
                 },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    // ✨ เผื่อพื้นที่ด้านล่างให้ตัวหนังสือในมือถือ
-                    layout: { padding: { left: 5, right: 5, bottom: window.innerWidth <= 1366 ? 25 : 0 } },
-                    plugins: { legend: { display: false } }, 
+                    responsive: true, maintainAspectRatio: false, 
+                    layout: { padding: { bottom: 0 } }, // ✨ เอา Padding Bottom ออกเพื่อให้กราฟสูงเต็ม 280px ✨
+                    plugins: { legend: { display: false } },
                     scales: { 
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, 
-                            grid: { color: '#f8fafc' }, 
-                            border: {display: false} 
-                        }, 
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: "'Plus Jakarta Sans', 'Kanit', sans-serif" } }, grid: { color: '#f8fafc' }, border: {display: false} }, 
                         x: { 
-                            offset: true, // ดันให้จุดเริ่มต้นไม่ติดขอบเกินไป
+                            // ✨ 2. บังคับให้แกน X จุดตรงกลางเสมอ และซ่อนข้อความออริจินัลบนไอแพด ✨
+                            offset: false, 
                             ticks: { 
-                                // ✨ ซ่อนตัวอักษรเอียงๆ แบบตั้งต้นในมือถือ
                                 color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
-                                font: { family: "'Kanit', sans-serif", weight: 'bold', size: 12 },
-                                autoSkip: false,
-                                maxRotation: 0,
+                                font: { family: "'Kanit', sans-serif", size: window.innerWidth <= 1366 ? 11 : 12, weight: 'bold' }, 
+                                autoSkip: false, 
+                                maxRotation: 0, 
                                 minRotation: 0,
-                                padding: window.innerWidth <= 1366 ? 0 : 8
+                                align: 'center',      
+                                crossAlign: 'center'
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
