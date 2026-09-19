@@ -2542,7 +2542,8 @@ $dept_icons = [
                         </div>
                         
                         <!-- ✨ Dropdown สำหรับเลือกดูช่างในฝ่ายงาน ✨ -->
-                        <div class="mt-2.5">
+                        <!-- ✨ ดึง Dropdown ไปทางซ้ายในมือถือ และบังคับให้กว้างพอดีจอ (ไม่กระทบ iPad/PC) ✨ -->
+                        <div class="mt-3.5 -ml-[64px] sm:ml-0 w-[calc(100%+64px)] sm:w-auto [&>select]:!w-full sm:[&>select]:!w-max">
                             <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full max-w-[280px] bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm">
                                 <!-- Options จะถูกสร้างผ่าน JS -->
                             </select>
@@ -2557,10 +2558,11 @@ $dept_icons = [
             </div>
 
             <!-- ✨ Filter Sub-header (แบบรูปดาว) ✨ -->
-            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
-                    <div id="starFilterContainer" class="flex gap-1.5">
+            <!-- ✨ ปรับโครงสร้าง flex ในมือถือ ให้ปุ่มทั้งหมดเด้งไปอยู่บรรทัดบนสุดชิดขวา ✨ -->
+            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-2 sm:gap-3">
+                <div class="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-0 shrink-0">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-0.5 sm:mr-1">ระดับคะแนน:</span>
+                    <div id="starFilterContainer" class="flex gap-1 sm:gap-1.5">
                         <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
                         <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(2)" title="2 ดาว"></i>
                         <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(3)" title="3 ดาว"></i>
@@ -2568,7 +2570,8 @@ $dept_icons = [
                         <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <!-- ✨ ใช้ flex-col-reverse ในมือถือดัน "ทั้งหมด" ขึ้นบรรทัดบนสุดชิดขวา ✨ -->
+                <div class="flex flex-col-reverse sm:flex-row items-end sm:items-center gap-2 shrink-0">
                     <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
                         เฉพาะคอมเมนต์
                     </button>
