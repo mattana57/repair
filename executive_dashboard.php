@@ -611,11 +611,13 @@ $pageTitles = [
                                 <div class="flex-1 min-w-0 pr-2">
                                     <h3 class="font-extrabold text-slate-800 text-[15px] sm:text-base md:text-lg truncate">Customer Satisfaction</h3>
                                     <p class="text-[11px] sm:text-xs md:text-sm font-medium text-slate-400 mt-0.5 truncate">คะแนนความพึงพอใจการให้บริการ</p>
+                                    <!-- ✨ แสดงข้อความเฉพาะมือถือ ให้อยู่ใต้หัวข้อทันที ✨ -->
+                                    <p class="sm:hidden text-[10px] text-indigo-500 font-bold mt-2 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
                                 </div>
-                                <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0 mt-1 sm:mt-0">
+                                <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0 mt-2 sm:mt-0">
                                     <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
                                         <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Month')">
-                                            <span id="rating-MonthText" class="truncate font-bold"><?php echo $current_month_name; ?></span>
+                                            <span id="rating-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                             <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                         </div>
                                         <div id="rating-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
@@ -623,9 +625,9 @@ $pageTitles = [
                                         </div>
                                         <input type="hidden" id="ratingMonth" value="all">
                                     </div>
-                                    <div class="relative w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="rating-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Year', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="rating-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Year', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
                                         <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Year')">
-                                            <span id="rating-YearText" class="truncate font-bold"><?php echo $current_thai_year; ?></span>
+                                            <span id="rating-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                             <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                         </div>
                                         <div id="rating-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
@@ -635,8 +637,8 @@ $pageTitles = [
                                     </div>
                                 </div>
                             </div>
-                            <!-- ✨ ย้ายบรรทัดคลิกกราฟออกมานอกกรอบ Flex เพื่อไม่ให้มันไปดันระดับของ Dropdown ให้ตกลงมา ✨ -->
-                            <p class="text-[10px] sm:text-[11px] md:text-[12px] text-indigo-500 font-bold mt-1 sm:mt-0.5 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
+                            <!-- ✨ แสดงข้อความนี้เฉพาะบน iPad/PC (ซ่อนในมือถือ) ✨ -->
+                            <p class="hidden sm:block text-[11px] md:text-[12px] text-indigo-500 font-bold mt-0.5 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
                         </div>
                         <div class="flex items-center w-full mt-2 flex-1">
                             <div class="relative w-full h-[380px]">
