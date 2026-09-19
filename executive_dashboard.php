@@ -322,7 +322,8 @@ $pageTitles = [
                     <i class="fas fa-bars text-[26px]"></i>
                 </button>
                 <h3 class="text-[18px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate select-none pointer-events-none" id="headerTitle"><?php echo $currentTitle; ?></h3>
-
+            </div>
+            
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
                 
                 <!-- 📱 สำหรับมือถือแนวตั้ง: แสดงเฉพาะรูปโปรไฟล์วงกลมเดี่ยวๆ -->
