@@ -2480,9 +2480,9 @@ $dept_icons = [
                     </div>
 
                     <!-- ปุ่ม Contacts -->
-                    <!-- ✨ เพิ่ม landscape:inline และ landscape:mr-1.5 เพื่อบังคับให้คำว่า Contacts ขึ้นมาในมือถือแนวนอน ✨ -->
+                    <!-- ✨ แสดงปุ่ม Contacts แบบเต็มคำในมือถือแนวตั้ง (ปลดคลาส hidden ออก) ✨ -->
                     <button id="historyModalLinkBtn" class="h-[42px] text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
-                        <i class="fas fa-address-book landscape:mr-1.5 md:mr-1.5"></i> <span class="hidden landscape:inline md:inline">Contacts</span>
+                        <i class="fas fa-address-book mr-1.5"></i> <span>Contacts</span>
                     </button>
 
                     <!-- ปุ่ม ขยาย/ปิด (ซ่อนในจอเล็ก โชว์เฉพาะจอคอม/iPad แนวนอน) -->
