@@ -320,7 +320,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide hidden sm:block">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
-                <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5">
+                <!-- ✨ เพิ่ม mt-3 lg:mt-0 เพื่อเว้นระยะห่างบรรทัดค้นหาออกจากบรรทัดบน ตามที่ต้องการใน iPad แนวตั้ง ✨ -->
+                <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5 mt-3 lg:mt-0">
                     <!-- ✨ บังคับฟอร์มให้กว้าง 100% บน iPad และใช้ flex-nowrap เพื่อให้อยู่บรรทัดเดียวกัน ✨ -->
                     <form method="GET" action="print_report.php" class="flex flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto overflow-x-auto custom-scrollbar">
                         <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
@@ -426,7 +427,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1 lg:mt-0">
                 
-                <div class="flex flex-wrap items-center justify-start gap-2.5 w-full sm:w-auto">
+                <!-- ✨ ซ่อนปุ่ม ตาราง/บันทึกข้อความ ใน iPad แนวตั้ง (จะไปโชว์รวมกับปุ่มพิมพ์ด้านล่างแทน) ✨ -->
+                <div class="hidden lg:flex flex-wrap items-center justify-start gap-2.5 w-full sm:w-auto">
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                        class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
                         <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
@@ -458,11 +460,28 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
     <!-- ================== ส่วนแสดงผลรายงาน ================== -->
     
+    <!-- ================== ส่วนแสดงผลรายงาน ================== -->
+    
     <div class="flex-1 overflow-auto pb-10">
 
-        <!-- ✨ ปุ่ม พิมพ์ / โหลด PDF ลอยอยู่ด้านนอกกระดาษ มุมขวาบน เว้นระยะห่างตามรูปที่ 1 เป๊ะๆ ✨ -->
-        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex justify-end px-4 xl:px-0">
-            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5">
+        <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ: ซ้ายเป็นตาราง/บันทึก ขวาเป็นพิมพ์ (แสดงเฉพาะ iPad แนวตั้ง) ✨ -->
+        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex justify-between items-center px-4 xl:px-0">
+            
+            <!-- ✨ โชว์ปุ่ม ตาราง/บันทึกข้อความ เฉพาะบน iPad แนวตั้ง ชิดซ้าย ✨ -->
+            <div class="flex lg:hidden flex-wrap items-center justify-start gap-2.5">
+                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
+                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
+                </a>
+                
+                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
+                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
+                </a>
+            </div>
+
+            <!-- ✨ ปุ่มพิมพ์ชิดขวาเสมอ ✨ -->
+            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5 ml-auto">
                 <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
             </button>
         </div>
