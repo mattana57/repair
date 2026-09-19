@@ -2542,9 +2542,9 @@ $dept_icons = [
                         </div>
                         
                         <!-- ✨ Dropdown สำหรับเลือกดูช่างในฝ่ายงาน ✨ -->
-                        <!-- ✨ เพิ่ม w-full sm:w-max และปรับ margin เพื่อดึง Dropdown มาชิดซ้ายตรงกับดาวดวงใหญ่เฉพาะในมือถือ ✨ -->
-                        <div class="mt-2.5 -ml-[56px] sm:ml-0">
-                            <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full sm:w-max min-w-[220px] max-w-[320px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1">
+                        <div class="mt-2.5">
+                            <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full max-w-[280px] bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm">
+                                <!-- Options จะถูกสร้างผ่าน JS -->
                             </select>
                         </div>
                     </div>
@@ -2557,24 +2557,21 @@ $dept_icons = [
             </div>
 
             <!-- ✨ Filter Sub-header (แบบรูปดาว) ✨ -->
-            <!-- ✨ จัดโครงสร้างใหม่ให้ปุ่ม 'ทั้งหมด' ขึ้นไปอยู่บรรทัดเดียวกับ 'ระดับคะแนน' ชิดขวา และ 'เฉพาะคอมเมนต์' อยู่ใต้ชิดขวา ✨ -->
-            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-3">
-                <div class="flex items-center justify-between w-full sm:w-auto gap-2">
+            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center shrink-0 z-10 shadow-sm gap-3">
+                <div class="flex items-center gap-2">
                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">ระดับคะแนน:</span>
                     <div id="starFilterContainer" class="flex gap-1.5">
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base sm:text-lg hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base sm:text-lg hover:text-amber-200" onclick="setReviewFilter(2)" title="2 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base sm:text-lg hover:text-amber-200" onclick="setReviewFilter(3)" title="3 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base sm:text-lg hover:text-amber-200" onclick="setReviewFilter(4)" title="4 ดาว"></i>
-                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-base sm:text-lg hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(1)" title="1 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(2)" title="2 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(3)" title="3 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(4)" title="4 ดาว"></i>
+                        <i class="fas fa-star cursor-pointer text-slate-200 hover:scale-125 transition-all text-lg hover:text-amber-200" onclick="setReviewFilter(5)" title="5 ดาว"></i>
                     </div>
                 </div>
-                <div class="flex flex-row sm:flex-row items-end sm:items-center justify-end w-full sm:w-auto gap-2">
-                    <!-- ปุ่มเฉพาะคอมเมนต์ (จะถูกจัดให้อยู่ขวาสุด/ใต้ปุ่มทั้งหมดในมือถือแนวตั้ง) -->
+                <div class="flex items-center gap-2">
                     <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
                         เฉพาะคอมเมนต์
                     </button>
-                    <!-- ปุ่มทั้งหมด -->
                     <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">
                         ทั้งหมด
                     </button>
