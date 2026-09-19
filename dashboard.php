@@ -722,22 +722,34 @@ $dept_icons = [
             color: #4f46e5 !important;
         }
 
-        /* ✨ สไตล์แก้บั๊กเลื่อนตารางบน iPad สมูท 100% ✨ */
-        /* ให้ตารางแสดงผลตามปกติ และบังคับให้ Safari ล็อกตำแหน่งให้ถูกต้อง */
-        .table-wrapper-fix {
-            -webkit-overflow-scrolling: touch;
-            /* เพิ่มเงาบางๆ ด้านขวาเวลาตารางมีข้อมูลล้น */
-            background: linear-gradient(to right, white 30%, rgba(255,255,255,0)), linear-gradient(to right, rgba(255,255,255,0), white 70%) 100% 0, radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.1), rgba(0,0,0,0)), radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.1), rgba(0,0,0,0)) 100% 0;
-            background-repeat: no-repeat;
-            background-color: white;
-            background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
-            background-attachment: local, local, scroll, scroll;
+        /* 🚨 แก้ไขเด็ดขาด: บั๊กหัวตาราง Safari (iPad/iPhone) ขาดหายและไม่เลื่อนตาม 🚨 */
+        .overflow-x-auto table {
+            border-collapse: separate !important; /* ✨ หัวใจสำคัญ: Safari จะเอ๋อถ้าใช้ collapse คู่กับ sticky */
+            border-spacing: 0 !important;
         }
-        .table-wrapper-fix thead th {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            background-clip: padding-box; /* สำคัญ: ป้องกันเส้นขอบทะลุใน Safari */
+        .overflow-x-auto thead,
+        .overflow-x-auto thead.sticky {
+            position: static !important; /* ปลดล็อก thead เด็ดขาด ให้มันยืดเต็มความกว้างตาราง */
+            transform: none !important;
+            box-shadow: none !important; /* ลบเงาที่ทำให้เกิดเส้นซ้อน */
+        }
+        .overflow-x-auto thead th {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 30 !important;
+            background-color: #fef9c3 !important; /* บังคับถมสีเหลืองให้เต็มแต่ละช่องแบบอิสระ */
+            border-bottom: 1px solid #fef08a !important; /* ตีเส้นขอบล่างให้แต่ละช่องแบบอิสระ */
+            background-clip: padding-box !important; /* ป้องกันสีและขอบซ้อนกันแบบโปร่งใส */
+        }
+        /* ซ่อมเส้นขอบระหว่างแถว (Row Border) ให้ Safari มองเห็นชัดเจนหลังจากแยก collapse */
+        .overflow-x-auto tbody tr td {
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+        .overflow-x-auto tbody tr:last-child td {
+            border-bottom: none !important;
+        }
+        .overflow-x-auto {
+            -webkit-overflow-scrolling: touch;
         }
     </style>
 </head>
