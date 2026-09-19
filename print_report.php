@@ -307,22 +307,26 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
     <!-- แถบเมนูควบคุม -->
     <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
-        <div class="max-w-7xl mx-auto flex flex-col gap-4">
+        <!-- ✨ เพิ่ม relative เพื่อใช้ควบคุมตำแหน่ง Absolute บน iPad ✨ -->
+        <div class="max-w-7xl mx-auto flex flex-col gap-4 relative">
             
             <div class="flex flex-col lg:flex-row justify-between items-start md:items-center gap-4">
                 
-                <div class="flex items-center space-x-4 w-full lg:w-auto justify-center lg:justify-start shrink-0">
+                <!-- ✨ ปรับ pr-[150px] lg:pr-0 เพื่อเว้นที่ให้ปุ่มด้านขวาบน iPad แนวตั้ง ✨ -->
+                <div class="flex items-center space-x-4 w-full lg:w-auto justify-start shrink-0 pr-[150px] lg:pr-0">
                     <button type="button" onclick="window.close();" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center cursor-pointer">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </button>
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide hidden sm:block">ระบบพิมพ์เอกสารรายงาน</h1>
                 </div>
                 
-                <div class="flex flex-wrap items-center justify-center lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5">
-                    <form method="GET" action="print_report.php" class="flex flex-wrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5">
+                    <!-- ✨ บังคับฟอร์มให้กว้าง 100% บน iPad และใช้ flex-nowrap เพื่อให้อยู่บรรทัดเดียวกัน ✨ -->
+                    <form method="GET" action="print_report.php" class="flex flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto overflow-x-auto custom-scrollbar">
                         <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                         
-                        <div class="relative w-full md:w-60" id="techDropdownContainer">
+                        <!-- ✨ ใส่ flex-1 ให้ช่องค้นหายืดเต็มพื้นที่ที่เหลือ ✨ -->
+                        <div class="relative flex-1 min-w-[200px] lg:w-60 lg:flex-none" id="techDropdownContainer">
                             <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
                                 <i class="fas fa-search pl-3 text-slate-400 dark:text-slate-300 opacity-80"></i>
                                 <input type="text" id="techSearchInput" class="w-full bg-transparent px-2 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
@@ -331,7 +335,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                                 </button>
                             </div>
                             
-                            <div id="techDropdownList" class="absolute z-50 w-full md:w-72 mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar right-0 md:right-auto md:left-0">
+                            <div id="techDropdownList" class="absolute z-50 w-full lg:w-72 mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar left-0">
                                 
                                 <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 cursor-pointer transition-colors flex items-center" data-value="all" data-search="รวมทุกฝ่ายงานทั้งหมด" onmousedown="selectTech('all', 'รวมทุกฝ่ายงาน (ทั้งหมด)')">
                                     <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500 flex items-center justify-center mr-3 text-slate-400 dark:text-slate-300">
@@ -368,13 +372,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         </div>
 
                         <!-- Dropdown เดือนแบบกำหนดเอง -->
-                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
+                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
                                 <span id="monthDisplayText" class="truncate"><?php echo ($selected_month > 0 && isset($thai_months[$selected_month])) ? $thai_months[$selected_month] : 'เดือน'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
-                            <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl hidden flex-col pb-2">
-                                <!-- ✨ เปลี่ยนให้หัวข้อ "เดือน" กดได้เพื่อเคลียร์ค่า (ค้นหาทุกเดือน) ✨ -->
+                            <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl hidden flex-col pb-2 right-0 sm:left-0 sm:right-auto">
                                 <div class='month-dropdown-item flex justify-center items-center px-4 py-2 mb-1 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl cursor-pointer transition-colors <?php echo ($selected_month == 0) ? "bg-indigo-100 dark:bg-slate-600 text-indigo-700 dark:text-indigo-300" : "bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-slate-700"; ?>' data-value='0' data-display='เดือน' onclick="selectMonth(0, 'เดือน')">
                                     <span class='text-[11px] font-extrabold tracking-wide pointer-events-none'>เดือน</span>
                                 </div>
@@ -389,13 +392,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         </div>
 
                         <!-- Dropdown ปีแบบกำหนดเอง -->
-                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
+                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
                                 <span id="yearDisplayText" class="truncate"><?php echo ($selected_year > 0) ? 'พ.ศ. ' . ($selected_year + 543) : 'ปี (พ.ศ.)'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
-                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar">
-                                <!-- ✨ ทำให้หัวข้อ "ปี (พ.ศ.)" กดได้เพื่อเคลียร์ค่า ✨ -->
+                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar right-0">
                                 <div class='year-dropdown-item flex justify-center items-center px-4 py-2 mb-1 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl cursor-pointer transition-colors <?php echo ($selected_year == 0) ? "bg-indigo-100 dark:bg-slate-600 text-indigo-700 dark:text-indigo-300" : "bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-slate-700"; ?>' data-value='0' data-display='ปี (พ.ศ.)' onclick="selectYear(0, 'ปี (พ.ศ.)')">
                                     <span class='text-[11px] font-extrabold tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                 </div>
@@ -410,20 +412,21 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
                         </div>
 
-                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-1.5 rounded-full font-extrabold transition-all shadow-sm">
+                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-1.5 rounded-full font-extrabold transition-all shadow-sm shrink-0">
                             ค้นหา
                         </button>
                     </form>
 
-                    <button id="theme-toggle" type="button" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+                    <!-- ✨ ดึงปุ่มพระจันทร์ลอยขึ้นไปมุมขวาบนในจอ iPad แนวตั้ง ✨ -->
+                    <button id="theme-toggle" type="button" class="absolute top-0 right-0 lg:static w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
                         <i id="theme-toggle-icon" class="fas fa-moon"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-2 md:mt-0">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1 lg:mt-0">
                 
-                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 w-full sm:w-auto">
+                <div class="flex flex-wrap items-center justify-start gap-2.5 w-full sm:w-auto">
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                        class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
                         <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
@@ -435,13 +438,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </a>
                 </div>
 
-                <div class="flex items-center justify-center sm:justify-end w-full sm:w-auto pr-1">
+                <!-- ✨ ดึงปุ่มลายเซ็นลอยขึ้นไปคู่กับปุ่มพระจันทร์บน iPad แนวตั้ง ✨ -->
+                <div class="absolute top-1.5 right-11 lg:static flex items-center justify-end w-auto pr-1">
                     <label for="toggleSignature" class="flex items-center cursor-pointer">
-                        <span class="mr-3 text-[12px] font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ลายเซ็นท้ายเอกสาร</span>
+                        <span class="mr-2 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ลายเซ็นท้ายเอกสาร</span>
                         <div class="relative flex items-center">
                             <input type="checkbox" id="toggleSignature" class="sr-only peer" checked onchange="toggleSignature()">
-                            <div class="w-9 h-5 bg-slate-300 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:bg-indigo-500 transition-colors duration-300 shadow-inner"></div>
-                            <div class="absolute left-[2px] top-[2px] bg-white border border-slate-300 rounded-full h-4 w-4 transition-transform duration-300 peer-checked:translate-x-[16px] peer-checked:border-white shadow-sm"></div>
+                            <div class="w-8 h-4 bg-slate-300 dark:bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:bg-indigo-500 transition-colors duration-300 shadow-inner"></div>
+                            <div class="absolute left-[2px] top-[2px] bg-white border border-slate-300 rounded-full h-3 w-3 transition-transform duration-300 peer-checked:translate-x-[16px] peer-checked:border-white shadow-sm"></div>
                         </div>
                     </label>
                 </div>
