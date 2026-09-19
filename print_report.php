@@ -453,16 +453,16 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ: ซ้ายเป็นตาราง/บันทึก ขวาเป็นพิมพ์ (แสดงเฉพาะ iPad แนวตั้ง) ✨ -->
         <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex justify-between items-center px-4 xl:px-0">
             
-            <!-- ✨ โชว์ปุ่ม ตาราง/บันทึกข้อความ เฉพาะบน iPad แนวตั้ง ชิดซ้าย พร้อม Effect เวลากด ✨ -->
+            <!-- ✨ โชว์ปุ่ม ตาราง/บันทึกข้อความ เฉพาะบน iPad แนวตั้ง ชิดซ้าย ✨ -->
             <div class="flex lg:hidden flex-wrap items-center justify-start gap-2.5">
                 <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                   class="px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
-                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> ตารางรายงาน
+                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'table' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
+                    <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> ตารางรายงาน
                 </a>
                 
                 <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                   class="px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'memo' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
-                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> บันทึกข้อความ
+                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center border-2 <?php echo $report_type === 'memo' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-600'; ?>">
+                    <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-600 dark:text-indigo-200' : 'text-slate-400 dark:text-slate-400'; ?>"></i> บันทึกข้อความ
                 </a>
             </div>
 
