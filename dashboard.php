@@ -722,21 +722,22 @@ $dept_icons = [
             color: #4f46e5 !important;
         }
 
-        /* ✨ แก้ไขบั๊กหัวตารางหลุด/เลื่อนเพี้ยนบน iPad & Tablet (Sticky Header Safari Fix) ✨ */
-        #repairsTable thead, #usersTable thead, #assets thead, #historyModal thead {
-            position: static !important;
-            box-shadow: none !important;
-        }
-        #repairsTable thead th, #usersTable thead th, #assets thead th, #historyModal thead th {
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 20 !important;
-            background-color: #fef9c3 !important;
-            box-shadow: inset 0 -1px 0 #fef08a, 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-        }
-        #repairsTableContainer, #historyModal .overflow-x-auto, #assets .overflow-x-auto, #users .overflow-x-auto {
+        /* ✨ สไตล์แก้บั๊กเลื่อนตารางบน iPad สมูท 100% ✨ */
+        /* ให้ตารางแสดงผลตามปกติ และบังคับให้ Safari ล็อกตำแหน่งให้ถูกต้อง */
+        .table-wrapper-fix {
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-x pan-y;
+            /* เพิ่มเงาบางๆ ด้านขวาเวลาตารางมีข้อมูลล้น */
+            background: linear-gradient(to right, white 30%, rgba(255,255,255,0)), linear-gradient(to right, rgba(255,255,255,0), white 70%) 100% 0, radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.1), rgba(0,0,0,0)), radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.1), rgba(0,0,0,0)) 100% 0;
+            background-repeat: no-repeat;
+            background-color: white;
+            background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+            background-attachment: local, local, scroll, scroll;
+        }
+        .table-wrapper-fix thead th {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background-clip: padding-box; /* สำคัญ: ป้องกันเส้นขอบทะลุใน Safari */
         }
     </style>
 </head>
@@ -1220,7 +1221,7 @@ $dept_icons = [
                                 See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
                             </button>
                         </div>
-                        <div class="overflow-x-auto pb-4 custom-scrollbar">
+                        <div class="overflow-x-auto pb-4 custom-scrollbar table-wrapper-fix">
                             <table class="w-full text-left whitespace-nowrap">
                                 <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
                                     <tr>
@@ -1353,7 +1354,7 @@ $dept_icons = [
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1" id="repairsTableContainer">
+                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1 table-wrapper-fix" id="repairsTableContainer">
                         <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
@@ -1509,7 +1510,7 @@ $dept_icons = [
                     <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Administrators</h3>
                     <p class="text-sm font-medium text-slate-500 mt-1 mb-5">Manage administrators</p>
                     <div class="modern-card overflow-hidden">
-                        <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
+                        <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
                             <table class="w-full text-left whitespace-nowrap min-w-[700px]">
                                 <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
                                     <tr>
@@ -1954,7 +1955,7 @@ $dept_icons = [
                         </div>
                         <button onclick="openAddAssetModal()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Asset</button>
                     </div>
-                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
+                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
                         <table class="w-full text-left whitespace-nowrap min-w-[600px]">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
@@ -2011,7 +2012,7 @@ $dept_icons = [
                             <input type="text" id="searchHistoryInput" oninput="searchHistoryTable()" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full md:w-64 bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium">
                         </div>
                     </div>
-                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar">
+                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
                         <table class="w-full text-left whitespace-nowrap min-w-[700px]" id="usersTable">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
