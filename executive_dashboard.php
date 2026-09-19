@@ -677,19 +677,19 @@ $pageTitles = [
                                 </div>
                             </div>
                         </div>
-                        <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center shrink-0 z-10 shadow-sm w-full">
-                            <div class="flex flex-wrap items-center gap-2 w-full">
-                                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1 shrink-0">จัดอันดับ:</span>
-                                <div class="flex flex-wrap items-center gap-1.5 flex-1" id="topReportersFilterContainer">
-                                    <button id="btnFilterTop3" onclick="setTopReportersFilter(3)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 3</button>
-                                    <button id="btnFilterTop5" onclick="setTopReportersFilter(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 5</button>
-                                    <button id="btnFilterTop10" onclick="setTopReportersFilter(10)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 10</button>
-                                    
-                                    <div class="sm:ml-auto flex items-center">
-                                        <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">ทั้งหมด</button>
+                        <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row flex-wrap sm:justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-3">
+                            <div class="flex flex-wrap items-center justify-between sm:justify-start w-full sm:w-auto gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">จัดอันดับ:</span>
+                                    <div class="flex flex-wrap items-center gap-1.5" id="topReportersFilterContainer">
+                                        <button id="btnFilterTop3" onclick="setTopReportersFilter(3)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 3</button>
+                                        <button id="btnFilterTop5" onclick="setTopReportersFilter(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 5</button>
+                                        <button id="btnFilterTop10" onclick="setTopReportersFilter(10)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 10</button>
+                                        <button id="btnFilterTopAll_mobile" onclick="setTopReportersFilter('all')" class="sm:hidden px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">ทั้งหมด</button>
                                     </div>
                                 </div>
                             </div>
+                            <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="hidden sm:block px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mt-1 sm:mt-0">ทั้งหมด</button>
                         </div>
                         <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar max-h-[380px]">
                             <div class="divide-y divide-slate-100" id="topReportersList"></div>
@@ -2794,24 +2794,32 @@ $pageTitles = [
         let currentTopReportersLimit = 'all'; // ✨ เปลี่ยนเป็น 'all' เพื่อให้ค่าเริ่มต้นคือ ทั้งหมด ✨
         function setTopReportersFilter(limit) {
             currentTopReportersLimit = limit;
+            
             const btn3 = document.getElementById('btnFilterTop3');
             const btn5 = document.getElementById('btnFilterTop5');
             const btn10 = document.getElementById('btnFilterTop10');
             const btnAll = document.getElementById('btnFilterTopAll');
+            const btnAllMobile = document.getElementById('btnFilterTopAll_mobile');
+            
             const activeClass = "px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
             const inactiveClass = "px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
-            const activeAllClass = "px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700";
-            const inactiveAllClass = "px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm";
+            const activeAllClass = "hidden sm:block px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mt-1 sm:mt-0";
+            const inactiveAllClass = "hidden sm:block px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mt-1 sm:mt-0";
             
             if(btn3) btn3.className = inactiveClass;
             if(btn5) btn5.className = inactiveClass;
             if(btn10) btn10.className = inactiveClass;
             if(btnAll) btnAll.className = inactiveAllClass;
+            if(btnAllMobile) btnAllMobile.className = "sm:hidden " + inactiveClass;
             
             if (limit === 3 && btn3) btn3.className = activeClass;
             else if (limit === 5 && btn5) btn5.className = activeClass;
             else if (limit === 10 && btn10) btn10.className = activeClass;
-            else if (limit === 'all' && btnAll) btnAll.className = activeAllClass;
+            else if (limit === 'all') {
+                if(btnAll) btnAll.className = activeAllClass;
+                if(btnAllMobile) btnAllMobile.className = "sm:hidden " + activeClass;
+            }
+            
             renderTopReporters();
         }
 
