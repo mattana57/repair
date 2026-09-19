@@ -722,34 +722,29 @@ $dept_icons = [
             color: #4f46e5 !important;
         }
 
-        /* 🚨 แก้ไขเด็ดขาด: บั๊กหัวตาราง Safari (iPad/iPhone) ขาดหายและไม่เลื่อนตาม 🚨 */
-        .overflow-x-auto table {
-            border-collapse: separate !important; /* ✨ หัวใจสำคัญ: Safari จะเอ๋อถ้าใช้ collapse คู่กับ sticky */
-            border-spacing: 0 !important;
+        /* ✨ แก้ไขบั๊กหน้าจอเลื่อนทะลุ และหัวตารางหลุดกรอบบน iPad/Tablet 100% ✨ */
+        /* 1. ล็อกไม่ให้หน้าจอหลักขยายกว้างเกินจอ (Flexbox Blowout Fix) */
+        main, #mainScrollContainer, .section, .modern-card {
+            min-width: 0 !important;
+            max-width: 100% !important;
         }
-        .overflow-x-auto thead,
-        .overflow-x-auto thead.sticky {
-            position: static !important; /* ปลดล็อก thead เด็ดขาด ให้มันยืดเต็มความกว้างตาราง */
-            transform: none !important;
-            box-shadow: none !important; /* ลบเงาที่ทำให้เกิดเส้นซ้อน */
+        /* 2. เปิดใช้การเลื่อนซ้ายขวาสมูทแบบ iOS ให้กับตาราง */
+        .overflow-x-auto {
+            min-width: 0 !important;
+            -webkit-overflow-scrolling: touch !important;
         }
-        .overflow-x-auto thead th {
+        /* 3. ปลดล็อก thead เดิมที่ทำให้ Safari รวน และย้ายมาล็อกที่ระดับช่อง th แทน */
+        table thead {
+            position: static !important;
+        }
+        table thead th {
+            position: -webkit-sticky !important;
             position: sticky !important;
             top: 0 !important;
-            z-index: 30 !important;
-            background-color: #fef9c3 !important; /* บังคับถมสีเหลืองให้เต็มแต่ละช่องแบบอิสระ */
-            border-bottom: 1px solid #fef08a !important; /* ตีเส้นขอบล่างให้แต่ละช่องแบบอิสระ */
-            background-clip: padding-box !important; /* ป้องกันสีและขอบซ้อนกันแบบโปร่งใส */
-        }
-        /* ซ่อมเส้นขอบระหว่างแถว (Row Border) ให้ Safari มองเห็นชัดเจนหลังจากแยก collapse */
-        .overflow-x-auto tbody tr td {
-            border-bottom: 1px solid #f1f5f9 !important;
-        }
-        .overflow-x-auto tbody tr:last-child td {
-            border-bottom: none !important;
-        }
-        .overflow-x-auto {
-            -webkit-overflow-scrolling: touch;
+            z-index: 20 !important;
+            background-color: #fef9c3 !important; 
+            box-shadow: inset 0 -1px 0 #fef08a, 0 1px 2px 0 rgba(0,0,0,0.05) !important;
+            background-clip: padding-box !important;
         }
     </style>
 </head>
