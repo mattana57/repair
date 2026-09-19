@@ -3777,6 +3777,30 @@ $dept_icons = [
             
             chartEquipInstance = new Chart(ctx, {
                 type: 'line', 
+                // ✨ เพิ่ม Plugin Custom Drawing ให้วาดข้อความแนวตรงในมือถือ ✨
+                plugins: [{
+                    id: 'custom_equip_x_labels',
+                    afterDraw: (chart) => {
+                        if (window.innerWidth > 1366) return; // ทำงานเฉพาะมือถือ/แท็บเล็ต
+
+                        const ctx = chart.ctx;
+                        const xAxis = chart.scales.x;
+                        
+                        ctx.save();
+                        ctx.textAlign = 'center'; // วาดให้อยู่ตรงกลางจุดเป๊ะๆ
+                        ctx.textBaseline = 'top';
+                        ctx.fillStyle = '#64748b'; 
+                        ctx.font = `bold 10px "Kanit", sans-serif`; // ปรับขนาดฟอนต์ให้พอดี
+                        
+                        const yPos = chart.chartArea.bottom + 10; 
+
+                        chart.data.labels.forEach((label, index) => {
+                            const xCenter = xAxis.getPixelForTick(index);
+                            ctx.fillText(label, xCenter, yPos);
+                        });
+                        ctx.restore();
+                    }
+                }],
                 data: {
                     labels: sorted.length ? sorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{ 
@@ -3794,7 +3818,10 @@ $dept_icons = [
                     }]
                 },
                 options: { 
-                    responsive: true, maintainAspectRatio: false, 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    // ✨ เพิ่ม padding ด้านล่างให้มือถือ เพื่อเว้นที่ให้ตัวหนังสือที่เราวาด ✨
+                    layout: { padding: { left: 10, right: 10, bottom: window.innerWidth <= 1366 ? 20 : 0 } },
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { 
@@ -3805,12 +3832,13 @@ $dept_icons = [
                         }, 
                         x: { 
                             ticks: { 
-                                color: '#64748b',
-                                /* ✨ ปรับขนาดฟอนต์ในมือถือเป็น 10 เพื่อให้พอดี และบังคับไม่ให้ตัวหนังสือเอียง ✨ */
-                                font: { family: "'Kanit', sans-serif", weight: 'bold', size: window.innerWidth <= 768 ? 10 : 12 },
+                                // ✨ ซ่อนตัวหนังสือเดิมของระบบในมือถือ แล้วให้แสดงปกติในจอคอม ✨
+                                color: window.innerWidth <= 1366 ? 'transparent' : '#64748b',
+                                font: { family: "'Kanit', sans-serif", weight: 'bold', size: window.innerWidth <= 1366 ? 10 : 12 },
+                                autoSkip: false,
                                 maxRotation: 0,
                                 minRotation: 0,
-                                autoSkip: false
+                                padding: window.innerWidth <= 1366 ? 0 : 8
                             }, 
                             grid: { display: false }, 
                             border: {display: false} 
