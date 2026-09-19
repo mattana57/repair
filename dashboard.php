@@ -806,7 +806,7 @@ $dept_icons = [
                 <button onclick="toggleSidebar()" type="button" class="xl:hidden -ml-4 sm:ml-0 mr-1 sm:mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0 w-12 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors z-50">
                     <i class="fas fa-bars text-[26px]"></i>
                 </button>
-                <h3 class="text-[15px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate select-none pointer-events-none" id="headerTitle"><?php echo $currentTitle; ?></h3>
+                <h3 class="text-[18px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate select-none pointer-events-none" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
             
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
