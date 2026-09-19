@@ -1312,7 +1312,9 @@ $pageTitles = [
     <div id="techReviewsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techReviewsModal')"></div>
         <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px]">
-            <div class="px-5 py-5 border-b border-slate-100 flex justify-between items-start bg-gradient-to-b from-slate-50 to-white shrink-0 relative">
+            <!-- Header -->
+            <!-- ✨ เพิ่ม pt-5 pb-[72px] เพื่อจองพื้นที่ด้านล่างให้ Dropdown ขยายเต็มจอในมือถือ ✨ -->
+            <div class="px-5 pt-5 pb-[72px] sm:py-5 border-b border-slate-100 flex justify-between items-start bg-gradient-to-b from-slate-50 to-white shrink-0 relative">
                 <div class="flex gap-4 relative z-10 flex-1 min-w-0">
                     <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center text-2xl shrink-0 shadow-sm border border-amber-200 mt-1"><i class="fas fa-star"></i></div>
                     <div class="flex flex-col min-w-0 w-full">
@@ -1323,10 +1325,11 @@ $pageTitles = [
                             <p class="text-[13px] font-bold text-indigo-600 truncate" id="techReviewsModalDept">ฝ่ายงาน...</p>
                             <p class="text-[11px] font-medium text-slate-500 truncate sm:ml-1.5 mt-0.5 sm:mt-0" id="techReviewsModalPos">(...)</p>
                         </div>
+                        
                         <!-- ✨ Dropdown สำหรับเลือกดูช่างในฝ่ายงาน ✨ -->
-                        <!-- ✨ ดึง Dropdown ไปทางซ้ายในมือถือ และบังคับให้กว้างพอดีจอ (ไม่กระทบ iPad/PC) ✨ -->
-                        <div class="mt-3.5 -ml-[64px] sm:ml-0 w-[calc(100%+64px)] sm:w-auto [&>select]:!w-full sm:[&>select]:!w-max">
-                            <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full max-w-[280px] bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm">
+                        <!-- ✨ ใช้ absolute ดึงไปอยู่ด้านล่างสุด และยืดซ้าย-ขวาให้เต็ม 100% ตรงตามรูปที่ 2 ✨ -->
+                        <div class="absolute bottom-5 left-[84px] right-5 sm:static sm:mt-3.5 sm:w-auto [&>select]:!w-full sm:[&>select]:!w-max">
+                            <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm">
                                 <!-- Options จะถูกสร้างผ่าน JS -->
                             </select>
                         </div>
@@ -2445,8 +2448,8 @@ $pageTitles = [
             const selector = document.getElementById('modalTechSelector');
             selector.innerHTML = '';
             
-            // ✨ บังคับ Dropdown ให้ยืดเต็มความกว้าง (!w-full) เฉพาะในมือถือแนวตั้ง และยกเลิกการล็อก max-w ในมือถือ ✨
-            selector.className = "custom-select w-full portrait:!w-full portrait:!max-w-none landscape:w-max landscape:max-w-[320px] sm:w-max sm:max-w-[320px] min-w-[200px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1";
+            // ✨ ลบคลาสล็อกความกว้างทิ้ง ปล่อยให้ HTML Wrapper สั่งยืดขยายเต็มพื้นที่ 100% อัตโนมัติ ✨
+            selector.className = "custom-select w-full sm:w-max sm:max-w-[320px] min-w-[200px] bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-md pl-3 pr-8 py-1.5 focus:outline-none focus:border-indigo-400 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm appearance-none mt-1 sm:mt-0";
             selector.style.backgroundImage = "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')";
             selector.style.backgroundRepeat = "no-repeat";
             selector.style.backgroundPosition = "right 0.5rem top 50%";
