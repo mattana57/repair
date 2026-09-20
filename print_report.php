@@ -329,8 +329,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 
                 <!-- ✨ เพิ่ม mt-6 lg:mt-0 เพื่อเว้นระยะห่างบรรทัดค้นหาให้ออกห่างจากบรรทัดบนอีกนิด ✨ -->
                 <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5 mt-6 lg:mt-0">
-                    <!-- ✨ เปลี่ยน flex-nowrap เป็น flex-wrap portrait:flex-wrap sm:flex-nowrap เพื่อให้ฟอร์มจัดเรียงใหม่ในมือถือแนวตั้ง ✨ -->
-                    <form method="GET" action="print_report.php" class="flex flex-wrap portrait:flex-wrap sm:flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto">
+                    <!-- ✨ เพิ่ม id="reportFilterForm" และย้ายปุ่มโหมดมืดเข้ามาไว้ในฟอร์มแทนปุ่มค้นหา ✨ -->
+                    <form id="reportFilterForm" method="GET" action="print_report.php" class="flex flex-wrap portrait:flex-wrap sm:flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto">
                         <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                         
                         <!-- ✨ เพิ่ม portrait:w-full portrait:flex-none ให้ช่องค้นหายืดเต็มบรรทัดแรกในมือถือแนวตั้ง ✨ -->
@@ -379,7 +379,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <input type="hidden" name="tech" id="techHiddenInput" value="<?php echo htmlspecialchars($selected_tech); ?>">
                         </div>
 
-                        <!-- Dropdown เดือนแบบกำหนดเอง -->
+                        <!-- ✨ เพิ่ม portrait:flex-1 ให้กล่องเดือนแชร์พื้นที่บรรทัดที่ 2 กับกล่องปี ในมือถือแนวตั้ง ✨ -->
                         <div class="relative w-28 portrait:flex-1 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
                                 <span id="monthDisplayText" class="truncate"><?php echo ($selected_month > 0 && isset($thai_months[$selected_month])) ? $thai_months[$selected_month] : 'เดือน'; ?></span>
@@ -421,16 +421,11 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
                         </div>
 
-                        <!-- ✨ ลบ py- ออกทั้งหมด แล้วล็อกความสูง 38px (แนวตั้ง) และ 42px (จออื่นๆ) ให้เท่ากล่องเป๊ะ 100% ✨ -->
-                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 portrait:px-5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] flex items-center justify-center rounded-full font-extrabold transition-all shadow-sm shrink-0">
-                            ค้นหา
+                        <!-- ✨ ลบปุ่มค้นหาออก และนำปุ่มพระจันทร์มาเรียงต่อท้ายกล่องปีให้สวยงาม ✨ -->
+                        <button id="theme-toggle" type="button" class="w-[42px] h-[42px] portrait:w-[38px] portrait:h-[38px] rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors ml-auto sm:ml-0">
+                            <i id="theme-toggle-icon" class="fas fa-moon"></i>
                         </button>
                     </form>
-
-                    <!-- ✨ ดึงปุ่มพระจันทร์ลอยขึ้นไปมุมขวาบนในจอ iPad แนวตั้ง ✨ -->
-                    <button id="theme-toggle" type="button" class="absolute top-0 right-0 lg:static w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
-                        <i id="theme-toggle-icon" class="fas fa-moon"></i>
-                    </button>
                 </div>
             </div>
 
