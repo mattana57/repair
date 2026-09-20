@@ -3636,9 +3636,36 @@ $dept_icons = [
                 mainScrollWrapper.style.opacity = '1';
             });
 
-            // แอบจำค่า Scroll แบบ Real-time ตลอดเวลา
+            // ✨ ระบบซ่อน Header อัตโนมัติเมื่อเลื่อนลงแบบสมูท (เฉพาะมือถือ ทั้งแนวตั้งและแนวนอน) ✨
+            let lastScrollTop = mainScrollWrapper.scrollTop;
+            const topHeader = document.querySelector('.top-header');
+            if (topHeader) {
+                topHeader.style.transition = 'transform 0.3s ease-in-out';
+            }
+
+            // แอบจำค่า Scroll แบบ Real-time ตลอดเวลา พร้อมซ่อน/แสดง Header
             mainScrollWrapper.addEventListener('scroll', () => {
-                sessionStorage.setItem('dashboardScrollY', mainScrollWrapper.scrollTop);
+                let st = mainScrollWrapper.scrollTop;
+                sessionStorage.setItem('dashboardScrollY', st);
+
+                if (topHeader) {
+                    // ตรวจสอบว่าเป็น "มือถือ" (แนวกว้าง < 768px หรือ แนวนอนที่ความสูง < 500px) เพื่อไม่ให้กระทบ iPad หรือคอมพิวเตอร์ 100%
+                    const isMobilePhone = window.innerWidth < 768 || (window.innerWidth <= 950 && window.innerHeight <= 500);
+                    
+                    if (isMobilePhone) {
+                        if (st > lastScrollTop && st > 80) {
+                            // ปัดนิ้วขึ้น (เลื่อนลง) -> ซ่อนแถบด้านบน
+                            topHeader.style.transform = 'translateY(-100%)';
+                        } else {
+                            // ปัดนิ้วลง (เลื่อนขึ้น) -> แสดงแถบด้านบน
+                            topHeader.style.transform = 'translateY(0)';
+                        }
+                    } else {
+                        // ถ้าเป็น iPad หรือ PC ให้แสดงแถบตลอดเวลา ไม่มีการซ่อน
+                        topHeader.style.transform = 'translateY(0)';
+                    }
+                }
+                lastScrollTop = st <= 0 ? 0 : st;
             }, { passive: true });
         }
 
