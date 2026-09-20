@@ -1083,6 +1083,60 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             }
             updateIcon();
         });
+
+        // ✨ ระบบซ่อนแถบ Header อัตโนมัติเมื่อใช้นิ้วเลื่อนจอ (เฉพาะมือถือแนวตั้งและแนวนอน) ✨
+        const reportHeaderEl = document.querySelector('.no-print.sticky.top-0');
+        const reportScrollEl = document.querySelector('.flex-1.overflow-auto');
+        let lastScrollTop = 0;
+
+        if (reportHeaderEl && reportScrollEl) {
+            // ✨ ใช้ transform เพื่อความสมูท 100% ไม่กระตุก ไม่เกิดขอบขาว ✨
+            reportHeaderEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            // เพื่อให้เนื้อหากระดาษเลื่อนตามขึ้นไปปิดช่องว่างของ Header ที่หายไป
+            reportScrollEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+
+            reportScrollEl.addEventListener('scroll', () => {
+                // 📱 ตรวจจับว่าเป็นมือถือ (กว้างไม่เกิน 768px หรือ เป็นมือถือแนวนอนที่ความสูงหน้าจอน้อยกว่า 500px)
+                const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
+                
+                if (isMobileScreen) {
+                    const currentScrollTop = reportScrollEl.scrollTop;
+                    const headerHeight = reportHeaderEl.offsetHeight;
+                    
+                    // 👆 ปัดนิ้วขึ้น (เลื่อนหน้าลง) -> ซ่อน Header
+                    if (currentScrollTop > lastScrollTop && currentScrollTop > 60) {
+                        reportHeaderEl.style.transform = 'translateY(-100%)';
+                        // ดึงเนื้อหาขึ้นมาเท่าความสูง Header เพื่อไม่ให้มีขอบขาว
+                        reportScrollEl.style.transform = `translateY(-${headerHeight}px)`;
+                        reportScrollEl.style.height = `calc(100% + ${headerHeight}px)`; 
+                    } 
+                    // 👇 ปัดนิ้วลง (เลื่อนหน้าขึ้น) -> โชว์ Header
+                    else if (currentScrollTop < lastScrollTop) {
+                        reportHeaderEl.style.transform = 'translateY(0)';
+                        // ดันเนื้อหากลับที่เดิม
+                        reportScrollEl.style.transform = 'translateY(0)';
+                        reportScrollEl.style.height = '100%';
+                    }
+                    
+                    lastScrollTop = currentScrollTop;
+                } else {
+                    // 💻 จอใหญ่ (iPad/PC) โชว์เสมอ
+                    reportHeaderEl.style.transform = 'translateY(0)';
+                    reportScrollEl.style.transform = 'translateY(0)';
+                    reportScrollEl.style.height = '100%';
+                }
+            }, { passive: true });
+
+            window.addEventListener('resize', () => {
+                const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
+                if (!isMobileScreen) {
+                    reportHeaderEl.style.transform = 'translateY(0)';
+                    reportScrollEl.style.transform = 'translateY(0)';
+                    reportScrollEl.style.height = '100%';
+                }
+            });
+        }
     </script>
 </body>
 </html>
