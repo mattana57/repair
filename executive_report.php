@@ -399,14 +399,16 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
         <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ (บรรทัดที่ 3) ลอยอยู่บนพื้นเทา ชิดซ้าย (แสดงเฉพาะ iPad แนวตั้ง) ✨ -->
         <!-- ✨ เพิ่ม portrait:grid portrait:grid-cols-2 เพื่อบังคับให้แบ่งครึ่งจอพอดีกันในมือถือแนวตั้ง ✨ -->
         <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex portrait:grid portrait:grid-cols-2 lg:hidden justify-start px-4 xl:px-0 gap-2.5">
+            <!-- ✨ ลบ portrait:py-2.5 ออก เพื่อให้ปุ่มกลับมาสมส่วนตามความสูงปกติ ✨ -->
             <a href="executive_report.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-               class="px-4 py-1.5 portrait:py-2.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600">
+               class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600">
                 <i class="fas fa-table mr-1.5 text-indigo-700 dark:text-white"></i> ตารางรายงาน
             </a>
             
+            <!-- ✨ ลบ portrait:py-2.5 ออก เพื่อให้ปุ่มกลับมาสมส่วนตามความสูงปกติ ✨ -->
             <a href="export_excel.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                target="_blank"
-               class="px-4 py-1.5 portrait:py-2.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600">
+               class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600">
                 <i class="fas fa-file-excel mr-1.5 text-emerald-100"></i> Export to Excel
             </a>
         </div>
