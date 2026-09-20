@@ -431,9 +431,15 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1 lg:mt-0">
                 
-                <!-- ✨ ซ่อนปุ่ม ตาราง/บันทึกข้อความ ใน iPad แนวตั้ง (จะไปโชว์รวมกับปุ่มพิมพ์ด้านล่างแทน) ✨ -->
-                <!-- ✨ ปรับปรุงให้มีกรอบตลอดเวลา และมี Effect เวลากด สำหรับหน้าจอคอมพิวเตอร์และ iPad แนวนอน ✨ -->
-                <div class="hidden lg:flex flex-wrap items-center justify-start gap-2.5 w-full sm:w-auto">
+                <!-- ✨ ซ่อนปุ่ม ตาราง/บันทึกข้อความ ในมือถือ/iPad แนวตั้ง (จะไปโชว์รวมกับปุ่มพิมพ์ด้านล่างแทน) ✨ -->
+                <!-- ✨ แสดงเฉพาะ คอมพิวเตอร์ และ อุปกรณ์แนวนอน พร้อมดันปุ่มให้ตรงกับคำว่า ระบบพิมพ์เอกสารรายงาน ✨ -->
+                <div class="hidden landscape:flex lg:flex flex-wrap items-center justify-start gap-2.5 w-full sm:w-auto">
+                    
+                    <!-- ✨ Spacer ล่องหน สำหรับดันปุ่มให้ตรงกับคำว่า "ระบบพิมพ์เอกสารรายงาน" พอดีเป๊ะ ✨ -->
+                    <div class="opacity-0 pointer-events-none select-none flex items-center px-4 py-1.5 border-2 text-xs font-bold mr-[6px]">
+                        <i class="fas fa-arrow-left mr-2"></i> Dashboard
+                    </div>
+
                     <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                        class="group px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                         <i class="fas fa-table mr-1.5 transition-colors <?php echo $report_type === 'table' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> ตารางรายงาน
