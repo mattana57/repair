@@ -322,12 +322,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 
                 <!-- ✨ เพิ่ม mt-6 lg:mt-0 เพื่อเว้นระยะห่างบรรทัดค้นหาให้ออกห่างจากบรรทัดบนอีกนิด ✨ -->
                 <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5 mt-6 lg:mt-0">
-                    <!-- ✨ เอา overflow-x-auto ออกเพื่อคืนชีพ Dropdown ข้อมูลช่างให้กลับมา และให้ Search ยืดเต็มที่ ✨ -->
-                    <form method="GET" action="print_report.php" class="flex flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto">
+                    <!-- ✨ เปลี่ยน flex-nowrap เป็น flex-wrap portrait:flex-wrap sm:flex-nowrap เพื่อให้ฟอร์มจัดเรียงใหม่ในมือถือแนวตั้ง ✨ -->
+                    <form method="GET" action="print_report.php" class="flex flex-wrap portrait:flex-wrap sm:flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto">
                         <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                         
-                        <!-- ✨ ใส่ flex-1 ให้ช่องค้นหายืดเต็มพื้นที่ที่เหลือ ✨ -->
-                        <div class="relative flex-1 min-w-[200px] lg:w-60 lg:flex-none" id="techDropdownContainer">
+                        <!-- ✨ เพิ่ม portrait:w-full portrait:flex-none ให้ช่องค้นหายืดเต็มบรรทัดแรกในมือถือแนวตั้ง ✨ -->
+                        <div class="relative flex-1 portrait:w-full portrait:flex-none min-w-[200px] lg:w-60 lg:flex-none" id="techDropdownContainer">
                             <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
                                 <i class="fas fa-search pl-3 text-slate-400 dark:text-slate-300 opacity-80"></i>
                                 <input type="text" id="techSearchInput" class="w-full bg-transparent px-2 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
@@ -372,8 +372,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <input type="hidden" name="tech" id="techHiddenInput" value="<?php echo htmlspecialchars($selected_tech); ?>">
                         </div>
 
-                        <!-- Dropdown เดือนแบบกำหนดเอง -->
-                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
+                        <!-- ✨ เพิ่ม portrait:flex-1 ให้กล่องเดือนแชร์พื้นที่บรรทัดที่ 2 กับกล่องปี ในมือถือแนวตั้ง ✨ -->
+                        <div class="relative w-28 portrait:flex-1 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
                                 <span id="monthDisplayText" class="truncate"><?php echo ($selected_month > 0 && isset($thai_months[$selected_month])) ? $thai_months[$selected_month] : 'เดือน'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
@@ -392,8 +392,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <input type="hidden" name="month" id="monthHiddenInput" value="<?php echo $selected_month; ?>">
                         </div>
 
-                        <!-- Dropdown ปีแบบกำหนดเอง -->
-                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
+                        <!-- ✨ เพิ่ม portrait:flex-1 ให้กล่องปีแชร์พื้นที่บรรทัดที่ 2 กับกล่องเดือน ในมือถือแนวตั้ง ✨ -->
+                        <div class="relative w-28 portrait:flex-1 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
                                 <span id="yearDisplayText" class="truncate"><?php echo ($selected_year > 0) ? 'พ.ศ. ' . ($selected_year + 543) : 'ปี (พ.ศ.)'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
@@ -413,7 +413,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
                         </div>
 
-                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-1.5 rounded-full font-extrabold transition-all shadow-sm shrink-0">
+                        <!-- ✨ ปรับ Padding ให้ปุ่มค้นหาอ้วนขึ้นนิดนึง เพื่อความสมดุลในบรรทัดที่ 2 ✨ -->
+                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 portrait:px-5 py-1.5 portrait:py-2.5 rounded-full font-extrabold transition-all shadow-sm shrink-0">
                             ค้นหา
                         </button>
                     </form>
@@ -463,23 +464,25 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <div class="flex-1 overflow-auto pb-10">
 
         <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ (บรรทัดที่ 3) ซ้ายเป็น ตาราง/บันทึก ขวาเป็น พิมพ์ ✨ -->
-        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex justify-between items-center px-4 xl:px-0">
+        <!-- ✨ เพิ่ม portrait:flex-col และ portrait:gap-3 เพื่อให้ปุ่มเรียงต่อกันสวยๆ แบบเต็มบรรทัดในมือถือแนวตั้ง ✨ -->
+        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex portrait:flex-col sm:flex-row justify-between items-center portrait:items-stretch px-4 xl:px-0 portrait:gap-3">
             
             <!-- ✨ โชว์ปุ่ม ตาราง/บันทึกข้อความ เฉพาะบน iPad แนวตั้ง ชิดซ้าย พร้อม Effect สมูทๆ เวลากด ✨ -->
-            <div class="flex lg:hidden items-center gap-2.5">
+            <!-- ✨ เพิ่ม portrait:grid portrait:grid-cols-2 บังคับให้ปุ่มแบ่งครึ่งจอพอดีกันในมือถือแนวตั้ง ✨ -->
+            <div class="flex portrait:grid portrait:grid-cols-2 lg:hidden items-center gap-2.5">
                 <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
+                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                     <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> ตารางรายงาน
                 </a>
                 
                 <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'memo' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
+                   class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'memo' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                     <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> บันทึกข้อความ
                 </a>
             </div>
 
-            <!-- ✨ ปุ่มพิมพ์ชิดขวาเสมอ ✨ -->
-            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5 ml-auto">
+            <!-- ✨ ปุ่มพิมพ์ชิดขวาเสมอ (ในมือถือแนวตั้งจะขยายเต็มบรรทัดต่อจากปุ่มด้านบน) ✨ -->
+            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 portrait:py-2.5 rounded-full font-bold shadow-lg transition-all flex items-center justify-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5 sm:ml-auto">
                 <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
             </button>
         </div>

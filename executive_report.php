@@ -252,12 +252,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                 
                 <!-- ✨ เพิ่ม mt-6 lg:mt-0 เพื่อดันบรรทัดค้นหาให้ห่างจากบรรทัดแรกใน iPad แนวตั้ง ✨ -->
                 <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5 mt-6 lg:mt-0">
-                    <!-- ✨ บังคับฟอร์มให้กว้าง 100% บน iPad และใช้ flex-nowrap เพื่อให้อยู่บรรทัดเดียวกัน ✨ -->
-                    <form method="GET" action="executive_report.php" class="flex flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto">
+                    <!-- ✨ เปลี่ยน flex-nowrap เป็น flex-wrap portrait:flex-wrap sm:flex-nowrap เพื่อให้ฟอร์มจัดเรียงใหม่ในมือถือแนวตั้ง ✨ -->
+                    <form method="GET" action="executive_report.php" class="flex flex-wrap portrait:flex-wrap sm:flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto">
                         <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                         
-                        <!-- ✨ ใส่ flex-1 ให้ช่องค้นหายืดเต็มพื้นที่ที่เหลือ ✨ -->
-                        <div class="relative flex-1 min-w-[200px] lg:w-60 lg:flex-none" id="techDropdownContainer">
+                        <!-- ✨ เพิ่ม portrait:w-full portrait:flex-none ให้ช่องค้นหายืดเต็มบรรทัดแรกในมือถือแนวตั้ง ✨ -->
+                        <div class="relative flex-1 portrait:w-full portrait:flex-none min-w-[200px] lg:w-60 lg:flex-none" id="techDropdownContainer">
                             <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
                                 <i class="fas fa-search pl-3 text-slate-400 dark:text-slate-300 opacity-80"></i>
                                 <input type="text" id="techSearchInput" class="w-full bg-transparent px-2 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
@@ -302,8 +302,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                             <input type="hidden" name="tech" id="techHiddenInput" value="<?php echo htmlspecialchars($selected_tech); ?>">
                         </div>
 
-                        <!-- Dropdown เดือนแบบกำหนดเอง -->
-                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
+                        <!-- ✨ เพิ่ม portrait:flex-1 ให้กล่องเดือนแชร์พื้นที่บรรทัดที่ 2 กับกล่องปี ในมือถือแนวตั้ง ✨ -->
+                        <div class="relative w-28 portrait:flex-1 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
                                 <span id="monthDisplayText" class="truncate"><?php echo ($selected_month > 0 && isset($thai_months[$selected_month])) ? $thai_months[$selected_month] : 'เดือน'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
@@ -322,20 +322,20 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                             <input type="hidden" name="month" id="monthHiddenInput" value="<?php echo $selected_month; ?>">
                         </div>
 
-                        <!-- Dropdown ปีแบบกำหนดเอง -->
-                        <div class="relative w-28 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
-                            <div class="flex items-center justify-between w-full bg-white text-slate-700 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
+                        <!-- ✨ เพิ่ม portrait:flex-1 ให้กล่องปีแชร์พื้นที่บรรทัดที่ 2 กับกล่องเดือน ในมือถือแนวตั้ง ✨ -->
+                        <div class="relative w-28 portrait:flex-1 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="yearDropdownContainer" tabindex="0" onkeydown="handleYearKeydown(event)">
+                            <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleYearDropdown(event)">
                                 <span id="yearDisplayText" class="truncate"><?php echo ($selected_year > 0) ? 'พ.ศ. ' . ($selected_year + 543) : 'ปี (พ.ศ.)'; ?></span>
-                                <i class="fas fa-caret-down text-slate-400 ml-2"></i>
+                                <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
-                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar right-0">
-                                <div class='year-dropdown-item flex justify-center items-center px-4 py-2 mb-1 border-b border-indigo-100 sticky top-0 z-10 rounded-t-2xl cursor-pointer transition-colors <?php echo ($selected_year == 0) ? "bg-indigo-100 text-indigo-700" : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"; ?>' data-value='0' data-display='ปี (พ.ศ.)' onclick="selectYear(0, 'ปี (พ.ศ.)')">
+                            <div id="yearDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden flex-col pb-2 custom-scrollbar right-0">
+                                <div class='year-dropdown-item flex justify-center items-center px-4 py-2 mb-1 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl cursor-pointer transition-colors <?php echo ($selected_year == 0) ? "bg-indigo-100 dark:bg-slate-600 text-indigo-700 dark:text-indigo-300" : "bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-slate-700"; ?>' data-value='0' data-display='ปี (พ.ศ.)' onclick="selectYear(0, 'ปี (พ.ศ.)')">
                                     <span class='text-[11px] font-extrabold tracking-wide pointer-events-none'>ปี (พ.ศ.)</span>
                                 </div>
                                 <?php
                                 foreach($available_years as $y) {
                                     $thai_y = $y + 543;
-                                    $activeClass = ($selected_year == $y) ? 'bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-slate-100 hover:text-indigo-600';
+                                    $activeClass = ($selected_year == $y) ? 'bg-indigo-50 dark:bg-slate-600 text-indigo-600 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 hover:text-indigo-600 dark:hover:text-indigo-300';
                                     echo "<div class='year-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-xs font-bold cursor-pointer transition-all {$activeClass}' data-value='$y' data-display='พ.ศ. {$thai_y}' onclick=\"selectYear($y, 'พ.ศ. {$thai_y}')\">พ.ศ. {$thai_y}</div>";
                                 }
                                 ?>
@@ -343,7 +343,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                             <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
                         </div>
 
-                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 py-1.5 rounded-full font-extrabold transition-all shadow-sm shrink-0">
+                        <!-- ✨ ปรับ Padding ให้ปุ่มค้นหาอ้วนขึ้นนิดนึง เพื่อความสมดุลในบรรทัดที่ 2 ✨ -->
+                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 portrait:px-5 py-1.5 portrait:py-2.5 rounded-full font-extrabold transition-all shadow-sm shrink-0">
                             ค้นหา
                         </button>
                     </form>
@@ -387,15 +388,16 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
     <div class="flex-1 overflow-auto pb-10">
 
         <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ (บรรทัดที่ 3) ลอยอยู่บนพื้นเทา ชิดซ้าย (แสดงเฉพาะ iPad แนวตั้ง) ✨ -->
-        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex lg:hidden justify-start px-4 xl:px-0 gap-2.5">
+        <!-- ✨ เพิ่ม portrait:grid portrait:grid-cols-2 เพื่อบังคับให้แบ่งครึ่งจอพอดีกันในมือถือแนวตั้ง ✨ -->
+        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex portrait:grid portrait:grid-cols-2 lg:hidden justify-start px-4 xl:px-0 gap-2.5">
             <a href="executive_report.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-               class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600">
+               class="px-4 py-1.5 portrait:py-2.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600">
                 <i class="fas fa-table mr-1.5 text-indigo-700 dark:text-white"></i> ตารางรายงาน
             </a>
             
             <a href="export_excel.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                target="_blank"
-               class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center shadow-sm active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600">
+               class="px-4 py-1.5 portrait:py-2.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600">
                 <i class="fas fa-file-excel mr-1.5 text-emerald-100"></i> Export to Excel
             </a>
         </div>
