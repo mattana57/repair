@@ -539,13 +539,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                     </div> 
                 <?php endif; ?>
 
-                <!-- ✨ แสดงเลขหน้าที่มุมขวาล่างของกรอบ A4 ในทุกหน้า ✨ -->
-                <div class="mt-auto pt-6 text-right text-xs text-slate-500 font-bold pr-2">
-                    หน้า <?php echo toThaiNumber($page_index + 1); ?> / <?php echo toThaiNumber($total_pages); ?>
+                <!-- ✨ เพิ่มเลขหน้า เลื่อนลงไปอยู่ขวาล่างสุดของกระดาษเสมอ (เลขอารบิก) ✨ -->
+                <div class="mt-auto pt-6 text-right text-xs font-bold text-slate-500">
+                    หน้า <?php echo ($page_index + 1); ?>/<?php echo $total_pages; ?>
                 </div>
-
             </div> 
-        </div>
+        </div> 
         
         <?php endforeach; ?>
     </div>
