@@ -352,8 +352,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                             <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
                         </div>
 
-                        <!-- ✨ ปรับลดขนาดปุ่มค้นหาในมือถือแนวตั้ง บังคับความสูง 38px ให้เท่ากับดรอปดาวน์เดือน/ปีเป๊ะๆ ✨ -->
-                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 portrait:px-4 py-1.5 portrait:py-0 portrait:h-[38px] flex items-center justify-center rounded-full font-extrabold transition-all shadow-sm shrink-0">
+                        <!-- ✨ ปรับ Padding ให้ปุ่มค้นหาอ้วนขึ้นนิดนึง เพื่อความสมดุลในบรรทัดที่ 2 ✨ -->
+                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 portrait:px-5 py-1.5 portrait:py-2.5 rounded-full font-extrabold transition-all shadow-sm shrink-0">
                             ค้นหา
                         </button>
                     </form>
