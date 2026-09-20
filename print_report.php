@@ -1086,45 +1086,32 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
         // ✨ ระบบซ่อนแถบ Header อัตโนมัติเมื่อใช้นิ้วเลื่อนจอ (เฉพาะมือถือแนวตั้งและแนวนอน) ✨
         const reportHeaderEl = document.querySelector('.no-print.sticky.top-0');
-        const reportScrollEl = document.querySelector('.flex-1.overflow-auto');
-        let lastScrollTop = 0;
+        let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-        if (reportHeaderEl && reportScrollEl) {
-            // ✨ ใช้ transform เพื่อความสมูท 100% ไม่กระตุก ไม่เกิดขอบขาว ✨
+        if (reportHeaderEl) {
+            // ✨ สั่งให้ Header เลื่อนสมูท 100% ✨
             reportHeaderEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            
-            // เพื่อให้เนื้อหากระดาษเลื่อนตามขึ้นไปปิดช่องว่างของ Header ที่หายไป
-            reportScrollEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 
-            reportScrollEl.addEventListener('scroll', () => {
-                // 📱 ตรวจจับว่าเป็นมือถือ (กว้างไม่เกิน 768px หรือ เป็นมือถือแนวนอนที่ความสูงหน้าจอน้อยกว่า 500px)
+            // 🚨 เปลี่ยนมาจับการเลื่อนที่หน้าต่างหลัก (window) แทน div 🚨
+            window.addEventListener('scroll', () => {
                 const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
                 
                 if (isMobileScreen) {
-                    const currentScrollTop = reportScrollEl.scrollTop;
-                    const headerHeight = reportHeaderEl.offsetHeight;
+                    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
                     
-                    // 👆 ปัดนิ้วขึ้น (เลื่อนหน้าลง) -> ซ่อน Header
+                    // 👆 เลื่อนหน้าจอลง (ปัดนิ้วขึ้น) -> ซ่อน Header
                     if (currentScrollTop > lastScrollTop && currentScrollTop > 60) {
                         reportHeaderEl.style.transform = 'translateY(-100%)';
-                        // ดึงเนื้อหาขึ้นมาเท่าความสูง Header เพื่อไม่ให้มีขอบขาว
-                        reportScrollEl.style.transform = `translateY(-${headerHeight}px)`;
-                        reportScrollEl.style.height = `calc(100% + ${headerHeight}px)`; 
                     } 
-                    // 👇 ปัดนิ้วลง (เลื่อนหน้าขึ้น) -> โชว์ Header
+                    // 👇 เลื่อนหน้าจอขึ้น (ปัดนิ้วลง) -> โชว์ Header
                     else if (currentScrollTop < lastScrollTop) {
                         reportHeaderEl.style.transform = 'translateY(0)';
-                        // ดันเนื้อหากลับที่เดิม
-                        reportScrollEl.style.transform = 'translateY(0)';
-                        reportScrollEl.style.height = '100%';
                     }
                     
-                    lastScrollTop = currentScrollTop;
+                    lastScrollTop = currentScrollTop <= 0 ? 0 : currentScrollTop;
                 } else {
-                    // 💻 จอใหญ่ (iPad/PC) โชว์เสมอ
+                    // 💻 ถ้าเป็นจอใหญ่ (iPad/PC) ให้บังคับโชว์ Header เสมอ
                     reportHeaderEl.style.transform = 'translateY(0)';
-                    reportScrollEl.style.transform = 'translateY(0)';
-                    reportScrollEl.style.height = '100%';
                 }
             }, { passive: true });
 
@@ -1132,8 +1119,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
                 if (!isMobileScreen) {
                     reportHeaderEl.style.transform = 'translateY(0)';
-                    reportScrollEl.style.transform = 'translateY(0)';
-                    reportScrollEl.style.height = '100%';
                 }
             });
         }
