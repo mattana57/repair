@@ -3636,36 +3636,9 @@ $dept_icons = [
                 mainScrollWrapper.style.opacity = '1';
             });
 
-            // ✨ ระบบซ่อน Header อัตโนมัติเมื่อเลื่อนลงแบบสมูท (เฉพาะมือถือ ทั้งแนวตั้งและแนวนอน) ✨
-            let lastScrollTop = mainScrollWrapper.scrollTop;
-            const topHeader = document.querySelector('.top-header');
-            if (topHeader) {
-                topHeader.style.transition = 'transform 0.3s ease-in-out';
-            }
-
-            // แอบจำค่า Scroll แบบ Real-time ตลอดเวลา พร้อมซ่อน/แสดง Header
+            // แอบจำค่า Scroll แบบ Real-time ตลอดเวลา
             mainScrollWrapper.addEventListener('scroll', () => {
-                let st = mainScrollWrapper.scrollTop;
-                sessionStorage.setItem('dashboardScrollY', st);
-
-                if (topHeader) {
-                    // ตรวจสอบว่าเป็น "มือถือ" (แนวกว้าง < 768px หรือ แนวนอนที่ความสูง < 500px) เพื่อไม่ให้กระทบ iPad หรือคอมพิวเตอร์ 100%
-                    const isMobilePhone = window.innerWidth < 768 || (window.innerWidth <= 950 && window.innerHeight <= 500);
-                    
-                    if (isMobilePhone) {
-                        if (st > lastScrollTop && st > 80) {
-                            // ปัดนิ้วขึ้น (เลื่อนลง) -> ซ่อนแถบด้านบน
-                            topHeader.style.transform = 'translateY(-100%)';
-                        } else {
-                            // ปัดนิ้วลง (เลื่อนขึ้น) -> แสดงแถบด้านบน
-                            topHeader.style.transform = 'translateY(0)';
-                        }
-                    } else {
-                        // ถ้าเป็น iPad หรือ PC ให้แสดงแถบตลอดเวลา ไม่มีการซ่อน
-                        topHeader.style.transform = 'translateY(0)';
-                    }
-                }
-                lastScrollTop = st <= 0 ? 0 : st;
+                sessionStorage.setItem('dashboardScrollY', mainScrollWrapper.scrollTop);
             }, { passive: true });
         }
 
@@ -5597,6 +5570,47 @@ $dept_icons = [
         setInterval(syncAdminAvatarsLive, 2000);
         // เช็คทันทีเมื่อสลับหน้าต่างกลับมา
         window.addEventListener('focus', syncAdminAvatarsLive);
+
+        // ✨ ระบบซ่อนแถบ Header อัตโนมัติเมื่อใช้นิ้วเลื่อนจอ (เฉพาะมือถือแนวตั้งและแนวนอน) ✨
+        const mainHeaderEl = document.querySelector('header.top-header');
+        const mainScrollEl = document.getElementById('mainScrollContainer');
+        let lastScrollTop = 0;
+
+        if (mainHeaderEl && mainScrollEl) {
+            // ✨ สั่งให้ Header เลื่อนสมูท 100% เวลาซ่อน/โชว์ ✨
+            mainHeaderEl.style.transition = 'margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            mainScrollEl.addEventListener('scroll', () => {
+                // 📱 ตรวจจับว่าเป็นมือถือ (กว้างไม่เกิน 768px หรือ เป็นมือถือแนวนอนที่ความสูงหน้าจอน้อยกว่า 500px)
+                const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
+                
+                if (isMobileScreen) {
+                    const currentScrollTop = mainScrollEl.scrollTop;
+                    
+                    // 👆 ถ้าเลื่อนลง (ปัดนิ้วขึ้น) และเลื่อนไปแล้วมากกว่า 50px -> ซ่อน Header
+                    if (currentScrollTop > lastScrollTop && currentScrollTop > 50) {
+                        mainHeaderEl.style.marginTop = '-88px'; // ดัน Header ขึ้นไปซ่อน และดึงเนื้อหาขึ้นมาแทนที่
+                    } 
+                    // 👇 ถ้าเลื่อนขึ้น (ปัดนิ้วลง) -> โชว์ Header
+                    else if (currentScrollTop < lastScrollTop) {
+                        mainHeaderEl.style.marginTop = '0px';
+                    }
+                    
+                    lastScrollTop = currentScrollTop;
+                } else {
+                    // 💻 ถ้าเป็นจอใหญ่ (iPad/PC) ให้บังคับโชว์ Header เสมอ ไม่ให้กระทบ 100%
+                    mainHeaderEl.style.marginTop = '0px';
+                }
+            }, { passive: true });
+
+            // 🔄 รีเซ็ตแถบให้กลับมาโชว์ตอนหมุนจอเป็นแนวตั้ง/แนวนอน หรือปรับขนาดจอ
+            window.addEventListener('resize', () => {
+                const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
+                if (!isMobileScreen) {
+                    mainHeaderEl.style.marginTop = '0px';
+                }
+            });
+        }
     </script>
 </body>
 </html>
