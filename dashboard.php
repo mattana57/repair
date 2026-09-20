@@ -5577,37 +5577,48 @@ $dept_icons = [
         let lastScrollTop = 0;
 
         if (mainHeaderEl && mainScrollEl) {
-            // ✨ สั่งให้ Header เลื่อนสมูท 100% เวลาซ่อน/โชว์ ✨
-            mainHeaderEl.style.transition = 'margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            // ✨ ใช้ transform เพื่อความสมูท 100% ไม่กระตุก ไม่เกิดขอบขาว ✨
+            mainHeaderEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             
+            // เพื่อให้เนื้อหาเลื่อนตามขึ้นไปปิดช่องว่างของ Header ที่หายไป
+            mainScrollEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+
             mainScrollEl.addEventListener('scroll', () => {
-                // 📱 ตรวจจับว่าเป็นมือถือ (กว้างไม่เกิน 768px หรือ เป็นมือถือแนวนอนที่ความสูงหน้าจอน้อยกว่า 500px)
                 const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
                 
                 if (isMobileScreen) {
                     const currentScrollTop = mainScrollEl.scrollTop;
                     
-                    // 👆 ถ้าเลื่อนลง (ปัดนิ้วขึ้น) และเลื่อนไปแล้วมากกว่า 50px -> ซ่อน Header
-                    if (currentScrollTop > lastScrollTop && currentScrollTop > 50) {
-                        mainHeaderEl.style.marginTop = '-88px'; // ดัน Header ขึ้นไปซ่อน และดึงเนื้อหาขึ้นมาแทนที่
+                    // 👆 ปัดนิ้วขึ้น (เลื่อนหน้าลง) -> ซ่อน Header
+                    if (currentScrollTop > lastScrollTop && currentScrollTop > 60) {
+                        mainHeaderEl.style.transform = 'translateY(-100%)';
+                        // ดึงเนื้อหาขึ้นมา 88px (เท่าความสูง Header) เพื่อไม่ให้มีขอบขาว
+                        mainScrollEl.style.transform = 'translateY(-88px)';
+                        mainScrollEl.style.height = 'calc(100% + 88px)'; 
                     } 
-                    // 👇 ถ้าเลื่อนขึ้น (ปัดนิ้วลง) -> โชว์ Header
+                    // 👇 ปัดนิ้วลง (เลื่อนหน้าขึ้น) -> โชว์ Header
                     else if (currentScrollTop < lastScrollTop) {
-                        mainHeaderEl.style.marginTop = '0px';
+                        mainHeaderEl.style.transform = 'translateY(0)';
+                        // ดันเนื้อหากลับที่เดิม
+                        mainScrollEl.style.transform = 'translateY(0)';
+                        mainScrollEl.style.height = '100%';
                     }
                     
                     lastScrollTop = currentScrollTop;
                 } else {
-                    // 💻 ถ้าเป็นจอใหญ่ (iPad/PC) ให้บังคับโชว์ Header เสมอ ไม่ให้กระทบ 100%
-                    mainHeaderEl.style.marginTop = '0px';
+                    // 💻 จอใหญ่ (iPad/PC) โชว์เสมอ
+                    mainHeaderEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.height = '100%';
                 }
             }, { passive: true });
 
-            // 🔄 รีเซ็ตแถบให้กลับมาโชว์ตอนหมุนจอเป็นแนวตั้ง/แนวนอน หรือปรับขนาดจอ
             window.addEventListener('resize', () => {
                 const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
                 if (!isMobileScreen) {
-                    mainHeaderEl.style.marginTop = '0px';
+                    mainHeaderEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.height = '100%';
                 }
             });
         }
