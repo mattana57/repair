@@ -1514,15 +1514,15 @@ $dept_icons = [
 
             <div id="technicians" class="section <?php echo $active_tab === 'technicians' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <!-- ✨ เพิ่ม landscape:flex-row และ landscape:items-center เพื่อให้บรรทัดนี้จัดเรียงแบบแนวนอนเฉพาะในมือถือแนวนอน ✨ -->
-                <div class="flex flex-col landscape:flex-row md:flex-row justify-between items-start landscape:items-center md:items-center gap-4 mb-2">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                     <div>
                         
                     </div>
                     <!-- ✨ เพิ่ม landscape:flex-row (เรียงปุ่มซ้ายขวา) และ landscape:w-auto landscape:ml-auto (ย่อความยาวและดันชิดขวา) ✨ -->
-                    <div class="flex flex-col landscape:flex-row md:flex-row w-full landscape:w-auto md:w-auto gap-3 landscape:ml-auto">
+                    <div class="flex flex-row justify-end w-full sm:w-auto gap-2.5 sm:gap-3">
                         <!-- ✨ เพิ่ม landscape:flex-none ให้ปุ่มหดเหลือแค่พอดีคำในแนวนอน ✨ -->
-                        <button onclick="openTechAdminModal('Admin')" class="flex-1 landscape:flex-none md:flex-none bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> Add Admin</button>
-                        <button onclick="openTechAdminModal('Technician')" class="flex-1 landscape:flex-none md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
+                        <button onclick="openTechAdminModal('Admin')" class="flex-1 sm:flex-none bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 px-2 sm:px-4 py-2.5 rounded-xl text-[13px] sm:text-sm font-bold shadow-sm transition-all flex items-center justify-center whitespace-nowrap"><i class="fas fa-user-shield mr-1.5 sm:mr-2"></i> Add Admin</button>
+                        <button onclick="openTechAdminModal('Technician')" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-2 sm:px-4 py-2.5 rounded-xl text-[13px] sm:text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all whitespace-nowrap"><i class="fas fa-plus mr-1.5 sm:mr-2"></i> Add Technician</button>
                     </div>
                 </div>
 
