@@ -728,8 +728,13 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         </div>
                     <?php endif; ?>
 
+                    <!-- ✨ แสดงเลขหน้าที่มุมขวาล่างของกรอบ A4 ในทุกหน้า ✨ -->
+                    <div class="mt-auto pt-6 text-right text-xs text-slate-500 font-bold pr-2">
+                        หน้า <?php echo toThaiNumber($page_index + 1); ?> / <?php echo toThaiNumber($total_pages); ?>
+                    </div>
+
                 </div> 
-            </div> 
+            </div>
             
             <?php endforeach; ?>
 
