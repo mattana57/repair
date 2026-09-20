@@ -420,8 +420,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
                         </div>
 
-                        <!-- ✨ บังคับความสูงแบบขั้นเด็ดขาด (max-h, min-h, py-0) สำหรับมือถือแนวตั้ง ให้เท่า Dropdown เป๊ะ 100% ✨ -->
-                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 portrait:px-5 h-[42px] portrait:h-[38px] portrait:min-h-[38px] portrait:max-h-[38px] portrait:py-0 portrait:leading-none sm:h-[42px] landscape:h-[42px] flex items-center justify-center rounded-full font-extrabold transition-all shadow-sm shrink-0">
+                        <!-- ✨ ลบ py- ออกทั้งหมด แล้วล็อกความสูง 38px (แนวตั้ง) และ 42px (จออื่นๆ) ให้เท่ากล่องเป๊ะ 100% ✨ -->
+                        <button type="submit" class="bg-amber-400 hover:bg-amber-500 text-amber-950 text-xs px-4 portrait:px-5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] flex items-center justify-center rounded-full font-extrabold transition-all shadow-sm shrink-0">
                             ค้นหา
                         </button>
                     </form>
