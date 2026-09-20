@@ -137,7 +137,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายงานสรุปผลการปฏิบัติงานซ่อม - MBS REPAIR</title>
+    <title>รายงานสรุปสำหรับผู้บริหาร - MBS REPAIR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -256,7 +256,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                     <button type="button" onclick="window.close();" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center cursor-pointer">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </button>
-                    <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide hidden sm:block">รายงานสรุปสำหรับผู้บริหาร</h1>
+                    <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide hidden sm:block">รายงานสรุปผลการปฏิบัติงานซ่อม</h1>
                 </div>
                 
                 <!-- ✨ เพิ่ม mt-6 lg:mt-0 เพื่อเว้นระยะห่างบรรทัดค้นหาให้ออกห่างจากบรรทัดบนอีกนิด ✨ -->
