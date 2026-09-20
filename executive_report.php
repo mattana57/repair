@@ -311,13 +311,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                             <input type="hidden" name="tech" id="techHiddenInput" value="<?php echo htmlspecialchars($selected_tech); ?>">
                         </div>
 
-                        <!-- ✨ เพิ่ม portrait:flex-1 ให้กล่องเดือนแชร์พื้นที่บรรทัดที่ 2 กับกล่องปี ในมือถือแนวตั้ง ✨ -->
+                        <!-- Dropdown เดือนแบบกำหนดเอง -->
                         <div class="relative w-28 portrait:flex-1 sm:w-32 outline-none focus:ring-2 focus:ring-indigo-400 rounded-full shrink-0" id="monthDropdownContainer" tabindex="0" onkeydown="handleMonthKeydown(event)">
                             <div class="flex items-center justify-between w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-full px-3 py-2 border border-slate-200 dark:border-slate-500 shadow-sm cursor-pointer transition-colors" onclick="toggleMonthDropdown(event)">
                                 <span id="monthDisplayText" class="truncate"><?php echo ($selected_month > 0 && isset($thai_months[$selected_month])) ? $thai_months[$selected_month] : 'เดือน'; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 dark:text-slate-300 ml-2"></i>
                             </div>
-                            <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl hidden flex-col pb-2 right-0 sm:left-0 sm:right-auto">
+                            <!-- ✨ เพิ่ม max-h-60, overflow-y-auto และ custom-scrollbar เพื่อให้มีแถบเลื่อน ✨ -->
+                            <div id="monthDropdownList" class="absolute z-50 w-full mt-2 bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl shadow-xl hidden flex-col pb-2 right-0 sm:left-0 sm:right-auto max-h-60 overflow-y-auto custom-scrollbar">
                                 <div class='month-dropdown-item flex justify-center items-center px-4 py-2 mb-1 border-b border-indigo-100 dark:border-slate-600 sticky top-0 z-10 rounded-t-2xl cursor-pointer transition-colors <?php echo ($selected_month == 0) ? "bg-indigo-100 dark:bg-slate-600 text-indigo-700 dark:text-indigo-300" : "bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-slate-700"; ?>' data-value='0' data-display='เดือน' onclick="selectMonth(0, 'เดือน')">
                                     <span class='text-[11px] font-extrabold tracking-wide pointer-events-none'>เดือน</span>
                                 </div>
@@ -729,7 +730,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
             if (currentMonthFocus >= x.length) currentMonthFocus = 0;
             if (currentMonthFocus < 0) currentMonthFocus = (x.length - 1);
             x[currentMonthFocus].classList.add("kb-active-item");
-            x[currentMonthFocus].scrollIntoView({ behavior: 'auto', block: 'nearest' });
+            // ✨ เปลี่ยนจาก 'auto' เป็น 'smooth' และใช้ block: 'center' เพื่อให้เลื่อนนุ่มนวลและอยู่ตรงกลางพอดี ✨
+            x[currentMonthFocus].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function removeMonthActive(x) {
