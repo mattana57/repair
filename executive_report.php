@@ -137,7 +137,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายงานสรุปสำหรับผู้บริหาร - MBS REPAIR</title>
+    <title>รายงานสรุปผลการปฏิบัติงานซ่อม - MBS REPAIR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
