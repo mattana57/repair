@@ -261,7 +261,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                 
                 <!-- ✨ เพิ่ม mt-6 lg:mt-0 เพื่อเว้นระยะห่างบรรทัดค้นหาให้ออกห่างจากบรรทัดบนอีกนิด ✨ -->
                 <div class="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 w-full lg:w-auto pb-0.5 mt-6 lg:mt-0">
-                    <!-- ✨ เพิ่ม id="reportFilterForm" และย้ายปุ่มโหมดมืดเข้ามาไว้ในฟอร์มแทนปุ่มค้นหา ✨ -->
+                    <!-- ✨ เพิ่ม id="reportFilterForm" เพื่อให้ JavaScript สั่งค้นหาอัตโนมัติได้ ✨ -->
                     <form id="reportFilterForm" method="GET" action="executive_report.php" class="flex flex-wrap portrait:flex-wrap sm:flex-nowrap items-center gap-2.5 bg-slate-50 dark:bg-slate-800 p-1.5 px-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full lg:w-auto">
                         <input type="hidden" name="type" value="<?php echo htmlspecialchars($report_type); ?>">
                         
