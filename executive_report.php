@@ -529,7 +529,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                                 $global_i++;
                             }
                         } else {
-                            echo "<tr><td colspan='7' class='p-8 text-center text-slate-400 italic bg-slate-50'>ไม่พบข้อมูลการแจ้งซ่อมของช่างหรือเดือนที่เลือก</td></tr>";
+                            echo "<tr><td colspan='7' class='p-8 text-center text-slate-400 italic bg-slate-50'>ไม่พบข้อมูลการแจ้งซ่อมของช่าง</td></tr>";
                         }
                         ?>
                     </tbody>
@@ -646,8 +646,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
             document.getElementById('reportFilterForm').submit();
         }
 
-        // ... (โค้ดระหว่างนี้คงไว้เหมือนเดิม) ...
-
         function selectMonth(val, displayText) {
             document.getElementById('monthHiddenInput').value = val;
             document.getElementById('monthDisplayText').innerText = displayText;
@@ -656,8 +654,6 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
             // ✨ สั่ง Submit ฟอร์มอัตโนมัติเมื่อเลือกเดือน ✨
             document.getElementById('reportFilterForm').submit();
         }
-
-        // ... (โค้ดระหว่างนี้คงไว้เหมือนเดิม) ...
 
         function selectYear(val, displayText) {
             document.getElementById('yearHiddenInput').value = val;
