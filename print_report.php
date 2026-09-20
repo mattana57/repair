@@ -728,12 +728,13 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         </div>
                     <?php endif; ?>
 
-                    <!-- ✨ เพิ่มเลขหน้าไว้ที่ด้านล่างสุดของกระดาษ (mt-auto ช่วยดันให้อยู่ล่างสุดเสมอ) ✨ -->
-                    <div class="mt-auto pt-6 pb-2 text-right text-[13px] font-bold text-slate-600">
-                        หน้า <?php echo $page_index + 1; ?>
+                    <!-- ✨ แสดงเลขหน้าที่มุมขวาล่างของกรอบ A4 ในทุกหน้า ✨ -->
+                    <div class="mt-auto pt-6 text-right text-xs text-slate-500 font-bold pr-2">
+                        หน้า <?php echo toThaiNumber($page_index + 1); ?> / <?php echo toThaiNumber($total_pages); ?>
                     </div>
+
                 </div> 
-            </div> 
+            </div>
             
             <?php endforeach; ?>
 
