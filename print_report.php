@@ -834,7 +834,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             document.getElementById('techSearchInput').value = displayText;
             document.getElementById('techDropdownList').classList.add('hidden');
             document.getElementById('techDropdownList').classList.remove('flex');
-            // ✨ สั่ง Submit ฟอร์มอัตโนมัติเมื่อเลือกช่าง ✨
+            // ✨ สั่ง Submit ฟอร์มอัตโนมัติเมื่อเลือกช่าง (รองรับทั้งเมาส์คลิกและ Enter) ✨
             document.getElementById('reportFilterForm').submit();
         }
 
@@ -922,6 +922,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             document.getElementById('monthDisplayText').innerText = displayText;
             document.getElementById('monthDropdownList').classList.add('hidden');
             document.getElementById('monthDropdownList').classList.remove('flex');
+            // ✨ สั่ง Submit ฟอร์มอัตโนมัติเมื่อเลือกเดือน (รองรับทั้งเมาส์คลิกและ Enter) ✨
+            document.getElementById('reportFilterForm').submit();
         }
 
         function handleMonthKeydown(e) {
@@ -985,6 +987,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             document.getElementById('yearDisplayText').innerText = displayText;
             document.getElementById('yearDropdownList').classList.add('hidden');
             document.getElementById('yearDropdownList').classList.remove('flex');
+            // ✨ สั่ง Submit ฟอร์มอัตโนมัติเมื่อเลือกปี (รองรับทั้งเมาส์คลิกและ Enter) ✨
+            document.getElementById('reportFilterForm').submit();
         }
 
         function handleYearKeydown(e) {
