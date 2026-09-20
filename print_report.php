@@ -213,6 +213,27 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.6); 
         }
 
+        /* ✨ ปรับขนาดกระดาษ A4 ให้สมส่วนกับหน้าจอมือถือแนวตั้ง ไม่ให้ล้นจอ ✨ */
+        @media screen and (max-width: 767px) and (orientation: portrait) {
+            .a4-container {
+                width: calc(100% - 24px) !important; /* บีบกระดาษให้พอดีจอ เว้นขอบซ้ายขวานิดหน่อย */
+                min-height: auto !important;
+                padding: 24px 16px !important; /* ลดระยะขอบกระดาษด้านใน */
+                margin: 16px auto 40px auto !important;
+                overflow-x: auto !important; /* สร้าง Scrollbar ด้านในกระดาษ ป้องกันตารางล้น */
+            }
+            .memo-head-title {
+                font-size: 16pt !important; /* ย่อหัวบันทึกข้อความให้พอดีจอ */
+                top: 0.5cm !important;
+            }
+            .a4-container h2 {
+                font-size: 1.15rem !important; /* ย่อหัวรายงานตารางให้พอดีจอ */
+            }
+            .gov-indent {
+                text-indent: 1cm !important; /* ลดระยะย่อหน้าให้สมส่วนกับจอมือถือ */
+            }
+        }
+
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; font-size: 14px; color: black !important; min-height: auto !important; }
