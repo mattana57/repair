@@ -213,9 +213,20 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.6); 
         }
 
+        @media print {.dark .a4-container {
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6); 
+        }
+
+        /* ✨ ย่อกระดาษ A4 ให้พอดีหน้าจอมือถือแนวตั้ง คล้ายเปิดดู PDF (ไม่กระทบ iPad/PC/แนวนอน) ✨ */
+        @media screen and (max-width: 767px) and (orientation: portrait) {
+            .a4-container {
+                zoom: 0.44; /* ย่อสเกลลง 44% ให้กระดาษ A4 พอดีกับความกว้างจอมือถือ */
+                margin-top: 10px;
+                margin-bottom: 25px;
+            }
+        }
+
         @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; font-size: 14px; color: black !important; min-height: auto !important; }
             
             @page { 
                 size: A4 portrait; 
