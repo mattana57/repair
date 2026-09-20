@@ -217,7 +217,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
         @media screen and (max-width: 767px) and (orientation: portrait) {
             .a4-container {
                 zoom: 0.44; /* ย่อสเกลลง 44% ให้กระดาษ A4 พอดีกับความกว้างจอมือถือ */
-                margin-top: 10px;
+                margin-top: 80px; /* ✨ เพิ่มระยะห่างเป็น 80px เพื่อให้มีช่องว่างระหว่างปุ่มกับกระดาษสวยงามขึ้น ✨ */
                 margin-bottom: 25px;
             }
         }
