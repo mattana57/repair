@@ -431,9 +431,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
 
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1 lg:mt-0">
                 
-                <!-- ✨ ซ่อนปุ่ม ตาราง/บันทึกข้อความ ในมือถือ/iPad แนวตั้ง (จะไปโชว์รวมกับปุ่มพิมพ์ด้านล่างแทน) ✨ -->
-                <!-- ✨ แสดงเฉพาะ คอมพิวเตอร์ และ อุปกรณ์แนวนอน พร้อมดันปุ่มให้ตรงกับคำว่า ระบบพิมพ์เอกสารรายงาน ✨ -->
-                <div class="hidden landscape:flex lg:flex flex-wrap items-center justify-start gap-2.5 w-full sm:w-auto">
+                <!-- ✨ ซ่อนปุ่ม ตาราง/บันทึกข้อความ ในมือถือทุกแนว และ iPad แนวตั้ง ✨ -->
+                <!-- ✨ แสดงเฉพาะ คอมพิวเตอร์ และ iPad แนวนอน (lg:flex) โดยดันปุ่มให้ตรงกับคำว่า ระบบพิมพ์เอกสารรายงาน ✨ -->
+                <div class="hidden lg:flex flex-wrap items-center justify-start gap-2.5 w-full sm:w-auto">
                     
                     <!-- ✨ Spacer ล่องหน สำหรับดันปุ่มให้ตรงกับคำว่า "ระบบพิมพ์เอกสารรายงาน" พอดีเป๊ะ ✨ -->
                     <div class="opacity-0 pointer-events-none select-none flex items-center px-4 py-1.5 border-2 text-xs font-bold mr-[6px]">
