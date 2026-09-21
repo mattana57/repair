@@ -1094,8 +1094,10 @@ $pageTitles = [
                                     </div>
                                 </div>
                                 
-                                <div class="relative z-10 hidden sm:flex items-center pr-1">
-                                    <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center">
+                                <!-- ✨ เปิดให้แสดงผลจำนวนช่างในมือถือแนวตั้งด้วยคลาส flex portrait:flex ✨ -->
+                                <div class="relative z-10 flex portrait:flex items-center pr-1">
+                                    <!-- ✨ ปรับขนาดฟอนต์ text-[10px] ในมือถือ และ text-[11px] ในจออื่น ให้พอดีไม่เบียดชื่อฝ่ายงาน ✨ -->
+                                    <span class="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center shrink-0">
                                         <i class="fas fa-user-check mr-1.5 opacity-80"></i> <?php echo count($techs); ?> คน
                                     </span>
                                 </div>
