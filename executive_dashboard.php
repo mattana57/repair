@@ -2646,10 +2646,11 @@ $pageTitles = [
                 displayTitleName = lineUsersMap[fullName].real_name;
             }
             
-            // ใช้ querySelectorAll ป้องกันบั๊กเวลามี ID ซ้ำ
-            document.querySelectorAll('[id="historyModalTitle"]').forEach(el => {
-                el.innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
-            });
+            // ใช้ innerHTML และใช้ <span class="block sm:inline"> เพื่อให้ชื่อช่างและชื่อผู้แจ้งมาต่อท้ายคำว่า "ประวัติ..." ในมือถือแนวตั้งแบบสมบูรณ์
+        document.querySelectorAll('[id="historyModalTitle"]').forEach(el => {
+            let prefix = type === 'technician' ? 'ประวัติงานช่าง:' : 'ประวัติการแจ้งซ่อม:';
+            el.innerHTML = `${prefix} <span class="block sm:inline mt-0.5 sm:mt-0">${displayTitleName}</span>`;
+        });
             
             document.querySelectorAll('[id="searchHistoryModalInput"]').forEach(el => el.value = '');
 
