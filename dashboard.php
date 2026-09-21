@@ -1665,7 +1665,7 @@ $dept_icons = [
                                                         </div>
                                                         <div>
                                                             <h3 class='font-extrabold text-sm sm:text-base text-white tracking-wide drop-shadow-md leading-tight'>
-                                                                ".htmlspecialchars($dept)."
+                                                                " . ($dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' ? "ฝ่ายงานบริการ<span class='block sm:inline landscape:inline'>เทคโนโลยีดิจิทัล</span>" : htmlspecialchars($dept)) . "
                                                             </h3>
                                                             <!-- ✨ ปรับฟอนต์ให้ใหญ่ขึ้นเพื่อความชัดเจน ✨ -->
                                                             <p class='text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
@@ -1860,7 +1860,7 @@ $dept_icons = [
                             </div>
                             <div>
                                 <h3 class="font-extrabold text-base text-white tracking-wide drop-shadow-md leading-tight">
-                                    <?php echo htmlspecialchars($dept_name); ?>
+                                    <?php echo $dept_name === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' ? "ฝ่ายงานบริการ<span class='block sm:inline landscape:inline'>เทคโนโลยีดิจิทัล</span>" : htmlspecialchars($dept_name); ?>
                                 </h3>
                                 <!-- ✨ ปรับฟอนต์ให้ใหญ่ขึ้นเพื่อความชัดเจน ✨ -->
                                 <p class="text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
