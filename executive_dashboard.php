@@ -787,28 +787,26 @@ $pageTitles = [
             <!-- ✨ หน้า Transactions (All Repairs List) ให้ผู้บริหาร ✨ -->
             <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <!-- ✨ จัด Layout ส่วน Header ใหม่สำหรับหน้า Repairs List (ปรับให้คอมฯ/iPad แนวนอน เป็น 2 บรรทัดเหมือนกัน) ✨ -->
-                    <!-- ✨ เอา lg:flex-row และ lg:items-center ออก เพื่อบังคับให้เป็นแนวตั้ง (flex-col) 2 บรรทัดเสมอ ✨ -->
-                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col justify-between items-start gap-4 bg-white shrink-0 relative z-30">
+                    <!-- ✨ จัด Layout ส่วน Header ใหม่สำหรับหน้า Repairs List ✨ -->
+                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white shrink-0 relative z-30">
                         
-                        <!-- 🌟 บรรทัดบน: หัวข้อ + ปุ่ม ขยายเต็มจอ (เอา lg:hidden ออก เพื่อโชว์ปุ่มนี้ในทุกอุปกรณ์บรรทัดแรกขวาสุด) ✨ -->
-                        <div class="flex justify-between items-center w-full gap-4">
+                        <!-- 🌟 บรรทัดบน (iPad): หัวข้อ + ปุ่ม ขยายเต็มจอ -->
+                        <div class="flex justify-between items-center w-full lg:w-auto gap-4">
                             <div class="shrink-0 flex-1">
                                 <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
                             </div>
                             
-                            <!-- ✨ ปุ่มขยายจอรวมเป็นอันเดียว ใช้ได้ทุกอุปกรณ์ โชว์ขวาบนสุด ✨ -->
-                            <div class="flex items-center gap-2 shrink-0">
+                            <!-- ปุ่ม ขยายเต็มจอ (ซ่อนใน แนวนอน/PC โชว์เฉพาะ iPad แนวตั้ง) -->
+                            <div class="flex items-center gap-2 shrink-0 lg:hidden">
                                 <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                                     <i class="fas fa-expand text-sm md:text-base" id="maximizeRepairsIcon"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง ✨ -->
-                        <!-- ✨ เพิ่ม lg:self-end เพื่อดันบรรทัดนี้ไปชิดขวาเฉพาะในคอมฯ/iPad แนวนอน ✨ -->
-                        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto lg:self-end lg:justify-end">
+                        <!-- 🌟 บรรทัดล่าง (iPad): ค้นหา + ตัวกรอง + ปุ่ม ขยายเต็มจอ (ของ แนวนอน/PC) -->
+                        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto lg:justify-end">
                             
                             <div class="relative flex-1 min-w-[150px] lg:w-64">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
@@ -838,6 +836,13 @@ $pageTitles = [
                                     </div>
                                     <input type="hidden" id="tableYear" value="all">
                                 </div>
+                            </div>
+                            
+                            <!-- ปุ่ม ขยายเต็มจอ (โชว์เฉพาะ แนวนอน/PC) -->
+                            <div class="hidden lg:flex items-center gap-2 shrink-0 ml-4">
+                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-[42px] h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                                    <i class="fas fa-expand text-base" id="maximizeRepairsIcon_desktop"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
