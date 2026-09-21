@@ -1237,7 +1237,8 @@ $pageTitles = [
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
             <!-- ✨ แก้ไข Header ของ History Modal จัด Layout ให้คอมพิวเตอร์/โน้ตบุ๊ค เป็น 2 บรรทัดเหมือนรูปที่กำหนด ✨ -->
-            <div class="px-5 py-4 border-b border-slate-100 flex flex-col gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300 relative z-30">
+            <!-- ✨ เพิ่ม xl:pb-3 และ xl:gap-3 เพื่อดึงระยะห่างของแถบค้นหาให้แคบลงนิดนึงในจอคอมพิวเตอร์ ✨ -->
+            <div class="px-5 py-4 xl:pb-3 border-b border-slate-100 flex flex-col gap-4 xl:gap-3 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300 relative z-30">
                 
                 <!-- 🌟 บรรทัดบน: หัวข้อ + ปุ่ม ขยาย/ปิด (ชิดขวาเสมอ) -->
                 <div class="flex justify-between items-start sm:items-center w-full">
@@ -1295,7 +1296,8 @@ $pageTitles = [
                 </div>
             </div>
             
-            <div class="p-0 md:p-6 overflow-hidden flex-1 bg-[#f8fafc]">
+            <!-- ✨ เพิ่ม xl:pt-3 เพื่อดึงขอบล่างของตารางขึ้นมาให้ชิด Header มากขึ้นเฉพาะบนหน้าจอคอมพิวเตอร์/โน้ตบุ๊ค ✨ -->
+            <div class="p-0 md:p-6 xl:pt-3 overflow-hidden flex-1 bg-[#f8fafc]">
                 <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
                     <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
