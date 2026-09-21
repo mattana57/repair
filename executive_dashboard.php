@@ -810,9 +810,9 @@ $pageTitles = [
                         <div class="flex flex-wrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
                             
                             <!-- ✨ ช่องค้นหา: หดความยาวในจอคอม/โน้ตบุ๊ค (xl:w-[450px] 2xl:w-[500px]) ให้กลับมาเท่าฝั่งแอดมิน เพื่อตรงกับคอลัมน์ Reporter พอดีเป๊ะ ไม่ทะลุออกไป ✨ -->
-                            <div class="relative flex-1 min-w-[150px] lg:flex-none lg:w-[400px] xl:w-[450px] 2xl:w-[500px]">
+                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[520px] 2xl:w-[580px]">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchInput" oninput="filterRepairsTable()" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
                             
                             <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
