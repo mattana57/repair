@@ -1327,19 +1327,16 @@ $dept_icons = [
                             </div>
                         </div>
 
-                        <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง (จัดเต็มพื้นที่และดันให้ช่องค้นหาพอดีกับคอลัมน์ Reporter) -->
-                        <div class="flex flex-wrap items-center gap-3 w-full">
+                        <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง (ชิดขวาเสมอ) -->
+                        <div class="flex flex-wrap items-center justify-end gap-3 w-full">
                             
-                            <!-- ✨ ช่องค้นหา: ใช้ flex-1 ตลอดเวลา เพื่อให้ยืดไปจนสุดและดันให้ตัวกรองเดือน/ปีชิดขวาเสมอ ✨ -->
-                            <div class="relative flex-1 min-w-[150px]">
-                                <!-- ✨ ซ้อน div อีกชั้นเพื่อล็อกความกว้างสูงสุดให้ตรงกับคอลัมน์ Reporter เฉพาะในจอคอม/iPad แนวนอน ✨ -->
-                                <div class="w-full lg:w-[450px] xl:w-[500px] 2xl:w-[600px] ml-auto lg:ml-0 lg:mr-auto">
-                                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                    <input type="text" id="searchInput" oninput="filterRepairsTable()" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                                </div>
+                            <!-- ✨ ช่องค้นหา: ใช้ flex-1 ให้ยืดเต็มพื้นที่ด้านซ้าย เพื่อให้ขอบซ้ายไปตรงกับคอลัมน์ Reporter พอดีในจอใหญ่ ✨ -->
+                            <div class="relative flex-1">
+                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="searchInput" oninput="filterRepairsTable()" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
                             
-                            <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน (โดน flex-1 ของช่องค้นหาดันมาอยู่ขวาสุดเสมอ) ✨ -->
+                            <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
                             <div class="flex items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 relative z-40">
                                 <!-- ✨ ย่อความกว้าง (w-92px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
                                 <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
