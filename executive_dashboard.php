@@ -1240,7 +1240,7 @@ $pageTitles = [
                 <div class="flex justify-between items-center w-full xl:w-auto gap-4">
                     <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate flex-1" id="historyModalTitle">History</p>
                     
-                    <div class="flex items-center gap-2 shrink-0 xl:hidden">
+                    <div class="flex items-center gap-2 shrink-0 md:ml-4">
                         <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
                         </button>
@@ -1319,7 +1319,7 @@ $pageTitles = [
                         <div class="flex gap-4 z-10 flex-1 min-w-0">
                             <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center text-2xl shrink-0 shadow-sm border border-amber-200 mt-1"><i class="fas fa-star"></i></div>
                             <div class="flex flex-col min-w-0 w-full">
-                                <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate" id="techReviewsModalTitle">รีวิวของช่าง: ...</p>
+                                <p class="text-lg md:text-xl font-extrabold text-slate-800 sm:truncate leading-tight" id="techReviewsModalTitle">รีวิวของช่าง: ...</p>
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center mt-1">
                                     <p class="text-[13px] font-bold text-indigo-600 truncate" id="techReviewsModalDept">ฝ่ายงาน...</p>
                                     <p class="text-[11px] font-medium text-slate-500 truncate sm:ml-1.5 mt-0.5 sm:mt-0" id="techReviewsModalPos">(...)</p>
@@ -2483,8 +2483,8 @@ $pageTitles = [
 
         function changeModalTech(techName) {
             let thNameOnly = (techInfoMap[techName] && techInfoMap[techName].th) ? techInfoMap[techName].th : techName.split(' (')[0];
-            // ✨ ปรับให้อยู่บรรทัดเดียวกันและตัดคำ <span ...> ทิ้งให้เหมือนฝั่งแอดมิน ✨
-            document.getElementById('techReviewsModalTitle').innerText = `รีวิวของช่าง: ${thNameOnly}`;
+            // ✨ ใช้ innerHTML และ <span class="block sm:inline"> เพื่อดันชื่อช่างลงบรรทัดใหม่เฉพาะมือถือแนวตั้ง ✨
+            document.getElementById('techReviewsModalTitle').innerHTML = `รีวิวของช่าง: <span class="block sm:inline mt-0.5 sm:mt-0">${thNameOnly}</span>`;
 
             let posName = (techInfoMap[techName] && techInfoMap[techName].pos) ? techInfoMap[techName].pos : '';
             document.getElementById('techReviewsModalPos').innerText = posName && posName !== '-' ? '(' + posName + ')' : '(ไม่ระบุตำแหน่ง)';
@@ -2648,7 +2648,6 @@ $pageTitles = [
             
             // ใช้ querySelectorAll ป้องกันบั๊กเวลามี ID ซ้ำ
             document.querySelectorAll('[id="historyModalTitle"]').forEach(el => {
-                // ✨ ปรับให้อยู่บรรทัดเดียวกันและตัดคำ <span ...> ทิ้งให้เหมือนฝั่งแอดมิน ✨
                 el.innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
             });
             
