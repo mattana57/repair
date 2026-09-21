@@ -786,7 +786,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
             document.getElementById('yearDisplayText').innerText = displayText;
             document.getElementById('yearDropdownList').classList.add('hidden');
             document.getElementById('yearDropdownList').classList.remove('flex');
-            // ✨ สั่ง Submit ฟอร์มอัตโนมัติเมื่อเลือกปี (รองรับทั้งเมาส์คลิกและ Enter) ✨
+            // ✨ สั่ง Submit ฟอร์มอัตโนมัติเมื่อเลือกปี ✨
             document.getElementById('reportFilterForm').submit();
         }
 
