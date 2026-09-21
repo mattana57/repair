@@ -451,8 +451,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </a>
                 </div>
 
-                <!-- ✨ ดึงปุ่มลายเซ็นลอยขึ้นไปคู่กับปุ่มพระจันทร์บน iPad แนวตั้ง และชิดขวาในมือถือแนวตั้ง ✨ -->
-                <div class="absolute top-1.5 portrait:right-4 md:portrait:right-11 landscape:right-11 lg:static flex items-center justify-end w-auto pr-1">
+                <!-- ✨ ดึงปุ่มลายเซ็นลอยขึ้นไปคู่กับปุ่มพระจันทร์บน iPad แนวตั้ง และชิดขวาแบบเป๊ะๆในมือถือแนวตั้ง ✨ -->
+                <div class="absolute top-1.5 portrait:right-0 md:portrait:right-11 landscape:right-11 lg:static flex items-center justify-end w-auto pr-1">
                     <label for="toggleSignature" class="flex items-center cursor-pointer">
                         <span class="mr-2 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ลายเซ็นท้ายเอกสาร</span>
                         <div class="relative flex items-center">
@@ -489,8 +489,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </a>
             </div>
 
-            <!-- ✨ ปุ่มพิมพ์ชิดขวาเสมอ (ปรับ portrait:py-1.5 ให้ความสูงเท่ากับปุ่มบนในมือถือแนวตั้ง) ✨ -->
-            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 portrait:py-1.5 md:portrait:py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center justify-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5 sm:ml-auto">
+            <!-- ✨ ปุ่มพิมพ์ลดความยาวและชิดซ้ายในมือถือแนวตั้ง (portrait:self-start) พร้อมป้องกันไม่ให้กระทบ iPad แนวตั้ง (md:portrait:self-auto) ✨ -->
+            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 portrait:py-1.5 md:portrait:py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center justify-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5 sm:ml-auto portrait:self-start md:portrait:self-auto">
                 <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
             </button>
         </div>
