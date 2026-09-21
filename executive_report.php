@@ -722,6 +722,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
             document.getElementById('monthDisplayText').innerText = displayText;
             document.getElementById('monthDropdownList').classList.add('hidden');
             document.getElementById('monthDropdownList').classList.remove('flex');
+            // ✨ สั่ง Submit ฟอร์มอัตโนมัติเมื่อเลือกเดือน ✨
+            document.getElementById('reportFilterForm').submit();
         }
 
         function handleMonthKeydown(e) {
