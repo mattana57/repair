@@ -1238,9 +1238,15 @@ $pageTitles = [
             <div class="px-5 py-4 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300 relative z-30">
                 
                 <div class="flex justify-between items-center w-full xl:w-auto gap-4">
-                    <p class="text-lg md:text-xl font-extrabold text-slate-800 truncate flex-1" id="historyModalTitle">History</p>
-                    
-                    <div class="flex items-center gap-2 shrink-0 md:ml-4">
+                    <!-- 🌟 บรรทัดบน: หัวข้อ + ปุ่ม ขยาย/ปิด -->
+                        <!-- ✨ ปรับ items-center เป็น portrait:items-start md:portrait:items-center sm:items-center เพื่อให้ปุ่มอยู่บนสุดตอนชื่อขึ้นบรรทัดใหม่ ✨ -->
+                        <div class="flex justify-between portrait:items-start md:portrait:items-center sm:items-center w-full xl:w-auto gap-4">
+                            
+                            <!-- ✨ ลบ truncate ออกเฉพาะในมือถือแนวตั้ง (ใส่ portrait:whitespace-normal) เพื่อให้แท็กปัดบรรทัดทำงานได้สมบูรณ์ และรักษาเลย์เอาต์ iPad/PC ไว้เหมือนเดิม 100% ✨ -->
+                            <p class="text-lg md:text-xl font-extrabold text-slate-800 portrait:whitespace-normal portrait:break-words md:portrait:truncate sm:truncate flex-1 leading-tight" id="historyModalTitle">History</p>
+                            
+                            <!-- ปุ่ม ปิด/ขยาย (ลอยขึ้นมาอยู่บรรทัดเดียวกับหัวข้อใน iPad) -->
+                            <div class="flex items-center gap-2 shrink-0 md:ml-4 mt-0.5 sm:mt-0">
                         <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
                         </button>
