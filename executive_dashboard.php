@@ -1260,7 +1260,7 @@ $pageTitles = [
                 <div class="flex flex-wrap landscape:flex-nowrap items-center justify-end gap-3 w-full">
                     
                     <!-- ✨ ช่องค้นหา: ขยายความยาวในจอคอม/โน้ตบุ๊ค (xl:w-[500px] 2xl:w-[600px]) เพื่อดันซ้ายให้ตรงกับคอลัมน์ Reporter พอดี ✨ -->
-                    <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[500px] 2xl:w-[600px]">
+                    <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px]">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
