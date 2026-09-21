@@ -353,8 +353,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                             <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
                         </div>
 
-                        <!-- ✨ ย้ายปุ่มพระจันทร์ลอยขึ้นไปขวาบนสุดเฉพาะในมือถือแนวตั้ง และคงตำแหน่งเดิมใน iPad แนวตั้ง ✨ -->
-                        <button id="theme-toggle" type="button" class="w-[42px] h-[42px] portrait:absolute portrait:top-0 portrait:right-4 md:portrait:static portrait:w-[34px] portrait:h-[34px] md:portrait:w-[38px] md:portrait:h-[38px] rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors ml-auto sm:ml-0">
+                        <!-- ✨ ย้ายปุ่มพระจันทร์ลอยขึ้นไปขวาบนสุดเฉพาะในมือถือแนวตั้ง (ปรับเป็น right-0 ให้ชิดขวาเป๊ะ) และคงตำแหน่งเดิมใน iPad แนวตั้ง ✨ -->
+                        <button id="theme-toggle" type="button" class="w-[42px] h-[42px] portrait:absolute portrait:top-0 portrait:right-0 md:portrait:static portrait:w-[34px] portrait:h-[34px] md:portrait:w-[38px] md:portrait:h-[38px] rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors ml-auto sm:ml-0">
                             <i id="theme-toggle-icon" class="fas fa-moon portrait:text-sm md:portrait:text-base"></i>
                         </button>
                     </form>
