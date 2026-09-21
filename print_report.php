@@ -451,8 +451,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </a>
                 </div>
 
-                <!-- ✨ ดึงปุ่มลายเซ็นลอยขึ้นไปคู่กับปุ่มพระจันทร์บน iPad แนวตั้ง ✨ -->
-                <div class="absolute top-1.5 right-11 lg:static flex items-center justify-end w-auto pr-1">
+                <!-- ✨ ดึงปุ่มลายเซ็นลอยขึ้นไปคู่กับปุ่มพระจันทร์บน iPad แนวตั้ง และชิดขวาในมือถือแนวตั้ง ✨ -->
+                <div class="absolute top-1.5 portrait:right-4 md:portrait:right-11 landscape:right-11 lg:static flex items-center justify-end w-auto pr-1">
                     <label for="toggleSignature" class="flex items-center cursor-pointer">
                         <span class="mr-2 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ลายเซ็นท้ายเอกสาร</span>
                         <div class="relative flex items-center">
@@ -473,11 +473,11 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     <div class="flex-1 overflow-auto pb-10">
 
         <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ (บรรทัดที่ 3) ซ้ายเป็น ตาราง/บันทึก ขวาเป็น พิมพ์ ✨ -->
-        <!-- ✨ เพิ่ม md:portrait:flex-row เพื่อดึงปุ่มใน iPad แนวตั้งให้กลับมาอยู่แถวเดียวกันกับปุ่มพิมพ์ ✨ -->
-        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex portrait:flex-col md:portrait:flex-row sm:flex-row justify-between items-center portrait:items-stretch md:portrait:items-center px-4 xl:px-0 portrait:gap-3 md:portrait:gap-0">
+        <!-- ✨ ปรับ portrait:w-max และ portrait:ml-0 เพื่อให้ในมือถือแนวตั้งปุ่มไม่ยาวเต็มจอและชิดซ้าย ✨ -->
+        <div class="no-print mx-auto portrait:ml-0 md:portrait:mx-auto w-full portrait:w-max md:portrait:w-full max-w-[210mm] mt-8 flex portrait:flex-col md:portrait:flex-row sm:flex-row justify-between items-center portrait:items-stretch md:portrait:items-center px-4 xl:px-0 portrait:gap-3 md:portrait:gap-0">
             
-            <!-- ✨ เพิ่ม md:portrait:flex เพื่อยกเลิก grid สองช่องใน iPad แนวตั้ง แล้วให้ปุ่มชิดซ้ายปกติ ✨ -->
-            <div class="flex portrait:grid md:portrait:flex portrait:grid-cols-2 lg:hidden items-center gap-2.5">
+            <!-- ✨ เปลี่ยน portrait:grid เป็น portrait:flex เพื่อให้ปุ่มตาราง/บันทึก หดตัวพอดีคำในมือถือแนวตั้ง ✨ -->
+            <div class="flex portrait:flex md:portrait:flex lg:hidden items-center gap-2.5">
                 <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                    class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                     <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> ตารางรายงาน
@@ -489,8 +489,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                 </a>
             </div>
 
-            <!-- ✨ ปุ่มพิมพ์ชิดขวาเสมอ (ปรับ md:portrait:py-1.5 ให้ความสูงเท่ากับปุ่มซ้ายใน iPad แนวตั้ง) ✨ -->
-            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 portrait:py-2.5 md:portrait:py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center justify-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5 sm:ml-auto">
+            <!-- ✨ ปุ่มพิมพ์ชิดขวาเสมอ (ปรับ portrait:py-1.5 ให้ความสูงเท่ากับปุ่มบนในมือถือแนวตั้ง) ✨ -->
+            <button type="button" onclick="window.print()" class="bg-slate-900 hover:bg-black dark:bg-rose-800 dark:hover:bg-rose-700 text-white text-xs px-4 py-1.5 portrait:py-1.5 md:portrait:py-1.5 rounded-full font-bold shadow-lg transition-all flex items-center justify-center border border-slate-900 dark:border-rose-800 hover:-translate-y-0.5 sm:ml-auto">
                 <i class="fas fa-print mr-1.5 text-slate-300 dark:text-rose-200"></i> พิมพ์ / โหลด PDF
             </button>
         </div>
