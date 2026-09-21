@@ -2648,10 +2648,9 @@ $pageTitles = [
             
             // ใช้ querySelectorAll ป้องกันบั๊กเวลามี ID ซ้ำ
             document.querySelectorAll('[id="historyModalTitle"]').forEach(el => {
-                let prefix = type === 'technician' ? 'ประวัติงานช่าง:' : 'ประวัติการแจ้งซ่อม:';
-                // ✨ ใช้ portrait:block เพื่อให้ขึ้นบรรทัดใหม่เฉพาะมือถือแนวตั้งเท่านั้น และเพิ่ม portrait:pl-4 เพื่อเยื้องข้อความเข้าด้านในให้สวยเหมือนฝั่งแอดมิน โดยซ่อนผลกระทบจากแนวนอน (landscape) และคอมพิวเตอร์ (sm:inline, md:inline) เด็ดขาด 100% ✨
-                el.innerHTML = `${prefix} <span class="portrait:block landscape:inline sm:inline md:inline mt-0.5 portrait:mt-1.5 portrait:pl-4 sm:pl-0 sm:mt-0 text-indigo-600">${displayTitleName}</span>`;
+                el.innerText = (type === 'technician' ? 'ประวัติงานช่าง: ' : 'ประวัติการแจ้งซ่อม: ') + displayTitleName;
             });
+            
             document.querySelectorAll('[id="searchHistoryModalInput"]').forEach(el => el.value = '');
 
             // ฝั่งผู้บริหารให้แสดงตัวกรองดรอปดาวน์เสมอ
