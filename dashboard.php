@@ -1376,9 +1376,6 @@ $dept_icons = [
                 </div>
             </div>
             
-            <!-- ✨ เพิ่ม xl:pt-3 เพื่อดึงขอบล่างของตารางขึ้นมาให้ชิด Header มากขึ้นเฉพาะบนหน้าจอคอมพิวเตอร์/โน้ตบุ๊ค ✨ -->
-            <div class="p-0 md:p-6 xl:pt-3 overflow-hidden flex-1 bg-[#f8fafc]">
-
                     <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1 table-wrapper-fix" id="repairsTableContainer">
                         <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
