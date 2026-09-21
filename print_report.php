@@ -451,8 +451,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                     </a>
                 </div>
 
-                <!-- ✨ ดึงปุ่มลายเซ็นลอยขึ้นไปคู่กับปุ่มพระจันทร์บน iPad แนวตั้ง และชิดขวาแบบเป๊ะๆในมือถือแนวตั้ง ✨ -->
-                <div class="absolute top-1.5 portrait:right-0 md:portrait:right-11 landscape:right-11 lg:static flex items-center justify-end w-auto pr-1">
+                <!-- ✨ ดึงปุ่มลายเซ็นลอยขึ้นไปคู่กับปุ่มพระจันทร์ และปรับให้ชิดขวาแบบเป๊ะๆ ทั้งในมือถือและ iPad แนวตั้ง ✨ -->
+                <div class="absolute top-1.5 portrait:right-0 md:portrait:right-0 landscape:right-11 lg:static flex items-center justify-end w-auto pr-1">
                     <label for="toggleSignature" class="flex items-center cursor-pointer">
                         <span class="mr-2 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">ลายเซ็นท้ายเอกสาร</span>
                         <div class="relative flex items-center">
