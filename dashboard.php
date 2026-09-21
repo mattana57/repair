@@ -2424,14 +2424,13 @@ $dept_icons = [
         <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
         <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
-            <!-- ✨ แก้ไข Header ของ History Modal จัด Layout ให้คอมพิวเตอร์/โน้ตบุ๊ค เป็น 2 บรรทัดเหมือนฝั่งผู้บริหาร ✨ -->
+            <!-- ✨ แก้ไข Header ของ History Modal จัด Layout ให้คอมพิวเตอร์/โน้ตบุ๊ค เป็น 2 บรรทัด ✨ -->
             <!-- ✨ เพิ่ม xl:pb-3 และ xl:gap-3 เพื่อดึงระยะห่างของแถบค้นหาให้แคบลงนิดนึงในจอคอมพิวเตอร์ ✨ -->
             <div class="px-5 py-4 xl:pb-3 border-b border-slate-100 flex flex-col gap-4 xl:gap-3 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300 relative z-30">
                 
                 <!-- 🌟 บรรทัดบน: หัวข้อ + ปุ่ม ขยาย/ปิด (ชิดขวาเสมอ) -->
                 <div class="flex justify-between items-start sm:items-center w-full">
                     <!-- หัวข้อ -->
-                    <!-- ✨ ใช้ innerHTML และใช้ <span class="block sm:inline"> เพื่อให้ชื่อช่างและชื่อผู้แจ้งมาต่อท้ายคำว่า "ประวัติ..." ในมือถือแนวตั้งแบบสมบูรณ์ ✨ -->
                     <p class="text-lg md:text-xl font-extrabold text-slate-800 sm:truncate flex-1 leading-tight" id="historyModalTitle">History</p>
                     
                     <!-- ปุ่ม ขยาย/ปิด (รวบมาใช้ชุดเดียวแสดงผลทุกอุปกรณ์ ชิดขวา) -->
@@ -2445,7 +2444,7 @@ $dept_icons = [
                     </div>
                 </div>
 
-                <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง + ปุ่ม Contacts (ชิดขวาเสมอ) -->
+                <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง + ปุ่ม Contacts -->
                 <div class="flex flex-wrap landscape:flex-nowrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
                     
                     <!-- ✨ ช่องค้นหา: ขยายความยาวในจอคอม/โน้ตบุ๊ค (xl:w-[450px] 2xl:w-[500px]) เพื่อดันซ้ายให้ตรงกับคอลัมน์ Reporter พอดี ✨ -->
@@ -2459,7 +2458,6 @@ $dept_icons = [
                         <!-- ตัวกรอง (ถ้ามี) -->
                         <div id="historyModalFilterGroup" class="hidden items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0">
                             
-                            <!-- ✨ ปรับขนาดความกว้าง (w-[110px] portrait:w-[100px]) และความสูงให้สมส่วนในมือถือแนวตั้ง ✨ -->
                             <div class="relative w-[110px] portrait:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Month', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
                                 <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-3 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Month')">
                                     <span id="history-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
@@ -2471,7 +2469,6 @@ $dept_icons = [
                                 <input type="hidden" id="historyMonth" value="all">
                             </div>
 
-                            <!-- ✨ ปรับขนาดความกว้าง (w-[110px] portrait:w-[85px]) และความสูงให้สมส่วนในมือถือแนวตั้ง ✨ -->
                             <div class="relative w-[110px] portrait:w-[85px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Year', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
                                 <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-2.5 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Year')">
                                     <span id="history-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
@@ -2494,6 +2491,17 @@ $dept_icons = [
             
             <!-- ✨ เพิ่ม xl:pt-3 เพื่อดึงขอบล่างของตารางขึ้นมาให้ชิด Header มากขึ้นเฉพาะบนหน้าจอคอมพิวเตอร์/โน้ตบุ๊ค ✨ -->
             <div class="p-0 md:p-6 xl:pt-3 overflow-hidden flex-1 bg-[#f8fafc]">
+                <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
+                    <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
+                        </button>
+                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-[42px] h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                            <i class="fas fa-times text-base"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-0 md:p-6 overflow-hidden flex-1 bg-[#f8fafc]">
                 <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
                     <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
