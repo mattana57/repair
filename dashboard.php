@@ -1309,20 +1309,22 @@ $dept_icons = [
 
             <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <!-- ✨ จัด Layout ส่วน Header ใหม่สำหรับหน้า Repairs List ให้เป็น 2 บรรทัด (สำหรับคอม/iPad แนวนอน) โดยไม่กระทบมือถือ ✨ -->
-                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col gap-4 bg-white shrink-0 relative z-30">
-                        
-                        <!-- 🌟 บรรทัดบน: หัวข้อ + ปุ่ม ขยายเต็มจอ (ชิดขวาเสมอ) -->
-                        <div class="flex justify-between items-start w-full">
-                            <div class="shrink-0 flex-1">
-                                <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
-                            </div>
-                            
-                            <!-- ปุ่ม ขยายเต็มจอ (ย้ายมารวมกัน ใช้คลาสเดียวจบ แสดงผลทุกอุปกรณ์) -->
-                            <div class="flex items-center shrink-0 ml-4">
-                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
-                                    <i class="fas fa-expand text-sm md:text-base" id="maximizeRepairsIcon"></i>
+                    <!-- ✨ แก้ไข Header ของ History Modal จัด Layout ให้คอมพิวเตอร์/โน้ตบุ๊ค เป็น 2 บรรทัดเหมือนฝั่งผู้บริหาร ✨ -->
+                    <!-- ✨ เพิ่ม xl:pb-3 และ xl:gap-3 เพื่อดึงระยะห่างของแถบค้นหาให้แคบลงนิดนึงในจอคอมพิวเตอร์ ✨ -->
+                    <div class="px-5 py-4 xl:pb-3 border-b border-slate-100 flex flex-col gap-4 xl:gap-3 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300 relative z-30">
+                
+                        <!-- 🌟 บรรทัดบน: หัวข้อ + ปุ่ม ขยาย/ปิด (ชิดขวาเสมอ) -->
+                        <div class="flex justify-between items-start sm:items-center w-full">
+                            <!-- หัวข้อ -->
+                            <p class="text-lg md:text-xl font-extrabold text-slate-800 sm:truncate flex-1 leading-tight" id="historyModalTitle">History</p>
+                    
+                            <!-- ปุ่ม ขยาย/ปิด (รวบมาใช้ชุดเดียวแสดงผลทุกอุปกรณ์ ชิดขวา) -->
+                            <div class="flex items-center gap-2 shrink-0 ml-4">
+                                <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                                    <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
+                                </button>
+                                <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                                    <i class="fas fa-times text-sm md:text-base"></i>
                                 </button>
                             </div>
                         </div>
@@ -1338,33 +1340,44 @@ $dept_icons = [
                             </div>
                             
                             <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
-                            <div class="flex items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 relative z-40">
-                                <!-- ✨ ย่อความกว้าง (w-92px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
-                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Month')">
-                                        <span id="table-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
-                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
-                                    </div>
-                                    <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('table-Month', '{$num_pad}', '{$name}', filterRepairsTable)\">{$name}</div>"; } ?>
-                                    </div>
-                                    <input type="hidden" id="tableMonth" value="all">
+                            <!-- ✨ Group ตัวกรองและปุ่ม Contacts เพื่อบังคับให้อยู่บรรทัดเดียวกัน ✨ -->
+                    <div class="flex portrait:flex-nowrap flex-wrap items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0">
+                        <!-- ตัวกรอง (ถ้ามี) -->
+                        <div id="historyModalFilterGroup" class="hidden items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0">
+                            
+                            <div class="relative w-[110px] portrait:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Month', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-3 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Month')">
+                                    <span id="history-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
+                                    <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                 </div>
+                                <div id="history-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('history-Month', '{$num_pad}', '{$name}', searchHistoryModalTable)\">{$name}</div>"; } ?>
+                                </div>
+                                <input type="hidden" id="historyMonth" value="all">
+                            </div>
 
-                                <!-- ✨ ย่อความกว้าง (w-82px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
-                                <div class="relative w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
-                                        <span id="table-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
-                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
-                                    </div>
-                                    <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', '{$thai_y}', filterRepairsTable)\">{$thai_y}</div>"; } ?>
-                                    </div>
-                                    <input type="hidden" id="tableYear" value="all">
+                            <div class="relative w-[110px] portrait:w-[85px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Year', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-2.5 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Year')">
+                                    <span id="history-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
+                                    <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                 </div>
-                            </div> 
+                                <div id="history-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('history-Year', '{$y}', '{$thai_y}', searchHistoryModalTable)\">{$thai_y}</div>"; } ?>
+                                </div>
+                                <input type="hidden" id="historyYear" value="all">
+                            </div>
                         </div>
+
+                        <!-- ปุ่ม Contacts -->
+                        <button id="historyModalLinkBtn" class="h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] text-sm portrait:text-xs sm:text-sm landscape:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 portrait:px-2.5 sm:px-4 landscape:px-4 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
+                            <i id="historyModalLinkIcon" class="fas fa-address-book landscape:mr-1.5 md:mr-1.5"></i> <span id="historyModalLinkText" class="hidden landscape:inline md:inline">Contacts</span>
+                        </button>
                     </div>
+                </div>
+            </div>
+            
+            <!-- ✨ เพิ่ม xl:pt-3 เพื่อดึงขอบล่างของตารางขึ้นมาให้ชิด Header มากขึ้นเฉพาะบนหน้าจอคอมพิวเตอร์/โน้ตบุ๊ค ✨ -->
+            <div class="p-0 md:p-6 xl:pt-3 overflow-hidden flex-1 bg-[#f8fafc]">
 
                     <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1 table-wrapper-fix" id="repairsTableContainer">
                         <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
