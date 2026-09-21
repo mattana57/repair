@@ -1291,11 +1291,6 @@ $pageTitles = [
                                 <input type="hidden" id="historyYear" value="all">
                             </div>
                         </div>
-
-                        <!-- ปุ่ม Contacts -->
-                        <button id="historyModalLinkBtn" class="h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] text-sm portrait:text-xs sm:text-sm landscape:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 portrait:px-2.5 sm:px-4 landscape:px-4 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
-                            <i id="historyModalLinkIcon" class="fas fa-address-book landscape:mr-1.5 md:mr-1.5"></i> <span id="historyModalLinkText" class="hidden landscape:inline md:inline">Contacts</span>
-                        </button>
                     </div>
                 </div>
             </div>
