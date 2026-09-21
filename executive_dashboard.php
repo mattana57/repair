@@ -787,7 +787,7 @@ $pageTitles = [
             <!-- ✨ หน้า Transactions (All Repairs List) ให้ผู้บริหาร ✨ -->
             <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <!-- ✨ จัด Layout ส่วน Header ใหม่สำหรับหน้า Repairs List ให้เป็น 2 บรรทัดทุกอุปกรณ์ ✨ -->
+                    <!-- ✨ จัด Layout ส่วน Header ใหม่สำหรับหน้า Repairs List ให้เป็น 2 บรรทัด (สำหรับคอม/iPad แนวนอน) โดยไม่กระทบมือถือ ✨ -->
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col gap-4 bg-white shrink-0 relative z-30">
                         
                         <!-- 🌟 บรรทัดบน: หัวข้อ + ปุ่ม ขยายเต็มจอ (ชิดขวาเสมอ) -->
@@ -797,7 +797,7 @@ $pageTitles = [
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
                             </div>
                             
-                            <!-- ปุ่ม ขยายเต็มจอ -->
+                            <!-- ปุ่ม ขยายเต็มจอ (ย้ายมารวมกัน ใช้คลาสเดียวจบ แสดงผลทุกอุปกรณ์) -->
                             <div class="flex items-center shrink-0 ml-4">
                                 <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                                     <i class="fas fa-expand text-sm md:text-base" id="maximizeRepairsIcon"></i>
@@ -808,16 +808,17 @@ $pageTitles = [
                         <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง (ชิดขวาเสมอ) -->
                         <div class="flex flex-wrap items-center justify-end gap-3 w-full">
                             
-                            <!-- ✨ ช่องค้นหา: ใช้ flex-1 ในมือถือ/ไอแพดแนวตั้ง แต่ยืดความยาว (lg:w-[400px] xl:w-[450px]) ในคอม/ไอแพดแนวนอนให้ตรงกับคอลัมน์ Reporter ✨ -->
-                            <div class="relative flex-1 md:portrait:flex-1 lg:flex-none lg:w-[400px] xl:w-[450px] 2xl:w-[500px]">
+                            <!-- ✨ ช่องค้นหา: ใช้ flex-1 ในมือถือ/ไอแพดแนวตั้ง แต่ยืดความยาว (lg:w-[450px] xl:w-[500px]) ในคอม/ไอแพดแนวนอนให้ตรงกับคอลัมน์ Reporter ✨ -->
+                            <div class="relative flex-1 min-w-[150px] lg:flex-none lg:w-[450px] xl:w-[500px] 2xl:w-[600px]">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" oninput="filterRepairsTable()" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
                             
-                            <!-- ✨ ชุด Dropdown เดือน/ปี ✨ -->
-                            <div class="flex items-center gap-2 shrink-0 relative z-40">
-                                <div class="relative w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm text-slate-700 rounded-xl px-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Month')">
+                            <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
+                            <div class="flex items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 relative z-40">
+                                <!-- ✨ ย่อความกว้าง (w-92px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
+                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Month')">
                                         <span id="table-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
@@ -827,8 +828,9 @@ $pageTitles = [
                                     <input type="hidden" id="tableMonth" value="all">
                                 </div>
 
-                                <div class="relative w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm text-slate-700 rounded-xl px-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
+                                <!-- ✨ ย่อความกว้าง (w-82px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
+                                <div class="relative w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
                                         <span id="table-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
@@ -837,7 +839,7 @@ $pageTitles = [
                                     </div>
                                     <input type="hidden" id="tableYear" value="all">
                                 </div>
-                            </div>
+                            </div> 
                         </div>
                     </div>
 
