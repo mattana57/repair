@@ -353,9 +353,9 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                             <input type="hidden" name="year" id="yearHiddenInput" value="<?php echo $selected_year; ?>">
                         </div>
 
-                        <!-- ✨ ลบปุ่มค้นหาออก และนำปุ่มพระจันทร์มาเรียงต่อท้ายกล่องปีให้สวยงาม ✨ -->
-                        <button id="theme-toggle" type="button" class="w-[42px] h-[42px] portrait:w-[38px] portrait:h-[38px] rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors ml-auto sm:ml-0">
-                            <i id="theme-toggle-icon" class="fas fa-moon"></i>
+                        <!-- ✨ ย้ายปุ่มพระจันทร์ลอยขึ้นไปขวาบนสุดเฉพาะในมือถือแนวตั้ง และคงตำแหน่งเดิมใน iPad แนวตั้ง ✨ -->
+                        <button id="theme-toggle" type="button" class="w-[42px] h-[42px] portrait:absolute portrait:top-0 portrait:right-4 md:portrait:static portrait:w-[34px] portrait:h-[34px] md:portrait:w-[38px] md:portrait:h-[38px] rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors ml-auto sm:ml-0">
+                            <i id="theme-toggle-icon" class="fas fa-moon portrait:text-sm md:portrait:text-base"></i>
                         </button>
                     </form>
                 </div>
@@ -392,17 +392,16 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
     
     <div class="flex-1 overflow-auto pb-10">
 
-        <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ (บรรทัดที่ 3) ลอยอยู่บนพื้นเทา ชิดซ้าย (แสดงเฉพาะ iPad แนวตั้ง) ✨ -->
-        <!-- ✨ เปลี่ยนจาก grid เป็น flex เพื่อลดความยาวปุ่มและจัดชิดซ้ายในมือถือ/iPad แนวตั้ง ✨ -->
-        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex portrait:flex portrait:flex-wrap lg:hidden justify-start portrait:justify-start px-4 xl:px-0 gap-2.5">
+        <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ ลดขนาดเฉพาะมือถือแนวตั้งให้อยู่บรรทัดเดียวกันแบบพอดี และคงสภาพเดิมใน iPad แนวตั้ง ✨ -->
+        <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex portrait:flex portrait:flex-nowrap lg:hidden justify-start px-4 xl:px-0 portrait:gap-2 md:portrait:gap-2.5">
             <a href="executive_report.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-               class="px-5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 portrait:w-auto">
+               class="rounded-full font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 px-5 py-1.5 text-xs portrait:px-3.5 portrait:py-1 portrait:text-[11px] md:portrait:px-5 md:portrait:py-1.5 md:portrait:text-xs portrait:w-auto">
                 <i class="fas fa-table mr-1.5 text-indigo-700 dark:text-white"></i> ตารางรายงาน
             </a>
             
             <a href="export_excel.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                target="_blank"
-               class="px-5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 portrait:w-auto">
+               class="rounded-full font-bold transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 px-5 py-1.5 text-xs portrait:px-3.5 portrait:py-1 portrait:text-[11px] md:portrait:px-5 md:portrait:py-1.5 md:portrait:text-xs portrait:w-auto">
                 <i class="fas fa-file-excel mr-1.5 text-emerald-100"></i> Export to Excel
             </a>
         </div>
