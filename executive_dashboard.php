@@ -1255,16 +1255,16 @@ $pageTitles = [
                     </div>
                 </div>
 
-                <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง + ปุ่ม Contacts (ชิดขวาเสมอ) -->
+                <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง (ชิดขวาเสมอ) -->
                 <div class="flex flex-wrap landscape:flex-nowrap items-center justify-end gap-3 w-full">
                     
-                    <!-- ✨ ช่องค้นหา: ขยายความยาวในจอคอม/โน้ตบุ๊ค (xl:w-[500px] 2xl:w-[600px]) เพื่อดันซ้ายให้ตรงกับคอลัมน์ Reporter พอดี ✨ -->
-                    <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px]">
+                    <!-- ✨ ช่องค้นหา: ปรับความยาวให้ยาวเท่ากับฝั่งแอดมินเป๊ะๆ (xl:w-[520px] 2xl:w-[580px]) เพื่อชนกับขอบคอลัมน์ Reporter พอดี ✨ -->
+                    <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[520px] 2xl:w-[580px]">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
 
-                    <!-- ✨ Group ตัวกรองและปุ่ม Contacts เพื่อบังคับให้อยู่บรรทัดเดียวกัน ✨ -->
+                    <!-- ✨ Group ตัวกรอง เพื่อบังคับให้อยู่บรรทัดเดียวกัน ✨ -->
                     <div class="flex portrait:flex-nowrap flex-wrap items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0">
                         <!-- ตัวกรอง (ถ้ามี) -->
                         <div id="historyModalFilterGroup" class="hidden items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0">
