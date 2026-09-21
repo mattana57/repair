@@ -1330,8 +1330,8 @@ $dept_icons = [
                         <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง (ชิดขวาเสมอ) -->
                         <div class="flex flex-wrap items-center justify-end gap-3 w-full">
                             
-                            <!-- ✨ ช่องค้นหา: ขยายความยาวในจอคอมและไอแพดแนวนอน (lg:w-[580px] xl:w-[680px] 2xl:w-[850px]) เพื่อดันซ้ายให้ตรงกับคอลัมน์ Reporter เป๊ะๆ ✨ -->
-                            <div class="relative flex-1 min-w-[150px] lg:flex-none lg:w-[580px] xl:w-[680px] 2xl:w-[850px]">
+                            <!-- ✨ ช่องค้นหา: ใช้ flex-1 ในมือถือ/ไอแพดแนวตั้ง แต่ยืดความยาว (lg:w-[450px] xl:w-[500px]) ในคอม/ไอแพดแนวนอนให้ตรงกับคอลัมน์ Reporter ✨ -->
+                            <div class="relative flex-1 min-w-[150px] lg:flex-none lg:w-[450px] xl:w-[500px] 2xl:w-[600px]">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" oninput="filterRepairsTable()" placeholder="ค้นหาเลขที่ใบงาน หรือสถานะ..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
