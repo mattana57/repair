@@ -1242,7 +1242,6 @@ $pageTitles = [
                 
                 <!-- 🌟 บรรทัดบน: หัวข้อ + ปุ่ม ขยาย/ปิด (ชิดขวาเสมอ) -->
                 <div class="flex justify-between items-start sm:items-center w-full">
-                    <!-- หัวข้อ -->
                     <p class="text-lg md:text-xl font-extrabold text-slate-800 sm:truncate flex-1 leading-tight" id="historyModalTitle">History</p>
                     
                     <!-- ปุ่ม ขยาย/ปิด (รวบมาใช้ชุดเดียวแสดงผลทุกอุปกรณ์ ชิดขวา) -->
