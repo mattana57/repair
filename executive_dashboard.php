@@ -1258,8 +1258,9 @@ $pageTitles = [
                     </div>
 
                     <div id="historyModalFilterGroup" class="flex items-center gap-2 shrink-0">
-                        <div class="relative w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Month', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
-                            <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm text-slate-700 rounded-xl px-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Month')">
+                        <!-- ✨ ปรับขนาดความกว้าง (w-[110px] portrait:w-[100px]) และความสูงให้สมส่วนในมือถือแนวตั้ง ✨ -->
+                        <div class="relative w-[110px] portrait:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Month', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                            <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-3 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Month')">
                                 <span id="history-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                             </div>
@@ -1269,8 +1270,9 @@ $pageTitles = [
                             <input type="hidden" id="historyMonth" value="all">
                         </div>
 
-                        <div class="relative w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Year', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
-                            <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm text-slate-700 rounded-xl px-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Year')">
+                        <!-- ✨ ปรับขนาดความกว้าง (w-[110px] portrait:w-[85px]) และความสูงให้สมส่วนในมือถือแนวตั้ง ✨ -->
+                        <div class="relative w-[110px] portrait:w-[85px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Year', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                            <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-2.5 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Year')">
                                 <span id="history-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
                                 <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                             </div>
