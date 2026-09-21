@@ -1362,12 +1362,7 @@ $dept_icons = [
                                 </div>
                             </div>
                             
-                            <!-- ปุ่ม ขยายเต็มจอ (โชว์เฉพาะ แนวนอน/PC) -->
-                            <div class="hidden lg:flex items-center gap-2 shrink-0 ml-4">
-                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-[42px] h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
-                                    <i class="fas fa-expand text-base" id="maximizeRepairsIcon_desktop"></i>
-                                </button>
-                            </div>
+                    
                         </div>
                     </div>
 
