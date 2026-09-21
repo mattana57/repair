@@ -1309,22 +1309,20 @@ $dept_icons = [
 
             <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <!-- ✨ แก้ไข Header ของ History Modal จัด Layout ให้คอมพิวเตอร์/โน้ตบุ๊ค เป็น 2 บรรทัดเหมือนฝั่งผู้บริหาร ✨ -->
-                    <!-- ✨ เพิ่ม xl:pb-3 และ xl:gap-3 เพื่อดึงระยะห่างของแถบค้นหาให้แคบลงนิดนึงในจอคอมพิวเตอร์ ✨ -->
-                    <div class="px-5 py-4 xl:pb-3 border-b border-slate-100 flex flex-col gap-4 xl:gap-3 bg-slate-50 rounded-t-3xl shrink-0 transition-all duration-300 relative z-30">
-                
-                        <!-- 🌟 บรรทัดบน: หัวข้อ + ปุ่ม ขยาย/ปิด (ชิดขวาเสมอ) -->
-                        <div class="flex justify-between items-start sm:items-center w-full">
-                            <!-- หัวข้อ -->
-                            <p class="text-lg md:text-xl font-extrabold text-slate-800 sm:truncate flex-1 leading-tight" id="historyModalTitle">History</p>
-                    
-                            <!-- ปุ่ม ขยาย/ปิด (รวบมาใช้ชุดเดียวแสดงผลทุกอุปกรณ์ ชิดขวา) -->
-                            <div class="flex items-center gap-2 shrink-0 ml-4">
-                                <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
-                                    <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
-                                </button>
-                                <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
-                                    <i class="fas fa-times text-sm md:text-base"></i>
+                    <!-- ✨ จัด Layout ส่วน Header ใหม่สำหรับหน้า Repairs List ให้เป็น 2 บรรทัด (สำหรับคอม/iPad แนวนอน) โดยไม่กระทบมือถือ ✨ -->
+                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col gap-4 bg-white shrink-0 relative z-30">
+                        
+                        <!-- 🌟 บรรทัดบน: หัวข้อ + ปุ่ม ขยายเต็มจอ (ชิดขวาเสมอ) -->
+                        <div class="flex justify-between items-start w-full">
+                            <div class="shrink-0 flex-1">
+                                <h2 class="text-xl font-extrabold text-slate-800">Repairs List</h2>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
+                            </div>
+                            
+                            <!-- ปุ่ม ขยายเต็มจอ (ย้ายมารวมกัน ใช้คลาสเดียวจบ แสดงผลทุกอุปกรณ์) -->
+                            <div class="flex items-center shrink-0 ml-4">
+                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                                    <i class="fas fa-expand text-sm md:text-base" id="maximizeRepairsIcon"></i>
                                 </button>
                             </div>
                         </div>
