@@ -753,6 +753,49 @@ $dept_icons = [
             box-shadow: inset 0 -1px 0 #fef08a, 0 1px 2px 0 rgba(0,0,0,0.05) !important;
             background-clip: padding-box !important;
         }
+        .search-container {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 8px; /* ปรับความโค้งของขอบ */
+            padding: 5px 10px;
+            width: 100%;
+            max-width: 500px; /* ปรับขนาดความกว้างตามต้องการ */
+            background-color: #fff;
+            }
+
+            .search-icon {
+            color: #999;
+            margin-right: 10px;
+            }
+
+            #searchInput {
+            border: none;
+            outline: none;
+            flex-grow: 1;
+            font-size: 16px;
+            color: #333;
+            }
+
+            #searchInput::placeholder {
+            color: #aaa;
+            }
+
+            .clear-btn {
+            background: none;
+            border: none;
+            border-left: 1px solid #ddd; /* สร้างเส้นคั่นบางๆ ด้านซ้ายของปุ่ม */
+            padding-left: 15px;
+            margin-left: 5px;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: inherit;
+            }
+
+            .clear-btn:hover {
+            color: #333; /* เปลี่ยนสีเมื่อเอาเมาส์ชี้ */
+            }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -2459,6 +2502,7 @@ $dept_icons = [
                     <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px]">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        <button type="button" id="clearBtn" class="clear-btn">ล้าง</button>
                     </div>
 
                     <!-- ✨ Group ตัวกรองและปุ่ม Contacts เพื่อบังคับให้อยู่บรรทัดเดียวกัน ✨ -->
@@ -3430,6 +3474,16 @@ $dept_icons = [
 
         // ✨ ฟังก์ชันสำหรับค้นหาและกรองตารางหน้า Transactions (Repairs List) ✨
         function filterRepairsTable() {
+            // ดึงตัวแปรช่องค้นหาและปุ่มมาใช้งาน
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearBtn');
+
+            // เมื่อคลิกที่ปุ่ม "ล้าง"
+            clearBtn.addEventListener('click', function() {
+            searchInput.value = ''; // เคลียร์ข้อความในช่อง input ให้เป็นค่าว่าง
+            searchInput.focus(); // นำเคอร์เซอร์กระพริบกลับไปที่ช่องพิมพ์อัตโนมัติ
+            });
+            
             let searchInput = document.getElementById('searchInput');
             let searchFilter = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '') : '';
             
