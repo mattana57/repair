@@ -387,7 +387,6 @@ $pageTitles = [
                                 <span class="px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-extrabold rounded-md border border-purple-100 shadow-sm whitespace-nowrap">
                                     <i class="fas fa-user-tie mr-1"></i><?php echo htmlspecialchars($current_user_role); ?>
                                 </span>
-                                <span class="text-[11px] font-bold text-slate-500 truncate">@<?php echo htmlspecialchars($current_username); ?></span>
                             </div>
                         </div>
                     </div>
