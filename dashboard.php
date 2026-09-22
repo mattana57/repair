@@ -3530,8 +3530,8 @@ $dept_icons = [
             clearBtn.addEventListener('click', function() {
             searchInput.value = ''; // เคลียร์ข้อความในช่อง input ให้เป็นค่าว่าง
             searchInput.focus(); // นำเคอร์เซอร์กระพริบกลับไปที่ช่องพิมพ์อัตโนมัติ
-            });
-            
+           
+
             });
 
             // ✨ โลจิกจัดการข้อความเมื่อซ่อนข้อมูลจนหมดตาราง ✨
