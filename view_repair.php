@@ -216,8 +216,14 @@ if (isset($_GET['id'])) {
                                 <?php 
                                     // 🟢 บังคับเซ็นเซอร์เบอร์โทรศัพท์ผู้แจ้งเสมอในหน้านี้ (สาธารณะ)
                                     $display_phone = formatCensoredPhone($repair['phone_number']);
+                                    
+                                    // ✨ เฉพาะฝั่งผู้บริหาร: ถ้าไม่มีเบอร์โทรให้โชว์คำว่า "ไม่ระบุ" ตัวหนาสีแดง ✨
+                                    if ($is_executive && ($display_phone === '- ไม่ระบุ -' || empty(trim($repair['phone_number'])) || trim($repair['phone_number']) === '-')) {
+                                        echo '<p class="font-bold text-rose-500">ไม่ระบุ</p>';
+                                    } else {
+                                        echo '<p class="font-medium text-slate-700">' . htmlspecialchars($display_phone) . '</p>';
+                                    }
                                 ?>
-                                <p class="font-medium text-slate-700"><?php echo htmlspecialchars($display_phone); ?></p>
                             </div>
                         </div>
                         <hr class="border-slate-100">
