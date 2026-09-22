@@ -124,21 +124,21 @@ if (isset($_GET['id'])) {
 
     <div class="max-w-4xl mx-auto">
         <?php if($is_executive): ?>
-        <!-- ✨ โครงสร้างสำหรับฝั่งผู้บริหาร: ใช้ CSS Media Query ล็อกเป้าหมายแบบ 100% ป้องกัน Tailwind CDN บั๊ก ✨ -->
+        <!-- ✨ โครงสร้างสำหรับฝั่งผู้บริหาร: ล็อก CSS ด้วย ID เพื่อการันตีผลลัพธ์บนมือถือ 100% ✨ -->
         <style>
-            @media (max-width: 639px) and (orientation: portrait) {
-                .exec-header-group { flex-direction: column-reverse !important; }
-                .exec-btn-container { width: auto !important; align-self: flex-end !important; }
-                .exec-btn-item { flex: none !important; width: auto !important; }
+            @media screen and (max-width: 767px) {
+                #exec-header { flex-direction: column-reverse !important; align-items: flex-end !important; }
+                #exec-btn-wrap { width: auto !important; margin-bottom: 0.5rem !important; }
+                #exec-btn { flex: 0 0 auto !important; width: max-content !important; }
             }
         </style>
-        <div class="exec-header-group flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-            <div>
+        <div id="exec-header" class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+            <div class="w-full sm:w-auto">
                 <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
-            <div class="exec-btn-container flex gap-3 w-full sm:w-auto">
-                <a href="<?php echo htmlspecialchars($back_url); ?>" class="exec-btn-item flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
+            <div id="exec-btn-wrap" class="flex gap-3 w-full sm:w-auto">
+                <a href="<?php echo htmlspecialchars($back_url); ?>" id="exec-btn" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
             </div>
@@ -196,18 +196,24 @@ if (isset($_GET['id'])) {
                         <h3 class="font-bold text-slate-800">ข้อมูลผู้แจ้ง (บุคลากร)</h3>
                     </div>
                     <div class="p-6 space-y-5">
+                        <?php 
+                            // ✨ ปรับขนาดใหม่อีกนิด: text-[11px] (มือถือ) ถึง text-xs (คอม/ไอแพด) และใช้ font-medium (หนาพอดี)
+                            // คงดีไซน์แอดมินไว้ที่ text-[10px] font-bold เหมือนเดิมเพื่อไม่ให้กระทบส่วนอื่น
+                            $label_class = $is_executive ? 'text-slate-500 text-[11px] md:text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1';
+                            $red_label_class = $is_executive ? 'text-rose-500 text-[11px] md:text-xs font-medium uppercase tracking-wide mb-1' : 'text-red-400 text-[10px] font-bold uppercase tracking-widest mb-1';
+                            $img_label_class = $is_executive ? 'text-slate-500 text-[11px] md:text-xs font-medium uppercase tracking-wide mb-2' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2';
+                        ?>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2 mb-1">
-                                <!-- ✨ ใช้คลาสมาตรฐาน text-xs font-medium ให้เท่ากับคำว่า "ผู้รับผิดชอบ" เป๊ะๆ 100% ✨ -->
-                                <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">ข้อมูลผู้แจ้ง</p>
+                                <p class="<?php echo $label_class; ?>">ข้อมูลผู้แจ้ง</p>
                                 <p class="font-bold text-indigo-600 flex items-center"><i class="fab fa-line text-[#06C755] text-[16px] mr-1.5"></i> <?php echo htmlspecialchars($repair_line_id); ?></p>
                             </div>
                             <div>
-                                <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">ชื่อ-นามสกุล</p>
+                                <p class="<?php echo $label_class; ?>">ชื่อ-นามสกุล</p>
                                 <p class="font-semibold text-slate-800"><?php echo htmlspecialchars($repair_real_name); ?></p>
                             </div>
                             <div>
-                                <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">เบอร์โทรศัพท์</p>
+                                <p class="<?php echo $label_class; ?>">เบอร์โทรศัพท์</p>
                                 <?php 
                                     // 🟢 บังคับเซ็นเซอร์เบอร์โทรศัพท์ผู้แจ้งเสมอในหน้านี้ (สาธารณะ)
                                     $display_phone = formatCensoredPhone($repair['phone_number']);
@@ -217,20 +223,20 @@ if (isset($_GET['id'])) {
                         </div>
                         <hr class="border-slate-100">
                         <div>
-                            <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">สถานที่ / ห้อง</p>
+                            <p class="<?php echo $label_class; ?>">สถานที่ / ห้อง</p>
                             <p class="font-medium text-slate-700"><i class="fas fa-map-marker-alt text-sky-500 mr-1.5"></i> <?php echo htmlspecialchars($repair['location']); ?></p>
                         </div>
                         <div>
-                            <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">อุปกรณ์</p>
+                            <p class="<?php echo $label_class; ?>">อุปกรณ์</p>
                             <p class="font-bold text-slate-800"><?php echo htmlspecialchars($repair['equipment_type']); ?></p>
                         </div>
                         <div class="bg-red-50/50 p-4 rounded-xl border border-red-100">
-                            <p class="<?php echo $is_executive ? 'text-rose-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-red-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">รายละเอียดอาการเสีย</p>
+                            <p class="<?php echo $red_label_class; ?>">รายละเอียดอาการเสีย</p>
                             <p class="text-slate-700 text-sm leading-relaxed"><?php echo nl2br(htmlspecialchars($repair['problem_desc'])); ?></p>
                         </div>
 
                         <div>
-                            <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-2' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2'; ?>">ภาพประกอบปัญหา</p>
+                            <p class="<?php echo $img_label_class; ?>">ภาพประกอบปัญหา</p>
                             <?php 
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 
