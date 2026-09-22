@@ -1970,7 +1970,8 @@ $dept_icons = [
                             <h2 class="text-xl font-extrabold text-slate-800">Assets Database</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Manage all registered equipments</p>
                         </div>
-                        <button onclick="openAddAssetModal()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Asset</button>
+                        <!-- ✨ ลบ w-full เปลี่ยนเป็น w-auto เพื่อให้ปุ่มสั้นลง และเพิ่ม self-end เพื่อดันชิดขวาในมือถือ (พร้อมล็อก md:self-auto ไม่ให้กระทบ iPad/คอม) ✨ -->
+                        <button onclick="openAddAssetModal()" class="self-end md:self-auto w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Asset</button>
                     </div>
                     <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
                         <table class="w-full text-left whitespace-nowrap min-w-[600px]">
