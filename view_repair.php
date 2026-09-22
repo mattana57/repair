@@ -384,7 +384,6 @@ if (isset($_GET['id'])) {
                     <?php endif; ?>
 
                 </div>
-                        <?php else: ?>
                         <!-- ✨ ดีไซน์เดิมสำหรับแอดมินและช่าง ✨ -->
                         <div class="mt-6 border-t border-slate-100 pt-6">
                             <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center"><i class="fas fa-star text-amber-400 mr-2"></i> ผลการประเมินจากผู้แจ้ง</h3>
