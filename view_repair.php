@@ -172,14 +172,14 @@ if (isset($_GET['id'])) {
             <!-- ✨ ปลดล็อก border-t-4 border-sky-500 ให้แสดงผลตลอดเวลา (ทุกสิทธิ์การใช้งาน) เพื่อให้กรอบสีฟ้าขึ้นในคอมพิวเตอร์ฝั่งแอดมินด้วย ✨ -->
             <div class="modern-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-t-4 border-sky-500">
                 <div>
-                    <!-- ✨ รหัสใบงาน: ขนาด text-lg ฝั่งผู้บริหาร / ฝั่งอื่นเป็นตัวเล็ก ✨ -->
-                    <p class="<?php echo $is_executive ? 'text-lg font-bold text-slate-800 mb-1' : 'text-slate-400 text-xs font-bold uppercase tracking-widest mb-1'; ?>">รหัสใบงาน (TICKET NO.)</p>
+                    <!-- ✨ ปรับขนาดคำว่า รหัสใบงาน ให้เท่ากับ ข้อมูลใบงาน (text-lg) เฉพาะฝั่งผู้บริหาร ✨ -->
+                    <p class="<?php echo $is_executive ? 'text-lg font-bold text-slate-800 mb-1' : 'font-bold text-slate-800 mb-1'; ?>">รหัสใบงาน (TICKET NO.)</p>
                     <h2 class="text-3xl font-extrabold text-sky-600 tracking-tight"><?php echo htmlspecialchars($repair['ticket_no']); ?></h2>
                     <p class="text-slate-500 text-sm mt-2"><i class="far fa-calendar-alt mr-1"></i> แจ้งเมื่อ: <?php echo !empty($repair['created_at']) ? date("d/m/Y เวลา H:i น.", strtotime($repair['created_at'])) : "-"; ?></p>
                 </div>
                 <div class="text-right">
-                    <!-- ✨ สถานะปัจจุบัน: สีดำตัวใหญ่ ฝั่งผู้บริหาร / ฝั่งอื่นเป็นตัวเล็ก ✨ -->
-                    <p class="<?php echo $is_executive ? 'font-bold text-slate-800 mb-2 text-left md:text-right' : 'text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 text-left md:text-right'; ?>">สถานะปัจจุบัน</p>
+                    <!-- ✨ ปลดล็อกให้แสดงตัวหนังสือสีดำขนาดใหญ่ ในทุกสิทธิ์การใช้งาน (เพื่อให้ในคอมเห็นด้วย) ✨ -->
+                    <p class="font-bold text-slate-800 mb-2 text-left md:text-right">สถานะปัจจุบัน</p>
                     <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold border <?php echo $statusColor; ?> shadow-sm">
                         <i class="fas <?php echo $statusIcon; ?> mr-2 text-lg"></i> <?php echo $repair['status']; ?>
                     </span>
@@ -199,15 +199,15 @@ if (isset($_GET['id'])) {
                     <div class="p-6 space-y-5">
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2 mb-1">
-                                <p class="<?php echo $is_executive ? 'text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">ข้อมูลผู้แจ้ง</p>
+                                <p class="<?php echo $is_executive ? 'text-slate-400 text-xs uppercase tracking-widest mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">ข้อมูลผู้แจ้ง</p>
                                 <p class="font-bold text-indigo-600 flex items-center"><i class="fab fa-line text-[#06C755] text-[16px] mr-1.5"></i> <?php echo htmlspecialchars($repair_line_id); ?></p>
                             </div>
                             <div>
-                                <p class="<?php echo $is_executive ? 'text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">ชื่อ-นามสกุล</p>
+                                <p class="<?php echo $is_executive ? 'text-slate-400 text-xs uppercase tracking-widest mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">ชื่อ-นามสกุล</p>
                                 <p class="font-semibold text-slate-800"><?php echo htmlspecialchars($repair_real_name); ?></p>
                             </div>
                             <div>
-                                <p class="<?php echo $is_executive ? 'text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">เบอร์โทรศัพท์</p>
+                                <p class="<?php echo $is_executive ? 'text-slate-400 text-xs uppercase tracking-widest mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">เบอร์โทรศัพท์</p>
                                 <?php 
                                     // 🟢 บังคับเซ็นเซอร์เบอร์โทรศัพท์ผู้แจ้งเสมอในหน้านี้ (สาธารณะ)
                                     $display_phone = formatCensoredPhone($repair['phone_number']);
@@ -217,21 +217,21 @@ if (isset($_GET['id'])) {
                         </div>
                         <hr class="border-slate-100">
                         <div>
-                            <p class="<?php echo $is_executive ? 'text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">สถานที่ / ห้อง</p>
+                            <p class="<?php echo $is_executive ? 'text-slate-400 text-xs uppercase tracking-widest mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">สถานที่ / ห้อง</p>
                             <p class="font-medium text-slate-700"><i class="fas fa-map-marker-alt text-sky-500 mr-1.5"></i> <?php echo htmlspecialchars($repair['location']); ?></p>
                         </div>
                         <div>
-                            <p class="<?php echo $is_executive ? 'text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">อุปกรณ์</p>
+                            <p class="<?php echo $is_executive ? 'text-slate-400 text-xs uppercase tracking-widest mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">อุปกรณ์</p>
                             <p class="font-bold text-slate-800"><?php echo htmlspecialchars($repair['equipment_type']); ?></p>
                         </div>
                         <div class="bg-red-50/50 p-4 rounded-xl border border-red-100">
-                            <p class="<?php echo $is_executive ? 'text-red-400 text-[10px] md:text-xs uppercase tracking-wide mb-1' : 'text-red-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">รายละเอียดอาการเสีย</p>
+                            <p class="text-red-400 text-[10px] font-bold uppercase tracking-widest mb-1">รายละเอียดอาการเสีย</p>
                             <p class="text-slate-700 text-sm leading-relaxed"><?php echo nl2br(htmlspecialchars($repair['problem_desc'])); ?></p>
                         </div>
 
                         <div>
-                            <p class="<?php echo $is_executive ? 'text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-2' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2'; ?>">ภาพประกอบปัญหา</p>
-                            <?php 
+                            <p class="<?php echo $is_executive ? 'text-slate-400 text-xs uppercase tracking-widest mb-2' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2'; ?>">ภาพประกอบปัญหา</p>
+                            <?php
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 
                             ?>
