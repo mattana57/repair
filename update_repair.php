@@ -416,27 +416,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     <div class="space-y-4 text-sm">
                         <div>
-                            <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide">วัน/เวลาที่แจ้ง</p>
+                            <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide">วัน/เวลาที่แจ้ง</p>
                             <p class="font-medium text-slate-700 mt-0.5"><i class="far fa-clock text-slate-400 mr-1"></i> <?php echo date("d/m/Y H:i", strtotime($repair['created_at'])); ?></p>
                         </div>
                         <div>
-                            <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide">ผู้แจ้ง</p>
+                            <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide">ผู้แจ้ง</p>
                             <p class="font-bold text-indigo-600 mt-1 flex items-center"><i class="fab fa-line text-[#06C755] text-[16px] mr-1.5"></i> <?php echo htmlspecialchars($repair_line_id); ?></p>
                             <p class="font-medium text-slate-700 mt-0.5"><i class="far fa-user text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair_real_name); ?></p>
                             <p class="text-slate-500 mt-0.5"><i class="fas fa-phone-alt text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair['phone_number']); ?></p>
                         </div>
                         <div>
-                            <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide">สถานที่</p>
+                            <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide">สถานที่</p>
                             <p class="font-medium text-slate-700 mt-0.5"><i class="fas fa-map-marker-alt text-rose-400 mr-1"></i> <?php echo htmlspecialchars($repair['location']); ?></p>
                         </div>
                         <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                            <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-1">อุปกรณ์และอาการเสีย</p>
+                            <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-1">อุปกรณ์และอาการเสีย</p>
                             <p class="font-bold text-sky-700"><?php echo htmlspecialchars($repair['equipment_type']); ?></p>
                             <p class="text-slate-600 mt-1"><?php echo htmlspecialchars($repair['problem_desc']); ?></p>
                         </div>
 
                         <div>
-                            <p class="text-slate-400 text-[10px] md:text-xs uppercase tracking-wide mb-2">ภาพประกอบ</p>
+                            <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-2">ภาพประกอบ</p>
                             <?php 
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 
