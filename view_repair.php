@@ -169,8 +169,8 @@ if (isset($_GET['id'])) {
 
         <div class="space-y-6">
 
-            <!-- ✨ เพิ่ม border-t-4 border-sky-500 เพื่อสร้างแถบสีฟ้าเหมือนฝั่งแอดมิน โดยล็อกให้แสดงเฉพาะฝั่งผู้บริหาร ✨ -->
-            <div class="modern-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 <?php echo $is_executive ? 'border-t-4 border-sky-500' : ''; ?>">
+            <!-- ✨ ปลดล็อก border-t-4 border-sky-500 ให้แสดงผลตลอดเวลา (ทุกสิทธิ์การใช้งาน) เพื่อให้กรอบสีฟ้าขึ้นในคอมพิวเตอร์ฝั่งแอดมินด้วย ✨ -->
+            <div class="modern-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-t-4 border-sky-500">
                 <div>
                     <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">รหัสใบงาน (Ticket No.)</p>
                     <h2 class="text-3xl font-extrabold text-sky-600 tracking-tight"><?php echo htmlspecialchars($repair['ticket_no']); ?></h2>
