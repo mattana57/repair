@@ -123,20 +123,36 @@ if (isset($_GET['id'])) {
     <div class="absolute inset-0 bg-pattern opacity-50 -z-10"></div>
 
     <div class="max-w-4xl mx-auto">
-        <!-- ✨ สลับ Layout เฉพาะมือถือแนวตั้งฝั่งผู้บริหาร: ดันปุ่มขึ้นไปชิดขวาบน ✨ -->
-        <div class="flex flex-col <?php echo $is_executive ? 'portrait:flex-col-reverse md:portrait:flex-row' : ''; ?> sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <?php if($is_executive): ?>
+        <!-- ✨ โครงสร้างสำหรับฝั่งผู้บริหาร: มือถือแนวตั้ง ปุ่มไปอยู่บนสุดชิดขวา และขนาดพอดีคำ โดยใช้ portrait: ร่วมกับ flex-col-reverse ✨ -->
+        <!-- ✨ ล็อก sm:portrait: ไว้ด้วย เพื่อไม่ให้กระทบ iPad แนวตั้งเด็ดขาด ✨ -->
+        <div class="flex flex-col portrait:flex-col-reverse sm:portrait:flex-row sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
-            <!-- ✨ ย่อปุ่มให้สั้นลงและชิดขวาเฉพาะมือถือแนวตั้งฝั่งผู้บริหาร ✨ -->
-            <div class="flex gap-3 w-full <?php echo $is_executive ? 'portrait:w-auto portrait:self-end md:portrait:w-auto md:portrait:self-auto' : ''; ?> sm:w-auto">
+            <div class="flex gap-3 w-full portrait:w-auto portrait:self-end sm:portrait:self-auto sm:w-auto">
                 
-                <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-1 <?php echo $is_executive ? 'portrait:flex-none md:portrait:flex-none' : ''; ?> sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
+                <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
             </div>
         </div>
+        <?php else: ?>
+        <!-- ✨ โครงสร้างสำหรับฝั่งแอดมินและช่าง: คงเดิมทุกอย่าง 100% ตามคำสั่ง ✨ -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
+                <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
+            </div>
+            <div class="flex gap-3 w-full sm:w-auto">
+                
+                <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
+                    <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
+                </a>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <?php if($repair): 
             $statusColor = "bg-slate-100 text-slate-600 border-slate-200"; 
