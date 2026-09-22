@@ -151,13 +151,12 @@ if (isset($_GET['id'])) {
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
             <div class="flex gap-3 w-full sm:w-auto">
-                
                 <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
             </div>
         </div>
-        <?php endif; ?> <!-- ✨ เติมตัวปิดเงื่อนไขที่หายไปกลับคืนมาตรงนี้ครับ ✨ -->
+        <?php endif; ?>
 
         <?php if($repair):
             $statusColor = "bg-slate-100 text-slate-600 border-slate-200"; 
