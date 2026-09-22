@@ -1,7 +1,8 @@
 <?php 
 session_start();
 
-if (!isset($_SESSION['user_id'])) {
+// ✨ 1. ตรวจสอบก่อนว่ามีการล็อกอินอยู่หรือไม่ ถ้าไม่มี (หรือหมดเวลา) ให้เตะไปหน้า Login ทันที ✨
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
     $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
     header("Location: login.php");
     exit();
@@ -9,6 +10,28 @@ if (!isset($_SESSION['user_id'])) {
 
 include 'db_connect.php';
 $conn->set_charset("utf8mb4");
+
+// ✨ 2. อัปเดตข้อมูล Session ก่อนเช็คสิทธิ์ เพื่อป้องกันการจำค่าสิทธิ์ผิดเพี้ยนเวลา Refresh ✨
+$uid_chk = intval($_SESSION['user_id']);
+$user_chk_q = $conn->query("SELECT role, full_name, english_name, username FROM users WHERE id = $uid_chk");
+if ($user_chk_q && $user_chk_q->num_rows > 0) {
+    $u_data = $user_chk_q->fetch_assoc();
+    $_SESSION['role'] = $u_data['role'];
+    $_SESSION['full_name'] = $u_data['full_name'];
+    $_SESSION['english_name'] = $u_data['english_name'];
+    $_SESSION['username'] = $u_data['username'];
+} else {
+    // ถ้าระบบหา User ในฐานข้อมูลไม่เจอ (เช่น โดนลบไอดี) ให้เตะกลับไป Login เหมือนกัน
+    session_destroy();
+    header("Location: login.php");
+    exit();
+}
+
+// ✨ 3. ถ้าดึงข้อมูลเสร็จแล้ว พบว่าเป็นผู้บริหารจริงๆ ค่อยเตะไปหน้า executive_dashboard.php ✨
+if (strtolower($_SESSION['role']) === 'executive') {
+    header("Location: executive_dashboard.php");
+    exit();
+}
 
 // ✨ API ส่งข้อมูลรูปภาพล่าสุดแบบเรียลไทม์ สำหรับอัปเดตหน้าจออัตโนมัติไม่ต้องกดรีเฟรช ✨
 if (isset($_GET['api_get_admin_avatars'])) {
@@ -30,22 +53,6 @@ if (isset($_GET['api_get_admin_avatars'])) {
     exit();
 }
 
-// ✨ อัปเดตข้อมูล Session ให้ตรงกับฐานข้อมูลล่าสุดเสมอ (อัปเดตชื่อไทย-อังกฤษ-Username อัตโนมัติ) ✨
-$uid_chk = intval($_SESSION['user_id']);
-$user_chk_q = $conn->query("SELECT role, full_name, english_name, username FROM users WHERE id = $uid_chk");
-if ($user_chk_q && $user_chk_q->num_rows > 0) {
-    $u_data = $user_chk_q->fetch_assoc();
-    $_SESSION['role'] = $u_data['role'];
-    $_SESSION['full_name'] = $u_data['full_name'];
-    $_SESSION['english_name'] = $u_data['english_name'];
-    $_SESSION['username'] = $u_data['username'];
-}
-
-// ถ้าเป็นสิทธิ์ Executive ตัวจริง ถึงจะยอมให้ไปหน้า executive_dashboard.php
-if (strtolower($_SESSION['role'] ?? '') === 'executive') {
-    header("Location: executive_dashboard.php");
-    exit();
-}
 // ✨ ฟังก์ชันจัดการค่าว่าง (-) และ (ไม่ระบุ) ให้เป็นสีแดง ✨
 function formatEmptyOrDash($val) {
     $val = trim((string)$val);
