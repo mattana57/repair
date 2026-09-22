@@ -234,7 +234,7 @@ if (isset($_GET['id'])) {
                         <hr class="border-slate-100">
                         <div>
                             <p class="<?php echo $label_class; ?>">สถานที่ / ห้อง</p>
-                            <p class="font-medium text-slate-700"><i class="fas fa-map-marker-alt text-sky-500 mr-1.5"></i> <?php echo htmlspecialchars($repair['location']); ?></p>
+                            <p class="font-medium text-slate-700"><i class="fas fa-map-marker-alt text-rose-400 mr-1.5"></i> <?php echo htmlspecialchars($repair['location']); ?></p>
                         </div>
                         <div>
                             <p class="<?php echo $label_class; ?>">อุปกรณ์</p>
