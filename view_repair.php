@@ -207,11 +207,12 @@ if (isset($_GET['id'])) {
                                 <p class="<?php echo $label_class; ?>">ข้อมูลผู้แจ้ง</p>
                                 <p class="font-bold text-indigo-600 flex items-center"><i class="fab fa-line text-[#06C755] text-[16px] mr-1.5"></i> <?php echo htmlspecialchars($repair_line_id); ?></p>
                             </div>
-                            <div>
+                            <!-- ✨ ปรับให้แสดง 1 คอลัมน์ (บน-ล่าง) เฉพาะมือถือและไอแพดแนวตั้งของฝั่งผู้บริหาร ✨ -->
+                            <div class="<?php echo $is_executive ? 'col-span-2 landscape:col-span-1 lg:col-span-1' : ''; ?>">
                                 <p class="<?php echo $label_class; ?>">ชื่อ-นามสกุล</p>
                                 <p class="font-semibold text-slate-800"><?php echo htmlspecialchars($repair_real_name); ?></p>
                             </div>
-                            <div>
+                            <div class="<?php echo $is_executive ? 'col-span-2 landscape:col-span-1 lg:col-span-1' : ''; ?>">
                                 <p class="<?php echo $label_class; ?>">เบอร์โทรศัพท์</p>
                                 <?php 
                                     // ✨ ตรวจสอบและแสดงคำว่า "ไม่ระบุ" สีแดงหากไม่มีเบอร์โทร (ผู้บริหาร) ✨
