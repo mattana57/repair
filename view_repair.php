@@ -196,25 +196,18 @@ if (isset($_GET['id'])) {
                         <h3 class="font-bold text-slate-800">ข้อมูลผู้แจ้ง (บุคลากร)</h3>
                     </div>
                     <div class="p-6 space-y-5">
-                        <?php 
-                            // ✨ รวบตึงสร้างตัวแปรคุมขนาด/ความหนา ✨
-                            // ฝั่งผู้บริหาร: ปรับขนาดให้ใหญ่ขึ้นสมส่วนทั้งมือถือและคอม (text-xs md:text-[13px]) ความหนากำลังดี (font-medium) และระยะห่างอักษรเท่าแอดมิน (tracking-wide)
-                            // ฝั่งแอดมิน: คงเดิม 100% ตามสเปคดั้งเดิม
-                            $label_class = $is_executive ? 'text-slate-500 text-xs md:text-[13px] font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-normal uppercase tracking-widest mb-1';
-                            $red_label_class = $is_executive ? 'text-rose-500 text-xs md:text-[13px] font-medium uppercase tracking-wide mb-1' : 'text-red-400 text-[10px] font-normal uppercase tracking-widest mb-1';
-                            $img_label_class = $is_executive ? 'text-slate-500 text-xs md:text-[13px] font-medium uppercase tracking-wide mb-2' : 'text-slate-400 text-[10px] font-normal uppercase tracking-widest mb-2';
-                        ?>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2 mb-1">
-                                <p class="<?php echo $label_class; ?>">ข้อมูลผู้แจ้ง</p>
+                                <!-- ✨ ใช้คลาสมาตรฐาน text-xs font-medium ให้เท่ากับคำว่า "ผู้รับผิดชอบ" เป๊ะๆ 100% ✨ -->
+                                <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">ข้อมูลผู้แจ้ง</p>
                                 <p class="font-bold text-indigo-600 flex items-center"><i class="fab fa-line text-[#06C755] text-[16px] mr-1.5"></i> <?php echo htmlspecialchars($repair_line_id); ?></p>
                             </div>
                             <div>
-                                <p class="<?php echo $label_class; ?>">ชื่อ-นามสกุล</p>
+                                <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">ชื่อ-นามสกุล</p>
                                 <p class="font-semibold text-slate-800"><?php echo htmlspecialchars($repair_real_name); ?></p>
                             </div>
                             <div>
-                                <p class="<?php echo $label_class; ?>">เบอร์โทรศัพท์</p>
+                                <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">เบอร์โทรศัพท์</p>
                                 <?php 
                                     // 🟢 บังคับเซ็นเซอร์เบอร์โทรศัพท์ผู้แจ้งเสมอในหน้านี้ (สาธารณะ)
                                     $display_phone = formatCensoredPhone($repair['phone_number']);
@@ -224,20 +217,20 @@ if (isset($_GET['id'])) {
                         </div>
                         <hr class="border-slate-100">
                         <div>
-                            <p class="<?php echo $label_class; ?>">สถานที่ / ห้อง</p>
+                            <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">สถานที่ / ห้อง</p>
                             <p class="font-medium text-slate-700"><i class="fas fa-map-marker-alt text-sky-500 mr-1.5"></i> <?php echo htmlspecialchars($repair['location']); ?></p>
                         </div>
                         <div>
-                            <p class="<?php echo $label_class; ?>">อุปกรณ์</p>
+                            <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">อุปกรณ์</p>
                             <p class="font-bold text-slate-800"><?php echo htmlspecialchars($repair['equipment_type']); ?></p>
                         </div>
                         <div class="bg-red-50/50 p-4 rounded-xl border border-red-100">
-                            <p class="<?php echo $red_label_class; ?>">รายละเอียดอาการเสีย</p>
+                            <p class="<?php echo $is_executive ? 'text-rose-500 text-xs font-medium uppercase tracking-wide mb-1' : 'text-red-400 text-[10px] font-bold uppercase tracking-widest mb-1'; ?>">รายละเอียดอาการเสีย</p>
                             <p class="text-slate-700 text-sm leading-relaxed"><?php echo nl2br(htmlspecialchars($repair['problem_desc'])); ?></p>
                         </div>
 
                         <div>
-                            <p class="<?php echo $img_label_class; ?>">ภาพประกอบปัญหา</p>
+                            <p class="<?php echo $is_executive ? 'text-slate-500 text-xs font-medium uppercase tracking-wide mb-2' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2'; ?>">ภาพประกอบปัญหา</p>
                             <?php 
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 
