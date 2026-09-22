@@ -197,11 +197,12 @@ if (isset($_GET['id'])) {
                     </div>
                     <div class="p-6 space-y-5">
                         <?php 
-                            // ✨ รวบตึงสร้างตัวแปรคุมขนาด/ความหนา เพื่อแก้บั๊ก Tailwind ไม่ยอมเปลี่ยนคลาส ✨
-                            // ฝั่งผู้บริหาร: ขนาด 12px (text-[12px]) และหนาแบบพอดี (font-semibold) 
-                            // ฝั่งแอดมิน: ขนาด 10px (text-[10px]) และไม่หนา (font-normal)
-                            $label_class = $is_executive ? 'text-slate-500 text-[12px] font-semibold uppercase tracking-widest mb-1' : 'text-slate-400 text-[10px] font-normal uppercase tracking-widest mb-1';
-                            $red_label_class = $is_executive ? 'text-rose-500 text-[12px] font-semibold uppercase tracking-widest mb-1' : 'text-red-400 text-[10px] font-normal uppercase tracking-widest mb-1';
+                            // ✨ รวบตึงสร้างตัวแปรคุมขนาด/ความหนา ✨
+                            // ฝั่งผู้บริหาร: ปรับขนาดให้ใหญ่ขึ้นสมส่วนทั้งมือถือและคอม (text-xs md:text-[13px]) ความหนากำลังดี (font-medium) และระยะห่างอักษรเท่าแอดมิน (tracking-wide)
+                            // ฝั่งแอดมิน: คงเดิม 100% ตามสเปคดั้งเดิม
+                            $label_class = $is_executive ? 'text-slate-500 text-xs md:text-[13px] font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-normal uppercase tracking-widest mb-1';
+                            $red_label_class = $is_executive ? 'text-rose-500 text-xs md:text-[13px] font-medium uppercase tracking-wide mb-1' : 'text-red-400 text-[10px] font-normal uppercase tracking-widest mb-1';
+                            $img_label_class = $is_executive ? 'text-slate-500 text-xs md:text-[13px] font-medium uppercase tracking-wide mb-2' : 'text-slate-400 text-[10px] font-normal uppercase tracking-widest mb-2';
                         ?>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2 mb-1">
@@ -236,7 +237,7 @@ if (isset($_GET['id'])) {
                         </div>
 
                         <div>
-                            <p class="<?php echo $is_executive ? 'text-slate-500 text-[12px] font-semibold uppercase tracking-widest mb-2' : 'text-slate-400 text-[10px] font-normal uppercase tracking-widest mb-2'; ?>">ภาพประกอบปัญหา</p>
+                            <p class="<?php echo $img_label_class; ?>">ภาพประกอบปัญหา</p>
                             <?php 
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 
