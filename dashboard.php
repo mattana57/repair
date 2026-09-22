@@ -753,49 +753,7 @@ $dept_icons = [
             box-shadow: inset 0 -1px 0 #fef08a, 0 1px 2px 0 rgba(0,0,0,0.05) !important;
             background-clip: padding-box !important;
         }
-        .search-container {
-            display: flex;
-            align-items: center;
-            border: 1px solid #ddd;
-            border-radius: 8px; /* ปรับความโค้งของขอบ */
-            padding: 5px 10px;
-            width: 100%;
-            max-width: 500px; /* ปรับขนาดความกว้างตามต้องการ */
-            background-color: #fff;
-            }
 
-            .search-icon {
-            color: #999;
-            margin-right: 10px;
-            }
-
-            #searchInput {
-            border: none;
-            outline: none;
-            flex-grow: 1;
-            font-size: 16px;
-            color: #333;
-            }
-
-            #searchInput::placeholder {
-            color: #aaa;
-            }
-
-            .clear-btn {
-            background: none;
-            border: none;
-            border-left: 1px solid #ddd; /* สร้างเส้นคั่นบางๆ ด้านซ้ายของปุ่ม */
-            padding-left: 15px;
-            margin-left: 5px;
-            color: #aaa;
-            cursor: pointer;
-            font-size: 16px;
-            font-family: inherit;
-            }
-
-            .clear-btn:hover {
-            color: #333; /* เปลี่ยนสีเมื่อเอาเมาส์ชี้ */
-            }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -3474,7 +3432,6 @@ $dept_icons = [
 
         // ✨ ฟังก์ชันสำหรับค้นหาและกรองตารางหน้า Transactions (Repairs List) ✨
         function filterRepairsTable() {
-
             let searchInput = document.getElementById('searchInput');
             let searchFilter = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '') : '';
             
@@ -3522,16 +3479,6 @@ $dept_icons = [
                 } else {
                     row.style.display = 'none';
                 }
-            // ดึงตัวแปรช่องค้นหาและปุ่มมาใช้งาน
-            const searchInput = document.getElementById('searchInput');
-            const clearBtn = document.getElementById('clearBtn');
-
-            // เมื่อคลิกที่ปุ่ม "ล้าง"
-            clearBtn.addEventListener('click', function() {
-            searchInput.value = ''; // เคลียร์ข้อความในช่อง input ให้เป็นค่าว่าง
-            searchInput.focus(); // นำเคอร์เซอร์กระพริบกลับไปที่ช่องพิมพ์อัตโนมัติ
-           
-
             });
 
             // ✨ โลจิกจัดการข้อความเมื่อซ่อนข้อมูลจนหมดตาราง ✨
