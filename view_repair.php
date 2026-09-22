@@ -214,14 +214,18 @@ if (isset($_GET['id'])) {
                             <div>
                                 <p class="<?php echo $label_class; ?>">เบอร์โทรศัพท์</p>
                                 <?php 
-                                    // 🟢 บังคับเซ็นเซอร์เบอร์โทรศัพท์ผู้แจ้งเสมอในหน้านี้ (สาธารณะ)
-                                    $display_phone = formatCensoredPhone($repair['phone_number']);
-                                    
-                                    // ✨ เฉพาะฝั่งผู้บริหาร: ถ้าไม่มีเบอร์โทรให้โชว์คำว่า "ไม่ระบุ" ตัวหนาสีแดง ✨
-                                    if ($is_executive && ($display_phone === '- ไม่ระบุ -' || empty(trim($repair['phone_number'])) || trim($repair['phone_number']) === '-')) {
+                                    // ✨ ถ้าไม่มีเบอร์โทร ให้โชว์คำว่า "ไม่ระบุ" (ตัวหนาสีแดง) ให้ตรงกันทั้งฝั่งแอดมินและผู้บริหาร ✨
+                                    $raw_phone = trim((string)$repair['phone_number']);
+                                    if (empty($raw_phone) || $raw_phone === '-') {
                                         echo '<p class="font-bold text-rose-500">ไม่ระบุ</p>';
                                     } else {
-                                        echo '<p class="font-medium text-slate-700">' . htmlspecialchars($display_phone) . '</p>';
+                                        // 🟢 บังคับเซ็นเซอร์เบอร์โทรศัพท์ผู้แจ้งเสมอในหน้านี้ (สาธารณะ)
+                                        $display_phone = formatCensoredPhone($raw_phone);
+                                        if ($display_phone === '- ไม่ระบุ -') {
+                                            echo '<p class="font-bold text-rose-500">ไม่ระบุ</p>';
+                                        } else {
+                                            echo '<p class="font-medium text-slate-700">' . htmlspecialchars($display_phone) . '</p>';
+                                        }
                                     }
                                 ?>
                             </div>
