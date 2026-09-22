@@ -124,16 +124,21 @@ if (isset($_GET['id'])) {
 
     <div class="max-w-4xl mx-auto">
         <?php if($is_executive): ?>
-        <!-- ✨ โครงสร้างสำหรับฝั่งผู้บริหาร: มือถือแนวตั้ง ปุ่มไปอยู่บนสุดชิดขวา และขนาดพอดีคำ โดยใช้ portrait: ร่วมกับ flex-col-reverse ✨ -->
-        <!-- ✨ ล็อก sm:portrait: ไว้ด้วย เพื่อไม่ให้กระทบ iPad แนวตั้งเด็ดขาด ✨ -->
-        <div class="flex flex-col portrait:flex-col-reverse sm:portrait:flex-row sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <!-- ✨ โครงสร้างสำหรับฝั่งผู้บริหาร: ใช้ CSS Media Query ล็อกเป้าหมายแบบ 100% ป้องกัน Tailwind CDN บั๊ก ✨ -->
+        <style>
+            @media (max-width: 639px) and (orientation: portrait) {
+                .exec-header-group { flex-direction: column-reverse !important; }
+                .exec-btn-container { width: auto !important; align-self: flex-end !important; }
+                .exec-btn-item { flex: none !important; width: auto !important; }
+            }
+        </style>
+        <div class="exec-header-group flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
-            <div class="flex gap-3 w-full portrait:w-auto portrait:self-end sm:portrait:self-auto sm:w-auto">
-                
-                <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
+            <div class="exec-btn-container flex gap-3 w-full sm:w-auto">
+                <a href="<?php echo htmlspecialchars($back_url); ?>" class="exec-btn-item flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
             </div>
