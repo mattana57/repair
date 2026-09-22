@@ -423,7 +423,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide">ผู้แจ้ง</p>
                             <p class="font-bold text-indigo-600 mt-1 flex items-center"><i class="fab fa-line text-[#06C755] text-[16px] mr-1.5"></i> <?php echo htmlspecialchars($repair_line_id); ?></p>
                             <p class="font-medium text-slate-700 mt-0.5"><i class="far fa-user text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair_real_name); ?></p>
-                            <p class="text-slate-500 mt-0.5"><i class="fas fa-phone-alt text-slate-400 mr-1"></i> <?php echo htmlspecialchars($repair['phone_number']); ?></p>
+                            <?php 
+                                // ✨ ตรวจสอบและแสดงคำว่า "ไม่ระบุ" สีแดงหากไม่มีเบอร์โทร (แอดมิน) ✨
+                                $admin_raw_phone = trim((string)$repair['phone_number']);
+                                if (empty($admin_raw_phone) || $admin_raw_phone === '-' || $admin_raw_phone === 'ไม่ระบุ') {
+                                    echo '<p class="font-bold text-rose-500 mt-0.5"><i class="fas fa-phone-slash text-rose-400 mr-1"></i> ไม่ระบุ</p>';
+                                } else {
+                                    echo '<p class="text-slate-500 mt-0.5"><i class="fas fa-phone-alt text-slate-400 mr-1"></i> ' . htmlspecialchars($admin_raw_phone) . '</p>';
+                                }
+                            ?>
                         </div>
                         <div>
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide">สถานที่</p>

@@ -214,14 +214,15 @@ if (isset($_GET['id'])) {
                             <div>
                                 <p class="<?php echo $label_class; ?>">เบอร์โทรศัพท์</p>
                                 <?php 
-                                    // ✨ ถ้าไม่มีเบอร์โทร ให้โชว์คำว่า "ไม่ระบุ" (ตัวหนาสีแดง) ให้ตรงกันทั้งฝั่งแอดมินและผู้บริหาร ✨
+                                    // ✨ ตรวจสอบและแสดงคำว่า "ไม่ระบุ" สีแดงหากไม่มีเบอร์โทร (ผู้บริหาร) ✨
                                     $raw_phone = trim((string)$repair['phone_number']);
-                                    if (empty($raw_phone) || $raw_phone === '-') {
+                                    if (empty($raw_phone) || $raw_phone === '-' || $raw_phone === 'ไม่ระบุ') {
                                         echo '<p class="font-bold text-rose-500">ไม่ระบุ</p>';
                                     } else {
                                         // 🟢 บังคับเซ็นเซอร์เบอร์โทรศัพท์ผู้แจ้งเสมอในหน้านี้ (สาธารณะ)
                                         $display_phone = formatCensoredPhone($raw_phone);
-                                        if ($display_phone === '- ไม่ระบุ -') {
+                                        if ($display_phone === '- ไม่ระบุ -' || $display_phone === '- ซ่อนข้อมูล -') {
+                                            // หากเซ็นเซอร์แล้วไม่มีข้อมูล หรือข้อมูลสั้นเกินไปจนถูกซ่อน
                                             echo '<p class="font-bold text-rose-500">ไม่ระบุ</p>';
                                         } else {
                                             echo '<p class="font-medium text-slate-700">' . htmlspecialchars($display_phone) . '</p>';
