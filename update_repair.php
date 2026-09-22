@@ -375,17 +375,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body class="p-4 md:p-10 selection:bg-sky-200">
 
     <div class="max-w-5xl mx-auto">
+        <?php if($is_admin): ?>
+        <!-- ✨ โครงสร้างสำหรับฝั่งแอดมิน: ใช้ CSS Media Query ล็อกเป้าหมายมือถือแนวตั้ง 100% ✨ -->
+        <style>
+            @media (max-width: 639px) and (orientation: portrait) {
+                .admin-header-group { flex-direction: column-reverse !important; }
+                .admin-btn-item { width: auto !important; align-self: flex-end !important; }
+            }
+        </style>
+        <div class="admin-header-group flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> ระบบจัดการใบงานแจ้งซ่อม</h1>
+                <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
+            </div>
+            <button type="button" onclick="goBack();" class="admin-btn-item bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto cursor-pointer">
+               <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
+            </button>
+        </div>
+        <?php else: ?>
+        <!-- โครงสร้างสำหรับช่าง (คงเดิม) -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
             <div>
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> ระบบจัดการใบงานแจ้งซ่อม</h1>
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
-            <?php if($is_admin): ?>
-           <button type="button" onclick="goBack();" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto cursor-pointer">
-               <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
-           </button>
-            <?php endif; ?>
         </div>
+        <?php endif; ?>
 
         <?php if($repair): ?>
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
