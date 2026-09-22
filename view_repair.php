@@ -169,37 +169,22 @@ if (isset($_GET['id'])) {
 
         <div class="space-y-6">
 
-            <?php if($is_executive): ?>
-            <!-- ✨ ดีไซน์เฉพาะฝั่งผู้บริหาร: เปลี่ยนสีข้อความเป็นสีดำและปรับขนาดตัวอักษร ✨ -->
+            <!-- ✨ ปลดล็อก border-t-4 border-sky-500 ให้แสดงผลตลอดเวลา (ทุกสิทธิ์การใช้งาน) เพื่อให้กรอบสีฟ้าขึ้นในคอมพิวเตอร์ฝั่งแอดมินด้วย ✨ -->
             <div class="modern-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-t-4 border-sky-500">
                 <div>
-                    <h3 class="font-bold text-slate-800 mb-1">รหัสใบงาน (Ticket No.)</h3>
+                    <!-- ✨ เปลี่ยนสีและขนาดตัวอักษรเฉพาะฝั่งผู้บริหาร ให้ตรงกับหัวข้อข้อมูลผู้แจ้ง ✨ -->
+                    <p class="<?php echo $is_executive ? 'font-bold text-slate-800 mb-1' : 'text-slate-400 text-xs font-bold uppercase tracking-widest mb-1'; ?>">รหัสใบงาน (TICKET NO.)</p>
                     <h2 class="text-3xl font-extrabold text-sky-600 tracking-tight"><?php echo htmlspecialchars($repair['ticket_no']); ?></h2>
                     <p class="text-slate-500 text-sm mt-2"><i class="far fa-calendar-alt mr-1"></i> แจ้งเมื่อ: <?php echo !empty($repair['created_at']) ? date("d/m/Y เวลา H:i น.", strtotime($repair['created_at'])) : "-"; ?></p>
                 </div>
                 <div class="text-right">
-                    <p class="text-slate-800 text-xs font-bold uppercase tracking-widest mb-2 text-left md:text-right">สถานะปัจจุบัน</p>
+                    <!-- ✨ เปลี่ยนสีและขนาดตัวอักษรเฉพาะฝั่งผู้บริหาร ให้ตรงกับหัวข้อข้อมูลผู้แจ้ง ✨ -->
+                    <p class="<?php echo $is_executive ? 'font-bold text-slate-800 mb-2 text-left md:text-right' : 'text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 text-left md:text-right'; ?>">สถานะปัจจุบัน</p>
                     <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold border <?php echo $statusColor; ?> shadow-sm">
                         <i class="fas <?php echo $statusIcon; ?> mr-2 text-lg"></i> <?php echo $repair['status']; ?>
                     </span>
                 </div>
             </div>
-            <?php else: ?>
-            <!-- ✨ ดีไซน์เดิมสำหรับแอดมินและช่าง ✨ -->
-            <div class="modern-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-t-4 border-sky-500">
-                <div>
-                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">รหัสใบงาน (Ticket No.)</p>
-                    <h2 class="text-3xl font-extrabold text-sky-600 tracking-tight"><?php echo htmlspecialchars($repair['ticket_no']); ?></h2>
-                    <p class="text-slate-500 text-sm mt-2"><i class="far fa-calendar-alt mr-1"></i> แจ้งเมื่อ: <?php echo !empty($repair['created_at']) ? date("d/m/Y เวลา H:i น.", strtotime($repair['created_at'])) : "-"; ?></p>
-                </div>
-                <div class="text-right">
-                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 text-left md:text-right">สถานะปัจจุบัน</p>
-                    <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold border <?php echo $statusColor; ?> shadow-sm">
-                        <i class="fas <?php echo $statusIcon; ?> mr-2 text-lg"></i> <?php echo $repair['status']; ?>
-                    </span>
-                </div>
-            </div>
-            <?php endif; ?>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
