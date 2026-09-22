@@ -134,8 +134,8 @@ if (isset($_GET['id'])) {
         </style>
         <div class="exec-header-group flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
-                <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
+                <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
+                <p class="text-sm md:text-base text-slate-500 mt-1">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
             <button type="button" onclick="goBack();" class="admin-btn-item bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto cursor-pointer">
                <i class="fas fa-arrow-left mr-2"></i> ปิดหน้าต่าง
