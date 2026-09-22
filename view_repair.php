@@ -124,10 +124,9 @@ if (isset($_GET['id'])) {
 
     <div class="max-w-4xl mx-auto">
         <?php if($is_executive): ?>
-        <!-- ✨ โครงสร้างสำหรับฝั่งผู้บริหาร: ใช้ CSS Media Query ล็อกเป้าหมายแบบ 100% ป้องกัน Tailwind CDN บั๊ก ✨ -->
+        <!-- ✨ โครงสร้างสำหรับฝั่งผู้บริหาร: ลบ column-reverse ออกเพื่อให้ปุ่มอยู่บรรทัดเดิม แต่คงการชิดขวาและย่อขนาดไว้ ✨ -->
         <style>
             @media (max-width: 639px) and (orientation: portrait) {
-                .exec-header-group { flex-direction: column-reverse !important; }
                 .exec-btn-container { width: auto !important; align-self: flex-end !important; }
                 .exec-btn-item { flex: none !important; width: auto !important; }
             }
