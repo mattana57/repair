@@ -3474,16 +3474,7 @@ $dept_icons = [
 
         // ✨ ฟังก์ชันสำหรับค้นหาและกรองตารางหน้า Transactions (Repairs List) ✨
         function filterRepairsTable() {
-            // ดึงตัวแปรช่องค้นหาและปุ่มมาใช้งาน
-            const searchInput = document.getElementById('searchInput');
-            const clearBtn = document.getElementById('clearBtn');
 
-            // เมื่อคลิกที่ปุ่ม "ล้าง"
-            clearBtn.addEventListener('click', function() {
-            searchInput.value = ''; // เคลียร์ข้อความในช่อง input ให้เป็นค่าว่าง
-            searchInput.focus(); // นำเคอร์เซอร์กระพริบกลับไปที่ช่องพิมพ์อัตโนมัติ
-            });
-            
             let searchInput = document.getElementById('searchInput');
             let searchFilter = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '') : '';
             
