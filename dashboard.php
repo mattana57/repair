@@ -870,9 +870,8 @@ $dept_icons = [
                             <?php endif; ?>
                             <div class="flex items-center gap-1.5 mt-1.5">
                                 <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-extrabold rounded-md border border-emerald-100 shadow-sm whitespace-nowrap">
-                                    <i class="fas fa-shield-alt mr-1"></i>ผู้ดูแลระบบ
+                                    <i class="fas fa-shield-alt mr-1"></i>Admin
                                 </span>
-                                <span class="text-[11px] font-bold text-slate-500 truncate">@<?php echo !empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'admin'; ?></span>
                             </div>
                         </div>
                     </div>
