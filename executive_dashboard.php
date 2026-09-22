@@ -348,7 +348,8 @@ $pageTitles = [
                 <div id="profileDropdownMenu" class="absolute right-0 top-full mt-3 w-72 bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 hidden flex-col z-50 animate-fade-in">
                     
                     <!-- ส่วนหัว: รูปโปรไฟล์และข้อมูลผู้บริหาร -->
-                    <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-4 relative">
+                    <!-- ✨ ลบ border-b และ border-slate-100 ออก เพื่อไม่ให้มีเส้นขีดกั้นด้านล่าง ✨ -->
+                    <div class="px-5 py-4 flex items-center gap-4 relative">
                         
                         <!-- 🚨 กล่องเมนูย่อยสีเทาเข้ม (โชว์ทั้ง "ดูรูปภาพ" และ "เปลี่ยนรูปภาพ") 🚨 -->
                         <div id="avatarActionMenu" class="absolute left-5 top-[85px] sm:left-auto sm:right-full sm:top-3 sm:mr-3 w-48 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-[60] text-white animate-fade-in">
