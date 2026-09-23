@@ -307,7 +307,7 @@ if (!is_null($events['events'])) {
                     $flex_details = [
                         ['type' => 'text', 'text' => "ปัญหา: $category", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                         ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
-                        ['type' => 'text', 'text' => "ผู้แจ้ง: ".$line_name." (".$user_reg['phone_number'].")", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
+                        ['type' => 'text', 'text' => "ผู้แจ้ง: ".$user_reg['real_name']." (".$user_reg['phone_number'].")", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
                         ['type' => 'text', 'text' => "รายละเอียด: $problem", 'size' => 'xs', 'color' => '#ef4444', 'wrap' => true]
                     ];
                     if ($image_path) {
@@ -422,7 +422,7 @@ if (!is_null($events['events'])) {
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
 
-                            $disp_name = !empty($job['line_display_name']) ? $job['line_display_name'] : $job['reporter_name'];
+                            $disp_name = $job['reporter_name'];
 
                             $replyMsg = [
                                 'type' => 'flex',
