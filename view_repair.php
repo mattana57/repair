@@ -124,14 +124,27 @@ if (isset($_GET['id'])) {
 
     <div class="max-w-4xl mx-auto">
         <?php if($is_executive): ?>
-        <!-- ✨ โครงสร้าง Header หลัก: ปรับให้ปุ่ม "ปิดหน้าต่าง" อยู่มุมบนขวาเสมอในจอมือถือแนวตั้ง (ใช้ร่วมกันทุกสิทธิ์) ✨ -->
-        <div class="flex flex-col-reverse sm:flex-row items-end sm:items-center justify-between mb-8 gap-4">
-            <div class="w-full sm:w-auto text-left">
+        <!-- ✨ โครงสร้างสำหรับฝั่งผู้บริหาร: ล็อกปุ่มปิดหน้าต่างไว้มุมขวาบนในมือถือ โดยไม่กระทบจอคอม/ไอแพด ✨ -->
+        <div class="relative flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 pt-10 sm:pt-0">
+            <div class="w-full sm:w-auto">
                 <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
-            <div class="flex gap-3 w-auto self-end sm:self-auto shrink-0 mb-1 sm:mb-0">
-                <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm whitespace-nowrap">
+            <div class="absolute top-0 right-0 sm:relative sm:top-auto sm:right-auto flex gap-3 w-auto">
+                <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 sm:py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
+                    <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
+                </a>
+            </div>
+        </div>
+        <?php else: ?>
+        <!-- ✨ โครงสร้างสำหรับฝั่งแอดมินและช่าง: คงเดิมทุกอย่าง 100% ไม่แตะต้อง ✨ -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
+                <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
+            </div>
+            <div class="flex gap-3 w-full sm:w-auto">
+                <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
             </div>
