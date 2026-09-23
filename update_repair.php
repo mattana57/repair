@@ -162,6 +162,12 @@ if($check_completed_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN completed_at DATETIME NULL");
 }
 
+// ✨ ตรวจสอบและสร้างคอลัมน์ received_at เผื่อไว้ ป้องกันระบบพัง ✨
+$check_received_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'received_at'");
+if($check_received_col->num_rows == 0) {
+    $conn->query("ALTER TABLE repairs ADD COLUMN received_at DATETIME NULL AFTER root_cause");
+}
+
 $show_alert = false;
 $show_asset_alert = false; 
 
@@ -205,10 +211,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
         $update_id = $_POST['id'];
 
+        // ✨ บันทึกเวลา received_at และ completed_at อัตโนมัติตามสถานะ โดยอิงจากเวลาจริงในระบบ ✨
         if ($status === 'ซ่อมเสร็จแล้ว') {
-            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+            // ถ้ากดซ่อมเสร็จ: บันทึกเวลาเสร็จงาน และถ้าเพิ่งกดข้ามสถานะมา ให้ลงเวลารับเรื่องไปด้วย
+            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = IFNULL(received_at, CURRENT_TIMESTAMP), completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+        } elseif ($status === 'กำลังดำเนินการ') {
+            // ถ้ากดกำลังดำเนินการ: บันทึกเวลารับเรื่อง (ถ้ายังไม่มี) ส่วนเวลาเสร็จงานให้เป็นค่าว่าง
+            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = IFNULL(received_at, CURRENT_TIMESTAMP), completed_at = NULL WHERE id = ?";
         } else {
-            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, completed_at = NULL WHERE id = ?";
+            // ถ้ากลับไปสถานะ 'รอรับเรื่อง': ให้ล้างเวลาทิ้งทั้งหมด
+            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = NULL, completed_at = NULL WHERE id = ?";
         }
         
         $update_stmt = $conn->prepare($update_sql);
