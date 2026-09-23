@@ -197,10 +197,10 @@ if (isset($_GET['id'])) {
                     </div>
                     <div class="p-6 space-y-5">
                         <?php 
-                            // ✨ ปรับสีหัวข้อให้เป็นสีเทาอ่อน (text-slate-400) เหมือนฝั่งแอดมิน โดยคงขนาดและความหนาไว้ ✨
-                            $label_class = $is_executive ? 'text-slate-400 text-[11px] md:text-xs font-medium uppercase tracking-wide mb-1' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1';
-                            $red_label_class = $is_executive ? 'text-rose-500 text-[11px] md:text-xs font-medium uppercase tracking-wide mb-1' : 'text-red-400 text-[10px] font-bold uppercase tracking-widest mb-1';
-                            $img_label_class = $is_executive ? 'text-slate-400 text-[11px] md:text-xs font-medium uppercase tracking-wide mb-2' : 'text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2';
+                            // ✨ ปรับให้ทั้งฝั่งผู้บริหารและแอดมินใช้ขนาดฟอนต์/น้ำหนักฟอนต์เดียวกัน เพื่อไม่ให้ในคอมผิดเพี้ยน ✨
+                            $label_class = 'text-slate-400 text-[11px] md:text-xs font-medium uppercase tracking-wide mb-1';
+                            $red_label_class = 'text-rose-500 text-[11px] md:text-xs font-medium uppercase tracking-wide mb-1';
+                            $img_label_class = 'text-slate-400 text-[11px] md:text-xs font-medium uppercase tracking-wide mb-2';
                         ?>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2 mb-1">
