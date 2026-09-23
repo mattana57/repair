@@ -1612,7 +1612,7 @@ $dept_icons = [
                         </div>
                         <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
-                            <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0 group">
+                            <div class="relative w-full sm:w-64 md:w-72 lg:w-80 xl:w-[400px] mb-2 sm:mb-0 group">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="search-tech-table" oninput="searchTeamTable(); toggleClearBtn('search-tech-table', 'clearTechTableBtn');" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                                 <button type="button" id="clearTechTableBtn" onclick="clearSearchInput('search-tech-table', searchTeamTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
@@ -1798,7 +1798,7 @@ $dept_icons = [
                     </div>
                     <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
                         <!-- ช่องค้นหา -->
-                        <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0 group">
+                        <div class="relative w-full sm:w-64 md:w-72 lg:w-80 xl:w-[400px] mb-2 sm:mb-0 group">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                             <input type="text" id="search-tech-card" oninput="searchTechCards(); toggleClearBtn('search-tech-card', 'clearTechCardBtn');" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             <button type="button" id="clearTechCardBtn" onclick="clearSearchInput('search-tech-card', searchTechCards)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
