@@ -2853,7 +2853,17 @@ $dept_icons = [
             const input = document.getElementById(inputId);
             if (input) {
                 input.value = '';
-                toggleClearBtn(inputId, inputId.replace('Input', 'Btn').replace('search', 'clear'));
+                
+                // ✨ แมป ID ของปุ่มล้างค่าให้ตรงกับช่องค้นหาแบบชัวร์ 100% ✨
+                let btnId = '';
+                if (inputId === 'searchInput') btnId = 'clearSearchBtn';
+                else if (inputId === 'search-tech-table') btnId = 'clearTechTableBtn';
+                else if (inputId === 'search-tech-card') btnId = 'clearTechCardBtn';
+                else if (inputId === 'searchHistoryInput') btnId = 'clearHistoryBtn';
+                else if (inputId === 'searchHistoryModalInput') btnId = 'clearHistoryModalBtn';
+                
+                toggleClearBtn(inputId, btnId);
+                
                 if (typeof callbackFunction === 'function') {
                     callbackFunction(); // รีเซ็ตตารางทันที
                 }
