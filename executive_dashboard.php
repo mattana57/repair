@@ -396,7 +396,7 @@ $pageTitles = [
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             <div id="dash" class="section space-y-6 animate-fade-in no-print">
 
                 <!-- ✨ ปรับ Grid เป็น 2 คอลัมน์ (grid-cols-2) ในมือถือ และเพิ่มความห่างให้สมดุล (gap-3) ✨ -->
@@ -3276,6 +3276,60 @@ $pageTitles = [
                 activeDept = activeBtn.innerText.trim();
             }
             filterByDept(activeDept, activeBtn);
+        }
+
+        // ✨ ระบบซ่อนแถบ Header อัตโนมัติเมื่อใช้นิ้วเลื่อนจอ (เฉพาะมือถือแนวตั้งและแนวนอน) ✨
+        const mainHeaderEl = document.querySelector('header.top-header');
+        const mainScrollEl = document.getElementById('mainScrollContainer');
+        let lastScrollTop = 0;
+
+        if (mainHeaderEl && mainScrollEl) {
+            // ✨ ใช้ transform เพื่อความสมูท 100% ไม่กระตุก ไม่เกิดขอบขาว ✨
+            mainHeaderEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            // เพื่อให้เนื้อหาเลื่อนตามขึ้นไปปิดช่องว่างของ Header ที่หายไป
+            mainScrollEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+
+            mainScrollEl.addEventListener('scroll', () => {
+                // เช็คว่ากำลังเปิดบนมือถือ (ทั้งแนวตั้งและแนวนอน)
+                const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
+                
+                if (isMobileScreen) {
+                    const currentScrollTop = mainScrollEl.scrollTop;
+                    
+                    // 👆 ปัดนิ้วขึ้น (เลื่อนหน้าลง) -> ซ่อน Header
+                    if (currentScrollTop > lastScrollTop && currentScrollTop > 60) {
+                        mainHeaderEl.style.transform = 'translateY(-100%)';
+                        // ดึงเนื้อหาขึ้นมา 88px (เท่าความสูง Header) เพื่อไม่ให้มีขอบขาว
+                        mainScrollEl.style.transform = 'translateY(-88px)';
+                        mainScrollEl.style.height = 'calc(100% + 88px)'; 
+                    } 
+                    // 👇 ปัดนิ้วลง (เลื่อนหน้าขึ้น) -> โชว์ Header
+                    else if (currentScrollTop < lastScrollTop) {
+                        mainHeaderEl.style.transform = 'translateY(0)';
+                        // ดันเนื้อหากลับที่เดิม
+                        mainScrollEl.style.transform = 'translateY(0)';
+                        mainScrollEl.style.height = '100%';
+                    }
+                    
+                    lastScrollTop = currentScrollTop;
+                } else {
+                    // 💻 จอใหญ่ (iPad/PC) โชว์เสมอ ไม่ให้ซ่อน
+                    mainHeaderEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.height = '100%';
+                }
+            }, { passive: true });
+
+            // ถ้ายืดจอหรือตะแคงเป็นจอใหญ่ ให้รีเซ็ตค่ากลับมาโชว์ Header ปกติ
+            window.addEventListener('resize', () => {
+                const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
+                if (!isMobileScreen) {
+                    mainHeaderEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.height = '100%';
+                }
+            });
         }
     </script>
 </body>
