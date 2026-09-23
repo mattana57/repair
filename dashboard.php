@@ -1342,8 +1342,8 @@ $dept_icons = [
                             <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
                             <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[520px] 2xl:w-[580px] group">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchInput" oninput="filterRepairsTable(); toggleClearBtn('searchInput', 'clearSearchBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-16 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                                <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-4 text-xs font-bold text-slate-400 hover:text-rose-500 border-l border-slate-200 hidden items-center justify-center transition-colors">ล้างค่า</button>
+                                <input type="text" id="searchInput" oninput="filterRepairsTable(); toggleClearBtn('searchInput', 'clearSearchBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[85px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-3 text-[11px] font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5"></i>ล้างค่า</button>
                             </div>
                             
                             <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
@@ -1612,9 +1612,10 @@ $dept_icons = [
                         </div>
                         <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
-                            <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
+                            <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0 group">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="search-tech-table" oninput="searchTeamTable()" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="search-tech-table" oninput="searchTeamTable(); toggleClearBtn('search-tech-table', 'clearTechTableBtn');" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[85px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <button type="button" id="clearTechTableBtn" onclick="clearSearchInput('search-tech-table', searchTeamTable)" class="absolute right-0 top-0 h-full px-3 text-[11px] font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5"></i>ล้างค่า</button>
                             </div>
                             
                             <div class="flex flex-wrap gap-2.5">
@@ -1797,9 +1798,10 @@ $dept_icons = [
                     </div>
                     <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
                         <!-- ช่องค้นหา -->
-                        <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0">
+                        <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0 group">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="search-tech-card" oninput="searchTechCards()" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            <input type="text" id="search-tech-card" oninput="searchTechCards(); toggleClearBtn('search-tech-card', 'clearTechCardBtn');" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[85px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            <button type="button" id="clearTechCardBtn" onclick="clearSearchInput('search-tech-card', searchTechCards)" class="absolute right-0 top-0 h-full px-3 text-[11px] font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5"></i>ล้างค่า</button>
                         </div>
 
                         <div class="flex flex-wrap gap-2.5">
@@ -2037,8 +2039,8 @@ $dept_icons = [
                         <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
                         <div class="w-full md:w-[320px] relative group">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchHistoryInput" oninput="searchHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-16 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
-                            <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', searchHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-xs font-bold text-slate-400 hover:text-rose-500 border-l border-slate-200 hidden items-center justify-center transition-colors">ล้างค่า</button>
+                            <input type="text" id="searchHistoryInput" oninput="searchHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[85px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
+                            <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', searchHistoryTable)" class="absolute right-0 top-0 h-full px-3 text-[11px] font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5"></i>ล้างค่า</button>
                         </div>
                     </div>
                     <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
@@ -2464,8 +2466,8 @@ $dept_icons = [
                     <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า (History Modal) ✨ -->
                     <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px] group">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable(); toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-16 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                        <button type="button" id="clearHistoryModalBtn" onclick="clearSearchInput('searchHistoryModalInput', searchHistoryModalTable)" class="absolute right-0 top-0 h-full px-4 text-xs font-bold text-slate-400 hover:text-rose-500 border-l border-slate-200 hidden items-center justify-center transition-colors">ล้างค่า</button>
+                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable(); toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[85px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        <button type="button" id="clearHistoryModalBtn" onclick="clearSearchInput('searchHistoryModalInput', searchHistoryModalTable)" class="absolute right-0 top-0 h-full px-3 text-[11px] font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5"></i>ล้างค่า</button>
                     </div>
 
                     <!-- ✨ Group ตัวกรองและปุ่ม Contacts เพื่อบังคับให้อยู่บรรทัดเดียวกัน ✨ -->
@@ -2830,6 +2832,32 @@ $dept_icons = [
             
             const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
             return `${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
+        }
+
+        // ✨ ฟังก์ชันควบคุมปุ่ม "ล้างค่า" ในช่องค้นหา ✨
+        function toggleClearBtn(inputId, btnId) {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById(btnId);
+            if (!input || !btn) return;
+            
+            if (input.value.length > 0) {
+                btn.classList.remove('hidden');
+                btn.classList.add('flex');
+            } else {
+                btn.classList.add('hidden');
+                btn.classList.remove('flex');
+            }
+        }
+
+        function clearSearchInput(inputId, callbackFunction) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = '';
+                toggleClearBtn(inputId, inputId.replace('Input', 'Btn').replace('search', 'clear'));
+                if (typeof callbackFunction === 'function') {
+                    callbackFunction(); // รีเซ็ตตารางทันที
+                }
+            }
         }
         
         // ✨ ฟังก์ชันจัดการเวลาเลือกรูปใน Modal Add/Edit (แยก Admin ไป Crop / Tech พรีวิวปกติ) ✨
