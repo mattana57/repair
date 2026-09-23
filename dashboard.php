@@ -5104,14 +5104,17 @@ $dept_icons = [
                     card.parentNode.insertBefore(placeholder, card);
                 }
                 
-                // 3. ปลดการ์ดให้ลอย (Fixed) แต่อยู่ตำแหน่งเดิมเป๊ะๆ
+                // ✨ 3. ดึงการ์ดออกมาอยู่ระดับสูงสุดของหน้าเว็บ เพื่อก้าวข้ามกรอบของ Sidebar และ Header 100% ✨
+                document.body.appendChild(card);
+
+                // ปลดการ์ดให้ลอย (Fixed) แต่อยู่ตำแหน่งเดิมเป๊ะๆ
                 card.style.transition = 'none';
                 card.style.position = 'fixed';
                 card.style.top = rect.top + 'px';
                 card.style.left = rect.left + 'px';
                 card.style.width = rect.width + 'px';
                 card.style.height = rect.height + 'px';
-                card.style.zIndex = '100';
+                card.style.zIndex = '9999'; // ดัน Z-index ให้ทะลุปรุโปร่งปิดมิดทุกอย่าง
                 card.style.margin = '0';
                 
                 void card.offsetWidth; // บังคับให้เบราว์เซอร์รับรู้ตำแหน่งก่อน
@@ -5149,7 +5152,7 @@ $dept_icons = [
                 document.body.classList.remove('overflow-hidden');
                 card.classList.remove('is-fullscreen');
                 
-                // 2. รอแอนิเมชันหดกลับเสร็จ แล้วเอาการ์ดกลับไปวางในหน้าเว็บปกติ
+                // 2. รอแอนิเมชันหดกลับเสร็จ แล้วเอาการ์ดกลับไปวางในโครงสร้างเดิม
                 setTimeout(() => {
                     if (!card.classList.contains('is-fullscreen')) {
                         card.style.transition = 'none';
@@ -5160,7 +5163,12 @@ $dept_icons = [
                         card.style.height = '';
                         card.style.zIndex = '';
                         card.style.margin = '';
-                        if (placeholder) placeholder.remove();
+                        
+                        // ✨ เอาการ์ดสอดกลับไปแทนที่กล่องเปล่าให้แนบเนียน ✨
+                        if (placeholder) {
+                            placeholder.parentNode.insertBefore(card, placeholder);
+                            placeholder.remove();
+                        }
                         
                         // คืนค่า transition เดิม
                         void card.offsetWidth;
