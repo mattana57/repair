@@ -1265,11 +1265,9 @@ $pageTitles = [
                 <div class="flex flex-wrap landscape:flex-nowrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
                     
                     <!-- ✨ ช่องค้นหา: หดความยาวในจอคอม/โน้ตบุ๊คลงมา (xl:w-[450px] 2xl:w-[500px]) ตามฝั่งผู้บริหาร เพื่อให้พอดีกับคอลัมน์ Reporter แน่นอน 100% ✨ -->
-                    <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า (History Modal) ✨ -->
-                    <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px] group">
+                    <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px]">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable(); toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-16 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                        <button type="button" id="clearHistoryModalBtn" onclick="clearSearchInput('searchHistoryModalInput', searchHistoryModalTable)" class="absolute right-0 top-0 h-full px-4 text-xs font-bold text-slate-400 hover:text-rose-500 border-l border-slate-200 hidden items-center justify-center transition-colors">ล้างค่า</button>
+                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                     </div>
 
                     <!-- ✨ Group ตัวกรอง เพื่อบังคับให้อยู่บรรทัดเดียวกัน ✨ -->
@@ -1811,36 +1809,6 @@ $pageTitles = [
             if (diffInSeconds < 604800) return Math.floor(diffInSeconds / 86400) + " วันที่แล้ว"; 
             const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
             return `${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
-        }
-
-        const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-            return `${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
-        }
-        
-        // ✨ ฟังก์ชันควบคุมปุ่ม "ล้างค่า" ในช่องค้นหา ✨
-        function toggleClearBtn(inputId, btnId) {
-            const input = document.getElementById(inputId);
-            const btn = document.getElementById(btnId);
-            if (!input || !btn) return;
-            
-            if (input.value.length > 0) {
-                btn.classList.remove('hidden');
-                btn.classList.add('flex');
-            } else {
-                btn.classList.add('hidden');
-                btn.classList.remove('flex');
-            }
-        }
-
-        function clearSearchInput(inputId, callbackFunction) {
-            const input = document.getElementById(inputId);
-            if (input) {
-                input.value = '';
-                toggleClearBtn(inputId, inputId.replace('Input', 'Btn').replace('search', 'clear'));
-                if (typeof callbackFunction === 'function') {
-                    callbackFunction(); // รีเซ็ตตารางทันที
-                }
-            }
         }
 
         function toggleModal(m) { 
