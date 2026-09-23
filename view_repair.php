@@ -146,7 +146,7 @@ if (isset($_GET['id'])) {
         <?php else: ?>
         <!-- ✨ โครงสร้างสำหรับฝั่งแอดมินและช่าง: คงเดิมทุกอย่าง 100% ตามคำสั่ง ✨ -->
         <!-- ✨ โครงสร้าง Header หลัก: ปรับให้ปุ่ม "ปิดหน้าต่าง" อยู่มุมบนขวาเสมอในจอมือถือ และข้อความชิดซ้ายเสมอ ✨ -->
-        <div class="flex flex-col-reverse sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 relative">
+        <div class="flex flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
             <div class="w-full sm:w-auto mt-10 sm:mt-0 text-left">
                 <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
