@@ -2460,7 +2460,6 @@ $dept_icons = [
                     <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px]">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                        <button type="button" id="clearBtn" class="clear-btn">ล้าง</button>
                     </div>
 
                     <!-- ✨ Group ตัวกรองและปุ่ม Contacts เพื่อบังคับให้อยู่บรรทัดเดียวกัน ✨ -->
