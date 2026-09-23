@@ -22,6 +22,10 @@ function extract_repair_info($text) {
     $category = "ไม่ระบุปัญหา";
     $location = "ไม่ระบุสถานที่";
     
+    $text_lower = mb_strtolower($text, 'UTF-8');
+    
+    $text_for_category = str_replace(['ดำเนินการ', 'พนักงาน', 'หนัก'], ['ทำงาน', 'พนง', 'ห_นัก'], $text_lower);
+    
     $keywords = [
         'แอร์', 'คอม', 'เครื่องปริ้น', 'printer', 'projector', 'โปรเจคเตอร์', 'โปรเจกเตอร์', 'เครื่องฉาย', 
         'จอ', 'ทีวี', 'ไมค์', 'หลอดไฟ', 'ไฟดับ', 'สายไฟ', 'ปลั๊ก', 'ไฟ', 'หลอด', 'พัดลม', 'เน็ต', 'wifi', 'วายฟาย','ไว้ฟาย','ไวฟาย', 'อินเทอร์เน็ต',
@@ -30,9 +34,11 @@ function extract_repair_info($text) {
         'งู', 'หมา', 'แมว', 'น้ำรั่ว', 'หน้าต่าง', 'กระจก', 'โต๊ะ', 'เก้าอี้', 'เพดาน', 'หลังคา'
     ];
 
-    $text_lower = mb_strtolower($text, 'UTF-8');
     foreach ($keywords as $keyword) {
-        if (mb_strpos($text_lower, $keyword) !== false) {
+        if (mb_strpos($text_for_category, $keyword) !== false) {
+            if ($keyword === 'หนู' && (mb_strpos($text_for_category, 'หนูชื่อ') !== false || mb_strpos($text_for_category, 'หนูขอ') !== false || mb_strpos($text_for_category, 'หนูอยู่') !== false)) {
+                continue;
+            }
             $category = $keyword;
             break;
         }
@@ -151,7 +157,6 @@ if (!is_null($events['events'])) {
                 continue; 
             }
 
-            $edit_keywords = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์','เปลี่ยนแปลง','อยากแก้','อยากเปลี่ยน','ต้องการแก้','ต้องการเปลี่ยน','ปรับปรุง','ปรับแก้', 'แก้ไข'];
             $is_edit_cmd = false;
             foreach ($edit_keywords as $keyword) {
                 if (mb_strpos($text, $keyword) !== false) {
@@ -247,13 +252,14 @@ if (!is_null($events['events'])) {
                         $real_name = $line_name; 
                     }
                     
+                    $real_name = explode(' ', trim($real_name))[0];
+
                     if (!empty($real_name)) {
                         $stmt = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE line_display_name=?, real_name=?, phone_number=?");
                         $stmt->bind_param("sssssss", $userId, $line_name, $real_name, $phone, $line_name, $real_name, $phone);
                         
                         if ($stmt->execute()) {
-                            $short_name_reg = explode(' ', trim($real_name))[0];
-                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกข้อมูลสำเร็จ!\nยินดีต้อนรับคุณ $short_name_reg\n\nจากนี้สามารถพิมพ์แจ้งซ่อมเข้ามาได้เลยค่ะ เช่น 'แอร์น้ำหยด ห้อง 901' 🛠️"], $channelAccessToken);
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกข้อมูลสำเร็จ!\nยินดีต้อนรับคุณ $real_name\n\nจากนี้สามารถพิมพ์แจ้งซ่อมเข้ามาได้เลยค่ะ เช่น 'แอร์น้ำหยด ห้อง 901' 🛠️"], $channelAccessToken);
                         } else {
                             send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการบันทึกข้อมูลค่ะ"], $channelAccessToken);
                         }
@@ -383,6 +389,7 @@ if (!is_null($events['events'])) {
                         if (empty($real_name)) {
                             $real_name = $user_reg['real_name']; 
                         }
+                        $real_name = explode(' ', trim($real_name))[0];
 
                         $stmt = $conn->prepare("UPDATE line_users SET line_display_name=?, real_name=?, phone_number=? WHERE line_user_id=?");
                         $stmt->bind_param("ssss", $line_name, $real_name, $phone, $userId);
