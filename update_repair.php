@@ -211,15 +211,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
         $update_id = $_POST['id'];
 
-        // ✨ บันทึกเวลา received_at และ completed_at อัตโนมัติตามสถานะ โดยอิงจากเวลาจริงในระบบ ✨
+        // ✨ บันทึกเวลาจริงลงฐานข้อมูลแบบไม่ทับซ้อนกัน ✨
         if ($status === 'ซ่อมเสร็จแล้ว') {
-            // ถ้ากดซ่อมเสร็จ: บันทึกเวลาเสร็จงาน และถ้าเพิ่งกดข้ามสถานะมา ให้ลงเวลารับเรื่องไปด้วย
-            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = IFNULL(received_at, CURRENT_TIMESTAMP), completed_at = CURRENT_TIMESTAMP WHERE id = ?";
+            // ใช้ IFNULL ทั้งคู่ เพื่อล็อค "เวลาจริงครั้งแรกที่กด" หากมีการกลับมาแก้หมายเหตุทีหลัง เวลาจะได้ไม่เพี้ยน
+            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = IFNULL(received_at, CURRENT_TIMESTAMP), completed_at = IFNULL(completed_at, CURRENT_TIMESTAMP) WHERE id = ?";
         } elseif ($status === 'กำลังดำเนินการ') {
-            // ถ้ากดกำลังดำเนินการ: บันทึกเวลารับเรื่อง (ถ้ายังไม่มี) ส่วนเวลาเสร็จงานให้เป็นค่าว่าง
             $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = IFNULL(received_at, CURRENT_TIMESTAMP), completed_at = NULL WHERE id = ?";
         } else {
-            // ถ้ากลับไปสถานะ 'รอรับเรื่อง': ให้ล้างเวลาทิ้งทั้งหมด
+            // ถ้าตั้งเป็น 'รอรับเรื่อง' ให้เคลียร์เวลารับงานและซ่อมเสร็จทิ้ง (เหลือแค่เวลาแจ้งซ่อมที่มาจาก LINE)
             $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = NULL, completed_at = NULL WHERE id = ?";
         }
         
