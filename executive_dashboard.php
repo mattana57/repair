@@ -275,6 +275,28 @@ $pageTitles = [
             color: #4f46e5 !important;
         }
 
+        /* ✨ แก้ไขบั๊กหน้าจอเลื่อนทะลุ และทำให้ Header สไลด์สมูทบน iOS/มือถือ 100% ✨ */
+        main, #mainScrollContainer, .section, .modern-card {
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+        .overflow-x-auto {
+            min-width: 0 !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        table thead {
+            position: static !important;
+        }
+        table thead th {
+            position: -webkit-sticky !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 20 !important;
+            background-color: #fef9c3 !important; 
+            box-shadow: inset 0 -1px 0 #fef08a, 0 1px 2px 0 rgba(0,0,0,0.05) !important;
+            background-clip: padding-box !important;
+        }
+
         @media print { aside, header, .no-print { display: none !important; } }
     </style>
 </head>
@@ -3280,56 +3302,54 @@ $pageTitles = [
 
         // ✨ ระบบซ่อนแถบ Header อัตโนมัติเมื่อใช้นิ้วเลื่อนจอ (เฉพาะมือถือแนวตั้งและแนวนอน) ✨
         const mainHeaderEl = document.querySelector('header.top-header');
-        
-        if (mainHeaderEl) {
-            // ✨ เปลี่ยนมาใช้ margin-top ให้ Flexbox เป็นตัวดึงเนื้อหาขึ้นมาปิดช่องว่างอัตโนมัติ ทำให้หมดปัญหาขอบขาว 100% ✨
-            mainHeaderEl.style.transition = 'margin-top 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+        const mainScrollEl = document.getElementById('mainScrollContainer');
+        let lastScrollTop = 0;
+
+        if (mainHeaderEl && mainScrollEl) {
+            // ✨ ใช้ transform เพื่อความสมูท 100% ไม่กระตุก ไม่เกิดขอบขาว ✨
+            mainHeaderEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             
-            // ล้างค่าเก่าทิ้ง ปล่อยให้ Container ไหลตาม Header ปกติโดยไม่สร้างช่องว่าง
-            const mainScrollEl = document.getElementById('mainScrollContainer');
-            if (mainScrollEl) {
-                mainScrollEl.style.transition = 'none';
-                mainScrollEl.style.transform = 'none';
-                mainScrollEl.style.height = '100%';
-            }
+            // เพื่อให้เนื้อหาเลื่อนตามขึ้นไปปิดช่องว่างของ Header ที่หายไป
+            mainScrollEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 
-            const handleScroll = (e) => {
+            mainScrollEl.addEventListener('scroll', () => {
+                // เช็คว่ากำลังเปิดบนมือถือ (ทั้งแนวตั้งและแนวนอน)
                 const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
-                if (!isMobileScreen) {
-                    mainHeaderEl.style.marginTop = '0px';
-                    return;
-                }
-
-                const el = e.target;
-                const currentScrollTop = el.scrollTop;
-                const lastTop = el.dataset.lastScrollTop ? parseInt(el.dataset.lastScrollTop) : 0;
                 
-                // 👆 เลื่อนขึ้น (ซ่อนแถบ) ให้ดันขอบขึ้นไปซ่อนเลยเงา (95px)
-                if (currentScrollTop > lastTop && currentScrollTop > 40) {
-                    mainHeaderEl.style.marginTop = '-95px'; 
-                } 
-                // 👇 เลื่อนลง หรือเด้งกลับบนสุด (โชว์แถบ)
-                else if (currentScrollTop < lastTop || currentScrollTop <= 0) {
-                    mainHeaderEl.style.marginTop = '0px';
+                if (isMobileScreen) {
+                    const currentScrollTop = mainScrollEl.scrollTop;
+                    
+                    // 👆 ปัดนิ้วขึ้น (เลื่อนหน้าลง) -> ซ่อน Header
+                    if (currentScrollTop > lastScrollTop && currentScrollTop > 60) {
+                        mainHeaderEl.style.transform = 'translateY(-100%)';
+                        // ดึงเนื้อหาขึ้นมา 88px (เท่าความสูง Header) เพื่อไม่ให้มีขอบขาว
+                        mainScrollEl.style.transform = 'translateY(-88px)';
+                        mainScrollEl.style.height = 'calc(100% + 88px)'; 
+                    } 
+                    // 👇 ปัดนิ้วลง (เลื่อนหน้าขึ้น) -> โชว์ Header
+                    else if (currentScrollTop < lastScrollTop) {
+                        mainHeaderEl.style.transform = 'translateY(0)';
+                        // ดันเนื้อหากลับที่เดิม
+                        mainScrollEl.style.transform = 'translateY(0)';
+                        mainScrollEl.style.height = '100%';
+                    }
+                    
+                    lastScrollTop = currentScrollTop;
+                } else {
+                    // 💻 จอใหญ่ (iPad/PC) โชว์เสมอ ไม่ให้ซ่อน
+                    mainHeaderEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.height = '100%';
                 }
-                
-                el.dataset.lastScrollTop = currentScrollTop;
-            };
+            }, { passive: true });
 
-            // ✨ ดักจับการเลื่อนจอจากทุกจุดที่มีโอกาสเลื่อน (หน้าหลัก + ตัวตารางทั้งหมด) ✨
-            const scrollContainers = [
-                document.getElementById('mainScrollContainer'),
-                ...document.querySelectorAll('[id="repairsTableContainer"]')
-            ].filter(el => el !== null);
-
-            scrollContainers.forEach(container => {
-                container.addEventListener('scroll', handleScroll, { passive: true });
-            });
-
+            // ถ้ายืดจอหรือตะแคงเป็นจอใหญ่ ให้รีเซ็ตค่ากลับมาโชว์ Header ปกติ
             window.addEventListener('resize', () => {
                 const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
                 if (!isMobileScreen) {
-                    mainHeaderEl.style.marginTop = '0px';
+                    mainHeaderEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.transform = 'translateY(0)';
+                    mainScrollEl.style.height = '100%';
                 }
             });
         }
