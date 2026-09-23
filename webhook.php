@@ -56,6 +56,8 @@ if (!is_null($events['events'])) {
         $groupId = isset($event['source']['groupId']) ? $event['source']['groupId'] : null;
 
         $line_name = get_line_profile($userId, null, $channelAccessToken);
+        $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'จาก', 'เดิม', 'ด้วย', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร','เบอโทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', 'นะคะ', 'นะครับ', 'ค่ะ', 'ครับ', 'คับ', 'จ้า', 'จ๊ะ', 'นะ', 'หน่อย', 'และ', 'หรือ', 'ทั้ง', 'ได้ไหม', 'ได้มั้ย', 'คะ', 'ข้อมูล', 'กับ', 'ปรับ', 'ปรุง', 'แก้', 'นี้', 'เบอ', 'จ้ะ', 'ค้าบ', 'อยาก', 'ต้องการ', 'ช่วย', 'ให้', 'ค่า', 'ต้อง', 'การ', 'ครัช', 'ได้', 'มั้ย', 'ไหม', 'โท', 'สกุล', 'เอา', 'ออก', 'แล้ว', 'ถ้า', 'หาก', 'สอง', 'อย่าง', '2', ':', '-', ','];
+        $prefixes_to_strip = ['นางสาว', 'น.ส.', 'น.ส', 'น.', 'นส.', 'นส', 'น', 'ด.ช.', 'ด.ญ.', 'นาย', 'นาง', 'คุณ'];
 
         if ($event['type'] == 'message' && $event['message']['type'] == 'image') {
             
@@ -158,8 +160,6 @@ if (!is_null($events['events'])) {
                 }
             }
 
-            $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'จาก', 'เดิม', 'ด้วย', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร','เบอโทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', 'นะคะ', 'นะครับ', 'ค่ะ', 'ครับ', 'คับ', 'จ้า', 'จ๊ะ', 'นะ', 'หน่อย', 'และ', 'หรือ', 'ทั้ง', 'ได้ไหม', 'ได้มั้ย', 'คะ', 'ข้อมูล', 'กับ', 'ปรับ', 'ปรุง', 'แก้', 'นี้', 'เบอ', 'จ้ะ', 'ค้าบ', 'อยาก', 'ต้องการ', 'ช่วย', 'ให้', 'ค่า', 'ต้อง', 'การ', 'ครัช', 'ได้', 'มั้ย', 'ไหม', 'โท', 'สกุล', 'เอา', 'ออก', 'แล้ว', 'ถ้า', 'หาก', 'สอง', 'อย่าง', '2', ':', '-', ','];
-
             if ($is_edit_cmd) {
                 preg_match('/(0[0-9]{8,9})/', $text, $matches);
                 $phone = !empty($matches[1]) ? $matches[1] : null;
@@ -168,6 +168,13 @@ if (!is_null($events['events'])) {
                 $real_name = str_replace($words_to_remove, ' ', $name_part);
                 $real_name = preg_replace('/\s+/', ' ', $real_name);
                 $real_name = trim($real_name);
+
+                foreach ($prefixes_to_strip as $prefix) {
+                    if (mb_strpos($real_name, $prefix) === 0) {
+                        $real_name = trim(mb_substr($real_name, mb_strlen($prefix)));
+                        break;
+                    }
+                }
 
                 $stmt_old = $conn->prepare("SELECT real_name, phone_number FROM line_users WHERE line_user_id = ?");
                 $stmt_old->bind_param("s", $userId);
@@ -229,6 +236,13 @@ if (!is_null($events['events'])) {
                     $real_name = preg_replace('/\s+/', ' ', $real_name);
                     $real_name = trim($real_name);
                     
+                    foreach ($prefixes_to_strip as $prefix) {
+                        if (mb_strpos($real_name, $prefix) === 0) {
+                            $real_name = trim(mb_substr($real_name, mb_strlen($prefix)));
+                            break;
+                        }
+                    }
+                    
                     if (empty($real_name)) {
                         $real_name = $line_name; 
                     }
@@ -238,7 +252,8 @@ if (!is_null($events['events'])) {
                         $stmt->bind_param("sssssss", $userId, $line_name, $real_name, $phone, $line_name, $real_name, $phone);
                         
                         if ($stmt->execute()) {
-                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกข้อมูลสำเร็จ!\nยินดีต้อนรับคุณ $real_name\n\nจากนี้สามารถพิมพ์แจ้งซ่อมเข้ามาได้เลยค่ะ เช่น 'แอร์น้ำหยด ห้อง 901' 🛠️"], $channelAccessToken);
+                            $short_name_reg = explode(' ', trim($real_name))[0];
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกข้อมูลสำเร็จ!\nยินดีต้อนรับคุณ $short_name_reg\n\nจากนี้สามารถพิมพ์แจ้งซ่อมเข้ามาได้เลยค่ะ เช่น 'แอร์น้ำหยด ห้อง 901' 🛠️"], $channelAccessToken);
                         } else {
                             send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการบันทึกข้อมูลค่ะ"], $channelAccessToken);
                         }
@@ -304,10 +319,12 @@ if (!is_null($events['events'])) {
                     }
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
+                    $short_reporter_name = explode(' ', trim($user_reg['real_name']))[0];
+
                     $flex_details = [
                         ['type' => 'text', 'text' => "ปัญหา: $category", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                         ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
-                        ['type' => 'text', 'text' => "ผู้แจ้ง: ".$user_reg['real_name']." (".$user_reg['phone_number'].")", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
+                        ['type' => 'text', 'text' => "ผู้แจ้ง: ".$short_reporter_name." (".$user_reg['phone_number'].")", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
                         ['type' => 'text', 'text' => "รายละเอียด: $problem", 'size' => 'xs', 'color' => '#ef4444', 'wrap' => true]
                     ];
                     if ($image_path) {
@@ -355,8 +372,14 @@ if (!is_null($events['events'])) {
                     $real_name = preg_replace('/\s+/', ' ', $real_name);
                     $real_name = trim($real_name);
                     
+                    foreach ($prefixes_to_strip as $prefix) {
+                        if (mb_strpos($real_name, $prefix) === 0) {
+                            $real_name = trim(mb_substr($real_name, mb_strlen($prefix)));
+                            break;
+                        }
+                    }
+                    
                     if (mb_strlen($text, 'UTF-8') < 50) {
-                        
                         if (empty($real_name)) {
                             $real_name = $user_reg['real_name']; 
                         }
@@ -422,7 +445,7 @@ if (!is_null($events['events'])) {
                             $stmt->bind_param("ss", $tech_name, $ticket_no);
                             $stmt->execute();
 
-                            $disp_name = $job['reporter_name'];
+                            $disp_name = explode(' ', trim($job['reporter_name']))[0];
 
                             $replyMsg = [
                                 'type' => 'flex',
@@ -512,6 +535,8 @@ if (!is_null($events['events'])) {
                                     $close_reply = "🎉 บันทึกปิดงานใบงาน $ticket_no เรียบร้อยค่ะ ระบบได้ส่งแบบประเมินให้ผู้แจ้งแล้ว";
                                     send_reply($replyToken, ['type' => 'text', 'text' => $close_reply], $channelAccessToken);
 
+                                    $short_reporter_name_close = explode(' ', trim($job['reporter_name']))[0];
+
                                     $review_msg = [
                                         'type' => 'flex',
                                         'altText' => 'ประเมินผลการซ่อม',
@@ -521,7 +546,7 @@ if (!is_null($events['events'])) {
                                                 'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
                                                 'contents' => [
                                                     ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'md'],
-                                                    ['type' => 'text', 'text' => "ถึงคุณ ".$job['reporter_name'], 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'xs'],
+                                                    ['type' => 'text', 'text' => "ถึงคุณ ".$short_reporter_name_close, 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'xs'],
                                                     ['type' => 'text', 'text' => 'ช่าง '.$clicker_name.' ดำเนินการซ่อมเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'size' => 'xs', 'wrap' => true],
                                                     ['type' => 'separator', 'margin' => 'sm'],
                                                     ['type' => 'text', 'text' => '1️⃣ ให้คะแนนดาว (กดเปลี่ยนได้)', 'size' => 'xs', 'color' => '#aaaaaa', 'margin' => 'sm'],
