@@ -228,6 +228,20 @@ $pageTitles = [
     'dash' => 'Dashboard Overview',
     'repairs' => 'All Repairs List'
 ];
+// ✨ API เช็คอัปเดตแบบคลุมทุกตารางและ Modal 100% ✨
+if (isset($_GET['api_check_hash'])) {
+    header('Content-Type: application/json; charset=utf-8');
+    // เช็คว่ามีข้อมูลใดๆ (ใบงาน, ช่าง, ผู้แจ้ง) ขยับหรือไม่
+    $data_hash = md5(json_encode($reps) . json_encode($tech_info_map) . json_encode($line_users_map));
+    echo json_encode([
+        'hash' => $data_hash,
+        'all_repairs' => $reps,
+        'tech_dept_map' => $tech_dept_map,
+        'tech_info_map' => $tech_info_map,
+        'line_users_map' => $line_users_map
+    ], JSON_UNESCAPED_UNICODE);
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -1415,10 +1429,10 @@ $pageTitles = [
     </div>
 
     <script>
-        const allRepairs = <?php echo $all_repairs_json; ?>;
-        const techDeptMap = <?php echo $tech_dept_map_json; ?>;
-        const techInfoMap = <?php echo $tech_info_map_json; ?>; 
-        const lineUsersMap = <?php echo $line_users_map_json; ?>;
+        window.allRepairs = <?php echo $all_repairs_json; ?>;
+        window.techDeptMap = <?php echo $tech_dept_map_json; ?>;
+        window.techInfoMap = <?php echo $tech_info_map_json; ?>; 
+        window.lineUsersMap = <?php echo $line_users_map_json; ?>;
         
         let chartEquipInstance = null;
         let chartStatusInstance = null;
@@ -2561,6 +2575,7 @@ $pageTitles = [
         }
 
         function changeModalTech(techName) {
+            window.currentModalTech = techName;   // ✨ จำชื่อช่างที่กำลังดูรีวิวอยู่
             let thNameOnly = (techInfoMap[techName] && techInfoMap[techName].th) ? techInfoMap[techName].th : techName.split(' (')[0];
             // ✨ ใช้ innerHTML และ <span class="block sm:inline"> เพื่อดันชื่อช่างลงบรรทัดใหม่เฉพาะมือถือแนวตั้ง ✨
             document.getElementById('techReviewsModalTitle').innerHTML = `รีวิวของช่าง: <span class="block sm:inline mt-0.5 sm:mt-0">${thNameOnly}</span>`;
@@ -2603,7 +2618,9 @@ $pageTitles = [
 
         // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
         function viewHistory(fullName, type) {
-            const tbody = document.getElementById('historyTableBody'); 
+            window.currentHistoryName = fullName; // ✨ จำชื่อที่เปิดอยู่
+            window.currentHistoryType = type;     // ✨ จำประเภทที่เปิดอยู่
+            const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
 
             const userRepairs = allRepairs.filter(r => {
@@ -3346,6 +3363,96 @@ $pageTitles = [
                 }
             });
         }
+        
+        // ✨ ระบบ Auto-Refresh ดึงข้อมูลและอัปเดตทุกตารางบนหน้าจอแบบเรียลไทม์ ✨
+        let globalDataHash = '<?php echo md5(json_encode($reps) . json_encode($tech_info_map) . json_encode($line_users_map)); ?>';
+
+        async function autoRefreshAllData() {
+            try {
+                // 1. เช็ค Hash จาก API เบาๆ ก่อนว่ามีอะไรเปลี่ยนไหม
+                const apiRes = await fetch('?api_check_hash=1&_=' + Date.now());
+                if (!apiRes.ok) return;
+                const apiData = await apiRes.json();
+
+                if (apiData.hash !== globalDataHash) {
+                    globalDataHash = apiData.hash;
+
+                    // 2. ถ้ามีอัปเดต โหลดหน้า HTML ปัจจุบันมาแบบซ่อนๆ
+                    const tab = new URLSearchParams(window.location.search).get('tab') || 'dash';
+                    const htmlRes = await fetch(window.location.href.split('?')[0] + '?tab=' + tab + '&_=' + Date.now());
+                    const htmlText = await htmlRes.text();
+                    
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlText, 'text/html');
+
+                    // 3. แจ้งเตือนถ้ายอดงานรวมเพิ่มขึ้น
+                    const newTotalStr = doc.querySelector('#dash .grid-cols-2 h3')?.innerText || '0';
+                    const oldTotalStr = document.querySelector('#dash .grid-cols-2 h3')?.innerText || '0';
+                    if (parseInt(newTotalStr) > parseInt(oldTotalStr)) {
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'มีการแจ้งซ่อม/อัปเดตข้อมูลใหม่!', showConfirmButton: false, timer: 3500, timerProgressBar: true });
+                    }
+
+                    // 4. อัปเดตตัวเลขการ์ดสรุปทั้ง 4 ใบ
+                    const newCards = doc.querySelectorAll('#dash .grid-cols-2 h3');
+                    const oldCards = document.querySelectorAll('#dash .grid-cols-2 h3');
+                    oldCards.forEach((el, index) => {
+                        if (newCards[index]) el.innerHTML = newCards[index].innerHTML;
+                    });
+
+                    // 5. อัปเดตทุกตารางบนหน้าจอ 100% แบบเจาะจง (ไม่กวน UI เดิม)
+                    const selectorsToUpdate = [
+                        '#dash table tbody',          // Recent Transactions
+                        '#repairs table tbody',       // All Repairs List
+                        '#techniciansTableBody',      // Technicians (Admin)
+                        '#techCardsContainer',        // Tech Cards (Executive)
+                        '#assets table tbody',        // Assets (Admin)
+                        '#usersTable tbody',          // Reporter History (Admin)
+                        '#topReportersList'           // Top Reporters List
+                    ];
+                    
+                    selectorsToUpdate.forEach(selector => {
+                        const newEl = doc.querySelector(selector);
+                        const oldEl = document.querySelector(selector);
+                        if (newEl && oldEl) {
+                            oldEl.innerHTML = newEl.innerHTML;
+                        }
+                    });
+
+                    // 6. อัปเดตตัวแปร JS สำหรับกราฟและ Modal
+                    if (apiData.all_repairs) window.allRepairs = apiData.all_repairs;
+                    if (apiData.tech_dept_map) window.techDeptMap = apiData.tech_dept_map;
+                    if (apiData.tech_info_map) window.techInfoMap = apiData.tech_info_map;
+                    if (apiData.line_users_map) window.lineUsersMap = apiData.line_users_map;
+
+                    // 7. รีเฟรชส่วนกราฟ/ตัวกรอง ที่กำลังเปิดอยู่
+                    if (document.getElementById('dash') && !document.getElementById('dash').classList.contains('hidden')) {
+                        if (typeof renderAllCharts === 'function') renderAllCharts();
+                    }
+
+                    if (typeof filterRepairsTable === 'function') filterRepairsTable();
+                    if (typeof filterTechCards === 'function') filterTechCards();
+                    if (typeof searchHistoryTable === 'function') searchHistoryTable();
+                    if (typeof searchTeamTable === 'function') searchTeamTable();
+
+                    // 8. อัปเดตหน้าต่าง Modal ของช่าง ถ้าผู้ใช้กำลังเปิดค้างอยู่!
+                    const historyModal = document.getElementById('historyModal');
+                    if (historyModal && !historyModal.classList.contains('opacity-0')) {
+                        if (window.currentHistoryName && window.currentHistoryType) {
+                            viewHistory(window.currentHistoryName, window.currentHistoryType);
+                        }
+                    }
+
+                    const techReviewsModal = document.getElementById('techReviewsModal');
+                    if (techReviewsModal && !techReviewsModal.classList.contains('opacity-0')) {
+                        if (window.currentModalTech) {
+                            changeModalTech(window.currentModalTech);
+                        }
+                    }
+                }
+            } catch (err) {}
+        }
+        setInterval(autoRefreshAllData, 3500);
+        window.addEventListener('focus', autoRefreshAllData);
     </script>
 </body>
 </html>
