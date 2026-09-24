@@ -330,10 +330,10 @@ if (isset($_GET['id'])) {
                                                 <i class="fas fa-user text-sm"></i>
                                             </div>
                                             <div>
-                                                <div class="text-sm font-bold text-slate-800 flex items-center flex-wrap gap-2">
+                                                <div class="text-sm font-bold text-slate-800 flex <?php echo $is_executive ? 'flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2' : 'items-center flex-wrap gap-2'; ?>">
                                                     <span><?php echo htmlspecialchars($repair['reporter_name']); ?></span>
-                                                    <!-- ✨ ย้ายดาวมาต่อท้ายชื่อตรงนี้ ✨ -->
-                                                    <div class="flex gap-0.5 pt-0.5 sm:pt-0">
+                                                    <!-- ✨ จัดดาวให้อยู่ใต้ชื่อและบาลานซ์ระยะห่าง (เฉพาะมือถือผู้บริหาร) ✨ -->
+                                                    <div class="flex gap-0.5 <?php echo $is_executive ? 'pt-0' : 'pt-0.5 sm:pt-0'; ?>">
                                                         <?php 
                                                         $rating = (int)($repair['rating'] ?? 0);
                                                         if ($rating > 0) {
@@ -347,7 +347,7 @@ if (isset($_GET['id'])) {
                                                         ?>
                                                     </div>
                                                 </div>
-                                                <div class="text-[11px] text-slate-400 font-medium">
+                                                <div class="text-[11px] text-slate-400 font-medium <?php echo $is_executive ? 'mt-1 sm:mt-0' : ''; ?>">
                                                     <?php 
                                                     if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
                                                         echo timeAgo($repair['completed_at']);
