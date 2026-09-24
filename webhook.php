@@ -214,19 +214,6 @@ if (!is_null($events['events'])) {
                 continue;
             }
 
-            $text_clean = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
-            $greetings = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'รับทราบ', 'เยี่ยม', 'แต้ง'];
-            $is_greeting = false;
-            foreach ($greetings as $g) {
-                if (mb_strpos($text_clean, $g) !== false) {
-                    $is_greeting = true; break;
-                }
-            }
-            if ($is_greeting && mb_strlen($text_clean) < 40) {
-                send_reply($replyToken, ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งได้ตลอดเลยนะคะ"], $channelAccessToken);
-                continue; 
-            }
-
             $stmt_chk_user = $conn->prepare("SELECT real_name, phone_number FROM line_users WHERE line_user_id = ?");
             $stmt_chk_user->bind_param("s", $userId);
             $stmt_chk_user->execute();
@@ -267,17 +254,17 @@ if (!is_null($events['events'])) {
                     }
                 }
 
-                $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
+                $stmt_check_review = $conn->prepare("SELECT id, ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY id DESC LIMIT 1");
                 if ($stmt_check_review) {
                     $stmt_check_review->bind_param("s", $userId);
                     $stmt_check_review->execute();
                     $recent_job = $stmt_check_review->get_result()->fetch_assoc();
 
-                    if ($recent_job && mb_strlen($text) < 100 && !preg_match('/(ห้อง|อาคาร|ชั้น)/', $text)) {
+                    if ($recent_job && mb_strlen($text, 'UTF-8') <= 255 && !preg_match('/(ห้อง|อาคาร|ชั้น)/', $text)) {
                         $current_rev = (string)$recent_job['review_comment'];
                         $new_rev = trim($current_rev . " " . $text);
-                        $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE ticket_no = ?");
-                        $stmt_upd->bind_param("ss", $new_rev, $recent_job['ticket_no']);
+                        $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE id = ?");
+                        $stmt_upd->bind_param("si", $new_rev, $recent_job['id']);
                         $stmt_upd->execute();
                         send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมให้ใบงาน {$recent_job['ticket_no']} เรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
                         continue;
@@ -329,7 +316,7 @@ if (!is_null($events['events'])) {
 
                     $flex_details = [
                         ['type' => 'text', 'text' => "ปัญหา: $category", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
-                        ['type' => 'text', 'text' => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
+                        ['type' => 'text', 'text => "สถานที่: $location", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
                         ['type' => 'text', 'text' => "ผู้แจ้ง: ".$short_reporter_name." (".$user_reg['phone_number'].")", 'size' => 'xs', 'color' => '#666666', 'wrap' => true],
                         ['type' => 'text', 'text' => "รายละเอียด: $problem", 'size' => 'xs', 'color' => '#ef4444', 'wrap' => true]
                     ];
@@ -400,22 +387,36 @@ if (!is_null($events['events'])) {
                     }
                 }
 
-                $stmt_check_review = $conn->prepare("SELECT ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY ticket_no DESC LIMIT 1");
+                $stmt_check_review = $conn->prepare("SELECT id, ticket_no, review_comment FROM repairs WHERE line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว' ORDER BY id DESC LIMIT 1");
                 if ($stmt_check_review) {
                     $stmt_check_review->bind_param("s", $userId);
                     $stmt_check_review->execute();
                     $recent_job = $stmt_check_review->get_result()->fetch_assoc();
 
-                    if ($recent_job && mb_strlen($text) < 100 && !preg_match('/(ห้อง|อาคาร|ชั้น)/', $text)) {
+                    if ($recent_job && mb_strlen($text, 'UTF-8') <= 255 && !preg_match('/(ห้อง|อาคาร|ชั้น)/', $text)) {
                         $current_rev = (string)$recent_job['review_comment'];
                         $new_rev = trim($current_rev . " " . $text);
                         
-                        $stmt_update_review = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE ticket_no = ?");
-                        $stmt_update_review->bind_param("ss", $new_rev, $recent_job['ticket_no']);
+                        $stmt_update_review = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE id = ?");
+                        $stmt_update_review->bind_param("si", $new_rev, $recent_job['id']);
                         $stmt_update_review->execute();
                         
                         send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมให้ใบงาน {$recent_job['ticket_no']} เรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
+                        continue;
                     }
+                }
+                
+                $text_clean = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
+                $greetings = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'รับทราบ', 'เยี่ยม', 'แต้ง'];
+                $is_greeting = false;
+                foreach ($greetings as $g) {
+                    if (mb_strpos($text_clean, $g) !== false) {
+                        $is_greeting = true; break;
+                    }
+                }
+                if ($is_greeting && mb_strlen($text_clean, 'UTF-8') < 40) {
+                    send_reply($replyToken, ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งได้ตลอดเลยนะคะ"], $channelAccessToken);
+                    continue; 
                 }
             }
         }
