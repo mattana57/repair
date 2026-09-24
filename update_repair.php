@@ -211,27 +211,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
         $update_id = $_POST['id'];
 
-        // ✨ บันทึกเวลาจริงลงฐานข้อมูลแบบไม่ทับซ้อนกัน (แก้ปัญหาเวลาไม่ขึ้นเมื่อกดรับงานไว) ✨
+        // ✨ บันทึกเวลาจริงลงฐานข้อมูลแบบเรียลไทม์ (ดักจับค่า 0000-00-00 ด้วย PHP) ✨
         $now = date('Y-m-d H:i:s');
-        $rec_at = isset($repair['received_at']) ? $repair['received_at'] : null;
-        $comp_at = isset($repair['completed_at']) ? $repair['completed_at'] : null;
+        
+        // ดึงค่าเวลาเดิมที่เคยบันทึกไว้มาตรวจสอบก่อน
+        $old_received = (!empty($repair['received_at']) && $repair['received_at'] !== '0000-00-00 00:00:00') ? $repair['received_at'] : null;
+        $old_completed = (!empty($repair['completed_at']) && $repair['completed_at'] !== '0000-00-00 00:00:00') ? $repair['completed_at'] : null;
 
         if ($status === 'ซ่อมเสร็จแล้ว') {
-            // ถ้าเวลายังว่างอยู่ ให้สแตมป์เวลาปัจจุบันลงไปทันที (รับงานและจบงานพร้อมกัน)
-            if (empty($rec_at) || $rec_at === '0000-00-00 00:00:00') $rec_at = $now;
-            if (empty($comp_at) || $comp_at === '0000-00-00 00:00:00') $comp_at = $now;
+            // ถ้าข้ามมากดเสร็จเลย โดยที่เวลายังว่าง ให้ยัดเวลาปัจจุบันลงไปทั้ง 2 ช่อง
+            $final_received = $old_received ? $old_received : $now;
+            $final_completed = $old_completed ? $old_completed : $now;
         } elseif ($status === 'กำลังดำเนินการ') {
-            if (empty($rec_at) || $rec_at === '0000-00-00 00:00:00') $rec_at = $now;
-            $comp_at = null; // เคลียร์เวลาซ่อมเสร็จถ้ามีการถอยสถานะกลับ
+            // ถ้ารับงาน ให้ยัดเวลาปัจจุบันลงไปช่องรับงาน (ถ้ายังไม่มี) และล้างเวลาเสร็จทิ้ง
+            $final_received = $old_received ? $old_received : $now;
+            $final_completed = null; 
         } else {
-            // ถ้าตั้งเป็น 'รอรับเรื่อง' ให้เคลียร์เวลารับงานและซ่อมเสร็จทิ้ง
-            $rec_at = null;
-            $comp_at = null;
+            // ถ้ากลับไปรอรับเรื่อง ให้ล้างเวลาทิ้งให้หมด
+            $final_received = null;
+            $final_completed = null;
         }
         
+        // อัปเดตข้อมูลโดยบังคับส่งเวลาที่กรองแล้วเข้าไปตรงๆ
         $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = ?, completed_at = ? WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("sssssssi", $status, $repair_note, $repair_note, $technician_name, $asset_code, $rec_at, $comp_at, $update_id);
+        $update_stmt->bind_param("sssssssi", $status, $repair_note, $repair_note, $technician_name, $asset_code, $final_received, $final_completed, $update_id);
 
         if ($update_stmt->execute()) {
             $show_alert = true;
