@@ -96,8 +96,8 @@ if (!is_null($events['events'])) {
                 $latest_job = $stmt_check->get_result()->fetch_assoc();
                 
                 $attached = false;
-                if ($latest_job && $latest_job['status'] === 'รอรับเรื่อง' && empty($latest_job['image_path'])) {
-                    if ((time() - strtotime($latest_job['created_at'])) <= 3600) {
+                if ($latest_job && $latest_job['status'] !== 'ซ่อมเสร็จแล้ว' && empty($latest_job['image_path'])) {
+                    if ((time() - strtotime($latest_job['created_at'])) <= 300) {
                         $new_img_name = $latest_job['ticket_no'] . "_" . time() . ".jpg";
                         file_put_contents("uploads/" . $new_img_name, $image_data);
                         
