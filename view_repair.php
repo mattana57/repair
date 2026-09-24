@@ -357,14 +357,30 @@ if (isset($_GET['id'])) {
                                         </div>
                                     </div>
                                     
-                                    <!-- ✨ โครงสร้างสำหรับผู้บริหาร (ไอแพด, คอมพิวเตอร์, มือถือแนวนอน): คงเดิม 100% ✨ -->
-                                    <div class="hidden sm:flex landscape:flex justify-between items-start mb-2">
+                                    <!-- ✨ โครงสร้างสำหรับผู้บริหาร (ไอแพด, คอมพิวเตอร์, มือถือแนวนอน) ✨ -->
+                                    <div class="hidden sm:flex landscape:flex flex-col sm:flex-row sm:items-center justify-start mb-2 gap-1.5 sm:gap-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm">
                                                 <i class="fas fa-user text-sm"></i>
                                             </div>
                                             <div>
-                                                <div class="text-sm font-bold text-slate-800"><?php echo htmlspecialchars($repair['reporter_name']); ?></div>
+                                                <div class="text-sm font-bold text-slate-800 flex items-center flex-wrap gap-2">
+                                                    <span><?php echo htmlspecialchars($repair['reporter_name']); ?></span>
+                                                    <!-- ✨ ดึงดาวมาต่อท้ายชื่อ ✨ -->
+                                                    <div class="flex gap-0.5 pt-0.5 sm:pt-0">
+                                                        <?php 
+                                                        $rating = (int)($repair['rating'] ?? 0);
+                                                        if ($rating > 0) {
+                                                            for($i=1; $i<=5; $i++) {
+                                                                if($i <= $rating) echo '<i class="fas fa-star text-amber-400 text-[13px] drop-shadow-sm"></i>';
+                                                                else echo '<i class="fas fa-star text-slate-200 text-[13px]"></i>';
+                                                            }
+                                                        } else {
+                                                            echo '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                                                        }
+                                                        ?>
+                                                    </div>
+                                                </div>
                                                 <div class="text-[11px] text-slate-400 font-medium">
                                                     <?php 
                                                     if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
@@ -375,30 +391,33 @@ if (isset($_GET['id'])) {
                                                     ?>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="flex gap-0.5 pt-1">
-                                            <?php 
-                                            $rating = (int)($repair['rating'] ?? 0);
-                                            if ($rating > 0) {
-                                                for($i=1; $i<=5; $i++) {
-                                                    if($i <= $rating) echo '<i class="fas fa-star text-amber-400 text-[13px] drop-shadow-sm"></i>';
-                                                    else echo '<i class="fas fa-star text-slate-200 text-[13px]"></i>';
-                                                }
-                                            } else {
-                                                echo '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
-                                            }
-                                            ?>
                                         </div>
                                     </div>
                                     <?php else: ?>
-                                    <!-- ✨ โครงสร้างสำหรับแอดมินและช่าง (ทุกอุปกรณ์): คงเดิม 100% ✨ -->
-                                    <div class="flex justify-between items-start mb-2">
+                                    <!-- ✨ โครงสร้างสำหรับแอดมินและช่าง (ทุกอุปกรณ์) ✨ -->
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-start mb-2 gap-1.5 sm:gap-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm">
                                                 <i class="fas fa-user text-sm"></i>
                                             </div>
                                             <div>
-                                                <div class="text-sm font-bold text-slate-800"><?php echo htmlspecialchars($repair['reporter_name']); ?></div>
+                                                <div class="text-sm font-bold text-slate-800 flex items-center flex-wrap gap-2">
+                                                    <span><?php echo htmlspecialchars($repair['reporter_name']); ?></span>
+                                                    <!-- ✨ ดึงดาวมาต่อท้ายชื่อ ✨ -->
+                                                    <div class="flex gap-0.5 pt-0.5 sm:pt-0">
+                                                        <?php 
+                                                        $rating = (int)($repair['rating'] ?? 0);
+                                                        if ($rating > 0) {
+                                                            for($i=1; $i<=5; $i++) {
+                                                                if($i <= $rating) echo '<i class="fas fa-star text-amber-400 text-[13px] drop-shadow-sm"></i>';
+                                                                else echo '<i class="fas fa-star text-slate-200 text-[13px]"></i>';
+                                                            }
+                                                        } else {
+                                                            echo '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                                                        }
+                                                        ?>
+                                                    </div>
+                                                </div>
                                                 <div class="text-[11px] text-slate-400 font-medium">
                                                     <?php 
                                                     if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
@@ -409,19 +428,6 @@ if (isset($_GET['id'])) {
                                                     ?>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="flex gap-0.5 pt-1">
-                                            <?php 
-                                            $rating = (int)($repair['rating'] ?? 0);
-                                            if ($rating > 0) {
-                                                for($i=1; $i<=5; $i++) {
-                                                    if($i <= $rating) echo '<i class="fas fa-star text-amber-400 text-[13px] drop-shadow-sm"></i>';
-                                                    else echo '<i class="fas fa-star text-slate-200 text-[13px]"></i>';
-                                                }
-                                            } else {
-                                                echo '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
-                                            }
-                                            ?>
                                         </div>
                                     </div>
                                     <?php endif; ?>
