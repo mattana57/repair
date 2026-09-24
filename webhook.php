@@ -47,8 +47,8 @@ function extract_repair_info($text) {
         }
     }
     
-    // ✨ เพิ่มการจับสถานที่ที่เกี่ยวกับรถ (ลานจอดรถ, โรงรถ, ทางเข้า, ทางออก)
-    preg_match('/(หน้า|หลัง|ข้าง|ใน|นอก)?\s*(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+|ชั้น\s*[0-9]+|ลานจอดรถ|โรงรถ|ทางเข้า|ทางออก)/iu', $text, $matches);
+    // ✨ อัปเดต Regex ให้รองรับคำว่า "คณะ", "ลานจอดรถ", "โรงรถ", "ทางเข้า", "ทางออก"
+    preg_match('/(หน้า|หลัง|ข้าง|ใน|นอก)?\s*(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+|ชั้น\s*[0-9]+|คณะ|ลานจอดรถ|โรงรถ|ทางเข้า|ทางออก)/iu', $text, $matches);
     if (!empty($matches[0])) {
         $location = trim($matches[0]);
     }
@@ -304,7 +304,6 @@ if (!is_null($events['events'])) {
                 continue;
             }
 
-            // ✨ เพิ่มการดักจับการสอบถามข้อมูลรถ (ไม่เปิดใบงาน)
             $text_clean_car = str_replace(' ', '', $text);
             if (mb_strpos($text_clean_car, 'รถว่าง') !== false || 
                 mb_strpos($text_clean_car, 'จองรถ') !== false || 
