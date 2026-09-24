@@ -26,7 +26,7 @@ function extract_repair_info($text) {
     
     $text_for_category = str_replace(['ดำเนินการ', 'พนักงาน', 'หนัก'], ['ทำงาน', 'พนง', 'ห_นัก'], $text_lower);
     
-    // ✨ อัปเดต: เรียงลำดับคำประสมขึ้นก่อนคำโดด เพื่อแก้ปัญหาการดักจับคำผิดพลาด
+    // ✨ Array อัปเดตใหม่: เรียงคำประสม (โต๊ะคอม, สายไฟ) ไว้ก่อนคำโดด (คอม, ไฟ)
     $keywords = [
         'โต๊ะคอม', 'เก้าอี้คอม', 'สายแลน', 'สายไฟ', 'หลอดไฟ', 'ไฟดับ', 'น้ำรั่ว', 'เครื่องปริ้น', 'printer', 'projector', 'โปรเจคเตอร์', 'โปรเจกเตอร์', 'เครื่องฉาย', 
         'แอร์', 'คอม', 'จอ', 'ทีวี', 'ไมค์', 'ปลั๊ก', 'ไฟ', 'หลอด', 'พัดลม', 'เน็ต', 'wifi', 'วายฟาย','ไว้ฟาย','ไวฟาย', 'อินเทอร์เน็ต',
@@ -261,7 +261,7 @@ if (!is_null($events['events'])) {
                     $stmt_check_review->execute();
                     $recent_job = $stmt_check_review->get_result()->fetch_assoc();
 
-                    if ($recent_job && mb_strlen($text, 'UTF-8') <= 255 && !preg_match('/(ห้อง|อาคาร|ชั้น)/', $text)) {
+                    if ($recent_job && mb_strlen($text, 'UTF-8') <= 255 && !preg_match('/(ห้อง|อาคาร|ตึก|ชั้น)/', $text)) {
                         $current_rev = (string)$recent_job['review_comment'];
                         $new_rev = trim($current_rev . " " . $text);
                         $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE id = ?");
@@ -407,7 +407,7 @@ if (!is_null($events['events'])) {
                     $stmt_check_review->execute();
                     $recent_job = $stmt_check_review->get_result()->fetch_assoc();
 
-                    if ($recent_job && mb_strlen($text, 'UTF-8') <= 255 && !preg_match('/(ห้อง|อาคาร|ชั้น)/', $text)) {
+                    if ($recent_job && mb_strlen($text, 'UTF-8') <= 255 && !preg_match('/(ห้อง|อาคาร|ตึก|ชั้น)/', $text)) {
                         $current_rev = (string)$recent_job['review_comment'];
                         $new_rev = trim($current_rev . " " . $text);
                         
