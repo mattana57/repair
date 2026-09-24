@@ -325,14 +325,15 @@ if (isset($_GET['id'])) {
                                 if ($has_rating || $has_comment): 
                                 ?>
                                     <?php if ($is_executive): ?>
-                                    <!-- ✨ โครงสร้างสำหรับผู้บริหาร (มือถือ/ไอแพดแนวตั้ง): ชื่อ -> ดาว -> เวลา (ระยะห่างพอดีเป๊ะ) ✨ -->
+                                    <!-- ✨ โครงสร้างสำหรับผู้บริหาร (มือถือ/ไอแพดแนวตั้ง): ชื่อ -> ดาว -> เวลา ✨ -->
                                     <div class="flex landscape:hidden items-start mb-3 gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm mt-1">
+                                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm mt-0.5">
                                             <i class="fas fa-user text-sm"></i>
                                         </div>
-                                        <div class="flex flex-col gap-1.5 mt-0.5">
-                                            <div class="text-sm font-bold text-slate-800 leading-none"><?php echo htmlspecialchars($repair['reporter_name']); ?></div>
-                                            <div class="flex gap-0.5">
+                                        <!-- ✨ ปรับช่องไฟ: ลบ leading-none ที่ไปบีบฟอนต์ภาษาไทยจนเพี้ยน และใช้ gap-1 เพื่อหารระยะห่าง 3 บรรทัดให้เท่ากันเป๊ะ 100% ✨ -->
+                                        <div class="flex flex-col gap-1">
+                                            <div class="text-sm font-bold text-slate-800 leading-tight"><?php echo htmlspecialchars($repair['reporter_name']); ?></div>
+                                            <div class="flex items-center gap-0.5">
                                                 <?php 
                                                 $rating = (int)($repair['rating'] ?? 0);
                                                 if ($rating > 0) {
@@ -345,7 +346,7 @@ if (isset($_GET['id'])) {
                                                 }
                                                 ?>
                                             </div>
-                                            <div class="text-[11px] text-slate-400 font-medium leading-none">
+                                            <div class="text-[11px] text-slate-400 font-medium leading-tight">
                                                 <?php 
                                                 if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
                                                     echo timeAgo($repair['completed_at']);
