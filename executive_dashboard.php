@@ -3152,10 +3152,8 @@ $pageTitles = [
             const tableContainer = document.getElementById('repairsTableContainer');
             
             if (!card.classList.contains('is-fullscreen')) {
-                // 1. จำตำแหน่งและขนาดปัจจุบันของการ์ด
                 const rect = card.getBoundingClientRect();
                 
-                // 2. สร้างกล่องเปล่าๆ มาวางแทนที่ เพื่อไม่ให้หน้าเว็บกระตุกเวลาดึงการ์ดออกไป
                 let placeholder = document.getElementById('repairsPlaceholder');
                 if (!placeholder) {
                     placeholder = document.createElement('div');
@@ -3166,7 +3164,6 @@ $pageTitles = [
                     card.parentNode.insertBefore(placeholder, card);
                 }
                 
-                // 3. ปลดการ์ดให้ลอย (Fixed) แต่อยู่ตำแหน่งเดิมเป๊ะๆ
                 card.style.transition = 'none';
                 card.style.position = 'fixed';
                 card.style.top = rect.top + 'px';
@@ -3176,9 +3173,8 @@ $pageTitles = [
                 card.style.zIndex = '100';
                 card.style.margin = '0';
                 
-                void card.offsetWidth; // บังคับให้เบราว์เซอร์รับรู้ตำแหน่งก่อน
+                void card.offsetWidth; 
                 
-                // 4. สั่งขยายเต็มจอ พร้อมแอนิเมชันความเร็วเดียวกับหน้าต่างประวัติ
                 card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
                 card.classList.add('is-fullscreen');
                 
@@ -3194,7 +3190,6 @@ $pageTitles = [
                 document.body.classList.add('overflow-hidden');
                 
             } else {
-                // 1. สั่งให้หดกลับมาที่ขนาดและตำแหน่งเดิมเป๊ะๆ
                 const placeholder = document.getElementById('repairsPlaceholder');
                 if (placeholder) {
                     const rect = placeholder.getBoundingClientRect();
@@ -3202,7 +3197,7 @@ $pageTitles = [
                     card.style.left = rect.left + 'px';
                     card.style.width = rect.width + 'px';
                     card.style.height = rect.height + 'px';
-                    card.style.borderRadius = '20px'; // ขอบมนเท่าเดิม
+                    card.style.borderRadius = '20px'; 
                 }
                 
                 if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
@@ -3211,7 +3206,6 @@ $pageTitles = [
                 document.body.classList.remove('overflow-hidden');
                 card.classList.remove('is-fullscreen');
                 
-                // 2. รอแอนิเมชันหดกลับเสร็จ แล้วเอาการ์ดกลับไปวางในหน้าเว็บปกติ
                 setTimeout(() => {
                     if (!card.classList.contains('is-fullscreen')) {
                         card.style.transition = 'none';
@@ -3224,7 +3218,6 @@ $pageTitles = [
                         card.style.margin = '';
                         if (placeholder) placeholder.remove();
                         
-                        // คืนค่า transition เดิม
                         void card.offsetWidth;
                         card.style.transition = '';
                     }
