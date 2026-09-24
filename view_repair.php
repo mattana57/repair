@@ -325,14 +325,15 @@ if (isset($_GET['id'])) {
                                 if ($has_rating || $has_comment): 
                                 ?>
                                     <?php if ($is_executive): ?>
-                                    <!-- ✨ โครงสร้างสำหรับผู้บริหาร (มือถือแนวตั้ง): ชื่อ -> ดาว -> เวลา (ระยะห่างพอดีเป๊ะ) ✨ -->
-                                    <div class="flex sm:hidden landscape:hidden items-start mb-3 gap-3">
+                                    <!-- ✨ โครงสร้างสำหรับผู้บริหาร (มือถือ/ไอแพดแนวตั้ง): ชื่อ -> ดาว -> เวลา (ระยะห่างพอดีเป๊ะ) ✨ -->
+                                    <div class="flex landscape:hidden items-start mb-3 gap-3">
                                         <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm mt-1">
                                             <i class="fas fa-user text-sm"></i>
                                         </div>
-                                        <div class="flex flex-col gap-1.5 mt-0.5">
+                                        <div class="flex flex-col mt-0.5">
                                             <div class="text-sm font-bold text-slate-800 leading-none"><?php echo htmlspecialchars($repair['reporter_name']); ?></div>
-                                            <div class="flex gap-0.5 mt-0.5">
+                                            <!-- ✨ เพิ่ม margin-top (mt-1.5) เพื่อให้ดาวห่างจากชื่อกำลังดี ✨ -->
+                                            <div class="flex gap-0.5 mt-1.5">
                                                 <?php 
                                                 $rating = (int)($repair['rating'] ?? 0);
                                                 if ($rating > 0) {
@@ -345,7 +346,8 @@ if (isset($_GET['id'])) {
                                                 }
                                                 ?>
                                             </div>
-                                            <div class="text-[11px] text-slate-400 font-medium leading-none">
+                                            <!-- ✨ เพิ่ม margin-top (mt-1) เพื่อให้เวลาห่างจากดาวกำลังดี ✨ -->
+                                            <div class="text-[11px] text-slate-400 font-medium leading-none mt-1">
                                                 <?php 
                                                 if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
                                                     echo timeAgo($repair['completed_at']);
@@ -357,8 +359,8 @@ if (isset($_GET['id'])) {
                                         </div>
                                     </div>
                                     
-                                    <!-- ✨ โครงสร้างสำหรับผู้บริหาร (ไอแพด, คอมพิวเตอร์, มือถือแนวนอน) ✨ -->
-                                    <div class="hidden sm:flex landscape:flex flex-col sm:flex-row sm:items-center justify-start mb-2 gap-1.5 sm:gap-4">
+                                    <!-- ✨ โครงสร้างสำหรับผู้บริหาร (คอมพิวเตอร์, มือถือ/ไอแพดแนวนอน) ✨ -->
+                                    <div class="hidden portrait:hidden landscape:flex flex-col sm:flex-row sm:items-center justify-start mb-2 gap-1.5 sm:gap-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm">
                                                 <i class="fas fa-user text-sm"></i>
