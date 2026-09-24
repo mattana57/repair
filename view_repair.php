@@ -154,7 +154,7 @@ if (isset($_GET['id'])) {
         <div class="space-y-6">
 
             <!-- ✨ ปลดล็อก border-t-4 border-sky-500 ให้แสดงผลตลอดเวลา (ทุกสิทธิ์การใช้งาน) เพื่อให้กรอบสีฟ้าขึ้นในคอมพิวเตอร์ฝั่งแอดมินด้วย ✨ -->
-            <div class="modern-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-t-4 border-sky-500">
+            <div class="modern-card p-6 md:p-8 flex flex-col landscape:flex-row md:flex-row justify-between items-start landscape:items-center md:items-center gap-6 border-t-4 border-sky-500">
                 <div>
                     <!-- ✨ ปรับขนาดคำว่ารหัสใบงานให้เท่ากับหัวข้อข้อมูลใบงานฝั่งแอดมิน (text-lg font-bold) ✨ -->
                     <p class="text-lg font-bold text-slate-800 mb-1">รหัสใบงาน (TICKET NO.)</p>
@@ -162,8 +162,8 @@ if (isset($_GET['id'])) {
                     <p class="text-slate-500 text-sm mt-2"><i class="far fa-calendar-alt mr-1"></i> แจ้งเมื่อ: <?php echo !empty($repair['created_at']) ? date("d/m/Y เวลา H:i น.", strtotime($repair['created_at'])) : "-"; ?></p>
                 </div>
                 <div class="text-right">
-                    <!-- ✨ ปลดล็อกให้แสดงตัวหนังสือสีดำขนาดใหญ่ ในทุกสิทธิ์การใช้งาน (เพื่อให้ในคอมเห็นด้วย) ✨ -->
-                    <p class="font-bold text-slate-800 mb-2 text-left md:text-right">สถานะปัจจุบัน</p>
+                    <!-- ✨ ปรับข้อความให้ชิดขวาในแนวนอน (landscape) เสมอ ✨ -->
+                    <p class="font-bold text-slate-800 mb-2 text-left landscape:text-right md:text-right">สถานะปัจจุบัน</p>
                     <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold border <?php echo $statusColor; ?> shadow-sm">
                         <i class="fas <?php echo $statusIcon; ?> mr-2 text-lg"></i> <?php echo $repair['status']; ?>
                     </span>
