@@ -123,41 +123,25 @@ if (isset($_GET['id'])) {
     <div class="absolute inset-0 bg-pattern opacity-50 -z-10"></div>
 
     <div class="max-w-4xl mx-auto">
-        <?php if($is_executive): ?>
-        <!-- ✨ โครงสร้างสำหรับฝั่งผู้บริหาร: ล็อก CSS ด้วย ID เพื่อการันตีผลลัพธ์บนมือถือ 100% ✨ -->
+        <!-- ✨ โครงสร้าง Header หลัก: รวมทุกสิทธิ์เป็นก้อนเดียว บังคับข้อความชิดซ้าย และปุ่มอยู่ขวาบนในมือถือ 100% ✨ -->
         <style>
             @media screen and (max-width: 767px) {
-                #exec-header { flex-direction: column-reverse !important; align-items: flex-end !important; }
-                #exec-btn-wrap { width: auto !important; margin-bottom: 0.5rem !important; }
-                #exec-btn { flex: 0 0 auto !important; width: max-content !important; }
+                .mobile-header-fix { flex-direction: column-reverse !important; align-items: flex-start !important; }
+                .mobile-btn-wrap { width: 100% !important; justify-content: flex-end !important; margin-bottom: 0.5rem !important; }
+                .mobile-btn { flex: 0 0 auto !important; width: max-content !important; }
             }
         </style>
-        <div id="exec-header" class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-            <div class="w-full sm:w-auto">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 mobile-header-fix">
+            <div class="w-full sm:w-auto text-left">
                 <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
-            <div id="exec-btn-wrap" class="flex gap-3 w-full sm:w-auto">
-                <a href="<?php echo htmlspecialchars($back_url); ?>" id="exec-btn" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm">
+            <div class="flex gap-3 w-full sm:w-auto mobile-btn-wrap">
+                <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm whitespace-nowrap mobile-btn">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
             </div>
         </div>
-        <?php else: ?>
-        <!-- ✨ โครงสร้างสำหรับฝั่งแอดมินและช่าง: คงเดิมทุกอย่าง 100% ตามคำสั่ง ✨ -->
-        <!-- ✨ โครงสร้าง Header หลัก: ปรับให้ปุ่ม "ปิดหน้าต่าง" อยู่มุมบนขวาเสมอในจอมือถือ และข้อความชิดซ้ายเสมอ ✨ -->
-        <div class="flex flex-col-reverse sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 relative">
-            <div class="w-full sm:w-auto mt-10 sm:mt-0 text-left">
-                <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
-                <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
-            </div>
-            <div class="absolute sm:relative top-0 right-0 sm:top-auto sm:right-auto flex gap-3 w-auto shrink-0">
-                <a href="<?php echo htmlspecialchars($back_url); ?>" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm whitespace-nowrap">
-                    <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
-                </a>
-            </div>
-        </div>
-        <?php endif; ?>
 
         <?php if($repair):
             $statusColor = "bg-slate-100 text-slate-600 border-slate-200"; 
