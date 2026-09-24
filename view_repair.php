@@ -330,10 +330,10 @@ if (isset($_GET['id'])) {
                                         <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm mt-0.5">
                                             <i class="fas fa-user text-sm"></i>
                                         </div>
-                                        <!-- ✨ ปรับช่องไฟ: ลบ leading-none ที่ไปบีบฟอนต์ภาษาไทยจนเพี้ยน และใช้ gap-1 เพื่อหารระยะห่าง 3 บรรทัดให้เท่ากันเป๊ะ 100% ✨ -->
-                                        <div class="flex flex-col gap-1">
+                                        <!-- ✨ ปรับช่องไฟใหม่: ลบ gap ออก แล้วใช้ mt-0.5 กับ mb-1.5 ที่ดาว เพื่อดันให้ระยะห่างทั้ง 3 บรรทัดบาลานซ์กันพอดีสายตา 100% ✨ -->
+                                        <div class="flex flex-col">
                                             <div class="text-sm font-bold text-slate-800 leading-tight"><?php echo htmlspecialchars($repair['reporter_name']); ?></div>
-                                            <div class="flex items-center gap-0.5">
+                                            <div class="flex items-center gap-0.5 mt-0.5 mb-1.5">
                                                 <?php 
                                                 $rating = (int)($repair['rating'] ?? 0);
                                                 if ($rating > 0) {
