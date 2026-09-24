@@ -324,6 +324,74 @@ if (isset($_GET['id'])) {
                                 $has_comment = !empty($repair['review_comment']) && trim($repair['review_comment']) !== '' && trim($repair['review_comment']) !== '-';
                                 if ($has_rating || $has_comment): 
                                 ?>
+                                    <?php if ($is_executive): ?>
+                                    <!-- ✨ โครงสร้างสำหรับผู้บริหาร (มือถือแนวตั้ง): ชื่อ -> ดาว -> เวลา (ระยะห่างพอดีเป๊ะ) ✨ -->
+                                    <div class="flex sm:hidden landscape:hidden items-start mb-3 gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm mt-1">
+                                            <i class="fas fa-user text-sm"></i>
+                                        </div>
+                                        <div class="flex flex-col gap-1.5 mt-0.5">
+                                            <div class="text-sm font-bold text-slate-800 leading-none"><?php echo htmlspecialchars($repair['reporter_name']); ?></div>
+                                            <div class="flex gap-0.5 mt-0.5">
+                                                <?php 
+                                                $rating = (int)($repair['rating'] ?? 0);
+                                                if ($rating > 0) {
+                                                    for($i=1; $i<=5; $i++) {
+                                                        if($i <= $rating) echo '<i class="fas fa-star text-amber-400 text-[13px] drop-shadow-sm"></i>';
+                                                        else echo '<i class="fas fa-star text-slate-200 text-[13px]"></i>';
+                                                    }
+                                                } else {
+                                                    echo '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                                                }
+                                                ?>
+                                            </div>
+                                            <div class="text-[11px] text-slate-400 font-medium leading-none">
+                                                <?php 
+                                                if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
+                                                    echo timeAgo($repair['completed_at']);
+                                                } else {
+                                                    echo "ไม่ระบุเวลา";
+                                                }
+                                                ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- ✨ โครงสร้างสำหรับผู้บริหาร (ไอแพด, คอมพิวเตอร์, มือถือแนวนอน): คงเดิม 100% ✨ -->
+                                    <div class="hidden sm:flex landscape:flex justify-between items-start mb-2">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm">
+                                                <i class="fas fa-user text-sm"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-bold text-slate-800"><?php echo htmlspecialchars($repair['reporter_name']); ?></div>
+                                                <div class="text-[11px] text-slate-400 font-medium">
+                                                    <?php 
+                                                    if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
+                                                        echo timeAgo($repair['completed_at']);
+                                                    } else {
+                                                        echo "ไม่ระบุเวลา";
+                                                    }
+                                                    ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-0.5 pt-1">
+                                            <?php 
+                                            $rating = (int)($repair['rating'] ?? 0);
+                                            if ($rating > 0) {
+                                                for($i=1; $i<=5; $i++) {
+                                                    if($i <= $rating) echo '<i class="fas fa-star text-amber-400 text-[13px] drop-shadow-sm"></i>';
+                                                    else echo '<i class="fas fa-star text-slate-200 text-[13px]"></i>';
+                                                }
+                                            } else {
+                                                echo '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
+                                    <?php else: ?>
+                                    <!-- ✨ โครงสร้างสำหรับแอดมินและช่าง (ทุกอุปกรณ์): คงเดิม 100% ✨ -->
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex items-center gap-3">
                                             <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm">
@@ -356,6 +424,7 @@ if (isset($_GET['id'])) {
                                             ?>
                                         </div>
                                     </div>
+                                    <?php endif; ?>
                                     <?php if($has_comment): ?>
                                         <p class="text-sm text-slate-600 font-medium pl-[52px] leading-relaxed mt-1"><?php echo nl2br(htmlspecialchars(trim($repair['review_comment']))); ?></p>
                                     <?php endif; ?>
