@@ -266,7 +266,20 @@ if (!is_null($events['events'])) {
                         $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE id = ?");
                         $stmt_upd->bind_param("si", $new_rev, $recent_job['id']);
                         $stmt_upd->execute();
-                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมให้ใบงาน {$recent_job['ticket_no']} เรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
+                        
+                        $text_clean_rev = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
+                        $greetings_rev = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'รับทราบ', 'เยี่ยม', 'แต้ง'];
+                        $is_greeting_rev = false;
+                        foreach ($greetings_rev as $g) {
+                            if (mb_strpos($text_clean_rev, $g) !== false) {
+                                $is_greeting_rev = true; break;
+                            }
+                        }
+                        if ($is_greeting_rev && mb_strlen($text_clean_rev, 'UTF-8') < 40) {
+                            send_reply($replyToken, ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งได้ตลอดเลยนะคะ"], $channelAccessToken);
+                        } else {
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมให้ใบงาน {$recent_job['ticket_no']} เรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
+                        }
                         continue;
                     }
                 }
@@ -401,7 +414,20 @@ if (!is_null($events['events'])) {
                         $stmt_update_review->bind_param("si", $new_rev, $recent_job['id']);
                         $stmt_update_review->execute();
                         
-                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมให้ใบงาน {$recent_job['ticket_no']} เรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
+                        $text_clean_rev = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
+                        $greetings_rev = ['ขอบคุณ', 'ขอบคุน', 'ขอบใจ', 'ok', 'โอเค', 'รับทราบ', 'เยี่ยม', 'แต้ง'];
+                        $is_greeting_rev = false;
+                        foreach ($greetings_rev as $g) {
+                            if (mb_strpos($text_clean_rev, $g) !== false) {
+                                $is_greeting_rev = true; break;
+                            }
+                        }
+                        
+                        if ($is_greeting_rev && mb_strlen($text_clean_rev, 'UTF-8') < 40) {
+                            send_reply($replyToken, ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งได้ตลอดเลยนะคะ"], $channelAccessToken);
+                        } else {
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเพิ่มเติมให้ใบงาน {$recent_job['ticket_no']} เรียบร้อยค่ะ ขอบคุณมากนะคะ 🙏✨"], $channelAccessToken);
+                        }
                         continue;
                     }
                 }
