@@ -211,19 +211,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
         $update_id = $_POST['id'];
 
-        // ✨ บันทึกเวลาจริงลงฐานข้อมูลแบบไม่ทับซ้อนกัน ✨
+        // ✨ บันทึกเวลาจริงลงฐานข้อมูลแบบไม่ทับซ้อนกัน (แก้ปัญหาเวลาไม่ขึ้นเมื่อกดรับงานไว) ✨
+        $now = date('Y-m-d H:i:s');
+        $rec_at = isset($repair['received_at']) ? $repair['received_at'] : null;
+        $comp_at = isset($repair['completed_at']) ? $repair['completed_at'] : null;
+
         if ($status === 'ซ่อมเสร็จแล้ว') {
-            // ใช้ IFNULL ทั้งคู่ เพื่อล็อค "เวลาจริงครั้งแรกที่กด" หากมีการกลับมาแก้หมายเหตุทีหลัง เวลาจะได้ไม่เพี้ยน
-            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = IFNULL(received_at, CURRENT_TIMESTAMP), completed_at = IFNULL(completed_at, CURRENT_TIMESTAMP) WHERE id = ?";
+            // ถ้าเวลายังว่างอยู่ ให้สแตมป์เวลาปัจจุบันลงไปทันที (รับงานและจบงานพร้อมกัน)
+            if (empty($rec_at) || $rec_at === '0000-00-00 00:00:00') $rec_at = $now;
+            if (empty($comp_at) || $comp_at === '0000-00-00 00:00:00') $comp_at = $now;
         } elseif ($status === 'กำลังดำเนินการ') {
-            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = IFNULL(received_at, CURRENT_TIMESTAMP), completed_at = NULL WHERE id = ?";
+            if (empty($rec_at) || $rec_at === '0000-00-00 00:00:00') $rec_at = $now;
+            $comp_at = null; // เคลียร์เวลาซ่อมเสร็จถ้ามีการถอยสถานะกลับ
         } else {
-            // ถ้าตั้งเป็น 'รอรับเรื่อง' ให้เคลียร์เวลารับงานและซ่อมเสร็จทิ้ง (เหลือแค่เวลาแจ้งซ่อมที่มาจาก LINE)
-            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = NULL, completed_at = NULL WHERE id = ?";
+            // ถ้าตั้งเป็น 'รอรับเรื่อง' ให้เคลียร์เวลารับงานและซ่อมเสร็จทิ้ง
+            $rec_at = null;
+            $comp_at = null;
         }
         
+        $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = ?, completed_at = ? WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("sssssi", $status, $repair_note, $repair_note, $technician_name, $asset_code, $update_id);
+        $update_stmt->bind_param("sssssssi", $status, $repair_note, $repair_note, $technician_name, $asset_code, $rec_at, $comp_at, $update_id);
 
         if ($update_stmt->execute()) {
             $show_alert = true;
