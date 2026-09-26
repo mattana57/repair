@@ -1993,6 +1993,13 @@ if (isset($_GET['api_check_hash'])) {
                                         </div>
                                         <span class="text-[12px] font-bold tracking-wide text-slate-600 truncate" title="<?php echo htmlspecialchars(trim($tech['email'])); ?>"><?php echo htmlspecialchars(trim($tech['email'])); ?></span>
                                     </div>
+                                <?php else: ?>
+                                    <div class="flex items-center text-rose-400 min-w-0">
+                                        <div class="w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center mr-3 shrink-0">
+                                            <i class="fas fa-envelope text-[10px] text-rose-500"></i>
+                                        </div>
+                                        <span class="text-[12px] font-bold text-rose-500 truncate">ไม่ระบุอีเมล</span>
+                                    </div>
                                 <?php endif; ?>
                                 </div>
 
