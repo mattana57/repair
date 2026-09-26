@@ -23,28 +23,20 @@
         .animation-delay-2000 {
             animation-delay: 2s;
         }
-        .animation-delay-4000 {
-            animation-delay: 4s;
-        }
     </style>
 </head>
-<body class="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 md:p-10 selection:bg-purple-500 selection:text-white relative overflow-hidden">
-
-    <!-- 🌟 พื้นหลังสีฟ้าขยับได้ (เพิ่มตามที่ขอ: สีชัด ขนาดพอดี ขยับไปมา) -->
-    <div class="absolute top-20 left-10 lg:left-32 w-[280px] h-[280px] bg-blue-400/50 rounded-full blur-3xl animate-blob pointer-events-none"></div>
-    <div class="absolute top-10 right-10 lg:right-32 w-[300px] h-[300px] bg-sky-400/50 rounded-full blur-3xl animate-blob animation-delay-2000 pointer-events-none"></div>
-    <div class="absolute bottom-20 left-1/3 w-[290px] h-[290px] bg-blue-300/50 rounded-full blur-3xl animate-blob animation-delay-4000 pointer-events-none"></div>
+<body class="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 md:p-10 selection:bg-purple-500 selection:text-white">
 
     <!-- 🌟 โครงสร้างการ์ดใหญ่ตรงกลาง -->
-    <div class="w-full max-w-[1000px] bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 rounded-[2.5rem] shadow-[0_20px_50px_rgba(79,70,229,0.3)] overflow-hidden relative min-h-[600px] flex flex-col lg:flex-row items-center p-2 sm:p-4 lg:p-6 z-10">
+    <div class="w-full max-w-[1000px] bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 rounded-[2.5rem] shadow-[0_20px_50px_rgba(79,70,229,0.3)] overflow-hidden relative min-h-[600px] flex flex-col lg:flex-row items-center p-2 sm:p-4 lg:p-6">
         
-        <!-- วงกลมแสงเอฟเฟกต์ด้านหลังของการ์ดม่วง (ของเดิม) -->
+        <!-- วงกลมแสงเอฟเฟกต์ด้านหลัง -->
         <div class="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
             <div class="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-white/20 to-transparent blur-3xl mix-blend-overlay animate-blob"></div>
             <div class="absolute bottom-[-10%] right-[30%] w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-indigo-400/30 to-transparent blur-3xl mix-blend-overlay animate-blob animation-delay-2000"></div>
         </div>
 
-        <!-- 👈 ฝั่งซ้าย: การ์ดเอียง (Glassmorphism) -->
+        <!-- 👈 ฝั่งซ้าย: การ์ดเอียง (Glassmorphism) ตามรูปที่กำหนดเป๊ะๆ (ไม่มีการแก้ไข) -->
         <div class="w-full lg:w-1/2 p-6 lg:p-10 flex flex-col items-center justify-center relative z-10">
             <div class="relative w-[300px] sm:w-[320px] p-8 lg:p-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-[2.5rem] shadow-2xl flex flex-col items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform duration-500">
                 <div class="w-24 h-24 bg-white rounded-[1.5rem] flex items-center justify-center mb-6 shadow-xl">
@@ -55,8 +47,9 @@
             </div>
         </div>
 
-        <!-- 👉 ฝั่งขวา: ฟอร์มเข้าสู่ระบบ (กล่องลอย 3D ของเดิมจากครั้งที่แล้ว) -->
+        <!-- 👉 ฝั่งขวา: ฟอร์มเข้าสู่ระบบ -->
         <div class="w-full lg:w-1/2 flex justify-center items-center relative z-10 p-4 lg:p-6">
+            <!-- 🌟 ปรับปรุงกล่องขาวให้ลอยมีมิติ (เพิ่ม Shadow ที่เข้มขึ้น และ Transform ยกตัว) -->
             <div class="w-full max-w-[420px] bg-white rounded-[2rem] p-8 lg:p-10 shadow-[0_30px_60px_rgba(0,0,0,0.4)] transform hover:-translate-y-2 transition-all duration-300">
                 
                 <!-- ส่วนหัว (Header) -->
