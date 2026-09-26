@@ -2309,11 +2309,7 @@ if (isset($_GET['api_check_hash'])) {
             deptArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
 
             const getRatingColor = (score) => {
-                if (score >= 4.5) return '#22c55e'; 
-                if (score >= 3.5) return '#84cc16'; 
-                if (score >= 2.5) return '#eab308'; 
-                if (score >= 1.5) return '#f97316'; 
-                return '#ef4444'; 
+                return '#fbbf24'; // ✨ ใช้สีเหลืองทองสีเดียวทุกแท่งกราฟ ✨
             };
 
             const ctx = document.getElementById('mainRatingChart').getContext('2d');
