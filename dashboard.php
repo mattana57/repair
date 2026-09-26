@@ -3541,11 +3541,47 @@ if (isset($_GET['api_check_hash'])) {
                 searchInput.addEventListener('input', filterRepairsTable);
             }
 
+            if(id === 'repairs' && !window._fromCardClick) {
+                window.currentStatusFilter = 'all';
+                filterRepairsTable();
+            }
+
             if(id === 'dash' && !window.chartsRendered) {
                 renderAllCharts();
                 window.chartsRendered = true;
             }
         } // 🚨 สำคัญมาก: ปิดวงเล็บของฟังก์ชัน show() ตรงนี้ เพื่อให้ดึงฟังก์ชันข้างล่างไปใช้ได้!
+
+        // ✨ ฟังก์ชันเมื่อคลิกการ์ด 4 ก้อนด้านบน (TOTAL / WAITING / ACTIVE / DONE) ✨
+        window.currentStatusFilter = 'all';
+        function filterRepairs(status) {
+            window.currentStatusFilter = status;
+            window._fromCardClick = true;
+
+            // เคลียร์ช่องค้นหาและตัวกรองเดือน/ปี เพื่อให้แสดงรายการตามยอดบนการ์ดครบถ้วน
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                toggleClearBtn('searchInput', 'clearSearchBtn');
+            }
+            if (typeof selectChartDropdown === 'function') {
+                selectChartDropdown('table-Month', 'all', '<?php echo $current_month_name; ?>', null);
+                selectChartDropdown('table-Year', 'all', '<?php echo $current_thai_year; ?>', null);
+            }
+
+            // สลับไปหน้า Transactions (Repairs List)
+            show('repairs');
+            window._fromCardClick = false;
+
+            // กรองตารางตามสถานะที่เลือก
+            filterRepairsTable();
+
+            // กางตารางแบบเต็มจอ (Fullscreen) ทันทีเหมือนในรูปที่ 2
+            const card = document.getElementById('repairsMainCard');
+            if (card && !card.classList.contains('is-fullscreen')) {
+                toggleMaximizeRepairs();
+            }
+        }
 
         // ✨ ฟังก์ชันสำหรับค้นหาและกรองตารางหน้า Transactions (Repairs List) ✨
         function filterRepairsTable() {
@@ -3554,6 +3590,7 @@ if (isset($_GET['api_check_hash'])) {
             
             let monthFilter = document.getElementById('tableMonth') ? document.getElementById('tableMonth').value : 'all';
             let yearFilter = document.getElementById('tableYear') ? document.getElementById('tableYear').value : 'all';
+            let statusFilter = window.currentStatusFilter || 'all';
 
             let tbody = document.querySelector('#repairsTable tbody');
             if(!tbody) return;
@@ -3564,6 +3601,7 @@ if (isset($_GET['api_check_hash'])) {
             rows.forEach(row => {
                 let textMatch = true;
                 let dateMatch = true;
+                let statusMatch = true;
 
                 // 1. กรองช่องค้นหาข้อความ
                 if (searchFilter !== '') {
@@ -3589,8 +3627,16 @@ if (isset($_GET['api_check_hash'])) {
                     }
                 }
 
-                // แสดงแถวก็ต่อเมื่อตรงกับเงื่อนไขทั้งคู่
-                if (textMatch && dateMatch) {
+                // 3. กรองตามสถานะจากการ์ด 4 ก้อนด้านบน ('all', 'รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว')
+                if (statusFilter !== 'all') {
+                    let rowStatus = row.cells[8] ? row.cells[8].textContent.trim() : '';
+                    if (rowStatus !== statusFilter) {
+                        statusMatch = false;
+                    }
+                }
+
+                // แสดงแถวก็ต่อเมื่อตรงกับเงื่อนไขทั้งหมด
+                if (textMatch && dateMatch && statusMatch) {
                     row.style.display = '';
                     visibleCount++; // ✨ นับเพิ่มถ้ามีข้อมูลแสดง
                 } else {
