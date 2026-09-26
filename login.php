@@ -11,13 +11,13 @@
         body { font-family: 'Kanit', sans-serif; }
     </style>
 </head>
-<body class="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6 md:p-10 selection:bg-purple-500 selection:text-white">
+<!-- 🌟 ขยายพื้นหลังสีม่วง 60/30/10 ให้เต็มหน้าจอตรงนี้ -->
+<body class="min-h-screen bg-gradient-to-br from-violet-600 from-[60%] via-purple-800 via-[90%] to-indigo-500 flex items-center justify-center p-4 sm:p-6 md:p-10 selection:bg-purple-500 selection:text-white">
 
-    <!-- 🌟 โครงสร้างการ์ดใหญ่ตรงกลาง (ไม่ทำให้ลอยแบบปุ่ม ใช้หลักสี 60-30-10) -->
-    <!-- ใช้ Gradient: สีหลัก 60%, สีรอง 30%, สี Accent 10% -->
-    <div class="w-full max-w-[1000px] bg-gradient-to-br from-violet-600 from-[60%] via-purple-800 via-[90%] to-indigo-500 rounded-[2.5rem] overflow-hidden flex flex-col lg:flex-row items-center p-2 sm:p-4 lg:p-6 shadow-sm border border-slate-200/50">
+    <!-- โครงสร้างหลัก (เอาขอบและพื้นหลังการ์ดออก เพื่อให้กลืนไปกับพื้นหลังเต็มจอ) -->
+    <div class="w-full max-w-[1000px] flex flex-col lg:flex-row items-center p-2 sm:p-4 lg:p-6">
 
-        <!-- 👈 ฝั่งซ้าย: แบบที่ 2 (จัดวางโดยตรง ไม่มีกรอบกระจก) -->
+        <!-- 👈 ฝั่งซ้าย: โลโก้และชื่อระบบ (คงเดิม 100%) -->
         <div class="w-full lg:w-1/2 p-6 lg:p-10 flex flex-col items-center justify-center text-center relative z-10">
             <div class="w-24 h-24 bg-white rounded-[1.5rem] flex items-center justify-center mb-6 shadow-md">
                 <span class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">MBS</span>
@@ -26,7 +26,7 @@
             <p class="text-violet-200 mt-2 font-medium text-sm">ระบบแจ้งซ่อมและบำรุงรักษา</p>
         </div>
 
-        <!-- 👉 ฝั่งขวา: กล่องขาว (ลอยมีมิติ) -->
+        <!-- 👉 ฝั่งขวา: กล่องฟอร์มสีขาวลอยตัว (คงเดิม 100%) -->
         <div class="w-full lg:w-1/2 flex justify-center items-center relative z-10 p-4 lg:p-6">
             <!-- กล่องขาวมีเอฟเฟกต์ยกตัวเมื่อ Hover -->
             <div class="w-full max-w-[420px] bg-white rounded-[2rem] p-8 lg:p-10 shadow-[0_25px_50px_rgba(0,0,0,0.15)] transform hover:-translate-y-2 transition-all duration-300 border border-slate-100">
