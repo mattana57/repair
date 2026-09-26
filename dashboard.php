@@ -1375,7 +1375,7 @@ if (isset($_GET['api_check_hash'])) {
                             
                             <!-- ✨ ช่องค้นหา: ขยายความยาวในจอคอมและไอแพดแนวนอน (lg:w-[580px] xl:w-[680px] 2xl:w-[850px]) เพื่อดันซ้ายให้ตรงกับคอลัมน์ Reporter เป๊ะๆ ✨ -->
                             <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
-                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[520px] 2xl:w-[580px] group">
+                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" oninput="filterRepairsTable(); toggleClearBtn('searchInput', 'clearSearchBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                                 <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
@@ -1405,6 +1405,21 @@ if (isset($_GET['api_check_hash'])) {
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', '{$thai_y}', filterRepairsTable)\">{$thai_y}</div>"; } ?>
                                     </div>
                                     <input type="hidden" id="tableYear" value="all">
+                                </div>
+
+                                <!-- ✨ ดรอปดาวน์เลือกสถานะ (สีเดียวกับในตารางเป๊ะๆ) ✨ -->
+                                <div class="relative w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-StatusContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Status', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="table-StatusTrigger" class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-3.5 portrait:px-2.5 sm:px-3.5 landscape:px-3.5 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Status')">
+                                        <span id="table-StatusText" class="truncate">ทุกสถานะ</span>
+                                        <i id="table-StatusCaret" class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="table-StatusList" class="chart-dropdown-list absolute z-50 w-[155px] right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col p-2 space-y-1.5" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 bg-slate-50 hover:bg-slate-100 text-center" data-value="all" data-display="ทุกสถานะ" onclick="selectTableStatusDropdown('all', 'ทุกสถานะ')">ทุกสถานะ</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#fef3c7] text-[#d97706] hover:brightness-95 text-center shadow-2xs" data-value="รอรับเรื่อง" data-display="รอรับเรื่อง" onclick="selectTableStatusDropdown('รอรับเรื่อง', 'รอรับเรื่อง')">รอรับเรื่อง</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#e0e7ff] text-[#4f46e5] hover:brightness-95 text-center shadow-2xs" data-value="กำลังดำเนินการ" data-display="กำลังดำเนินการ" onclick="selectTableStatusDropdown('กำลังดำเนินการ', 'กำลังดำเนินการ')">กำลังดำเนินการ</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#d1fae5] text-[#059669] hover:brightness-95 text-center shadow-2xs" data-value="ซ่อมเสร็จแล้ว" data-display="ซ่อมเสร็จแล้ว" onclick="selectTableStatusDropdown('ซ่อมเสร็จแล้ว', 'ซ่อมเสร็จแล้ว')">ซ่อมเสร็จแล้ว</div>
+                                    </div>
+                                    <input type="hidden" id="tableStatus" value="all">
                                 </div>
                             </div> 
                         </div>
@@ -3584,13 +3599,61 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         // ✨ ฟังก์ชันสำหรับค้นหาและกรองตารางหน้า Transactions (Repairs List) ✨
+        // ✨ ฟังก์ชันเลือกสถานะในดรอปดาวน์ พร้อมเปลี่ยนสีปุ่มให้ตรงกับสีสถานะในตารางเป๊ะๆ ✨
+        function selectTableStatusDropdown(val, display) {
+            const list = document.getElementById('table-StatusList');
+            const input = document.getElementById('tableStatus');
+            const textEl = document.getElementById('table-StatusText');
+            const trigger = document.getElementById('table-StatusTrigger');
+            const caret = document.getElementById('table-StatusCaret');
+
+            if (input) input.value = val;
+            if (textEl) textEl.innerText = display;
+            if (list) { list.classList.add('hidden'); list.classList.remove('flex'); }
+
+            if (trigger && caret) {
+                // ล้างสีสถานะเดิมออกก่อน
+                trigger.classList.remove(
+                    'bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50',
+                    'bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]',
+                    'bg-[#e0e7ff]', 'text-[#4f46e5]', 'border-[#c7d2fe]',
+                    'bg-[#d1fae5]', 'text-[#059669]', 'border-[#a7f3d0]'
+                );
+                caret.classList.remove('text-slate-400', 'text-[#d97706]', 'text-[#4f46e5]', 'text-[#059669]');
+
+                if (val === 'รอรับเรื่อง') {
+                    trigger.classList.add('bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]');
+                    caret.classList.add('text-[#d97706]');
+                } else if (val === 'กำลังดำเนินการ') {
+                    trigger.classList.add('bg-[#e0e7ff]', 'text-[#4f46e5]', 'border-[#c7d2fe]');
+                    caret.classList.add('text-[#4f46e5]');
+                } else if (val === 'ซ่อมเสร็จแล้ว') {
+                    trigger.classList.add('bg-[#d1fae5]', 'text-[#059669]', 'border-[#a7f3d0]');
+                    caret.classList.add('text-[#059669]');
+                } else {
+                    trigger.classList.add('bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50');
+                    caret.classList.add('text-slate-400');
+                }
+            }
+
+            filterRepairsTable();
+        }
+
+        // ✨ เมื่อคลิกการ์ดสรุป 4 ใบบนหน้า Overview ให้สลับมาหน้า Transactions และกรองสถานะทันที ✨
+        function filterRepairs(status) {
+            show('repairs');
+            const disp = (status === 'all') ? 'ทุกสถานะ' : status;
+            selectTableStatusDropdown(status, disp);
+        }
+
+        // ✨ ฟังก์ชันสำหรับค้นหาและกรองตารางหน้า Transactions (Repairs List) ✨
         function filterRepairsTable() {
             let searchInput = document.getElementById('searchInput');
             let searchFilter = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '') : '';
             
             let monthFilter = document.getElementById('tableMonth') ? document.getElementById('tableMonth').value : 'all';
             let yearFilter = document.getElementById('tableYear') ? document.getElementById('tableYear').value : 'all';
-            let statusFilter = window.currentStatusFilter || 'all';
+            let statusFilter = document.getElementById('tableStatus') ? document.getElementById('tableStatus').value : 'all';
 
             let tbody = document.querySelector('#repairsTable tbody');
             if(!tbody) return;
@@ -3627,9 +3690,10 @@ if (isset($_GET['api_check_hash'])) {
                     }
                 }
 
-                // 3. กรองตามสถานะจากการ์ด 4 ก้อนด้านบน ('all', 'รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว')
+                // 3. กรองสถานะ ('รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว')
                 if (statusFilter !== 'all') {
-                    let rowStatus = row.cells[8] ? row.cells[8].textContent.trim() : '';
+                    let statusCell = row.cells[8];
+                    let rowStatus = statusCell ? statusCell.textContent.trim() : '';
                     if (rowStatus !== statusFilter) {
                         statusMatch = false;
                     }
