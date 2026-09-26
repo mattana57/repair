@@ -4239,7 +4239,7 @@ if (isset($_GET['api_check_hash'])) {
             deptArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
 
             const getRatingColor = (score) => {
-                return '#fbbf24'; // ✨ ใช้สีเหลืองทองสีเดียวทุกแท่งกราฟ ✨
+                return '#38bdf8'; // ✨ สีฟ้าสกายบลู สดใสสบายตา ✨
             };
             
 
