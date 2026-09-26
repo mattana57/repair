@@ -136,9 +136,8 @@ function getAutoPosition($th_name) {
 // ฟังก์ชันจัดฟอร์แมตเบอร์โทร
 function formatPhoneHtml($phone_str) {
     $val = trim((string)$phone_str);
-    if (empty($val) || $val === '-' || $val === 'ไม่ระบุ' || $val === 'ไม่มีเบอร์ติดต่อ' || $val === 'ไม่มีข้อมูลเบอร์ติดต่อ' || $val === 'ยังไม่ระบุเบอร์ติดต่อ') {
-        return "<span class='text-rose-500 font-bold text-xs'><i class='fas fa-exclamation-circle mr-1'></i>ไม่มีข้อมูลเบอร์ติดต่อ</span>";
-    }
+    if (empty($val) || $val === '-') return "<span class='text-rose-500 font-bold'>-</span>";
+    if ($val === 'ไม่ระบุ') return "<span class='text-rose-500 font-bold'>ไม่ระบุ</span>";
     $phones = array_values(array_filter(array_map('trim', explode(',', $val))));
     $html = '<div class="space-y-1">';
     $count = count($phones);
@@ -2324,7 +2323,7 @@ if (isset($_GET['api_check_hash'])) {
                 <button type="button" onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full w-8 h-8 flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
             </div>
 
-            <form action="" method="POST" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-hidden min-h-0">
+           <form id="techAdminForm" action="" method="POST" enctype="multipart/form-data" novalidate onsubmit="return validateTechAdminForm(event)" class="flex flex-col flex-1 overflow-hidden min-h-0">
                 <input type="hidden" name="save_user" value="1">
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
                 <input type="hidden" name="role" id="techAdmin_role" value="">
@@ -2385,17 +2384,19 @@ if (isset($_GET['api_check_hash'])) {
 
                     <div id="loginCredsDiv" class="flex flex-col gap-5">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
-                            <input type="text" name="username" id="techAdmin_username" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username <span class="text-rose-500">*</span></label>
+                            <input type="text" name="username" id="techAdmin_username" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุชื่อผู้ใช้งาน (Username)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="ระบุชื่อผู้ใช้งาน (Username)">
+                            <p id="err_techAdmin_username" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุชื่อผู้ใช้งาน (Username)</span></p>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span></label>
                             <div class="relative">
-                                <input type="password" name="password" id="techAdmin_password" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="••••••••">
+                                <input type="password" name="password" id="techAdmin_password" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="••••••••" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="••••••••">
                                 <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
                                     <i id="eyeIcon" class="fas fa-eye"></i>
                                 </button>
                             </div>
+                            <p id="err_techAdmin_password" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณากำหนดรหัสผ่าน (Password)</span></p>
                         </div>
                     </div>
 
@@ -2408,44 +2409,48 @@ if (isset($_GET['api_check_hash'])) {
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">FULL NAME</label>
-                        <input type="text" name="full_name" id="techAdmin_fullname" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น นาย สมพร วงษ์จำปา">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">FULL NAME <span class="text-rose-500">*</span></label>
+                        <input type="text" name="full_name" id="techAdmin_fullname" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น นาย สมพร วงษ์จำปา" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น นาย สมพร วงษ์จำปา">
+                        <p id="err_techAdmin_fullname" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุชื่อ-นามสกุล (ภาษาไทย)</span></p>
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ENGLISH NAME</label>
-                        <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น Mr. Somporn Wongchampa">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ENGLISH NAME <span class="text-slate-400 font-normal text-[10px]">(ไม่บังคับ)</span></label>
+                        <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
                     <div id="positionDiv">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION</label>
-                        <select name="position_select" id="techAdmin_position_select" onchange="toggleCustomInput(this, 'techAdmin_position_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
-                            <option value="" disabled selected>-- Select Position --</option>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION <span class="text-rose-500">*</span></label>
+                        <select name="position_select" id="techAdmin_position_select" onchange="clearFieldError(this); toggleCustomInput(this, 'techAdmin_position_custom')" onfocus="clearFieldError(this)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-1 appearance-none transition-all cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
+                            <option value="" disabled selected id="posDefaultOpt">-- Select Position --</option>
                             <option value="นักวิชาการคอมพิวเตอร์">นักวิชาการคอมพิวเตอร์</option>
                             <option value="นักวิชาการโสตทัศนศึกษา">นักวิชาการโสตทัศนศึกษา</option>
                             <option value="เจ้าหน้าที่บริหารงานทั่วไป">เจ้าหน้าที่บริหารงานทั่วไป</option>
                             <option value="พนักงานขับรถยนต์">พนักงานขับรถยนต์</option>
                             <option value="อื่นๆ">อื่นๆ (Custom)</option>
                         </select>
-                        <input type="text" name="position_custom" id="techAdmin_position_custom" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="Specify position">
+                        <input type="text" name="position_custom" id="techAdmin_position_custom" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุตำแหน่งงานเพิ่มเติม" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="ระบุตำแหน่งงานเพิ่มเติม">
+                        <p id="err_techAdmin_position_select" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาเลือกหรือระบุตำแหน่งงาน</span></p>
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PHONE</label>
-                        <input type="text" name="phone" id="techAdmin_phone" placeholder="ยังไม่ระบุเบอร์ติดต่อ (ควรระบุหมายเลขโทรศัพท์)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 placeholder:text-rose-500 placeholder:font-bold focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PHONE <span class="text-rose-500">*</span></label>
+                        <input type="text" name="phone" id="techAdmin_phone" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น 081-234-5678" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น 081-234-5678">
+                        <p id="err_techAdmin_phone" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุหมายเลขโทรศัพท์ติดต่อ</span></p>
                     </div>
                     
                     <div id="deptDiv">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">DEPARTMENT</label>
-                        <select name="department_select" id="techAdmin_department_select" onchange="toggleCustomInput(this, 'techAdmin_department_custom')" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-2 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
-                            <option value="" disabled selected>-- Select Department --</option>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">DEPARTMENT <span class="text-rose-500">*</span></label>
+                        <select name="department_select" id="techAdmin_department_select" onchange="clearFieldError(this); toggleCustomInput(this, 'techAdmin_department_custom')" onfocus="clearFieldError(this)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-1 appearance-none transition-all cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
+                            <option value="" disabled selected id="deptDefaultOpt">-- Select Department --</option>
                             <option value="ฝ่ายงานบริการเทคโนโลยีดิจิทัล">ฝ่ายงานบริการเทคโนโลยีดิจิทัล</option>
                             <option value="ฝ่ายงานยานยนต์">ฝ่ายงานยานยนต์</option>
                             <option value="ฝ่ายงานโสตทัศนูปกรณ์">ฝ่ายงานโสตทัศนูปกรณ์</option>
                             <option value="แม่บ้าน">แม่บ้าน</option>
                             <option value="อื่นๆ">อื่นๆ (Custom)</option>
                         </select>
-                        <input type="text" name="department_custom" id="techAdmin_department_custom" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="Specify department">
+                        <input type="text" name="department_custom" id="techAdmin_department_custom" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุฝ่ายงานเพิ่มเติม" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="ระบุฝ่ายงานเพิ่มเติม">
+                        <p id="err_techAdmin_department_select" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาเลือกฝ่ายงานสังกัด</span></p>
                     </div>
                 </div>
 
@@ -4751,7 +4756,145 @@ if (isset($_GET['api_check_hash'])) {
             document.getElementById('asset_id').value = id; document.getElementById('asset_code').value = c; document.getElementById('asset_name').value = n; document.getElementById('asset_category').value = cat; document.getElementById('asset_status').value = s; toggleModal('assetModal'); 
         }
 
+        // ✨ ฟังก์ชันแสดงกรอบสีแดงและข้อความสีแดงในช่องที่ไม่ได้กรอก ✨
+        function setFieldError(el, msg) {
+            if (!el) return;
+            el.classList.remove('border-slate-200', 'bg-white', 'text-slate-700');
+            el.classList.add('border-rose-500', 'bg-rose-50/40', 'text-rose-600', 'placeholder-rose-400', 'ring-2', 'ring-rose-100');
+            
+            if (el.tagName === 'INPUT') {
+                el.value = '';
+                el.placeholder = msg;
+            } else if (el.tagName === 'SELECT') {
+                const firstOpt = el.querySelector('option[value=""]');
+                if (firstOpt) firstOpt.textContent = msg;
+            }
+
+            // แสดงข้อความกำกับใต้กล่องด้วย
+            let errId = 'err_' + el.id;
+            if (el.id === 'techAdmin_position_custom') errId = 'err_techAdmin_position_select';
+            if (el.id === 'techAdmin_department_custom') errId = 'err_techAdmin_department_select';
+            const errEl = document.getElementById(errId);
+            if (errEl) {
+                errEl.querySelector('span').textContent = msg.replace(/^--\s*|\s*--$/g, '');
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        // ✨ ฟังก์ชันล้างสีแดงเมื่อผู้ใช้เริ่มพิมพ์หรือคลิกแก้ไข ✨
+        function clearFieldError(el) {
+            if (!el) return;
+            el.classList.remove('border-rose-500', 'bg-rose-50/40', 'text-rose-600', 'placeholder-rose-400', 'ring-2', 'ring-rose-100');
+            el.classList.add('border-slate-200', 'bg-white', 'text-slate-700');
+            
+            if (el.tagName === 'INPUT' && el.getAttribute('data-default-placeholder')) {
+                el.placeholder = el.getAttribute('data-default-placeholder');
+            } else if (el.tagName === 'SELECT') {
+                if (el.id === 'techAdmin_position_select') {
+                    const opt = document.getElementById('posDefaultOpt');
+                    if (opt) opt.textContent = '-- Select Position --';
+                } else if (el.id === 'techAdmin_department_select') {
+                    const opt = document.getElementById('deptDefaultOpt');
+                    if (opt) opt.textContent = '-- Select Department --';
+                }
+            }
+
+            let errId = 'err_' + el.id;
+            if (el.id === 'techAdmin_position_custom') errId = 'err_techAdmin_position_select';
+            if (el.id === 'techAdmin_department_custom') errId = 'err_techAdmin_department_select';
+            const errEl = document.getElementById(errId);
+            if (errEl) errEl.classList.add('hidden');
+        }
+
+        // ✨ ฟังก์ชันตรวจสอบข้อมูลทั้งหมดก่อนกด Save Data ✨
+        function validateTechAdminForm(e) {
+            let isValid = true;
+            let firstErrorEl = null;
+
+            const role = document.getElementById('techAdmin_role').value;
+            const uid = document.getElementById('techAdmin_id').value;
+            const isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
+
+            const fullNameEl = document.getElementById('techAdmin_fullname');
+            const phoneEl = document.getElementById('techAdmin_phone');
+            const deptSelectEl = document.getElementById('techAdmin_department_select');
+            const deptCustomEl = document.getElementById('techAdmin_department_custom');
+            const posSelectEl = document.getElementById('techAdmin_position_select');
+            const posCustomEl = document.getElementById('techAdmin_position_custom');
+
+            // 1. เช็คกรณีเป็น Admin / Executive (ตอนเพิ่มใหม่หรือแก้ไข)
+            if (isManagement) {
+                const userEl = document.getElementById('techAdmin_username');
+                const pwdEl = document.getElementById('techAdmin_password');
+                if (!userEl.value.trim() || userEl.value.trim() === '-') {
+                    setFieldError(userEl, 'กรุณาระบุชื่อผู้ใช้งาน (Username)');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = userEl;
+                }
+                if (uid === '' && !pwdEl.value.trim()) {
+                    setFieldError(pwdEl, 'กรุณากำหนดรหัสผ่าน (Password)');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = pwdEl;
+                }
+            }
+
+            // 2. เช็คชื่อ-นามสกุลภาษาไทย (FULL NAME) - บังคับกรอก!
+            if (!fullNameEl.value.trim() || fullNameEl.value.trim() === '-') {
+                setFieldError(fullNameEl, 'กรุณาระบุชื่อ-นามสกุล (ภาษาไทย)');
+                isValid = false;
+                if (!firstErrorEl) firstErrorEl = fullNameEl;
+            }
+
+            // 3. เช็คตำแหน่งงาน (เฉพาะตอน Add Technician ที่แสดงกล่องเลือกตำแหน่ง)
+            if (!isManagement && uid === '') {
+                if (!posSelectEl.value) {
+                    setFieldError(posSelectEl, '-- กรุณาเลือกตำแหน่งงาน --');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = posSelectEl;
+                } else if (posSelectEl.value === 'อื่นๆ' && (!posCustomEl.value.trim() || posCustomEl.value.trim() === '-')) {
+                    setFieldError(posCustomEl, 'กรุณาระบุตำแหน่งงานเพิ่มเติม');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = posCustomEl;
+                }
+            }
+
+            // 4. เช็คเบอร์โทรศัพท์ (PHONE) - บังคับกรอกทั้งตอน Add และ Edit! ห้ามเว้นว่างและห้ามใส่ '-'
+            const phoneVal = phoneEl.value.trim();
+            if (!phoneVal || phoneVal === '-' || phoneVal === 'ไม่ระบุ') {
+                setFieldError(phoneEl, 'กรุณาระบุหมายเลขโทรศัพท์ติดต่อ');
+                isValid = false;
+                if (!firstErrorEl) firstErrorEl = phoneEl;
+            }
+
+            // 5. เช็คฝ่ายงาน (DEPARTMENT) - บังคับเลือกสำหรับช่าง!
+            if (!isManagement) {
+                if (!deptSelectEl.value) {
+                    setFieldError(deptSelectEl, '-- กรุณาเลือกฝ่ายงานสังกัด --');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = deptSelectEl;
+                } else if (deptSelectEl.value === 'อื่นๆ' && (!deptCustomEl.value.trim() || deptCustomEl.value.trim() === '-')) {
+                    setFieldError(deptCustomEl, 'กรุณาระบุชื่อฝ่ายงานสังกัด');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = deptCustomEl;
+                }
+            }
+
+            if (!isValid) {
+                if (e) e.preventDefault();
+                if (firstErrorEl) {
+                    firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+            return true;
+        }
+
         function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='') { 
+            // ✨ ล้างสถานะสีแดงค้างเก่าออกให้หมดทุกช่องก่อนเปิดหน้าต่าง ✨
+            ['techAdmin_username', 'techAdmin_password', 'techAdmin_fullname', 'techAdmin_phone', 'techAdmin_position_select', 'techAdmin_position_custom', 'techAdmin_department_select', 'techAdmin_department_custom'].forEach(elId => {
+                clearFieldError(document.getElementById(elId));
+            });
+
             let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
             let baseRole = isManagement ? 'Admin' : 'Technician';
             let title = isManagement ? 'Manage Administrator' : 'Manage Technician';
@@ -4781,7 +4924,6 @@ if (isset($_GET['api_check_hash'])) {
                 loginCredsDiv.classList.remove('hidden'); 
                 document.getElementById('techAdmin_username').required = true;
                 
-                // ✨ เปิดกล่องอัปโหลดรูปภาพโปรไฟล์ให้เหมือนฝั่งช่างเป๊ะๆ ✨
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 if(avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
                 if(avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
@@ -4822,25 +4964,25 @@ if (isset($_GET['api_check_hash'])) {
                     hiddenInput.id = 'final_avatar_position';
                     hiddenInput.name = 'position';
                     hiddenInput.value = pos;
-                    // 🚨 แก้ไขให้มันชี้ไปที่ฟอร์มด้านใน Modal โดยตรง จะได้หาเจอและปุ่ม Edit กลับมาทำงานได้!
                     let targetForm = document.querySelector('#techAdminModal form');
                     if(targetForm) targetForm.appendChild(hiddenInput);
                 }
             }
 
+            // ✨ ถ้าค่าเดิมเป็นขีด '-' ให้เคลียร์เป็นค่าว่าง เพื่อให้ระบบบังคับกรอกข้อมูลจริง ✨
+            let cleanFullName = (f && f.trim() !== '-') ? f : '';
+            let cleanEngName = (en && en.trim() !== '-') ? en : '';
+            let cleanPhone = (p && p.trim() !== '-' && p.trim() !== 'ไม่ระบุ') ? p : '';
+
             document.getElementById('techAdmin_id').value = id;
             document.getElementById('techAdmin_username').value = u; 
-            document.getElementById('techAdmin_fullname').value = f; 
-            document.getElementById('techAdmin_englishname').value = en;
-            // ✨ ถ้าไม่มีเบอร์โทร หรือเป็นขีด '-' ให้เคลียร์เป็นค่าว่าง เพื่อโชว์ข้อความสีแดงข้างในช่อง PHONE ✨
-            let cleanPhone = (p && p.trim() !== '-' && p.trim() !== 'ไม่ระบุ' && p.trim() !== 'ไม่มีเบอร์ติดต่อ' && p.trim() !== 'ไม่มีข้อมูลเบอร์ติดต่อ') ? p.trim() : '';
-            document.getElementById('techAdmin_phone').value = cleanPhone;
+            document.getElementById('techAdmin_fullname').value = cleanFullName; 
+            document.getElementById('techAdmin_englishname').value = cleanEngName;
+            document.getElementById('techAdmin_phone').value = cleanPhone; 
             
-            // ✨ กำหนดรูปเริ่มต้นตาม username (u) หรือชื่อช่าง (f) ให้ตรงกับตารางเป๊ะๆ ✨
             let seedKey = u ? u : (f ? f : 'admin');
             const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(seedKey) + '&backgroundColor=e2e8f0';
             
-            // เช็คว่าเป็นรูปที่อัปโหลดเองจริงๆ (ไม่ใช่รูปการ์ตูน Dicebear)
             let isUploadedAvatar = (avatarUrl && avatarUrl.trim() !== '' && !avatarUrl.includes('dicebear.com'));
             
             document.getElementById('avatarPreviewImg').src = (avatarUrl && avatarUrl.trim() !== '') ? avatarUrl : defaultImg;
