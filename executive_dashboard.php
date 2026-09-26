@@ -902,17 +902,24 @@ if (isset($_GET['api_check_hash'])) {
                                 </div>
 
                                 <!-- ✨ ดรอปดาวน์เลือกสถานะ (สีเดียวกับในตารางเป๊ะๆ) ✨ -->
-                                <div class="relative w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-StatusContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Status', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div id="table-StatusTrigger" class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-3.5 portrait:px-2.5 sm:px-3.5 landscape:px-3.5 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Status')">
-                                        <span id="table-StatusText" class="truncate">ทุกสถานะ</span>
-                                        <i id="table-StatusCaret" class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                <div class="relative w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-StatusContainer" tabindex="0" style="font-family: 'Sarabun', sans-serif;">
+                                    <!-- เปลี่ยนสีเริ่มต้นและข้อความเป็น ซ่อมเสร็จแล้ว -->
+                                    <div id="table-StatusTrigger" class="flex items-center justify-between w-full bg-[#d1fae5] text-[#059669] text-sm portrait:text-xs sm:text-sm landscape:text-sm rounded-xl px-3.5 portrait:px-2.5 sm:px-3.5 landscape:px-3.5 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors shadow-sm" onclick="toggleChartDropdown(event, 'table-Status')">
+                                        <span id="table-StatusText" class="truncate">ซ่อมเสร็จแล้ว</span>
+                                        <i id="table-StatusCaret" class="fas fa-caret-down ml-1.5 text-[10px] opacity-70"></i>
                                     </div>
+                                    
                                     <div id="table-StatusList" class="chart-dropdown-list absolute z-50 w-[155px] right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col p-2 space-y-1.5" style="font-family: 'Sarabun', sans-serif;">
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#fef3c7] text-[#d97706] hover:brightness-95 text-center shadow-2xs" data-value="รอรับเรื่อง" data-display="รอรับเรื่อง" onclick="selectTableStatusDropdown('รอรับเรื่อง', 'รอรับเรื่อง')">รอรับเรื่อง</div>
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#e0e7ff] text-[#4f46e5] hover:brightness-95 text-center shadow-2xs" data-value="กำลังดำเนินการ" data-display="กำลังดำเนินการ" onclick="selectTableStatusDropdown('กำลังดำเนินการ', 'กำลังดำเนินการ')">กำลังดำเนินการ</div>
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#d1fae5] text-[#059669] hover:brightness-95 text-center shadow-2xs" data-value="ซ่อมเสร็จแล้ว" data-display="ซ่อมเสร็จแล้ว" onclick="selectTableStatusDropdown('ซ่อมเสร็จแล้ว', 'ซ่อมเสร็จแล้ว')">ซ่อมเสร็จแล้ว</div>
+                                        <!-- เพิ่มการส่งค่าสีไปในฟังก์ชัน selectTableStatusDropdown -->
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#fef3c7] text-[#d97706] hover:brightness-95 text-center shadow-2xs" data-value="รอรับเรื่อง" onclick="selectTableStatusDropdown('รอรับเรื่อง', 'รอรับเรื่อง', 'bg-[#fef3c7]', 'text-[#d97706]')">รอรับเรื่อง</div>
+                                        
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#e0e7ff] text-[#4f46e5] hover:brightness-95 text-center shadow-2xs" data-value="กำลังดำเนินการ" onclick="selectTableStatusDropdown('กำลังดำเนินการ', 'กำลังดำเนินการ', 'bg-[#e0e7ff]', 'text-[#4f46e5]')">กำลังดำเนินการ</div>
+                                        
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#d1fae5] text-[#059669] hover:brightness-95 text-center shadow-2xs" data-value="ซ่อมเสร็จแล้ว" onclick="selectTableStatusDropdown('ซ่อมเสร็จแล้ว', 'ซ่อมเสร็จแล้ว', 'bg-[#d1fae5]', 'text-[#059669]')">ซ่อมเสร็จแล้ว</div>
                                     </div>
-                                    <input type="hidden" id="tableStatus" value="all">
+                                    
+                                    <!-- เปลี่ยน value เริ่มต้น -->
+                                    <input type="hidden" id="tableStatus" value="ซ่อมเสร็จแล้ว">
                                 </div>
                             </div> 
                         </div>
