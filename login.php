@@ -36,7 +36,7 @@
             <div class="absolute bottom-[-10%] right-[30%] w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-indigo-400/30 to-transparent blur-3xl mix-blend-overlay animate-blob animation-delay-2000"></div>
         </div>
 
-        <!-- 👈 ฝั่งซ้าย: การ์ดเอียง (Glassmorphism) ตามรูปที่กำหนดเป๊ะๆ -->
+        <!-- 👈 ฝั่งซ้าย: การ์ดเอียง (Glassmorphism) ตามรูปที่กำหนดเป๊ะๆ (ไม่มีการแก้ไข) -->
         <div class="w-full lg:w-1/2 p-6 lg:p-10 flex flex-col items-center justify-center relative z-10">
             <div class="relative w-[300px] sm:w-[320px] p-8 lg:p-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-[2.5rem] shadow-2xl flex flex-col items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform duration-500">
                 <div class="w-24 h-24 bg-white rounded-[1.5rem] flex items-center justify-center mb-6 shadow-xl">
@@ -47,7 +47,7 @@
             </div>
         </div>
 
-        <!-- 👉 ฝั่งขวา: ฟอร์มเข้าสู่ระบบ (การ์ดขาวลอยมีมิติ) -->
+        <!-- 👉 ฝั่งขวา: ฟอร์มเข้าสู่ระบบ (ปรับช่องกรอกและปุ่มเป็นแบบลอยมีมิติ 3D) -->
         <div class="w-full lg:w-1/2 flex justify-center items-center relative z-10 p-4 lg:p-6">
             <div class="w-full max-w-[420px] bg-white rounded-[2rem] p-8 lg:p-10 shadow-2xl">
                 
@@ -61,24 +61,24 @@
                 </div>
                 
                 <!-- ฟอร์มเข้าสู่ระบบ -->
-                <form action="auth.php" method="POST" class="space-y-5">
+                <form action="auth.php" method="POST" class="space-y-6">
                     
-                    <!-- ช่อง Username -->
+                    <!-- ช่อง Username (แบบปุ่มลอย 3D) -->
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Username</label>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Username</label>
                         <div class="relative group">
-                            <input type="text" name="username" class="peer w-full bg-slate-50/80 border border-slate-200/80 shadow-sm rounded-xl pl-12 pr-4 py-3.5 text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-purple-500/10 outline-none transition-all" required placeholder="ระบุชื่อผู้ใช้งาน">
+                            <input type="text" name="username" class="peer w-full bg-white border-0 shadow-[0_8px_20px_rgba(0,0,0,0.06)] rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgba(139,92,246,0.15)] outline-none transition-all hover:-translate-y-0.5" required placeholder="ระบุชื่อผู้ใช้งาน">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-purple-600 transition-colors">
                                 <i class="fas fa-at text-sm"></i>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- ช่อง Password -->
+                    <!-- ช่อง Password (แบบปุ่มลอย 3D) -->
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Password</label>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
                         <div class="relative group">
-                            <input type="password" id="password" name="password" class="peer w-full bg-slate-50/80 border border-slate-200/80 shadow-sm rounded-xl pl-12 pr-12 py-3.5 text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-purple-500/10 outline-none transition-all" required placeholder="ระบุรหัสผ่าน">
+                            <input type="password" id="password" name="password" class="peer w-full bg-white border-0 shadow-[0_8px_20px_rgba(0,0,0,0.06)] rounded-2xl pl-12 pr-12 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgba(139,92,246,0.15)] outline-none transition-all hover:-translate-y-0.5" required placeholder="ระบุรหัสผ่าน">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-purple-600 transition-colors">
                                 <i class="fas fa-key text-sm"></i>
                             </div>
@@ -89,9 +89,9 @@
                         </div>
                     </div>
 
-                    <!-- ปุ่ม Submit -->
-                    <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm py-4 rounded-xl shadow-[0_10px_20px_rgb(139,92,246,0.25)] hover:shadow-[0_15px_25px_rgb(139,92,246,0.4)] transform transition-all active:scale-[0.98] hover:-translate-y-0.5 mt-4 flex items-center justify-center gap-2 group">
-                        เข้าสู่ระบบ <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    <!-- ปุ่ม Submit (แบบปุ่มลอย 3D) -->
+                    <button type="submit" class="relative w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm py-4 rounded-2xl shadow-[0_10px_20px_rgba(139,92,246,0.25)] hover:shadow-[0_15px_25px_rgba(139,92,246,0.4)] transform transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 group mt-4">
+                        <span>เข้าสู่ระบบ</span> <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                     </button>
                 </form>
             </div>
