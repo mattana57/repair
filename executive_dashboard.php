@@ -162,6 +162,11 @@ function timeAgo($datetime) {
 $all_repairs_json = "[]";
 $check_repairs_list = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs_list && $check_repairs_list->num_rows > 0) {
+    // ✨ สแตมป์เวลารับงาน (received_at) อัตโนมัติแบบเรียลไทม์ทันทีที่ช่างกดรับงานผ่าน LINE ✨
+    date_default_timezone_set('Asia/Bangkok');
+    $now_realtime = date('Y-m-d H:i:s');
+    $conn->query("UPDATE repairs SET received_at = IF(completed_at IS NOT NULL AND completed_at != '0000-00-00 00:00:00', completed_at, '$now_realtime') WHERE status != 'รอรับเรื่อง' AND (received_at IS NULL OR received_at = '0000-00-00 00:00:00' OR received_at = '' OR received_at = '-')");
+
     $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
     $rep_res = $conn->query($select_query);
     $reps = [];

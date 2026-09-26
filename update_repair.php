@@ -66,6 +66,20 @@ if (isset($_GET['id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $repair = $result->fetch_assoc();
+
+    // ✨ ถ้าช่างรับงานผ่าน LINE มาแล้ว แต่เวลา received_at ยังว่าง ให้ประทับเวลาปัจจุบันแบบเรียลไทม์ทันที ✨
+    if ($repair && (empty($repair['received_at']) || $repair['received_at'] === '0000-00-00 00:00:00' || $repair['received_at'] === '-')) {
+        if ($repair['status'] !== 'รอรับเรื่อง') {
+            $auto_rec_time = (!empty($repair['completed_at']) && $repair['completed_at'] !== '0000-00-00 00:00:00') ? $repair['completed_at'] : date('Y-m-d H:i:s');
+            $stmt_fix = $conn->prepare("UPDATE repairs SET received_at = ? WHERE id = ?");
+            if ($stmt_fix) {
+                $stmt_fix->bind_param("si", $auto_rec_time, $id);
+                $stmt_fix->execute();
+                $stmt_fix->close();
+                $repair['received_at'] = $auto_rec_time;
+            }
+        }
+    }
     
     // ✨ ดึงข้อมูล ID LINE และ ชื่อจริง จากตาราง line_users เพื่อนำมาโชว์
     $repair_line_id = $repair['reporter_name'];
