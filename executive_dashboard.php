@@ -1909,7 +1909,7 @@ if (isset($_GET['api_check_hash'])) {
         // ✨ เมื่อคลิกการ์ดสรุป 4 ใบบนหน้า Overview ให้สลับมาหน้า Transactions และกรองสถานะทันที ✨
         function filterRepairs(status) {
             show('repairs');
-            const disp = (status === 'all') ? 'ทุกสถานะ' : status;
+            const disp = (status === 'all') ? 'ทั้งหมด' : status;
             selectTableStatusDropdown(status, disp);
         }
 
