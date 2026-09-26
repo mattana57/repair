@@ -136,8 +136,9 @@ function getAutoPosition($th_name) {
 // ฟังก์ชันจัดฟอร์แมตเบอร์โทร
 function formatPhoneHtml($phone_str) {
     $val = trim((string)$phone_str);
-    if (empty($val) || $val === '-') return "<span class='text-rose-500 font-bold'>-</span>";
-    if ($val === 'ไม่ระบุ') return "<span class='text-rose-500 font-bold'>ไม่ระบุ</span>";
+    if (empty($val) || $val === '-' || $val === 'ไม่ระบุ' || $val === 'ไม่มีเบอร์ติดต่อ' || $val === 'ไม่มีข้อมูลเบอร์ติดต่อ' || $val === 'ยังไม่ระบุเบอร์ติดต่อ') {
+        return "<span class='text-rose-500 font-bold text-xs'><i class='fas fa-exclamation-circle mr-1'></i>ไม่มีข้อมูลเบอร์ติดต่อ</span>";
+    }
     $phones = array_values(array_filter(array_map('trim', explode(',', $val))));
     $html = '<div class="space-y-1">';
     $count = count($phones);
@@ -2431,7 +2432,7 @@ if (isset($_GET['api_check_hash'])) {
                     
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PHONE</label>
-                        <input type="text" name="phone" id="techAdmin_phone" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
+                        <input type="text" name="phone" id="techAdmin_phone" placeholder="ยังไม่ระบุเบอร์ติดต่อ (ควรระบุหมายเลขโทรศัพท์)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 placeholder:text-rose-500 placeholder:font-bold focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
                     </div>
                     
                     <div id="deptDiv">
@@ -4831,7 +4832,9 @@ if (isset($_GET['api_check_hash'])) {
             document.getElementById('techAdmin_username').value = u; 
             document.getElementById('techAdmin_fullname').value = f; 
             document.getElementById('techAdmin_englishname').value = en;
-            document.getElementById('techAdmin_phone').value = p; 
+            // ✨ ถ้าไม่มีเบอร์โทร หรือเป็นขีด '-' ให้เคลียร์เป็นค่าว่าง เพื่อโชว์ข้อความสีแดงข้างในช่อง PHONE ✨
+            let cleanPhone = (p && p.trim() !== '-' && p.trim() !== 'ไม่ระบุ' && p.trim() !== 'ไม่มีเบอร์ติดต่อ' && p.trim() !== 'ไม่มีข้อมูลเบอร์ติดต่อ') ? p.trim() : '';
+            document.getElementById('techAdmin_phone').value = cleanPhone;
             
             // ✨ กำหนดรูปเริ่มต้นตาม username (u) หรือชื่อช่าง (f) ให้ตรงกับตารางเป๊ะๆ ✨
             let seedKey = u ? u : (f ? f : 'admin');
