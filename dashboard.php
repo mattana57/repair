@@ -742,6 +742,7 @@ if (isset($_GET['api_check_hash'])) {
         .badge-pending { background-color: #fef3c7; color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-progress { background-color: #e0e7ff; color: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-success { background-color: #d1fae5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .swal2-container { z-index: 99999 !important; }
         @media print { aside, header, .no-print, #sidebarOverlay, #dash, #repairs, #technicians, #team_cards, #assets, #users, #reports { display: none !important; } }
 
         /* ✨ สไตล์สำหรับ Keyboard Navigation (หน้า Official Report) ✨ */
@@ -5923,7 +5924,7 @@ if (isset($_GET['api_check_hash'])) {
                     // 5. อัปเดตทุกตารางบนหน้าจอ 100% แบบเจาะจง (ไม่กวน UI เดิม)
                     const selectorsToUpdate = [
                         '#dash table tbody',          // Recent Transactions
-                        '#repairs table tbody',       // All Repairs List
+                        '#repairsTable tbody',        // All Repairs List (รองรับทั้งโหมดปกติและเต็มจอ 100%)
                         '#techniciansTableBody',      // Technicians (Admin)
                         '#techCardsContainer',        // Tech Cards (Executive)
                         '#assets table tbody',        // Assets (Admin)

@@ -325,6 +325,7 @@ if (isset($_GET['api_check_hash'])) {
             background-clip: padding-box !important;
         }
 
+        .swal2-container { z-index: 99999 !important; }
         @media print { aside, header, .no-print { display: none !important; } }
     </style>
 </head>
@@ -3427,7 +3428,7 @@ if (isset($_GET['api_check_hash'])) {
                     // 5. อัปเดตทุกตารางบนหน้าจอ 100% แบบเจาะจง (ไม่กวน UI เดิม)
                     const selectorsToUpdate = [
                         '#dash table tbody',          // Recent Transactions
-                        '#repairs table tbody',       // All Repairs List
+                        '#repairsTable tbody',        // All Repairs List (รองรับทั้งโหมดปกติและเต็มจอ 100%)
                         '#techniciansTableBody',      // Technicians (Admin)
                         '#techCardsContainer',        // Tech Cards (Executive)
                         '#assets table tbody',        // Assets (Admin)
