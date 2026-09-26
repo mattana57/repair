@@ -4239,8 +4239,7 @@ if (isset($_GET['api_check_hash'])) {
             deptArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
 
             const getRatingColor = (score) => {
-                 
-                return '#84cc16'; 
+                return '#22c55e';
             };
             
 
