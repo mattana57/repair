@@ -460,6 +460,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $full_name = !empty($_POST['full_name']) ? $_POST['full_name'] : NULL;
     $english_name = !empty($_POST['english_name']) ? $_POST['english_name'] : NULL;
     $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
+    $email = !empty($_POST['email']) ? trim($_POST['email']) : NULL;
     
     $position = !empty($_POST['position']) ? $_POST['position'] : NULL;
     $delete_avatar_flag = isset($_POST['delete_avatar_flag']) ? $_POST['delete_avatar_flag'] : '0';
@@ -499,9 +500,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         
         if (empty($user_id)) {
             $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
-            $stmt = $conn->prepare("INSERT INTO technicians (full_name, english_name, position, phone, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, 'รอผูกบัญชี')");
+            $stmt = $conn->prepare("INSERT INTO technicians (full_name, english_name, position, phone, email, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'รอผูกบัญชี')");
             if ($stmt) {
-                $stmt->bind_param("sssssss", $full_name, $english_name, $position, $phone, $department, $avatar_url, $secret_code);
+                $stmt->bind_param("ssssssss", $full_name, $english_name, $position, $phone, $email, $department, $avatar_url, $secret_code);
                 if ($stmt->execute()) {
                     $msg = "เพิ่มข้อมูลช่างสำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
                     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg\", confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
@@ -520,8 +521,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     $old_avatar = $q_old->fetch_assoc()['avatar_url'];
                     if (!empty($old_avatar) && file_exists($old_avatar)) @unlink($old_avatar);
                 }
-                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=?, avatar_url=NULL WHERE id=?");
-                if ($stmt) $stmt->bind_param("sssssi", $full_name, $english_name, $position, $phone, $department, $user_id);
+                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, email=?, department=?, avatar_url=NULL WHERE id=?");
+                if ($stmt) $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $email, $department, $user_id);
             } else {
                 if ($avatar_url) {
                     $q_old = $conn->query("SELECT avatar_url FROM technicians WHERE id = $user_id");
@@ -529,11 +530,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                         $old_avatar = $q_old->fetch_assoc()['avatar_url'];
                         if (!empty($old_avatar) && file_exists($old_avatar)) @unlink($old_avatar);
                     }
-                    $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=?, avatar_url=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $department, $avatar_url, $user_id);
+                    $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, email=?, department=?, avatar_url=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("sssssssi", $full_name, $english_name, $position, $phone, $email, $department, $avatar_url, $user_id);
                 } else {
-                    $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, department=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("sssssi", $full_name, $english_name, $position, $phone, $department, $user_id);
+                    $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, email=?, department=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $email, $department, $user_id);
                 }
             }
             
@@ -578,9 +579,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
 
         if (empty($user_id)) {
-            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, english_name, position, phone, department, role, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, english_name, position, phone, email, department, role, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             if ($stmt) {
-                $stmt->bind_param("sssssssss", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $avatar_url);
+                $stmt->bind_param("ssssssssss", $username, $password, $full_name, $english_name, $position, $phone, $email, $department, $role, $avatar_url);
                 if ($stmt->execute()) {
                     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'เพิ่มข้อมูลผู้ดูแลระบบสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
                 } else {
@@ -599,25 +600,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
 
             if (!empty($password)) {
                 if ($delete_avatar_flag === '1' && !$avatar_url) {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=?, avatar_url=NULL WHERE id=?");
-                    if ($stmt) $stmt->bind_param("ssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
+                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=NULL WHERE id=?");
+                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
                 } elseif ($avatar_url) {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=?, avatar_url=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $avatar_url, $user_id);
+                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("ssssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $email, $department, $role, $avatar_url, $user_id);
                 } else {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("ssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
+                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
                 }
             } else {
                 if ($delete_avatar_flag === '1' && !$avatar_url) {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=?, avatar_url=NULL WHERE id=?");
-                    if ($stmt) $stmt->bind_param("sssssssi", $username, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
+                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=NULL WHERE id=?");
+                    if ($stmt) $stmt->bind_param("ssssssssi", $username, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
                 } elseif ($avatar_url) {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=?, avatar_url=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("ssssssssi", $username, $full_name, $english_name, $position, $phone, $department, $role, $avatar_url, $user_id);
+                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $full_name, $english_name, $position, $phone, $email, $department, $role, $avatar_url, $user_id);
                 } else {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, department=?, role=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("sssssssi", $username, $full_name, $english_name, $position, $phone, $department, $role, $user_id);
+                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=? WHERE id=?");
+                    if ($stmt) $stmt->bind_param("ssssssssi", $username, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
                 }
             }
             if ($stmt && $stmt->execute()) {
@@ -1585,6 +1586,7 @@ if (isset($_GET['api_check_hash'])) {
                                             $js_uid = $u['id']; 
                                             $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); 
                                             $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); 
+                                            $js_email = htmlspecialchars($u['email'] ?? '', ENT_QUOTES);
                                             $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES); 
                                             $js_role = htmlspecialchars($u['role'], ENT_QUOTES);
                                             
@@ -1612,7 +1614,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 align-middle text-center'>
                                                     <div class='flex items-center justify-center space-x-2'>
-                                                        <button id='btn-edit-admin-{$u['id']}' onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '{$js_avatar_param}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button id='btn-edit-admin-{$u['id']}' onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '{$js_avatar_param}', '$js_email')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
@@ -1735,7 +1737,7 @@ if (isset($_GET['api_check_hash'])) {
                                         $pos = !empty($t['position']) ? $t['position'] : getAutoPosition($th_name);
                                         $js_pos = htmlspecialchars($pos, ENT_QUOTES);
 
-                                        $js_uid = $t['id']; $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES); $js_role = 'Technician';
+                                        $js_uid = $t['id']; $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); $js_email = htmlspecialchars($t['email'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES); $js_role = 'Technician';
                                         
                                         $total_jobs = 0;
                                         if(!empty($t['full_name'])) {
@@ -1780,7 +1782,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     {$unlinkBtn}
                                                     <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                    <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}', '$js_email')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                     <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:text-white hover:bg-rose-500 transition-all flex items-center justify-center shadow-xs'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
@@ -2437,6 +2439,12 @@ if (isset($_GET['api_check_hash'])) {
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PHONE <span class="text-rose-500">*</span></label>
                         <input type="text" name="phone" id="techAdmin_phone" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น 081-234-5678" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น 081-234-5678">
                         <p id="err_techAdmin_phone" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุหมายเลขโทรศัพท์ติดต่อ</span></p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">EMAIL <span class="text-slate-400 font-normal normal-case">(ไม่บังคับ)</span></label>
+                        <input type="email" name="email" id="techAdmin_email" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น somporn@mbs.com" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น somporn@mbs.com">
+                        <p id="err_techAdmin_email" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>รูปแบบอีเมลไม่ถูกต้อง (เช่น example@mbs.com)</span></p>
                     </div>
                     
                     <div id="deptDiv">
@@ -4819,6 +4827,7 @@ if (isset($_GET['api_check_hash'])) {
 
             const fullNameEl = document.getElementById('techAdmin_fullname');
             const phoneEl = document.getElementById('techAdmin_phone');
+            const emailEl = document.getElementById('techAdmin_email');
             const deptSelectEl = document.getElementById('techAdmin_department_select');
             const deptCustomEl = document.getElementById('techAdmin_department_custom');
             const posSelectEl = document.getElementById('techAdmin_position_select');
@@ -4868,6 +4877,16 @@ if (isset($_GET['api_check_hash'])) {
                 if (!firstErrorEl) firstErrorEl = phoneEl;
             }
 
+            // 4.5 เช็ครูปแบบอีเมล (EMAIL) - ไม่บังคับกรอก แต่ถ้ากรอกมาต้องถูกรูปแบบอีเมล
+            if (emailEl && emailEl.value.trim() !== '' && emailEl.value.trim() !== '-') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(emailEl.value.trim())) {
+                    setFieldError(emailEl, 'รูปแบบอีเมลไม่ถูกต้อง (เช่น example@mbs.com)');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = emailEl;
+                }
+            }
+
             // 5. เช็คฝ่ายงาน (DEPARTMENT) - บังคับเลือกสำหรับช่าง!
             if (!isManagement) {
                 if (!deptSelectEl.value) {
@@ -4891,11 +4910,130 @@ if (isset($_GET['api_check_hash'])) {
             return true;
         }
 
-        function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='') { 
+        function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='', em='') { 
             // ✨ ล้างสถานะสีแดงค้างเก่าออกให้หมดทุกช่องก่อนเปิดหน้าต่าง ✨
-            ['techAdmin_username', 'techAdmin_password', 'techAdmin_fullname', 'techAdmin_phone', 'techAdmin_position_select', 'techAdmin_position_custom', 'techAdmin_department_select', 'techAdmin_department_custom'].forEach(elId => {
+            ['techAdmin_username', 'techAdmin_password', 'techAdmin_fullname', 'techAdmin_phone', 'techAdmin_email', 'techAdmin_position_select', 'techAdmin_position_custom', 'techAdmin_department_select', 'techAdmin_department_custom'].forEach(elId => {
                 clearFieldError(document.getElementById(elId));
             });
+
+            let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
+            let baseRole = isManagement ? 'Admin' : 'Technician';
+            let title = isManagement ? 'Manage Administrator' : 'Manage Technician';
+            document.getElementById('techAdminModalTitle').innerHTML = title; 
+            document.getElementById('techAdmin_role').value = baseRole; 
+            
+            const adminLevelDiv = document.getElementById('adminLevelDiv'); 
+            const deptDiv = document.getElementById('deptDiv');
+            const loginCredsDiv = document.getElementById('loginCredsDiv');
+            const avatarDiv = document.getElementById('avatarDiv');
+            const avatarLabelWrapper = document.getElementById('avatarLabelWrapper');
+            const avatarPositionWrapper = document.getElementById('avatarPositionWrapper');
+            const positionDiv = document.getElementById('positionDiv');
+            const displayPositionLabel = document.getElementById('displayPositionLabel');
+            const avatarPreviewWrapper = document.getElementById('avatarPreviewWrapper');
+            
+            let oldHidden = document.getElementById('final_avatar_position');
+            if(oldHidden) oldHidden.remove();
+            
+            if(isManagement) {
+                adminLevelDiv.classList.remove('hidden'); 
+                deptDiv.classList.add('hidden'); 
+                document.getElementById('techAdmin_department_select').required = false;
+                
+                let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; 
+                document.getElementById('techAdmin_level').value = exactRole;
+                loginCredsDiv.classList.remove('hidden'); 
+                document.getElementById('techAdmin_username').required = true;
+                
+                if(avatarDiv) avatarDiv.classList.remove('hidden');
+                if(avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
+                if(avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
+                if(positionDiv) positionDiv.classList.add('hidden');
+                if(avatarPreviewWrapper) {
+                    avatarPreviewWrapper.classList.remove('rounded-2xl');
+                    avatarPreviewWrapper.classList.add('rounded-full');
+                }
+            } else {
+                adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
+                loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
+                if(avatarDiv) avatarDiv.classList.remove('hidden');
+                if(avatarPreviewWrapper) {
+                    avatarPreviewWrapper.classList.remove('rounded-full');
+                    avatarPreviewWrapper.classList.add('rounded-2xl');
+                }
+                
+                if (id === '') {
+                    if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
+                    if (avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
+                    if (positionDiv) positionDiv.classList.remove('hidden');
+                    
+                    document.getElementById('techAdmin_position_select').name = 'position_select';
+                    document.getElementById('techAdmin_position_custom').name = 'position_custom';
+                    setDropdownOrCustom('techAdmin_position_select', 'techAdmin_position_custom', '');
+                } else {
+                    if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
+                    if (avatarPositionWrapper) avatarPositionWrapper.classList.remove('hidden');
+                    if (positionDiv) positionDiv.classList.add('hidden');
+                    
+                    let displayPosText = pos ? pos : 'ระบุตำแหน่งงาน';
+                    displayPositionLabel.innerText = displayPosText;
+                    document.getElementById('techAdmin_position_select').name = '';
+                    document.getElementById('techAdmin_position_custom').name = '';
+                    
+                    let hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = 'final_avatar_position';
+                    hiddenInput.name = 'position';
+                    hiddenInput.value = pos;
+                    let targetForm = document.querySelector('#techAdminModal form');
+                    if(targetForm) targetForm.appendChild(hiddenInput);
+                }
+            }
+
+            // ✨ ถ้าค่าเดิมเป็นขีด '-' ให้เคลียร์เป็นค่าว่าง เพื่อให้ระบบบังคับกรอกข้อมูลจริง ✨
+            let cleanFullName = (f && f.trim() !== '-') ? f : '';
+            let cleanEngName = (en && en.trim() !== '-') ? en : '';
+            let cleanPhone = (p && p.trim() !== '-' && p.trim() !== 'ไม่ระบุ') ? p : '';
+            let cleanEmail = (em && em.trim() !== '-' && em.trim() !== 'ไม่ระบุ') ? em : '';
+
+            document.getElementById('techAdmin_id').value = id;
+            document.getElementById('techAdmin_username').value = u; 
+            document.getElementById('techAdmin_fullname').value = cleanFullName; 
+            document.getElementById('techAdmin_englishname').value = cleanEngName;
+            document.getElementById('techAdmin_phone').value = cleanPhone; 
+            if(document.getElementById('techAdmin_email')) {
+                document.getElementById('techAdmin_email').value = cleanEmail;
+            }
+            
+            let seedKey = u ? u : (f ? f : 'admin');
+            const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(seedKey) + '&backgroundColor=e2e8f0';
+            
+            let isUploadedAvatar = (avatarUrl && avatarUrl.trim() !== '' && !avatarUrl.includes('dicebear.com'));
+            
+            document.getElementById('avatarPreviewImg').src = (avatarUrl && avatarUrl.trim() !== '') ? avatarUrl : defaultImg;
+            document.getElementById('fileNameDisplay').textContent = isUploadedAvatar ? 'มีรูปภาพในระบบ' : 'ไม่ได้เลือกไฟล์ใด';
+            
+            const btnRemove = document.getElementById('btnRemoveAvatar');
+            if(btnRemove) {
+                if(isUploadedAvatar) btnRemove.classList.remove('hidden');
+                else btnRemove.classList.add('hidden');
+            }
+            document.getElementById('delete_avatar_flag').value = '0';
+            
+            const avatarInput = document.getElementById('techAdmin_avatar');
+            if(avatarInput) avatarInput.value = '';
+
+            const pwdInput = document.getElementById('techAdmin_password'); 
+            const pwdHint = document.getElementById('pwdHint'); 
+            const eyeIcon = document.getElementById('eyeIcon');
+            pwdInput.value = ''; pwdInput.type = 'password'; 
+            if(eyeIcon) { eyeIcon.classList.remove('fa-eye'); eyeIcon.classList.add('fa-eye-slash'); }
+            if(id === '') { if(isManagement) pwdInput.required = true; pwdHint.innerText = "(จำเป็นต้องกรอก)"; } else { pwdInput.required = false; pwdHint.innerText = "(เว้นว่างไว้หากไม่ต้องการเปลี่ยน)"; }
+            
+            document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
+            setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
+            toggleModal('techAdminModal'); 
+        }
 
             let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
             let baseRole = isManagement ? 'Admin' : 'Technician';
