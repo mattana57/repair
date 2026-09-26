@@ -173,12 +173,14 @@ $tech_cols = [
     'department' => 'VARCHAR(255) NULL',
     'position' => 'VARCHAR(255) NULL',
     'phone' => 'VARCHAR(100) NULL',
+    'email' => 'VARCHAR(150) NULL',
     'avatar_url' => 'VARCHAR(255) NULL',
     'secret_code' => 'VARCHAR(10) NULL',
     'approval_status' => "VARCHAR(50) DEFAULT 'รอผูกบัญชี'",
     'status' => "VARCHAR(50) DEFAULT 'ว่าง'",
     'english_name' => 'VARCHAR(255) NULL'
 ];
+
 foreach ($tech_cols as $col => $def) {
     $chk = $conn->query("SHOW COLUMNS FROM technicians LIKE '$col'");
     if($chk && $chk->num_rows == 0) {
@@ -212,9 +214,11 @@ $users_cols = [
     'english_name' => 'VARCHAR(255) NULL',
     'position' => 'VARCHAR(255) NULL',
     'phone' => 'VARCHAR(100) NULL',
+    'email' => 'VARCHAR(150) NULL',
     'department' => 'VARCHAR(255) NULL',
     'avatar_url' => 'VARCHAR(255) NULL' // ✨ เพิ่มการรองรับรูปโปรไฟล์ในตาราง users
 ];
+
 foreach ($users_cols as $col => $def) {
     $chk = $conn->query("SHOW COLUMNS FROM users LIKE '$col'");
     if($chk && $chk->num_rows == 0) {
@@ -907,7 +911,7 @@ if (isset($_GET['api_check_hash'])) {
 
                     <!-- รายการคำสั่งของโปรไฟล์ -->
                     <div class="px-2 py-2 space-y-1">
-                        <button type="button" onclick="openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
+                        <button type="button" onclick="const editBtn = document.getElementById('btn-edit-admin-<?php echo $_SESSION['user_id'] ?? ''; ?>'); if(editBtn) editBtn.click(); else openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
                                     <i class="fas fa-user-edit text-xs"></i>
@@ -5035,121 +5039,6 @@ if (isset($_GET['api_check_hash'])) {
             toggleModal('techAdminModal'); 
         }
 
-            let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
-            let baseRole = isManagement ? 'Admin' : 'Technician';
-            let title = isManagement ? 'Manage Administrator' : 'Manage Technician';
-            document.getElementById('techAdminModalTitle').innerHTML = title; 
-            document.getElementById('techAdmin_role').value = baseRole; 
-            
-            const adminLevelDiv = document.getElementById('adminLevelDiv'); 
-            const deptDiv = document.getElementById('deptDiv');
-            const loginCredsDiv = document.getElementById('loginCredsDiv');
-            const avatarDiv = document.getElementById('avatarDiv');
-            const avatarLabelWrapper = document.getElementById('avatarLabelWrapper');
-            const avatarPositionWrapper = document.getElementById('avatarPositionWrapper');
-            const positionDiv = document.getElementById('positionDiv');
-            const displayPositionLabel = document.getElementById('displayPositionLabel');
-            const avatarPreviewWrapper = document.getElementById('avatarPreviewWrapper');
-            
-            let oldHidden = document.getElementById('final_avatar_position');
-            if(oldHidden) oldHidden.remove();
-            
-            if(isManagement) {
-                adminLevelDiv.classList.remove('hidden'); 
-                deptDiv.classList.add('hidden'); 
-                document.getElementById('techAdmin_department_select').required = false;
-                
-                let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; 
-                document.getElementById('techAdmin_level').value = exactRole;
-                loginCredsDiv.classList.remove('hidden'); 
-                document.getElementById('techAdmin_username').required = true;
-                
-                if(avatarDiv) avatarDiv.classList.remove('hidden');
-                if(avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
-                if(avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
-                if(positionDiv) positionDiv.classList.add('hidden');
-                if(avatarPreviewWrapper) {
-                    avatarPreviewWrapper.classList.remove('rounded-2xl');
-                    avatarPreviewWrapper.classList.add('rounded-full');
-                }
-            } else {
-                adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
-                loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
-                if(avatarDiv) avatarDiv.classList.remove('hidden');
-                if(avatarPreviewWrapper) {
-                    avatarPreviewWrapper.classList.remove('rounded-full');
-                    avatarPreviewWrapper.classList.add('rounded-2xl');
-                }
-                
-                if (id === '') {
-                    if (avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
-                    if (avatarPositionWrapper) avatarPositionWrapper.classList.add('hidden');
-                    if (positionDiv) positionDiv.classList.remove('hidden');
-                    
-                    document.getElementById('techAdmin_position_select').name = 'position_select';
-                    document.getElementById('techAdmin_position_custom').name = 'position_custom';
-                    setDropdownOrCustom('techAdmin_position_select', 'techAdmin_position_custom', '');
-                } else {
-                    if (avatarLabelWrapper) avatarLabelWrapper.classList.add('hidden');
-                    if (avatarPositionWrapper) avatarPositionWrapper.classList.remove('hidden');
-                    if (positionDiv) positionDiv.classList.add('hidden');
-                    
-                    let displayPosText = pos ? pos : 'ระบุตำแหน่งงาน';
-                    displayPositionLabel.innerText = displayPosText;
-                    document.getElementById('techAdmin_position_select').name = '';
-                    document.getElementById('techAdmin_position_custom').name = '';
-                    
-                    let hiddenInput = document.createElement('input');
-                    hiddenInput.type = 'hidden';
-                    hiddenInput.id = 'final_avatar_position';
-                    hiddenInput.name = 'position';
-                    hiddenInput.value = pos;
-                    let targetForm = document.querySelector('#techAdminModal form');
-                    if(targetForm) targetForm.appendChild(hiddenInput);
-                }
-            }
-
-            // ✨ ถ้าค่าเดิมเป็นขีด '-' ให้เคลียร์เป็นค่าว่าง เพื่อให้ระบบบังคับกรอกข้อมูลจริง ✨
-            let cleanFullName = (f && f.trim() !== '-') ? f : '';
-            let cleanEngName = (en && en.trim() !== '-') ? en : '';
-            let cleanPhone = (p && p.trim() !== '-' && p.trim() !== 'ไม่ระบุ') ? p : '';
-
-            document.getElementById('techAdmin_id').value = id;
-            document.getElementById('techAdmin_username').value = u; 
-            document.getElementById('techAdmin_fullname').value = cleanFullName; 
-            document.getElementById('techAdmin_englishname').value = cleanEngName;
-            document.getElementById('techAdmin_phone').value = cleanPhone; 
-            
-            let seedKey = u ? u : (f ? f : 'admin');
-            const defaultImg = 'https://api.dicebear.com/7.x/notionists/svg?seed=' + encodeURIComponent(seedKey) + '&backgroundColor=e2e8f0';
-            
-            let isUploadedAvatar = (avatarUrl && avatarUrl.trim() !== '' && !avatarUrl.includes('dicebear.com'));
-            
-            document.getElementById('avatarPreviewImg').src = (avatarUrl && avatarUrl.trim() !== '') ? avatarUrl : defaultImg;
-            document.getElementById('fileNameDisplay').textContent = isUploadedAvatar ? 'มีรูปภาพในระบบ' : 'ไม่ได้เลือกไฟล์ใด';
-            
-            const btnRemove = document.getElementById('btnRemoveAvatar');
-            if(btnRemove) {
-                if(isUploadedAvatar) btnRemove.classList.remove('hidden');
-                else btnRemove.classList.add('hidden');
-            }
-            document.getElementById('delete_avatar_flag').value = '0';
-            
-            const avatarInput = document.getElementById('techAdmin_avatar');
-            if(avatarInput) avatarInput.value = '';
-
-            const pwdInput = document.getElementById('techAdmin_password'); 
-            const pwdHint = document.getElementById('pwdHint'); 
-            const eyeIcon = document.getElementById('eyeIcon');
-            pwdInput.value = ''; pwdInput.type = 'password'; 
-            if(eyeIcon) { eyeIcon.classList.remove('fa-eye'); eyeIcon.classList.add('fa-eye-slash'); }
-            if(id === '') { if(isManagement) pwdInput.required = true; pwdHint.innerText = "(จำเป็นต้องกรอก)"; } else { pwdInput.required = false; pwdHint.innerText = "(เว้นว่างไว้หากไม่ต้องการเปลี่ยน)"; }
-            
-            document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
-            setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
-            toggleModal('techAdminModal'); 
-        }
-
         // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
         function viewHistory(fullName, type) {
             window.currentHistoryName = fullName; // ✨ จำชื่อที่เปิดอยู่
@@ -5888,7 +5777,7 @@ if (isset($_GET['api_check_hash'])) {
                     if (btnEdit) {
                         const targetParam = hasAvatar ? adm.avatar_url : '';
                         let currentOnClick = btnEdit.getAttribute('onclick') || '';
-                        currentOnClick = currentOnClick.replace(/,[^,]*\)$/, `,'${targetParam}')`);
+                        currentOnClick = currentOnClick.replace(/,\s*'[^']*'\s*,\s*('[^']*')\)$/, `, '${targetParam}', $1)`);
                         btnEdit.setAttribute('onclick', currentOnClick);
                     }
 
