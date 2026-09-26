@@ -2929,6 +2929,10 @@ if (isset($_GET['api_check_hash'])) {
                     let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
                     let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
 
+                    let imageIcon = (rev.image_path && String(rev.image_path).trim() !== '' && String(rev.image_path).trim() !== '-') 
+                        ? "<i class='fas fa-image text-slate-400 ml-1.5' title='มีรูปภาพแนบ'></i>" 
+                        : "";
+
                     container.innerHTML += `<div onclick="openReviewTab(${rev.id})" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
                                 <i class="fas fa-external-link-alt text-xs" title="คลิกเพื่อดูใบงานนี้"></i>
@@ -2937,7 +2941,7 @@ if (isset($_GET['api_check_hash'])) {
                                 <div class='flex items-center gap-3'>
                                     <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors'><i class='fas fa-user text-xs'></i></div>
                                     <div>
-                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors'>${r_name}</div>
+                                        <div class='text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors flex items-center'>${r_name}${imageIcon}</div>
                                         <div class='text-[10px] text-slate-400 font-medium'>${date_str}</div>
                                     </div>
                                 </div>
