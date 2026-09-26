@@ -214,6 +214,7 @@ if($check_lu && $check_lu->num_rows > 0) {
         }
     }
 }
+
 $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
 
 $years_query = $conn->query("SELECT DISTINCT YEAR(created_at) as y FROM repairs WHERE created_at IS NOT NULL ORDER BY y DESC");
@@ -225,14 +226,19 @@ if($years_query && $years_query->num_rows > 0) {
 } else {
     $available_years[] = date('Y');
 }
+
 $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 $current_month_name = $thai_months[date('n')];
 $current_thai_year = date('Y') + 543;
 
+$active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'dash';
 $pageTitles = [
     'dash' => 'Dashboard Overview',
-    'repairs' => 'All Repairs List'
+    'repairs' => 'All Repairs List',
+    'technician' => 'Team Management'
 ];
+
+$currentTitle = isset($pageTitles[$active_tab]) ? $pageTitles[$active_tab] : 'Dashboard Overview';
 // ✨ ดึงข้อมูลชุดเต็มของช่างและแอดมินมาสร้าง Hash เพื่อให้ฝั่งผู้บริหารรับรู้การแก้ไขจากฝั่งแอดมินแบบเรียลไทม์ 100% ✨
 $all_techs_sync = [];
 $t_sync_q = $conn->query("SELECT id, full_name, english_name, department, position, phone, email, avatar_url, approval_status FROM technicians ORDER BY id ASC");
@@ -256,6 +262,7 @@ if (isset($_GET['api_check_hash'])) {
     ], JSON_UNESCAPED_UNICODE);
     exit();
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -347,9 +354,9 @@ if (isset($_GET['api_check_hash'])) {
 
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">DASHBOARD</p>
-            <button onclick="show('dash')" class="nav-btn active-btn" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
-            <button onclick="show('repairs')" class="nav-btn" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
-            <button onclick="show('technician')" class="nav-btn" id="btn-technician"><i class="fas fa-id-badge"></i> Technician</button>
+            <button onclick="show('dash')" class="nav-btn <?php echo $active_tab === 'dash' ? 'active-btn' : ''; ?>" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
+            <button onclick="show('repairs')" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?>" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
+            <button onclick="show('technician')" class="nav-btn <?php echo $active_tab === 'technician' ? 'active-btn' : ''; ?>" id="btn-technician"><i class="fas fa-id-badge"></i> Technician</button>
             
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2">MANAGEMENT</p>
             <a href="executive_report.php" target="_blank" class="nav-btn"><i class="fas fa-file-alt"></i> Summary Reports</a>
@@ -448,7 +455,7 @@ if (isset($_GET['api_check_hash'])) {
         </header>
 
         <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-            <div id="dash" class="section space-y-6 animate-fade-in no-print">
+            <div id="dash" class="section <?php echo $active_tab === 'dash' ? '' : 'hidden'; ?> space-y-6 animate-fade-in no-print">
 
                 <!-- ✨ ปรับ Grid เป็น 2 คอลัมน์ (grid-cols-2) ในมือถือ และเพิ่มความห่างให้สมดุล (gap-3) ✨ -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
@@ -1032,7 +1039,7 @@ if (isset($_GET['api_check_hash'])) {
             </div>
 
             <!-- ✨ หน้า Technician (Team Management) ให้ผู้บริหาร ✨ -->
-            <div id="technician" class="section hidden space-y-6 no-print animate-fade-in">
+            <div id="technician" class="section <?php echo $active_tab === 'technician' ? '' : 'hidden'; ?> space-y-6 no-print animate-fade-in">
                 <?php
                 // กรองเฉพาะช่าง (ไม่เอาแม่บ้าน) ให้ตรงกับฝั่งแอดมิน
                 $techs_query = "SELECT * FROM technicians WHERE department != 'แม่บ้าน' ORDER BY department ASC, full_name ASC";
@@ -1764,14 +1771,28 @@ if (isset($_GET['api_check_hash'])) {
             }
         });
 
-        function show(id) {
+        function show(id, preventScrollReset = false) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
+            const targetSec = document.getElementById(id);
+            if(targetSec) targetSec.classList.remove('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
             const activeBtn = document.getElementById('btn-' + id);
             if(activeBtn) activeBtn.classList.add('active-btn');
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'Executive View';
             
+            // ✨ อัปเดต URL เงียบๆ และจำแท็บปัจจุบันไว้เสมอ เวลา Refresh จะได้กลับมาหน้าเดิมเป๊ะๆ ✨
+            history.replaceState(null, '', '?tab=' + id);
+            sessionStorage.setItem('execActiveTabBeforeRefresh', id);
+
+            // ✨ รีเซ็ต Scroll กลับไปบนสุดเฉพาะตอนกดเปลี่ยนแท็บใหม่ ✨
+            if (!preventScrollReset) {
+                const scrollContainer = document.getElementById('mainScrollContainer');
+                if (scrollContainer) {
+                    scrollContainer.scrollTop = 0;
+                    sessionStorage.setItem('execDashboardScrollY', 0);
+                }
+            }
+
             if (window.innerWidth < 1280) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
                 document.getElementById('sidebarOverlay').classList.add('hidden');
@@ -3277,12 +3298,47 @@ if (isset($_GET['api_check_hash'])) {
             }
         });
 
+        // ✨ จำสถานะ Tab และตำแหน่ง Scroll ก่อนรีเฟรชหน้าจอ ✨
+        window.addEventListener('beforeunload', function() {
+            const activeSection = document.querySelector('.section:not(.hidden)');
+            if (activeSection) {
+                sessionStorage.setItem('execActiveTabBeforeRefresh', activeSection.id);
+            }
+            const mainScroll = document.getElementById('mainScrollContainer');
+            if (mainScroll) {
+                sessionStorage.setItem('execDashboardScrollY', mainScroll.scrollTop);
+            }
+            const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
+            if (repairsTableWrap) {
+                sessionStorage.setItem('execRepairsScrollX', repairsTableWrap.scrollLeft);
+            }
+        });
+
         // ================== INIT ==================
         document.addEventListener('DOMContentLoaded', () => {
+            window.chartsRendered = false;
             const urlParams = new URLSearchParams(window.location.search);
-            const tab = urlParams.get('tab');
+            const currentTabUrl = urlParams.get('tab');
+            const savedTab = sessionStorage.getItem('execActiveTabBeforeRefresh');
             
-            if(tab) { show(tab); } else { show('dash'); }
+            // ✨ โหลดกลับไปยังหน้าที่เปิดค้างไว้ล่าสุดเสมอ ✨
+            const finalTab = currentTabUrl ? currentTabUrl : (savedTab ? savedTab : 'dash');
+            show(finalTab, true);
+
+            // คืนค่าตำแหน่งการเลื่อนจอแนวตั้ง
+            const mainScroll = document.getElementById('mainScrollContainer');
+            const savedScrollY = sessionStorage.getItem('execDashboardScrollY');
+            if (mainScroll && savedScrollY !== null) {
+                mainScroll.scrollTop = parseInt(savedScrollY);
+            }
+
+            // คืนค่าตำแหน่งการเลื่อนตารางแนวนอน
+            const savedRepairsScrollX = sessionStorage.getItem('execRepairsScrollX');
+            if (savedRepairsScrollX !== null) {
+                const repairsTableWrap = document.getElementById('repairsTable')?.parentElement;
+                if (repairsTableWrap) repairsTableWrap.scrollLeft = parseInt(savedRepairsScrollX);
+                sessionStorage.removeItem('execRepairsScrollX');
+            }
 
             renderAllCharts();
             if(document.getElementById('topReportersList')) {
