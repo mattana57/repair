@@ -4239,7 +4239,7 @@ if (isset($_GET['api_check_hash'])) {
             deptArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
 
             const getRatingColor = (score) => {
-                return '#6366f1'; // ✨ สีน้ำเงินอมม่วง (Indigo) เข้ากับธีมหลักเป๊ะๆ ✨
+                return '#10b981'; // ✨ สีเขียวมรกต ดูสมูทและเข้ากับชุดสีของระบบ ✨
             };
             
 
