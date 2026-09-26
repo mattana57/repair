@@ -1058,10 +1058,10 @@ if (isset($_GET['api_check_hash'])) {
                         <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Technicians</h3>
                         <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
-                    <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
-                        <div class="relative w-full sm:w-48 lg:w-56 mb-2 sm:mb-0 group">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards(); toggleClearBtn('techSearchFilter', 'clearTechSearchBtn');" placeholder="ค้นหาชื่อช่าง..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                    <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:flex-1 lg:justify-end">
+                        <div class="relative w-full sm:flex-1 lg:max-w-[400px] mb-2 sm:mb-0 group">
+                            <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards(); toggleClearBtn('techSearchFilter', 'clearTechSearchBtn');" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-10 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             <button type="button" id="clearTechSearchBtn" onclick="clearSearchInput('techSearchFilter', filterTechCards)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                         </div>
 
