@@ -9,53 +9,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; }
-        
-        /* 🎨 Custom Animation สำหรับแสงพื้นหลัง */
-        @keyframes blob {
-            0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-            100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-            animation: blob 8s infinite;
-        }
-        .animation-delay-2000 {
-            animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-            animation-delay: 4s;
-        }
     </style>
 </head>
-<body class="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 md:p-10 selection:bg-purple-500 selection:text-white relative overflow-hidden">
+<body class="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6 md:p-10 selection:bg-purple-500 selection:text-white">
 
-    <!-- 🌟 พื้นหลังสีฟ้าขยับได้ -->
-    <div class="absolute top-20 left-10 lg:left-32 w-[280px] h-[280px] bg-blue-400/50 rounded-full blur-3xl animate-blob pointer-events-none"></div>
-    <div class="absolute top-10 right-10 lg:right-32 w-[300px] h-[300px] bg-sky-400/50 rounded-full blur-3xl animate-blob animation-delay-2000 pointer-events-none"></div>
-    <div class="absolute bottom-20 left-1/3 w-[290px] h-[290px] bg-blue-300/50 rounded-full blur-3xl animate-blob animation-delay-4000 pointer-events-none"></div>
+    <!-- 🌟 โครงสร้างการ์ดใหญ่ตรงกลาง (ไม่ทำให้ลอยแบบปุ่ม ใช้หลักสี 60-30-10) -->
+    <!-- ใช้ Gradient: สีหลัก 60%, สีรอง 30%, สี Accent 10% -->
+    <div class="w-full max-w-[1000px] bg-gradient-to-br from-violet-600 from-[60%] via-purple-800 via-[90%] to-indigo-500 rounded-[2.5rem] overflow-hidden flex flex-col lg:flex-row items-center p-2 sm:p-4 lg:p-6 shadow-sm border border-slate-200/50">
 
-    <!-- 🌟 โครงสร้างการ์ดใหญ่ตรงกลาง -->
-    <div class="w-full max-w-[1000px] bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 rounded-[2.5rem] shadow-[0_20px_50px_rgba(79,70,229,0.3)] overflow-hidden relative min-h-[600px] flex flex-col lg:flex-row items-center p-2 sm:p-4 lg:p-6 z-10">
-        
-        <!-- วงกลมแสงเอฟเฟกต์ด้านหลังของการ์ดม่วง -->
-        <div class="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
-            <div class="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-white/20 to-transparent blur-3xl mix-blend-overlay animate-blob"></div>
-            <div class="absolute bottom-[-10%] right-[30%] w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-indigo-400/30 to-transparent blur-3xl mix-blend-overlay animate-blob animation-delay-2000"></div>
-        </div>
-
-        <!-- 👈 ฝั่งซ้าย: เปลี่ยนเป็นแบบที่ 2 (ไม่มีกรอบกระจก จัดวางโดยตรง) -->
-        <div class="w-full lg:w-1/2 p-6 lg:p-10 flex flex-col items-center lg:items-start justify-center relative z-10 text-center lg:text-left">
-            <div class="w-24 h-24 bg-white rounded-[1.5rem] flex items-center justify-center mb-6 shadow-xl">
+        <!-- 👈 ฝั่งซ้าย: แบบที่ 2 (จัดวางโดยตรง ไม่มีกรอบกระจก) -->
+        <div class="w-full lg:w-1/2 p-6 lg:p-10 flex flex-col items-center justify-center text-center relative z-10">
+            <div class="w-24 h-24 bg-white rounded-[1.5rem] flex items-center justify-center mb-6 shadow-md">
                 <span class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">MBS</span>
             </div>
             <h3 class="text-3xl font-bold text-white tracking-wide">Repair System</h3>
-            <p class="text-indigo-100 mt-2 font-medium text-sm">ระบบแจ้งซ่อมและบำรุงรักษา</p>
+            <p class="text-violet-200 mt-2 font-medium text-sm">ระบบแจ้งซ่อมและบำรุงรักษา</p>
         </div>
 
-        <!-- 👉 ฝั่งขวา: ฟอร์มเข้าสู่ระบบ (ไม่มีการเปลี่ยนแปลง) -->
+        <!-- 👉 ฝั่งขวา: กล่องขาว (ลอยมีมิติ) -->
         <div class="w-full lg:w-1/2 flex justify-center items-center relative z-10 p-4 lg:p-6">
-            <div class="w-full max-w-[420px] bg-white rounded-[2rem] p-8 lg:p-10 shadow-[0_30px_60px_rgba(0,0,0,0.4)] transform hover:-translate-y-2 transition-all duration-300">
+            <!-- กล่องขาวมีเอฟเฟกต์ยกตัวเมื่อ Hover -->
+            <div class="w-full max-w-[420px] bg-white rounded-[2rem] p-8 lg:p-10 shadow-[0_25px_50px_rgba(0,0,0,0.15)] transform hover:-translate-y-2 transition-all duration-300 border border-slate-100">
                 
                 <!-- ส่วนหัว (Header) -->
                 <div class="flex flex-col items-center mb-8 relative">
@@ -69,22 +43,22 @@
                 <!-- ฟอร์มเข้าสู่ระบบ -->
                 <form action="auth.php" method="POST" class="space-y-6">
                     
-                    <!-- ช่อง Username -->
+                    <!-- ช่อง Username (มีเอฟเฟกต์ยกตัว) -->
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Username</label>
                         <div class="relative group">
-                            <input type="text" name="username" class="peer w-full bg-white border-0 shadow-[0_8px_20px_rgba(0,0,0,0.06)] rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgba(139,92,246,0.15)] outline-none transition-all hover:-translate-y-0.5" required placeholder="ระบุชื่อผู้ใช้งาน">
+                            <input type="text" name="username" class="peer w-full bg-white border border-slate-100 shadow-[0_8px_20px_rgba(0,0,0,0.05)] rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgba(139,92,246,0.15)] outline-none transition-all hover:-translate-y-0.5" required placeholder="ระบุชื่อผู้ใช้งาน">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-purple-600 transition-colors">
                                 <i class="fas fa-at text-sm"></i>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- ช่อง Password -->
+                    <!-- ช่อง Password (มีเอฟเฟกต์ยกตัว) -->
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
                         <div class="relative group">
-                            <input type="password" id="password" name="password" class="peer w-full bg-white border-0 shadow-[0_8px_20px_rgba(0,0,0,0.06)] rounded-2xl pl-12 pr-12 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgba(139,92,246,0.15)] outline-none transition-all hover:-translate-y-0.5" required placeholder="ระบุรหัสผ่าน">
+                            <input type="password" id="password" name="password" class="peer w-full bg-white border border-slate-100 shadow-[0_8px_20px_rgba(0,0,0,0.05)] rounded-2xl pl-12 pr-12 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgba(139,92,246,0.15)] outline-none transition-all hover:-translate-y-0.5" required placeholder="ระบุรหัสผ่าน">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-purple-600 transition-colors">
                                 <i class="fas fa-key text-sm"></i>
                             </div>
@@ -95,7 +69,7 @@
                         </div>
                     </div>
 
-                    <!-- ปุ่ม Submit -->
+                    <!-- ปุ่ม Submit (มีเอฟเฟกต์ยกตัว) -->
                     <button type="submit" class="relative w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm py-4 rounded-2xl shadow-[0_10px_20px_rgba(139,92,246,0.25)] hover:shadow-[0_15px_25px_rgba(139,92,246,0.4)] transform transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 group mt-4">
                         <span>เข้าสู่ระบบ</span> <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                     </button>
