@@ -8,17 +8,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Kanit', sans-serif; 
-            /* ปรับพื้นหลังเต็มจอด้วย Gradient สีน้ำเงิน-คราม */
-            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #1e40af 100%);
-        }
+        body { font-family: 'Kanit', sans-serif; }
         
-        /* 🎨 Custom Animation สำหรับก้อนสีพื้นหลังที่ขยับได้ */
+        /* 🎨 Custom Animation สำหรับกราฟิกฝั่งขวา */
         @keyframes blob {
             0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(40px, -60px) scale(1.2); }
-            66% { transform: translate(-30px, 30px) scale(0.8); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
             100% { transform: translate(0px, 0px) scale(1); }
         }
         .animate-blob {
@@ -31,76 +27,96 @@
             animation-delay: 4s;
         }
 
-        /* 🚀 Animation ตอนโหลดหน้าเว็บ (Slide Up Fade) */
+        /* 🚀 Animation ตอนโหลดหน้าฟอร์ม */
         .fade-in-up {
             animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
         }
         @keyframes fadeInUp {
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden selection:bg-white selection:text-blue-900">
+<body class="min-h-screen bg-slate-50 selection:bg-purple-500 selection:text-white">
 
-    <!-- 🌌 Animated Background Blobs (พื้นหลังเต็มจอที่มีลูกเล่นลอยๆ) -->
-    <div class="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none z-0 overflow-hidden">
-        <div class="relative w-full h-full max-w-4xl flex items-center justify-center">
-            <div class="absolute top-1/4 -left-10 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob"></div>
-            <div class="absolute top-1/3 -right-10 w-96 h-96 bg-indigo-500 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob animation-delay-2000"></div>
-            <div class="absolute -bottom-20 left-1/3 w-96 h-96 bg-blue-400 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob animation-delay-4000"></div>
-        </div>
-    </div>
-
-    <!-- 💎 กล่องเข้าสู่ระบบแบบลอย (Floating Card) -->
-    <div class="w-full max-w-md bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border border-white/20 z-10 fade-in-up relative">
+    <!-- เค้าโครงหลักแบบแบ่ง 2 ฝั่งเต็มหน้าจอ -->
+    <div class="flex w-full min-h-screen">
         
-        <!-- ส่วนหัว (Header) -->
-        <div class="flex flex-col items-center mb-8 relative">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-lg shadow-blue-500/40 transform transition-transform hover:scale-110 hover:rotate-3 duration-300">
-                <i class="fas fa-fingerprint"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">เข้าสู่ระบบเจ้าหน้าที่</h2>
-            <p class="text-slate-500 text-sm mt-1 text-center font-medium">คณะการบัญชีและการจัดการ (MBS)</p>
-        </div>
-        
-        <!-- ฟอร์มเข้าสู่ระบบ -->
-        <form action="auth.php" method="POST" class="space-y-6">
-            
-            <!-- ช่อง Username -->
-            <div>
-                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Username</label>
-                <div class="relative group">
-                    <input type="text" name="username" class="peer w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all" required placeholder="ระบุชื่อผู้ใช้งาน">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-blue-600 transition-colors">
-                        <i class="fas fa-at text-sm"></i>
+        <!-- ฝั่งซ้าย: ฟอร์มเข้าสู่ระบบ (ย้ายมาซ้ายตามต้องการ) -->
+        <div class="w-full lg:w-5/12 flex items-center justify-center p-8 relative z-10 bg-slate-50">
+            <div class="w-full max-w-md fade-in-up">
+                
+                <!-- ส่วนหัว (Header) -->
+                <div class="flex flex-col items-center mb-10 relative">
+                    <!-- Icon อิงโทนสี Dashboard -->
+                    <div class="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-500 text-white rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-[0_10px_20px_rgb(139,92,246,0.3)] transform transition-transform hover:scale-110 hover:-rotate-3 duration-300">
+                        <i class="fas fa-fingerprint"></i>
                     </div>
+                    <h2 class="text-3xl font-bold text-slate-800 tracking-tight">เข้าสู่ระบบเจ้าหน้าที่</h2>
+                    <p class="text-slate-500 text-sm mt-2 text-center font-medium">คณะการบัญชีและการจัดการ (MBS)</p>
                 </div>
-            </div>
-            
-            <!-- ช่อง Password -->
-            <div>
-                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
-                <div class="relative group">
-                    <input type="password" id="password" name="password" class="peer w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-12 py-3.5 text-sm font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all" required placeholder="ระบุรหัสผ่าน">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-blue-600 transition-colors">
-                        <i class="fas fa-key text-sm"></i>
+                
+                <!-- ฟอร์มเข้าสู่ระบบ -->
+                <form action="auth.php" method="POST" class="space-y-6">
+                    
+                    <!-- ช่อง Username (แบบปุ่มลอย) -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Username</label>
+                        <div class="relative group">
+                            <!-- ดีไซน์กล่องลอยตัว (ไร้เส้นขอบ เน้นเงา) -->
+                            <input type="text" name="username" class="peer w-full bg-white border-0 shadow-[0_8px_20px_rgb(0,0,0,0.04)] rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgb(139,92,246,0.15)] outline-none transition-all" required placeholder="ระบุชื่อผู้ใช้งาน">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-purple-600 transition-colors">
+                                <i class="fas fa-at text-sm"></i>
+                            </div>
+                        </div>
                     </div>
-                    <!-- ปุ่มเปิดปิดตา -->
-                    <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-blue-600 focus:outline-none transition-colors" onclick="togglePassword()">
-                        <i id="eyeIcon" class="fas fa-eye text-sm"></i>
+                    
+                    <!-- ช่อง Password (แบบปุ่มลอย) -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
+                        <div class="relative group">
+                            <!-- ดีไซน์กล่องลอยตัว (ไร้เส้นขอบ เน้นเงา) -->
+                            <input type="password" id="password" name="password" class="peer w-full bg-white border-0 shadow-[0_8px_20px_rgb(0,0,0,0.04)] rounded-2xl pl-12 pr-12 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgb(139,92,246,0.15)] outline-none transition-all" required placeholder="ระบุรหัสผ่าน">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-purple-600 transition-colors">
+                                <i class="fas fa-key text-sm"></i>
+                            </div>
+                            <!-- ปุ่มเปิดปิดตา -->
+                            <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-purple-600 focus:outline-none transition-colors" onclick="togglePassword()">
+                                <i id="eyeIcon" class="fas fa-eye text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ปุ่ม Submit แบบ Gradient สีตรงกับ Dashboard -->
+                    <button type="submit" class="relative overflow-hidden w-full bg-gradient-to-r from-indigo-600 to-purple-500 text-white font-bold text-sm py-4 rounded-2xl shadow-[0_10px_20px_rgb(139,92,246,0.25)] transform transition-all hover:-translate-y-1 hover:shadow-[0_15px_25px_rgb(139,92,246,0.4)] active:scale-95 group mt-4">
+                        <span class="relative z-10 flex items-center justify-center gap-2">
+                            เข้าสู่ระบบ <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                        </span>
                     </button>
-                </div>
+                </form>
             </div>
+        </div>
 
-            <!-- ปุ่ม Submit -->
-            <button type="submit" class="relative overflow-hidden w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm py-4 rounded-2xl shadow-lg shadow-blue-500/30 transform transition-all hover:-translate-y-0.5 hover:shadow-blue-500/50 active:scale-95 group mt-2">
-                <span class="relative z-10 flex items-center justify-center gap-2">
-                    เข้าสู่ระบบ <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-                </span>
-            </button>
-        </form>
+        <!-- ฝั่งขวา: กราฟิกสีโทนเดียวกับ Dashboard (Indigo-Purple) -->
+        <div class="hidden lg:flex lg:w-7/12 relative overflow-hidden bg-gradient-to-br from-indigo-700 via-purple-600 to-indigo-900 items-center justify-center">
+            
+            <!-- วงกลมแสงลอยๆ ด้านหลัง -->
+            <div class="absolute inset-0 w-full h-full pointer-events-none">
+                <div class="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-white/20 to-transparent blur-3xl mix-blend-overlay animate-blob"></div>
+                <div class="absolute bottom-[-10%] left-[10%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-indigo-400/30 to-transparent blur-3xl mix-blend-overlay animate-blob animation-delay-2000"></div>
+            </div>
+            
+            <!-- การ์ด Glassmorphism ตกแต่งฝั่งขวาให้ไม่โล่ง -->
+            <div class="relative z-10 w-96 p-10 bg-white/10 backdrop-blur-xl border border-white/20 rounded-[3rem] shadow-2xl flex flex-col items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                <div class="w-24 h-24 bg-white rounded-[1.5rem] flex items-center justify-center mb-6 shadow-xl transform rotate-6">
+                    <span class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">MBS</span>
+                </div>
+                <h3 class="text-3xl font-bold text-white tracking-wide text-center">Repair System</h3>
+                <p class="text-indigo-100 mt-2 font-medium text-center">ระบบแจ้งซ่อมและบำรุงรักษา</p>
+            </div>
+            
+        </div>
     </div>
 
     <!-- Script สำหรับปุ่มแสดงรหัสผ่าน -->
