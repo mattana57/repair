@@ -10,7 +10,7 @@
     <style>
         body { font-family: 'Kanit', sans-serif; }
         
-        /* 🎨 Custom Animation สำหรับกราฟิกฝั่งขวา */
+        /* 🎨 Custom Animation สำหรับกราฟิกฝั่งซ้าย */
         @keyframes blob {
             0% { transform: translate(0px, 0px) scale(1); }
             33% { transform: translate(30px, -50px) scale(1.1); }
@@ -43,14 +43,34 @@
     <!-- เค้าโครงหลักแบบแบ่ง 2 ฝั่งเต็มหน้าจอ -->
     <div class="flex w-full min-h-screen">
         
-        <!-- ฝั่งซ้าย: ฟอร์มเข้าสู่ระบบ (ย้ายมาซ้ายตามต้องการ) -->
+        <!-- ฝั่งซ้าย: กราฟิกสีโทนเดียวกับ Dashboard (Indigo-Purple) -->
+        <div class="hidden lg:flex lg:w-7/12 relative overflow-hidden bg-gradient-to-br from-indigo-700 via-purple-600 to-indigo-900 items-center justify-center">
+            
+            <!-- วงกลมแสงลอยๆ ด้านหลัง -->
+            <div class="absolute inset-0 w-full h-full pointer-events-none">
+                <div class="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-white/20 to-transparent blur-3xl mix-blend-overlay animate-blob"></div>
+                <div class="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-indigo-400/30 to-transparent blur-3xl mix-blend-overlay animate-blob animation-delay-2000"></div>
+            </div>
+            
+            <!-- การ์ด Glassmorphism ตกแต่งฝั่งซ้ายให้ไม่โล่ง -->
+            <div class="relative z-10 w-96 p-10 bg-white/10 backdrop-blur-xl border border-white/20 rounded-[3rem] shadow-2xl flex flex-col items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                <div class="w-24 h-24 bg-white rounded-[1.5rem] flex items-center justify-center mb-6 shadow-xl transform rotate-6">
+                    <span class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">MBS</span>
+                </div>
+                <h3 class="text-3xl font-bold text-white tracking-wide text-center">Repair System</h3>
+                <p class="text-indigo-100 mt-2 font-medium text-center">ระบบแจ้งซ่อมและบำรุงรักษา</p>
+            </div>
+            
+        </div>
+
+        <!-- ฝั่งขวา: ฟอร์มเข้าสู่ระบบ (ย้ายมาขวาตามต้องการ) -->
         <div class="w-full lg:w-5/12 flex items-center justify-center p-8 relative z-10 bg-slate-50">
             <div class="w-full max-w-md fade-in-up">
                 
                 <!-- ส่วนหัว (Header) -->
                 <div class="flex flex-col items-center mb-10 relative">
                     <!-- Icon อิงโทนสี Dashboard -->
-                    <div class="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-500 text-white rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-[0_10px_20px_rgb(139,92,246,0.3)] transform transition-transform hover:scale-110 hover:-rotate-3 duration-300">
+                    <div class="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-500 text-white rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-[0_10px_20px_rgb(139,92,246,0.3)] transform transition-transform hover:scale-110 hover:rotate-3 duration-300">
                         <i class="fas fa-fingerprint"></i>
                     </div>
                     <h2 class="text-3xl font-bold text-slate-800 tracking-tight">เข้าสู่ระบบเจ้าหน้าที่</h2>
@@ -98,25 +118,6 @@
             </div>
         </div>
 
-        <!-- ฝั่งขวา: กราฟิกสีโทนเดียวกับ Dashboard (Indigo-Purple) -->
-        <div class="hidden lg:flex lg:w-7/12 relative overflow-hidden bg-gradient-to-br from-indigo-700 via-purple-600 to-indigo-900 items-center justify-center">
-            
-            <!-- วงกลมแสงลอยๆ ด้านหลัง -->
-            <div class="absolute inset-0 w-full h-full pointer-events-none">
-                <div class="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-white/20 to-transparent blur-3xl mix-blend-overlay animate-blob"></div>
-                <div class="absolute bottom-[-10%] left-[10%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-indigo-400/30 to-transparent blur-3xl mix-blend-overlay animate-blob animation-delay-2000"></div>
-            </div>
-            
-            <!-- การ์ด Glassmorphism ตกแต่งฝั่งขวาให้ไม่โล่ง -->
-            <div class="relative z-10 w-96 p-10 bg-white/10 backdrop-blur-xl border border-white/20 rounded-[3rem] shadow-2xl flex flex-col items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform duration-500">
-                <div class="w-24 h-24 bg-white rounded-[1.5rem] flex items-center justify-center mb-6 shadow-xl transform rotate-6">
-                    <span class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">MBS</span>
-                </div>
-                <h3 class="text-3xl font-bold text-white tracking-wide text-center">Repair System</h3>
-                <p class="text-indigo-100 mt-2 font-medium text-center">ระบบแจ้งซ่อมและบำรุงรักษา</p>
-            </div>
-            
-        </div>
     </div>
 
     <!-- Script สำหรับปุ่มแสดงรหัสผ่าน -->
