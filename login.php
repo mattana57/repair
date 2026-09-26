@@ -47,9 +47,10 @@
             </div>
         </div>
 
-        <!-- 👉 ฝั่งขวา: ฟอร์มเข้าสู่ระบบ (ปรับช่องกรอกและปุ่มเป็นแบบลอยมีมิติ 3D) -->
+        <!-- 👉 ฝั่งขวา: ฟอร์มเข้าสู่ระบบ -->
         <div class="w-full lg:w-1/2 flex justify-center items-center relative z-10 p-4 lg:p-6">
-            <div class="w-full max-w-[420px] bg-white rounded-[2rem] p-8 lg:p-10 shadow-2xl">
+            <!-- 🌟 ปรับปรุงกล่องขาวให้ลอยมีมิติ (เพิ่ม Shadow ที่เข้มขึ้น และ Transform ยกตัว) -->
+            <div class="w-full max-w-[420px] bg-white rounded-[2rem] p-8 lg:p-10 shadow-[0_30px_60px_rgba(0,0,0,0.4)] transform hover:-translate-y-2 transition-all duration-300">
                 
                 <!-- ส่วนหัว (Header) -->
                 <div class="flex flex-col items-center mb-8 relative">
@@ -63,7 +64,7 @@
                 <!-- ฟอร์มเข้าสู่ระบบ -->
                 <form action="auth.php" method="POST" class="space-y-6">
                     
-                    <!-- ช่อง Username (แบบปุ่มลอย 3D) -->
+                    <!-- ช่อง Username -->
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Username</label>
                         <div class="relative group">
@@ -74,7 +75,7 @@
                         </div>
                     </div>
                     
-                    <!-- ช่อง Password (แบบปุ่มลอย 3D) -->
+                    <!-- ช่อง Password -->
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
                         <div class="relative group">
@@ -89,7 +90,7 @@
                         </div>
                     </div>
 
-                    <!-- ปุ่ม Submit (แบบปุ่มลอย 3D) -->
+                    <!-- ปุ่ม Submit -->
                     <button type="submit" class="relative w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm py-4 rounded-2xl shadow-[0_10px_20px_rgba(139,92,246,0.25)] hover:shadow-[0_15px_25px_rgba(139,92,246,0.4)] transform transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 group mt-4">
                         <span>เข้าสู่ระบบ</span> <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                     </button>
