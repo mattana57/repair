@@ -233,13 +233,22 @@ $pageTitles = [
     'dash' => 'Dashboard Overview',
     'repairs' => 'All Repairs List'
 ];
+// ✨ ดึงข้อมูลชุดเต็มของช่างและแอดมินมาสร้าง Hash เพื่อให้ฝั่งผู้บริหารรับรู้การแก้ไขจากฝั่งแอดมินแบบเรียลไทม์ 100% ✨
+$all_techs_sync = [];
+$t_sync_q = $conn->query("SELECT id, full_name, english_name, department, position, phone, email, avatar_url, approval_status FROM technicians ORDER BY id ASC");
+if ($t_sync_q) { while($r = $t_sync_q->fetch_assoc()) $all_techs_sync[] = $r; }
+
+$all_users_sync = [];
+$u_sync_q = $conn->query("SELECT id, username, full_name, english_name, position, phone, email, department, role, avatar_url FROM users ORDER BY id ASC");
+if ($u_sync_q) { while($r = $u_sync_q->fetch_assoc()) $all_users_sync[] = $r; }
+
+$full_system_hash = md5(json_encode($reps) . json_encode($all_techs_sync) . json_encode($all_users_sync) . json_encode($line_users_map));
+
 // ✨ API เช็คอัปเดตแบบคลุมทุกตารางและ Modal 100% ✨
 if (isset($_GET['api_check_hash'])) {
     header('Content-Type: application/json; charset=utf-8');
-    // เช็คว่ามีข้อมูลใดๆ (ใบงาน, ช่าง, ผู้แจ้ง) ขยับหรือไม่
-    $data_hash = md5(json_encode($reps) . json_encode($tech_info_map) . json_encode($line_users_map));
     echo json_encode([
-        'hash' => $data_hash,
+        'hash' => $full_system_hash,
         'all_repairs' => $reps,
         'tech_dept_map' => $tech_dept_map,
         'tech_info_map' => $tech_info_map,
@@ -1087,13 +1096,14 @@ if (isset($_GET['api_check_hash'])) {
                             list($th_name, $en_name) = splitThaiEngName($row['full_name'], $row['english_name']);
 
                             $departments_data[$dept][] = [
-                                'th' => $th_name,
-                                'eng' => $en_name, 
-                                'pos' => !empty($row['position']) ? $row['position'] : getAutoPosition($th_name),
-                                'phone' => $row['phone'],
-                                'img' => $img,
-                                'raw_name' => $row['full_name']
-                            ];
+                            'th' => $th_name,
+                            'eng' => $en_name, 
+                            'pos' => !empty($row['position']) ? $row['position'] : getAutoPosition($th_name),
+                            'phone' => $row['phone'],
+                            'email' => $row['email'] ?? '',
+                            'img' => $img,
+                            'raw_name' => $row['full_name']
+                        ];
                         }
                     }
 
@@ -1190,8 +1200,8 @@ if (isset($_GET['api_check_hash'])) {
                                         
                                         <div class="mt-3 w-full pt-4 border-t border-slate-100 flex flex-col gap-2.5">
                                         <?php 
-                                        if ($phone !== '- ไม่ระบุเบอร์โทร -' && $phone !== '-'): 
-                                            $phone_parts = array_values(array_filter(array_map('trim', explode(',', $phone))));
+                                        if (!empty($tech['phone']) && $tech['phone'] !== '-'): 
+                                            $phone_parts = array_values(array_filter(array_map('trim', explode(',', $tech['phone']))));
                                             foreach($phone_parts as $p): ?>
                                                 <div class="flex items-center text-slate-600">
                                                     <div class="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center mr-3 shrink-0">
@@ -1206,6 +1216,15 @@ if (isset($_GET['api_check_hash'])) {
                                                     <i class="fas fa-phone-slash text-[10px] text-rose-500"></i>
                                                 </div>
                                                 <span class="text-[12px] font-bold text-rose-500">ไม่มีเบอร์ติดต่อ</span>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($tech['email']) && trim($tech['email']) !== '-' && trim($tech['email']) !== 'ไม่ระบุ'): ?>
+                                            <div class="flex items-center text-slate-600 min-w-0">
+                                                <div class="w-7 h-7 rounded-full bg-sky-50 flex items-center justify-center mr-3 shrink-0">
+                                                    <i class="fas fa-envelope text-[10px] text-sky-500"></i>
+                                                </div>
+                                                <span class="text-[12px] font-bold tracking-wide text-slate-600 truncate" title="<?php echo htmlspecialchars(trim($tech['email'])); ?>"><?php echo htmlspecialchars(trim($tech['email'])); ?></span>
                                             </div>
                                         <?php endif; ?>
                                         </div>
@@ -1881,6 +1900,7 @@ if (isset($_GET['api_check_hash'])) {
                 if (inputId === 'searchInput') btnId = 'clearSearchBtn';
                 else if (inputId === 'search-tech-table') btnId = 'clearTechTableBtn';
                 else if (inputId === 'search-tech-card') btnId = 'clearTechCardBtn';
+                else if (inputId === 'techSearchFilter') btnId = 'clearTechSearchBtn';
                 else if (inputId === 'searchHistoryInput') btnId = 'clearHistoryBtn';
                 else if (inputId === 'searchHistoryModalInput') btnId = 'clearHistoryModalBtn';
                 
@@ -2311,7 +2331,7 @@ if (isset($_GET['api_check_hash'])) {
             deptArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
 
             const getRatingColor = (score) => {
-                return '#fbbf24'; // ✨ ใช้สีเหลืองทองสีเดียวทุกแท่งกราฟ ✨
+                return '#10b981'; // ✨ สีเขียวมรกต ดูสมูทและเข้ากับชุดสีของระบบ ✨
             };
 
             const ctx = document.getElementById('mainRatingChart').getContext('2d');
@@ -3270,7 +3290,9 @@ if (isset($_GET['api_check_hash'])) {
         });
 
         // ✨ ระบบควบคุมการค้นหาและปุ่มกรองฝ่ายงานในหน้า Technician ✨
+        let currentExecDept = 'all';
         function filterByDept(dept, btn) {
+            currentExecDept = dept;
             // เปลี่ยนสีปุ่มที่ถูกเลือก
             const defaultStyle = "tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer";
             const activeStyle = "tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer";
@@ -3282,16 +3304,17 @@ if (isset($_GET['api_check_hash'])) {
                 btn.className = activeStyle;
             }
 
-            let searchFilter = document.getElementById('techSearchFilter').value.toLowerCase();
+            let searchInput = document.getElementById('techSearchFilter');
+            let searchFilter = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '').trim() : '';
             
-            document.querySelectorAll('.tech-dept-group').forEach(group => {
+            document.querySelectorAll('#techCardsContainer .tech-dept-section').forEach(group => {
                 let groupDept = group.getAttribute('data-dept');
                 let showGroup = false;
 
                 if(dept === 'all' || groupDept === dept) {
-                    let cards = group.querySelectorAll('.tech-card');
+                    let cards = group.querySelectorAll('.tech-card-item');
                     cards.forEach(card => {
-                        let searchData = card.getAttribute('data-search').toLowerCase();
+                        let searchData = (card.getAttribute('data-tech-name') || '').toLowerCase().replace(/\s+/g, '');
                         if(searchData.includes(searchFilter)) {
                             card.style.display = '';
                             showGroup = true;
@@ -3300,7 +3323,7 @@ if (isset($_GET['api_check_hash'])) {
                         }
                     });
                 } else {
-                    group.querySelectorAll('.tech-card').forEach(c => c.style.display = 'none');
+                    group.querySelectorAll('.tech-card-item').forEach(c => c.style.display = 'none');
                 }
 
                 group.style.display = showGroup ? '' : 'none';
@@ -3309,11 +3332,7 @@ if (isset($_GET['api_check_hash'])) {
 
         function filterTechCards() {
             let activeBtn = document.querySelector('.tech-filter-btn.bg-indigo-600');
-            let activeDept = 'all';
-            if(activeBtn && activeBtn.innerText.trim() !== 'ทั้งหมด') {
-                activeDept = activeBtn.innerText.trim();
-            }
-            filterByDept(activeDept, activeBtn);
+            filterByDept(currentExecDept, activeBtn);
         }
 
         // ✨ ระบบซ่อนแถบ Header อัตโนมัติเมื่อใช้นิ้วเลื่อนจอ (เฉพาะมือถือแนวตั้งและแนวนอน) ✨
@@ -3371,7 +3390,7 @@ if (isset($_GET['api_check_hash'])) {
         }
         
         // ✨ ระบบ Auto-Refresh ดึงข้อมูลและอัปเดตทุกตารางบนหน้าจอแบบเรียลไทม์ ✨
-        let globalDataHash = '<?php echo md5(json_encode($reps) . json_encode($tech_info_map) . json_encode($line_users_map)); ?>';
+        let globalDataHash = '<?php echo $full_system_hash; ?>';
 
         async function autoRefreshAllData() {
             try {

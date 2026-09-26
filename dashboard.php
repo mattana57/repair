@@ -667,13 +667,22 @@ $dept_icons = [
     'แม่บ้าน' => 'fas fa-broom'
 ];
 
+// ✨ ดึงข้อมูลชุดเต็มของช่างและแอดมินมาสร้าง Hash เพื่อให้ตรวจจับการแก้ไขเบอร์โทร/อีเมล/รูปภาพ แบบเรียลไทม์ 100% ✨
+$all_techs_sync = [];
+$t_sync_q = $conn->query("SELECT id, full_name, english_name, department, position, phone, email, avatar_url, approval_status, secret_code FROM technicians ORDER BY id ASC");
+if ($t_sync_q) { while($r = $t_sync_q->fetch_assoc()) $all_techs_sync[] = $r; }
+
+$all_users_sync = [];
+$u_sync_q = $conn->query("SELECT id, username, full_name, english_name, position, phone, email, department, role, avatar_url FROM users ORDER BY id ASC");
+if ($u_sync_q) { while($r = $u_sync_q->fetch_assoc()) $all_users_sync[] = $r; }
+
+$full_system_hash = md5(json_encode($reps) . json_encode($all_techs_sync) . json_encode($all_users_sync) . json_encode($line_users_map));
+
 // ✨ API เช็คอัปเดตแบบคลุมทุกตารางและ Modal 100% ✨
 if (isset($_GET['api_check_hash'])) {
     header('Content-Type: application/json; charset=utf-8');
-    // เช็คว่ามีข้อมูลใดๆ (ใบงาน, ช่าง, ผู้แจ้ง) ขยับหรือไม่
-    $data_hash = md5(json_encode($reps) . json_encode($tech_info_map) . json_encode($line_users_map));
     echo json_encode([
-        'hash' => $data_hash,
+        'hash' => $full_system_hash,
         'all_repairs' => $reps,
         'tech_dept_map' => $tech_dept_map,
         'tech_info_map' => $tech_info_map,
@@ -1858,6 +1867,7 @@ if (isset($_GET['api_check_hash'])) {
                             'eng' => $en_name, 
                             'pos' => !empty($row['position']) ? $row['position'] : getAutoPosition($th_name),
                             'phone' => $row['phone'],
+                            'email' => $row['email'] ?? '',
                             'img' => $img,
                             'raw_name' => $row['full_name']
                         ];
@@ -1879,7 +1889,9 @@ if (isset($_GET['api_check_hash'])) {
                     if ($pos_a == $pos_b) return strcmp($a, $b);
                     return $pos_a - $pos_b;
                 });
-
+                ?>
+                <div id="techCardsContainer">
+                <?php
                 if(empty($departments_data)) {
                     echo "<div class='modern-card p-12 text-center flex flex-col items-center justify-center'><i class='fas fa-user-slash text-4xl text-slate-300 mb-4'></i><p class='text-slate-500 font-bold'>ยังไม่มีช่างในระบบ หรือยังไม่มีช่างที่ผูกบัญชีสำเร็จ</p></div>";
                 }
@@ -1972,6 +1984,15 @@ if (isset($_GET['api_check_hash'])) {
                                         <span class="text-[12px] font-bold text-rose-500">ไม่มีเบอร์ติดต่อ</span>
                                     </div>
                                 <?php endif; ?>
+
+                                <?php if (!empty($tech['email']) && trim($tech['email']) !== '-' && trim($tech['email']) !== 'ไม่ระบุ'): ?>
+                                    <div class="flex items-center text-slate-600 min-w-0">
+                                        <div class="w-7 h-7 rounded-full bg-sky-50 flex items-center justify-center mr-3 shrink-0">
+                                            <i class="fas fa-envelope text-[10px] text-sky-500"></i>
+                                        </div>
+                                        <span class="text-[12px] font-bold tracking-wide text-slate-600 truncate" title="<?php echo htmlspecialchars(trim($tech['email'])); ?>"><?php echo htmlspecialchars(trim($tech['email'])); ?></span>
+                                    </div>
+                                <?php endif; ?>
                                 </div>
 
                                 <div class="mt-auto pt-4">
@@ -1988,6 +2009,7 @@ if (isset($_GET['api_check_hash'])) {
                     </div>
                 </div>
                 <?php endforeach; ?>
+                </div>
                 
                 <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-indigo-100 bg-indigo-50/30 text-center rounded-3xl">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
@@ -5864,7 +5886,7 @@ if (isset($_GET['api_check_hash'])) {
         }
         
         // ✨ ระบบ Auto-Refresh ดึงข้อมูลและอัปเดตทุกตารางบนหน้าจอแบบเรียลไทม์ ✨
-        let globalDataHash = '<?php echo md5(json_encode($reps) . json_encode($tech_info_map) . json_encode($line_users_map)); ?>';
+        let globalDataHash = '<?php echo $full_system_hash; ?>';
 
         async function autoRefreshAllData() {
             try {
