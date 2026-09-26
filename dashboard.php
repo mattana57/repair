@@ -4239,7 +4239,8 @@ if (isset($_GET['api_check_hash'])) {
             deptArr.sort((a, b) => b.avg - a.avg || b.count - a.count);
 
             const getRatingColor = (score) => {
-                return '#10b981'; // ✨ สีเขียวมรกต ดูสมูทและเข้ากับชุดสีของระบบ ✨
+                 
+                return '#84cc16'; 
             };
             
 
