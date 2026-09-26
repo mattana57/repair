@@ -961,9 +961,11 @@ if (isset($_GET['api_check_hash'])) {
                                         $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
                                         $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
 
-                                        $has_received = (!empty($row['received_at']) && $row['received_at'] != '0000-00-00 00:00:00');
-                                        $received_date = $has_received ? date('Y-m-d', strtotime($row['received_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $received_time = $has_received ? date('H:i', strtotime($row['received_at'])) : '';
+                                        // ✨ บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันทีในจังหวะเดียวกันเป๊ะ 100% ✨
+                                        $raw_rec = (!empty($row['received_at']) && $row['received_at'] != '0000-00-00 00:00:00' && $row['received_at'] != '-') ? $row['received_at'] : (($row['status'] !== 'รอรับเรื่อง') ? date('Y-m-d H:i:s') : '');
+                                        $has_received = !empty($raw_rec);
+                                        $received_date = $has_received ? date('Y-m-d', strtotime($raw_rec)) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $received_time = $has_received ? date('H:i', strtotime($raw_rec)) : '';
                                         $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
 
                                         $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
@@ -2663,10 +2665,13 @@ if (isset($_GET['api_check_hash'])) {
 
                     let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-rose-500 font-bold'>-</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
 
-                    // เวลาเข้างานและเสร็จงาน
-                    let has_received = (r.received_at && r.received_at != '0000-00-00 00:00:00');
-                    let received_date = has_received ? r.received_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    let received_time = has_received && r.received_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.received_at.split(' ')[1].substring(0, 5)}</div>` : '';
+                    // เวลาเข้างานและเสร็จงาน (บังคับขึ้นพร้อมสถานะทันที 100%)
+                    let dt = new Date();
+                    let nowStr = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0') + ' ' + String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0') + ':00';
+                    let raw_rec_js = (r.received_at && r.received_at != '0000-00-00 00:00:00' && r.received_at != '-') ? r.received_at : (r.status !== 'รอรับเรื่อง' ? nowStr : '');
+                    let has_received = (raw_rec_js !== '');
+                    let received_date = has_received ? raw_rec_js.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
+                    let received_time = has_received && raw_rec_js.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${raw_rec_js.split(' ')[1].substring(0, 5)}</div>` : '';
 
                     let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
                     let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
@@ -3452,7 +3457,7 @@ if (isset($_GET['api_check_hash'])) {
                 }
             } catch (err) {}
         }
-        setInterval(autoRefreshAllData, 3500);
+        setInterval(autoRefreshAllData, 1000);
         window.addEventListener('focus', autoRefreshAllData);
     </script>
 </body>
