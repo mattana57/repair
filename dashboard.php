@@ -4307,83 +4307,97 @@ if (isset($_GET['api_check_hash'])) {
                 type: 'bar', 
                 plugins: [{
                     id: 'custom_star_gradient',
+                    afterDatasetsDraw: (chart) => {
+                        // ✨ ทำงานเฉพาะมือถือแนวตั้งเท่านั้น เพื่อให้กล่องฟิลเตอร์สีดำ (Tooltip) ลอยทับชื่อช่างและชื่อฝ่ายงาน ✨
+                        const isMobilePortrait = (window.innerWidth < 640 && window.innerHeight > window.innerWidth);
+                        if (!isMobilePortrait) return;
+                        chart._drawCustomRatingLabels(chart);
+                    },
                     afterDraw: (chart) => {
-                        const ctx = chart.ctx;
-                        const yAxis = chart.scales.y;
-                        
-                        ctx.save();
-                        // ✨ 1. เปลี่ยนมาใช้จัดชิดซ้าย (Left-aligned) เพื่อให้ตัวหนังสือเกาะขอบซ้ายเป๊ะเหมือนในคอมโน้ตบุ๊ค
-                        ctx.textAlign = 'left'; 
-                        ctx.textBaseline = 'middle';
-                        
-                        yAxis.ticks.forEach((tick, index) => {
-                            const y = yAxis.getPixelForTick(index);
-                            const labelArray = chart.data.labels[index];
-                            if (!labelArray) return;
+                        // ✨ หน้าจออื่นๆ ทั้งหมด (คอม, iPad, มือถือแนวนอน) ทำงานเหมือนเดิม 100% ไม่กระทบส่วนอื่น ✨
+                        const isMobilePortrait = (window.innerWidth < 640 && window.innerHeight > window.innerWidth);
+                        if (isMobilePortrait) return;
+                        chart._drawCustomRatingLabels(chart);
+                    },
+                    beforeInit: (chart) => {
+                        chart._drawCustomRatingLabels = (chart) => {
+                            const ctx = chart.ctx;
+                            const yAxis = chart.scales.y;
                             
-                            if (Array.isArray(labelArray) && labelArray.length === 3) {
-                                const scoreStr = labelArray[0].trim();
-                                const scoreVal = parseFloat(scoreStr) || 0;
-                                const tName = labelArray[1];
-                                const dName = labelArray[2];
+                            ctx.save();
+                            // ✨ 1. เปลี่ยนมาใช้จัดชิดซ้าย (Left-aligned) เพื่อให้ตัวหนังสือเกาะขอบซ้ายเป๊ะเหมือนในคอมโน้ตบุ๊ค
+                            ctx.textAlign = 'left'; 
+                            ctx.textBaseline = 'middle';
+                            
+                            yAxis.ticks.forEach((tick, index) => {
+                                const y = yAxis.getPixelForTick(index);
+                                const labelArray = chart.data.labels[index];
+                                if (!labelArray) return;
                                 
-                                let isTablet = window.innerWidth <= 1366;
-                                let fSizeDept = isTablet ? 12 : 14;
-                                let fSizeTech = isTablet ? 11 : 13;
-                                let fSizeScore = isTablet ? 11 : 12;
-                                let fSizeStar = isTablet ? 11 : 13;
+                                if (Array.isArray(labelArray) && labelArray.length === 3) {
+                                    const scoreStr = labelArray[0].trim();
+                                    const scoreVal = parseFloat(scoreStr) || 0;
+                                    const tName = labelArray[1];
+                                    const dName = labelArray[2];
+                                    
+                                    let isTablet = window.innerWidth <= 1366;
+                                    let fSizeDept = isTablet ? 12 : 14;
+                                    let fSizeTech = isTablet ? 11 : 13;
+                                    let fSizeScore = isTablet ? 11 : 12;
+                                    let fSizeStar = isTablet ? 11 : 13;
 
-                                // ✨ 2. ล็อคพิกัดให้ตัวหนังสือเริ่มวาดที่ตำแหน่งคงที่เสมอ
-                                // การันตีว่าตัวหนังสือจะอยู่ริมซ้ายสวยงาม ไม่ลอยไปทับกราฟตรงกลางแน่นอน
-                                const textDrawX = 10; 
-                                
-                                const yOffsetTop = isTablet ? -18 : -16;
-                                const yOffsetBottom = isTablet ? 18 : 16;
+                                    // ✨ 2. ล็อคพิกัดให้ตัวหนังสือเริ่มวาดที่ตำแหน่งคงที่เสมอ
+                                    // การันตีว่าตัวหนังสือจะอยู่ริมซ้ายสวยงาม ไม่ลอยไปทับกราฟตรงกลางแน่นอน
+                                    const textDrawX = 10; 
+                                    
+                                    const yOffsetTop = isTablet ? -18 : -16;
+                                    const yOffsetBottom = isTablet ? 18 : 16;
 
-                                // วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
-                                ctx.font = `800 ${fSizeDept}px "Sarabun", sans-serif`;
-                                ctx.fillStyle = '#4f46e5';
-                                ctx.fillText(dName, textDrawX, y + yOffsetBottom);
+                                    // วาดชื่อฝ่ายงาน (บรรทัดล่าง) - สีน้ำเงิน
+                                    ctx.font = `800 ${fSizeDept}px "Sarabun", sans-serif`;
+                                    ctx.fillStyle = '#4f46e5';
+                                    ctx.fillText(dName, textDrawX, y + yOffsetBottom);
 
-                                // วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
-                                ctx.font = `bold ${fSizeTech}px "Sarabun", sans-serif`;
-                                ctx.fillStyle = '#475569';
-                                ctx.fillText(tName, textDrawX, y);
+                                    // วาดชื่อช่าง (บรรทัดกลาง) - สีเทาเข้ม
+                                    ctx.font = `bold ${fSizeTech}px "Sarabun", sans-serif`;
+                                    ctx.fillStyle = '#475569';
+                                    ctx.fillText(tName, textDrawX, y);
 
-                                // วาดดาว (บรรทัดบน)
-                                const textY = y + yOffsetTop; 
-                                ctx.font = `900 ${fSizeStar}px "Font Awesome 6 Free"`;
-                                const starIcon = '\uf005'; 
-                                const starWidth = ctx.measureText(starIcon).width;
-                                
-                                // ดาวพื้นหลัง (สีเทา)
-                                ctx.fillStyle = '#e2e8f0';
-                                ctx.fillText(starIcon, textDrawX, textY);
-                                
-                                // ดาวทับ (สีเหลือง ไล่ตาม %)
-                                if (scoreVal > 0) {
-                                    const fillPercent = scoreVal / 5.0;
-                                    ctx.save();
-                                    ctx.beginPath();
-                                    ctx.rect(textDrawX, textY - 10, starWidth * fillPercent, 20);
-                                    ctx.clip(); 
-                                    ctx.fillStyle = '#f59e0b'; 
+                                    // วาดดาว (บรรทัดบน)
+                                    const textY = y + yOffsetTop; 
+                                    ctx.font = `900 ${fSizeStar}px "Font Awesome 6 Free"`;
+                                    const starIcon = '\uf005'; 
+                                    const starWidth = ctx.measureText(starIcon).width;
+                                    
+                                    // ดาวพื้นหลัง (สีเทา)
+                                    ctx.fillStyle = '#e2e8f0';
                                     ctx.fillText(starIcon, textDrawX, textY);
-                                    ctx.restore();
+                                    
+                                    // ดาวทับ (สีเหลือง ไล่ตาม %)
+                                    if (scoreVal > 0) {
+                                        const fillPercent = scoreVal / 5.0;
+                                        ctx.save();
+                                        ctx.beginPath();
+                                        ctx.rect(textDrawX, textY - 10, starWidth * fillPercent, 20);
+                                        ctx.clip(); 
+                                        ctx.fillStyle = '#f59e0b'; 
+                                        ctx.fillText(starIcon, textDrawX, textY);
+                                        ctx.restore();
+                                    }
+                                    
+                                    // วาดคะแนนตัวเลข
+                                    ctx.font = `bold ${fSizeScore}px "Sarabun", sans-serif`;
+                                    ctx.fillStyle = '#64748b';
+                                    ctx.fillText(scoreStr, textDrawX + starWidth + 6, textY);
+                                    
+                                } else {
+                                    ctx.font = 'bold 13px "Sarabun", sans-serif';
+                                    ctx.fillStyle = '#475569';
+                                    ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, 10, y);
                                 }
-                                
-                                // วาดคะแนนตัวเลข
-                                ctx.font = `bold ${fSizeScore}px "Sarabun", sans-serif`;
-                                ctx.fillStyle = '#64748b';
-                                ctx.fillText(scoreStr, textDrawX + starWidth + 6, textY);
-                                
-                            } else {
-                                ctx.font = 'bold 13px "Sarabun", sans-serif';
-                                ctx.fillStyle = '#475569';
-                                ctx.fillText(Array.isArray(labelArray) ? labelArray.join(' ') : labelArray, 10, y);
-                            }
-                        });
-                        ctx.restore();
+                            });
+                            ctx.restore();
+                        };
                     }
                 }],
                 data: {
