@@ -2415,7 +2415,7 @@ if (isset($_GET['api_check_hash'])) {
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ENGLISH NAME <span class="text-slate-400 font-normal text-[10px]">(ไม่บังคับ)</span></label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ENGLISH NAME <span class="text-slate-400 font-normal normal-case">(ไม่บังคับ)</span></label>
                         <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
@@ -5005,7 +5005,7 @@ if (isset($_GET['api_check_hash'])) {
             const eyeIcon = document.getElementById('eyeIcon');
             pwdInput.value = ''; pwdInput.type = 'password'; 
             if(eyeIcon) { eyeIcon.classList.remove('fa-eye'); eyeIcon.classList.add('fa-eye-slash'); }
-            if(id === '') { if(isManagement) pwdInput.required = true; pwdHint.innerText = "(Required)"; } else { pwdInput.required = false; pwdHint.innerText = "(Leave blank to keep current)"; }
+            if(id === '') { if(isManagement) pwdInput.required = true; pwdHint.innerText = "(จำเป็นต้องกรอก)"; } else { pwdInput.required = false; pwdHint.innerText = "(เว้นว่างไว้หากไม่ต้องการเปลี่ยน)"; }
             
             document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
             setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
