@@ -2393,7 +2393,7 @@ if (isset($_GET['api_check_hash'])) {
                             <div class="relative">
                                 <input type="password" name="password" id="techAdmin_password" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="••••••••" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="••••••••">
                                 <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
-                                    <i id="eyeIcon" class="fas fa-eye"></i>
+                                    <i id="eyeIcon" class="fas fa-eye-slash"></i>
                                 </button>
                             </div>
                             <p id="err_techAdmin_password" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณากำหนดรหัสผ่าน (Password)</span></p>
@@ -4719,9 +4719,11 @@ if (isset($_GET['api_check_hash'])) {
             const input = document.getElementById(inputId);
             const icon = document.getElementById(iconId);
             if (input.type === 'password') {
-                input.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
+                // เปิดดูรหัส (เห็นตัวอักษร) -> แสดงรูปตาเปิด
+                input.type = 'text'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
             } else {
-                input.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
+                // ซ่อนรหัส (เป็นจุด ••••) -> แสดงรูปตาปิด
+                input.type = 'password'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
             }
         }
 
@@ -5002,7 +5004,7 @@ if (isset($_GET['api_check_hash'])) {
             const pwdHint = document.getElementById('pwdHint'); 
             const eyeIcon = document.getElementById('eyeIcon');
             pwdInput.value = ''; pwdInput.type = 'password'; 
-            if(eyeIcon) { eyeIcon.classList.remove('fa-eye-slash'); eyeIcon.classList.add('fa-eye'); }
+            if(eyeIcon) { eyeIcon.classList.remove('fa-eye'); eyeIcon.classList.add('fa-eye-slash'); }
             if(id === '') { if(isManagement) pwdInput.required = true; pwdHint.innerText = "(Required)"; } else { pwdInput.required = false; pwdHint.innerText = "(Leave blank to keep current)"; }
             
             document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
