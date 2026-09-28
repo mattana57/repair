@@ -373,21 +373,6 @@ if (isset($_GET['api_check_hash'])) {
                 white-space: normal !important;
                 max-width: 90px !important;
             }
-            /* 4. ตอนกดขยายเต็มจอ (.is-fullscreen) ให้กางระยะห่างและขนาดฟอนต์ออกเต็มที่ */
-            #repairsMainCard.is-fullscreen #repairsTable th {
-                padding: 1rem 0.65rem !important;
-                font-size: 11px !important;
-                letter-spacing: 0.04em !important;
-            }
-            #repairsMainCard.is-fullscreen #repairsTable td {
-                padding: 0.85rem 0.65rem !important;
-                font-size: 13px !important;
-            }
-            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(4),
-            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(4) > div.truncate,
-            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(8) {
-                max-width: 220px !important;
-            }
         }
 
         .swal2-container { z-index: 99999 !important; }
@@ -3621,6 +3606,7 @@ if (isset($_GET['api_check_hash'])) {
 
         if (mainHeaderEl && mainScrollEl) {
             mainScrollEl.addEventListener('scroll', () => {
+                // เช็คว่ากำลังเปิดบนมือถือ (ทั้งแนวตั้งและแนวนอน)
                 const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
                 if (isMobileScreen) {
                     mainHeaderEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -3629,8 +3615,6 @@ if (isset($_GET['api_check_hash'])) {
                     mainHeaderEl.style.transition = 'none';
                     mainScrollEl.style.transition = 'none';
                 }
-                // เช็คว่ากำลังเปิดบนมือถือ (ทั้งแนวตั้งและแนวนอน)
-                const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
                 
                 if (isMobileScreen) {
                     const currentScrollTop = mainScrollEl.scrollTop;
