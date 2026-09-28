@@ -789,15 +789,17 @@ if (isset($_GET['api_check_hash'])) {
             background-clip: padding-box !important;
         }
 
-        /* ✨ บังคับตาราง Repairs List ให้แสดงครบทุกคอลัมน์ในหน้าเดียว เลื่อนแค่บน-ล่าง และเห็นคำว่า ACTION ครบ 100% ✨ */
+        /* ✨ บังคับตาราง Repairs List, หน้า Team และ History Modal ให้แสดงครบทุกคอลัมน์ในหน้าเดียว เลื่อนแค่บน-ล่าง ✨ */
         @media (min-width: 1024px) {
-            #repairsTable {
+            #repairsTable,
+            #historyModal table {
                 width: 100% !important;
                 min-width: 0 !important;
                 table-layout: auto !important;
             }
             /* 1. ล็อกหัวตารางทุกช่อง ห้ามตัดคำตกบรรทัดเด็ดขาด */
-            #repairsTable th {
+            #repairsTable th,
+            #historyModal table th {
                 padding: 0.85rem 3px !important;
                 font-size: 9.5px !important;
                 letter-spacing: 0px !important;
@@ -805,30 +807,65 @@ if (isset($_GET['api_check_hash'])) {
                 word-break: keep-all !important;
             }
             #repairsTable th:first-child,
-            #repairsTable td:first-child {
+            #repairsTable td:first-child,
+            #historyModal table th:first-child,
+            #historyModal table td:first-child {
                 padding-left: 10px !important;
             }
             #repairsTable th:last-child,
-            #repairsTable td:last-child {
+            #repairsTable td:last-child,
+            #historyModal table th:last-child,
+            #historyModal table td:last-child {
                 padding-right: 10px !important;
             }
             /* 2. ล็อกข้อมูลในตารางไม่ให้ชื่อคนและตำแหน่งหักตกบรรทัด */
-            #repairsTable td {
+            #repairsTable td,
+            #historyModal table td {
                 padding: 0.75rem 3px !important;
                 font-size: 11.5px !important;
                 white-space: nowrap !important;
             }
             /* 3. บีบความกว้างช่องรายละเอียดอุปกรณ์ (ช่อง 4) และสาเหตุ (ช่อง 8) เล็กน้อยเพื่อดึงช่อง ACTION เข้ามาในจอ */
-            #repairsTable td:nth-child(4) {
+            #repairsTable td:nth-child(4),
+            #historyModal table td:nth-child(4) {
                 white-space: normal !important;
                 max-width: 115px !important;
             }
-            #repairsTable td:nth-child(4) > div.truncate {
+            #repairsTable td:nth-child(4) > div.truncate,
+            #historyModal table td:nth-child(4) > div.truncate {
                 max-width: 110px !important;
             }
-            #repairsTable td:nth-child(8) {
+            #repairsTable td:nth-child(8),
+            #historyModal table td:nth-child(8) {
                 white-space: normal !important;
                 max-width: 90px !important;
+            }
+
+            /* ✨ จัดการตารางในหน้า Team (Administrators & Technicians) ให้เห็นปุ่ม ACTION ครบ ไม่ต้องเลื่อนซ้าย-ขวา ✨ */
+            #technicians .overflow-x-auto,
+            #techniciansTableContainer,
+            #assets .overflow-x-auto,
+            #users .overflow-x-auto,
+            #historyModal .overflow-x-auto {
+                overflow-x: hidden !important;
+            }
+            #technicians table,
+            #assets table,
+            #users table {
+                width: 100% !important;
+                min-width: 0 !important;
+                table-layout: auto !important;
+            }
+            #techniciansTableContainer th,
+            #techniciansTableContainer td.px-6 {
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+            }
+            #techniciansTableContainer th:last-child {
+                padding-right: 1.5rem !important;
+            }
+            #techniciansTableContainer td:last-child {
+                padding-right: 1rem !important;
             }
         }
 
@@ -1726,8 +1763,8 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
                     
-                    <div id="techniciansTableContainer" class="w-full overflow-x-auto pb-4 custom-scrollbar">
-                        <table class="w-full text-left whitespace-nowrap min-w-[700px]">
+                    <div id="techniciansTableContainer" class="w-full overflow-x-auto lg:overflow-x-hidden pb-4 custom-scrollbar">
+                        <table class="w-full text-left whitespace-nowrap lg:min-w-0">
                             <tbody class="text-sm" id="techniciansTableBody">
                             <?php 
                             $techs_by_dept = [];
