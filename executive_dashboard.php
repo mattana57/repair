@@ -670,7 +670,7 @@ if (isset($_GET['api_check_hash'])) {
                                     <h3 class="font-extrabold text-slate-800 text-lg truncate">Customer Satisfaction</h3>
                                     <p class="text-sm font-medium text-slate-400 mt-0.5 truncate">คะแนนความพึงพอใจการให้บริการ</p>
                                     <!-- ✨ แสดงข้อความเฉพาะมือถือ ให้อยู่ใต้หัวข้อทันที ✨ -->
-                                    <p class="sm:hidden text-xs text-indigo-500 font-bold mt-2 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
+                                    <p class="sm:hidden text-xs text-indigo-500 font-bold mt-2 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวของเจ้าหน้าที่</p>
                                 </div>
                                 <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0 mt-2 sm:mt-0">
                                     <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
@@ -696,7 +696,7 @@ if (isset($_GET['api_check_hash'])) {
                                 </div>
                             </div>
                             <!-- ✨ แสดงข้อความนี้เฉพาะบน iPad/PC (ซ่อนในมือถือ) ✨ -->
-                            <p class="hidden sm:block text-[11px] md:text-[12px] text-indigo-500 font-bold mt-0.5 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
+                            <p class="hidden sm:block text-[11px] md:text-[12px] text-indigo-500 font-bold mt-0.5 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวของเจ้าหน้าที่</p>
                         </div>
                         <div class="flex items-center w-full mt-2 flex-1">
                             <div class="relative w-full h-[380px]">
@@ -1435,7 +1435,7 @@ if (isset($_GET['api_check_hash'])) {
                         <div class="flex gap-4 z-10 flex-1 min-w-0">
                             <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center text-2xl shrink-0 shadow-sm border border-amber-200 mt-1"><i class="fas fa-star"></i></div>
                             <div class="flex flex-col min-w-0 w-full">
-                                <p class="text-lg md:text-xl font-extrabold text-slate-800 sm:truncate leading-tight" id="techReviewsModalTitle">รีวิวของช่าง: ...</p>
+                                <p class="text-lg md:text-xl font-extrabold text-slate-800 sm:truncate leading-tight" id="techReviewsModalTitle">รีวิวของเจ้าหน้าที่: ...</p>
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center mt-1">
                                     <p class="text-[13px] font-bold text-indigo-600 truncate" id="techReviewsModalDept">ฝ่ายงาน...</p>
                                     <p class="text-[11px] font-medium text-slate-500 truncate sm:ml-1.5 mt-0.5 sm:mt-0" id="techReviewsModalPos">(...)</p>
@@ -2755,7 +2755,7 @@ if (isset($_GET['api_check_hash'])) {
             window.currentModalTech = techName;   // ✨ จำชื่อช่างที่กำลังดูรีวิวอยู่
             let thNameOnly = (techInfoMap[techName] && techInfoMap[techName].th) ? techInfoMap[techName].th : techName.split(' (')[0];
             // ✨ ใช้ innerHTML และ <span class="block sm:inline"> เพื่อดันชื่อช่างลงบรรทัดใหม่เฉพาะมือถือแนวตั้ง ✨
-            document.getElementById('techReviewsModalTitle').innerHTML = `รีวิวของช่าง: <span class="block sm:inline mt-0.5 sm:mt-0">${thNameOnly}</span>`;
+            document.getElementById('techReviewsModalTitle').innerHTML = `รีวิวของเจ้าหน้าที่: <span class="block sm:inline mt-0.5 sm:mt-0">${thNameOnly}</span>`;
 
             let posName = (techInfoMap[techName] && techInfoMap[techName].pos) ? techInfoMap[techName].pos : '';
             document.getElementById('techReviewsModalPos').innerText = posName && posName !== '-' ? '(' + posName + ')' : '(ไม่ระบุตำแหน่ง)';
