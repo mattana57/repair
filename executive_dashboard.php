@@ -332,6 +332,64 @@ if (isset($_GET['api_check_hash'])) {
             background-clip: padding-box !important;
         }
 
+        /* ✨ บังคับตาราง Repairs List ให้แสดงครบทุกคอลัมน์ในหน้าเดียว เลื่อนแค่บน-ล่าง และเห็นคำว่า ACTION ครบ 100% ✨ */
+        @media (min-width: 1024px) {
+            #repairsTable {
+                width: 100% !important;
+                min-width: 0 !important;
+                table-layout: auto !important;
+            }
+            /* 1. ล็อกหัวตารางทุกช่อง ห้ามตัดคำตกบรรทัดเด็ดขาด */
+            #repairsTable th {
+                padding: 0.85rem 3px !important;
+                font-size: 9.5px !important;
+                letter-spacing: 0px !important;
+                white-space: nowrap !important;
+                word-break: keep-all !important;
+            }
+            #repairsTable th:first-child,
+            #repairsTable td:first-child {
+                padding-left: 10px !important;
+            }
+            #repairsTable th:last-child,
+            #repairsTable td:last-child {
+                padding-right: 10px !important;
+            }
+            /* 2. ล็อกข้อมูลในตารางไม่ให้ชื่อคนและตำแหน่งหักตกบรรทัด */
+            #repairsTable td {
+                padding: 0.75rem 3px !important;
+                font-size: 11.5px !important;
+                white-space: nowrap !important;
+            }
+            /* 3. บีบความกว้างช่องรายละเอียดอุปกรณ์ (ช่อง 4) และสาเหตุ (ช่อง 8) เล็กน้อยเพื่อดึงช่อง ACTION เข้ามาในจอ */
+            #repairsTable td:nth-child(4) {
+                white-space: normal !important;
+                max-width: 115px !important;
+            }
+            #repairsTable td:nth-child(4) > div.truncate {
+                max-width: 110px !important;
+            }
+            #repairsTable td:nth-child(8) {
+                white-space: normal !important;
+                max-width: 90px !important;
+            }
+            /* 4. ตอนกดขยายเต็มจอ (.is-fullscreen) ให้กางระยะห่างและขนาดฟอนต์ออกเต็มที่ */
+            #repairsMainCard.is-fullscreen #repairsTable th {
+                padding: 1rem 0.65rem !important;
+                font-size: 11px !important;
+                letter-spacing: 0.04em !important;
+            }
+            #repairsMainCard.is-fullscreen #repairsTable td {
+                padding: 0.85rem 0.65rem !important;
+                font-size: 13px !important;
+            }
+            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(4),
+            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(4) > div.truncate,
+            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(8) {
+                max-width: 220px !important;
+            }
+        }
+
         .swal2-container { z-index: 99999 !important; }
         @media print { aside, header, .no-print { display: none !important; } }
     </style>
@@ -922,8 +980,8 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1" id="repairsTableContainer">
-                        <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
+                    <div class="overflow-x-auto lg:overflow-x-hidden w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1" id="repairsTableContainer">
+                        <table class="w-full text-left whitespace-nowrap lg:whitespace-normal lg:min-w-0" id="repairsTable">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-4">Date / Time</th>
