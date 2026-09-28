@@ -1082,7 +1082,7 @@ if (isset($_GET['api_check_hash'])) {
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
                         <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Technicians</h3>
-                        <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมเจ้าหน้าที่ผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
+                        <p class="text-sm font-medium text-slate-500 mt-1">รายชื่อทีมเจ้าหน้าที่ผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
                     <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:flex-1 lg:justify-end">
                         <div class="relative w-full sm:flex-1 lg:max-w-[400px] mb-2 sm:mb-0 group">
