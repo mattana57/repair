@@ -3404,13 +3404,19 @@ if (isset($_GET['api_check_hash'])) {
             });
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) สมูท 100% เหมือนหน้าต่างประวัติ ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) ซูมเข้า-ออกสมูท ไร้ดีเลย์และไม่กระตุก 100% ✨
         function toggleMaximizeRepairs() {
             const card = document.getElementById('repairsMainCard');
             const icon = document.getElementById('maximizeRepairsIcon');
             const tableContainer = document.getElementById('repairsTableContainer');
+            const scrollEl = document.getElementById('mainScrollContainer');
+            const sidebarEl = document.getElementById('sidebar');
+            const headerEl = document.querySelector('header.top-header');
             
             if (!card.classList.contains('is-fullscreen')) {
+                // ปลด transform ของ container หลักชั่วคราวเพื่อให้ position: fixed ทะลุเต็มจอได้โดยไม่ต้องย้าย DOM
+                if (scrollEl) scrollEl.style.transform = 'none';
+
                 const rect = card.getBoundingClientRect();
                 
                 let placeholder = document.getElementById('repairsPlaceholder');
@@ -3422,8 +3428,6 @@ if (isset($_GET['api_check_hash'])) {
                     placeholder.className = 'flex-1';
                     card.parentNode.insertBefore(placeholder, card);
                 }
-                
-                document.body.appendChild(card);
 
                 card.style.transition = 'none';
                 card.style.position = 'fixed';
@@ -3433,10 +3437,15 @@ if (isset($_GET['api_check_hash'])) {
                 card.style.height = rect.height + 'px';
                 card.style.zIndex = '9999';
                 card.style.margin = '0';
+                card.style.willChange = 'top, left, width, height, border-radius';
                 
-                void card.offsetWidth; 
+                if (sidebarEl) sidebarEl.style.zIndex = '10';
+                if (headerEl) headerEl.style.zIndex = '10';
+                if (tableContainer) tableContainer.classList.remove('max-h-[70vh]');
+
+                void card.offsetWidth;
                 
-                card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                card.style.transition = 'top 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), height 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
                 card.classList.add('is-fullscreen');
                 
                 card.style.top = '0px';
@@ -3445,7 +3454,6 @@ if (isset($_GET['api_check_hash'])) {
                 card.style.height = '100vh';
                 card.style.borderRadius = '0px';
                 
-                if (tableContainer) tableContainer.classList.remove('max-h-[70vh]');
                 icon.classList.remove('fa-expand');
                 icon.classList.add('fa-compress');
                 document.body.classList.add('overflow-hidden');
@@ -3458,10 +3466,9 @@ if (isset($_GET['api_check_hash'])) {
                     card.style.left = rect.left + 'px';
                     card.style.width = rect.width + 'px';
                     card.style.height = rect.height + 'px';
-                    card.style.borderRadius = '20px'; 
+                    card.style.borderRadius = '20px';
                 }
                 
-                if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
                 icon.classList.add('fa-expand');
                 icon.classList.remove('fa-compress');
                 document.body.classList.remove('overflow-hidden');
@@ -3477,15 +3484,17 @@ if (isset($_GET['api_check_hash'])) {
                         card.style.height = '';
                         card.style.zIndex = '';
                         card.style.margin = '';
-                        if (placeholder) {
-                            placeholder.parentNode.insertBefore(card, placeholder);
-                            placeholder.remove();
-                        }
+                        card.style.willChange = '';
+                        
+                        if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
+                        if (sidebarEl) sidebarEl.style.zIndex = '';
+                        if (headerEl) headerEl.style.zIndex = '';
+                        if (placeholder) placeholder.remove();
                         
                         void card.offsetWidth;
                         card.style.transition = '';
                     }
-                }, 300);
+                }, 250);
             }
         }
 

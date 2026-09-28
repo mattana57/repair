@@ -830,21 +830,6 @@ if (isset($_GET['api_check_hash'])) {
                 white-space: normal !important;
                 max-width: 90px !important;
             }
-            /* 4. ตอนกดขยายเต็มจอ (.is-fullscreen) ให้กางระยะห่างและขนาดฟอนต์ออกเต็มที่ */
-            #repairsMainCard.is-fullscreen #repairsTable th {
-                padding: 1rem 0.65rem !important;
-                font-size: 11px !important;
-                letter-spacing: 0.04em !important;
-            }
-            #repairsMainCard.is-fullscreen #repairsTable td {
-                padding: 0.85rem 0.65rem !important;
-                font-size: 13px !important;
-            }
-            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(4),
-            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(4) > div.truncate,
-            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(8) {
-                max-width: 220px !important;
-            }
         }
 
     </style>
@@ -5501,17 +5486,21 @@ if (isset($_GET['api_check_hash'])) {
             });
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) สมูท 100% เหมือนหน้าต่างประวัติ ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) ซูมเข้า-ออกสมูท ไร้ดีเลย์และไม่กระตุก 100% ✨
         function toggleMaximizeRepairs() {
             const card = document.getElementById('repairsMainCard');
             const icon = document.getElementById('maximizeRepairsIcon');
             const tableContainer = document.getElementById('repairsTableContainer');
+            const scrollEl = document.getElementById('mainScrollContainer');
+            const sidebarEl = document.getElementById('sidebar');
+            const headerEl = document.querySelector('header.top-header');
             
             if (!card.classList.contains('is-fullscreen')) {
-                // 1. จำตำแหน่งและขนาดปัจจุบันของการ์ด
+                // ปลด transform ของ container หลักชั่วคราวเพื่อให้ position: fixed ทะลุเต็มจอได้โดยไม่ต้องย้าย DOM
+                if (scrollEl) scrollEl.style.transform = 'none';
+
                 const rect = card.getBoundingClientRect();
                 
-                // 2. สร้างกล่องเปล่าๆ มาวางแทนที่ เพื่อไม่ให้หน้าเว็บกระตุกเวลาดึงการ์ดออกไป
                 let placeholder = document.getElementById('repairsPlaceholder');
                 if (!placeholder) {
                     placeholder = document.createElement('div');
@@ -5521,24 +5510,24 @@ if (isset($_GET['api_check_hash'])) {
                     placeholder.className = 'flex-1';
                     card.parentNode.insertBefore(placeholder, card);
                 }
-                
-                // ✨ 3. ดึงการ์ดออกมาอยู่ระดับสูงสุดของหน้าเว็บ เพื่อก้าวข้ามกรอบของ Sidebar และ Header 100% ✨
-                document.body.appendChild(card);
 
-                // ปลดการ์ดให้ลอย (Fixed) แต่อยู่ตำแหน่งเดิมเป๊ะๆ
                 card.style.transition = 'none';
                 card.style.position = 'fixed';
                 card.style.top = rect.top + 'px';
                 card.style.left = rect.left + 'px';
                 card.style.width = rect.width + 'px';
                 card.style.height = rect.height + 'px';
-                card.style.zIndex = '9999'; // ดัน Z-index ให้ทะลุปรุโปร่งปิดมิดทุกอย่าง
+                card.style.zIndex = '9999';
                 card.style.margin = '0';
+                card.style.willChange = 'top, left, width, height, border-radius';
                 
-                void card.offsetWidth; // บังคับให้เบราว์เซอร์รับรู้ตำแหน่งก่อน
+                if (sidebarEl) sidebarEl.style.zIndex = '10';
+                if (headerEl) headerEl.style.zIndex = '10';
+                if (tableContainer) tableContainer.classList.remove('max-h-[70vh]');
+
+                void card.offsetWidth;
                 
-                // 4. สั่งขยายเต็มจอ พร้อมแอนิเมชันความเร็วเดียวกับหน้าต่างประวัติ
-                card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                card.style.transition = 'top 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), height 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
                 card.classList.add('is-fullscreen');
                 
                 card.style.top = '0px';
@@ -5547,13 +5536,11 @@ if (isset($_GET['api_check_hash'])) {
                 card.style.height = '100vh';
                 card.style.borderRadius = '0px';
                 
-                if (tableContainer) tableContainer.classList.remove('max-h-[70vh]');
                 icon.classList.remove('fa-expand');
                 icon.classList.add('fa-compress');
                 document.body.classList.add('overflow-hidden');
                 
             } else {
-                // 1. สั่งให้หดกลับมาที่ขนาดและตำแหน่งเดิมเป๊ะๆ
                 const placeholder = document.getElementById('repairsPlaceholder');
                 if (placeholder) {
                     const rect = placeholder.getBoundingClientRect();
@@ -5561,16 +5548,14 @@ if (isset($_GET['api_check_hash'])) {
                     card.style.left = rect.left + 'px';
                     card.style.width = rect.width + 'px';
                     card.style.height = rect.height + 'px';
-                    card.style.borderRadius = '20px'; // ขอบมนเท่าเดิม
+                    card.style.borderRadius = '20px';
                 }
                 
-                if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
                 icon.classList.add('fa-expand');
                 icon.classList.remove('fa-compress');
                 document.body.classList.remove('overflow-hidden');
                 card.classList.remove('is-fullscreen');
                 
-                // 2. รอแอนิเมชันหดกลับเสร็จ แล้วเอาการ์ดกลับไปวางในโครงสร้างเดิม
                 setTimeout(() => {
                     if (!card.classList.contains('is-fullscreen')) {
                         card.style.transition = 'none';
@@ -5581,18 +5566,17 @@ if (isset($_GET['api_check_hash'])) {
                         card.style.height = '';
                         card.style.zIndex = '';
                         card.style.margin = '';
+                        card.style.willChange = '';
                         
-                        // ✨ เอาการ์ดสอดกลับไปแทนที่กล่องเปล่าให้แนบเนียน ✨
-                        if (placeholder) {
-                            placeholder.parentNode.insertBefore(card, placeholder);
-                            placeholder.remove();
-                        }
+                        if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
+                        if (sidebarEl) sidebarEl.style.zIndex = '';
+                        if (headerEl) headerEl.style.zIndex = '';
+                        if (placeholder) placeholder.remove();
                         
-                        // คืนค่า transition เดิม
                         void card.offsetWidth;
                         card.style.transition = '';
                     }
-                }, 300);
+                }, 250);
             }
         }
 
