@@ -1264,7 +1264,7 @@ if (isset($_GET['api_check_hash'])) {
                                 </div>
                             </div>
                             <!-- ✨ แสดงข้อความนี้เฉพาะบน iPad/PC (ซ่อนในมือถือ) ✨ -->
-                            <p class="hidden sm:block text-[11px] md:text-[12px] text-indigo-500 font-bold mt-0.5 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
+                            <p class="hidden sm:block text-[11px] md:text-[12px] text-indigo-500 font-bold mt-0.5 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวของเจ้าหน้าที่</p>
                         </div>
                         
                         <div class="flex items-center w-full mt-2 flex-1">
@@ -4797,7 +4797,7 @@ if (isset($_GET['api_check_hash'])) {
             window.currentModalTech = techName;   // ✨ จำชื่อช่างที่กำลังดูรีวิวอยู่
             let thNameOnly = (techInfoMap[techName] && techInfoMap[techName].th) ? techInfoMap[techName].th : techName.split(' (')[0];
             // ✨ ใช้ innerHTML และ <span class="block sm:inline"> เพื่อดันชื่อช่างลงบรรทัดใหม่เฉพาะมือถือแนวตั้ง ✨
-            document.getElementById('techReviewsModalTitle').innerHTML = `รีวิวของช่าง: <span class="block sm:inline mt-0.5 sm:mt-0">${thNameOnly}</span>`;
+            document.getElementById('techReviewsModalTitle').innerHTML = `รีวิวของเจ้าหน้าที่: <span class="block sm:inline mt-0.5 sm:mt-0">${thNameOnly}</span>`;
 
             let posName = (techInfoMap[techName] && techInfoMap[techName].pos) ? techInfoMap[techName].pos : '';
             document.getElementById('techReviewsModalPos').innerText = posName && posName !== '-' ? '(' + posName + ')' : '(ไม่ระบุตำแหน่ง)';
