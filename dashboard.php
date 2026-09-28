@@ -1993,8 +1993,8 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                         <h3 class="font-extrabold text-xl mb-2 text-rose-500">ไม่พบรายชื่อเจ้าหน้าที่ในระบบ</h3>
                         <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
-                            ไม่มีเจ้าหน้าที่ชื่อนี้อยู่ในระบบ ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
-                            <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นเจ้าหน้าที่ใหม่ ต้องทำการ <span onclick="openTechAdminModal('Technician')" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 hover:underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
+                            ไม่มีเจ้าหน้าที่ชื่อนี้อยู่ในระบบ ลองตรวจสอบตัวสะกด<br>ทั้งภาษาไทยและภาษาอังกฤษดูอีกครั้งนะครับ<br>
+                            <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นเจ้าหน้าที่ใหม่ ต้องทำการ <span onclick="openTechAdminModal('Technician')" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
                         </p>
                     </div>
                 </div>
@@ -2202,8 +2202,8 @@ if (isset($_GET['api_check_hash'])) {
                     <h3 class="font-extrabold text-xl mb-2"><span class="text-rose-500">ไม่พบรายชื่อเจ้าหน้าที่</span> <span class="text-emerald-500">(ที่ผูกบัญชีแล้ว)</span></h3>
                     <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
                         ไม่มีเจ้าหน้าที่ชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">เจ้าหน้าที่ท่านนี้ยังไม่ได้ทำการ <span class="text-emerald-500">"ผูกบัญชี LINE"</span></strong><br>
-                        ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
-                        <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นเจ้าหน้าที่ใหม่ ต้องไปที่หน้าเมนู <strong>"Team"</strong> เพื่อทำการ <span onclick="show('technicians'); setTimeout(() => openTechAdminModal('Technician'), 200);" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 hover:underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
+                        ลองตรวจสอบตัวสะกด<br>ทั้งภาษาไทยและภาษาอังกฤษดูอีกครั้งนะครับ<br>
+                        <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นเจ้าหน้าที่ใหม่ ต้องไปที่หน้าเมนู <strong>"Team"</strong> เพื่อทำการ <span onclick="show('technicians'); setTimeout(() => openTechAdminModal('Technician'), 200);" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
                     </p>
                 </div>
             </div>
