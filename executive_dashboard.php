@@ -1082,12 +1082,12 @@ if (isset($_GET['api_check_hash'])) {
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
                         <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Technicians</h3>
-                        <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
+                        <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมเจ้าหน้าที่ผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
                     <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:flex-1 lg:justify-end">
                         <div class="relative w-full sm:flex-1 lg:max-w-[400px] mb-2 sm:mb-0 group">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards(); toggleClearBtn('techSearchFilter', 'clearTechSearchBtn');" placeholder="ค้นหาช่าง..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-10 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards(); toggleClearBtn('techSearchFilter', 'clearTechSearchBtn');" placeholder="ค้นหาเจ้าหน้าที่..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-10 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             <button type="button" id="clearTechSearchBtn" onclick="clearSearchInput('techSearchFilter', filterTechCards)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                         </div>
 
@@ -1152,7 +1152,7 @@ if (isset($_GET['api_check_hash'])) {
                     });
 
                     if(empty($departments_data)) {
-                        echo "<div class='text-center p-10 bg-white rounded-2xl border border-slate-100 text-slate-500'>ไม่พบข้อมูลช่างในระบบ หรือยังไม่มีช่างที่ผูกบัญชีสำเร็จ</div>";
+                        echo "<div class='text-center p-10 bg-white rounded-2xl border border-slate-100 text-slate-500'>ไม่พบข้อมูลเจ้าหน้าที่ในระบบ หรือยังไม่มีเจ้าหน้าที่ที่ผูกบัญชีสำเร็จ</div>";
                     } else {
                         foreach ($departments_data as $dept_name => $techs):
                             $icon_class = $dept_icons[$dept_name] ?? 'fas fa-users';
@@ -1172,7 +1172,7 @@ if (isset($_GET['api_check_hash'])) {
                                             <?php echo $dept_name === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' ? "ฝ่ายงานบริการ<span class='block sm:inline landscape:inline'>เทคโนโลยีดิจิทัล</span>" : htmlspecialchars($dept_name); ?>
                                         </h3>
                                         <!-- ✨ ปรับฟอนต์ให้ใหญ่ขึ้นเพื่อความชัดเจน ✨ -->
-                                        <p class="text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                        <p class="text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมเจ้าหน้าที่ผู้รับผิดชอบประจำฝ่าย</p>
                                     </div>
                                 </div>
                                 
@@ -2309,7 +2309,7 @@ if (isset($_GET['api_check_hash'])) {
 
             let map = {};
             data.forEach(r => {
-                let tName = r.technician_name ? r.technician_name : 'ไม่ระบุช่าง';
+                let tName = r.technician_name ? r.technician_name : 'ไม่ระบุเจ้าหน้าที่';
                 map[tName] = (map[tName] || 0) + 1;
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
@@ -2429,7 +2429,7 @@ if (isset($_GET['api_check_hash'])) {
             data.forEach(r => {
                 let rating = parseFloat(r.rating);
                 if (!isNaN(rating) && rating > 0) {
-                    let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                    let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุเจ้าหน้าที่';
                     let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
                     if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
                         dName = 'ฝ่ายงาน' + dName;
@@ -2632,7 +2632,7 @@ if (isset($_GET['api_check_hash'])) {
                                 label: function(context) {
                                     let idx = context.dataIndex;
                                     if (!deptArr[idx]) return '';
-                                    return ` ช่าง ${deptArr[idx].topTech} (⭐ ${deptArr[idx].topTechAvg})`;
+                                    return ` เจ้าหน้าที่ ${deptArr[idx].topTech} (⭐ ${deptArr[idx].topTechAvg})`;
                                 },
                                 afterLabel: function(context) {
                                     let idx = context.dataIndex;
@@ -2690,7 +2690,7 @@ if (isset($_GET['api_check_hash'])) {
             });
 
             currentDeptReviewsData = data.filter(r => {
-                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุเจ้าหน้าที่';
                 return allTechsInDept.includes(tName);
             });
 
@@ -2698,7 +2698,7 @@ if (isset($_GET['api_check_hash'])) {
             allTechsInDept.forEach(tName => { techStats[tName] = { sum: 0, count: 0 }; });
 
             currentDeptReviewsData.forEach(r => {
-                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุเจ้าหน้าที่';
                 if(techStats[tName]) {
                     let rating = parseFloat(r.rating) || 0;
                     if(rating > 0) { 
@@ -2761,7 +2761,7 @@ if (isset($_GET['api_check_hash'])) {
             document.getElementById('techReviewsModalPos').innerText = posName && posName !== '-' ? '(' + posName + ')' : '(ไม่ระบุตำแหน่ง)';
 
             currentTechReviewsData = currentDeptReviewsData.filter(r => {
-                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุเจ้าหน้าที่';
                 let rRating = parseFloat(r.rating) || 0;
                 let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
                 return tName === techName && (rRating > 0 || hasComment);
@@ -2924,7 +2924,7 @@ if (isset($_GET['api_check_hash'])) {
             
             // ใช้ innerHTML และใช้ <span class="block sm:inline"> เพื่อให้ชื่อช่างและชื่อผู้แจ้งมาต่อท้ายคำว่า "ประวัติ..." ในมือถือแนวตั้งแบบสมบูรณ์
         document.querySelectorAll('[id="historyModalTitle"]').forEach(el => {
-            let prefix = type === 'technician' ? 'ประวัติงานช่าง:' : 'ประวัติการแจ้งซ่อม:';
+            let prefix = type === 'technician' ? 'ประวัติงานเจ้าหน้าที่:' : 'ประวัติการแจ้งซ่อม:';
             el.innerHTML = `${prefix} <span class="block sm:inline mt-0.5 sm:mt-0">${displayTitleName}</span>`;
         });
             
@@ -3051,8 +3051,8 @@ if (isset($_GET['api_check_hash'])) {
                     }
 
                     // ✨ สร้างตัวแปรดึงชื่อช่าง เพื่อเอาไปแสดงใต้คอมเมนต์ (นี่คือโค้ดที่หายไปครับ!) ✨
-                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
-                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
+                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุเจ้าหน้าที่';
+                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>เจ้าหน้าที่: ${tName}</div>`;
 
                     let imageIcon = (rev.image_path && String(rev.image_path).trim() !== '' && String(rev.image_path).trim() !== '-') 
                         ? "<i class='fas fa-image text-slate-400 ml-1.5' title='มีรูปภาพแนบ'></i>" 

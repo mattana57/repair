@@ -508,7 +508,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             if ($stmt) {
                 $stmt->bind_param("ssssssss", $full_name, $english_name, $position, $phone, $email, $department, $avatar_url, $secret_code);
                 if ($stmt->execute()) {
-                    $msg = "เพิ่มข้อมูลช่างสำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
+                    $msg = "เพิ่มข้อมูลเจ้าหน้าที่สำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
                     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg\", confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
                 } else {
                     $err = addslashes($stmt->error);
@@ -999,7 +999,7 @@ if (isset($_GET['api_check_hash'])) {
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-800">จัดการสิทธิ์ผู้ใช้งาน</p>
-                                    <p class="text-[10px] text-slate-400 font-medium">แอดมินและเจ้าหน้าที่ช่าง</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">แอดมินและเจ้าหน้าที่เจ้าหน้าที่</p>
                                 </div>
                             </div>
                             <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
@@ -1728,7 +1728,7 @@ if (isset($_GET['api_check_hash'])) {
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
                             <div class="relative w-full sm:w-64 md:w-72 lg:w-80 xl:w-[400px] mb-2 sm:mb-0 group">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="search-tech-table" oninput="searchTeamTable(); toggleClearBtn('search-tech-table', 'clearTechTableBtn');" placeholder="ค้นหาชื่อช่างทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="search-tech-table" oninput="searchTeamTable(); toggleClearBtn('search-tech-table', 'clearTechTableBtn');" placeholder="ค้นหาชื่อเจ้าหน้าที่ทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                                 <button type="button" id="clearTechTableBtn" onclick="clearSearchInput('search-tech-table', searchTeamTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
                             
@@ -1792,7 +1792,7 @@ if (isset($_GET['api_check_hash'])) {
                                                                 " . ($dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' ? "ฝ่ายงานบริการ<span class='block sm:inline landscape:inline'>เทคโนโลยีดิจิทัล</span>" : htmlspecialchars($dept)) . "
                                                             </h3>
                                                             <!-- ✨ ปรับฟอนต์ให้ใหญ่ขึ้นเพื่อความชัดเจน ✨ -->
-                                                            <p class='text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                                            <p class='text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider'>ทีมเจ้าหน้าที่ผู้รับผิดชอบประจำฝ่าย</p>
                                                         </div>
                                                     </div>
                                                     
@@ -1891,10 +1891,10 @@ if (isset($_GET['api_check_hash'])) {
                         <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-rose-50">
                             <i class="fas fa-user-times text-3xl text-rose-300"></i>
                         </div>
-                        <h3 class="font-extrabold text-xl mb-2 text-rose-500">ไม่พบรายชื่อช่างในระบบ</h3>
+                        <h3 class="font-extrabold text-xl mb-2 text-rose-500">ไม่พบรายชื่อเจ้าหน้าที่ในระบบ</h3>
                         <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
-                            ไม่มีช่างชื่อนี้อยู่ในระบบ ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
-                            <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องทำการ <span onclick="openTechAdminModal('Technician')" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 hover:underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
+                            ไม่มีเจ้าหน้าที่ชื่อนี้อยู่ในระบบ ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
+                            <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นเจ้าหน้าที่ใหม่ ต้องทำการ <span onclick="openTechAdminModal('Technician')" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 hover:underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
                         </p>
                     </div>
                 </div>
@@ -1908,13 +1908,13 @@ if (isset($_GET['api_check_hash'])) {
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                     <div>
                         <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Technicians</h3>
-                        <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมช่างผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
+                        <p class="text-sm font-medium text-slate-500 mt-1">ทำเนียบรายชื่อทีมเจ้าหน้าที่ผู้ดูแลระบบ (แยกตามฝ่ายงาน)</p>
                     </div>
                     <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
                         <!-- ช่องค้นหา -->
                         <div class="relative w-full sm:w-64 md:w-72 lg:w-80 xl:w-[400px] mb-2 sm:mb-0 group">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="search-tech-card" oninput="searchTechCards(); toggleClearBtn('search-tech-card', 'clearTechCardBtn');" placeholder="ค้นหาช่างที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            <input type="text" id="search-tech-card" oninput="searchTechCards(); toggleClearBtn('search-tech-card', 'clearTechCardBtn');" placeholder="ค้นหาเจ้าหน้าที่ที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             <button type="button" id="clearTechCardBtn" onclick="clearSearchInput('search-tech-card', searchTechCards)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                         </div>
 
@@ -1970,7 +1970,7 @@ if (isset($_GET['api_check_hash'])) {
                 <div id="techCardsContainer">
                 <?php
                 if(empty($departments_data)) {
-                    echo "<div class='modern-card p-12 text-center flex flex-col items-center justify-center'><i class='fas fa-user-slash text-4xl text-slate-300 mb-4'></i><p class='text-slate-500 font-bold'>ยังไม่มีช่างในระบบ หรือยังไม่มีช่างที่ผูกบัญชีสำเร็จ</p></div>";
+                    echo "<div class='modern-card p-12 text-center flex flex-col items-center justify-center'><i class='fas fa-user-slash text-4xl text-slate-300 mb-4'></i><p class='text-slate-500 font-bold'>ยังไม่มีเจ้าหน้าที่ในระบบ หรือยังไม่มีเจ้าหน้าที่ที่ผูกบัญชีสำเร็จ</p></div>";
                 }
 
                 foreach ($departments_data as $dept_name => $techs):
@@ -1991,7 +1991,7 @@ if (isset($_GET['api_check_hash'])) {
                                     <?php echo $dept_name === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' ? "ฝ่ายงานบริการ<span class='block sm:inline landscape:inline'>เทคโนโลยีดิจิทัล</span>" : htmlspecialchars($dept_name); ?>
                                 </h3>
                                 <!-- ✨ ปรับฟอนต์ให้ใหญ่ขึ้นเพื่อความชัดเจน ✨ -->
-                                <p class="text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                <p class="text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider">ทีมเจ้าหน้าที่ผู้รับผิดชอบประจำฝ่าย</p>
                             </div>
                         </div>
                         
@@ -2099,11 +2099,11 @@ if (isset($_GET['api_check_hash'])) {
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
                         <i class="fas fa-user-lock text-3xl text-indigo-300"></i>
                     </div>
-                    <h3 class="font-extrabold text-xl mb-2"><span class="text-rose-500">ไม่พบรายชื่อช่าง</span> <span class="text-emerald-500">(ที่ผูกบัญชีแล้ว)</span></h3>
+                    <h3 class="font-extrabold text-xl mb-2"><span class="text-rose-500">ไม่พบรายชื่อเจ้าหน้าที่</span> <span class="text-emerald-500">(ที่ผูกบัญชีแล้ว)</span></h3>
                     <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
-                        ไม่มีช่างชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">ช่างท่านนี้ยังไม่ได้ทำการ <span class="text-emerald-500">"ผูกบัญชี LINE"</span></strong><br>
+                        ไม่มีเจ้าหน้าที่ชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">เจ้าหน้าที่ท่านนี้ยังไม่ได้ทำการ <span class="text-emerald-500">"ผูกบัญชี LINE"</span></strong><br>
                         ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>ดูอีกครั้งนะครับ<br>
-                        <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นช่างใหม่ ต้องไปที่หน้าเมนู <strong>"Team"</strong> เพื่อทำการ <span onclick="show('technicians'); setTimeout(() => openTechAdminModal('Technician'), 200);" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 hover:underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
+                        <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นเจ้าหน้าที่ใหม่ ต้องไปที่หน้าเมนู <strong>"Team"</strong> เพื่อทำการ <span onclick="show('technicians'); setTimeout(() => openTechAdminModal('Technician'), 200);" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 hover:underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
                     </p>
                 </div>
             </div>
@@ -2275,7 +2275,7 @@ if (isset($_GET['api_check_hash'])) {
                         <div class="relative w-full md:w-[450px]" id="reportDropdownContainer">
                             <div class="flex items-center w-full bg-white border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100 transition-all cursor-text shadow-sm" onclick="toggleReportDropdown(event, true)">
                                 <i class="fas fa-search text-slate-400 pl-4"></i>
-                                <input type="text" id="reportSearchInput" oninput="filterReportDropdown()" onfocus="focusReportSearch(event)" onblur="blurReportSearch(event)" autocomplete="off" class="w-full bg-transparent px-3 py-3 text-sm text-slate-700 focus:outline-none font-bold placeholder-slate-400" placeholder="พิมพ์ค้นหาชื่อช่าง, แผนก...">
+                                <input type="text" id="reportSearchInput" oninput="filterReportDropdown()" onfocus="focusReportSearch(event)" onblur="blurReportSearch(event)" autocomplete="off" class="w-full bg-transparent px-3 py-3 text-sm text-slate-700 focus:outline-none font-bold placeholder-slate-400" placeholder="พิมพ์ค้นหาชื่อเจ้าหน้าที่, แผนก...">
                                 <button type="button" class="px-4 py-3 text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="toggleReportDropdown(event)">
                                     <i class="fas fa-caret-down text-lg"></i>
                                 </button>
@@ -2928,8 +2928,8 @@ if (isset($_GET['api_check_hash'])) {
                         date_str = timeAgoJS(rev.completed_at);
                     }
 
-                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุช่าง';
-                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>ช่าง: ${tName}</div>`;
+                    let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุเจ้าหน้าที่';
+                    let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>เจ้าหน้าที่: ${tName}</div>`;
 
                     let imageIcon = (rev.image_path && String(rev.image_path).trim() !== '' && String(rev.image_path).trim() !== '-') 
                         ? "<i class='fas fa-image text-slate-400 ml-1.5' title='มีรูปภาพแนบ'></i>" 
@@ -3980,8 +3980,8 @@ if (isset($_GET['api_check_hash'])) {
             if (openModal === 'historyModal') {
                 const titleStr = sessionStorage.getItem('historyModalTitle');
                 if (titleStr) {
-                    let fullName = titleStr.replace('ประวัติงานช่าง: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
-                    let type = titleStr.includes('ช่าง') ? 'technician' : 'reporter';
+                    let fullName = titleStr.replace('ประวัติงานเจ้าหน้าที่: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
+                    let type = titleStr.includes('เจ้าหน้าที่') ? 'technician' : 'reporter';
                     viewHistory(fullName, type);
                     
                     setTimeout(() => {
@@ -4299,7 +4299,7 @@ if (isset($_GET['api_check_hash'])) {
 
             let map = {};
             data.forEach(r => {
-                let tName = r.technician_name ? r.technician_name : 'ไม่ระบุช่าง';
+                let tName = r.technician_name ? r.technician_name : 'ไม่ระบุเจ้าหน้าที่';
                 map[tName] = (map[tName] || 0) + 1;
             });
             let sorted = Object.keys(map).map(k => ({ name: k, count: map[k] })).sort((a,b) => b.count - a.count).slice(0, 5);
@@ -4420,7 +4420,7 @@ if (isset($_GET['api_check_hash'])) {
             data.forEach(r => {
                 let rating = parseFloat(r.rating);
                 if (!isNaN(rating) && rating > 0) {
-                    let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                    let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุเจ้าหน้าที่';
                     
                     let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
                     if (dName !== 'ไม่มีสังกัด' && !dName.startsWith('ฝ่ายงาน') && dName !== 'แม่บ้าน' && dName !== 'อื่นๆ') {
@@ -4630,7 +4630,7 @@ if (isset($_GET['api_check_hash'])) {
                                 label: function(context) {
                                     let idx = context.dataIndex;
                                     if (!deptArr[idx]) return '';
-                                    return ` ช่าง ${deptArr[idx].topTech} (⭐ ${deptArr[idx].topTechAvg})`;
+                                    return ` เจ้าหน้าที่ ${deptArr[idx].topTech} (⭐ ${deptArr[idx].topTechAvg})`;
                                 },
                                 afterLabel: function(context) {
                                     let idx = context.dataIndex;
@@ -4723,7 +4723,7 @@ if (isset($_GET['api_check_hash'])) {
             });
 
             currentDeptReviewsData = data.filter(r => {
-                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุเจ้าหน้าที่';
                 return allTechsInDept.includes(tName);
             });
 
@@ -4731,7 +4731,7 @@ if (isset($_GET['api_check_hash'])) {
             allTechsInDept.forEach(tName => { techStats[tName] = { sum: 0, count: 0 }; });
 
             currentDeptReviewsData.forEach(r => {
-                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่เจ้าหน้าที่';
                 if(techStats[tName]) {
                     let rating = parseFloat(r.rating) || 0;
                     if(rating > 0) { 
@@ -4803,7 +4803,7 @@ if (isset($_GET['api_check_hash'])) {
             document.getElementById('techReviewsModalPos').innerText = posName && posName !== '-' ? '(' + posName + ')' : '(ไม่ระบุตำแหน่ง)';
 
             currentTechReviewsData = currentDeptReviewsData.filter(r => {
-                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุช่าง';
+                let tName = r.technician_name && r.technician_name !== '-' ? r.technician_name : 'ไม่ระบุเจ้าหน้าที่';
                 let rRating = parseFloat(r.rating) || 0;
                 let hasComment = r.review_comment && r.review_comment.trim() !== '' && r.review_comment.trim() !== '-';
                 return tName === techName && (rRating > 0 || hasComment);
@@ -5393,7 +5393,7 @@ if (isset($_GET['api_check_hash'])) {
             
             // ใช้ querySelectorAll ป้องกันบั๊กเวลามี ID ซ้ำ
             document.querySelectorAll('[id="historyModalTitle"]').forEach(el => {
-                let prefix = type === 'technician' ? 'ประวัติงานช่าง:' : 'ประวัติการแจ้งซ่อม:';
+                let prefix = type === 'technician' ? 'ประวัติงานเจ้าหน้าที่:' : 'ประวัติการแจ้งซ่อม:';
                 // ✨ แทรก <span class="block sm:inline"> เพื่อบังคับให้ชื่อถูกปัดลงบรรทัดใหม่เฉพาะในมือถือแนวตั้ง ✨
                 el.innerHTML = `${prefix} <span class="block sm:inline mt-0.5 sm:mt-0">${displayTitleName}</span>`;
             });
@@ -5484,7 +5484,7 @@ if (isset($_GET['api_check_hash'])) {
                         const linkBtn = wrapper.querySelector('[id="historyModalLinkBtn"]');
                         const isLinkBtnHidden = !linkBtn || linkBtn.style.display === 'none';
 
-                        if (titleText.includes('ประวัติงานช่าง') || isLinkBtnHidden) {
+                        if (titleText.includes('ประวัติงานเจ้าหน้าที่') || isLinkBtnHidden) {
                             filterGroup.classList.remove('hidden'); filterGroup.classList.add('flex');
                         } else {
                             filterGroup.classList.add('hidden'); filterGroup.classList.remove('flex');
@@ -5653,7 +5653,7 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         function confirmUnlink(id) {
-            Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "ช่างจะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
+            Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "เจ้าหน้าที่จะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
                 if(r.isConfirmed) {
                     let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
                     window.location.href = '?unlink_tech=' + id + '&tab=' + t; 
