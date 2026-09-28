@@ -841,7 +841,7 @@ if (isset($_GET['api_check_hash'])) {
                 max-width: 90px !important;
             }
 
-            /* ✨ จัดการตารางในหน้า Team (Administrators & Technicians) ให้เห็นปุ่ม ACTION ครบ ไม่ต้องเลื่อนซ้าย-ขวา ✨ */
+            /* ✨ จัดการตารางในหน้า Team (Administrators & Technicians) ให้แถบชื่อฝ่ายงานและตารางกว้างเท่ากับ Administrators เป๊ะ 100% ✨ */
             #technicians .overflow-x-auto,
             #techniciansTableContainer,
             #assets .overflow-x-auto,
@@ -856,16 +856,21 @@ if (isset($_GET['api_check_hash'])) {
                 min-width: 0 !important;
                 table-layout: auto !important;
             }
-            #techniciansTableContainer th,
-            #techniciansTableContainer td.px-6 {
-                padding-left: 0.75rem !important;
-                padding-right: 0.75rem !important;
+            #techniciansTableContainer .tech-dept-header td {
+                padding: 0 !important;
             }
-            #techniciansTableContainer th:last-child {
-                padding-right: 1.5rem !important;
-            }
-            #techniciansTableContainer td:last-child {
+            #techniciansTableContainer .tech-col-header th,
+            #techniciansTableContainer .tech-dept-row td {
+                padding-left: 1rem !important;
                 padding-right: 1rem !important;
+            }
+            #techniciansTableContainer .tech-col-header th:first-child,
+            #techniciansTableContainer .tech-dept-row td:first-child {
+                padding-left: 1.5rem !important;
+            }
+            #techniciansTableContainer .tech-col-header th:last-child,
+            #techniciansTableContainer .tech-dept-row td:last-child {
+                padding-right: 1.5rem !important;
             }
         }
 
