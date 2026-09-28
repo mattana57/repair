@@ -789,39 +789,54 @@ if (isset($_GET['api_check_hash'])) {
             background-clip: padding-box !important;
         }
 
-        /* ✨ บังคับตาราง Repairs List ให้แสดงครบทุกคอลัมน์ในหน้าเดียว เลื่อนแค่บน-ล่าง ไม่ต้องเลื่อนซ้าย-ขวา ✨ */
+        /* ✨ บังคับตาราง Repairs List ให้แสดงครบทุกคอลัมน์ในหน้าเดียว เลื่อนแค่บน-ล่าง และไม่ให้ตัวอักษรหักตกบรรทัด ✨ */
         @media (min-width: 1024px) {
             #repairsTable {
                 width: 100% !important;
                 min-width: 0 !important;
                 table-layout: auto !important;
-                white-space: normal !important;
             }
-            #repairsTable th,
-            #repairsTable td {
-                padding-left: 0.5rem !important;
-                padding-right: 0.5rem !important;
-                padding-top: 0.75rem !important;
-                padding-bottom: 0.75rem !important;
-                white-space: normal !important;
-                word-break: break-word !important;
-            }
+            /* 1. ล็อกหัวตารางทุกช่อง ห้ามตัดคำตกบรรทัดเด็ดขาด */
             #repairsTable th {
-                font-size: 10.5px !important;
-                letter-spacing: 0.03em !important;
-                line-height: 1.25 !important;
-            }
-            #repairsTable td {
-                font-size: 12.5px !important;
-            }
-            /* ล็อกคอลัมน์วันที่ เลขใบงาน และสถานะ ไม่ให้ตัวหนังสือหักกลางคำ */
-            #repairsTable td:nth-child(1),
-            #repairsTable td:nth-child(2),
-            #repairsTable td:nth-child(7),
-            #repairsTable td:nth-child(9),
-            #repairsTable td:nth-child(10),
-            #repairsTable td:nth-child(11) {
+                padding: 0.85rem 5px !important;
+                font-size: 10px !important;
+                letter-spacing: 0.02em !important;
                 white-space: nowrap !important;
+                word-break: keep-all !important;
+            }
+            #repairsTable th:first-child,
+            #repairsTable td:first-child {
+                padding-left: 1rem !important;
+            }
+            #repairsTable th:last-child,
+            #repairsTable td:last-child {
+                padding-right: 1rem !important;
+            }
+            /* 2. ล็อกข้อมูลในตารางไม่ให้ชื่อคนและตำแหน่งหักตกบรรทัด */
+            #repairsTable td {
+                padding: 0.75rem 5px !important;
+                font-size: 12px !important;
+                white-space: nowrap !important;
+            }
+            /* 3. อนุญาตให้เฉพาะช่องรายละเอียดอุปกรณ์ (ช่อง 4) และสาเหตุ (ช่อง 8) ตัดคำได้ถ้ายาวเกิน */
+            #repairsTable td:nth-child(4),
+            #repairsTable td:nth-child(8) {
+                white-space: normal !important;
+                max-width: 140px !important;
+            }
+            /* 4. ตอนกดขยายเต็มจอ (.is-fullscreen) ให้กางระยะห่างและขนาดฟอนต์ออกเต็มที่เหมือนรูปที่ 1 */
+            #repairsMainCard.is-fullscreen #repairsTable th {
+                padding: 1rem 0.65rem !important;
+                font-size: 11px !important;
+                letter-spacing: 0.04em !important;
+            }
+            #repairsMainCard.is-fullscreen #repairsTable td {
+                padding: 0.85rem 0.65rem !important;
+                font-size: 13px !important;
+            }
+            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(4),
+            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(8) {
+                max-width: 220px !important;
             }
         }
 
