@@ -841,6 +841,43 @@ if (isset($_GET['api_check_hash'])) {
                 max-width: 90px !important;
             }
 
+            /* ✨ จัดตารางใน History Modal (เฉพาะก่อนกดเต็มจอ) ให้เห็นครบทุกคอลัมน์ถึง ACTION 100% ✨ */
+            #historyModal .modal-container:not(.max-w-full) {
+                max-width: 96vw !important;
+                width: 1280px !important;
+            }
+            #historyModal .modal-container:not(.max-w-full) > div:last-child {
+                padding: 0.75rem 1rem !important;
+            }
+            #historyModal .modal-container:not(.max-w-full) table th {
+                padding: 0.8rem 2px !important;
+                font-size: 9px !important;
+                letter-spacing: 0px !important;
+            }
+            #historyModal .modal-container:not(.max-w-full) table td {
+                padding: 0.7rem 2px !important;
+                font-size: 11px !important;
+            }
+            #historyModal .modal-container:not(.max-w-full) table th:first-child,
+            #historyModal .modal-container:not(.max-w-full) table td:first-child {
+                padding-left: 8px !important;
+            }
+            #historyModal .modal-container:not(.max-w-full) table th:last-child,
+            #historyModal .modal-container:not(.max-w-full) table td:last-child {
+                padding-right: 8px !important;
+            }
+            /* ซ่อนวงกลมไอคอนคนในช่อง Reporter เฉพาะตอนก่อนกดเต็มจอ เพื่อให้เหมือนตาราง Repairs List และไม่ดันคอลัมน์ขวาตกขอบ */
+            #historyModal .modal-container:not(.max-w-full) table td:nth-child(3) .w-8.h-8 {
+                display: none !important;
+            }
+            #historyModal .modal-container:not(.max-w-full) table td:nth-child(4),
+            #historyModal .modal-container:not(.max-w-full) table td:nth-child(4) > div.truncate {
+                max-width: 100px !important;
+            }
+            #historyModal .modal-container:not(.max-w-full) table td:nth-child(8) {
+                max-width: 80px !important;
+            }
+
             /* ✨ จัดการตารางในหน้า Team (Administrators & Technicians) ให้แถบชื่อฝ่ายงานและตารางกว้างเท่ากับ Administrators เป๊ะ ไม่ล้นขอบ 100% ✨ */
             #technicians .overflow-x-auto,
             #techniciansTableContainer,
