@@ -841,37 +841,61 @@ if (isset($_GET['api_check_hash'])) {
                 max-width: 90px !important;
             }
 
-            /* ✨ จัดการตารางในหน้า Team (Administrators & Technicians) ให้แถบชื่อฝ่ายงานและตารางกว้างเท่ากับ Administrators เป๊ะ 100% ✨ */
+            /* ✨ จัดการตารางในหน้า Team (Administrators & Technicians) ให้แถบชื่อฝ่ายงานและตารางกว้างเท่ากับ Administrators เป๊ะ 100% ห้ามล้นขอบเด็ดขาด ✨ */
             #technicians .overflow-x-auto,
             #techniciansTableContainer,
             #assets .overflow-x-auto,
             #users .overflow-x-auto,
             #historyModal .overflow-x-auto {
                 overflow-x: hidden !important;
+                width: 100% !important;
+                max-width: 100% !important;
             }
             #technicians table,
             #assets table,
             #users table {
                 width: 100% !important;
+                max-width: 100% !important;
                 min-width: 0 !important;
-                table-layout: auto !important;
+                table-layout: fixed !important;
             }
+            /* ล็อกสัดส่วนคอลัมน์ตาราง Administrators (6 คอลัมน์) */
+            #technicians .modern-card table th:nth-child(1), #technicians .modern-card table td:nth-child(1) { width: 12% !important; }
+            #technicians .modern-card table th:nth-child(2), #technicians .modern-card table td:nth-child(2) { width: 26% !important; }
+            #technicians .modern-card table th:nth-child(3), #technicians .modern-card table td:nth-child(3) { width: 16% !important; }
+            #technicians .modern-card table th:nth-child(4), #technicians .modern-card table td:nth-child(4) { width: 22% !important; }
+            #technicians .modern-card table th:nth-child(5), #technicians .modern-card table td:nth-child(5) { width: 12% !important; }
+            #technicians .modern-card table th:nth-child(6), #technicians .modern-card table td:nth-child(6) { width: 12% !important; }
+
+            /* ล็อกสัดส่วนคอลัมน์ตาราง Technicians (7 คอลัมน์) ให้รวมได้ 100% พอดีกับกรอบ Administrators ไม่ล้นขอบแน่นอน */
+            #techniciansTableContainer table .tech-col-header th:nth-child(1), #techniciansTableContainer table .tech-dept-row td:nth-child(1) { width: 21% !important; }
+            #techniciansTableContainer table .tech-col-header th:nth-child(2), #techniciansTableContainer table .tech-dept-row td:nth-child(2) { width: 18% !important; }
+            #techniciansTableContainer table .tech-col-header th:nth-child(3), #techniciansTableContainer table .tech-dept-row td:nth-child(3) { width: 12% !important; }
+            #techniciansTableContainer table .tech-col-header th:nth-child(4), #techniciansTableContainer table .tech-dept-row td:nth-child(4) { width: 19% !important; }
+            #techniciansTableContainer table .tech-col-header th:nth-child(5), #techniciansTableContainer table .tech-dept-row td:nth-child(5) { width: 11% !important; }
+            #techniciansTableContainer table .tech-col-header th:nth-child(6), #techniciansTableContainer table .tech-dept-row td:nth-child(6) { width: 6% !important; }
+            #techniciansTableContainer table .tech-col-header th:nth-child(7), #techniciansTableContainer table .tech-dept-row td:nth-child(7) { width: 13% !important; }
+
             #techniciansTableContainer .tech-dept-header td {
                 padding: 0 !important;
+                width: 100% !important;
             }
             #technicians table th,
             #technicians table td {
-                padding-left: 0.65rem !important;
-                padding-right: 0.65rem !important;
+                padding-left: 6px !important;
+                padding-right: 6px !important;
                 white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
             }
             #technicians table th:first-child,
             #technicians table td:first-child {
-                padding-left: 1.25rem !important;
+                padding-left: 1rem !important;
             }
             #technicians table th:last-child,
             #technicians table td:last-child {
-                padding-right: 1.25rem !important;
+                padding-right: 1rem !important;
+                overflow: visible !important;
             }
         }
 
