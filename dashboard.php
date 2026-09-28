@@ -841,7 +841,7 @@ if (isset($_GET['api_check_hash'])) {
                 max-width: 90px !important;
             }
 
-            /* ✨ จัดการตารางในหน้า Team (Administrators & Technicians) ให้แถบชื่อฝ่ายงานและตารางกว้างเท่ากับ Administrators เป๊ะ 100% ✨ */
+            /* ✨ จัดการตารางในหน้า Team (Administrators & Technicians) ให้แถบชื่อฝ่ายงานและตารางกว้างเท่ากับ Administrators เป๊ะ ไม่ล้นขอบ 100% ✨ */
             #technicians .overflow-x-auto,
             #techniciansTableContainer,
             #assets .overflow-x-auto,
@@ -853,25 +853,42 @@ if (isset($_GET['api_check_hash'])) {
             #assets table,
             #users table {
                 width: 100% !important;
+                max-width: 100% !important;
                 min-width: 0 !important;
                 table-layout: auto !important;
             }
-            #techniciansTableContainer .tech-dept-header td {
+            /* 1. บังคับแถบชื่อฝ่ายงานสีฟ้าให้กางเต็มขอบซ้าย-ขวาเท่ากับตาราง Administrators เป๊ะ ห้ามโดนบีบขอบ */
+            #techniciansTableContainer tr.tech-dept-header td,
+            #techniciansTableContainer tr.tech-dept-header td:first-child,
+            #techniciansTableContainer tr.tech-dept-header td:last-child,
+            #techniciansTableContainer tr.tech-dept-spacer td {
                 padding: 0 !important;
             }
-            #technicians table th,
-            #technicians table td {
-                padding-left: 0.65rem !important;
-                padding-right: 0.65rem !important;
+            /* 2. จัดระยะห่างตาราง Technicians ให้กระชับเหมือนหน้า Repairs List เพื่อดึงทั้ง 7 คอลัมน์เข้ามาในจอทั้งหมดโดยไม่ตัดบรรทัด */
+            #techniciansTableContainer tr.tech-col-header th {
+                padding: 0.85rem 4px !important;
+                font-size: 10px !important;
+                letter-spacing: 0.02em !important;
                 white-space: nowrap !important;
             }
-            #technicians table th:first-child,
-            #technicians table td:first-child {
-                padding-left: 1.25rem !important;
+            #techniciansTableContainer tr.tech-dept-row td {
+                padding: 0.75rem 4px !important;
+                font-size: 11.5px !important;
+                white-space: nowrap !important;
             }
-            #technicians table th:last-child,
-            #technicians table td:last-child {
-                padding-right: 1.25rem !important;
+            #techniciansTableContainer tr.tech-col-header th:first-child,
+            #techniciansTableContainer tr.tech-dept-row td:first-child {
+                padding-left: 12px !important;
+            }
+            #techniciansTableContainer tr.tech-col-header th:last-child,
+            #techniciansTableContainer tr.tech-dept-row td:last-child {
+                padding-right: 12px !important;
+            }
+            /* ลดขนาดรูปและระยะห่างไอคอนในตารางช่างลงนิดเดียวเพื่อให้เห็นตัวอักษรครบทุกตัวและเห็นปุ่ม ACTION ครบ 100% */
+            #techniciansTableContainer tr.tech-dept-row td:first-child img {
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+                margin-right: 0.6rem !important;
             }
         }
 
