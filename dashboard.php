@@ -5501,66 +5501,98 @@ if (isset($_GET['api_check_hash'])) {
             });
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) แบบรวดเร็วทันใจ ไม่ดีเลย์ 100% ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) สมูท 100% เหมือนหน้าต่างประวัติ ✨
         function toggleMaximizeRepairs() {
             const card = document.getElementById('repairsMainCard');
             const icon = document.getElementById('maximizeRepairsIcon');
             const tableContainer = document.getElementById('repairsTableContainer');
             
             if (!card.classList.contains('is-fullscreen')) {
+                // 1. จำตำแหน่งและขนาดปัจจุบันของการ์ด
+                const rect = card.getBoundingClientRect();
+                
+                // 2. สร้างกล่องเปล่าๆ มาวางแทนที่ เพื่อไม่ให้หน้าเว็บกระตุกเวลาดึงการ์ดออกไป
                 let placeholder = document.getElementById('repairsPlaceholder');
                 if (!placeholder) {
                     placeholder = document.createElement('div');
                     placeholder.id = 'repairsPlaceholder';
-                    placeholder.className = 'hidden';
+                    placeholder.style.width = rect.width + 'px';
+                    placeholder.style.height = rect.height + 'px';
+                    placeholder.className = 'flex-1';
                     card.parentNode.insertBefore(placeholder, card);
                 }
                 
+                // ✨ 3. ดึงการ์ดออกมาอยู่ระดับสูงสุดของหน้าเว็บ เพื่อก้าวข้ามกรอบของ Sidebar และ Header 100% ✨
                 document.body.appendChild(card);
 
+                // ปลดการ์ดให้ลอย (Fixed) แต่อยู่ตำแหน่งเดิมเป๊ะๆ
                 card.style.transition = 'none';
                 card.style.position = 'fixed';
+                card.style.top = rect.top + 'px';
+                card.style.left = rect.left + 'px';
+                card.style.width = rect.width + 'px';
+                card.style.height = rect.height + 'px';
+                card.style.zIndex = '9999'; // ดัน Z-index ให้ทะลุปรุโปร่งปิดมิดทุกอย่าง
+                card.style.margin = '0';
+                
+                void card.offsetWidth; // บังคับให้เบราว์เซอร์รับรู้ตำแหน่งก่อน
+                
+                // 4. สั่งขยายเต็มจอ พร้อมแอนิเมชันความเร็วเดียวกับหน้าต่างประวัติ
+                card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                card.classList.add('is-fullscreen');
+                
                 card.style.top = '0px';
                 card.style.left = '0px';
                 card.style.width = '100vw';
                 card.style.height = '100vh';
-                card.style.zIndex = '9999';
-                card.style.margin = '0';
                 card.style.borderRadius = '0px';
-                card.classList.add('is-fullscreen');
                 
                 if (tableContainer) tableContainer.classList.remove('max-h-[70vh]');
-                if (icon) {
-                    icon.classList.remove('fa-expand');
-                    icon.classList.add('fa-compress');
-                }
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
                 document.body.classList.add('overflow-hidden');
                 
             } else {
+                // 1. สั่งให้หดกลับมาที่ขนาดและตำแหน่งเดิมเป๊ะๆ
                 const placeholder = document.getElementById('repairsPlaceholder');
-                
-                card.style.transition = 'none';
-                card.classList.remove('is-fullscreen');
-                card.style.position = '';
-                card.style.top = '';
-                card.style.left = '';
-                card.style.width = '';
-                card.style.height = '';
-                card.style.zIndex = '';
-                card.style.margin = '';
-                card.style.borderRadius = '';
-                
-                if (placeholder && placeholder.parentNode) {
-                    placeholder.parentNode.insertBefore(card, placeholder);
-                    placeholder.remove();
+                if (placeholder) {
+                    const rect = placeholder.getBoundingClientRect();
+                    card.style.top = rect.top + 'px';
+                    card.style.left = rect.left + 'px';
+                    card.style.width = rect.width + 'px';
+                    card.style.height = rect.height + 'px';
+                    card.style.borderRadius = '20px'; // ขอบมนเท่าเดิม
                 }
                 
                 if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
-                if (icon) {
-                    icon.classList.add('fa-expand');
-                    icon.classList.remove('fa-compress');
-                }
+                icon.classList.add('fa-expand');
+                icon.classList.remove('fa-compress');
                 document.body.classList.remove('overflow-hidden');
+                card.classList.remove('is-fullscreen');
+                
+                // 2. รอแอนิเมชันหดกลับเสร็จ แล้วเอาการ์ดกลับไปวางในโครงสร้างเดิม
+                setTimeout(() => {
+                    if (!card.classList.contains('is-fullscreen')) {
+                        card.style.transition = 'none';
+                        card.style.position = '';
+                        card.style.top = '';
+                        card.style.left = '';
+                        card.style.width = '';
+                        card.style.height = '';
+                        card.style.zIndex = '';
+                        card.style.margin = '';
+                        
+                        // ✨ เอาการ์ดสอดกลับไปแทนที่กล่องเปล่าให้แนบเนียน ✨
+                        if (placeholder) {
+                            placeholder.parentNode.insertBefore(card, placeholder);
+                            placeholder.remove();
+                        }
+                        
+                        // คืนค่า transition เดิม
+                        void card.offsetWidth;
+                        card.style.transition = '';
+                    }
+                }, 300);
             }
         }
 
