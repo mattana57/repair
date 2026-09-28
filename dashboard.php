@@ -789,7 +789,7 @@ if (isset($_GET['api_check_hash'])) {
             background-clip: padding-box !important;
         }
 
-        /* ✨ บังคับตาราง Repairs List ให้แสดงครบทุกคอลัมน์ในหน้าเดียว เลื่อนแค่บน-ล่าง และไม่ให้ตัวอักษรหักตกบรรทัด ✨ */
+        /* ✨ บังคับตาราง Repairs List ให้แสดงครบทุกคอลัมน์ในหน้าเดียว เลื่อนแค่บน-ล่าง และเห็นคำว่า ACTION ครบ 100% ✨ */
         @media (min-width: 1024px) {
             #repairsTable {
                 width: 100% !important;
@@ -798,33 +798,39 @@ if (isset($_GET['api_check_hash'])) {
             }
             /* 1. ล็อกหัวตารางทุกช่อง ห้ามตัดคำตกบรรทัดเด็ดขาด */
             #repairsTable th {
-                padding: 0.85rem 5px !important;
-                font-size: 10px !important;
-                letter-spacing: 0.02em !important;
+                padding: 0.85rem 3px !important;
+                font-size: 9.5px !important;
+                letter-spacing: 0px !important;
                 white-space: nowrap !important;
                 word-break: keep-all !important;
             }
             #repairsTable th:first-child,
             #repairsTable td:first-child {
-                padding-left: 1rem !important;
+                padding-left: 10px !important;
             }
             #repairsTable th:last-child,
             #repairsTable td:last-child {
-                padding-right: 1rem !important;
+                padding-right: 10px !important;
             }
             /* 2. ล็อกข้อมูลในตารางไม่ให้ชื่อคนและตำแหน่งหักตกบรรทัด */
             #repairsTable td {
-                padding: 0.75rem 5px !important;
-                font-size: 12px !important;
+                padding: 0.75rem 3px !important;
+                font-size: 11.5px !important;
                 white-space: nowrap !important;
             }
-            /* 3. อนุญาตให้เฉพาะช่องรายละเอียดอุปกรณ์ (ช่อง 4) และสาเหตุ (ช่อง 8) ตัดคำได้ถ้ายาวเกิน */
-            #repairsTable td:nth-child(4),
+            /* 3. บีบความกว้างช่องรายละเอียดอุปกรณ์ (ช่อง 4) และสาเหตุ (ช่อง 8) เล็กน้อยเพื่อดึงช่อง ACTION เข้ามาในจอ */
+            #repairsTable td:nth-child(4) {
+                white-space: normal !important;
+                max-width: 115px !important;
+            }
+            #repairsTable td:nth-child(4) > div.truncate {
+                max-width: 110px !important;
+            }
             #repairsTable td:nth-child(8) {
                 white-space: normal !important;
-                max-width: 140px !important;
+                max-width: 90px !important;
             }
-            /* 4. ตอนกดขยายเต็มจอ (.is-fullscreen) ให้กางระยะห่างและขนาดฟอนต์ออกเต็มที่เหมือนรูปที่ 1 */
+            /* 4. ตอนกดขยายเต็มจอ (.is-fullscreen) ให้กางระยะห่างและขนาดฟอนต์ออกเต็มที่ */
             #repairsMainCard.is-fullscreen #repairsTable th {
                 padding: 1rem 0.65rem !important;
                 font-size: 11px !important;
@@ -835,6 +841,7 @@ if (isset($_GET['api_check_hash'])) {
                 font-size: 13px !important;
             }
             #repairsMainCard.is-fullscreen #repairsTable td:nth-child(4),
+            #repairsMainCard.is-fullscreen #repairsTable td:nth-child(4) > div.truncate,
             #repairsMainCard.is-fullscreen #repairsTable td:nth-child(8) {
                 max-width: 220px !important;
             }
