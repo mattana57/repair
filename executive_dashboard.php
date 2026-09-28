@@ -332,41 +332,6 @@ if (isset($_GET['api_check_hash'])) {
             background-clip: padding-box !important;
         }
 
-        /* ✨ บังคับตาราง Repairs List ให้แสดงครบทุกคอลัมน์ในหน้าเดียว เลื่อนแค่บน-ล่าง ไม่ต้องเลื่อนซ้าย-ขวา ✨ */
-        @media (min-width: 1024px) {
-            #repairsTable {
-                width: 100% !important;
-                min-width: 0 !important;
-                table-layout: auto !important;
-                white-space: normal !important;
-            }
-            #repairsTable th,
-            #repairsTable td {
-                padding-left: 0.5rem !important;
-                padding-right: 0.5rem !important;
-                padding-top: 0.75rem !important;
-                padding-bottom: 0.75rem !important;
-                white-space: normal !important;
-                word-break: break-word !important;
-            }
-            #repairsTable th {
-                font-size: 10.5px !important;
-                letter-spacing: 0.03em !important;
-                line-height: 1.25 !important;
-            }
-            #repairsTable td {
-                font-size: 12.5px !important;
-            }
-            #repairsTable td:nth-child(1),
-            #repairsTable td:nth-child(2),
-            #repairsTable td:nth-child(7),
-            #repairsTable td:nth-child(9),
-            #repairsTable td:nth-child(10),
-            #repairsTable td:nth-child(11) {
-                white-space: nowrap !important;
-            }
-        }
-
         .swal2-container { z-index: 99999 !important; }
         @media print { aside, header, .no-print { display: none !important; } }
     </style>
@@ -957,8 +922,8 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto lg:overflow-x-hidden w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1" id="repairsTableContainer">
-                        <table class="w-full text-left whitespace-nowrap lg:whitespace-normal lg:min-w-0" id="repairsTable">
+                    <div class="overflow-x-auto w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1" id="repairsTableContainer">
+                        <table class="w-full text-left whitespace-nowrap min-w-[1200px]" id="repairsTable">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-4">Date / Time</th>
