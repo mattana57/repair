@@ -1238,7 +1238,7 @@ if (isset($_GET['api_check_hash'])) {
                                     <h3 class="font-extrabold text-slate-800 text-lg truncate">Customer Satisfaction</h3>
                                     <p class="text-sm font-medium text-slate-400 mt-0.5 truncate">คะแนนความพึงพอใจการให้บริการ</p>
                                     <!-- ✨ แสดงข้อความเฉพาะมือถือ ให้อยู่ใต้หัวข้อทันที ✨ -->
-                                    <p class="sm:hidden text-xs text-indigo-500 font-bold mt-2 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวช่าง</p>
+                                    <p class="sm:hidden text-xs text-indigo-500 font-bold mt-2 truncate"><i class="fas fa-hand-pointer mr-1"></i>คลิกที่แท่งกราฟเพื่อดูรีวิวของเจ้าหน้าที่</p>
                                 </div>
                                 <div class="flex items-center justify-start sm:justify-end gap-2 shrink-0 mt-2 sm:mt-0">
                                     <div class="relative w-[90px] sm:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="rating-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Month', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
