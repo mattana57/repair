@@ -2691,7 +2691,7 @@ if (isset($_GET['api_check_hash'])) {
                         <div class="flex gap-4 z-10 flex-1 min-w-0">
                             <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-500 flex items-center justify-center text-2xl shrink-0 shadow-sm border border-amber-200 mt-1"><i class="fas fa-star"></i></div>
                             <div class="flex flex-col min-w-0 w-full">
-                                <p class="text-lg md:text-xl font-extrabold text-slate-800 sm:truncate leading-tight" id="techReviewsModalTitle">รีวิวของช่าง: ...</p>
+                                <p class="text-lg md:text-xl font-extrabold text-slate-800 sm:truncate leading-tight" id="techReviewsModalTitle">รีวิวของเจ้าหน้าที่: ...</p>
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center mt-1">
                                     <p class="text-[13px] font-bold text-indigo-600 truncate" id="techReviewsModalDept">ฝ่ายงาน...</p>
                                     <p class="text-[11px] font-medium text-slate-500 truncate sm:ml-1.5 mt-0.5 sm:mt-0" id="techReviewsModalPos">(...)</p>
