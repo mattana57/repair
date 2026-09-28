@@ -3389,26 +3389,15 @@ if (isset($_GET['api_check_hash'])) {
             });
         }
 
-        // ✨ ฟังก์ชันสลับโหมดเต็มจอด้วย GPU Transform (FLIP Technique) ซูมเข้า-ออกสมูท ไร้ดีเลย์และไม่กระตุก 100% ✨
+        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) สมูท 100% ✨
         function toggleMaximizeRepairs() {
             const card = document.getElementById('repairsMainCard');
             const icon = document.getElementById('maximizeRepairsIcon');
             const tableContainer = document.getElementById('repairsTableContainer');
-            const scrollEl = document.getElementById('mainScrollContainer');
-            const sidebarEl = document.getElementById('sidebar');
-            const headerEl = document.querySelector('header.top-header');
-
-            if (card.dataset.animating === '1') return;
-            card.dataset.animating = '1';
-
+            
             if (!card.classList.contains('is-fullscreen')) {
-                if (scrollEl) {
-                    scrollEl.style.transition = 'none';
-                    scrollEl.style.transform = 'none';
-                }
-
                 const rect = card.getBoundingClientRect();
-
+                
                 let placeholder = document.getElementById('repairsPlaceholder');
                 if (!placeholder) {
                     placeholder = document.createElement('div');
@@ -3418,82 +3407,71 @@ if (isset($_GET['api_check_hash'])) {
                     placeholder.className = 'flex-1';
                     card.parentNode.insertBefore(placeholder, card);
                 }
+                
+                document.body.appendChild(card);
 
-                const scaleX = rect.width / window.innerWidth;
-                const scaleY = rect.height / window.innerHeight;
-
-                if (sidebarEl) sidebarEl.style.zIndex = '10';
-                if (headerEl) headerEl.style.zIndex = '10';
-                if (tableContainer) tableContainer.classList.remove('max-h-[70vh]');
-
-                // เซ็ตขนาดเต็มจอครั้งเดียว แล้วใช้ GPU ย่อไว้ที่ตำแหน่งเดิมก่อนซูมออก
                 card.style.transition = 'none';
                 card.style.position = 'fixed';
+                card.style.top = rect.top + 'px';
+                card.style.left = rect.left + 'px';
+                card.style.width = rect.width + 'px';
+                card.style.height = rect.height + 'px';
+                card.style.zIndex = '9999';
+                card.style.margin = '0';
+                
+                void card.offsetWidth;
+                
+                card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                card.classList.add('is-fullscreen');
+                
                 card.style.top = '0px';
                 card.style.left = '0px';
                 card.style.width = '100vw';
                 card.style.height = '100vh';
-                card.style.zIndex = '9999';
-                card.style.margin = '0';
-                card.style.borderRadius = '20px';
-                card.style.transformOrigin = 'top left';
-                card.style.willChange = 'transform, border-radius';
-                card.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0) scale(${scaleX}, ${scaleY})`;
-
-                card.classList.add('is-fullscreen');
+                card.style.borderRadius = '0px';
+                
+                if (tableContainer) tableContainer.classList.remove('max-h-[70vh]');
                 icon.classList.remove('fa-expand');
                 icon.classList.add('fa-compress');
                 document.body.classList.add('overflow-hidden');
-
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        card.style.transition = 'transform 0.22s cubic-bezier(0.2, 0, 0, 1), border-radius 0.22s cubic-bezier(0.2, 0, 0, 1)';
-                        card.style.transform = 'translate3d(0px, 0px, 0) scale(1, 1)';
-                        card.style.borderRadius = '0px';
-                        setTimeout(() => { card.dataset.animating = '0'; }, 230);
-                    });
-                });
-
+                
             } else {
                 const placeholder = document.getElementById('repairsPlaceholder');
-                const rect = placeholder ? placeholder.getBoundingClientRect() : { top: 120, left: 260, width: window.innerWidth - 280, height: window.innerHeight - 150 };
-
-                const scaleX = rect.width / window.innerWidth;
-                const scaleY = rect.height / window.innerHeight;
-
+                if (placeholder) {
+                    const rect = placeholder.getBoundingClientRect();
+                    card.style.top = rect.top + 'px';
+                    card.style.left = rect.left + 'px';
+                    card.style.width = rect.width + 'px';
+                    card.style.height = rect.height + 'px';
+                    card.style.borderRadius = '20px';
+                }
+                
                 icon.classList.add('fa-expand');
                 icon.classList.remove('fa-compress');
+                document.body.classList.remove('overflow-hidden');
                 card.classList.remove('is-fullscreen');
-
-                // ซูมกลับด้วย GPU ทันทีโดยไม่คำนวณตารางใหม่ระหว่างทาง
-                card.style.transition = 'transform 0.2s cubic-bezier(0.2, 0, 0, 1), border-radius 0.2s cubic-bezier(0.2, 0, 0, 1)';
-                card.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0) scale(${scaleX}, ${scaleY})`;
-                card.style.borderRadius = '20px';
-
+                
                 setTimeout(() => {
-                    card.style.transition = 'none';
-                    card.style.position = '';
-                    card.style.top = '';
-                    card.style.left = '';
-                    card.style.width = '';
-                    card.style.height = '';
-                    card.style.zIndex = '';
-                    card.style.margin = '';
-                    card.style.borderRadius = '';
-                    card.style.transformOrigin = '';
-                    card.style.transform = '';
-                    card.style.willChange = '';
-
-                    if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
-                    if (sidebarEl) sidebarEl.style.zIndex = '';
-                    if (headerEl) headerEl.style.zIndex = '';
-                    if (placeholder) placeholder.remove();
-                    document.body.classList.remove('overflow-hidden');
-
-                    void card.offsetWidth;
-                    card.style.transition = '';
-                    card.dataset.animating = '0';
-                }, 205);
+                    if (!card.classList.contains('is-fullscreen')) {
+                        card.style.transition = 'none';
+                        card.style.position = '';
+                        card.style.top = '';
+                        card.style.left = '';
+                        card.style.width = '';
+                        card.style.height = '';
+                        card.style.zIndex = '';
+                        card.style.margin = '';
+                        
+                        if (tableContainer) tableContainer.classList.add('max-h-[70vh]');
+                        if (placeholder) {
+                            placeholder.parentNode.insertBefore(card, placeholder);
+                            placeholder.remove();
+                        }
+                        
+                        void card.offsetWidth;
+                        card.style.transition = '';
+                    }
+                }, 300);
             }
         }
 
@@ -3608,13 +3586,6 @@ if (isset($_GET['api_check_hash'])) {
             mainScrollEl.addEventListener('scroll', () => {
                 // เช็คว่ากำลังเปิดบนมือถือ (ทั้งแนวตั้งและแนวนอน)
                 const isMobileScreen = window.innerWidth < 768 || (window.innerHeight < 500 && window.innerWidth < 1000);
-                if (isMobileScreen) {
-                    mainHeaderEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                    mainScrollEl.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                } else {
-                    mainHeaderEl.style.transition = 'none';
-                    mainScrollEl.style.transition = 'none';
-                }
                 
                 if (isMobileScreen) {
                     const currentScrollTop = mainScrollEl.scrollTop;
