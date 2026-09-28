@@ -855,10 +855,13 @@ if (isset($_GET['api_check_hash'])) {
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
                             </div>
                             
-                            <!-- ปุ่ม ขยายเต็มจอ (ย้ายมารวมกัน ใช้คลาสเดียวจบ แสดงผลทุกอุปกรณ์) -->
-                            <div class="flex items-center shrink-0 ml-4">
+                            <!-- ปุ่ม ขยายเต็มจอ + ปุ่มกากบาท (ปิด) -->
+                            <div class="flex items-center gap-2 shrink-0 ml-4">
                                 <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                                     <i class="fas fa-expand text-sm md:text-base" id="maximizeRepairsIcon"></i>
+                                </button>
+                                <button onclick="if(document.getElementById('repairsMainCard').classList.contains('is-fullscreen')) toggleMaximizeRepairs(); else show('dash');" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                                    <i class="fas fa-times text-sm md:text-base"></i>
                                 </button>
                             </div>
                         </div>
