@@ -707,15 +707,108 @@ if (isset($_GET['api_check_hash'])) {
     <style>
         body { font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .modern-card { background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; }
-        #sidebar { width: 240px !important; min-width: 240px !important; max-width: 240px !important; }
-        .sidebar-logo-box { height: 70px !important; padding: 0 24px !important; }
-        .top-header { height: 70px !important; padding: 0 28px !important; }
-        .nav-btn { width: calc(100% - 32px) !important; display: flex !important; align-items: center !important; padding: 0.65rem 1rem !important; margin: 2px 16px !important; border-radius: 12px !important; color: #64748b !important; font-weight: 600 !important; font-size: 0.875rem !important; transition: all 0.2s ease !important; cursor: pointer !important; }
-        .nav-btn i { width: 1.5rem !important; text-align: center !important; font-size: 1rem !important; margin-right: 0.75rem !important; color: #94a3b8 !important; }
-        .nav-btn:hover { background-color: #f8fafc !important; color: #4f46e5 !important; }
-        .nav-btn:hover i { color: #4f46e5 !important; }
-        .active-btn { background-color: #eef2ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
-        .active-btn i { color: #4f46e5 !important; }
+        /* ✨ Sidebar 3D Dark Glass: เพิ่มมิติแสงเงาไล่ระดับ กรอบไอคอนนูน 3 มิติ และปุ่ม Active เรืองแสง ✨ */
+        #sidebar {
+            background: 
+                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.22) 0%, transparent 40%),
+                radial-gradient(circle at 100% 85%, rgba(139, 92, 246, 0.16) 0%, transparent 45%),
+                linear-gradient(180deg, #0b1120 0%, #0f172a 55%, #090d16 100%) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05), 10px 0 30px -5px rgba(15, 23, 42, 0.35) !important;
+        }
+        #sidebar .sidebar-logo-box {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.3) !important;
+        }
+        #sidebar .border-slate-50 {
+            border-color: rgba(255, 255, 255, 0.07) !important;
+        }
+        #sidebar p {
+            color: #64748b !important;
+            letter-spacing: 0.12em !important;
+            font-weight: 800 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+        }
+        .nav-btn {
+            position: relative !important;
+            width: calc(100% - 24px) !important;
+            display: flex !important;
+            align-items: center !important;
+            padding: 0.5rem 0.75rem !important;
+            margin: 4px 12px !important;
+            border-radius: 14px !important;
+            color: #94a3b8 !important;
+            font-weight: 600 !important;
+            font-size: 0.875rem !important;
+            border: 1px solid transparent !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            cursor: pointer !important;
+        }
+        /* กล่องไอคอน 3 มิติหน้าเมนูทุกอัน */
+        .nav-btn i {
+            width: 34px !important;
+            height: 34px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 10px !important;
+            font-size: 0.95rem !important;
+            margin-right: 0.75rem !important;
+            color: #94a3b8 !important;
+            background: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+            transition: all 0.25s ease !important;
+        }
+        .nav-btn:hover {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%) !important;
+            color: #f8fafc !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+            transform: translateX(3px) !important;
+        }
+        .nav-btn:hover i {
+            color: #a5b4fc !important;
+            background: rgba(99, 102, 241, 0.18) !important;
+            border-color: rgba(99, 102, 241, 0.35) !important;
+        }
+        /* ปุ่มที่กำลังเลือก (Active) นูน 3 มิติพร้อมขีดไฟเรืองแสงด้านซ้าย */
+        .active-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 55%, #7c3aed 100%) !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            border: 1px solid rgba(255, 255, 255, 0.22) !important;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 8px 20px -4px rgba(79, 70, 229, 0.6) !important;
+            transform: translateX(2px) !important;
+        }
+        .active-btn::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 22%;
+            height: 56%;
+            width: 4px;
+            border-radius: 99px;
+            background: #a5b4fc;
+            box-shadow: 0 0 10px #818cf8;
+        }
+        .active-btn i {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+        }
+        #sidebar a.nav-btn.group { color: #94a3b8 !important; }
+        #sidebar a.nav-btn.group:hover {
+            background: linear-gradient(90deg, rgba(244, 63, 94, 0.18) 0%, rgba(244, 63, 94, 0.05) 100%) !important;
+            border-color: rgba(244, 63, 94, 0.25) !important;
+            color: #fda4af !important;
+        }
+        #sidebar a.nav-btn.group:hover i {
+            background: rgba(244, 63, 94, 0.2) !important;
+            border-color: rgba(244, 63, 94, 0.35) !important;
+            color: #fda4af !important;
+        }
         
         .custom-select {
             appearance: none;
