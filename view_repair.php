@@ -117,6 +117,7 @@ if (isset($_GET['id'])) {
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
         .bg-pattern { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
     </style>
+    <link rel="stylesheet" href="assets/repair-ui.css?v=1" media="screen">
 </head>
 <body class="p-6 md:p-10 selection:bg-sky-200 relative">
 

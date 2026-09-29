@@ -378,6 +378,7 @@ if (isset($_GET['api_check_hash'])) {
         .swal2-container { z-index: 99999 !important; }
         @media print { aside, header, .no-print { display: none !important; } }
     </style>
+    <link rel="stylesheet" href="assets/repair-ui.css?v=1" media="screen">
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 

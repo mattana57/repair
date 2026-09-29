@@ -408,6 +408,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
+    <link rel="stylesheet" href="assets/repair-ui.css?v=1" media="screen">
 </head>
 <body class="p-4 md:p-10 selection:bg-sky-200">
 

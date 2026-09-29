@@ -241,6 +241,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
         .month-dropdown-item.kb-active-item, .year-dropdown-item.kb-active-item { background-color: #eef2ff !important; color: #4f46e5 !important; }
         .dark .month-dropdown-item.kb-active-item, .dark .year-dropdown-item.kb-active-item { background-color: #475569 !important; color: #a5b4fc !important; }
     </style>
+    <link rel="stylesheet" href="assets/repair-ui.css?v=1" media="screen">
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
 
