@@ -1369,19 +1369,19 @@ if (isset($_GET['api_check_hash'])) {
         ?>
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dashboard</p>
-            <button onclick="show('dash')" class="nav-btn <?php echo $active_tab === 'dash' ? 'active-btn' : ''; ?>" id="btn-dash"><i class="fas fa-chart-pie"></i> ภาพรวมระบบ</button>
-            <button onclick="show('repairs')" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?>" id="btn-repairs"><i class="fas fa-list-ul"></i> รายการแจ้งซ่อม</button>
-            <button onclick="show('technicians')" class="nav-btn <?php echo $active_tab === 'technicians' ? 'active-btn' : ''; ?>" id="btn-technicians"><i class="fas fa-user-friends"></i> จัดการทีมงาน</button>
-            <button onclick="show('team_cards')" class="nav-btn <?php echo $active_tab === 'team_cards' ? 'active-btn' : ''; ?>" id="btn-team_cards"><i class="fas fa-id-badge"></i> ข้อมูลช่าง</button>
+            <button onclick="show('dash')" class="nav-btn <?php echo $active_tab === 'dash' ? 'active-btn' : ''; ?>" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
+            <button onclick="show('repairs')" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?>" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
+            <button onclick="show('technicians')" class="nav-btn <?php echo $active_tab === 'technicians' ? 'active-btn' : ''; ?>" id="btn-technicians"><i class="fas fa-user-friends"></i> Team</button>
+            <button onclick="show('team_cards')" class="nav-btn <?php echo $active_tab === 'team_cards' ? 'active-btn' : ''; ?>" id="btn-team_cards"><i class="fas fa-id-badge"></i> Technician</button>
             
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Management</p>
-            <button onclick="show('assets')" class="nav-btn <?php echo $active_tab === 'assets' ? 'active-btn' : ''; ?>" id="btn-assets"><i class="fas fa-box-open"></i> ครุภัณฑ์</button>
-            <button onclick="show('users')" class="nav-btn <?php echo $active_tab === 'users' ? 'active-btn' : ''; ?>" id="btn-users"><i class="fas fa-address-book"></i> ข้อมูลผู้แจ้ง</button>
-            <button onclick="show('reports')" class="nav-btn <?php echo $active_tab === 'reports' ? 'active-btn' : ''; ?>" id="btn-reports"><i class="fas fa-file-export"></i> รายงาน</button>
+            <button onclick="show('assets')" class="nav-btn <?php echo $active_tab === 'assets' ? 'active-btn' : ''; ?>" id="btn-assets"><i class="fas fa-box-open"></i> Assets</button>
+            <button onclick="show('users')" class="nav-btn <?php echo $active_tab === 'users' ? 'active-btn' : ''; ?>" id="btn-users"><i class="fas fa-address-book"><</i> Contacts</button>
+            <button onclick="show('reports')" class="nav-btn <?php echo $active_tab === 'reports' ? 'active-btn' : ''; ?>" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
                 <a href="logout.php" class="nav-btn group text-slate-500 hover:!bg-rose-50 hover:!text-rose-600">
-                    <i class="fas fa-sign-out-alt group-hover:!text-rose-600"></i> ออกจากระบบ
+                    <i class="fas fa-sign-out-alt group-hover:!text-rose-600"></i> Logout
                 </a>
             </div>
         </nav>
