@@ -950,7 +950,7 @@ if (isset($_GET['api_check_hash'])) {
         $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'dash';
         $pageTitlesArr = [
             'dash' => 'Dashboard Overview',
-            'repairs' => 'บ้าบอAll Repairs List',
+            'repairs' => 'All Repairs List',
             'technicians' => 'Team Management',
             'team_cards' => 'Team Management',
             'assets' => 'Assets Database',
