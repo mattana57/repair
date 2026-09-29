@@ -378,17 +378,12 @@ if (isset($_GET['api_check_hash'])) {
         .swal2-container { z-index: 99999 !important; }
         @media print { aside, header, .no-print { display: none !important; } }
     </style>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
-<body class="flex h-screen overflow-hidden selection:bg-indigo-100 mbs-app mbs-executive-dashboard">
+<body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden xl:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print mbs-sidebar">
+    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
 
         <div class="sidebar-logo-box flex items-center border-b border-slate-50 py-6 px-6">
             <div class="w-[42px] h-[42px] rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-purple-500/30 mr-3.5 shrink-0">
@@ -402,29 +397,29 @@ if (isset($_GET['api_check_hash'])) {
 
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">DASHBOARD</p>
-            <button onclick="show('dash')" class="nav-btn <?php echo $active_tab === 'dash' ? 'active-btn' : ''; ?> mbs-control" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
-            <button onclick="show('repairs')" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?> mbs-control" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
-            <button onclick="show('technician')" class="nav-btn <?php echo $active_tab === 'technician' ? 'active-btn' : ''; ?> mbs-control" id="btn-technician"><i class="fas fa-id-badge"></i> Technician</button>
+            <button onclick="show('dash')" class="nav-btn <?php echo $active_tab === 'dash' ? 'active-btn' : ''; ?>" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
+            <button onclick="show('repairs')" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?>" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
+            <button onclick="show('technician')" class="nav-btn <?php echo $active_tab === 'technician' ? 'active-btn' : ''; ?>" id="btn-technician"><i class="fas fa-id-badge"></i> Technician</button>
             
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2">MANAGEMENT</p>
             <a href="executive_report.php" target="_blank" class="nav-btn"><i class="fas fa-file-alt"></i> Summary Reports</a>
 
             <div class="mt-auto pt-4 border-t border-slate-50">
-                <a href="logout.php" class="nav-btn group text-slate-500 hover:!bg-rose-50 hover:!text-rose-600 mbs-control">
+                <a href="logout.php" class="nav-btn group text-slate-500 hover:!bg-rose-50 hover:!text-rose-600">
                     <i class="fas fa-sign-out-alt group-hover:!text-rose-600"></i> Logout
                 </a>
             </div>
         </nav>
     </aside>
 
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc] mbs-main min-w-0">
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
 
         <!-- ✨ แก้ไขพื้นที่กดของปุ่ม Sidebar ให้พอดีและป้องกันการคลิกทะลุ ✨ -->
-        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50 gap-2 pointer-events-auto mbs-topbar">
+        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50 gap-2 pointer-events-auto">
             <div class="flex items-center min-w-0 pr-2">
                 <!-- ✨ เพิ่มการตีกรอบปุ่มให้ชัดเจน ป้องกันพื้นที่ด้านข้างโดนกด ✨ -->
                 <!-- ปรับ -ml-4 (ดันซ้ายมือถือ) และ mr-1 (ลดช่องว่างขวามือถือ) ส่วน sm: จะคืนค่าเดิมให้ iPad/PC -->
-                <button aria-label="เปิดหรือปิดเมนูหลัก" onclick="toggleSidebar()" type="button" class="xl:hidden -ml-4 sm:ml-0 mr-1 sm:mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0 w-12 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors z-50 mbs-control">
+                <button onclick="toggleSidebar()" type="button" class="xl:hidden -ml-4 sm:ml-0 mr-1 sm:mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0 w-12 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors z-50">
                     <i class="fas fa-bars text-[26px]"></i>
                 </button>
                 <h3 class="text-[18px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate select-none pointer-events-none" id="headerTitle"><?php echo $currentTitle; ?></h3>
@@ -459,14 +454,14 @@ if (isset($_GET['api_check_hash'])) {
                         
                         <!-- 🚨 กล่องเมนูย่อยสีเทาเข้ม (โชว์ทั้ง "ดูรูปภาพ" และ "เปลี่ยนรูปภาพ") 🚨 -->
                         <div id="avatarActionMenu" class="absolute left-5 top-[85px] sm:left-auto sm:right-full sm:top-3 sm:mr-3 w-48 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-[60] text-white animate-fade-in">
-                            <button type="button" onclick="openImageModal('<?php echo $current_user_avatar; ?>'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3 mbs-control">
+                            <button type="button" onclick="openImageModal('<?php echo $current_user_avatar; ?>'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
                                 <i class="fas fa-eye text-slate-300 w-4 text-center"></i> ดูรูปภาพ
                             </button>
-                            <button type="button" onclick="document.getElementById('profileAvatarInput').removeAttribute('capture'); document.getElementById('profileAvatarInput').click(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3 mbs-control">
+                            <button type="button" onclick="document.getElementById('profileAvatarInput').removeAttribute('capture'); document.getElementById('profileAvatarInput').click(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
                                 <i class="fas fa-camera text-slate-300 w-4 text-center"></i> เปลี่ยนรูปภาพ
                             </button>
                             <?php if ($has_custom_avatar): ?>
-                            <button type="button" onclick="confirmDeleteProfileAvatar(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold text-rose-400 hover:bg-slate-700 transition-colors flex items-center gap-3 mbs-control">
+                            <button type="button" onclick="confirmDeleteProfileAvatar(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold text-rose-400 hover:bg-slate-700 transition-colors flex items-center gap-3">
                                 <i class="fas fa-trash-alt text-rose-400 w-4 text-center"></i> ลบรูปภาพ
                             </button>
                             <?php endif; ?>
@@ -502,20 +497,11 @@ if (isset($_GET['api_check_hash'])) {
             </div>
         </header>
 
-        <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 mbs-content">
+        <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             <div id="dash" class="section <?php echo $active_tab === 'dash' ? '' : 'hidden'; ?> space-y-6 animate-fade-in no-print">
 
-                <div class="mbs-overview-intro flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div class="min-w-0">
-                        <p class="mb-2 text-xs font-medium uppercase tracking-[0.16em] text-violet-600">MBS Repair</p>
-                        <h1 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Dashboard Overview</h1>
-                        <p class="mt-2 text-sm text-slate-500">ภาพรวมงานแจ้งซ่อม สถานะการดำเนินงาน และประสิทธิภาพการให้บริการ</p>
-                    </div>
-                    <span class="hidden h-1 w-20 rounded-full bg-gradient-to-r from-violet-600 via-indigo-600 to-sky-400 sm:block" aria-hidden="true"></span>
-                </div>
-
                 <!-- ✨ ปรับ Grid เป็น 2 คอลัมน์ (grid-cols-2) ในมือถือ และเพิ่มความห่างให้สมดุล (gap-3) ✨ -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 mbs-kpi-grid">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                     <?php 
                         $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
                         $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
@@ -528,7 +514,7 @@ if (isset($_GET['api_check_hash'])) {
                     ?>
                     
                     <!-- ✨ ปรับ p-4 สำหรับมือถือ และคืนค่า p-6 สำหรับ iPad/PC เพื่อไม่ให้การ์ดอึดอัด ✨ -->
-                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer mbs-panel mbs-kpi !rounded-2xl !border-slate-200/70 !shadow-sm" onclick="filterRepairs('all')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('all')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg sm:text-xl shrink-0"><i class="fas fa-layer-group"></i></div>
                             <span class="text-[10px] sm:text-xs font-bold text-slate-400">TOTAL</span>
@@ -539,7 +525,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
                     
-                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer mbs-panel mbs-kpi !rounded-2xl !border-slate-200/70 !shadow-sm" onclick="filterRepairs('รอรับเรื่อง')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('รอรับเรื่อง')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-lg sm:text-xl shrink-0"><i class="fas fa-clock"></i></div>
                             <span class="text-[10px] sm:text-xs font-bold text-slate-400">WAITING</span>
@@ -550,7 +536,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer mbs-panel mbs-kpi !rounded-2xl !border-slate-200/70 !shadow-sm" onclick="filterRepairs('กำลังดำเนินการ')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('กำลังดำเนินการ')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-lg sm:text-xl shrink-0"><i class="fas fa-spinner"></i></div>
                             <span class="text-[10px] sm:text-xs font-bold text-slate-400">ACTIVE</span>
@@ -561,7 +547,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer mbs-panel mbs-kpi !rounded-2xl !border-slate-200/70 !shadow-sm" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-lg sm:text-xl shrink-0"><i class="fas fa-check-circle"></i></div>
                             <span class="text-[10px] sm:text-xs font-bold text-slate-400">DONE</span>
@@ -575,7 +561,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 <!-- Equipment & Work Status -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="modern-card p-6 flex flex-col mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                    <div class="modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-lg truncate">Equipment Analytics</h3>
@@ -610,7 +596,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <div class="modern-card p-6 flex flex-col mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                    <div class="modern-card p-6 flex flex-col">
                         <div class="flex flex-wrap justify-between items-start md:items-center gap-3 mb-4 w-full">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Work Status</h3>
@@ -647,7 +633,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     
-                    <div class="modern-card p-6 flex flex-col mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                    <div class="modern-card p-6 flex flex-col">
                         <div class="flex flex-wrap justify-between items-start md:items-center gap-3 mb-4 w-full">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Top Locations</h3>
@@ -681,7 +667,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
                     
-                    <div class="modern-card p-6 flex flex-col mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                    <div class="modern-card p-6 flex flex-col">
                         <div class="flex flex-wrap justify-between items-start md:items-center gap-3 mb-4 w-full">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Technician Workload</h3>
@@ -719,7 +705,7 @@ if (isset($_GET['api_check_hash'])) {
                 <!-- Customer Satisfaction -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                     
-                    <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                    <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
                         <!-- ✨ แก้ไข Header: แยกข้อความคลิกกราฟออก เพื่อให้ระดับแกน Y ตรงกับช่องอื่นๆ 100% ✨ -->
                         <div class="mb-4 w-full">
                             <div class="flex justify-between items-start sm:items-center gap-2 w-full flex-col sm:flex-row">
@@ -763,7 +749,7 @@ if (isset($_GET['api_check_hash'])) {
                     </div>
 
                     <!-- Top Reporters -->
-                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
                         <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start sm:items-center shrink-0 gap-2 w-full flex-col sm:flex-row">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-lg truncate">Top Reporters</h3>
@@ -797,14 +783,14 @@ if (isset($_GET['api_check_hash'])) {
                                 <div class="flex items-center gap-2">
                                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">จัดอันดับ:</span>
                                     <div class="flex flex-wrap items-center gap-1.5" id="topReportersFilterContainer">
-                                        <button id="btnFilterTop3" onclick="setTopReportersFilter(3)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mbs-control">Top 3</button>
-                                        <button id="btnFilterTop5" onclick="setTopReportersFilter(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mbs-control">Top 5</button>
-                                        <button id="btnFilterTop10" onclick="setTopReportersFilter(10)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mbs-control">Top 10</button>
-                                        <button id="btnFilterTopAll_mobile" onclick="setTopReportersFilter('all')" class="sm:hidden px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mbs-control">ทั้งหมด</button>
+                                        <button id="btnFilterTop3" onclick="setTopReportersFilter(3)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 3</button>
+                                        <button id="btnFilterTop5" onclick="setTopReportersFilter(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 5</button>
+                                        <button id="btnFilterTop10" onclick="setTopReportersFilter(10)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 10</button>
+                                        <button id="btnFilterTopAll_mobile" onclick="setTopReportersFilter('all')" class="sm:hidden px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">ทั้งหมด</button>
                                     </div>
                                 </div>
                             </div>
-                            <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="hidden sm:block px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mt-1 sm:mt-0 mbs-control">ทั้งหมด</button>
+                            <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="hidden sm:block px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mt-1 sm:mt-0">ทั้งหมด</button>
                         </div>
                         <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar max-h-[380px]">
                             <div class="divide-y divide-slate-100" id="topReportersList"></div>
@@ -814,19 +800,19 @@ if (isset($_GET['api_check_hash'])) {
 
                 <!-- Recent Transactions (Dashboard) -->
                 <div class="grid grid-cols-1 gap-6 mt-6">
-                    <div class="modern-card overflow-hidden flex flex-col col-span-full mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                    <div class="modern-card overflow-hidden flex flex-col col-span-full">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">Latest 5 repairs in system</p>
                             </div>
-                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group mbs-control">
+                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
                                 See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
                             </button>
                         </div>
-                        <div class="overflow-x-auto pb-4 custom-scrollbar mbs-table-scroll">
-                            <table class="w-full text-left whitespace-nowrap mbs-table">
-                                <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a] mbs-table-head !bg-slate-50 !text-slate-500 !border-slate-200">
+                        <div class="overflow-x-auto pb-4 custom-scrollbar">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
                                     <tr>
                                         <th class="px-6 py-4">Date / Time</th>
                                         <th class="px-6 py-4">Ticket No.</th>
@@ -901,7 +887,7 @@ if (isset($_GET['api_check_hash'])) {
 
             <!-- ✨ หน้า Transactions (All Repairs List) ให้ผู้บริหาร ✨ -->
             <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
-                <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm" id="repairsMainCard">
+                <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
                     <!-- ✨ จัด Layout ส่วน Header ใหม่สำหรับหน้า Repairs List ให้เป็น 2 บรรทัด (สำหรับคอม/iPad แนวนอน) โดยไม่กระทบมือถือ ✨ -->
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col gap-4 bg-white shrink-0 relative z-30">
                         
@@ -914,10 +900,10 @@ if (isset($_GET['api_check_hash'])) {
                             
                             <!-- ปุ่ม ขยายเต็มจอ + ปุ่มกากบาท (ปิด) -->
                             <div class="flex items-center gap-2 shrink-0 ml-4">
-                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50 mbs-control" title="สลับเต็มจอ">
+                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                                     <i class="fas fa-expand text-sm md:text-base" id="maximizeRepairsIcon"></i>
                                 </button>
-                                <button onclick="if(document.getElementById('repairsMainCard').classList.contains('is-fullscreen')) toggleMaximizeRepairs(); else show('dash');" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50 mbs-control" title="ปิด">
+                                <button onclick="if(document.getElementById('repairsMainCard').classList.contains('is-fullscreen')) toggleMaximizeRepairs(); else show('dash');" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
                                     <i class="fas fa-times text-sm md:text-base"></i>
                                 </button>
                             </div>
@@ -931,8 +917,8 @@ if (isset($_GET['api_check_hash'])) {
                             <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
                             <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchInput" oninput="filterRepairsTable(); toggleClearBtn('searchInput', 'clearSearchBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm mbs-input">
-                                <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl mbs-control"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                                <input type="text" id="searchInput" oninput="filterRepairsTable(); toggleClearBtn('searchInput', 'clearSearchBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
                             
                             <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
@@ -979,9 +965,9 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto lg:overflow-x-hidden w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1 mbs-table-scroll" id="repairsTableContainer">
-                        <table class="w-full text-left whitespace-nowrap lg:whitespace-normal lg:min-w-0 mbs-table" id="repairsTable">
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm mbs-table-head !bg-slate-50 !text-slate-500 !border-slate-200">
+                    <div class="overflow-x-auto lg:overflow-x-hidden w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1" id="repairsTableContainer">
+                        <table class="w-full text-left whitespace-nowrap lg:whitespace-normal lg:min-w-0" id="repairsTable">
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-4">Date / Time</th>
                                     <th class="px-6 py-4">Ticket No.</th>
@@ -1144,12 +1130,12 @@ if (isset($_GET['api_check_hash'])) {
                     <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:flex-1 lg:justify-end">
                         <div class="relative w-full sm:flex-1 lg:max-w-[400px] mb-2 sm:mb-0 group">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards(); toggleClearBtn('techSearchFilter', 'clearTechSearchBtn');" placeholder="ค้นหาเจ้าหน้าที่..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-10 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm mbs-input">
-                            <button type="button" id="clearTechSearchBtn" onclick="clearSearchInput('techSearchFilter', filterTechCards)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full mbs-control"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                            <input type="text" id="techSearchFilter" onkeyup="filterTechCards(); toggleClearBtn('techSearchFilter', 'clearTechSearchBtn');" placeholder="ค้นหาเจ้าหน้าที่..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-10 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                            <button type="button" id="clearTechSearchBtn" onclick="clearSearchInput('techSearchFilter', filterTechCards)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                         </div>
 
                         <div class="flex flex-wrap gap-2.5">
-                            <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer mbs-control">ทั้งหมด</button>
+                            <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
                             <?php
                             foreach(array_keys($grouped_technicians) as $d_name) {
                                 // ✨ ซ่อนปุ่มแม่บ้าน ฝ่ายงานทั่วไป และ อื่นๆ ให้เหมือนหน้าแอดมิน ✨
@@ -1321,7 +1307,7 @@ if (isset($_GET['api_check_hash'])) {
 
                                         <div class="mt-auto pt-4">
                                             <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" 
-                                                    class="w-full text-[11px] font-bold text-sky-600 bg-white border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn mbs-control">
+                                                    class="w-full text-[11px] font-bold text-sky-600 bg-white border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn">
                                                 <i class="fas fa-history mr-1.5 text-sky-400 group-hover/btn:text-white transition-colors"></i> 
                                                 ดูประวัติงาน
                                             </button>
@@ -1342,9 +1328,9 @@ if (isset($_GET['api_check_hash'])) {
         </div>
     </main>
 
-    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[140] flex items-center justify-center p-4 mbs-modal">
+    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[140] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
-        <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20 mbs-control">
+        <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
             <i class="fas fa-times text-xl"></i>
         </button>
         <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
@@ -1356,11 +1342,11 @@ if (isset($_GET['api_check_hash'])) {
     </form>
 
     <!-- ✨ Modal หน้าจอพรีวิว (ดีไซน์จัดวางตำแหน่งรูป เลื่อนได้ ซูมได้ สมูท 100%) ✨ -->
-    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col justify-center items-center bg-[#0f0f0f]/95 sm:bg-[#0f0f0f] transition-opacity duration-300 mbs-modal">
+    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col justify-center items-center bg-[#0f0f0f]/95 sm:bg-[#0f0f0f] transition-opacity duration-300">
         
         <!-- ✨ เอา pointer-events-none ออกจาก div และเอา pointer-events-auto ออกจาก button เพื่อไม่ให้ปุ่มล่องหนทะลุจอมาโดนคลิก ✨ -->
         <div class="hidden sm:flex absolute top-0 left-0 w-full justify-between items-center px-6 md:px-12 lg:px-16 py-5 md:py-6 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent">
-            <button type="button" onclick="cancelAvatarUpload()" class="w-12 h-12 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer mbs-control">
+            <button type="button" onclick="cancelAvatarUpload()" class="w-12 h-12 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer">
                 <i class="fas fa-chevron-left text-2xl pr-1"></i>
             </button>
             <h3 class="text-white font-bold text-[16px] md:text-[18px] drop-shadow-md tracking-wide pointer-events-none">ตัวอย่างรูปโปรไฟล์</h3>
@@ -1380,19 +1366,19 @@ if (isset($_GET['api_check_hash'])) {
                 <div id="dragTouchLayer" class="absolute inset-0 z-30 cursor-move" style="touch-action: none;"></div>
             </div>
             <div class="px-6 py-6 sm:pb-10 shrink-0 flex justify-center items-center gap-5 bg-[#0f0f0f] relative z-40 sm:border-t sm:border-white/10 sm:w-full sm:absolute sm:bottom-0 sm:left-0">
-                <button type="button" onclick="cancelAvatarUpload()" class="py-2.5 px-8 sm:px-10 rounded-full bg-rose-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30 mbs-control">
+                <button type="button" onclick="cancelAvatarUpload()" class="py-2.5 px-8 sm:px-10 rounded-full bg-rose-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30">
                     ยกเลิก
                 </button>
-                <button type="button" onclick="processAndUploadCrop()" class="py-2.5 px-8 sm:px-10 rounded-full bg-blue-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30 mbs-control">
+                <button type="button" onclick="processAndUploadCrop()" class="py-2.5 px-8 sm:px-10 rounded-full bg-blue-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
                     บันทึก
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300 mbs-modal">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 mbs-modal" onclick="toggleModal('historyModal')"></div>
-        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100 mbs-modal">
+    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
+        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
             
             <!-- ✨ แก้ไข Header ของ History Modal จัด Layout ให้คอมพิวเตอร์/โน้ตบุ๊ค เป็น 2 บรรทัดเหมือนรูปที่กำหนด ✨ -->
             <!-- ✨ เพิ่ม xl:pb-3 และ xl:gap-3 เพื่อดึงระยะห่างของแถบค้นหาให้แคบลงนิดนึงในจอคอมพิวเตอร์ ✨ -->
@@ -1404,10 +1390,10 @@ if (isset($_GET['api_check_hash'])) {
                     
                     <!-- ปุ่ม ขยาย/ปิด (รวบมาใช้ชุดเดียวแสดงผลทุกอุปกรณ์ ชิดขวา) -->
                     <div class="flex items-center gap-2 shrink-0 ml-4">
-                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50 mbs-control" title="สลับเต็มจอ">
+                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
                         </button>
-                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50 mbs-control" title="ปิด">
+                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
                             <i class="fas fa-times text-sm md:text-base"></i>
                         </button>
                     </div>
@@ -1420,8 +1406,8 @@ if (isset($_GET['api_check_hash'])) {
                     <!-- ✨ ช่องค้นหา: หดความยาวในจอคอม/โน้ตบุ๊คลงมา (xl:w-[450px] 2xl:w-[500px]) ตามฝั่งผู้บริหาร เพื่อให้พอดีกับคอลัมน์ Reporter แน่นอน 100% ✨ -->
                     <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px] group">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable(); toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm mbs-input">
-                        <button type="button" id="clearHistoryModalBtn" onclick="clearSearchInput('searchHistoryModalInput', searchHistoryModalTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl mbs-control"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable(); toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                        <button type="button" id="clearHistoryModalBtn" onclick="clearSearchInput('searchHistoryModalInput', searchHistoryModalTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                     </div>
 
                     <!-- ✨ Group ตัวกรอง เพื่อบังคับให้อยู่บรรทัดเดียวกัน ✨ -->
@@ -1457,9 +1443,9 @@ if (isset($_GET['api_check_hash'])) {
             
             <!-- ✨ เพิ่ม xl:pt-3 เพื่อดึงขอบล่างของตารางขึ้นมาให้ชิด Header มากขึ้นเฉพาะบนหน้าจอคอมพิวเตอร์/โน้ตบุ๊ค ✨ -->
             <div class="p-0 md:p-6 xl:pt-3 overflow-hidden flex-1 bg-[#f8fafc]">
-                <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white mbs-table-scroll">
-                    <table class="w-full text-left whitespace-nowrap min-w-[1200px] mbs-table">
-                        <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm mbs-table-head !bg-slate-50 !text-slate-500 !border-slate-200">
+                <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
+                    <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
+                        <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
                                 <th class="px-6 py-4">Date / Time</th>
                                 <th class="px-6 py-4">Ticket No.</th>
@@ -1482,9 +1468,9 @@ if (isset($_GET['api_check_hash'])) {
         </div>
     </div>
 
-    <div id="techReviewsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 mbs-modal">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm mbs-modal" onclick="toggleModal('techReviewsModal')"></div>
-        <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px] mbs-modal">
+    <div id="techReviewsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techReviewsModal')"></div>
+        <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px]">
             <!-- Header -->
                     <!-- ✨ เพิ่ม pb-[72px] จองพื้นที่ด้านล่างเฉพาะมือถือ ให้ Dropdown มีที่อยู่ไม่ทับใคร ✨ -->
                     <div class="px-5 pt-5 pb-[72px] sm:py-5 border-b border-slate-100 flex justify-between items-start bg-gradient-to-b from-slate-50 to-white shrink-0 relative">
@@ -1501,7 +1487,7 @@ if (isset($_GET['api_check_hash'])) {
                                 <!-- ✨ Dropdown สำหรับเลือกดูช่างในฝ่ายงาน ✨ -->
                                 <!-- ✨ ล็อกตำแหน่ง left-5 right-5 บังคับกว้าง 100% ตรงแนวเดียวกับดาวเป๊ะๆ (เฉพาะมือถือแนวตั้ง) ✨ -->
                                 <div class="absolute bottom-5 left-5 right-5 sm:static sm:mt-3.5 sm:w-auto [&>select]:!w-full sm:[&>select]:!w-max">
-                                    <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm mbs-input">
+                                    <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm">
                                         <!-- Options จะถูกสร้างผ่าน JS -->
                                     </select>
                                 </div>
@@ -1509,7 +1495,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                         
                         <div class="flex flex-col items-end gap-3 shrink-0 ml-3 relative z-10">
-                            <button onclick="toggleModal('techReviewsModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0 mbs-control"><i class="fas fa-times"></i></button>
+                            <button onclick="toggleModal('techReviewsModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
                             <span id="techReviewsModalCount" class="text-xs font-extrabold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full shadow-sm border border-amber-100 whitespace-nowrap mt-1">0 รีวิว</span>
                         </div>
                     </div>
@@ -1529,10 +1515,10 @@ if (isset($_GET['api_check_hash'])) {
                 </div>
                 <!-- ✨ ใช้ flex-col-reverse ในมือถือดัน "ทั้งหมด" ขึ้นบรรทัดบนสุดชิดขวา ✨ -->
                 <div class="flex flex-col-reverse sm:flex-row items-end sm:items-center gap-2 shrink-0">
-                    <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mbs-control">
+                    <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
                         เฉพาะคอมเมนต์
                     </button>
-                    <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mbs-control">
+                    <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">
                         ทั้งหมด
                     </button>
                 </div>

@@ -408,13 +408,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
-<body class="p-4 md:p-10 selection:bg-sky-200 mbs-app mbs-update-repair">
+<body class="p-4 md:p-10 selection:bg-sky-200">
 
     <div class="max-w-5xl mx-auto">
         <?php if($is_admin): ?>
@@ -430,7 +425,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> ระบบจัดการใบงานแจ้งซ่อม</h1>
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
-            <button type="button" onclick="goBack();" class="admin-btn-item bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto cursor-pointer mbs-control">
+            <button type="button" onclick="goBack();" class="admin-btn-item bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto cursor-pointer">
                <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </button>
         </div>
@@ -448,7 +443,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
             <div class="lg:col-span-2 space-y-6">
-                <div class="modern-card p-6 border-t-4 border-sky-500 mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                <div class="modern-card p-6 border-t-4 border-sky-500">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-lg font-bold text-slate-800">ข้อมูลใบงาน</h2>
                         <span class="bg-slate-100 border border-slate-200 px-3 py-1 rounded-lg text-lg font-extrabold text-sky-600 tracking-tight">
@@ -491,7 +486,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 
                             ?>
-                                <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-48 rounded-xl border border-slate-200 overflow-hidden group relative mbs-control">
+                                <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-48 rounded-xl border border-slate-200 overflow-hidden group relative">
                                     <img src="uploads/<?php echo htmlspecialchars($image_file); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                         <span class="text-white font-medium text-sm"><i class="fas fa-expand mr-1"></i> ดูรูปภาพเต็ม</span>
@@ -508,7 +503,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
 
-                <div class="modern-card overflow-hidden border-t-4 border-amber-400 mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                <div class="modern-card overflow-hidden border-t-4 border-amber-400">
                     <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center">
                         <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center mr-3">
                             <i class="fas fa-star text-sm"></i>
@@ -579,7 +574,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
             <div class="lg:col-span-3">
-                <div class="modern-card p-6 md:p-8 h-full flex flex-col mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                <div class="modern-card p-6 md:p-8 h-full flex flex-col">
                     <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-6">บันทึกการปฏิบัติงาน</h2>
 
                     <form id="updateForm" action="<?php echo htmlspecialchars($form_action); ?>" method="POST" class="space-y-6 flex-1 flex flex-col">
@@ -594,7 +589,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             }
                         ?>
                         <div class="mb-4 relative" id="techDropdownContainer">
-                            <label class="block text-sm font-semibold text-slate-700 mb-2 mbs-label"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
                             
                             <?php if (!empty($current_tech_full) && $current_tech_full !== '-' && !$is_admin): ?>
                                 <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center shadow-sm">
@@ -609,9 +604,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($current_tech_full); ?>">
                             <?php else: ?>
                                 <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 transition-all cursor-text shadow-sm" onclick="toggleTechDropdown(event, true)">
-                                    <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400 mbs-input" placeholder="-- ค้นหาหรือเลือกช่าง --">
+                                    <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="-- ค้นหาหรือเลือกช่าง --">
                                     
-                                    <button type="button" class="px-4 py-3 text-slate-400 hover:text-sky-600 focus:outline-none flex items-center justify-center mbs-control" onclick="toggleTechDropdown(event)">
+                                    <button type="button" class="px-4 py-3 text-slate-400 hover:text-sky-600 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
                                         <i class="fas fa-caret-down text-lg"></i>
                                     </button>
                                 </div>
@@ -659,13 +654,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <div class="flex justify-between items-center mb-2">
-                                        <label class="block text-sm font-semibold text-slate-700 mbs-label"><i class="fas fa-barcode text-sky-500 mr-1.5"></i> รหัสครุภัณฑ์ (ที่ซ่อม)</label>
-                                        <button type="button" onclick="openAssetModal()" class="text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg font-bold transition-all shadow-sm flex items-center shrink-0 mbs-control">
+                                        <label class="block text-sm font-semibold text-slate-700"><i class="fas fa-barcode text-sky-500 mr-1.5"></i> รหัสครุภัณฑ์ (ที่ซ่อม)</label>
+                                        <button type="button" onclick="openAssetModal()" class="text-[11px] bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg font-bold transition-all shadow-sm flex items-center shrink-0">
                                             <i class="fas fa-plus mr-1"></i> เพิ่มใหม่
                                         </button>
                                     </div>
                                     <input type="text" name="asset_code" id="asset_code" list="asset_code_list" 
-                                           class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all shadow-sm relative mbs-input"
+                                           class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all shadow-sm relative" 
                                            placeholder="-- เลือกรหัส หรือพิมพ์ค้นหา --" 
                                            value="<?php echo isset($repair['asset_code']) ? htmlspecialchars($repair['asset_code']) : ''; ?>">
                                     
@@ -680,8 +675,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2 mbs-label"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
-                                    <select name="asset_status" id="asset_status" class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm mt-0.5 md:mt-0 mbs-input">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-heartbeat text-sky-500 mr-2"></i> สถานะครุภัณฑ์ (ปัจจุบัน)</label>
+                                    <select name="asset_status" id="asset_status" class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer shadow-sm mt-0.5 md:mt-0">
                                         <option value="ใช้งานปกติ">🟢 ใช้งานปกติ</option>
                                         <option value="ชำรุด/ส่งซ่อม">🟠 ชำรุด/ส่งซ่อม</option>
                                         <option value="แทงจำหน่าย">🔴 แทงจำหน่าย</option>
@@ -696,41 +691,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">ชื่อครุภัณฑ์ <span class="text-red-500">*</span></label>
-                                        <input type="text" name="new_asset_name" id="new_asset_name" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mbs-input" placeholder="เช่น คอมพิวเตอร์ DELL">
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ชื่อครุภัณฑ์ <span class="text-red-500">*</span></label>
+                                        <input type="text" name="new_asset_name" id="new_asset_name" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="เช่น คอมพิวเตอร์ DELL">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">หมวดหมู่</label>
-                                        <select name="new_asset_category" id="new_asset_category" onchange="toggleCustomInput(this, 'new_asset_category_custom')" class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer mbs-input">
+                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
+                                        <select name="new_asset_category" id="new_asset_category" onchange="toggleCustomInput(this, 'new_asset_category_custom')" class="custom-select w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm cursor-pointer">
                                             <?php foreach($asset_categories as $cat): ?>
                                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
                                             <?php endforeach; ?>
                                             <option value="อื่นๆ">อื่นๆ (พิมพ์ระบุเอง)</option>
                                         </select>
-                                        <input type="text" name="new_asset_category_custom" id="new_asset_category_custom" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mbs-input" placeholder="ระบุหมวดหมู่ใหม่">
+                                        <input type="text" name="new_asset_category_custom" id="new_asset_category_custom" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="ระบุหมวดหมู่ใหม่">
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2 mbs-label"><i class="fas fa-tasks text-sky-500 mr-2"></i> อัปเดตสถานะงานแจ้งซ่อม <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-tasks text-sky-500 mr-2"></i> อัปเดตสถานะงานแจ้งซ่อม <span class="text-red-500">*</span></label>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <label class="cursor-pointer mbs-label">
+                                <label class="cursor-pointer">
                                     <input type="radio" name="status" value="รอรับเรื่อง" class="peer sr-only" <?php echo ($repair['status'] == 'รอรับเรื่อง') ? 'checked' : ''; ?> required>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-amber-50 peer-checked:border-amber-300 peer-checked:text-amber-700 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-clock mb-1 text-lg"></i>
                                         <div class="text-sm font-medium">รอรับเรื่อง</div>
                                     </div>
                                 </label>
-                                <label class="cursor-pointer mbs-label">
+                                <label class="cursor-pointer">
                                     <input type="radio" name="status" value="กำลังดำเนินการ" class="peer sr-only" <?php echo ($repair['status'] == 'กำลังดำเนินการ' || $repair['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') ? 'checked' : ''; ?>>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-sky-50 peer-checked:border-sky-300 peer-checked:text-sky-700 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-tools mb-1 text-lg"></i>
                                         <div class="text-sm font-medium">กำลังดำเนินการ</div>
                                     </div>
                                 </label>
-                                <label class="cursor-pointer mbs-label">
+                                <label class="cursor-pointer">
                                     <input type="radio" name="status" value="ซ่อมเสร็จแล้ว" class="peer sr-only" <?php echo ($repair['status'] == 'ซ่อมเสร็จแล้ว' || $repair['status'] == 'เสร็จสิ้น') ? 'checked' : ''; ?>>
                                     <div class="text-center p-3 rounded-xl border border-slate-200 bg-white peer-checked:bg-emerald-50 peer-checked:border-emerald-300 peer-checked:text-emerald-700 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-check-circle mb-1 text-lg"></i>
@@ -741,12 +736,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
 
                         <div class="w-full">
-                            <label class="block text-sm font-semibold text-slate-700 mb-2 mbs-label"><i class="fas fa-edit text-sky-500 mr-2"></i> บันทึกผลการดำเนินการ / หมายเหตุช่าง</label>
-                            <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none mbs-input"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-edit text-sky-500 mr-2"></i> บันทึกผลการดำเนินการ / หมายเหตุช่าง</label>
+                            <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
                         </div>
 
                         <div class="flex flex-col md:flex-row justify-end gap-3 mt-2">
-                            <button type="submit" class="w-full md:w-auto bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center mbs-control mbs-submit">
+                            <button type="submit" class="w-full md:w-auto bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
                                 <i class="fas fa-save mr-2"></i> บันทึกข้อมูลและแจ้งเตือน
                             </button>
                         </div>
@@ -756,50 +751,50 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         </div>
         <?php else: ?>
-            <div class="modern-card p-12 text-center mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+            <div class="modern-card p-12 text-center">
                 <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-exclamation-triangle text-3xl text-slate-400"></i>
                 </div>
                 <h2 class="text-xl font-bold text-slate-700 mb-2">ไม่พบข้อมูลใบงาน</h2>
                 <?php if($is_admin): ?>
-                <button type="button" onclick="window.close();" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block mt-4 cursor-pointer mbs-control">กลับหน้ารายการ</button>
+                <button type="button" onclick="window.close();" class="bg-sky-600 hover:bg-sky-500 text-white px-6 py-2.5 rounded-xl font-medium transition-colors inline-block mt-4 cursor-pointer">กลับหน้ารายการ</button>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
     </div>
 
-    <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 mbs-modal">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm mbs-modal" onclick="toggleModal('assetModal')"></div>
-        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all mbs-modal">
+    <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
+        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
                 <p class="text-lg font-extrabold text-slate-800" id="assetModalTitle">Add Asset</p>
-                <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm mbs-control"><i class="fas fa-times"></i></button>
+                <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
             <form action="update_repair.php?id=<?php echo $id; ?>" method="POST" class="p-6">
                 <input type="hidden" name="save_asset_only" value="1"><input type="hidden" name="asset_id" id="asset_id" value="">
                 <div class="space-y-5">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">Asset Code <span class="text-red-500">*</span></label>
-                        <input type="text" name="modal_asset_code" id="modal_asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium mbs-input">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Code <span class="text-red-500">*</span></label>
+                        <input type="text" name="modal_asset_code" id="modal_asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">Asset Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="modal_asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium mbs-input">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="modal_asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">Category</label>
-                        <select name="modal_category" id="modal_category" onchange="toggleCustomInput(this, 'modal_category_custom')" required class="custom-select w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer mbs-input">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
+                        <select name="modal_category" id="modal_category" onchange="toggleCustomInput(this, 'modal_category_custom')" required class="custom-select w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
                             <?php foreach($asset_categories as $cat): ?>
                                 <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
                             <?php endforeach; ?>
                             <option value="อื่นๆ">อื่นๆ (พิมพ์ระบุเอง)</option>
                         </select>
-                        <input type="text" name="modal_category_custom" id="modal_category_custom" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mbs-input" placeholder="ระบุหมวดหมู่ใหม่">
+                        <input type="text" name="modal_category_custom" id="modal_category_custom" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="ระบุหมวดหมู่ใหม่">
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end gap-3">
-                    <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm mbs-control">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all mbs-control mbs-submit">Save Asset</button>
+                    <button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Asset</button>
                 </div>
             </form>
         </div>
