@@ -8,8 +8,14 @@
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap');
         body { font-family: 'Prompt', sans-serif; }
     </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body class="bg-indigo-50 flex items-center justify-center h-screen">
+<body class="bg-indigo-50 flex items-center justify-center h-screen mbs-app mbs-index-legacy">
 
     <div class="bg-white p-10 rounded-3xl shadow-2xl w-96 border border-indigo-100">
         <div class="text-center mb-8">
@@ -19,15 +25,15 @@
 
         <form id="loginForm" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Username</label>
-                <input type="text" id="username" class="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="admin หรือ executive" required>
+                <label class="block text-sm font-medium text-gray-700 mbs-label">Username</label>
+                <input type="text" id="username" class="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none mbs-input" placeholder="admin หรือ executive" required>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" id="password" class="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="••••••••" required>
+                <label class="block text-sm font-medium text-gray-700 mbs-label">Password</label>
+                <input type="password" id="password" class="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none mbs-input" placeholder="••••••••" required>
             </div>
             <p id="errorMsg" class="text-red-500 text-sm hidden">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</p>
-            <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition transform hover:scale-[1.02]">เข้าสู่ระบบ</button>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition transform hover:scale-[1.02] mbs-control mbs-submit">เข้าสู่ระบบ</button>
         </form>
 
         <div class="mt-6 text-center text-sm text-gray-500">

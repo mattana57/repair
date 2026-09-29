@@ -241,9 +241,13 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
         .month-dropdown-item.kb-active-item, .year-dropdown-item.kb-active-item { background-color: #eef2ff !important; color: #4f46e5 !important; }
         .dark .month-dropdown-item.kb-active-item, .dark .year-dropdown-item.kb-active-item { background-color: #475569 !important; color: #a5b4fc !important; }
     </style>
-    <link rel="stylesheet" href="assets/repair-ui.css?v=1" media="screen">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
-<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col mbs-app mbs-executive-report mbs-document">
 
     <!-- แถบเมนูควบคุม -->
     <div class="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-4 px-6 sticky top-0 z-50 shadow-md transition-colors duration-300">
@@ -254,7 +258,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                 
                 <!-- ✨ ปรับ pr-[50px] lg:pr-0 เพื่อเว้นที่ให้ปุ่มพระจันทร์ด้านขวาบน iPad แนวตั้ง ✨ -->
                 <div class="flex items-center space-x-4 w-full lg:w-auto justify-start shrink-0 pr-[50px] lg:pr-0">
-                    <button type="button" onclick="window.close();" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center cursor-pointer">
+                    <button type="button" onclick="window.close();" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-200 dark:bg-violet-600 dark:hover:bg-violet-500 dark:border-violet-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center cursor-pointer mbs-control">
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </button>
                     <h1 class="font-extrabold text-sm border-l-2 border-slate-200 dark:border-slate-500 pl-4 text-slate-800 dark:text-slate-100 tracking-wide hidden sm:block">รายงานสรุปผลการปฏิบัติงานซ่อม</h1>
@@ -270,8 +274,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                         <div class="relative flex-1 portrait:w-full portrait:flex-none min-w-[200px] lg:w-60 lg:flex-none" id="techDropdownContainer">
                             <div class="flex items-center w-full bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-500 shadow-sm focus-within:ring-2 focus-within:ring-indigo-400 transition-colors cursor-text overflow-hidden" onclick="toggleTechDropdown(event, true)">
                                 <i class="fas fa-search pl-3 text-slate-400 dark:text-slate-300 opacity-80"></i>
-                                <input type="text" id="techSearchInput" class="w-full bg-transparent px-2 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
-                                <button type="button" class="pr-3 pl-1 text-slate-400 dark:text-slate-300 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
+                                <input type="text" id="techSearchInput" class="w-full bg-transparent px-2 py-2 focus:outline-none placeholder-slate-400 dark:placeholder-slate-300 mbs-input" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" placeholder="ค้นหาชื่อช่าง...">
+                                <button type="button" class="pr-3 pl-1 text-slate-400 dark:text-slate-300 focus:outline-none flex items-center justify-center mbs-control" onclick="toggleTechDropdown(event)">
                                     <i class="fas fa-caret-down text-sm"></i>
                                 </button>
                             </div>
@@ -355,7 +359,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                         </div>
 
                         <!-- ✨ ย้ายปุ่มพระจันทร์ลอยขึ้นไปขวาบนสุดเฉพาะในมือถือแนวตั้ง (ปรับเป็น right-0 ให้ชิดขวาเป๊ะ) และคงตำแหน่งเดิมใน iPad แนวตั้ง ✨ -->
-                        <button id="theme-toggle" type="button" class="w-[42px] h-[42px] portrait:absolute portrait:top-0 portrait:right-0 md:portrait:static portrait:w-[34px] portrait:h-[34px] md:portrait:w-[38px] md:portrait:h-[38px] rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors ml-auto sm:ml-0">
+                        <button id="theme-toggle" type="button" class="w-[42px] h-[42px] portrait:absolute portrait:top-0 portrait:right-0 md:portrait:static portrait:w-[34px] portrait:h-[34px] md:portrait:w-[38px] md:portrait:h-[38px] rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-amber-400 shadow-sm flex items-center justify-center shrink-0 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors ml-auto sm:ml-0 mbs-control">
                             <i id="theme-toggle-icon" class="fas fa-moon portrait:text-sm md:portrait:text-base"></i>
                         </button>
                     </form>
@@ -372,14 +376,14 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
 
                     <!-- ปุ่ม ตารางรายงาน -->
                     <a href="executive_report.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm active:scale-95 hover:bg-indigo-100">
+                       class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 shadow-sm active:scale-95 hover:bg-indigo-100 mbs-control">
                         <i class="fas fa-table mr-1.5 text-indigo-600 dark:text-indigo-200"></i> ตารางรายงาน
                     </a>
                     
                     <!-- ปุ่ม Export to Excel (ปรับลดขนาดเป็น px-4 py-1.5 ให้เท่ากัน และเพิ่มเอฟเฟกต์คลิก) -->
                     <a href="export_excel.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                        target="_blank"
-                       class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-sm active:scale-95 transition-all duration-200 flex items-center border border-emerald-600 ml-1">
+                       class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-4 py-1.5 rounded-full font-bold shadow-sm active:scale-95 transition-all duration-200 flex items-center border border-emerald-600 ml-1 mbs-control">
                         <i class="fas fa-file-excel mr-1.5 text-emerald-100"></i> Export to Excel
                     </a>
                 </div>
@@ -396,13 +400,13 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
         <!-- ✨ กลุ่มปุ่มด้านบนกระดาษ ลดขนาดเฉพาะมือถือแนวตั้งให้อยู่บรรทัดเดียวกันแบบพอดี และคงสภาพเดิมใน iPad แนวตั้ง ✨ -->
         <div class="no-print mx-auto w-full max-w-[210mm] mt-8 flex portrait:flex portrait:flex-nowrap lg:hidden justify-start px-4 xl:px-0 portrait:gap-2 md:portrait:gap-2.5">
             <a href="executive_report.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
-               class="rounded-full font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 px-5 py-1.5 text-xs portrait:px-3.5 portrait:py-1 portrait:text-[11px] md:portrait:px-5 md:portrait:py-1.5 md:portrait:text-xs portrait:w-auto">
+               class="rounded-full font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600 px-5 py-1.5 text-xs portrait:px-3.5 portrait:py-1 portrait:text-[11px] md:portrait:px-5 md:portrait:py-1.5 md:portrait:text-xs portrait:w-auto mbs-control">
                 <i class="fas fa-table mr-1.5 text-indigo-700 dark:text-white"></i> ตารางรายงาน
             </a>
             
             <a href="export_excel.php?tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
                target="_blank"
-               class="rounded-full font-bold transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 px-5 py-1.5 text-xs portrait:px-3.5 portrait:py-1 portrait:text-[11px] md:portrait:px-5 md:portrait:py-1.5 md:portrait:text-xs portrait:w-auto">
+               class="rounded-full font-bold transition-all duration-200 flex items-center justify-center shadow-sm active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 px-5 py-1.5 text-xs portrait:px-3.5 portrait:py-1 portrait:text-[11px] md:portrait:px-5 md:portrait:py-1.5 md:portrait:text-xs portrait:w-auto mbs-control">
                 <i class="fas fa-file-excel mr-1.5 text-emerald-100"></i> Export to Excel
             </a>
         </div>
@@ -456,8 +460,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
 
                     <div class="mb-5">
                         <h3 class="font-bold text-sm text-slate-800 mb-2">สรุปภาพรวมการซ่อมบำรุง (KPI Summary)</h3>
-                        <table class="w-full text-xs text-center border-collapse border border-slate-300">
-                            <thead class="bg-slate-100 font-bold border-b border-slate-300">
+                        <table class="w-full text-xs text-center border-collapse border border-slate-300 mbs-table">
+                            <thead class="bg-slate-100 font-bold border-b border-slate-300 mbs-table-head">
                                 <tr>
                                     <th class="p-2 border-r border-slate-300">จำนวนรับแจ้งทั้งหมด</th>
                                     <th class="p-2 border-r border-slate-300">ดำเนินการเสร็จสิ้น</th>
@@ -492,8 +496,8 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รา
                     </div>
                 <?php endif; ?>
 
-                <table class="w-full text-xs border-collapse border border-slate-300">
-                    <thead class="bg-slate-100 font-bold text-slate-700 border-b border-slate-300">
+                <table class="w-full text-xs border-collapse border border-slate-300 mbs-table">
+                    <thead class="bg-slate-100 font-bold text-slate-700 border-b border-slate-300 mbs-table-head">
                         <tr>
                             <th class="p-1.5 w-8 text-center border-r border-slate-300">ลำดับ</th>
                             <th class="p-1.5 w-24 text-center border-r border-slate-300">วัน/เวลา รับแจ้ง</th>

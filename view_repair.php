@@ -117,9 +117,13 @@ if (isset($_GET['id'])) {
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
         .bg-pattern { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
     </style>
-    <link rel="stylesheet" href="assets/repair-ui.css?v=1" media="screen">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
-<body class="p-6 md:p-10 selection:bg-sky-200 relative">
+<body class="p-6 md:p-10 selection:bg-sky-200 relative mbs-app mbs-view-repair">
 
     <div class="absolute inset-0 bg-pattern opacity-50 -z-10"></div>
 
@@ -138,7 +142,7 @@ if (isset($_GET['id'])) {
                 <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
             </div>
             <div class="flex gap-3 w-full sm:w-auto mobile-btn-wrap">
-                <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm whitespace-nowrap mobile-btn">
+                <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm whitespace-nowrap mobile-btn mbs-control">
                     <i class="fas fa-times mr-2"></i> ปิดหน้าต่าง
                 </a>
             </div>
@@ -155,7 +159,7 @@ if (isset($_GET['id'])) {
         <div class="space-y-6">
 
             <!-- ✨ ปลดล็อก border-t-4 border-sky-500 ให้แสดงผลตลอดเวลา (ทุกสิทธิ์การใช้งาน) เพื่อให้กรอบสีฟ้าขึ้นในคอมพิวเตอร์ฝั่งแอดมินด้วย ✨ -->
-            <div class="modern-card p-6 md:p-8 flex flex-col landscape:flex-row md:flex-row justify-between items-start landscape:items-center md:items-center gap-6 border-t-4 border-sky-500">
+            <div class="modern-card p-6 md:p-8 flex flex-col landscape:flex-row md:flex-row justify-between items-start landscape:items-center md:items-center gap-6 border-t-4 border-sky-500 mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                 <div>
                     <!-- ✨ ปรับขนาดคำว่ารหัสใบงานให้เท่ากับหัวข้อข้อมูลใบงานฝั่งแอดมิน (text-lg font-bold) ✨ -->
                     <p class="text-lg font-bold text-slate-800 mb-1">รหัสใบงาน (TICKET NO.)</p>
@@ -174,7 +178,7 @@ if (isset($_GET['id'])) {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <!-- ฝั่งซ้าย: ข้อมูลผู้แจ้ง -->
-                <div class="modern-card overflow-hidden">
+                <div class="modern-card overflow-hidden mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                     <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center">
                         <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
                             <i class="fas fa-user-tie text-sm"></i>
@@ -238,7 +242,7 @@ if (isset($_GET['id'])) {
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 
                             ?>
-                                <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-40 rounded-xl border border-slate-200 overflow-hidden relative group">
+                                <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-40 rounded-xl border border-slate-200 overflow-hidden relative group mbs-control">
                                     <img src="uploads/<?php echo htmlspecialchars($image_file); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                     <div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                         <span class="text-white font-medium text-sm bg-black/40 px-3 py-1.5 rounded-lg backdrop-blur-sm"><i class="fas fa-search-plus mr-1.5"></i> คลิกดูรูปเต็ม</span>
@@ -256,7 +260,7 @@ if (isset($_GET['id'])) {
                 </div>
 
                 <!-- ฝั่งขวา: ข้อมูลการปฏิบัติงาน -->
-                <div class="modern-card overflow-hidden flex flex-col h-full">
+                <div class="modern-card overflow-hidden flex flex-col h-full mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                     <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between">
                         <div class="flex items-start md:items-center">
                             <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3 shrink-0 mt-1 md:mt-0">
@@ -312,7 +316,7 @@ if (isset($_GET['id'])) {
                         <?php endif; ?>
 
                         <!-- ✨ ดีไซน์ใหม่: เปลี่ยนเป็นรูปแบบการ์ดขอบเหลือง (แสดงผลให้เห็นทุกอุปกรณ์) ✨ -->
-                        <div class="mt-6 modern-card overflow-hidden border-t-4 border-amber-400">
+                        <div class="mt-6 modern-card overflow-hidden border-t-4 border-amber-400 mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                             <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center">
                                 <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center mr-3">
                                     <i class="fas fa-star text-sm"></i>
@@ -459,7 +463,7 @@ if (isset($_GET['id'])) {
             </div>
         </div> 
         <?php else: ?>
-            <div class="modern-card p-16 text-center mt-10">
+            <div class="modern-card p-16 text-center mt-10 mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                 <i class="fas fa-search text-5xl text-slate-300 mb-4 block"></i>
                 <h2 class="text-2xl font-bold text-slate-700 mb-2">ไม่พบข้อมูลใบงาน</h2>
                 <p class="text-slate-500">รหัสอ้างอิงไม่ถูกต้อง หรือใบงานนี้อาจถูกลบออกจากระบบแล้ว</p>

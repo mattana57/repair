@@ -116,14 +116,19 @@ $reporter_name = isset($_SESSION['full_name']) && !empty($_SESSION['full_name'])
             background: linear-gradient(135deg, #033495 0%, #6A9CFD 100%);
         }
     </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
-<body>
+<body class="mbs-app mbs-executive-summary-report mbs-document">
 
     <!-- แถบเมนูด้านบน -->
     <div class="no-print bg-palette-header text-white p-3.5 sticky top-0 z-50 shadow-md">
         <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center space-x-3">
-                <a href="executive_dashboard.php" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all backdrop-blur-sm">
+                <a href="executive_dashboard.php" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all backdrop-blur-sm mbs-control">
                     ← กลับหน้า Dashboard
                 </a>
                 <h1 class="font-bold text-sm border-l border-white/30 pl-3 text-white tracking-wide hidden sm:block">รายงานสรุปผู้บริหาร</h1>
@@ -132,7 +137,7 @@ $reporter_name = isset($_SESSION['full_name']) && !empty($_SESSION['full_name'])
             <div class="flex items-center gap-3">
                 <!-- 🟢 เพิ่มฟอร์มเลือกเดือน -->
                 <form method="GET" action="" class="flex items-center gap-2">
-                    <select name="month" class="bg-white text-[#033495] font-semibold text-xs rounded-xl px-3 py-1.5 border border-sky-200 shadow-sm focus:outline-none cursor-pointer">
+                    <select name="month" class="bg-white text-[#033495] font-semibold text-xs rounded-xl px-3 py-1.5 border border-sky-200 shadow-sm focus:outline-none cursor-pointer mbs-input">
                         <?php 
                         for($m=1; $m<=12; $m++) {
                             $sel = ($selected_month === $m) ? 'selected' : '';
@@ -140,12 +145,12 @@ $reporter_name = isset($_SESSION['full_name']) && !empty($_SESSION['full_name'])
                         }
                         ?>
                     </select>
-                    <button type="submit" class="bg-[#033495] hover:bg-[#022578] text-white text-xs px-3.5 py-1.5 rounded-xl font-bold transition-all shadow-sm">
+                    <button type="submit" class="bg-[#033495] hover:bg-[#022578] text-white text-xs px-3.5 py-1.5 rounded-xl font-bold transition-all shadow-sm mbs-control mbs-submit">
                         ค้นหา
                     </button>
                 </form>
 
-                <button type="button" onclick="window.print()" class="bg-[#AEE4FF] hover:bg-[#8CD8FF] text-[#033495] text-xs px-3.5 py-1.5 rounded-xl font-bold shadow-md transition-all">
+                <button type="button" onclick="window.print()" class="bg-[#AEE4FF] hover:bg-[#8CD8FF] text-[#033495] text-xs px-3.5 py-1.5 rounded-xl font-bold shadow-md transition-all mbs-control">
                     🖨️ พิมพ์ / โหลด PDF
                 </button>
             </div>
@@ -163,7 +168,7 @@ $reporter_name = isset($_SESSION['full_name']) && !empty($_SESSION['full_name'])
             </div>
 
             <!-- รายละเอียดส่วนหัว -->
-            <table class="memo-table pb-1">
+            <table class="memo-table pb-1 mbs-table">
                 <tr>
                     <td class="memo-lbl">ส่วนราชการ</td>
                     <td colspan="3">ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</td>

@@ -931,12 +931,17 @@ if (isset($_GET['api_check_hash'])) {
 
     </style>
     
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
-<body class="flex h-screen overflow-hidden selection:bg-indigo-100">
+<body class="flex h-screen overflow-hidden selection:bg-indigo-100 mbs-app mbs-dashboard">
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden xl:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
+    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print mbs-sidebar">
         <!-- ✨ เพิ่มสีพื้นหลังม่วงอมฟ้าสว่างๆ ให้กล่องโลโก้ดูโดดเด่นและเข้าธีม ✨ -->
         <div class="sidebar-logo-box flex items-center border-b border-indigo-50 bg-[#f4f4fd]">
             <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3.5 shrink-0 hover:scale-105 transition-transform duration-300">
@@ -962,32 +967,32 @@ if (isset($_GET['api_check_hash'])) {
         ?>
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dashboard</p>
-            <button onclick="show('dash')" class="nav-btn <?php echo $active_tab === 'dash' ? 'active-btn' : ''; ?>" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
-            <button onclick="show('repairs')" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?>" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
-            <button onclick="show('technicians')" class="nav-btn <?php echo $active_tab === 'technicians' ? 'active-btn' : ''; ?>" id="btn-technicians"><i class="fas fa-user-friends"></i> Team</button>
-            <button onclick="show('team_cards')" class="nav-btn <?php echo $active_tab === 'team_cards' ? 'active-btn' : ''; ?>" id="btn-team_cards"><i class="fas fa-id-badge"></i> Technician</button>
+            <button onclick="show('dash')" class="nav-btn <?php echo $active_tab === 'dash' ? 'active-btn' : ''; ?> mbs-control" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
+            <button onclick="show('repairs')" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?> mbs-control" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
+            <button onclick="show('technicians')" class="nav-btn <?php echo $active_tab === 'technicians' ? 'active-btn' : ''; ?> mbs-control" id="btn-technicians"><i class="fas fa-user-friends"></i> Team</button>
+            <button onclick="show('team_cards')" class="nav-btn <?php echo $active_tab === 'team_cards' ? 'active-btn' : ''; ?> mbs-control" id="btn-team_cards"><i class="fas fa-id-badge"></i> Technician</button>
             
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Management</p>
-            <button onclick="show('assets')" class="nav-btn <?php echo $active_tab === 'assets' ? 'active-btn' : ''; ?>" id="btn-assets"><i class="fas fa-box-open"></i> Assets</button>
-            <button onclick="show('users')" class="nav-btn <?php echo $active_tab === 'users' ? 'active-btn' : ''; ?>" id="btn-users"><i class="fas fa-address-book"><</i> Contacts</button>
-            <button onclick="show('reports')" class="nav-btn <?php echo $active_tab === 'reports' ? 'active-btn' : ''; ?>" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
+            <button onclick="show('assets')" class="nav-btn <?php echo $active_tab === 'assets' ? 'active-btn' : ''; ?> mbs-control" id="btn-assets"><i class="fas fa-box-open"></i> Assets</button>
+            <button onclick="show('users')" class="nav-btn <?php echo $active_tab === 'users' ? 'active-btn' : ''; ?> mbs-control" id="btn-users"><i class="fas fa-address-book"><</i> Contacts</button>
+            <button onclick="show('reports')" class="nav-btn <?php echo $active_tab === 'reports' ? 'active-btn' : ''; ?> mbs-control" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
-                <a href="logout.php" class="nav-btn group text-slate-500 hover:!bg-rose-50 hover:!text-rose-600">
+                <a href="logout.php" class="nav-btn group text-slate-500 hover:!bg-rose-50 hover:!text-rose-600 mbs-control">
                     <i class="fas fa-sign-out-alt group-hover:!text-rose-600"></i> Logout
                 </a>
             </div>
         </nav>
     </aside>
 
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc]">
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#f8fafc] mbs-main min-w-0">
         
         <!-- ✨ แก้ไขพื้นที่กดของปุ่ม Sidebar ให้พอดีและป้องกันการคลิกทะลุ ✨ -->
-        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50 gap-2 pointer-events-auto">
+        <header class="top-header bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 flex items-center justify-between z-30 sticky top-0 no-print shadow-md shadow-indigo-200/50 gap-2 pointer-events-auto mbs-topbar">
             <div class="flex items-center min-w-0 pr-2">
                 <!-- ✨ เพิ่มการตีกรอบปุ่มให้ชัดเจน ป้องกันพื้นที่ด้านข้างโดนกด ✨ -->
                 <!-- ปรับ -ml-4 (ดันซ้ายมือถือ) และ mr-1 (ลดช่องว่างขวามือถือ) ส่วน sm: จะคืนค่าเดิมให้ iPad/PC -->
-                <button onclick="toggleSidebar()" type="button" class="xl:hidden -ml-4 sm:ml-0 mr-1 sm:mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0 w-12 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors z-50">
+                <button aria-label="เปิดหรือปิดเมนูหลัก" onclick="toggleSidebar()" type="button" class="xl:hidden -ml-4 sm:ml-0 mr-1 sm:mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0 w-12 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors z-50 mbs-control">
                     <i class="fas fa-bars text-[26px]"></i>
                 </button>
                 <h3 class="text-[18px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate select-none pointer-events-none" id="headerTitle"><?php echo $currentTitle; ?></h3>
@@ -1021,14 +1026,14 @@ if (isset($_GET['api_check_hash'])) {
                         
                         <!-- 🚨 กล่องเมนูย่อยสีเทาเข้ม: มือถือโชว์ด้านล่างรูป, คอม/ไอแพดโชว์ด้านซ้ายเหมือนเดิม 🚨 -->
                         <div id="avatarActionMenu" class="absolute left-5 top-[85px] sm:left-auto sm:right-full sm:top-3 sm:mr-3 w-48 bg-[#2a2d36] rounded-2xl shadow-2xl border border-slate-700 py-2 hidden flex-col z-[60] text-white animate-fade-in">
-                            <button type="button" onclick="openImageModal('<?php echo $current_user_avatar; ?>'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
+                            <button type="button" onclick="openImageModal('<?php echo $current_user_avatar; ?>'); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3 mbs-control">
                                 <i class="fas fa-eye text-slate-300 w-4 text-center"></i> ดูรูปภาพ
                             </button>
-                            <button type="button" onclick="document.getElementById('profileAvatarInput').removeAttribute('capture'); document.getElementById('profileAvatarInput').click(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3">
+                            <button type="button" onclick="document.getElementById('profileAvatarInput').removeAttribute('capture'); document.getElementById('profileAvatarInput').click(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold hover:bg-slate-700 transition-colors flex items-center gap-3 mbs-control">
                                 <i class="fas fa-camera text-slate-300 w-4 text-center"></i> เปลี่ยนรูปภาพ
                             </button>
                             <?php if ($has_custom_avatar): ?>
-                            <button type="button" onclick="confirmDeleteProfileAvatar(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold text-rose-400 hover:bg-slate-700 transition-colors flex items-center gap-3">
+                            <button type="button" onclick="confirmDeleteProfileAvatar(); closeAvatarMenu();" class="px-4 py-2.5 text-left text-[13px] font-bold text-rose-400 hover:bg-slate-700 transition-colors flex items-center gap-3 mbs-control">
                                 <i class="fas fa-trash-alt text-rose-400 w-4 text-center"></i> ลบรูปภาพ
                             </button>
                             <?php endif; ?>
@@ -1062,7 +1067,7 @@ if (isset($_GET['api_check_hash'])) {
 
                     <!-- รายการคำสั่งของโปรไฟล์ -->
                     <div class="px-2 py-2 space-y-1">
-                        <button type="button" onclick="const editBtn = document.getElementById('btn-edit-admin-<?php echo $_SESSION['user_id'] ?? ''; ?>'); if(editBtn) editBtn.click(); else openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
+                        <button type="button" onclick="const editBtn = document.getElementById('btn-edit-admin-<?php echo $_SESSION['user_id'] ?? ''; ?>'); if(editBtn) editBtn.click(); else openTechAdminModal('Admin', '<?php echo $_SESSION['user_id'] ?? ''; ?>'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors mbs-control">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
                                     <i class="fas fa-user-edit text-xs"></i>
@@ -1075,7 +1080,7 @@ if (isset($_GET['api_check_hash'])) {
                             <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
                         </button>
 
-                        <button type="button" onclick="show('technicians'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
+                        <button type="button" onclick="show('technicians'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors mbs-control">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                                     <i class="fas fa-users-cog text-xs"></i>
@@ -1088,7 +1093,7 @@ if (isset($_GET['api_check_hash'])) {
                             <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
                         </button>
 
-                        <button type="button" onclick="show('reports'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
+                        <button type="button" onclick="show('reports'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors mbs-control">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
                                     <i class="fas fa-file-invoice text-xs"></i>
@@ -1107,12 +1112,21 @@ if (isset($_GET['api_check_hash'])) {
         </header>
 
         <!-- ✨ ซ่อนความทึบเป็น 0 ไว้ชั่วคราวก่อน เพื่อไม่ให้เห็นจังหวะจอเด้งขึ้นบนสุด ✨ -->
-        <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" style="opacity: 0;">
+        <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 mbs-content" style="opacity: 0;">
             
             <div id="dash" class="section <?php echo $active_tab === 'dash' ? '' : 'hidden'; ?> space-y-6 animate-fade-in no-print">
 
+                <div class="mbs-overview-intro flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div class="min-w-0">
+                        <p class="mb-2 text-xs font-medium uppercase tracking-[0.16em] text-violet-600">MBS Repair</p>
+                        <h1 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Dashboard Overview</h1>
+                        <p class="mt-2 text-sm text-slate-500">ภาพรวมงานแจ้งซ่อม สถานะการดำเนินงาน และประสิทธิภาพการให้บริการ</p>
+                    </div>
+                    <span class="hidden h-1 w-20 rounded-full bg-gradient-to-r from-violet-600 via-indigo-600 to-sky-400 sm:block" aria-hidden="true"></span>
+                </div>
+
                 <!-- ✨ ปรับ Grid เป็น 2 คอลัมน์ (grid-cols-2) ในมือถือ และเพิ่มความห่างให้สมดุล (gap-3) ✨ -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 mbs-kpi-grid">
                     <?php 
                         $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
                         $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
@@ -1125,7 +1139,7 @@ if (isset($_GET['api_check_hash'])) {
                     ?>
                     
                     <!-- ✨ ปรับ p-4 สำหรับมือถือ และคืนค่า p-6 สำหรับ iPad/PC เพื่อไม่ให้การ์ดอึดอัด ✨ -->
-                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('all')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer mbs-panel mbs-kpi !rounded-2xl !border-slate-200/70 !shadow-sm" onclick="filterRepairs('all')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg sm:text-xl shrink-0"><i class="fas fa-layer-group"></i></div>
                             <span class="text-[10px] sm:text-xs font-bold text-slate-400">TOTAL</span>
@@ -1136,7 +1150,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
                     
-                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('รอรับเรื่อง')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer mbs-panel mbs-kpi !rounded-2xl !border-slate-200/70 !shadow-sm" onclick="filterRepairs('รอรับเรื่อง')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-lg sm:text-xl shrink-0"><i class="fas fa-clock"></i></div>
                             <span class="text-[10px] sm:text-xs font-bold text-slate-400">WAITING</span>
@@ -1147,7 +1161,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('กำลังดำเนินการ')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer mbs-panel mbs-kpi !rounded-2xl !border-slate-200/70 !shadow-sm" onclick="filterRepairs('กำลังดำเนินการ')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-lg sm:text-xl shrink-0"><i class="fas fa-spinner"></i></div>
                             <span class="text-[10px] sm:text-xs font-bold text-slate-400">ACTIVE</span>
@@ -1158,7 +1172,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer mbs-panel mbs-kpi !rounded-2xl !border-slate-200/70 !shadow-sm" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-lg sm:text-xl shrink-0"><i class="fas fa-check-circle"></i></div>
                             <span class="text-[10px] sm:text-xs font-bold text-slate-400">DONE</span>
@@ -1171,7 +1185,7 @@ if (isset($_GET['api_check_hash'])) {
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="modern-card p-6 flex flex-col">
+                    <div class="modern-card p-6 flex flex-col mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                         <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-lg truncate">Equipment Analytics</h3>
@@ -1206,7 +1220,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
                     
-                    <div class="modern-card p-6 flex flex-col">
+                    <div class="modern-card p-6 flex flex-col mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                         <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-lg truncate">Work Status</h3>
@@ -1242,7 +1256,7 @@ if (isset($_GET['api_check_hash'])) {
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                    <div class="modern-card p-6 flex flex-col justify-between">
+                    <div class="modern-card p-6 flex flex-col justify-between mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-lg truncate">Top Locations</h3>
@@ -1276,7 +1290,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
                     
-                    <div class="modern-card p-6 flex flex-col justify-between">
+                    <div class="modern-card p-6 flex flex-col justify-between mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                         <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-lg truncate">Technician Workload</h3>
@@ -1313,7 +1327,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                     
-                    <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between">
+                    <div class="modern-card p-6 flex flex-col lg:col-span-7 justify-between mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                         <!-- ✨ แก้ไข Header: แยกข้อความคลิกกราฟออก เพื่อให้ระดับแกน Y ตรงกับช่องอื่นๆ 100% ✨ -->
                         <div class="mb-4 w-full">
                             <div class="flex justify-between items-start sm:items-center gap-2 w-full flex-col sm:flex-row">
@@ -1357,7 +1371,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full">
+                    <div class="modern-card overflow-hidden flex flex-col lg:col-span-5 h-full mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                         <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start sm:items-center shrink-0 gap-2 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-lg truncate">Top Reporters</h3>
@@ -1392,14 +1406,14 @@ if (isset($_GET['api_check_hash'])) {
                                 <div class="flex items-center gap-2">
                                     <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">จัดอันดับ:</span>
                                     <div class="flex flex-wrap items-center gap-1.5" id="topReportersFilterContainer">
-                                        <button id="btnFilterTop3" onclick="setTopReportersFilter(3)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 3</button>
-                                        <button id="btnFilterTop5" onclick="setTopReportersFilter(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 5</button>
-                                        <button id="btnFilterTop10" onclick="setTopReportersFilter(10)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 10</button>
-                                        <button id="btnFilterTopAll_mobile" onclick="setTopReportersFilter('all')" class="sm:hidden px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">ทั้งหมด</button>
+                                        <button id="btnFilterTop3" onclick="setTopReportersFilter(3)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mbs-control">Top 3</button>
+                                        <button id="btnFilterTop5" onclick="setTopReportersFilter(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mbs-control">Top 5</button>
+                                        <button id="btnFilterTop10" onclick="setTopReportersFilter(10)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mbs-control">Top 10</button>
+                                        <button id="btnFilterTopAll_mobile" onclick="setTopReportersFilter('all')" class="sm:hidden px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mbs-control">ทั้งหมด</button>
                                     </div>
                                 </div>
                             </div>
-                            <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="hidden sm:block px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mt-1 sm:mt-0">ทั้งหมด</button>
+                            <button id="btnFilterTopAll" onclick="setTopReportersFilter('all')" class="hidden sm:block px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mt-1 sm:mt-0 mbs-control">ทั้งหมด</button>
                         </div>
                         <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar max-h-[380px]">
                             <div class="divide-y divide-slate-100" id="topReportersList">
@@ -1409,19 +1423,19 @@ if (isset($_GET['api_check_hash'])) {
                 </div>
 
                 <div class="grid grid-cols-1 gap-6 mt-6">
-                    <div class="modern-card overflow-hidden flex flex-col col-span-full">
+                    <div class="modern-card overflow-hidden flex flex-col col-span-full mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                             <div>
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">Latest 5 repairs in system</p>
                             </div>
-                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
+                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group mbs-control">
                                 See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
                             </button>
                         </div>
-                        <div class="overflow-x-auto pb-4 custom-scrollbar table-wrapper-fix">
-                            <table class="w-full text-left whitespace-nowrap">
-                                <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
+                        <div class="overflow-x-auto pb-4 custom-scrollbar table-wrapper-fix mbs-table-scroll">
+                            <table class="w-full text-left whitespace-nowrap mbs-table">
+                                <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a] mbs-table-head !bg-slate-50 !text-slate-500 !border-slate-200">
                                     <tr>
                                         <th class="px-6 py-4">Date / Time</th>
                                         <th class="px-6 py-4">Ticket No.</th>
@@ -1491,7 +1505,7 @@ if (isset($_GET['api_check_hash'])) {
              </div>
 
             <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
-                <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
+                <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm" id="repairsMainCard">
                     <!-- ✨ จัด Layout ส่วน Header ใหม่สำหรับหน้า Repairs List ให้เป็น 2 บรรทัด (สำหรับคอม/iPad แนวนอน) โดยไม่กระทบมือถือ ✨ -->
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col gap-4 bg-white shrink-0 relative z-30">
                         
@@ -1504,10 +1518,10 @@ if (isset($_GET['api_check_hash'])) {
                             
                             <!-- ปุ่ม ขยายเต็มจอ + ปุ่มกากบาท (ปิด) -->
                             <div class="flex items-center gap-2 shrink-0 ml-4">
-                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50 mbs-control" title="สลับเต็มจอ">
                                     <i class="fas fa-expand text-sm md:text-base" id="maximizeRepairsIcon"></i>
                                 </button>
-                                <button onclick="if(document.getElementById('repairsMainCard').classList.contains('is-fullscreen')) toggleMaximizeRepairs(); else show('dash');" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                                <button onclick="if(document.getElementById('repairsMainCard').classList.contains('is-fullscreen')) toggleMaximizeRepairs(); else show('dash');" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50 mbs-control" title="ปิด">
                                     <i class="fas fa-times text-sm md:text-base"></i>
                                 </button>
                             </div>
@@ -1521,8 +1535,8 @@ if (isset($_GET['api_check_hash'])) {
                             <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
                             <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchInput" oninput="filterRepairsTable(); toggleClearBtn('searchInput', 'clearSearchBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                                <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                                <input type="text" id="searchInput" oninput="filterRepairsTable(); toggleClearBtn('searchInput', 'clearSearchBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm mbs-input">
+                                <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl mbs-control"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
                             
                             <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
@@ -1569,9 +1583,9 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto lg:overflow-x-hidden w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1 table-wrapper-fix" id="repairsTableContainer">
-                        <table class="w-full text-left whitespace-nowrap lg:whitespace-normal lg:min-w-0" id="repairsTable">
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                    <div class="overflow-x-auto lg:overflow-x-hidden w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1 table-wrapper-fix mbs-table-scroll" id="repairsTableContainer">
+                        <table class="w-full text-left whitespace-nowrap lg:whitespace-normal lg:min-w-0 mbs-table" id="repairsTable">
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm mbs-table-head !bg-slate-50 !text-slate-500 !border-slate-200">
                                 <tr>
                                     <th class="px-6 py-4">Date / Time</th>
                                     <th class="px-6 py-4">Ticket No.</th>
@@ -1721,18 +1735,18 @@ if (isset($_GET['api_check_hash'])) {
                     <!-- ✨ เพิ่ม portrait:items-end เพื่อบังคับให้ปุ่มชิดขวาในมือถือแนวตั้ง และจัดวางอยู่คนละบรรทัด ✨ -->
                     <div class="flex flex-col portrait:items-end landscape:flex-row md:flex-row w-full landscape:w-auto md:w-auto gap-3">
                         <!-- ✨ ใช้ portrait:w-[55%] เพื่อย่อปุ่มให้สั้นลงประมาณครึ่งนึงในมือถือแนวตั้ง ✨ -->
-                        <button onclick="openTechAdminModal('Admin')" class="w-full portrait:w-[55%] landscape:w-auto md:w-auto flex-none bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> Add Admin</button>
-                        <button onclick="openTechAdminModal('Technician')" class="w-full portrait:w-[55%] landscape:w-auto md:w-auto flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
+                        <button onclick="openTechAdminModal('Admin')" class="w-full portrait:w-[55%] landscape:w-auto md:w-auto flex-none bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center mbs-control"><i class="fas fa-user-shield mr-2"></i> Add Admin</button>
+                        <button onclick="openTechAdminModal('Technician')" class="w-full portrait:w-[55%] landscape:w-auto md:w-auto flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all mbs-control"><i class="fas fa-plus mr-2"></i> Add Technician</button>
                     </div>
                 </div>
 
                 <div>
                     <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Administrators</h3>
                     <p class="text-sm font-medium text-slate-500 mt-1 mb-5">Manage administrators</p>
-                    <div class="modern-card overflow-hidden">
-                        <div class="overflow-x-auto lg:overflow-x-hidden w-full pb-4 custom-scrollbar table-wrapper-fix">
-                            <table class="w-full text-left whitespace-nowrap lg:min-w-0">
-                                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
+                    <div class="modern-card overflow-hidden mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
+                        <div class="overflow-x-auto lg:overflow-x-hidden w-full pb-4 custom-scrollbar table-wrapper-fix mbs-table-scroll">
+                            <table class="w-full text-left whitespace-nowrap lg:min-w-0 mbs-table">
+                                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold mbs-table-head !bg-slate-50 !text-slate-500 !border-slate-200">
                                     <tr>
                                         <th class="px-6 py-4 w-36">Username</th>
                                         <th class="px-6 py-4">Name</th>
@@ -1820,21 +1834,21 @@ if (isset($_GET['api_check_hash'])) {
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
                             <div class="relative w-full sm:w-64 md:w-72 lg:w-80 xl:w-[400px] mb-2 sm:mb-0 group">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="search-tech-table" oninput="searchTeamTable(); toggleClearBtn('search-tech-table', 'clearTechTableBtn');" placeholder="ค้นหาชื่อเจ้าหน้าที่ทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                                <button type="button" id="clearTechTableBtn" onclick="clearSearchInput('search-tech-table', searchTeamTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                                <input type="text" id="search-tech-table" oninput="searchTeamTable(); toggleClearBtn('search-tech-table', 'clearTechTableBtn');" placeholder="ค้นหาชื่อเจ้าหน้าที่ทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm mbs-input">
+                                <button type="button" id="clearTechTableBtn" onclick="clearSearchInput('search-tech-table', searchTeamTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full mbs-control"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
                             
                             <div class="flex flex-wrap gap-2.5">
-                                <button onclick="filterDeptTable('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
-                                <button onclick="filterDeptTable('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
-                                <button onclick="filterDeptTable('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
-                                <button onclick="filterDeptTable('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                                <button onclick="filterDeptTable('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer mbs-control">ทั้งหมด</button>
+                                <button onclick="filterDeptTable('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer mbs-control">บริการเทคโนโลยีดิจิทัล</button>
+                                <button onclick="filterDeptTable('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer mbs-control">โสตทัศนูปกรณ์</button>
+                                <button onclick="filterDeptTable('ฝ่ายงานยานยนต์')" id="btn-filter-auto" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer mbs-control">ยานยนต์</button>
                             </div>
                         </div>
                     </div>
                     
-                    <div id="techniciansTableContainer" class="w-full overflow-x-auto lg:overflow-x-hidden pb-4 custom-scrollbar">
-                        <table class="w-full text-left whitespace-nowrap lg:min-w-0">
+                    <div id="techniciansTableContainer" class="w-full overflow-x-auto lg:overflow-x-hidden pb-4 custom-scrollbar mbs-table-scroll">
+                        <table class="w-full text-left whitespace-nowrap lg:min-w-0 mbs-table">
                             <tbody class="text-sm" id="techniciansTableBody">
                             <?php 
                             $techs_by_dept = [];
@@ -1988,7 +2002,7 @@ if (isset($_GET['api_check_hash'])) {
                         </table>
                     </div>
                     
-                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border-2 border-dashed border-rose-100 bg-rose-50/30 text-center rounded-3xl">
+                    <div class="tech-empty-state hidden w-full modern-card p-12 flex-col items-center justify-center mt-2 border-2 border-dashed border-rose-100 bg-rose-50/30 text-center rounded-3xl mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                         <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-rose-50">
                             <i class="fas fa-user-times text-3xl text-rose-300"></i>
                         </div>
@@ -2015,15 +2029,15 @@ if (isset($_GET['api_check_hash'])) {
                         <!-- ช่องค้นหา -->
                         <div class="relative w-full sm:w-64 md:w-72 lg:w-80 xl:w-[400px] mb-2 sm:mb-0 group">
                             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="search-tech-card" oninput="searchTechCards(); toggleClearBtn('search-tech-card', 'clearTechCardBtn');" placeholder="ค้นหาเจ้าหน้าที่ที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                            <button type="button" id="clearTechCardBtn" onclick="clearSearchInput('search-tech-card', searchTechCards)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                            <input type="text" id="search-tech-card" oninput="searchTechCards(); toggleClearBtn('search-tech-card', 'clearTechCardBtn');" placeholder="ค้นหาเจ้าหน้าที่ที่ผูกบัญชี..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm mbs-input">
+                            <button type="button" id="clearTechCardBtn" onclick="clearSearchInput('search-tech-card', searchTechCards)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full mbs-control"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                         </div>
 
                         <div class="flex flex-wrap gap-2.5">
-                            <button onclick="filterDeptCard('all')" id="btn-filter-all-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
-                            <button onclick="filterDeptCard('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
-                            <button onclick="filterDeptCard('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
-                            <button onclick="filterDeptCard('ฝ่ายงานยานยนต์')" id="btn-filter-auto-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">ยานยนต์</button>
+                            <button onclick="filterDeptCard('all')" id="btn-filter-all-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer mbs-control">ทั้งหมด</button>
+                            <button onclick="filterDeptCard('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer mbs-control">บริการเทคโนโลยีดิจิทัล</button>
+                            <button onclick="filterDeptCard('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer mbs-control">โสตทัศนูปกรณ์</button>
+                            <button onclick="filterDeptCard('ฝ่ายงานยานยนต์')" id="btn-filter-auto-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer mbs-control">ยานยนต์</button>
                         </div>
                     </div>
                 </div>
@@ -2182,7 +2196,7 @@ if (isset($_GET['api_check_hash'])) {
 
                                 <div class="mt-auto pt-4">
                                     <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" 
-                                            class="w-full text-[11px] font-bold text-sky-600 bg-white border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn">
+                                            class="w-full text-[11px] font-bold text-sky-600 bg-white border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn mbs-control">
                                         <i class="fas fa-history mr-1.5 text-sky-400 group-hover/btn:text-white transition-colors"></i> 
                                         ดูประวัติงาน
                                     </button>
@@ -2196,7 +2210,7 @@ if (isset($_GET['api_check_hash'])) {
                 <?php endforeach; ?>
                 </div>
                 
-                <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-indigo-100 bg-indigo-50/30 text-center rounded-3xl">
+                <div class="tech-empty-state hidden w-full modern-card p-10 flex-col items-center justify-center mt-6 border-2 border-dashed border-indigo-100 bg-indigo-50/30 text-center rounded-3xl mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
                         <i class="fas fa-user-lock text-3xl text-indigo-300"></i>
                     </div>
@@ -2210,18 +2224,18 @@ if (isset($_GET['api_check_hash'])) {
             </div>
 
             <div id="assets" class="section <?php echo $active_tab === 'assets' ? '' : 'hidden'; ?> space-y-6 no-print">
-                <div class="modern-card overflow-hidden flex flex-col">
+                <div class="modern-card overflow-hidden flex flex-col mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800">Assets Database</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Manage all registered equipments</p>
                         </div>
                         <!-- ✨ ลบ w-full เปลี่ยนเป็น w-auto เพื่อให้ปุ่มสั้นลง และเพิ่ม self-end เพื่อดันชิดขวาในมือถือ (พร้อมล็อก md:self-auto ไม่ให้กระทบ iPad/คอม) ✨ -->
-                        <button onclick="openAddAssetModal()" class="self-end md:self-auto w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Asset</button>
+                        <button onclick="openAddAssetModal()" class="self-end md:self-auto w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all mbs-control"><i class="fas fa-plus mr-2"></i> Add Asset</button>
                     </div>
-                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
-                        <table class="w-full text-left whitespace-nowrap min-w-[600px]">
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix mbs-table-scroll">
+                        <table class="w-full text-left whitespace-nowrap min-w-[600px] mbs-table">
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm mbs-table-head !bg-slate-50 !text-slate-500 !border-slate-200">
                                 <tr>
                                     <th class="px-6 py-4">Code</th>
                                     <th class="px-6 py-4">Name</th>
@@ -2265,7 +2279,7 @@ if (isset($_GET['api_check_hash'])) {
             </div>
 
             <div id="users" class="section <?php echo $active_tab === 'users' ? '' : 'hidden'; ?> space-y-6 no-print">
-                <div class="modern-card overflow-hidden flex flex-col">
+                <div class="modern-card overflow-hidden flex flex-col mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800">Reporter History</h2>
@@ -2274,13 +2288,13 @@ if (isset($_GET['api_check_hash'])) {
                         <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
                         <div class="w-full md:w-[320px] relative group">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchHistoryInput" oninput="searchHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
-                            <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', searchHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                            <input type="text" id="searchHistoryInput" oninput="searchHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px] mbs-input">
+                            <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', searchHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl mbs-control"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                         </div>
                     </div>
-                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
-                        <table class="w-full text-left whitespace-nowrap min-w-[700px]" id="usersTable">
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix mbs-table-scroll">
+                        <table class="w-full text-left whitespace-nowrap min-w-[700px] mbs-table" id="usersTable">
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm mbs-table-head !bg-slate-50 !text-slate-500 !border-slate-200">
                                 <tr>
                                     <th class="px-6 py-4">Name</th>
                                     <th class="px-6 py-4">Contact</th>
@@ -2354,30 +2368,30 @@ if (isset($_GET['api_check_hash'])) {
             </div>
 
             <div id="reports" class="section <?php echo $active_tab === 'reports' ? '' : 'hidden'; ?> space-y-6 no-print">
-                <div class="modern-card p-6 md:p-8">
+                <div class="modern-card p-6 md:p-8 mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                         <div>
                             <h2 class="text-2xl font-extrabold text-slate-800">Official Report</h2>
                             <p class="text-sm font-medium text-slate-500 mt-1">Generate official print document or export to Excel.</p>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                            <a href="export_excel.php" id="exportExcelBtn" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-emerald-200 flex items-center justify-center transition-all">
+                            <a href="export_excel.php" id="exportExcelBtn" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-emerald-200 flex items-center justify-center transition-all mbs-control">
                                 <i class="fas fa-file-excel mr-2 text-lg"></i> Export Excel
                             </a>
-                            <button onclick="printOfficialReport()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-all">
+                            <button onclick="printOfficialReport()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm flex items-center justify-center transition-all mbs-control">
                                 <i class="fas fa-print mr-2 text-lg"></i> Print Document
                             </button>
                         </div>
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-4 relative">
-                        <label class="font-bold text-slate-700 text-sm flex items-center shrink-0"><i class="fas fa-filter text-indigo-500 mr-2"></i> Filter Data by Technician:</label>
+                        <label class="font-bold text-slate-700 text-sm flex items-center shrink-0 mbs-label"><i class="fas fa-filter text-indigo-500 mr-2"></i> Filter Data by Technician:</label>
                         
                         <div class="relative w-full md:w-[450px]" id="reportDropdownContainer">
                             <div class="flex items-center w-full bg-white border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100 transition-all cursor-text shadow-sm" onclick="toggleReportDropdown(event, true)">
                                 <i class="fas fa-search text-slate-400 pl-4"></i>
-                                <input type="text" id="reportSearchInput" oninput="filterReportDropdown()" onfocus="focusReportSearch(event)" onblur="blurReportSearch(event)" autocomplete="off" class="w-full bg-transparent px-3 py-3 text-sm text-slate-700 focus:outline-none font-bold placeholder-slate-400" placeholder="พิมพ์ค้นหาชื่อเจ้าหน้าที่, แผนก...">
-                                <button type="button" class="px-4 py-3 text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="toggleReportDropdown(event)">
+                                <input type="text" id="reportSearchInput" oninput="filterReportDropdown()" onfocus="focusReportSearch(event)" onblur="blurReportSearch(event)" autocomplete="off" class="w-full bg-transparent px-3 py-3 text-sm text-slate-700 focus:outline-none font-bold placeholder-slate-400 mbs-input" placeholder="พิมพ์ค้นหาชื่อเจ้าหน้าที่, แผนก...">
+                                <button type="button" class="px-4 py-3 text-slate-400 hover:text-indigo-600 focus:outline-none mbs-control" onclick="toggleReportDropdown(event)">
                                     <i class="fas fa-caret-down text-lg"></i>
                                 </button>
                             </div>
@@ -2436,11 +2450,11 @@ if (isset($_GET['api_check_hash'])) {
     </form>
 
     <!-- ✨ Modal หน้าจอพรีวิว (ดีไซน์จัดวางตำแหน่งรูป เลื่อนได้ ซูมได้ สมูท 100%) ✨ -->
-    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col justify-center items-center bg-[#0f0f0f]/95 sm:bg-[#0f0f0f] transition-opacity duration-300">
+    <div id="avatarPreviewConfirmModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[130] flex flex-col justify-center items-center bg-[#0f0f0f]/95 sm:bg-[#0f0f0f] transition-opacity duration-300 mbs-modal">
         
         <!-- ✨ เอา pointer-events-none ออกจาก div และเอา pointer-events-auto ออกจาก button เพื่อไม่ให้ปุ่มล่องหนทะลุจอมาโดนคลิก ✨ -->
         <div class="hidden sm:flex absolute top-0 left-0 w-full justify-between items-center px-6 md:px-12 lg:px-16 py-5 md:py-6 shrink-0 z-40 bg-gradient-to-b from-black/80 to-transparent">
-            <button type="button" onclick="cancelAvatarUpload()" class="w-12 h-12 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer">
+            <button type="button" onclick="cancelAvatarUpload()" class="w-12 h-12 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer mbs-control">
                 <i class="fas fa-chevron-left text-2xl pr-1"></i>
             </button>
             <h3 class="text-white font-bold text-[16px] md:text-[18px] drop-shadow-md tracking-wide pointer-events-none">ตัวอย่างรูปโปรไฟล์</h3>
@@ -2466,10 +2480,10 @@ if (isset($_GET['api_check_hash'])) {
             </div>
 
             <div class="px-6 py-6 sm:pb-10 shrink-0 flex justify-center items-center gap-5 bg-[#0f0f0f] relative z-40 sm:border-t sm:border-white/10 sm:w-full sm:absolute sm:bottom-0 sm:left-0">
-                <button type="button" onclick="cancelAvatarUpload()" class="py-2.5 px-8 sm:px-10 rounded-full bg-rose-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30">
+                <button type="button" onclick="cancelAvatarUpload()" class="py-2.5 px-8 sm:px-10 rounded-full bg-rose-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30 mbs-control">
                     ยกเลิก
                 </button>
-                <button type="button" onclick="processAndUploadCrop()" class="py-2.5 px-8 sm:px-10 rounded-full bg-blue-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30">
+                <button type="button" onclick="processAndUploadCrop()" class="py-2.5 px-8 sm:px-10 rounded-full bg-blue-600 text-white font-bold text-[14px] sm:text-[15px] hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30 mbs-control">
                     บันทึก
                 </button>
             </div>
@@ -2477,30 +2491,30 @@ if (isset($_GET['api_check_hash'])) {
         </div>
     </div>
 
-    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[120] flex items-center justify-center p-4">
+    <div id="imagePreviewModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-[120] flex items-center justify-center p-4 mbs-modal">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm cursor-pointer" onclick="toggleModal('imagePreviewModal')"></div>
-        <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20">
+        <button onclick="toggleModal('imagePreviewModal')" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg transition-all z-20 cursor-pointer backdrop-blur-md border border-white/20 mbs-control">
             <i class="fas fa-times text-xl"></i>
         </button>
         <img id="fullSizeImage" src="" class="relative z-10 max-h-[85vh] max-w-full rounded-xl shadow-2xl object-contain bg-slate-50 border-4 border-white" alt="Full Preview">
     </div>
 
     <!-- ✨ Modal สำหรับเพิ่มครุภัณฑ์ใหม่ ✨ -->
-    <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('assetModal')"></div>
-        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all">
+    <div id="assetModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 mbs-modal">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm mbs-modal" onclick="toggleModal('assetModal')"></div>
+        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 overflow-y-auto transform transition-all mbs-modal">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-3xl">
                 <p class="text-lg font-extrabold text-slate-800" id="assetModalTitle">Add Asset</p>
-                <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
+                <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm mbs-control"><i class="fas fa-times"></i></button>
             </div>
             <form action="" method="POST" class="p-6">
                 <input type="hidden" name="save_asset" value="1"><input type="hidden" name="asset_id" id="asset_id" value="">
                 <div class="space-y-5">
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Code</label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Name</label><input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">Asset Code</label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium mbs-input"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">Asset Name</label><input type="text" name="asset_name" id="asset_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium mbs-input"></div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
-                        <select name="category" id="asset_category" onchange="toggleCustomInput(this, 'asset_category_custom')" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">Category</label>
+                        <select name="category" id="asset_category" onchange="toggleCustomInput(this, 'asset_category_custom')" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium cursor-pointer mbs-input">
                             <?php 
                             // สร้างตัวแปรดึงหมวดหมู่ (เหมือนใน update_repair)
                             $dash_categories = ['IT Support', 'ไฟฟ้า/แอร์', 'อาคารสถานที่'];
@@ -2518,22 +2532,22 @@ if (isset($_GET['api_check_hash'])) {
                             <?php endforeach; ?>
                             <option value="อื่นๆ">อื่นๆ (พิมพ์ระบุเอง)</option>
                         </select>
-                        <input type="text" name="category_custom" id="asset_category_custom" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm" placeholder="ระบุหมวดหมู่ใหม่">
+                        <input type="text" name="category_custom" id="asset_category_custom" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mbs-input" placeholder="ระบุหมวดหมู่ใหม่">
                     </div>
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label><select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"><option value="ใช้งานปกติ">ใช้งานปกติ</option><option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option><option value="แทงจำหน่าย">แทงจำหน่าย</option></select></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">Status</label><select name="status" id="asset_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium mbs-input"><option value="ใช้งานปกติ">ใช้งานปกติ</option><option value="ชำรุด/ส่งซ่อม">ชำรุด/ส่งซ่อม</option><option value="แทงจำหน่าย">แทงจำหน่าย</option></select></div>
                 </div>
-                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Asset</button></div>
+                <div class="mt-8 flex justify-end gap-3"><button type="button" onclick="toggleModal('assetModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors mbs-control">Cancel</button><button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all mbs-control mbs-submit">Save Asset</button></div>
             </form>
         </div>
     </div>
 
-    <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techAdminModal')"></div>
-        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 flex flex-col max-h-[90vh] transform transition-all overflow-hidden">
+    <div id="techAdminModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 mbs-modal">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm mbs-modal" onclick="toggleModal('techAdminModal')"></div>
+        <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 flex flex-col max-h-[90vh] transform transition-all overflow-hidden mbs-modal">
             
             <div class="px-6 py-5 flex justify-between items-center bg-white rounded-t-3xl border-b border-slate-100 shrink-0">
                 <h2 class="text-xl font-bold text-slate-800" id="techAdminModalTitle">Manage Technician</h2>
-                <button type="button" onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full w-8 h-8 flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
+                <button type="button" onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full w-8 h-8 flex items-center justify-center mbs-control"><i class="fas fa-times text-sm"></i></button>
             </div>
 
            <form id="techAdminForm" action="" method="POST" enctype="multipart/form-data" novalidate onsubmit="return validateTechAdminForm(event)" class="flex flex-col flex-1 overflow-hidden min-h-0">
@@ -2548,7 +2562,7 @@ if (isset($_GET['api_check_hash'])) {
                     <!-- ✨ ย้ายส่วนอัปโหลดรูปภาพขึ้นมาเป็นอันดับ 1 ให้โชว์บนสุดเสมอ ✨ -->
                     <div id="avatarDiv" class="hidden space-y-3">
                         <div id="avatarLabelWrapper">
-                             <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider">PROFILE PICTURE</label>
+                             <label id="avatarLabel" class="block text-sm font-extrabold text-indigo-600 uppercase tracking-wider mbs-label">PROFILE PICTURE</label>
                         </div>
                         
                         <div id="avatarPositionWrapper" class="hidden w-max relative z-30">
@@ -2557,7 +2571,7 @@ if (isset($_GET['api_check_hash'])) {
                                      <span id="displayPositionLabel">ตำแหน่งงาน</span>
                                      <i class="fas fa-caret-down ml-1.5 text-indigo-600 text-xs hover:text-indigo-400 transition-colors"></i>
                                  </div>
-                                 <button type="button" onclick="openCustomPositionPrompt()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors shadow-sm" title="พิมพ์ระบุตำแหน่งเอง">
+                                 <button type="button" onclick="openCustomPositionPrompt()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors shadow-sm mbs-control" title="พิมพ์ระบุตำแหน่งเอง">
                                      <i class="fas fa-pencil-alt text-[10px]"></i>
                                  </button>
                              </div>
@@ -2566,7 +2580,7 @@ if (isset($_GET['api_check_hash'])) {
                              </div>
                         </div>
                              
-                        <select id="avatarPositionSelect" class="hidden w-full mt-1 text-sm font-extrabold text-indigo-600 uppercase tracking-wider bg-transparent border-b-2 border-indigo-400 focus:border-indigo-600 outline-none pb-1 transition-colors cursor-pointer appearance-none pr-6" onchange="handleDropdownChange(this)" onblur="cancelDropdownEdit()" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234f46e5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right top 50%; background-size: 0.65rem auto;">
+                        <select id="avatarPositionSelect" class="hidden w-full mt-1 text-sm font-extrabold text-indigo-600 uppercase tracking-wider bg-transparent border-b-2 border-indigo-400 focus:border-indigo-600 outline-none pb-1 transition-colors cursor-pointer appearance-none pr-6 mbs-input" onchange="handleDropdownChange(this)" onblur="cancelDropdownEdit()" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234f46e5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right top 50%; background-size: 0.65rem auto;">
                             <option value="" disabled selected>-- เลือกตำแหน่ง --</option>
                             <option value="นักวิชาการคอมพิวเตอร์">นักวิชาการคอมพิวเตอร์</option>
                             <option value="นักวิชาการโสตทัศนศึกษา">นักวิชาการโสตทัศนศึกษา</option>
@@ -2581,10 +2595,10 @@ if (isset($_GET['api_check_hash'])) {
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex flex-wrap items-center gap-2 mb-2">
-                                    <label for="techAdmin_avatar" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl text-sm font-bold transition-colors whitespace-nowrap">
+                                    <label for="techAdmin_avatar" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl text-sm font-bold transition-colors whitespace-nowrap mbs-label">
                                         เลือกไฟล์รูปภาพ
                                     </label>
-                                    <button type="button" id="btnRemoveAvatar" onclick="removeTechAdminAvatar()" class="hidden cursor-pointer inline-flex items-center justify-center w-9 h-9 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl text-sm transition-all shadow-sm shrink-0" title="ลบรูปภาพ">
+                                    <button type="button" id="btnRemoveAvatar" onclick="removeTechAdminAvatar()" class="hidden cursor-pointer inline-flex items-center justify-center w-9 h-9 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl text-sm transition-all shadow-sm shrink-0 mbs-control" title="ลบรูปภาพ">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                     <span id="fileNameDisplay" class="text-sm text-slate-500 truncate w-full sm:w-auto mt-1 sm:mt-0">ไม่ได้เลือกไฟล์ใด</span>
@@ -2597,15 +2611,15 @@ if (isset($_GET['api_check_hash'])) {
 
                     <div id="loginCredsDiv" class="flex flex-col gap-5">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username <span class="text-rose-500">*</span></label>
-                            <input type="text" name="username" id="techAdmin_username" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุชื่อผู้ใช้งาน (Username)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="ระบุชื่อผู้ใช้งาน (Username)">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">Username <span class="text-rose-500">*</span></label>
+                            <input type="text" name="username" id="techAdmin_username" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุชื่อผู้ใช้งาน (Username)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all mbs-input" placeholder="ระบุชื่อผู้ใช้งาน (Username)">
                             <p id="err_techAdmin_username" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุชื่อผู้ใช้งาน (Username)</span></p>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span></label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">Password <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span></label>
                             <div class="relative">
-                                <input type="password" name="password" id="techAdmin_password" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="••••••••" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="••••••••">
-                                <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
+                                <input type="password" name="password" id="techAdmin_password" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="••••••••" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all mbs-input" placeholder="••••••••">
+                                <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none mbs-control" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
                                     <i id="eyeIcon" class="fas fa-eye-slash"></i>
                                 </button>
                             </div>
@@ -2614,27 +2628,27 @@ if (isset($_GET['api_check_hash'])) {
                     </div>
 
                     <div id="adminLevelDiv" class="hidden">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Role Level</label>
-                        <select name="admin_level" id="techAdmin_level" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">Role Level</label>
+                        <select name="admin_level" id="techAdmin_level" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mbs-input">
                             <option value="Admin">Admin</option>
                             <option value="Executive">Executive</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">FULL NAME <span class="text-rose-500">*</span></label>
-                        <input type="text" name="full_name" id="techAdmin_fullname" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น นาย สมพร วงษ์จำปา" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น นาย สมพร วงษ์จำปา">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">FULL NAME <span class="text-rose-500">*</span></label>
+                        <input type="text" name="full_name" id="techAdmin_fullname" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น นาย สมพร วงษ์จำปา" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all mbs-input" placeholder="เช่น นาย สมพร วงษ์จำปา">
                         <p id="err_techAdmin_fullname" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุชื่อ-นามสกุล (ภาษาไทย)</span></p>
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ENGLISH NAME <span class="text-slate-400 font-normal normal-case">(ไม่บังคับ)</span></label>
-                        <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น Mr. Somporn Wongchampa">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">ENGLISH NAME <span class="text-slate-400 font-normal normal-case">(ไม่บังคับ)</span></label>
+                        <input type="text" name="english_name" id="techAdmin_englishname" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all mbs-input" placeholder="เช่น Mr. Somporn Wongchampa">
                     </div>
 
                     <div id="positionDiv">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">POSITION <span class="text-rose-500">*</span></label>
-                        <select name="position_select" id="techAdmin_position_select" onchange="clearFieldError(this); toggleCustomInput(this, 'techAdmin_position_custom')" onfocus="clearFieldError(this)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-1 appearance-none transition-all cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">POSITION <span class="text-rose-500">*</span></label>
+                        <select name="position_select" id="techAdmin_position_select" onchange="clearFieldError(this); toggleCustomInput(this, 'techAdmin_position_custom')" onfocus="clearFieldError(this)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-1 appearance-none transition-all cursor-pointer mbs-input" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
                             <option value="" disabled selected id="posDefaultOpt">-- Select Position --</option>
                             <option value="นักวิชาการคอมพิวเตอร์">นักวิชาการคอมพิวเตอร์</option>
                             <option value="นักวิชาการโสตทัศนศึกษา">นักวิชาการโสตทัศนศึกษา</option>
@@ -2642,25 +2656,25 @@ if (isset($_GET['api_check_hash'])) {
                             <option value="พนักงานขับรถยนต์">พนักงานขับรถยนต์</option>
                             <option value="อื่นๆ">อื่นๆ (Custom)</option>
                         </select>
-                        <input type="text" name="position_custom" id="techAdmin_position_custom" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุตำแหน่งงานเพิ่มเติม" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="ระบุตำแหน่งงานเพิ่มเติม">
+                        <input type="text" name="position_custom" id="techAdmin_position_custom" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุตำแหน่งงานเพิ่มเติม" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all mbs-input" placeholder="ระบุตำแหน่งงานเพิ่มเติม">
                         <p id="err_techAdmin_position_select" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาเลือกหรือระบุตำแหน่งงาน</span></p>
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PHONE <span class="text-rose-500">*</span></label>
-                        <input type="text" name="phone" id="techAdmin_phone" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น 081-234-5678" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น 081-234-5678">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">PHONE <span class="text-rose-500">*</span></label>
+                        <input type="text" name="phone" id="techAdmin_phone" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น 081-234-5678" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all mbs-input" placeholder="เช่น 081-234-5678">
                         <p id="err_techAdmin_phone" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุหมายเลขโทรศัพท์ติดต่อ</span></p>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">EMAIL <span class="text-slate-400 font-normal normal-case">(ไม่บังคับ)</span></label>
-                        <input type="email" name="email" id="techAdmin_email" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น somporn@mbs.com" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น somporn@mbs.com">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">EMAIL <span class="text-slate-400 font-normal normal-case">(ไม่บังคับ)</span></label>
+                        <input type="email" name="email" id="techAdmin_email" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น somporn@mbs.com" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all mbs-input" placeholder="เช่น somporn@mbs.com">
                         <p id="err_techAdmin_email" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>รูปแบบอีเมลไม่ถูกต้อง (เช่น example@mbs.com)</span></p>
                     </div>
                     
                     <div id="deptDiv">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">DEPARTMENT <span class="text-rose-500">*</span></label>
-                        <select name="department_select" id="techAdmin_department_select" onchange="clearFieldError(this); toggleCustomInput(this, 'techAdmin_department_custom')" onfocus="clearFieldError(this)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-1 appearance-none transition-all cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mbs-label">DEPARTMENT <span class="text-rose-500">*</span></label>
+                        <select name="department_select" id="techAdmin_department_select" onchange="clearFieldError(this); toggleCustomInput(this, 'techAdmin_department_custom')" onfocus="clearFieldError(this)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm mb-1 appearance-none transition-all cursor-pointer mbs-input" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
                             <option value="" disabled selected id="deptDefaultOpt">-- Select Department --</option>
                             <option value="ฝ่ายงานบริการเทคโนโลยีดิจิทัล">ฝ่ายงานบริการเทคโนโลยีดิจิทัล</option>
                             <option value="ฝ่ายงานยานยนต์">ฝ่ายงานยานยนต์</option>
@@ -2668,22 +2682,22 @@ if (isset($_GET['api_check_hash'])) {
                             <option value="แม่บ้าน">แม่บ้าน</option>
                             <option value="อื่นๆ">อื่นๆ (Custom)</option>
                         </select>
-                        <input type="text" name="department_custom" id="techAdmin_department_custom" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุฝ่ายงานเพิ่มเติม" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="ระบุฝ่ายงานเพิ่มเติม">
+                        <input type="text" name="department_custom" id="techAdmin_department_custom" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุฝ่ายงานเพิ่มเติม" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 hidden mt-2 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all mbs-input" placeholder="ระบุฝ่ายงานเพิ่มเติม">
                         <p id="err_techAdmin_department_select" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาเลือกฝ่ายงานสังกัด</span></p>
                     </div>
                 </div>
 
                 <div class="p-6 pt-4 border-t border-slate-100 flex justify-end gap-3 shrink-0 bg-white rounded-b-3xl">
-                    <button type="button" onclick="toggleModal('techAdminModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Data</button>
+                    <button type="button" onclick="toggleModal('techAdminModal')" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors shadow-sm mbs-control">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all mbs-control mbs-submit">Save Data</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="toggleModal('historyModal')"></div>
-        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100">
+    <div id="historyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 transition-all duration-300 mbs-modal">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 mbs-modal" onclick="toggleModal('historyModal')"></div>
+        <div class="modal-container bg-white w-full max-w-[95%] xl:max-w-6xl mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all duration-300 ease-in-out flex flex-col h-[85vh] max-h-[850px] opacity-100 scale-100 mbs-modal">
             
             <!-- ✨ แก้ไข Header ของ History Modal จัด Layout ให้คอมพิวเตอร์/โน้ตบุ๊ค เป็น 2 บรรทัดเหมือนฝั่งผู้บริหาร ✨ -->
             <!-- ✨ เพิ่ม xl:pb-3 และ xl:gap-3 เพื่อดึงระยะห่างของแถบค้นหาให้แคบลงนิดนึงในจอคอมพิวเตอร์ ✨ -->
@@ -2696,10 +2710,10 @@ if (isset($_GET['api_check_hash'])) {
                     
                     <!-- ปุ่ม ขยาย/ปิด (รวบมาใช้ชุดเดียวแสดงผลทุกอุปกรณ์ ชิดขวา) -->
                     <div class="flex items-center gap-2 shrink-0 ml-4">
-                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                        <button onclick="toggleMaximizeHistoryModal()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50 mbs-control" title="สลับเต็มจอ">
                             <i class="fas fa-expand text-sm md:text-base" id="maximizeHistoryIcon"></i>
                         </button>
-                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                        <button onclick="toggleModal('historyModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50 mbs-control" title="ปิด">
                             <i class="fas fa-times text-sm md:text-base"></i>
                         </button>
                     </div>
@@ -2713,8 +2727,8 @@ if (isset($_GET['api_check_hash'])) {
                     <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า (History Modal) ✨ -->
                     <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px] group">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable(); toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                        <button type="button" id="clearHistoryModalBtn" onclick="clearSearchInput('searchHistoryModalInput', searchHistoryModalTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                        <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable(); toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm mbs-input">
+                        <button type="button" id="clearHistoryModalBtn" onclick="clearSearchInput('searchHistoryModalInput', searchHistoryModalTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl mbs-control"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                     </div>
 
                     <!-- ✨ Group ตัวกรองและปุ่ม Contacts เพื่อบังคับให้อยู่บรรทัดเดียวกัน ✨ -->
@@ -2746,7 +2760,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
 
                         <!-- ปุ่ม Contacts -->
-                        <button id="historyModalLinkBtn" class="h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] text-sm portrait:text-xs sm:text-sm landscape:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 portrait:px-2.5 sm:px-4 landscape:px-4 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0">
+                        <button id="historyModalLinkBtn" class="h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] text-sm portrait:text-xs sm:text-sm landscape:text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 portrait:px-2.5 sm:px-4 landscape:px-4 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center cursor-pointer shrink-0 mbs-control">
                             <i id="historyModalLinkIcon" class="fas fa-address-book landscape:mr-1.5 md:mr-1.5"></i> <span id="historyModalLinkText" class="hidden landscape:inline md:inline">Contacts</span>
                         </button>
                     </div>
@@ -2755,9 +2769,9 @@ if (isset($_GET['api_check_hash'])) {
             
             <!-- ✨ เพิ่ม xl:pt-3 เพื่อดึงขอบล่างของตารางขึ้นมาให้ชิด Header มากขึ้นเฉพาะบนหน้าจอคอมพิวเตอร์/โน้ตบุ๊ค ✨ -->
             <div class="p-0 md:p-6 xl:pt-3 overflow-hidden flex-1 bg-[#f8fafc]">
-                <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
-                    <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
-                        <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white mbs-table-scroll">
+                    <table class="w-full text-left whitespace-nowrap min-w-[1200px] mbs-table">
+                        <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm mbs-table-head !bg-slate-50 !text-slate-500 !border-slate-200">
                             <tr>
                                 <th class="px-6 py-4">Date / Time</th>
                                 <th class="px-6 py-4">Ticket No.</th>
@@ -2781,9 +2795,9 @@ if (isset($_GET['api_check_hash'])) {
     </div>
 
     <!-- ✨ Modal สำหรับแสดงรีวิวของช่างรายบุคคล ✨ -->
-    <div id="techReviewsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('techReviewsModal')"></div>
-        <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px]">
+    <div id="techReviewsModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 mbs-modal">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900/40 backdrop-blur-sm mbs-modal" onclick="toggleModal('techReviewsModal')"></div>
+        <div class="modal-container bg-white w-full max-w-lg mx-auto rounded-3xl shadow-2xl z-50 overflow-hidden transform transition-all flex flex-col h-[80vh] max-h-[800px] mbs-modal">
             
             <!-- Header -->
                     <!-- ✨ เพิ่ม pb-[72px] จองพื้นที่ด้านล่างเฉพาะมือถือ ให้ Dropdown มีที่อยู่ไม่ทับใคร ✨ -->
@@ -2801,7 +2815,7 @@ if (isset($_GET['api_check_hash'])) {
                                 <!-- ✨ Dropdown สำหรับเลือกดูช่างในฝ่ายงาน ✨ -->
                                 <!-- ✨ ล็อกตำแหน่ง left-5 right-5 บังคับกว้าง 100% ตรงแนวเดียวกับดาวเป๊ะๆ (เฉพาะมือถือแนวตั้ง) ✨ -->
                                 <div class="absolute bottom-5 left-5 right-5 sm:static sm:mt-3.5 sm:w-auto [&>select]:!w-full sm:[&>select]:!w-max">
-                                    <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm">
+                                    <select id="modalTechSelector" onchange="changeModalTech(this.value)" style="font-family: 'Sarabun', sans-serif;" class="custom-select w-full bg-white border border-indigo-200 text-[13px] text-indigo-700 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-indigo-50 shadow-sm mbs-input">
                                         <!-- Options จะถูกสร้างผ่าน JS -->
                                     </select>
                                 </div>
@@ -2809,7 +2823,7 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                         
                         <div class="flex flex-col items-end gap-3 shrink-0 ml-3 relative z-10">
-                            <button onclick="toggleModal('techReviewsModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0"><i class="fas fa-times"></i></button>
+                            <button onclick="toggleModal('techReviewsModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-sm shrink-0 mbs-control"><i class="fas fa-times"></i></button>
                             <span id="techReviewsModalCount" class="text-xs font-extrabold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full shadow-sm border border-amber-100 whitespace-nowrap mt-1">0 รีวิว</span>
                         </div>
                     </div>
@@ -2829,10 +2843,10 @@ if (isset($_GET['api_check_hash'])) {
                 </div>
                 <!-- ✨ ใช้ flex-col-reverse ในมือถือดัน "ทั้งหมด" ขึ้นบรรทัดบนสุดชิดขวา ✨ -->
                 <div class="flex flex-col-reverse sm:flex-row items-end sm:items-center gap-2 shrink-0">
-                    <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">
+                    <button id="btnFilterZeroReviews" onclick="setReviewFilter(0)" class="px-3 py-1.5 text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm mbs-control">
                         เฉพาะคอมเมนต์
                     </button>
-                    <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">
+                    <button id="btnFilterAllReviews" onclick="setReviewFilter('all')" class="px-4 py-1.5 text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mbs-control">
                         ทั้งหมด
                     </button>
                 </div>

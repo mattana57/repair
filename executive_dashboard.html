@@ -13,27 +13,32 @@
         .tab-content { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
-<body>
+<body class="mbs-app mbs-executive-dashboard-legacy">
     <div class="flex h-screen w-full overflow-hidden bg-slate-50">
 
-        <aside class="w-64 bg-indigo-900 text-indigo-100 flex flex-col shrink-0 shadow-xl">
+        <aside class="w-64 bg-indigo-900 text-indigo-100 flex flex-col shrink-0 shadow-xl mbs-sidebar">
             <div class="h-20 flex items-center justify-center border-b border-indigo-800">
                 <h1 class="text-xl font-bold text-white tracking-wide"><i class="fas fa-chart-line text-indigo-400 mr-2"></i>ExecView</h1>
             </div>
             <nav class="flex-1 px-4 py-8 space-y-3 overflow-y-auto">
-                <button type="button" data-target="page-overview" class="menu-btn w-full text-left px-4 py-3 rounded-xl bg-indigo-600 text-white shadow-md font-medium transition-all active-btn"><i class="fas fa-tachometer-alt w-6 text-center"></i> สถิติภาพรวม</button>
-                <button type="button" data-target="page-budget" class="menu-btn w-full text-left px-4 py-3 hover:bg-indigo-800 rounded-xl transition-all"><i class="fas fa-search-dollar w-6 text-center"></i> วิเคราะห์งบประมาณ</button>
-                <button type="button" data-target="page-ai" class="menu-btn w-full text-left px-4 py-3 hover:bg-indigo-800 rounded-xl transition-all"><i class="fas fa-brain w-6 text-center"></i> AI คาดการณ์ปัญหา</button>
-                <button type="button" data-target="page-location" class="menu-btn w-full text-left px-4 py-3 hover:bg-indigo-800 rounded-xl transition-all"><i class="fas fa-building w-6 text-center"></i> สถิติตามอาคาร</button>
+                <button type="button" data-target="page-overview" class="menu-btn w-full text-left px-4 py-3 rounded-xl bg-indigo-600 text-white shadow-md font-medium transition-all active-btn mbs-control"><i class="fas fa-tachometer-alt w-6 text-center"></i> สถิติภาพรวม</button>
+                <button type="button" data-target="page-budget" class="menu-btn w-full text-left px-4 py-3 hover:bg-indigo-800 rounded-xl transition-all mbs-control"><i class="fas fa-search-dollar w-6 text-center"></i> วิเคราะห์งบประมาณ</button>
+                <button type="button" data-target="page-ai" class="menu-btn w-full text-left px-4 py-3 hover:bg-indigo-800 rounded-xl transition-all mbs-control"><i class="fas fa-brain w-6 text-center"></i> AI คาดการณ์ปัญหา</button>
+                <button type="button" data-target="page-location" class="menu-btn w-full text-left px-4 py-3 hover:bg-indigo-800 rounded-xl transition-all mbs-control"><i class="fas fa-building w-6 text-center"></i> สถิติตามอาคาร</button>
             </nav>
             <div class="p-4 border-t border-indigo-800 text-sm text-indigo-300 text-center">
                 Smart Maintenance System
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col overflow-y-auto relative bg-slate-50">
-            <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 sticky top-0 z-10 shrink-0">
+        <main class="flex-1 flex flex-col overflow-y-auto relative bg-slate-50 mbs-main min-w-0">
+            <header class="h-20 bg-white shadow-sm flex items-center justify-between px-8 sticky top-0 z-10 shrink-0 mbs-topbar">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800" id="headerTitle">รายงานสถิติเชิงบริหาร (Overview)</h2>
                     <p class="text-sm text-gray-500">ข้อมูลอัปเดตล่าสุด: วันนี้ 08:30 น.</p>
@@ -86,8 +91,8 @@
                 <div id="page-budget" class="tab-content" style="display: none;">
                     <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                         <h3 class="text-xl font-bold text-gray-800 mb-6"><i class="fas fa-file-invoice-dollar text-green-500 mr-2"></i> สรุปการใช้งบประมาณซ่อมบำรุงรายเดือน</h3>
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50 text-slate-600">
+                        <table class="w-full text-left border-collapse mbs-table">
+                            <thead class="bg-slate-50 text-slate-600 mbs-table-head !bg-slate-50 !text-slate-500 !border-slate-200">
                                 <tr>
                                     <th class="px-6 py-4 border-b font-medium">เดือน</th>
                                     <th class="px-6 py-4 border-b font-medium">จำนวนเคส</th>

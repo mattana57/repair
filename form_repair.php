@@ -47,9 +47,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         body.modal-active { overflow: hidden; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="assets/repair-ui.css?v=1" media="screen">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
-<body class="p-4 md:p-8 relative selection:bg-sky-200">
+<body class="p-4 md:p-8 relative selection:bg-sky-200 mbs-app mbs-form-repair">
 
 <div class="max-w-xl mx-auto relative z-10">
     <!-- Header -->
@@ -63,28 +67,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
     <!-- ปุ่มนำทาง (เพิ่มปุ่มกลับหน้าแรก) -->
     <div class="flex flex-wrap justify-center gap-4 mb-8">
-        <a href="index.php" class="bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50 text-slate-700 px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center shadow-sm">
+        <a href="index.php" class="bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50 text-slate-700 px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center shadow-sm mbs-control">
             <i class="fas fa-home mr-2 text-sky-500"></i> กลับหน้าแรก
         </a>
-        <button type="button" onclick="toggleModal('searchModal')" class="bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50 text-slate-700 px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center shadow-sm">
+        <button type="button" onclick="toggleModal('searchModal')" class="bg-white border border-slate-200 hover:border-sky-300 hover:bg-sky-50 text-slate-700 px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center shadow-sm mbs-control">
             <i class="fas fa-search mr-2 text-sky-500"></i> ตรวจสอบสถานะการแจ้งซ่อม
         </button>
     </div>
 
     <!-- ฟอร์มแจ้งซ่อม (Light Theme) -->
-    <div class="modern-card p-6 md:p-8">
+    <div class="modern-card p-6 md:p-8 mbs-panel !rounded-2xl !border-slate-200/70 !shadow-sm">
         <h2 class="text-xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4"><i class="fas fa-edit text-sky-500 mr-2"></i> กรอกข้อมูลแจ้งซ่อม</h2>
         
-        <form action="submit_repair.php" method="POST" enctype="multipart/form-data">
+        <form action="submit_repair.php" method="POST" enctype="multipart/form-data" class="mbs-repair-form grid grid-cols-1 gap-6 md:grid-cols-2">
             
             <div class="mb-5">
-                <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อ(ผู้แจ้ง) <span class="text-red-500">*</span></label>
-                <input type="text" name="reporter_name" class="w-full p-3.5 rounded-xl input-light" required placeholder="ระบุชื่อจริงของคุณ">
+                <label class="block text-sm font-bold text-slate-700 mb-2 mbs-label">ชื่อ(ผู้แจ้ง) <span class="text-red-500">*</span></label>
+                <input type="text" name="reporter_name" class="w-full p-3.5 rounded-xl input-light mbs-input" required placeholder="ระบุชื่อจริงของคุณ">
             </div>
 
             <div class="mb-5">
-                <label class="block text-sm font-bold text-slate-700 mb-2">อุปกรณ์ที่มีปัญหา <span class="text-red-500">*</span></label>
-                <select name="equipment_type" id="equipSelect" class="w-full p-3.5 rounded-xl input-light appearance-none cursor-pointer" onchange="checkOther()" required>
+                <label class="block text-sm font-bold text-slate-700 mb-2 mbs-label">อุปกรณ์ที่มีปัญหา <span class="text-red-500">*</span></label>
+                <select name="equipment_type" id="equipSelect" class="w-full p-3.5 rounded-xl input-light appearance-none cursor-pointer mbs-input" onchange="checkOther()" required>
                     <option value="" disabled selected>-- เลือกอุปกรณ์ --</option>
                     <option value="แอร์">แอร์</option>
                     <option value="คอมพิวเตอร์">คอมพิวเตอร์</option>
@@ -93,44 +97,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     <option value="ไมค์">ไมค์</option>
                     <option value="other">อื่นๆ (ระบุ...)</option>
                 </select>
-                <input type="text" name="other_equip" id="otherInput" class="w-full p-3.5 rounded-xl mt-3 hidden input-light" placeholder="ระบุชื่ออุปกรณ์">
+                <input type="text" name="other_equip" id="otherInput" class="w-full p-3.5 rounded-xl mt-3 hidden input-light mbs-input" placeholder="ระบุชื่ออุปกรณ์">
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">เลือกอาคาร <span class="text-red-500">*</span></label>
-                    <select name="building" class="w-full p-3.5 rounded-xl input-light appearance-none cursor-pointer" required>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 mbs-label">เลือกอาคาร <span class="text-red-500">*</span></label>
+                    <select name="building" class="w-full p-3.5 rounded-xl input-light appearance-none cursor-pointer mbs-input" required>
                         <option value="" disabled selected>-- เลือกตึก --</option>
                         <option value="SBB">SBB</option>
                         <option value="ACC.BIZ">ACC.BIZ</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">เลขห้อง <span class="text-red-500">*</span></label>
-                    <input type="text" name="room_no" class="w-full p-3.5 rounded-xl input-light" placeholder="เช่น 303" required>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 mbs-label">เลขห้อง <span class="text-red-500">*</span></label>
+                    <input type="text" name="room_no" class="w-full p-3.5 rounded-xl input-light mbs-input" placeholder="เช่น 303" required>
                 </div>
             </div>
 
             <div class="mb-5">
-                <label class="block text-sm font-bold text-slate-700 mb-2">เบอร์ติดต่อกลับ <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-bold text-slate-700 mb-2 mbs-label">เบอร์ติดต่อกลับ <span class="text-red-500">*</span></label>
                 <!-- 🟢 ล็อกการกรอกเบอร์โทรศัพท์ (ให้กรอกได้แค่ตัวเลข 10 หลัก) -->
-                <input type="tel" name="phone_number" class="w-full p-3.5 rounded-xl input-light" required placeholder="08x-xxx-xxxx" maxlength="10" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" title="กรุณากรอกเบอร์โทรศัพท์ด้วยตัวเลข 10 หลัก">
+                <input type="tel" name="phone_number" class="w-full p-3.5 rounded-xl input-light mbs-input" required placeholder="08x-xxx-xxxx" maxlength="10" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" title="กรุณากรอกเบอร์โทรศัพท์ด้วยตัวเลข 10 หลัก">
             </div>
 
             <div class="mb-5">
-                <label class="block text-sm font-bold text-slate-700 mb-2">อาการเสีย / รายละเอียด <span class="text-red-500">*</span></label>
-                <textarea name="problem_desc" class="w-full p-3.5 rounded-xl input-light resize-none" rows="3" required placeholder="อธิบายปัญหาที่พบ..."></textarea>
+                <label class="block text-sm font-bold text-slate-700 mb-2 mbs-label">อาการเสีย / รายละเอียด <span class="text-red-500">*</span></label>
+                <textarea name="problem_desc" class="w-full p-3.5 rounded-xl input-light resize-none mbs-input" rows="3" required placeholder="อธิบายปัญหาที่พบ..."></textarea>
             </div>
 
             <div class="mb-8">
-                <label class="block text-sm font-bold text-slate-700 mb-2">แนบภาพประกอบ <span class="text-slate-400 font-normal">(ถ้ามี)</span></label>
+                <label class="block text-sm font-bold text-slate-700 mb-2 mbs-label">แนบภาพประกอบ <span class="text-slate-400 font-normal">(ถ้ามี)</span></label>
                 <input type="file" name="image_before" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-sky-100 file:text-sky-700 hover:file:bg-sky-200 cursor-pointer" accept="image/*">
             </div>
 
             <!-- ซ่อนช่องรับค่า LINE User ID ไว้ในฟอร์ม -->
             <input type="hidden" name="line_user_id" id="line_user_id" value="">
 
-            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white p-4 rounded-xl font-bold text-lg shadow-lg shadow-sky-500/30 transition-all transform hover:-translate-y-1 flex justify-center items-center">
+            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white p-4 rounded-xl font-bold text-lg shadow-lg shadow-sky-500/30 transition-all transform hover:-translate-y-1 flex justify-center items-center mbs-control mbs-submit">
                 ส่งรายการแจ้งซ่อม <i class="fas fa-paper-plane ml-2"></i>
             </button>
         </form>
@@ -140,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 <!-- ================== MODALS ================== -->
 
 <!-- Modal: ค้นหาสถานะ -->
-<div id="searchModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
+<div id="searchModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 mbs-modal">
     <div class="absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('searchModal')"></div>
     <div class="bg-white w-full max-w-md mx-auto rounded-3xl z-50 overflow-hidden shadow-2xl transform transition-all">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 relative">
@@ -151,22 +155,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <h2 class="text-xl font-bold text-slate-800">ตรวจสอบสถานะ</h2>
                 <p class="text-xs text-slate-500">กรอกเลขที่ใบงาน หรือ ชื่อ-นามสกุล</p>
             </div>
-            <button type="button" onclick="toggleModal('searchModal')" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors">
+            <button type="button" onclick="toggleModal('searchModal')" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors mbs-control">
                 <i class="fas fa-times"></i>
             </button>
         </div>
         <form action="" method="POST" class="p-6 space-y-4">
             <input type="hidden" name="check_status" value="1">
             <div>
-                <input type="text" name="search_query" required class="w-full p-4 rounded-xl input-light text-base font-medium" placeholder="เช่น MR-2026... หรือ สมชาย">
+                <input type="text" name="search_query" required class="w-full p-4 rounded-xl input-light text-base font-medium mbs-input" placeholder="เช่น MR-2026... หรือ สมชาย">
             </div>
-            <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-sky-500/30 transition-all">ค้นหาประวัติ</button>
+            <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-sky-500/30 transition-all mbs-control mbs-submit">ค้นหาประวัติ</button>
         </form>
     </div>
 </div>
 
 <!-- Modal: แสดงผลค้นหา -->
-<div id="resultModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4">
+<div id="resultModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50 px-4 mbs-modal">
     <div class="absolute w-full h-full bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
     <div class="bg-white w-full max-w-2xl mx-auto rounded-3xl z-50 overflow-hidden shadow-2xl flex flex-col max-h-[85vh] transform transition-all">
         <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
@@ -174,7 +178,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 <h2 class="text-lg md:text-xl font-bold text-slate-800"><i class="fas fa-list-alt text-sky-500 mr-2"></i> ผลการค้นหา</h2>
                 <p class="text-xs md:text-sm text-slate-500 mt-1">คำค้นหา: <span class="font-bold text-sky-600">"<?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?>"</span></p>
             </div>
-            <button onclick="toggleModal('resultModal')" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors">
+            <button onclick="toggleModal('resultModal')" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors mbs-control">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -226,7 +230,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             <?php endif; ?>
         </div>
         <div class="p-4 border-t border-slate-100 flex justify-center shrink-0 bg-white">
-            <button onclick="toggleModal('resultModal')" class="bg-slate-800 hover:bg-slate-700 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-md transition-colors">ปิดหน้าต่าง</button>
+            <button onclick="toggleModal('resultModal')" class="bg-slate-800 hover:bg-slate-700 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-md transition-colors mbs-control">ปิดหน้าต่าง</button>
         </div>
     </div>
 </div>
