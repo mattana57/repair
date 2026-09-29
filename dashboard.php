@@ -1734,10 +1734,9 @@ if (isset($_GET['api_check_hash'])) {
                             <table class="w-full text-left whitespace-nowrap lg:min-w-0">
                                 <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
                                     <tr>
-                                        <th class="px-6 py-4 w-36">Username</th>
+                                        <th class="px-6 py-4 w-48">Username</th>
                                         <th class="px-6 py-4">Name</th>
                                         <th class="px-6 py-4">Contact</th>
-                                        <th class="px-6 py-4">Email</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-center">Action</th>
                                     </tr>
@@ -1775,9 +1774,9 @@ if (isset($_GET['api_check_hash'])) {
 
                                             $u_email_raw = trim((string)($u['email'] ?? ''));
                                             if (!empty($u_email_raw) && $u_email_raw !== '-' && $u_email_raw !== 'ไม่ระบุ') {
-                                                $u_email_html = "<div class='flex items-center text-slate-600'><div class='w-7 h-7 rounded-full bg-sky-50 flex items-center justify-center mr-2.5 shrink-0'><i class='fas fa-envelope text-[10px] text-sky-500'></i></div><span class='text-[12px] font-bold text-slate-600'>" . htmlspecialchars($u_email_raw) . "</span></div>";
+                                                $u_email_html = "<div class='flex items-center text-slate-600 mt-1.5'><div class='w-6 h-6 rounded-full bg-sky-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-sky-500'></i></div><span class='text-[12px] font-bold text-slate-600'>" . htmlspecialchars($u_email_raw) . "</span></div>";
                                             } else {
-                                                $u_email_html = "<div class='flex items-center text-rose-400'><div class='w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center mr-2.5 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
+                                                $u_email_html = "<div class='flex items-center text-rose-400 mt-1.5'><div class='w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
                                             }
 
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors' data-admin-row-uid='{$u['id']}'>
@@ -1791,8 +1790,10 @@ if (isset($_GET['api_check_hash'])) {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 align-top text-slate-500 font-medium'>".formatPhoneHtml($u['phone'])."</td>
-                                                <td class='px-6 py-4 align-top'>{$u_email_html}</td>
+                                                <td class='px-6 py-4 align-top text-slate-500 font-medium'>
+                                                    ".formatPhoneHtml($u['phone'])."
+                                                    {$u_email_html}
+                                                </td>
                                                 <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 align-middle text-center'>
                                                     <div class='flex items-center justify-center space-x-2'>
@@ -1802,7 +1803,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>No admins found</td></tr>"; }
+                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No admins found</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -1857,7 +1858,7 @@ if (isset($_GET['api_check_hash'])) {
                             });
                             
                             if (empty($techs_by_dept)) {
-                                echo "<tr><td colspan='7' class='px-6 py-12 text-center text-slate-400 font-medium'>No technicians found</td></tr>";
+                                echo "<tr><td colspan='6' class='px-6 py-12 text-center text-slate-400 font-medium'>No technicians found</td></tr>";
                             } else {
                                 $tbl_dept_icons = [
                                     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
@@ -1870,7 +1871,7 @@ if (isset($_GET['api_check_hash'])) {
                                     $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                     
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
-                                            <td colspan='7' class='p-0 border-0 bg-transparent'>
+                                            <td colspan='6' class='p-0 border-0 bg-transparent'>
                                                 <div class='relative overflow-hidden flex items-center justify-between bg-blue-500 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
                                                     <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                     <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
@@ -1884,7 +1885,7 @@ if (isset($_GET['api_check_hash'])) {
                                                                 " . ($dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' ? "ฝ่ายงานบริการ<span class='block sm:inline landscape:inline'>เทคโนโลยีดิจิทัล</span>" : htmlspecialchars($dept)) . "
                                                             </h3>
                                                             <!-- ✨ ปรับฟอนต์ให้ใหญ่ขึ้นเพื่อความชัดเจน ✨ -->
-                                                            <p class='text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider'>ทีมเจ้าหน้าที่ผู้รับผิดชอบประจำฝ่าย</p>
+                                                            <p class='text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
                                                         </div>
                                                     </div>
                                                     
@@ -1902,7 +1903,6 @@ if (isset($_GET['api_check_hash'])) {
                                             <th class='px-6 py-4 border-0'>Name</th>
                                             <th class='px-6 py-4 border-0'>Department</th>
                                             <th class='px-6 py-4 border-0'>Contact</th>
-                                            <th class='px-6 py-4 border-0'>Email</th>
                                             <th class='px-6 py-4 text-center border-0'>Status / Code</th>
                                             <th class='px-6 py-4 text-center border-0'>Jobs</th>
                                             <th class='py-4 pl-6 pr-6 text-center border-0'>Action</th>
@@ -1946,9 +1946,9 @@ if (isset($_GET['api_check_hash'])) {
 
                                         $t_email_raw = trim((string)($t['email'] ?? ''));
                                         if (!empty($t_email_raw) && $t_email_raw !== '-' && $t_email_raw !== 'ไม่ระบุ') {
-                                            $t_email_html = "<div class='flex items-center text-slate-600'><div class='w-7 h-7 rounded-full bg-sky-50 flex items-center justify-center mr-2.5 shrink-0'><i class='fas fa-envelope text-[10px] text-sky-500'></i></div><span class='text-[12px] font-bold text-slate-600'>" . htmlspecialchars($t_email_raw) . "</span></div>";
+                                            $t_email_html = "<div class='flex items-center text-slate-600 mt-1.5'><div class='w-6 h-6 rounded-full bg-sky-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-sky-500'></i></div><span class='text-[12px] font-bold text-slate-600'>" . htmlspecialchars($t_email_raw) . "</span></div>";
                                         } else {
-                                            $t_email_html = "<div class='flex items-center text-rose-400'><div class='w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center mr-2.5 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
+                                            $t_email_html = "<div class='flex items-center text-rose-400 mt-1.5'><div class='w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
                                         }
 
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
@@ -1965,8 +1965,10 @@ if (isset($_GET['api_check_hash'])) {
                                                 <div class='text-slate-700 font-bold'>{$dept}</div>
                                                 {$pos_html}
                                             </td>
-                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td>
-                                            <td class='px-6 py-4 align-top'>{$t_email_html}</td>
+                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>
+                                                ".formatPhoneHtml($t['phone'])."
+                                                {$t_email_html}
+                                            </td>
                                             <td class='px-6 py-4 align-middle text-center'>{$statusBadge}</td>
                                             <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
                                             <td class='px-6 py-4 align-middle text-right'>
@@ -1980,7 +1982,7 @@ if (isset($_GET['api_check_hash'])) {
                                         </tr>";
                                     }
                                     
-                                    echo "<tr class='tech-dept-spacer' data-dept='".htmlspecialchars($dept)."'><td colspan='7' class='h-6 border-0 bg-transparent'></td></tr>";
+                                    echo "<tr class='tech-dept-spacer' data-dept='".htmlspecialchars($dept)."'><td colspan='6' class='h-6 border-0 bg-transparent'></td></tr>";
                                 }
                             } 
                             ?>
