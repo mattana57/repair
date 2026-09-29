@@ -722,6 +722,14 @@ if (isset($_GET['api_check_hash'])) {
             border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
             box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.3) !important;
         }
+        .sidebar-logo-box h1 {
+            color: #ffffff !important;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+        }
+        .sidebar-logo-box h1 span,
+        #sidebar .sidebar-logo-box p {
+            color: #a5b4fc !important;
+        }
         .top-header { height: 70px !important; padding: 0 28px !important; }
         #sidebar .border-slate-50 { border-color: rgba(255, 255, 255, 0.07) !important; }
         #sidebar p { color: #64748b !important; letter-spacing: 0.12em !important; font-weight: 800 !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important; }
