@@ -11,13 +11,8 @@
         body { font-family: 'Prompt', sans-serif; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 pb-10 antialiased mbs-app mbs-report-form-legacy">
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-10 antialiased">
 
     <div class="w-full max-w-md mx-auto bg-white md:mt-8 md:rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100/50">
         
@@ -39,20 +34,20 @@
                 
                 <!-- ช่องกรอกชื่อที่จำค่าได้ -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2 mbs-label">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
                         <i class="fas fa-user text-indigo-500 mr-1.5"></i> ชื่อ-นามสกุล ผู้แจ้ง <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="reporter_name" id="reporter_name" placeholder="ระบุชื่อของคุณ..." 
-                           class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200 mbs-input"
+                           class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200" 
                            required onblur="saveName()">
                 </div>
 
                 <!-- สิ่งที่ต้องการแจ้งซ่อม -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2 mbs-label">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
                         <i class="fas fa-wrench text-indigo-500 mr-1.5"></i> สิ่งที่ต้องการแจ้งซ่อม <span class="text-red-500">*</span>
                     </label>
-                    <select name="equipment_type" id="equipment_type" onchange="toggleOtherEquipment()" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200 mbs-input" required>
+                    <select name="equipment_type" id="equipment_type" onchange="toggleOtherEquipment()" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200" required>
                         <option value="">-- เลือกสิ่งที่ชำรุด --</option>
                         <option value="แอร์/เครื่องปรับอากาศ">❄️ แอร์ / เครื่องปรับอากาศ</option>
                         <option value="คอมพิวเตอร์/ปริ้นเตอร์">💻 คอมพิวเตอร์ / ปริ้นเตอร์</option>
@@ -61,16 +56,16 @@
                         <option value="อื่นๆ">➕ อื่นๆ</option>
                     </select>
                     <div id="other_equipment_div" class="hidden mt-3">
-                        <input type="text" name="other_equipment" id="other_equipment_input" placeholder="โปรดระบุอุปกรณ์ที่ต้องการแจ้งซ่อม..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 mbs-input">
+                        <input type="text" name="other_equipment" id="other_equipment_input" placeholder="โปรดระบุอุปกรณ์ที่ต้องการแจ้งซ่อม..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50">
                     </div>
                 </div>
 
                 <!-- สถานที่ -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2 mbs-label">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
                         <i class="fas fa-map-marker-alt text-indigo-500 mr-1.5"></i> สถานที่ / ห้อง <span class="text-red-500">*</span>
                     </label>
-                    <select name="location" id="location" onchange="toggleOtherLocation()" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200 mbs-input" required>
+                    <select name="location" id="location" onchange="toggleOtherLocation()" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200" required>
     <option value="">-- เลือกสถานที่ / ห้อง --</option>
     
     <optgroup label="ตึก ACC.BIZ">
@@ -114,27 +109,27 @@
     <option value="อื่นๆ">-- อื่นๆ (ระบุสถานที่เอง) --</option>
 </select>
                     <div id="other_location_div" class="hidden mt-3">
-                        <input type="text" name="other_location" id="other_location_input" placeholder="โปรดระบุสถานที่..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 mbs-input">
+                        <input type="text" name="other_location" id="other_location_input" placeholder="โปรดระบุสถานที่..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50">
                     </div>
                 </div>
 
                 <!-- เบอร์โทรศัพท์ -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2 mbs-label">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
                         <i class="fas fa-phone-alt text-indigo-500 mr-1.5"></i> เบอร์โทรศัพท์ติดต่อกลับ <span class="text-red-500">*</span>
                     </label>
-                    <input type="tel" name="phone_number" placeholder="เช่น 0812345678" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200 mbs-input" required>
+                    <input type="tel" name="phone_number" placeholder="เช่น 0812345678" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200" required>
                 </div>
 
                 <!-- อาการเสีย -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2 mbs-label">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
                         <i class="fas fa-comment-dots text-indigo-500 mr-1.5"></i> อาการเสียเบื้องต้น <span class="text-red-500">*</span>
                     </label>
-                    <textarea name="problem_desc" rows="3" placeholder="อธิบายอาการเสียให้ช่างเข้าใจเบื้องต้น..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200 mbs-input" required></textarea>
+                    <textarea name="problem_desc" rows="3" placeholder="อธิบายอาการเสียให้ช่างเข้าใจเบื้องต้น..." class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-200" required></textarea>
                 </div>
 
-                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-lg py-3.5 rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 mbs-control mbs-submit">
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-lg py-3.5 rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200">
                     <i class="fas fa-paper-plane mr-2"></i> ยืนยันการแจ้งซ่อม
                 </button>
             </form>

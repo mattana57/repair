@@ -96,16 +96,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white mbs-app mbs-index">
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
 
     <!-- 1. NAVIGATION HEADER (Responsive สำหรับมือถือ) -->
-    <header class="w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 transition-all mbs-topbar">
+    <header class="w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
             
             <!-- Logo & Title -->
@@ -122,7 +117,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             </div>
 
             <!-- 🟢 Login Button (เปลี่ยนเป็นลิงก์ไปหน้า login.php) -->
-            <a href="login.php" class="bg-[#0f172a] hover:bg-blue-600 text-white font-bold px-3.5 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:outline-none transition-all flex items-center gap-2 shadow-md hover:shadow-blue-500/20 active:scale-95 shrink-0 mbs-control">
+            <a href="login.php" class="bg-[#0f172a] hover:bg-blue-600 text-white font-bold px-3.5 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:outline-none transition-all flex items-center gap-2 shadow-md hover:shadow-blue-500/20 active:scale-95 shrink-0">
                 <i class="fas fa-user-shield text-blue-400 sm:text-lg"></i> 
                 <span class="hidden sm:inline">เจ้าหน้าที่เข้าสู่ระบบ</span>
                 <span class="sm:hidden">เข้าสู่ระบบ</span>
@@ -149,10 +144,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
             <!-- Action Buttons -->
             <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-4">
-                <a href="form_repair.php" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-blue-600/30 transition-all flex items-center justify-center gap-2.5 mbs-control">
+                <a href="form_repair.php" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-blue-600/30 transition-all flex items-center justify-center gap-2.5">
                     <i class="fas fa-file-pen text-xl"></i> กรอกแบบฟอร์มแจ้งซ่อมใหม่
                 </a>
-                <a href="https://line.me/R/ti/p/@941kflsc" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2.5 mbs-control">
+                <a href="https://line.me/R/ti/p/@941kflsc" target="_blank" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base focus:outline-none shadow-xl shadow-emerald-500/25 transition-all flex items-center justify-center gap-2.5">
                     <i class="fab fa-line text-2xl"></i> ติดต่อผ่าน LINE Official
                 </a>
             </div>
@@ -160,7 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             <!-- Floating Search Card -->
             <div class="max-w-2xl mx-auto bg-white/95 backdrop-blur-xl p-4 sm:p-7 rounded-3xl shadow-2xl border border-white/40 text-slate-800 text-left mt-8 sm:mt-10">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3 sm:mb-4 px-1">
-                    <label class="text-sm sm:text-base font-extrabold text-blue-950 flex items-center gap-2 mbs-label">
+                    <label class="text-sm sm:text-base font-extrabold text-blue-950 flex items-center gap-2">
                         <i class="fas fa-magnifying-glass text-blue-600"></i> ค้นหาประวัติ / ตรวจสอบสถานะ
                     </label>
                     <span class="text-[10px] sm:text-xs bg-blue-50 text-blue-700 font-bold px-3 py-1 rounded-full border border-blue-200 shrink-0">Real-time Search</span>
@@ -170,9 +165,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                     <input type="hidden" name="check_status" value="1">
                     <div class="relative flex-1">
                         <i class="fas fa-ticket-simple absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-base sm:text-lg"></i>
-                        <input type="text" name="search_query" required placeholder="กรอกเลขที่ใบงาน (เช่น MR-001)..." class="w-full pl-11 pr-4 py-3.5 sm:py-4 bg-slate-100/90 border border-slate-200 rounded-xl text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-all mbs-input">
+                        <input type="text" name="search_query" required placeholder="กรอกเลขที่ใบงาน (เช่น MR-001)..." class="w-full pl-11 pr-4 py-3.5 sm:py-4 bg-slate-100/90 border border-slate-200 rounded-xl text-sm sm:text-base font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition-all">
                     </div>
-                    <button type="submit" class="bg-slate-900 hover:bg-blue-600 text-white font-bold px-8 py-3.5 sm:py-4 rounded-xl text-sm sm:text-base focus:outline-none transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-blue-500/20 mbs-control mbs-submit">
+                    <button type="submit" class="bg-slate-900 hover:bg-blue-600 text-white font-bold px-8 py-3.5 sm:py-4 rounded-xl text-sm sm:text-base focus:outline-none transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-blue-500/20">
                         <i class="fas fa-search"></i> ตรวจสอบสถานะ
                     </button>
                 </form>
@@ -183,9 +178,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
 
     <!-- 3. STATS CARDS SECTION -->
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-20 w-full">
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 mbs-kpi-grid">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             
-            <div class="card-3d p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 mbs-panel">
+            <div class="card-3d p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
                 <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-lg shadow-amber-500/30 flex items-center justify-center text-lg sm:text-2xl font-bold shrink-0">
                     <i class="fa-regular fa-clock"></i>
                 </div>
@@ -195,7 +190,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </div>
             </div>
 
-            <div class="card-3d p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 mbs-panel">
+            <div class="card-3d p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
                 <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/30 flex items-center justify-center text-lg sm:text-2xl font-bold shrink-0">
                     <i class="fa-regular fa-compass"></i>
                 </div>
@@ -205,7 +200,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </div>
             </div>
 
-            <div class="card-3d p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 mbs-panel">
+            <div class="card-3d p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
                 <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 flex items-center justify-center text-lg sm:text-2xl font-bold shrink-0">
                     <i class="fa-regular fa-circle-check"></i>
                 </div>
@@ -215,7 +210,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                 </div>
             </div>
 
-            <div class="card-3d p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 mbs-panel">
+            <div class="card-3d p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
                 <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-lg shadow-slate-900/30 flex items-center justify-center text-lg sm:text-2xl font-bold shrink-0">
                     <i class="fa-regular fa-clipboard"></i>
                 </div>
@@ -345,7 +340,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
     <!-- ==============================================
          MODAL 1: RESULT MODAL 
          ============================================== -->
-    <div id="resultModal" class="modal opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-[100] px-4 mbs-modal">
+    <div id="resultModal" class="modal opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-[100] px-4">
         <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="toggleModal('resultModal')"></div>
         <div id="resultModalContent" class="relative bg-white w-full max-w-2xl mx-auto z-50 overflow-hidden transform transition-all flex flex-col max-h-[85vh] rounded-3xl sm:rounded-[2rem] shadow-2xl border border-white">
             
@@ -360,7 +355,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         คำค้นหา: <span class="text-blue-600"><?php echo htmlspecialchars($search_keyword, ENT_QUOTES); ?></span>
                     </p>
                 </div>
-                <button onclick="toggleModal('resultModal')" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 focus:outline-none transition-colors flex items-center justify-center shrink-0 mbs-control">
+                <button onclick="toggleModal('resultModal')" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 focus:outline-none transition-colors flex items-center justify-center shrink-0">
                     <i class="fas fa-times text-base sm:text-lg"></i>
                 </button>
             </div>
@@ -373,7 +368,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
                         elseif($res['status'] == 'กำลังดำเนินการ') $statusClass = "bg-sky-50 text-sky-800 border-sky-200";
                         elseif($res['status'] == 'ซ่อมเสร็จแล้ว') $statusClass = "bg-emerald-50 text-emerald-800 border-emerald-200";
                     ?>
-                        <a href="view_repair.php?id=<?php echo $res['id']; ?>" target="_blank" class="block bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer mbs-control">
+                        <a href="view_repair.php?id=<?php echo $res['id']; ?>" target="_blank" class="block bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4">
                                 <div>
                                     <span class="text-[10px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-widest">เลขที่ใบงาน</span>
@@ -395,7 +390,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['check_status'])) {
             </div>
             
             <div class="p-4 sm:p-6 border-t border-slate-50 bg-white shrink-0">
-                <button onclick="toggleModal('resultModal')" class="w-full bg-slate-900 hover:bg-slate-800 py-3 sm:py-4 rounded-xl font-bold text-sm sm:text-base text-white focus:outline-none transition-colors shadow-md active:scale-95 mbs-control">ปิดหน้าต่าง</button>
+                <button onclick="toggleModal('resultModal')" class="w-full bg-slate-900 hover:bg-slate-800 py-3 sm:py-4 rounded-xl font-bold text-sm sm:text-base text-white focus:outline-none transition-colors shadow-md active:scale-95">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>

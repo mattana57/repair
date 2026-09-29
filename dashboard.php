@@ -708,19 +708,14 @@ if (isset($_GET['api_check_hash'])) {
         body { font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .modern-card { background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; }
         #sidebar { width: 240px !important; min-width: 240px !important; max-width: 240px !important; }
-        .sidebar-logo-box { height: 70px !important; padding: 0 24px !important; }
-        .top-header { height: 70px !important; padding: 0 28px !important; }
-        #sidebar { background-color: #0f172a !important; border-right: 1px solid #1e293b !important; box-shadow: 6px 0 24px -4px rgba(0, 0, 0, 0.15) !important; }
-        #sidebar p { color: #64748b !important; letter-spacing: 0.1em !important; font-weight: 700 !important; }
-        .nav-btn { width: calc(100% - 24px) !important; display: flex !important; align-items: center !important; padding: 0.65rem 1rem !important; margin: 3px 12px !important; border-radius: 12px !important; color: #94a3b8 !important; font-weight: 600 !important; font-size: 0.875rem !important; transition: all 0.2s ease !important; cursor: pointer !important; }
-        .nav-btn i { width: 1.5rem !important; text-align: center !important; font-size: 1rem !important; margin-right: 0.75rem !important; color: #64748b !important; transition: all 0.2s ease !important; }
-        .nav-btn:hover { background-color: #1e293b !important; color: #ffffff !important; }
-        .nav-btn:hover i { color: #818cf8 !important; }
-        .active-btn { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important; color: #ffffff !important; font-weight: 700 !important; box-shadow: 0 4px 14px -2px rgba(79, 70, 229, 0.5) !important; }
-        .active-btn i { color: #ffffff !important; }
-        #sidebar a.nav-btn.group { color: #94a3b8 !important; }
-        #sidebar a.nav-btn.group:hover { background-color: rgba(244, 63, 94, 0.15) !important; color: #fb7185 !important; }
-        #sidebar a.nav-btn.group:hover i { color: #fb7185 !important; }
+        .sidebar-logo-box { height: 88px !important; padding: 0 24px !important; }
+        .top-header { height: 88px !important; padding: 0 32px !important; }
+        .nav-btn { width: calc(100% - 32px) !important; display: flex !important; align-items: center !important; padding: 0.65rem 1rem !important; margin: 2px 16px !important; border-radius: 12px !important; color: #64748b !important; font-weight: 600 !important; font-size: 0.875rem !important; transition: all 0.2s ease !important; cursor: pointer !important; }
+        .nav-btn i { width: 1.5rem !important; text-align: center !important; font-size: 1rem !important; margin-right: 0.75rem !important; color: #94a3b8 !important; }
+        .nav-btn:hover { background-color: #f8fafc !important; color: #4f46e5 !important; }
+        .nav-btn:hover i { color: #4f46e5 !important; }
+        .active-btn { background-color: #eef2ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
+        .active-btn i { color: #4f46e5 !important; }
         
         .custom-select {
             appearance: none;
@@ -935,20 +930,19 @@ if (isset($_GET['api_check_hash'])) {
         }
 
     </style>
-    
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden xl:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <aside id="sidebar" class="flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 no-print">
-        <!-- ✨ กล่องโลโก้สีกรมท่าเข้มพรีเมียม ตัดกับสีขาวของตัวอักษรอย่างคมชัด ✨ -->
-        <div class="sidebar-logo-box flex items-center border-b border-slate-800/80 bg-[#0f172a]">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-md shadow-indigo-500/30 mr-3 shrink-0 ring-2 ring-slate-700/60 hover:scale-105 transition-transform duration-300">
-                <i class="fas fa-tools text-white text-base"></i>
+    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
+        <!-- ✨ เพิ่มสีพื้นหลังม่วงอมฟ้าสว่างๆ ให้กล่องโลโก้ดูโดดเด่นและเข้าธีม ✨ -->
+        <div class="sidebar-logo-box flex items-center border-b border-indigo-50 bg-[#f4f4fd]">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3.5 shrink-0 hover:scale-105 transition-transform duration-300">
+                <i class="fas fa-tools text-white text-xl"></i>
             </div>
             <div class="overflow-hidden">
-                <h1 class="text-[21px] font-extrabold text-white tracking-tight leading-none">MBS<span class="text-indigo-400">Repair</span></h1>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">MBS<span class="text-indigo-600">Repair</span></h1>
             </div>
         </div>
         
@@ -992,28 +986,28 @@ if (isset($_GET['api_check_hash'])) {
             <div class="flex items-center min-w-0 pr-2">
                 <!-- ✨ เพิ่มการตีกรอบปุ่มให้ชัดเจน ป้องกันพื้นที่ด้านข้างโดนกด ✨ -->
                 <!-- ปรับ -ml-4 (ดันซ้ายมือถือ) และ mr-1 (ลดช่องว่างขวามือถือ) ส่วน sm: จะคืนค่าเดิมให้ iPad/PC -->
-                <button onclick="toggleSidebar()" type="button" class="xl:hidden -ml-4 sm:ml-0 mr-1 sm:mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0 w-11 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors z-50">
-                    <i class="fas fa-bars text-[22px]"></i>
+                <button onclick="toggleSidebar()" type="button" class="xl:hidden -ml-4 sm:ml-0 mr-1 sm:mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0 w-12 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors z-50">
+                    <i class="fas fa-bars text-[26px]"></i>
                 </button>
-                <h3 class="text-[18px] sm:text-xl md:text-2xl font-extrabold text-white tracking-tight drop-shadow-sm truncate select-none pointer-events-none" id="headerTitle"><?php echo $currentTitle; ?></h3>
+                <h3 class="text-[18px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate select-none pointer-events-none" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
             
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
                 
-                <!-- 📱 สำหรับมือถือแนวตั้ง: รูปโปรไฟล์ขนาดกะทัดรัดพอดีกับแถบบน 70px -->
-                <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-[44px] h-[44px] rounded-full bg-white p-[2.5px] shadow-sm border border-slate-200/60 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
+                <!-- 📱 สำหรับมือถือแนวตั้ง: แสดงเฉพาะรูปโปรไฟล์วงกลมเดี่ยวๆ มินิมอล ใหญ่ขึ้นนิดนึง -->
+                <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-[54px] h-[54px] rounded-full bg-white p-[3.5px] shadow-sm border border-slate-200/60 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
                     <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full rounded-full object-cover shadow-inner">
                 </div>
 
-                <!-- 💻 สำหรับคอม / โน๊ตบุ๊ค / ไอแพด: แคปซูลแนวนอนดีไซน์เพรียวบาง เรียบหรูตามหลัก UI/UX -->
-                <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-2.5 bg-white/95 backdrop-blur-sm pl-4 pr-1 py-1 rounded-full shadow-sm cursor-pointer hover:shadow-md hover:bg-white transition-all border border-white/60 select-none hover:scale-[1.02] active:scale-95 duration-200">
+                <!-- 💻 สำหรับคอม / โน๊ตบุ๊ค / ไอแพด / แท็บเล็ต / จอแนวนอน: แสดงเป็นแถบแคปซูลแนวนอนชิ้นเดียวเหมือนเดิมเป๊ะ -->
+                <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
                     <div class="text-right">
-                        <span class="block text-[13px] font-extrabold text-slate-800 leading-tight max-w-[140px] truncate">
+                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 max-w-[150px] truncate">
                             <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <span class="block text-[9.5px] text-indigo-500 font-bold uppercase tracking-wider leading-tight">Administrator</span>
+                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
                     </div>
-                    <div class="w-[38px] h-[38px] rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-2xs shrink-0 border border-indigo-100">
+                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
                         <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
@@ -1129,12 +1123,11 @@ if (isset($_GET['api_check_hash'])) {
                         $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     ?>
                     
-                    <!-- ✨ การ์ดสรุป 4 สถานะ (คุมโทนพื้นหลังสีขาวคลีนเข้ากับธีมหลัก + มีมิติที่ป้ายสถานะและขอบการ์ด) ✨ -->
-                    <!-- 1. TOTAL -->
-                    <div class="modern-card relative overflow-hidden p-4 sm:p-6 flex flex-col justify-between border-b-4 border-b-violet-500 shadow-[0_6px_20px_-4px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_25px_-4px_rgba(139,92,246,0.18)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('all')">
+                    <!-- ✨ ปรับ p-4 สำหรับมือถือ และคืนค่า p-6 สำหรับ iPad/PC เพื่อไม่ให้การ์ดอึดอัด ✨ -->
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('all')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-violet-50 border border-violet-100 shadow-inner flex items-center justify-center text-violet-600 text-lg sm:text-xl shrink-0 group-hover:bg-violet-600 group-hover:text-white transition-colors duration-300"><i class="fas fa-layer-group"></i></div>
-                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-violet-50 text-violet-600 border border-violet-200/80 shadow-2xs">TOTAL</span>
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 text-lg sm:text-xl shrink-0"><i class="fas fa-layer-group"></i></div>
+                            <span class="text-[10px] sm:text-xs font-bold text-slate-400">TOTAL</span>
                         </div>
                         <div>
                             <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
@@ -1142,11 +1135,10 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
                     
-                    <!-- 2. WAITING (รอรับเรื่อง) -->
-                    <div class="modern-card relative overflow-hidden p-4 sm:p-6 flex flex-col justify-between border-b-4 border-b-amber-400 shadow-[0_6px_20px_-4px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_25px_-4px_rgba(245,158,11,0.18)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('รอรับเรื่อง')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('รอรับเรื่อง')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#fef3c7]/70 border border-amber-200/70 shadow-inner flex items-center justify-center text-[#d97706] text-lg sm:text-xl shrink-0 group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300"><i class="fas fa-clock"></i></div>
-                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#fef3c7] text-[#d97706] border border-amber-300/60 shadow-2xs">WAITING</span>
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-lg sm:text-xl shrink-0"><i class="fas fa-clock"></i></div>
+                            <span class="text-[10px] sm:text-xs font-bold text-slate-400">WAITING</span>
                         </div>
                         <div>
                             <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
@@ -1154,11 +1146,10 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <!-- 3. ACTIVE (กำลังดำเนินการ) -->
-                    <div class="modern-card relative overflow-hidden p-4 sm:p-6 flex flex-col justify-between border-b-4 border-b-indigo-500 shadow-[0_6px_20px_-4px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_25px_-4px_rgba(79,70,229,0.18)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('กำลังดำเนินการ')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('กำลังดำเนินการ')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#e0e7ff]/70 border border-indigo-200/70 shadow-inner flex items-center justify-center text-[#4f46e5] text-lg sm:text-xl shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300"><i class="fas fa-spinner"></i></div>
-                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#e0e7ff] text-[#4f46e5] border border-indigo-300/60 shadow-2xs">ACTIVE</span>
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 text-lg sm:text-xl shrink-0"><i class="fas fa-spinner"></i></div>
+                            <span class="text-[10px] sm:text-xs font-bold text-slate-400">ACTIVE</span>
                         </div>
                         <div>
                             <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
@@ -1166,11 +1157,10 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
 
-                    <!-- 4. DONE (ซ่อมเสร็จแล้ว) -->
-                    <div class="modern-card relative overflow-hidden p-4 sm:p-6 flex flex-col justify-between border-b-4 border-b-emerald-500 shadow-[0_6px_20px_-4px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_25px_-4px_rgba(16,185,129,0.18)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
+                    <div class="modern-card p-4 sm:p-6 flex flex-col justify-between hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
                         <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#d1fae5]/70 border border-emerald-200/70 shadow-inner flex items-center justify-center text-[#059669] text-lg sm:text-xl shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300"><i class="fas fa-check-circle"></i></div>
-                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#d1fae5] text-[#059669] border border-emerald-300/60 shadow-2xs">DONE</span>
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-lg sm:text-xl shrink-0"><i class="fas fa-check-circle"></i></div>
+                            <span class="text-[10px] sm:text-xs font-bold text-slate-400">DONE</span>
                         </div>
                         <div>
                             <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
@@ -1743,9 +1733,10 @@ if (isset($_GET['api_check_hash'])) {
                             <table class="w-full text-left whitespace-nowrap lg:min-w-0">
                                 <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold">
                                     <tr>
-                                        <th class="px-6 py-4 w-48">Username</th>
+                                        <th class="px-6 py-4 w-36">Username</th>
                                         <th class="px-6 py-4">Name</th>
                                         <th class="px-6 py-4">Contact</th>
+                                        <th class="px-6 py-4">Email</th>
                                         <th class="px-6 py-4 text-center">Role</th>
                                         <th class="px-6 py-4 text-center">Action</th>
                                     </tr>
@@ -1783,9 +1774,9 @@ if (isset($_GET['api_check_hash'])) {
 
                                             $u_email_raw = trim((string)($u['email'] ?? ''));
                                             if (!empty($u_email_raw) && $u_email_raw !== '-' && $u_email_raw !== 'ไม่ระบุ') {
-                                                $u_email_html = "<div class='flex items-center text-slate-600 mt-1.5'><div class='w-6 h-6 rounded-full bg-sky-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-sky-500'></i></div><span class='text-[12px] font-bold text-slate-600'>" . htmlspecialchars($u_email_raw) . "</span></div>";
+                                                $u_email_html = "<div class='flex items-center text-slate-600'><div class='w-7 h-7 rounded-full bg-sky-50 flex items-center justify-center mr-2.5 shrink-0'><i class='fas fa-envelope text-[10px] text-sky-500'></i></div><span class='text-[12px] font-bold text-slate-600'>" . htmlspecialchars($u_email_raw) . "</span></div>";
                                             } else {
-                                                $u_email_html = "<div class='flex items-center text-rose-400 mt-1.5'><div class='w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
+                                                $u_email_html = "<div class='flex items-center text-rose-400'><div class='w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center mr-2.5 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
                                             }
 
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors' data-admin-row-uid='{$u['id']}'>
@@ -1799,10 +1790,8 @@ if (isset($_GET['api_check_hash'])) {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td class='px-6 py-4 align-top text-slate-500 font-medium'>
-                                                    ".formatPhoneHtml($u['phone'])."
-                                                    {$u_email_html}
-                                                </td>
+                                                <td class='px-6 py-4 align-top text-slate-500 font-medium'>".formatPhoneHtml($u['phone'])."</td>
+                                                <td class='px-6 py-4 align-top'>{$u_email_html}</td>
                                                 <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 align-middle text-center'>
                                                     <div class='flex items-center justify-center space-x-2'>
@@ -1812,7 +1801,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No admins found</td></tr>"; }
+                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>No admins found</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -1867,7 +1856,7 @@ if (isset($_GET['api_check_hash'])) {
                             });
                             
                             if (empty($techs_by_dept)) {
-                                echo "<tr><td colspan='6' class='px-6 py-12 text-center text-slate-400 font-medium'>No technicians found</td></tr>";
+                                echo "<tr><td colspan='7' class='px-6 py-12 text-center text-slate-400 font-medium'>No technicians found</td></tr>";
                             } else {
                                 $tbl_dept_icons = [
                                     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
@@ -1880,7 +1869,7 @@ if (isset($_GET['api_check_hash'])) {
                                     $tbl_icon = isset($tbl_dept_icons[$dept]) ? $tbl_dept_icons[$dept] : 'fas fa-users';
                                     
                                     echo "<tr class='tech-dept-header' data-dept='".htmlspecialchars($dept)."'>
-                                            <td colspan='6' class='p-0 border-0 bg-transparent'>
+                                            <td colspan='7' class='p-0 border-0 bg-transparent'>
                                                 <div class='relative overflow-hidden flex items-center justify-between bg-blue-500 p-4 rounded-t-xl mb-[2px] mt-6 shadow-sm'>
                                                     <div class='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-2xl pointer-events-none'></div>
                                                     <div class='absolute bottom-0 right-1/4 w-20 h-20 bg-white opacity-10 rounded-full blur-xl pointer-events-none'></div>
@@ -1894,7 +1883,7 @@ if (isset($_GET['api_check_hash'])) {
                                                                 " . ($dept === 'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' ? "ฝ่ายงานบริการ<span class='block sm:inline landscape:inline'>เทคโนโลยีดิจิทัล</span>" : htmlspecialchars($dept)) . "
                                                             </h3>
                                                             <!-- ✨ ปรับฟอนต์ให้ใหญ่ขึ้นเพื่อความชัดเจน ✨ -->
-                                                            <p class='text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider'>ทีมช่างผู้รับผิดชอบประจำฝ่าย</p>
+                                                            <p class='text-blue-100 text-[11px] sm:text-xs font-medium mt-0.5 opacity-90 tracking-wider'>ทีมเจ้าหน้าที่ผู้รับผิดชอบประจำฝ่าย</p>
                                                         </div>
                                                     </div>
                                                     
@@ -1912,6 +1901,7 @@ if (isset($_GET['api_check_hash'])) {
                                             <th class='px-6 py-4 border-0'>Name</th>
                                             <th class='px-6 py-4 border-0'>Department</th>
                                             <th class='px-6 py-4 border-0'>Contact</th>
+                                            <th class='px-6 py-4 border-0'>Email</th>
                                             <th class='px-6 py-4 text-center border-0'>Status / Code</th>
                                             <th class='px-6 py-4 text-center border-0'>Jobs</th>
                                             <th class='py-4 pl-6 pr-6 text-center border-0'>Action</th>
@@ -1955,9 +1945,9 @@ if (isset($_GET['api_check_hash'])) {
 
                                         $t_email_raw = trim((string)($t['email'] ?? ''));
                                         if (!empty($t_email_raw) && $t_email_raw !== '-' && $t_email_raw !== 'ไม่ระบุ') {
-                                            $t_email_html = "<div class='flex items-center text-slate-600 mt-1.5'><div class='w-6 h-6 rounded-full bg-sky-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-sky-500'></i></div><span class='text-[12px] font-bold text-slate-600'>" . htmlspecialchars($t_email_raw) . "</span></div>";
+                                            $t_email_html = "<div class='flex items-center text-slate-600'><div class='w-7 h-7 rounded-full bg-sky-50 flex items-center justify-center mr-2.5 shrink-0'><i class='fas fa-envelope text-[10px] text-sky-500'></i></div><span class='text-[12px] font-bold text-slate-600'>" . htmlspecialchars($t_email_raw) . "</span></div>";
                                         } else {
-                                            $t_email_html = "<div class='flex items-center text-rose-400 mt-1.5'><div class='w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
+                                            $t_email_html = "<div class='flex items-center text-rose-400'><div class='w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center mr-2.5 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
                                         }
 
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
@@ -1974,10 +1964,8 @@ if (isset($_GET['api_check_hash'])) {
                                                 <div class='text-slate-700 font-bold'>{$dept}</div>
                                                 {$pos_html}
                                             </td>
-                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>
-                                                ".formatPhoneHtml($t['phone'])."
-                                                {$t_email_html}
-                                            </td>
+                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>".formatPhoneHtml($t['phone'])."</td>
+                                            <td class='px-6 py-4 align-top'>{$t_email_html}</td>
                                             <td class='px-6 py-4 align-middle text-center'>{$statusBadge}</td>
                                             <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
                                             <td class='px-6 py-4 align-middle text-right'>
@@ -1991,7 +1979,7 @@ if (isset($_GET['api_check_hash'])) {
                                         </tr>";
                                     }
                                     
-                                    echo "<tr class='tech-dept-spacer' data-dept='".htmlspecialchars($dept)."'><td colspan='6' class='h-6 border-0 bg-transparent'></td></tr>";
+                                    echo "<tr class='tech-dept-spacer' data-dept='".htmlspecialchars($dept)."'><td colspan='7' class='h-6 border-0 bg-transparent'></td></tr>";
                                 }
                             } 
                             ?>
@@ -6162,9 +6150,9 @@ if (isset($_GET['api_check_hash'])) {
                     // 👆 ปัดนิ้วขึ้น (เลื่อนหน้าลง) -> ซ่อน Header
                     if (currentScrollTop > lastScrollTop && currentScrollTop > 60) {
                         mainHeaderEl.style.transform = 'translateY(-100%)';
-                        // ดึงเนื้อหาขึ้นมา 70px (เท่าความสูง Header ใหม่) เพื่อไม่ให้มีขอบขาว
-                        mainScrollEl.style.transform = 'translateY(-70px)';
-                        mainScrollEl.style.height = 'calc(100% + 70px)';
+                        // ดึงเนื้อหาขึ้นมา 88px (เท่าความสูง Header) เพื่อไม่ให้มีขอบขาว
+                        mainScrollEl.style.transform = 'translateY(-88px)';
+                        mainScrollEl.style.height = 'calc(100% + 88px)'; 
                     } 
                     // 👇 ปัดนิ้วลง (เลื่อนหน้าขึ้น) -> โชว์ Header
                     else if (currentScrollTop < lastScrollTop) {

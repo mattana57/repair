@@ -10,14 +10,9 @@
     <style>
         body { font-family: 'Kanit', sans-serif; }
     </style>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/repair-ui.css?v=2" media="screen">
 </head>
 <!-- 🌟 ขยายพื้นหลังสีม่วง 60/30/10 ให้เต็มหน้าจอตรงนี้ -->
-<body class="min-h-screen bg-gradient-to-br from-violet-600 from-[60%] via-purple-800 via-[90%] to-indigo-500 flex items-center justify-center p-4 sm:p-6 md:p-10 selection:bg-purple-500 selection:text-white mbs-app mbs-login">
+<body class="min-h-screen bg-gradient-to-br from-violet-600 from-[60%] via-purple-800 via-[90%] to-indigo-500 flex items-center justify-center p-4 sm:p-6 md:p-10 selection:bg-purple-500 selection:text-white">
 
     <!-- โครงสร้างหลัก (เอาขอบและพื้นหลังการ์ดออก เพื่อให้กลืนไปกับพื้นหลังเต็มจอ) -->
     <div class="w-full max-w-[1000px] flex flex-col lg:flex-row items-center p-2 sm:p-4 lg:p-6">
@@ -50,9 +45,9 @@
                     
                     <!-- ช่อง Username (มีเอฟเฟกต์ยกตัว) -->
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1 mbs-label">Username</label>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Username</label>
                         <div class="relative group">
-                            <input type="text" name="username" class="peer w-full bg-white border border-slate-100 shadow-[0_8px_20px_rgba(0,0,0,0.05)] rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgba(139,92,246,0.15)] outline-none transition-all hover:-translate-y-0.5 mbs-input" required placeholder="ระบุชื่อผู้ใช้งาน">
+                            <input type="text" name="username" class="peer w-full bg-white border border-slate-100 shadow-[0_8px_20px_rgba(0,0,0,0.05)] rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgba(139,92,246,0.15)] outline-none transition-all hover:-translate-y-0.5" required placeholder="ระบุชื่อผู้ใช้งาน">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-purple-600 transition-colors">
                                 <i class="fas fa-at text-sm"></i>
                             </div>
@@ -61,21 +56,21 @@
                     
                     <!-- ช่อง Password (มีเอฟเฟกต์ยกตัว) -->
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1 mbs-label">Password</label>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
                         <div class="relative group">
-                            <input type="password" id="password" name="password" class="peer w-full bg-white border border-slate-100 shadow-[0_8px_20px_rgba(0,0,0,0.05)] rounded-2xl pl-12 pr-12 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgba(139,92,246,0.15)] outline-none transition-all hover:-translate-y-0.5 mbs-input" required placeholder="ระบุรหัสผ่าน">
+                            <input type="password" id="password" name="password" class="peer w-full bg-white border border-slate-100 shadow-[0_8px_20px_rgba(0,0,0,0.05)] rounded-2xl pl-12 pr-12 py-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:ring-4 focus:ring-purple-500/10 focus:shadow-[0_8px_25px_rgba(139,92,246,0.15)] outline-none transition-all hover:-translate-y-0.5" required placeholder="ระบุรหัสผ่าน">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 peer-focus:text-purple-600 transition-colors">
                                 <i class="fas fa-key text-sm"></i>
                             </div>
                             <!-- ปุ่มเปิดปิดตา -->
-                            <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-purple-600 focus:outline-none transition-colors mbs-control" aria-label="แสดงหรือซ่อนรหัสผ่าน" onclick="togglePassword()">
+                            <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-purple-600 focus:outline-none transition-colors" onclick="togglePassword()">
                                 <i id="eyeIcon" class="fas fa-eye text-sm"></i>
                             </button>
                         </div>
                     </div>
 
                     <!-- ปุ่ม Submit (มีเอฟเฟกต์ยกตัว) -->
-                    <button type="submit" class="relative w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm py-4 rounded-2xl shadow-[0_10px_20px_rgba(139,92,246,0.25)] hover:shadow-[0_15px_25px_rgba(139,92,246,0.4)] transform transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 group mt-4 mbs-control mbs-submit">
+                    <button type="submit" class="relative w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm py-4 rounded-2xl shadow-[0_10px_20px_rgba(139,92,246,0.25)] hover:shadow-[0_15px_25px_rgba(139,92,246,0.4)] transform transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 group mt-4">
                         <span>เข้าสู่ระบบ</span> <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                     </button>
                 </form>
