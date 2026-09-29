@@ -710,13 +710,17 @@ if (isset($_GET['api_check_hash'])) {
         #sidebar { width: 240px !important; min-width: 240px !important; max-width: 240px !important; }
         .sidebar-logo-box { height: 70px !important; padding: 0 24px !important; }
         .top-header { height: 70px !important; padding: 0 28px !important; }
-        #sidebar { background: linear-gradient(180deg, #f5f3ff 0%, #eef2ff 100%) !important; border-right: 1px solid #e0e7ff !important; box-shadow: 4px 0 24px -4px rgba(79, 70, 229, 0.06) !important; }
-        .nav-btn { width: calc(100% - 32px) !important; display: flex !important; align-items: center !important; padding: 0.65rem 1rem !important; margin: 3px 16px !important; border-radius: 12px !important; color: #475569 !important; font-weight: 600 !important; font-size: 0.875rem !important; transition: all 0.2s ease !important; cursor: pointer !important; }
+        #sidebar { background-color: #0f172a !important; border-right: 1px solid #1e293b !important; box-shadow: 6px 0 24px -4px rgba(0, 0, 0, 0.15) !important; }
+        #sidebar p { color: #64748b !important; letter-spacing: 0.1em !important; font-weight: 700 !important; }
+        .nav-btn { width: calc(100% - 24px) !important; display: flex !important; align-items: center !important; padding: 0.65rem 1rem !important; margin: 3px 12px !important; border-radius: 12px !important; color: #94a3b8 !important; font-weight: 600 !important; font-size: 0.875rem !important; transition: all 0.2s ease !important; cursor: pointer !important; }
         .nav-btn i { width: 1.5rem !important; text-align: center !important; font-size: 1rem !important; margin-right: 0.75rem !important; color: #64748b !important; transition: all 0.2s ease !important; }
-        .nav-btn:hover { background-color: #ffffff !important; color: #4f46e5 !important; box-shadow: 0 2px 8px -2px rgba(79, 70, 229, 0.12) !important; }
-        .nav-btn:hover i { color: #4f46e5 !important; }
-        .active-btn { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important; color: #ffffff !important; font-weight: 700 !important; box-shadow: 0 6px 16px -3px rgba(79, 70, 229, 0.4) !important; }
+        .nav-btn:hover { background-color: #1e293b !important; color: #ffffff !important; }
+        .nav-btn:hover i { color: #818cf8 !important; }
+        .active-btn { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important; color: #ffffff !important; font-weight: 700 !important; box-shadow: 0 4px 14px -2px rgba(79, 70, 229, 0.5) !important; }
         .active-btn i { color: #ffffff !important; }
+        #sidebar a.nav-btn.group { color: #94a3b8 !important; }
+        #sidebar a.nav-btn.group:hover { background-color: rgba(244, 63, 94, 0.15) !important; color: #fb7185 !important; }
+        #sidebar a.nav-btn.group:hover i { color: #fb7185 !important; }
         
         .custom-select {
             appearance: none;
@@ -938,13 +942,13 @@ if (isset($_GET['api_check_hash'])) {
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden xl:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
     <aside id="sidebar" class="flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 no-print">
-        <!-- ✨ กล่องโลโก้กลืนเป็นสีเดียวกับแถบซ้ายทั้งหมดตามหลัก UI/UX ✨ -->
-        <div class="sidebar-logo-box flex items-center border-b border-indigo-100/80">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-md shadow-indigo-500/30 mr-3 shrink-0 ring-2 ring-white hover:scale-105 transition-transform duration-300">
+        <!-- ✨ กล่องโลโก้สีกรมท่าเข้มพรีเมียม ตัดกับสีขาวของตัวอักษรอย่างคมชัด ✨ -->
+        <div class="sidebar-logo-box flex items-center border-b border-slate-800/80 bg-[#0f172a]">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-md shadow-indigo-500/30 mr-3 shrink-0 ring-2 ring-slate-700/60 hover:scale-105 transition-transform duration-300">
                 <i class="fas fa-tools text-white text-base"></i>
             </div>
             <div class="overflow-hidden">
-                <h1 class="text-[21px] font-extrabold text-slate-800 tracking-tight leading-none">MBS<span class="text-indigo-600">Repair</span></h1>
+                <h1 class="text-[21px] font-extrabold text-white tracking-tight leading-none">MBS<span class="text-indigo-400">Repair</span></h1>
             </div>
         </div>
         
