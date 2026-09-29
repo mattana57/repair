@@ -283,12 +283,13 @@ if (isset($_GET['api_check_hash'])) {
         #sidebar { width: 240px !important; min-width: 240px !important; max-width: 240px !important; }
         .sidebar-logo-box { height: 70px !important; padding: 0 24px !important; }
         .top-header { height: 70px !important; padding: 0 28px !important; }
-        .nav-btn { width: calc(100% - 32px) !important; display: flex !important; align-items: center !important; padding: 0.65rem 1rem !important; margin: 2px 16px !important; border-radius: 12px !important; color: #64748b !important; font-weight: 600 !important; font-size: 0.875rem !important; transition: all 0.2s ease !important; cursor: pointer !important; }
-        .nav-btn i { width: 1.5rem !important; text-align: center !important; font-size: 1rem !important; margin-right: 0.75rem !important; color: #94a3b8 !important; }
-        .nav-btn:hover { background-color: #f8fafc !important; color: #4f46e5 !important; }
+        #sidebar { background: linear-gradient(180deg, #f5f3ff 0%, #eef2ff 100%) !important; border-right: 1px solid #e0e7ff !important; box-shadow: 4px 0 24px -4px rgba(79, 70, 229, 0.06) !important; }
+        .nav-btn { width: calc(100% - 32px) !important; display: flex !important; align-items: center !important; padding: 0.65rem 1rem !important; margin: 3px 16px !important; border-radius: 12px !important; color: #475569 !important; font-weight: 600 !important; font-size: 0.875rem !important; transition: all 0.2s ease !important; cursor: pointer !important; }
+        .nav-btn i { width: 1.5rem !important; text-align: center !important; font-size: 1rem !important; margin-right: 0.75rem !important; color: #64748b !important; transition: all 0.2s ease !important; }
+        .nav-btn:hover { background-color: #ffffff !important; color: #4f46e5 !important; box-shadow: 0 2px 8px -2px rgba(79, 70, 229, 0.12) !important; }
         .nav-btn:hover i { color: #4f46e5 !important; }
-        .active-btn { background-color: #eef2ff !important; color: #4f46e5 !important; font-weight: 700 !important; }
-        .active-btn i { color: #4f46e5 !important; }
+        .active-btn { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important; color: #ffffff !important; font-weight: 700 !important; box-shadow: 0 6px 16px -3px rgba(79, 70, 229, 0.4) !important; }
+        .active-btn i { color: #ffffff !important; }
 
         ::-webkit-scrollbar { width: 8px; height: 12px; } 
         ::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
@@ -383,10 +384,10 @@ if (isset($_GET['api_check_hash'])) {
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden xl:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-    <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
+    <aside id="sidebar" class="flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 no-print">
 
-        <div class="sidebar-logo-box flex items-center border-b border-slate-100 bg-white">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-purple-500/25 mr-3 shrink-0">
+        <div class="sidebar-logo-box flex items-center border-b border-indigo-100/80">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-purple-500/30 mr-3 shrink-0 ring-2 ring-white">
                 <i class="fas fa-chart-line text-white text-lg"></i>
             </div>
             <div class="overflow-hidden flex-1 mt-0.5">
