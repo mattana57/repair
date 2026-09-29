@@ -1124,60 +1124,52 @@ if (isset($_GET['api_check_hash'])) {
                         $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     ?>
                     
-                    <!-- ✨ การ์ดสรุป 4 สถานะแบบมีมิติ (3D Gradient & Status Color Theme) ✨ -->
+                    <!-- ✨ การ์ดสรุป 4 สถานะ (คุมโทนพื้นหลังสีขาวคลีนเข้ากับธีมหลัก + มีมิติที่ป้ายสถานะและขอบการ์ด) ✨ -->
                     <!-- 1. TOTAL -->
-                    <div class="relative overflow-hidden rounded-[22px] p-4 sm:p-6 flex flex-col justify-between bg-gradient-to-br from-white via-violet-50/60 to-purple-100/80 border border-violet-200/90 shadow-[0_8px_24px_-4px_rgba(139,92,246,0.15)] hover:shadow-[0_14px_30px_-4px_rgba(139,92,246,0.28)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('all')">
-                        <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br from-violet-400/25 to-fuchsia-400/20 blur-xl pointer-events-none"></div>
-                        <i class="fas fa-layer-group absolute -right-3 -bottom-3 text-6xl text-violet-600/[0.06] group-hover:scale-110 transition-transform duration-500 pointer-events-none"></i>
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4 relative z-10">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-lg sm:text-xl shrink-0 shadow-md shadow-violet-500/30 ring-4 ring-white/80 group-hover:scale-105 transition-transform"><i class="fas fa-layer-group"></i></div>
-                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-violet-100 text-violet-700 border border-violet-200/90 shadow-2xs">TOTAL</span>
+                    <div class="modern-card relative overflow-hidden p-4 sm:p-6 flex flex-col justify-between border-b-4 border-b-violet-500 shadow-[0_6px_20px_-4px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_25px_-4px_rgba(139,92,246,0.18)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('all')">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-violet-50 border border-violet-100 shadow-inner flex items-center justify-center text-violet-600 text-lg sm:text-xl shrink-0 group-hover:bg-violet-600 group-hover:text-white transition-colors duration-300"><i class="fas fa-layer-group"></i></div>
+                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-violet-50 text-violet-600 border border-violet-200/80 shadow-2xs">TOTAL</span>
                         </div>
-                        <div class="relative z-10">
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 group-hover:text-violet-700 transition-colors"><?php echo $cTotal; ?></h3>
-                            <p class="text-[11px] sm:text-sm font-bold text-violet-600/80 mt-0.5 sm:mt-1 truncate">Total Repairs</p>
+                        <div>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
+                            <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Total Repairs</p>
                         </div>
                     </div>
                     
                     <!-- 2. WAITING (รอรับเรื่อง) -->
-                    <div class="relative overflow-hidden rounded-[22px] p-4 sm:p-6 flex flex-col justify-between bg-gradient-to-br from-white via-amber-50/60 to-[#fef3c7]/80 border border-amber-200/90 shadow-[0_8px_24px_-4px_rgba(245,158,11,0.16)] hover:shadow-[0_14px_30px_-4px_rgba(245,158,11,0.3)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('รอรับเรื่อง')">
-                        <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br from-amber-400/25 to-orange-400/20 blur-xl pointer-events-none"></div>
-                        <i class="fas fa-clock absolute -right-3 -bottom-3 text-6xl text-amber-500/[0.07] group-hover:scale-110 transition-transform duration-500 pointer-events-none"></i>
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4 relative z-10">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-lg sm:text-xl shrink-0 shadow-md shadow-amber-500/30 ring-4 ring-white/80 group-hover:scale-105 transition-transform"><i class="fas fa-clock"></i></div>
-                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#fef3c7] text-[#d97706] border border-amber-300/80 shadow-2xs">WAITING</span>
+                    <div class="modern-card relative overflow-hidden p-4 sm:p-6 flex flex-col justify-between border-b-4 border-b-amber-400 shadow-[0_6px_20px_-4px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_25px_-4px_rgba(245,158,11,0.18)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('รอรับเรื่อง')">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#fef3c7]/70 border border-amber-200/70 shadow-inner flex items-center justify-center text-[#d97706] text-lg sm:text-xl shrink-0 group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300"><i class="fas fa-clock"></i></div>
+                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#fef3c7] text-[#d97706] border border-amber-300/60 shadow-2xs">WAITING</span>
                         </div>
-                        <div class="relative z-10">
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 group-hover:text-[#d97706] transition-colors"><?php echo $cPend; ?></h3>
-                            <p class="text-[11px] sm:text-sm font-bold text-[#d97706]/85 mt-0.5 sm:mt-1 truncate">Pending</p>
+                        <div>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
+                            <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Pending</p>
                         </div>
                     </div>
 
                     <!-- 3. ACTIVE (กำลังดำเนินการ) -->
-                    <div class="relative overflow-hidden rounded-[22px] p-4 sm:p-6 flex flex-col justify-between bg-gradient-to-br from-white via-indigo-50/60 to-[#e0e7ff]/80 border border-indigo-200/90 shadow-[0_8px_24px_-4px_rgba(79,70,229,0.15)] hover:shadow-[0_14px_30px_-4px_rgba(79,70,229,0.28)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('กำลังดำเนินการ')">
-                        <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br from-indigo-400/25 to-blue-400/20 blur-xl pointer-events-none"></div>
-                        <i class="fas fa-spinner absolute -right-3 -bottom-3 text-6xl text-indigo-600/[0.06] group-hover:scale-110 transition-transform duration-500 pointer-events-none"></i>
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4 relative z-10">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-lg sm:text-xl shrink-0 shadow-md shadow-indigo-500/30 ring-4 ring-white/80 group-hover:scale-105 transition-transform"><i class="fas fa-spinner"></i></div>
-                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#e0e7ff] text-[#4f46e5] border border-indigo-300/80 shadow-2xs">ACTIVE</span>
+                    <div class="modern-card relative overflow-hidden p-4 sm:p-6 flex flex-col justify-between border-b-4 border-b-indigo-500 shadow-[0_6px_20px_-4px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_25px_-4px_rgba(79,70,229,0.18)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('กำลังดำเนินการ')">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#e0e7ff]/70 border border-indigo-200/70 shadow-inner flex items-center justify-center text-[#4f46e5] text-lg sm:text-xl shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300"><i class="fas fa-spinner"></i></div>
+                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#e0e7ff] text-[#4f46e5] border border-indigo-300/60 shadow-2xs">ACTIVE</span>
                         </div>
-                        <div class="relative z-10">
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 group-hover:text-[#4f46e5] transition-colors"><?php echo $cProg; ?></h3>
-                            <p class="text-[11px] sm:text-sm font-bold text-[#4f46e5]/85 mt-0.5 sm:mt-1 truncate">In Progress</p>
+                        <div>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
+                            <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">In Progress</p>
                         </div>
                     </div>
 
                     <!-- 4. DONE (ซ่อมเสร็จแล้ว) -->
-                    <div class="relative overflow-hidden rounded-[22px] p-4 sm:p-6 flex flex-col justify-between bg-gradient-to-br from-white via-emerald-50/60 to-[#d1fae5]/80 border border-emerald-200/90 shadow-[0_8px_24px_-4px_rgba(16,185,129,0.16)] hover:shadow-[0_14px_30px_-4px_rgba(16,185,129,0.28)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
-                        <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400/25 to-teal-400/20 blur-xl pointer-events-none"></div>
-                        <i class="fas fa-check-circle absolute -right-3 -bottom-3 text-6xl text-emerald-600/[0.06] group-hover:scale-110 transition-transform duration-500 pointer-events-none"></i>
-                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4 relative z-10">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white text-lg sm:text-xl shrink-0 shadow-md shadow-emerald-500/30 ring-4 ring-white/80 group-hover:scale-105 transition-transform"><i class="fas fa-check-circle"></i></div>
-                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#d1fae5] text-[#059669] border border-emerald-300/80 shadow-2xs">DONE</span>
+                    <div class="modern-card relative overflow-hidden p-4 sm:p-6 flex flex-col justify-between border-b-4 border-b-emerald-500 shadow-[0_6px_20px_-4px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_25px_-4px_rgba(16,185,129,0.18)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="filterRepairs('ซ่อมเสร็จแล้ว')">
+                        <div class="flex flex-col xl:flex-row justify-between items-start mb-3 sm:mb-4 gap-2 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#d1fae5]/70 border border-emerald-200/70 shadow-inner flex items-center justify-center text-[#059669] text-lg sm:text-xl shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300"><i class="fas fa-check-circle"></i></div>
+                            <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#d1fae5] text-[#059669] border border-emerald-300/60 shadow-2xs">DONE</span>
                         </div>
-                        <div class="relative z-10">
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 group-hover:text-[#059669] transition-colors"><?php echo $cComp; ?></h3>
-                            <p class="text-[11px] sm:text-sm font-bold text-[#059669]/85 mt-0.5 sm:mt-1 truncate">Completed</p>
+                        <div>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
+                            <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Completed</p>
                         </div>
                     </div>
                 </div>
