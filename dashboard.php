@@ -708,8 +708,8 @@ if (isset($_GET['api_check_hash'])) {
         body { font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .modern-card { background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; }
         #sidebar { width: 240px !important; min-width: 240px !important; max-width: 240px !important; }
-        .sidebar-logo-box { height: 88px !important; padding: 0 24px !important; }
-        .top-header { height: 88px !important; padding: 0 32px !important; }
+        .sidebar-logo-box { height: 70px !important; padding: 0 24px !important; }
+        .top-header { height: 70px !important; padding: 0 28px !important; }
         .nav-btn { width: calc(100% - 32px) !important; display: flex !important; align-items: center !important; padding: 0.65rem 1rem !important; margin: 2px 16px !important; border-radius: 12px !important; color: #64748b !important; font-weight: 600 !important; font-size: 0.875rem !important; transition: all 0.2s ease !important; cursor: pointer !important; }
         .nav-btn i { width: 1.5rem !important; text-align: center !important; font-size: 1rem !important; margin-right: 0.75rem !important; color: #94a3b8 !important; }
         .nav-btn:hover { background-color: #f8fafc !important; color: #4f46e5 !important; }
@@ -937,13 +937,13 @@ if (isset($_GET['api_check_hash'])) {
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden xl:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
     <aside id="sidebar" class="bg-white flex flex-col shrink-0 fixed inset-y-0 left-0 transform -translate-x-full xl:relative xl:translate-x-0 transition-transform duration-300 ease-in-out z-50 border-r border-slate-100 no-print">
-        <!-- ✨ เพิ่มสีพื้นหลังม่วงอมฟ้าสว่างๆ ให้กล่องโลโก้ดูโดดเด่นและเข้าธีม ✨ -->
-        <div class="sidebar-logo-box flex items-center border-b border-indigo-50 bg-[#f4f4fd]">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 mr-3.5 shrink-0 hover:scale-105 transition-transform duration-300">
-                <i class="fas fa-tools text-white text-xl"></i>
+        <!-- ✨ คุมโทนพื้นหลังสีขาวคลีนให้กลืนเป็นแถบเดียวกับเมนูซ้ายทั้งหมดตามหลัก UI/UX ✨ -->
+        <div class="sidebar-logo-box flex items-center border-b border-slate-100 bg-white">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-md shadow-indigo-500/25 mr-3 shrink-0 hover:scale-105 transition-transform duration-300">
+                <i class="fas fa-tools text-white text-base"></i>
             </div>
             <div class="overflow-hidden">
-                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">MBS<span class="text-indigo-600">Repair</span></h1>
+                <h1 class="text-[21px] font-extrabold text-slate-800 tracking-tight leading-none">MBS<span class="text-indigo-600">Repair</span></h1>
             </div>
         </div>
         
@@ -987,28 +987,28 @@ if (isset($_GET['api_check_hash'])) {
             <div class="flex items-center min-w-0 pr-2">
                 <!-- ✨ เพิ่มการตีกรอบปุ่มให้ชัดเจน ป้องกันพื้นที่ด้านข้างโดนกด ✨ -->
                 <!-- ปรับ -ml-4 (ดันซ้ายมือถือ) และ mr-1 (ลดช่องว่างขวามือถือ) ส่วน sm: จะคืนค่าเดิมให้ iPad/PC -->
-                <button onclick="toggleSidebar()" type="button" class="xl:hidden -ml-4 sm:ml-0 mr-1 sm:mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0 w-12 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors z-50">
-                    <i class="fas fa-bars text-[26px]"></i>
+                <button onclick="toggleSidebar()" type="button" class="xl:hidden -ml-4 sm:ml-0 mr-1 sm:mr-3 text-white hover:text-indigo-100 focus:outline-none shrink-0 w-11 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors z-50">
+                    <i class="fas fa-bars text-[22px]"></i>
                 </button>
-                <h3 class="text-[18px] sm:text-xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-sm truncate select-none pointer-events-none" id="headerTitle"><?php echo $currentTitle; ?></h3>
+                <h3 class="text-[18px] sm:text-xl md:text-2xl font-extrabold text-white tracking-tight drop-shadow-sm truncate select-none pointer-events-none" id="headerTitle"><?php echo $currentTitle; ?></h3>
             </div>
             
             <div class="flex items-center relative shrink-0" id="profileMenuWrapper">
                 
-                <!-- 📱 สำหรับมือถือแนวตั้ง: แสดงเฉพาะรูปโปรไฟล์วงกลมเดี่ยวๆ มินิมอล ใหญ่ขึ้นนิดนึง -->
-                <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-[54px] h-[54px] rounded-full bg-white p-[3.5px] shadow-sm border border-slate-200/60 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
+                <!-- 📱 สำหรับมือถือแนวตั้ง: รูปโปรไฟล์ขนาดกะทัดรัดพอดีกับแถบบน 70px -->
+                <div onclick="toggleProfileDropdown(event)" class="flex sm:hidden w-[44px] h-[44px] rounded-full bg-white p-[2.5px] shadow-sm border border-slate-200/60 items-center justify-center overflow-hidden shrink-0 cursor-pointer select-none hover:scale-105 active:scale-95 transition-transform">
                     <img src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full rounded-full object-cover shadow-inner">
                 </div>
 
-                <!-- 💻 สำหรับคอม / โน๊ตบุ๊ค / ไอแพด / แท็บเล็ต / จอแนวนอน: แสดงเป็นแถบแคปซูลแนวนอนชิ้นเดียวเหมือนเดิมเป๊ะ -->
-                <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-3 bg-white pl-5 pr-1.5 py-1.5 rounded-full shadow-md cursor-pointer hover:shadow-lg transition-all border border-slate-100 select-none hover:scale-105 active:scale-95 duration-200">
+                <!-- 💻 สำหรับคอม / โน๊ตบุ๊ค / ไอแพด: แคปซูลแนวนอนดีไซน์เพรียวบาง เรียบหรูตามหลัก UI/UX -->
+                <div onclick="toggleProfileDropdown(event)" class="hidden sm:flex items-center gap-2.5 bg-white/95 backdrop-blur-sm pl-4 pr-1 py-1 rounded-full shadow-sm cursor-pointer hover:shadow-md hover:bg-white transition-all border border-white/60 select-none hover:scale-[1.02] active:scale-95 duration-200">
                     <div class="text-right">
-                        <span class="block text-sm font-extrabold text-slate-800 leading-none mb-1 max-w-[150px] truncate">
+                        <span class="block text-[13px] font-extrabold text-slate-800 leading-tight max-w-[140px] truncate">
                             <?php echo !empty($_SESSION['full_name']) ? htmlspecialchars($_SESSION['full_name']) : (!empty($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Admin'); ?>
                         </span>
-                        <span class="block text-[10px] text-indigo-500 font-bold uppercase tracking-wider">Administrator</span>
+                        <span class="block text-[9.5px] text-indigo-500 font-bold uppercase tracking-wider leading-tight">Administrator</span>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm shrink-0 border-2 border-indigo-100">
+                    <div class="w-[38px] h-[38px] rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shadow-2xs shrink-0 border border-indigo-100">
                         <img id="headerAvatarImg" src="<?php echo $current_user_avatar; ?>" alt="Avatar" class="w-full h-full object-cover">
                     </div>
                 </div>
@@ -6157,9 +6157,9 @@ if (isset($_GET['api_check_hash'])) {
                     // 👆 ปัดนิ้วขึ้น (เลื่อนหน้าลง) -> ซ่อน Header
                     if (currentScrollTop > lastScrollTop && currentScrollTop > 60) {
                         mainHeaderEl.style.transform = 'translateY(-100%)';
-                        // ดึงเนื้อหาขึ้นมา 88px (เท่าความสูง Header) เพื่อไม่ให้มีขอบขาว
-                        mainScrollEl.style.transform = 'translateY(-88px)';
-                        mainScrollEl.style.height = 'calc(100% + 88px)'; 
+                        // ดึงเนื้อหาขึ้นมา 70px (เท่าความสูง Header ใหม่) เพื่อไม่ให้มีขอบขาว
+                        mainScrollEl.style.transform = 'translateY(-70px)';
+                        mainScrollEl.style.height = 'calc(100% + 70px)';
                     } 
                     // 👇 ปัดนิ้วลง (เลื่อนหน้าขึ้น) -> โชว์ Header
                     else if (currentScrollTop < lastScrollTop) {
