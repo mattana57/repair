@@ -717,10 +717,15 @@ if (isset($_GET['api_check_hash'])) {
             box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05), 10px 0 30px -5px rgba(15, 23, 42, 0.35) !important;
         }
         .sidebar-logo-box {
-            height: 70px !important; padding: 0 24px !important;
+            height: 70px !important;
+            padding: 0 20px !important;
+            justify-content: center !important;
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
             box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.3) !important;
+        }
+        .sidebar-logo-box > div:last-child {
+            flex: 0 1 auto !important;
         }
         .sidebar-logo-box h1 {
             color: #ffffff !important;
@@ -732,14 +737,21 @@ if (isset($_GET['api_check_hash'])) {
         }
         .top-header { height: 70px !important; padding: 0 28px !important; }
         #sidebar .border-slate-50 { border-color: rgba(255, 255, 255, 0.07) !important; }
-        #sidebar p { color: #64748b !important; letter-spacing: 0.12em !important; font-weight: 800 !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important; }
+        #sidebar nav > p {
+            color: #64748b !important;
+            letter-spacing: 0.12em !important;
+            font-weight: 800 !important;
+            padding-left: 34px !important;
+            padding-right: 20px !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+        }
         .nav-btn {
             position: relative !important;
-            width: calc(100% - 24px) !important;
+            width: calc(100% - 40px) !important;
             display: flex !important;
             align-items: center !important;
-            padding: 0.5rem 0.75rem !important;
-            margin: 4px 12px !important;
+            padding: 0.55rem 1.15rem !important;
+            margin: 4px auto !important;
             border-radius: 14px !important;
             color: #94a3b8 !important;
             font-weight: 600 !important;
@@ -756,7 +768,7 @@ if (isset($_GET['api_check_hash'])) {
             justify-content: center !important;
             border-radius: 10px !important;
             font-size: 0.95rem !important;
-            margin-right: 0.75rem !important;
+            margin-right: 0.85rem !important;
             color: #94a3b8 !important;
             background: rgba(255, 255, 255, 0.04) !important;
             border: 1px solid rgba(255, 255, 255, 0.06) !important;
@@ -767,7 +779,6 @@ if (isset($_GET['api_check_hash'])) {
             background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%) !important;
             color: #f8fafc !important;
             border-color: rgba(255, 255, 255, 0.08) !important;
-            transform: translateX(3px) !important;
         }
         .nav-btn:hover i {
             color: #a5b4fc !important;
@@ -780,18 +791,6 @@ if (isset($_GET['api_check_hash'])) {
             font-weight: 700 !important;
             border: 1px solid rgba(255, 255, 255, 0.22) !important;
             box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 8px 20px -4px rgba(79, 70, 229, 0.6) !important;
-            transform: translateX(2px) !important;
-        }
-        .active-btn::before {
-            content: '';
-            position: absolute;
-            left: -6px;
-            top: 22%;
-            height: 56%;
-            width: 4px;
-            border-radius: 99px;
-            background: #a5b4fc;
-            box-shadow: 0 0 10px #818cf8;
         }
         .active-btn i {
             color: #ffffff !important;
