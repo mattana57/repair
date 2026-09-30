@@ -309,25 +309,26 @@ if (isset($_GET['api_check_hash'])) {
             font-weight: 700 !important;
             margin-bottom: 6px !important;
         }
-        /* จัดปุ่มเมนูให้สมส่วน มีระยะขอบซ้าย-ขวาสมดุล และดันตัวหนังสือเข้ามาตรงกลางพอดี */
+        /* จัดปุ่มเมนูให้สมส่วน ตัวหนังสือและไอคอนกะทัดรัดพอดีสายตา ไม่ใหญ่เทอะทะ */
         .nav-btn {
             width: calc(100% - 40px) !important;
             display: flex !important;
             align-items: center !important;
-            padding: 0.7rem 1.25rem !important;
-            margin: 4px 20px !important;
-            border-radius: 12px !important;
+            padding: 0.55rem 1.15rem !important;
+            margin: 3px 20px !important;
+            border-radius: 11px !important;
             color: #cbd5e1 !important;
-            font-weight: 600 !important;
-            font-size: 0.925rem !important;
+            font-weight: 500 !important;
+            font-size: 0.8125rem !important;
+            letter-spacing: 0.01em !important;
             transition: all 0.2s ease !important;
             cursor: pointer !important;
         }
         .nav-btn i {
-            width: 24px !important;
+            width: 20px !important;
             text-align: center !important;
-            font-size: 1.05rem !important;
-            margin-right: 14px !important;
+            font-size: 0.875rem !important;
+            margin-right: 10px !important;
             color: #94a3b8 !important;
             transition: all 0.2s ease !important;
         }
