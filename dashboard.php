@@ -707,29 +707,21 @@ if (isset($_GET['api_check_hash'])) {
     <style>
         body { font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .modern-card { background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; }
+        /* ✨ Sidebar Modern Balanced UI: โทนสีกรมท่าละมุน จัดสัดส่วนปุ่มและตัวหนังสือให้สมดุลตรงกลางสายตา ✨ */
         #sidebar {
             width: 240px !important; min-width: 240px !important; max-width: 240px !important;
-            background: 
-                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.22) 0%, transparent 40%),
-                radial-gradient(circle at 100% 85%, rgba(139, 92, 246, 0.16) 0%, transparent 45%),
-                linear-gradient(180deg, #0b1120 0%, #0f172a 55%, #090d16 100%) !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-            box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05), 10px 0 30px -5px rgba(15, 23, 42, 0.35) !important;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+            box-shadow: 4px 0 24px -2px rgba(15, 23, 42, 0.18) !important;
         }
         .sidebar-logo-box {
             height: 70px !important;
-            padding: 0 20px !important;
-            justify-content: center !important;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-            box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.3) !important;
-        }
-        .sidebar-logo-box > div:last-child {
-            flex: 0 1 auto !important;
+            padding: 0 28px !important;
+            background: rgba(255, 255, 255, 0.02) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
         }
         .sidebar-logo-box h1 {
             color: #ffffff !important;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
         }
         .sidebar-logo-box h1 span,
         #sidebar .sidebar-logo-box p {
@@ -739,74 +731,56 @@ if (isset($_GET['api_check_hash'])) {
         #sidebar .border-slate-50 { border-color: rgba(255, 255, 255, 0.07) !important; }
         #sidebar nav > p {
             color: #64748b !important;
-            letter-spacing: 0.12em !important;
-            font-weight: 800 !important;
-            padding-left: 34px !important;
-            padding-right: 20px !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+            padding-left: 32px !important;
+            letter-spacing: 0.1em !important;
+            font-weight: 700 !important;
+            margin-bottom: 6px !important;
         }
+        /* จัดปุ่มเมนูให้สมส่วน มีระยะขอบซ้าย-ขวาสมดุล และดันตัวหนังสือเข้ามาตรงกลางพอดี */
         .nav-btn {
-            position: relative !important;
             width: calc(100% - 40px) !important;
             display: flex !important;
             align-items: center !important;
-            padding: 0.55rem 1.15rem !important;
-            margin: 4px auto !important;
-            border-radius: 14px !important;
-            color: #94a3b8 !important;
+            padding: 0.7rem 1.25rem !important;
+            margin: 4px 20px !important;
+            border-radius: 12px !important;
+            color: #cbd5e1 !important;
             font-weight: 600 !important;
-            font-size: 0.875rem !important;
-            border: 1px solid transparent !important;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            font-size: 0.925rem !important;
+            transition: all 0.2s ease !important;
             cursor: pointer !important;
         }
         .nav-btn i {
-            width: 34px !important;
-            height: 34px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            border-radius: 10px !important;
-            font-size: 0.95rem !important;
-            margin-right: 0.85rem !important;
+            width: 24px !important;
+            text-align: center !important;
+            font-size: 1.05rem !important;
+            margin-right: 14px !important;
             color: #94a3b8 !important;
-            background: rgba(255, 255, 255, 0.04) !important;
-            border: 1px solid rgba(255, 255, 255, 0.06) !important;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-            transition: all 0.25s ease !important;
+            transition: all 0.2s ease !important;
         }
         .nav-btn:hover {
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%) !important;
-            color: #f8fafc !important;
-            border-color: rgba(255, 255, 255, 0.08) !important;
+            background-color: rgba(255, 255, 255, 0.07) !important;
+            color: #ffffff !important;
         }
         .nav-btn:hover i {
             color: #a5b4fc !important;
-            background: rgba(99, 102, 241, 0.18) !important;
-            border-color: rgba(99, 102, 241, 0.35) !important;
         }
+        /* ปุ่มที่เลือก (Active) ทรงแคปซูลสมส่วน สีม่วงครามนุ่มนวลเข้ากับแถบบน */
         .active-btn {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 55%, #7c3aed 100%) !important;
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%) !important;
             color: #ffffff !important;
             font-weight: 700 !important;
-            border: 1px solid rgba(255, 255, 255, 0.22) !important;
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 8px 20px -4px rgba(79, 70, 229, 0.6) !important;
+            box-shadow: 0 6px 16px -3px rgba(99, 102, 241, 0.45) !important;
         }
         .active-btn i {
             color: #ffffff !important;
-            background: rgba(255, 255, 255, 0.2) !important;
-            border-color: rgba(255, 255, 255, 0.3) !important;
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2) !important;
         }
-        #sidebar a.nav-btn.group { color: #94a3b8 !important; }
+        #sidebar a.nav-btn.group { color: #cbd5e1 !important; }
         #sidebar a.nav-btn.group:hover {
-            background: linear-gradient(90deg, rgba(244, 63, 94, 0.18) 0%, rgba(244, 63, 94, 0.05) 100%) !important;
-            border-color: rgba(244, 63, 94, 0.25) !important;
+            background-color: rgba(244, 63, 94, 0.15) !important;
             color: #fda4af !important;
         }
         #sidebar a.nav-btn.group:hover i {
-            background: rgba(244, 63, 94, 0.2) !important;
-            border-color: rgba(244, 63, 94, 0.35) !important;
             color: #fda4af !important;
         }
         
