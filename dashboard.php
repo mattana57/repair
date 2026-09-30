@@ -995,31 +995,31 @@ if (isset($_GET['api_check_hash'])) {
             #techniciansTableContainer tr.tech-dept-spacer td {
                 padding: 0 !important;
             }
-            /* 2. จัดระยะห่างตาราง Technicians ให้กระชับเหมือนหน้า Repairs List เพื่อดึงทั้ง 7 คอลัมน์เข้ามาในจอทั้งหมดโดยไม่ตัดบรรทัด */
+            /* 2. ขยายขนาดตัวหนังสือหัวตารางและในตาราง Technicians ให้ใหญ่ชัดเจนเท่ากับตาราง Administrators */
             #techniciansTableContainer tr.tech-col-header th {
-                padding: 0.85rem 4px !important;
-                font-size: 10px !important;
-                letter-spacing: 0.02em !important;
+                padding: 1rem 0.75rem !important;
+                font-size: 12px !important;
+                letter-spacing: 0.08em !important;
                 white-space: nowrap !important;
             }
             #techniciansTableContainer tr.tech-dept-row td {
-                padding: 0.75rem 4px !important;
-                font-size: 11.5px !important;
+                padding: 1rem 0.75rem !important;
+                font-size: 14px !important;
                 white-space: nowrap !important;
             }
             #techniciansTableContainer tr.tech-col-header th:first-child,
             #techniciansTableContainer tr.tech-dept-row td:first-child {
-                padding-left: 12px !important;
+                padding-left: 1.5rem !important;
             }
             #techniciansTableContainer tr.tech-col-header th:last-child,
             #techniciansTableContainer tr.tech-dept-row td:last-child {
-                padding-right: 12px !important;
+                padding-right: 1.5rem !important;
             }
-            /* ลดขนาดรูปและระยะห่างไอคอนในตารางช่างลงนิดเดียวเพื่อให้เห็นตัวอักษรครบทุกตัวและเห็นปุ่ม ACTION ครบ 100% */
+            /* คืนขนาดรูปโปรไฟล์ช่างให้ใหญ่ชัดเจน 48x48px เท่าเดิม */
             #techniciansTableContainer tr.tech-dept-row td:first-child img {
-                width: 2.5rem !important;
-                height: 2.5rem !important;
-                margin-right: 0.6rem !important;
+                width: 3rem !important;
+                height: 3rem !important;
+                margin-right: 1rem !important;
             }
         }
 
