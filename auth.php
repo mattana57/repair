@@ -54,9 +54,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
 
-        if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-
         // ✨ ระบบตรวจสอบรหัสผ่าน และ Auto-Migration (ย้ายรหัสผ่านเดิมให้เป็น Hash) ✨
         $is_password_correct = false;
         
@@ -82,9 +79,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (file_exists($attempt_file)) {
                 unlink($attempt_file);
             }
-            if (file_exists($attempt_file)) {
-                unlink($attempt_file);
-            }
 
             if ($user['is_active'] != 1) {
                 $_SESSION['login_error'] = "บัญชีนี้ถูกระงับการใช้งาน";
@@ -92,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit();
             }
         
-        $role_lower = strtolower($user['role']);
+            $role_lower = strtolower($user['role']);
 
             if ($role_lower === 'technician') {
                 if (empty($user['technician_id'])) {
@@ -127,7 +121,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 unset($_SESSION['technician_id']);
             }
         
-        // ==========================================
+            // ==========================================
             // ตรวจสอบว่าระบบมีการฝากจำ URL ไว้ก่อนล็อกอินหรือไม่
             // ==========================================
             $redirect = "";
