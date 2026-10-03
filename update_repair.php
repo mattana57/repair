@@ -1,9 +1,31 @@
 <?php
 session_start();
+include 'db_connect.php';
+
+// ข้อ 1.2: ถ้ายังไม่ล็อกอิน ให้จำ URL ปัจจุบันและไปหน้า Login
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['redirect_url'] = "http" . (isset($_SERVER['HTTPS']) ? "s" : "") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    header("Location: login.php");
+    exit();
+}
+
+// ข้อ 10.4: ตรวจสอบสถานะบัญชีและ auth_version ปัจจุบัน
+$stmt_auth = $conn->prepare("SELECT is_active, auth_version, technician_id FROM users WHERE id = ?");
+$stmt_auth->bind_param("i", $_SESSION['user_id']);
+$stmt_auth->execute();
+$res_auth = $stmt_auth->get_result();
+if ($res_auth->num_rows === 0) {
+    session_destroy(); header("Location: login.php"); exit();
+}
+$user_db = $res_auth->fetch_assoc();
+if ($user_db['is_active'] != 1 || $user_db['auth_version'] != $_SESSION['auth_version']) {
+    session_destroy(); header("Location: login.php"); exit();
+}
+$stmt_auth->close();
 
 $back_url = 'dashboard.php?tab=repairs';
 $query_params = [];
-
+// ... (ส่วน GET source คงเดิม) ...
 if (isset($_GET['source'])) {
     $source = $_GET['source'];
     $query_params['source'] = $source;
@@ -20,9 +42,9 @@ if (isset($_GET['source'])) {
 }
 
 date_default_timezone_set('Asia/Bangkok');
-include 'db_connect.php';
 
 $is_admin = isset($_SESSION['role']) && in_array(strtolower($_SESSION['role']), ['admin', 'executive']);
+$is_tech = isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'technician';
 
 function splitThaiEngName($fullName, $engName) {
     $th = trim((string)$fullName);
@@ -66,6 +88,15 @@ if (isset($_GET['id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $repair = $result->fetch_assoc();
+    
+    if (!$repair) {
+        die("ไม่พบข้อมูลใบงาน");
+    }
+
+    // ข้อ 18.2 และ 11.7: ตรวจสิทธิ์เจ้าของงาน (ช่างเปิดได้เฉพาะงานของตัวเอง หรืองานที่ยังว่าง)
+    if ($is_tech && !empty($repair['technician_id']) && $repair['technician_id'] != $_SESSION['technician_id']) {
+        die("<div style='text-align:center; padding: 50px; font-family: sans-serif;'><h2 style='color:#ef4444;'>ไม่มีสิทธิ์เข้าถึง</h2><p>ใบงานนี้มีเจ้าหน้าที่ท่านอื่นรับผิดชอบแล้ว คุณไม่สามารถตรวจสอบหรือแก้ไขได้</p></div>");
+    }
 
     // ✨ ถ้าช่างรับงานผ่าน LINE มาแล้ว แต่เวลา received_at ยังว่าง ให้ประทับเวลาปัจจุบันแบบเรียลไทม์ทันที ✨
     if ($repair && (empty($repair['received_at']) || $repair['received_at'] === '0000-00-00 00:00:00' || $repair['received_at'] === '-')) {
@@ -109,18 +140,26 @@ if (!empty($query_params)) {
 }
 
 $techs_by_dept = [];
-$tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != ''");
+// ข้อ 15.2: ดึง id มาด้วยเพื่อแยกคนชื่อซ้ำและใช้บันทึก Foreign Key
+$tech_res = $conn->query("SELECT id, full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != ''");
 if($tech_res && $tech_res->num_rows > 0){
     while($t = $tech_res->fetch_assoc()) {
         $dept = !empty($t['department']) ? $t['department'] : 'ฝ่ายงานทั่วไป';
         if (!isset($techs_by_dept[$dept])) {
             $techs_by_dept[$dept] = [];
         }
-        if (!in_array($t['full_name'], $techs_by_dept[$dept])) {
-            $techs_by_dept[$dept][] = $t['full_name'];
-        }
+        // เก็บเป็น Array ที่มีทั้ง id และ name
+        $techs_by_dept[$dept][] = ['id' => $t['id'], 'name' => $t['full_name']];
     }
 }
+
+// แก้ไขฟังก์ชันการจัดเรียงภายในกลุ่มให้รองรับโครงสร้าง Array แบบใหม่
+foreach ($techs_by_dept as &$tList) { 
+    usort($tList, function($a, $b) {
+        return strcmp($a['name'], $b['name']);
+    }); 
+}
+unset($tList);
 
 $custom_dept_order = [
     'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
@@ -220,7 +259,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $status = $_POST['status'];
         $repair_note = trim($_POST['repair_note']);
         
-        $technician_name = isset($_POST['technician_name']) && $_POST['technician_name'] !== '' ? $_POST['technician_name'] : null;
+        $technician_id = (isset($_POST['technician_id']) && $_POST['technician_id'] !== '') ? intval($_POST['technician_id']) : null;
+        $technician_name = (isset($_POST['technician_name']) && $_POST['technician_name'] !== '') ? trim($_POST['technician_name']) : null;
+        
+        // ข้อ 15.1, 6.3: ตรวจสอบความถูกต้องของรหัสช่างจากฐานข้อมูล ห้ามเชื่อ hidden input 100%
+        if ($technician_id) {
+            $chk_t = $conn->prepare("SELECT full_name FROM technicians WHERE id = ?");
+            $chk_t->bind_param("i", $technician_id);
+            $chk_t->execute();
+            $res_t = $chk_t->get_result();
+            if ($res_t->num_rows > 0) {
+                $technician_name = $res_t->fetch_assoc()['full_name'];
+            } else {
+                $technician_id = null;
+                $technician_name = null;
+            }
+            $chk_t->close();
+        } else {
+            // ข้อ 15.2: ถ้ายกเลิกผู้รับผิดชอบ ให้ล้างรหัสและชื่ออย่างสอดคล้อง
+            $technician_name = null;
+        }
+
         $asset_code = isset($_POST['asset_code']) && $_POST['asset_code'] !== '' ? trim($_POST['asset_code']) : null;
         $asset_status = isset($_POST['asset_status']) ? $_POST['asset_status'] : null;
         $update_id = $_POST['id'];
@@ -246,10 +305,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $final_completed = null;
         }
         
-        // อัปเดตข้อมูลโดยบังคับส่งเวลาที่กรองแล้วเข้าไปตรงๆ
-        $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_name = ?, asset_code = ?, received_at = ?, completed_at = ? WHERE id = ?";
+        // ข้อ 15.1: บันทึก repairs.technician_id ควบคู่กับชื่อเสมอ
+        $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_id = ?, technician_name = ?, asset_code = ?, received_at = ?, completed_at = ? WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("sssssssi", $status, $repair_note, $repair_note, $technician_name, $asset_code, $final_received, $final_completed, $update_id);
+        $update_stmt->bind_param("sssississi", $status, $repair_note, $repair_note, $technician_id, $technician_name, $asset_code, $final_received, $final_completed, $update_id);
 
         if ($update_stmt->execute()) {
             $show_alert = true;
@@ -591,18 +650,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <div class="mb-4 relative" id="techDropdownContainer">
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
                             
-                            <?php if (!empty($current_tech_full) && $current_tech_full !== '-' && !$is_admin): ?>
+                            <?php if ($is_tech): ?>
+                                <!-- ข้อ 18.2: ล็อกสิทธิ์ผู้รับผิดชอบตามรหัสช่างของ Account ที่กำลังล็อกอิน (กรณีรับงานที่ว่างอยู่ จะผูกกับตัวเองอัตโนมัติ) -->
+                                <input type="hidden" name="technician_id" id="technician_id" value="<?php echo $_SESSION['technician_id']; ?>">
+                                <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($_SESSION['full_name']); ?>">
                                 <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center shadow-sm">
                                     <div class="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center mr-4 text-sky-600 shrink-0">
                                         <i class="fas fa-user-check"></i>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-bold text-slate-800"><?php echo htmlspecialchars($current_tech_display); ?></p>
-                                        <p class="text-[11px] text-slate-500 mt-0.5">ล็อกสิทธิ์ผู้รับผิดชอบ (ป้องกันการแก้ไขผิดพลาด)</p>
+                                        <p class="text-sm font-bold text-slate-800"><?php echo htmlspecialchars($_SESSION['full_name']); ?></p>
+                                        <p class="text-[11px] text-slate-500 mt-0.5">รับผิดชอบใบงานนี้ (ล็อกสิทธิ์ตามบัญชี)</p>
                                     </div>
                                 </div>
-                                <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($current_tech_full); ?>">
                             <?php else: ?>
+                                <input type="hidden" name="technician_id" id="technician_id" value="<?php echo htmlspecialchars($repair['technician_id'] ?? ''); ?>">
+                                <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($current_tech_full); ?>">
                                 <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 transition-all cursor-text shadow-sm" onclick="toggleTechDropdown(event, true)">
                                     <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="-- ค้นหาหรือเลือกช่าง --">
                                     
@@ -612,7 +675,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                                 
                                 <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
-                                    <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
+                                    <!-- เลือกค่าว่างส่ง ID ว่าง -->
+                                    <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
                                         <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
                                             <i class="fas fa-user-slash text-xs"></i>
                                         </div>
@@ -630,10 +694,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         </div>
                                         
                                         <?php foreach($techList as $t): 
-                                            list($th_name, $en_name) = splitThaiEngName($t, '');
+                                            list($th_name, $en_name) = splitThaiEngName($t['name'], '');
                                             $searchStr = preg_replace('/\s+/', '', strtolower($th_name . $dept));
                                         ?>
-                                            <div class="tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer flex justify-between items-center transition-all group" data-value="<?php echo htmlspecialchars($t); ?>" data-display="<?php echo htmlspecialchars($th_name); ?>" data-search="<?php echo htmlspecialchars($searchStr); ?>" data-dept="<?php echo htmlspecialchars($dept); ?>" onmousedown="selectTech('<?php echo htmlspecialchars($t, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($th_name, ENT_QUOTES); ?>')">
+                                            <div class="tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer flex justify-between items-center transition-all group" data-value="<?php echo htmlspecialchars($t['name']); ?>" data-display="<?php echo htmlspecialchars($th_name); ?>" data-search="<?php echo htmlspecialchars($searchStr); ?>" data-dept="<?php echo htmlspecialchars($dept); ?>" onmousedown="selectTech('<?php echo htmlspecialchars($t['id'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($t['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($th_name, ENT_QUOTES); ?>')">
+                                                <div class="flex items-center pointer-events-none">
+                                                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors">
+                                                        <i class="fas fa-user text-xs"></i>
+                                                    </div>
+                                                    <div>
+                                                        <span><?php echo htmlspecialchars($th_name); ?></span>
+                                                        <span class="text-[10px] text-slate-400 block -mt-1 font-medium">(รหัส: <?php echo htmlspecialchars($t['id']); ?>)</span>
+                                                    </div>
+                                                </div>
                                                 <div class="flex items-center pointer-events-none">
                                                     <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors">
                                                         <i class="fas fa-user text-xs"></i>
@@ -876,10 +949,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             });
         }
 
-        function selectTech(val, displayText) {
-            currentTechValue = val;
+        function selectTech(id, fullName, displayText) {
+            currentTechValue = fullName;
             currentTechDisplay = displayText;
-            document.getElementById('technician_name').value = val;
+            document.getElementById('technician_id').value = id;
+            document.getElementById('technician_name').value = fullName;
             document.getElementById('techSearchInput').value = displayText;
             document.getElementById('techDropdownList').classList.add('hidden');
             document.getElementById('techDropdownList').classList.remove('flex');
