@@ -54,9 +54,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
 
+        if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+
+        // ✨ ระบบตรวจสอบรหัสผ่าน และ Auto-Migration (ย้ายรหัสผ่านเดิมให้เป็น Hash) ✨
+        $is_password_correct = false;
+        
+        // 1. ตรวจสอบรหัสผ่านแบบ Hash ตามมาตรฐานความปลอดภัยใหม่ (ข้อ 7.1, 7.2)
         if (password_verify($password, $user['password'])) {
+            $is_password_correct = true;
+        } 
+        // 2. ตรวจสอบรหัสผ่านบัญชีเก่าที่เป็น Plain text และแปลงเป็น Hash ให้อัตโนมัติ (ข้อ 7.4)
+        elseif ($password === $user['password']) {
+            $is_password_correct = true;
+            $new_hash = password_hash($password, PASSWORD_DEFAULT);
+            $stmt_update_pwd = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+            if ($stmt_update_pwd) {
+                $stmt_update_pwd->bind_param("si", $new_hash, $user['id']);
+                $stmt_update_pwd->execute();
+                $stmt_update_pwd->close();
+            }
+        }
+
+        if ($is_password_correct) {
             
             // ล้างประวัติการล็อกอินผิดพลาดเมื่อเข้าสู่ระบบสำเร็จ
+            if (file_exists($attempt_file)) {
+                unlink($attempt_file);
+            }
             if (file_exists($attempt_file)) {
                 unlink($attempt_file);
             }
