@@ -1,14 +1,12 @@
 <?php 
-session_start();
+// เรียกใช้ระบบตรวจสิทธิ์ส่วนกลาง (ตรวจสอบ Session, อายุการใช้งาน, และสถานะบัญชี)
+require_once 'auth_guard.php';
 
-// ✨ 1. ตรวจสอบก่อนว่ามีการล็อกอินอยู่หรือไม่ ถ้าไม่มี (หรือหมดเวลา) ให้เตะไปหน้า Login ทันที ✨
-if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
-    $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
-    header("Location: login.php");
-    exit();
+// สร้าง CSRF Token สำหรับป้องกันการแนบสคริปต์สวมรอยส่งคำสั่ง (CSRF Protection)
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-include 'db_connect.php';
 $conn->set_charset("utf8mb4");
 
 // ✨ 2. อัปเดตข้อมูล Session ก่อนเช็คสิทธิ์ เพื่อป้องกันการจำค่าสิทธิ์ผิดเพี้ยนเวลา Refresh ✨
@@ -419,12 +417,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
 }
 
 if (isset($_GET['delete_asset'])) {
+    if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
     $del_id = intval($_GET['delete_asset']);
     $conn->query("DELETE FROM assets WHERE id = $del_id");
     echo "<script>$js_redirect</script>";
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
     $asset_id = $_POST['asset_id'];
     $asset_code = $_POST['asset_code'];
     $asset_name = $_POST['asset_name'];
@@ -443,6 +443,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
 }
 
 if (isset($_GET['delete_tech'])) {
+    if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
     $del_id = intval($_GET['delete_tech']);
     
     // ข้อ 14.1, 14.2, 14.6: ตรวจสอบบัญชีเว็บและประวัติใบงานก่อนลบ
@@ -467,6 +468,7 @@ if (isset($_GET['delete_tech'])) {
 }
 
 if (isset($_GET['unlink_tech'])) {
+    if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
     $unlink_id = intval($_GET['unlink_tech']);
     $new_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
     $conn->query("UPDATE technicians SET line_user_id = NULL, approval_status = 'รอผูกบัญชี', secret_code = '$new_code' WHERE id = $unlink_id");
@@ -474,12 +476,14 @@ if (isset($_GET['unlink_tech'])) {
 }
 
 if (isset($_GET['delete_user'])) {
+    if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
     $del_id = intval($_GET['delete_user']);
     $conn->query("DELETE FROM users WHERE id = $del_id");
     echo "<script>$js_redirect</script>";
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
     $user_id = $_POST['user_id'];
     $role = $_POST['role']; 
     
@@ -2645,6 +2649,7 @@ if (isset($_GET['api_check_hash'])) {
                 <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
             <form action="" method="POST" class="p-6">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                 <input type="hidden" name="save_asset" value="1"><input type="hidden" name="asset_id" id="asset_id" value="">
                 <div class="space-y-5">
                     <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asset Code</label><input type="text" name="asset_code" id="asset_code" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium"></div>
@@ -2688,6 +2693,7 @@ if (isset($_GET['api_check_hash'])) {
             </div>
 
            <form id="techAdminForm" action="" method="POST" enctype="multipart/form-data" novalidate onsubmit="return validateTechAdminForm(event)" class="flex flex-col flex-1 overflow-hidden min-h-0">
+                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                 <input type="hidden" name="save_user" value="1">
                 <input type="hidden" name="user_id" id="techAdmin_id" value="">
                 <input type="hidden" name="role" id="techAdmin_role" value="">
@@ -5925,7 +5931,7 @@ if (isset($_GET['api_check_hash'])) {
             Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "เจ้าหน้าที่จะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
                 if(r.isConfirmed) {
                     let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
-                    window.location.href = '?unlink_tech=' + id + '&tab=' + t; 
+                    window.location.href = '?unlink_tech=' + id + '&tab=' + t + '&csrf_token=<?php echo $_SESSION['csrf_token']; ?>'; 
                 }
             }); 
         }
@@ -5934,9 +5940,10 @@ if (isset($_GET['api_check_hash'])) {
             Swal.fire({ title: 'ยืนยันการลบข้อมูล?', text: "เมื่อลบแล้วจะไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { 
                 if(r.isConfirmed) {
                     let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
-                    if(type === 'tech') window.location.href = '?delete_tech=' + id + '&tab=' + t;
-                    else if(type === 'user') window.location.href = '?delete_user=' + id + '&tab=' + t;
-                    else if(type === 'asset') window.location.href = '?delete_asset=' + id + '&tab=' + t;
+                    let csrf = '&csrf_token=<?php echo $_SESSION['csrf_token']; ?>';
+                    if(type === 'tech') window.location.href = '?delete_tech=' + id + '&tab=' + t + csrf;
+                    else if(type === 'user') window.location.href = '?delete_user=' + id + '&tab=' + t + csrf;
+                    else if(type === 'asset') window.location.href = '?delete_asset=' + id + '&tab=' + t + csrf;
                 }
             }); 
         }

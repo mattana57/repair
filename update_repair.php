@@ -1,27 +1,6 @@
 <?php
-session_start();
-include 'db_connect.php';
-
-// ข้อ 1.2: ถ้ายังไม่ล็อกอิน ให้จำ URL ปัจจุบันและไปหน้า Login
-if (!isset($_SESSION['user_id'])) {
-    $_SESSION['redirect_url'] = "http" . (isset($_SERVER['HTTPS']) ? "s" : "") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-    header("Location: login.php");
-    exit();
-}
-
-// ข้อ 10.4: ตรวจสอบสถานะบัญชีและ auth_version ปัจจุบัน
-$stmt_auth = $conn->prepare("SELECT is_active, auth_version, technician_id FROM users WHERE id = ?");
-$stmt_auth->bind_param("i", $_SESSION['user_id']);
-$stmt_auth->execute();
-$res_auth = $stmt_auth->get_result();
-if ($res_auth->num_rows === 0) {
-    session_destroy(); header("Location: login.php"); exit();
-}
-$user_db = $res_auth->fetch_assoc();
-if ($user_db['is_active'] != 1 || $user_db['auth_version'] != $_SESSION['auth_version']) {
-    session_destroy(); header("Location: login.php"); exit();
-}
-$stmt_auth->close();
+// เรียกใช้ระบบตรวจสิทธิ์ส่วนกลางแทนการเช็คแบบแยกไฟล์
+require_once 'auth_guard.php';
 
 $back_url = 'dashboard.php?tab=repairs';
 $query_params = [];
@@ -93,7 +72,7 @@ if (isset($_GET['id'])) {
         die("ไม่พบข้อมูลใบงาน");
     }
 
-    // ข้อ 18.2 และ 11.7: ตรวจสิทธิ์เจ้าของงาน (ช่างเปิดได้เฉพาะงานของตัวเอง หรืองานที่ยังว่าง)
+    // ตรวจสิทธิ์เจ้าของงาน (ช่างเปิดได้เฉพาะงานของตัวเอง หรืองานที่ยังว่าง)
     if ($is_tech && !empty($repair['technician_id']) && $repair['technician_id'] != $_SESSION['technician_id']) {
         die("<div style='text-align:center; padding: 50px; font-family: sans-serif;'><h2 style='color:#ef4444;'>ไม่มีสิทธิ์เข้าถึง</h2><p>ใบงานนี้มีเจ้าหน้าที่ท่านอื่นรับผิดชอบแล้ว คุณไม่สามารถตรวจสอบหรือแก้ไขได้</p></div>");
     }
@@ -140,7 +119,7 @@ if (!empty($query_params)) {
 }
 
 $techs_by_dept = [];
-// ข้อ 15.2: ดึง id มาด้วยเพื่อแยกคนชื่อซ้ำและใช้บันทึก Foreign Key
+// ดึงรหัสช่างมาด้วยเพื่อแยกคนชื่อซ้ำและใช้บันทึกข้อมูล
 $tech_res = $conn->query("SELECT id, full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != ''");
 if($tech_res && $tech_res->num_rows > 0){
     while($t = $tech_res->fetch_assoc()) {
@@ -262,7 +241,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $technician_id = (isset($_POST['technician_id']) && $_POST['technician_id'] !== '') ? intval($_POST['technician_id']) : null;
         $technician_name = (isset($_POST['technician_name']) && $_POST['technician_name'] !== '') ? trim($_POST['technician_name']) : null;
         
-        // ข้อ 15.1, 6.3: ตรวจสอบความถูกต้องของรหัสช่างจากฐานข้อมูล ห้ามเชื่อ hidden input 100%
+        // ตรวจสอบความถูกต้องของรหัสช่างจากฐานข้อมูล ห้ามเชื่อ hidden input 100%
         if ($technician_id) {
             $chk_t = $conn->prepare("SELECT full_name FROM technicians WHERE id = ?");
             $chk_t->bind_param("i", $technician_id);
@@ -276,7 +255,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             $chk_t->close();
         } else {
-            // ข้อ 15.2: ถ้ายกเลิกผู้รับผิดชอบ ให้ล้างรหัสและชื่ออย่างสอดคล้อง
+            // ถ้ายกเลิกผู้รับผิดชอบ ให้ล้างรหัสและชื่ออย่างสอดคล้อง
             $technician_name = null;
         }
 
@@ -305,7 +284,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $final_completed = null;
         }
         
-        // ข้อ 15.1: บันทึก repairs.technician_id ควบคู่กับชื่อเสมอ
+        // บันทึก repairs.technician_id ควบคู่กับชื่อเสมอ
         $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_id = ?, technician_name = ?, asset_code = ?, received_at = ?, completed_at = ? WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
         $update_stmt->bind_param("sssississi", $status, $repair_note, $repair_note, $technician_id, $technician_name, $asset_code, $final_received, $final_completed, $update_id);
@@ -651,7 +630,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
                             
                             <?php if ($is_tech): ?>
-                                <!-- ข้อ 18.2: ล็อกสิทธิ์ผู้รับผิดชอบตามรหัสช่างของ Account ที่กำลังล็อกอิน (กรณีรับงานที่ว่างอยู่ จะผูกกับตัวเองอัตโนมัติ) -->
+                                <!-- ล็อกสิทธิ์ผู้รับผิดชอบตามรหัสช่างของ Account ที่กำลังล็อกอิน (กรณีรับงานที่ว่างอยู่ จะผูกกับตัวเองอัตโนมัติ) -->
                                 <input type="hidden" name="technician_id" id="technician_id" value="<?php echo $_SESSION['technician_id']; ?>">
                                 <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($_SESSION['full_name']); ?>">
                                 <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center shadow-sm">

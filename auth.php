@@ -2,11 +2,44 @@
 session_start();
 require_once 'db_connect.php'; 
 
+// ฟังก์ชันช่วยบันทึกการเข้าระบบผิดพลาด (Rate Limiting)
+function record_failed_attempt($file) {
+    $data = ['attempts' => 1, 'last_time' => time()];
+    if (file_exists($file)) {
+        $existing = json_decode(file_get_contents($file), true);
+        $data['attempts'] = $existing['attempts'] + 1;
+    }
+    file_put_contents($file, json_encode($data));
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    
+    // จำกัดความถี่การล็อกอิน (Rate Limiting) ป้องกันการเดารหัสผ่านโดยอ้างอิงจาก IP Address
+    $ip_address = $_SERVER['REMOTE_ADDR'];
+    $attempt_file = 'uploads/login_attempts_' . md5($ip_address) . '.txt';
+    $max_attempts = 5;
+    $lockout_time = 15 * 60; // ระงับ 15 นาที
+    
+    if (file_exists($attempt_file)) {
+        $attempts_data = json_decode(file_get_contents($attempt_file), true);
+        if ($attempts_data['attempts'] >= $max_attempts) {
+            if (time() - $attempts_data['last_time'] < $lockout_time) {
+                $_SESSION['login_error'] = "พยายามเข้าสู่ระบบผิดพลาดหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่";
+                header("Location: login.php");
+                exit();
+            } else {
+                // ปลดล็อกเมื่อครบเวลาที่กำหนด
+                unlink($attempt_file);
+            }
+        }
+    }
+
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
+    // ตรวจสอบค่าว่างและบันทึกการผิดพลาด
     if (empty($username) || empty($password)) {
+        record_failed_attempt($attempt_file);
         $_SESSION['login_error'] = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
         header("Location: login.php");
         exit();
@@ -22,6 +55,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user = $result->fetch_assoc();
 
         if (password_verify($password, $user['password'])) {
+            
+            // ล้างประวัติการล็อกอินผิดพลาดเมื่อเข้าสู่ระบบสำเร็จ
+            if (file_exists($attempt_file)) {
+                unlink($attempt_file);
+            }
+
             if ($user['is_active'] != 1) {
                 $_SESSION['login_error'] = "บัญชีนี้ถูกระงับการใช้งาน";
                 header("Location: login.php");
@@ -107,11 +146,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
             
         } else {
+            // บันทึกการเข้าระบบผิดพลาด (รหัสผ่านผิด)
+            record_failed_attempt($attempt_file);
             $_SESSION['login_error'] = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
             header("Location: login.php");
             exit();
         }
     } else {
+        // บันทึกการเข้าระบบผิดพลาด (ไม่พบชื่อผู้ใช้)
+        record_failed_attempt($attempt_file);
         $_SESSION['login_error'] = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
         header("Location: login.php");
         exit();
