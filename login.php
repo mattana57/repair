@@ -1,3 +1,4 @@
+<?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -39,8 +40,17 @@
                     <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">เข้าสู่ระบบเจ้าหน้าที่</h2>
                     <p class="text-slate-500 text-xs mt-2 text-center font-medium">คณะการบัญชีและการจัดการ (MBS)</p>
                 </div>
+
+                <!-- แสดงข้อความ Error จาก Session -->
+                <?php if (isset($_SESSION['login_error']) && !empty($_SESSION['login_error'])): ?>
+                    <div class="mb-6 p-4 rounded-xl bg-red-50 border-l-4 border-red-500 text-red-700 text-sm flex items-center shadow-sm">
+                        <i class="fas fa-exclamation-circle text-lg mr-3"></i>
+                        <span><?php echo htmlspecialchars($_SESSION['login_error']); ?></span>
+                    </div>
+                    <?php unset($_SESSION['login_error']); ?>
+                <?php endif; ?>
                 
-                <!-- ฟอร์มเข้าสู่ระบบ -->
+                <!-- ฟอร์มเข้าสู่ระบบ (ข้อ 8.1 และ 8.2: คงฟอร์มเดิม ไม่เพิ่มช่องเลือกระดับสิทธิ์) -->
                 <form action="auth.php" method="POST" class="space-y-6">
                     
                     <!-- ช่อง Username (มีเอฟเฟกต์ยกตัว) -->

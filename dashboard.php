@@ -31,6 +31,10 @@ if ($user_chk_q && $user_chk_q->num_rows > 0) {
 if (strtolower($_SESSION['role']) === 'executive') {
     header("Location: executive_dashboard.php");
     exit();
+} elseif (strtolower($_SESSION['role']) === 'technician') {
+    // ข้อ 12.2: ปฏิเสธ Technician เข้าหน้าแอดมิน
+    header("Location: technician_home.php");
+    exit();
 }
 
 // ✨ API ส่งข้อมูลรูปภาพล่าสุดแบบเรียลไทม์ สำหรับอัปเดตหน้าจออัตโนมัติไม่ต้องกดรีเฟรช ✨
@@ -440,8 +444,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
 
 if (isset($_GET['delete_tech'])) {
     $del_id = intval($_GET['delete_tech']);
-    $conn->query("DELETE FROM technicians WHERE id = $del_id");
-    echo "<script>$js_redirect</script>";
+    
+    // ข้อ 14.1, 14.2, 14.6: ตรวจสอบบัญชีเว็บและประวัติใบงานก่อนลบ
+    $t_name_q = $conn->query("SELECT full_name FROM technicians WHERE id = $del_id");
+    if ($t_name_q && $t_name_q->num_rows > 0) {
+        $t_name = $t_name_q->fetch_assoc()['full_name'];
+        
+        $chk_usr = $conn->query("SELECT id FROM users WHERE technician_id = $del_id LIMIT 1");
+        $chk_rep = $conn->prepare("SELECT id FROM repairs WHERE technician_id = ? OR technician_name = ? LIMIT 1");
+        $chk_rep->bind_param("is", $del_id, $t_name);
+        $chk_rep->execute();
+        $res_rep = $chk_rep->get_result();
+
+        if (($chk_usr && $chk_usr->num_rows > 0) || ($res_rep && $res_rep->num_rows > 0)) {
+            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ไม่สามารถลบได้', text: 'ช่างรายนี้มีบัญชีเว็บหรือมีประวัติผูกกับใบงานแล้ว แนะนำให้ใช้การระงับบัญชีแทน', confirmButtonColor: '#ef4444' }).then(() => { $js_redirect }); });</script>";
+        } else {
+            $conn->query("DELETE FROM technicians WHERE id = $del_id");
+            echo "<script>$js_redirect</script>";
+        }
+        $chk_rep->close();
+    }
 }
 
 if (isset($_GET['unlink_tech'])) {
@@ -483,6 +505,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             $department = $_POST['department_custom'];
         }
 
+        // ข้อ 5.2 และ 6.1: รับค่าสร้างบัญชีเว็บ
+        $web_username = isset($_POST['username']) ? trim($_POST['username']) : '';
+        $web_password = isset($_POST['password']) ? $_POST['password'] : '';
+        $is_active = isset($_POST['is_active']) ? intval($_POST['is_active']) : 1;
+
         $avatar_url = NULL;
         $upload_dir = 'uploads/';
         if (!is_dir($upload_dir)) {
@@ -501,55 +528,98 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 }
             }
         }
-        
-        if (empty($user_id)) {
-            $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
-            $stmt = $conn->prepare("INSERT INTO technicians (full_name, english_name, position, phone, email, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'รอผูกบัญชี')");
-            if ($stmt) {
+
+        // ข้อ 6.5: ใช้ Transaction เพื่อผูกการบันทึก 2 ตาราง
+        $conn->begin_transaction();
+        try {
+            $tech_id = $user_id;
+
+            // 1. จัดการข้อมูลตาราง technicians
+            if (empty($user_id)) {
+                $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
+                $stmt = $conn->prepare("INSERT INTO technicians (full_name, english_name, position, phone, email, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'รอผูกบัญชี')");
                 $stmt->bind_param("ssssssss", $full_name, $english_name, $position, $phone, $email, $department, $avatar_url, $secret_code);
-                if ($stmt->execute()) {
-                    $msg = "เพิ่มข้อมูลเจ้าหน้าที่สำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
-                    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg\", confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
-                } else {
-                    $err = addslashes($stmt->error);
-                    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการบันทึก', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
-                }
+                $stmt->execute();
+                $tech_id = $conn->insert_id;
+                $msg = "เพิ่มข้อมูลเจ้าหน้าที่สำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
             } else {
-                $err = addslashes($conn->error);
-                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ฐานข้อมูลมีปัญหา', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
-            }
-        } else {
-            if ($delete_avatar_flag === '1' && !$avatar_url) {
-                $q_old = $conn->query("SELECT avatar_url FROM technicians WHERE id = $user_id");
-                if ($q_old && $q_old->num_rows > 0) {
-                    $old_avatar = $q_old->fetch_assoc()['avatar_url'];
-                    if (!empty($old_avatar) && file_exists($old_avatar)) @unlink($old_avatar);
-                }
-                $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, email=?, department=?, avatar_url=NULL WHERE id=?");
-                if ($stmt) $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $email, $department, $user_id);
-            } else {
-                if ($avatar_url) {
+                if ($delete_avatar_flag === '1' && !$avatar_url) {
                     $q_old = $conn->query("SELECT avatar_url FROM technicians WHERE id = $user_id");
                     if ($q_old && $q_old->num_rows > 0) {
                         $old_avatar = $q_old->fetch_assoc()['avatar_url'];
                         if (!empty($old_avatar) && file_exists($old_avatar)) @unlink($old_avatar);
                     }
-                    $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, email=?, department=?, avatar_url=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("sssssssi", $full_name, $english_name, $position, $phone, $email, $department, $avatar_url, $user_id);
+                    $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, email=?, department=?, avatar_url=NULL WHERE id=?");
+                    $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $email, $department, $user_id);
                 } else {
-                    $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, email=?, department=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $email, $department, $user_id);
+                    if ($avatar_url) {
+                        $q_old = $conn->query("SELECT avatar_url FROM technicians WHERE id = $user_id");
+                        if ($q_old && $q_old->num_rows > 0) {
+                            $old_avatar = $q_old->fetch_assoc()['avatar_url'];
+                            if (!empty($old_avatar) && file_exists($old_avatar)) @unlink($old_avatar);
+                        }
+                        $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, email=?, department=?, avatar_url=? WHERE id=?");
+                        $stmt->bind_param("sssssssi", $full_name, $english_name, $position, $phone, $email, $department, $avatar_url, $user_id);
+                    } else {
+                        $stmt = $conn->prepare("UPDATE technicians SET full_name=?, english_name=?, position=?, phone=?, email=?, department=? WHERE id=?");
+                        $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $email, $department, $user_id);
+                    }
+                }
+                $stmt->execute();
+            }
+
+            // 2. จัดการข้อมูลตาราง users สำหรับช่าง (ข้อ 5.3, 6.1)
+            if (!empty($web_username)) {
+                // ตรวจ Username ซ้ำ
+                $chk_u = $conn->prepare("SELECT id FROM users WHERE username = ? AND technician_id != ?");
+                $chk_u->bind_param("si", $web_username, $tech_id);
+                $chk_u->execute();
+                if ($chk_u->get_result()->num_rows > 0) {
+                    throw new Exception("Username นี้ถูกใช้งานแล้ว กรุณาใช้ชื่ออื่น");
+                }
+                $chk_u->close();
+
+                // ตรวจว่ามีบัญชีแล้วหรือยัง
+                $usr_q = $conn->prepare("SELECT id FROM users WHERE technician_id = ?");
+                $usr_q->bind_param("i", $tech_id);
+                $usr_q->execute();
+                $usr_res = $usr_q->get_result();
+
+                if ($usr_res->num_rows > 0) {
+                    // อัปเดตบัญชีเดิม
+                    $usr_id = $usr_res->fetch_assoc()['id'];
+                    if (!empty($web_password)) {
+                        // เปลี่ยนรหัสผ่านและเพิ่ม auth_version (ข้อ 7.2, 13.1)
+                        $hashed = password_hash($web_password, PASSWORD_DEFAULT);
+                        $u_upd = $conn->prepare("UPDATE users SET username = ?, password = ?, full_name = ?, is_active = ?, auth_version = auth_version + 1 WHERE id = ?");
+                        $u_upd->bind_param("sssii", $web_username, $hashed, $full_name, $is_active, $usr_id);
+                    } else {
+                        // ไม่เปลี่ยนรหัสผ่าน (ข้อ 5.7, 13.2)
+                        $u_upd = $conn->prepare("UPDATE users SET username = ?, full_name = ?, is_active = ?, auth_version = auth_version + 1 WHERE id = ?");
+                        $u_upd->bind_param("ssii", $web_username, $full_name, $is_active, $usr_id);
+                    }
+                    $u_upd->execute();
+                } else {
+                    // สร้างบัญชีใหม่
+                    if (empty($web_password)) throw new Exception("กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่ของช่าง");
+                    $hashed = password_hash($web_password, PASSWORD_DEFAULT);
+                    $role_tech = 'Technician';
+                    $u_ins = $conn->prepare("INSERT INTO users (username, password, full_name, role, technician_id, is_active, auth_version) VALUES (?, ?, ?, ?, ?, ?, 1)");
+                    $u_ins->bind_param("ssssii", $web_username, $hashed, $full_name, $role_tech, $tech_id, $is_active);
+                    $u_ins->execute();
                 }
             }
-            
-            if ($stmt && $stmt->execute()) {
-                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
-            } else {
-                $err = addslashes($stmt ? $stmt->error : $conn->error);
-                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการอัปเดต', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
-            }
+
+            $conn->commit();
+            $msg_success = isset($msg) ? $msg : 'อัปเดตข้อมูลและบัญชีสำเร็จ!';
+            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg_success\", confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
+
+        } catch (Exception $e) {
+            $conn->rollback();
+            $err = addslashes($e->getMessage());
+            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการบันทึก', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
         }
-        
+
     } else {
         $username = $_POST['username'];
         $password = $_POST['password']; 
@@ -1910,7 +1980,13 @@ if (isset($_GET['api_check_hash'])) {
                             <tbody class="text-sm" id="techniciansTableBody">
                             <?php 
                             $techs_by_dept = [];
-                            $tech_res = $conn->query("SELECT * FROM technicians ORDER BY department ASC, id DESC");
+                            // ข้อ 5.4: โหลดบัญชีด้วย users.technician_id
+                            $tech_res = $conn->query("
+                                SELECT t.*, u.username AS web_username, u.is_active AS web_is_active 
+                                FROM technicians t 
+                                LEFT JOIN users u ON t.id = u.technician_id 
+                                ORDER BY t.department ASC, t.id DESC
+                            ");
                             
                             if($tech_res && $tech_res->num_rows > 0){
                                 while($t = $tech_res->fetch_assoc()) {
@@ -1992,6 +2068,8 @@ if (isset($_GET['api_check_hash'])) {
                                         $js_pos = htmlspecialchars($pos, ENT_QUOTES);
 
                                         $js_uid = $t['id']; $js_phone = htmlspecialchars($t['phone'] ?? '', ENT_QUOTES); $js_email = htmlspecialchars($t['email'] ?? '', ENT_QUOTES); $js_dept = htmlspecialchars($t['department'] ?? '', ENT_QUOTES); $js_role = 'Technician';
+                                        $js_web_uname = htmlspecialchars($t['web_username'] ?? '', ENT_QUOTES);
+                                        $js_web_active = isset($t['web_is_active']) ? $t['web_is_active'] : 1;
                                         
                                         $total_jobs = 0;
                                         if(!empty($t['full_name'])) {
@@ -2046,7 +2124,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     {$unlinkBtn}
                                                     <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                    <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}', '$js_email')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_web_uname', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}', '$js_email', '$js_web_active')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                     <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:text-white hover:bg-rose-500 transition-all flex items-center justify-center shadow-xs'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
@@ -2669,8 +2747,15 @@ if (isset($_GET['api_check_hash'])) {
                     </div>
 
                     <div id="loginCredsDiv" class="flex flex-col gap-5">
+                        <div id="accountStatusDiv" class="hidden">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Account Status <span class="text-slate-400 font-normal normal-case">(สถานะบัญชีเว็บ)</span></label>
+                            <select name="is_active" id="techAdmin_is_active" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all">
+                                <option value="1">เปิดใช้งาน (Active)</option>
+                                <option value="0">ระงับบัญชี (Suspended)</option>
+                            </select>
+                        </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username <span class="text-rose-500" id="usernameReqStar">*</span></label>
                             <input type="text" name="username" id="techAdmin_username" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุชื่อผู้ใช้งาน (Username)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="ระบุชื่อผู้ใช้งาน (Username)">
                             <p id="err_techAdmin_username" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุชื่อผู้ใช้งาน (Username)</span></p>
                         </div>
@@ -5307,7 +5392,7 @@ if (isset($_GET['api_check_hash'])) {
             return true;
         }
 
-        function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='', em='') { 
+        function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='', em='', isActive=1) { 
             // ✨ ล้างสถานะสีแดงค้างเก่าออกให้หมดทุกช่องก่อนเปิดหน้าต่าง ✨
             ['techAdmin_username', 'techAdmin_password', 'techAdmin_fullname', 'techAdmin_phone', 'techAdmin_email', 'techAdmin_position_select', 'techAdmin_position_custom', 'techAdmin_department_select', 'techAdmin_department_custom'].forEach(elId => {
                 clearFieldError(document.getElementById(elId));
@@ -5322,6 +5407,7 @@ if (isset($_GET['api_check_hash'])) {
             const adminLevelDiv = document.getElementById('adminLevelDiv'); 
             const deptDiv = document.getElementById('deptDiv');
             const loginCredsDiv = document.getElementById('loginCredsDiv');
+            const accountStatusDiv = document.getElementById('accountStatusDiv');
             const avatarDiv = document.getElementById('avatarDiv');
             const avatarLabelWrapper = document.getElementById('avatarLabelWrapper');
             const avatarPositionWrapper = document.getElementById('avatarPositionWrapper');
@@ -5339,8 +5425,11 @@ if (isset($_GET['api_check_hash'])) {
                 
                 let exactRole = (role.toLowerCase() === 'executive') ? 'Executive' : 'Admin'; 
                 document.getElementById('techAdmin_level').value = exactRole;
+                
                 loginCredsDiv.classList.remove('hidden'); 
+                if(accountStatusDiv) accountStatusDiv.classList.remove('hidden');
                 document.getElementById('techAdmin_username').required = true;
+                if(document.getElementById('usernameReqStar')) document.getElementById('usernameReqStar').style.display = 'inline';
                 
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 if(avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
@@ -5352,7 +5441,13 @@ if (isset($_GET['api_check_hash'])) {
                 }
             } else {
                 adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
-                loginCredsDiv.classList.add('hidden'); document.getElementById('techAdmin_username').required = false; document.getElementById('techAdmin_password').required = false;
+                
+                // ข้อ 5.1: เปิดการแสดง Login Creds ให้ช่าง
+                loginCredsDiv.classList.remove('hidden'); 
+                if(accountStatusDiv) accountStatusDiv.classList.remove('hidden');
+                document.getElementById('techAdmin_username').required = false; 
+                document.getElementById('techAdmin_password').required = false;
+                if(document.getElementById('usernameReqStar')) document.getElementById('usernameReqStar').style.display = 'none';
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 if(avatarPreviewWrapper) {
                     avatarPreviewWrapper.classList.remove('rounded-full');
@@ -5395,7 +5490,8 @@ if (isset($_GET['api_check_hash'])) {
 
             document.getElementById('techAdmin_id').value = id;
             document.getElementById('techAdmin_username').value = u; 
-            document.getElementById('techAdmin_fullname').value = cleanFullName; 
+            if(document.getElementById('techAdmin_is_active')) document.getElementById('techAdmin_is_active').value = isActive;
+            document.getElementById('techAdmin_fullname').value = cleanFullName;
             document.getElementById('techAdmin_englishname').value = cleanEngName;
             document.getElementById('techAdmin_phone').value = cleanPhone; 
             if(document.getElementById('techAdmin_email')) {
