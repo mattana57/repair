@@ -21,16 +21,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($stmt_check->get_result()->num_rows > 0) {
             $error = "ชื่อผู้ใช้งาน (Username) นี้มีผู้ใช้แล้ว กรุณาตั้งใหม่";
         } else {
-            // สมัครสมาชิกเป็น Technician เบื้องต้น (แอดมินค่อยไปผูกชื่อทีหลัง)
+            // สมัครสมาชิกเป็น Technician เบื้องต้น
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $role = 'Technician';
             $is_active = 1;
             $auth_version = 1;
 
-            $stmt_insert = $conn->prepare("INSERT INTO users (username, password, full_name, phone, role, is_active, auth_version) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt_insert->bind_param("sssssii", $username, $hashed_password, $full_name, $phone, $role, $is_active, $auth_version);
+            // ✨ ระบบค้นหาและผูกบัญชีอัตโนมัติ (Auto-Link) ✨
+            // ค้นหา ID ช่างจาก เบอร์โทรศัพท์ หรือ ชื่อ-นามสกุล
+            $tech_id = null; 
+            $stmt_find = $conn->prepare("SELECT id FROM technicians WHERE phone = ? OR full_name = ? LIMIT 1");
+            $stmt_find->bind_param("ss", $phone, $full_name);
+            $stmt_find->execute();
+            $res_find = $stmt_find->get_result();
+            if ($res_find->num_rows > 0) {
+                $tech_id = $res_find->fetch_assoc()['id']; // เจอช่างตัวจริง! ดึง ID มาเตรียมผูก
+            }
+            $stmt_find->close();
+
+            // บันทึกผู้ใช้ใหม่ พร้อมผูก technician_id ให้อัตโนมัติ (ถ้าหาเจอ)
+            $stmt_insert = $conn->prepare("INSERT INTO users (username, password, full_name, phone, role, is_active, auth_version, technician_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt_insert->bind_param("sssssiii", $username, $hashed_password, $full_name, $phone, $role, $is_active, $auth_version, $tech_id);
+            
             if ($stmt_insert->execute()) {
-                $success = "สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ";
+                if ($tech_id) {
+                    $success = "สมัครสมาชิกและผูกบัญชีสำเร็จ! เข้าสู่ระบบได้ทันที";
+                } else {
+                    $success = "สมัครสมาชิกสำเร็จ! (แต่ชื่อ/เบอร์ไม่ตรงกับในระบบ โปรดแจ้งแอดมิน)";
+                }
             } else {
                 $error = "เกิดข้อผิดพลาดในการสมัครสมาชิก";
             }
