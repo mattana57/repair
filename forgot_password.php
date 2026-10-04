@@ -80,14 +80,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">รหัสผ่านใหม่ (New Password)</label>
-                    <input type="password" name="new_password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                    <div class="relative">
+                        <input type="password" name="new_password" id="new_password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                        <button type="button" onclick="togglePassword('new_password', 'eyeIcon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-amber-500 transition-colors">
+                            <i id="eyeIcon" class="fas fa-eye text-sm"></i>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md mt-2">ตั้งรหัสผ่านใหม่</button>
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md mt-6">ตั้งรหัสผ่านใหม่</button>
             </form>
             <div class="text-center mt-6">
                 <a href="login.php" class="text-sm text-slate-500 hover:text-indigo-600 font-bold transition-colors">จำรหัสผ่านได้แล้ว? เข้าสู่ระบบ</a>
             </div>
         <?php endif; ?>
     </div>
+    <script>
+        function togglePassword(inputId, iconId) {
+            var x = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+            if (x.type === "password") {
+                x.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                x.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+    </script>
 </body>
 </html>

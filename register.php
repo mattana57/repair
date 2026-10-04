@@ -72,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php else: ?>
             <form action="" method="POST" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ชื่อ-นามสกุลจริง</label>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ชื่อ-นามสกุล</label>
                     <input type="text" name="full_name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
                 </div>
                 <div>
@@ -80,19 +80,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <input type="text" name="phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ชื่อผู้ใช้งาน (Username)</label>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ชื่อผู้ใช้งาน</label>
                     <input type="text" name="username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">รหัสผ่าน (Password)</label>
-                    <input type="password" name="password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">รหัสผ่าน</label>
+                    <div class="relative">
+                        <input type="password" name="password" id="password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                        <button type="button" onclick="togglePassword('password', 'eyeIcon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600 transition-colors">
+                            <i id="eyeIcon" class="fas fa-eye text-sm"></i>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md mt-2">ยืนยันการสมัครสมาชิก</button>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md mt-6">ยืนยันการสมัครสมาชิก</button>
             </form>
             <div class="text-center mt-6">
                 <a href="login.php" class="text-sm text-slate-500 hover:text-indigo-600 font-bold transition-colors">มีบัญชีอยู่แล้ว? เข้าสู่ระบบ</a>
             </div>
         <?php endif; ?>
     </div>
+    <script>
+        function togglePassword(inputId, iconId) {
+            var x = document.getElementById(inputId);
+            var icon = document.getElementById(iconId);
+            if (x.type === "password") {
+                x.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                x.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+    </script>
 </body>
 </html>
