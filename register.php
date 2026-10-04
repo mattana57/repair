@@ -88,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="relative">
                         <input type="password" name="password" id="password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
                         <button type="button" onclick="togglePassword('password', 'eyeIcon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600 transition-colors">
-                            <i id="eyeIcon" class="fas fa-eye text-sm"></i>
+                            <i id="eyeIcon" class="fas fa-eye-slash text-sm"></i>
                         </button>
                     </div>
                 </div>
@@ -105,12 +105,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             var icon = document.getElementById(iconId);
             if (x.type === "password") {
                 x.type = "text";
-                icon.classList.remove("fa-eye");
-                icon.classList.add("fa-eye-slash");
-            } else {
-                x.type = "password";
                 icon.classList.remove("fa-eye-slash");
                 icon.classList.add("fa-eye");
+            } else {
+                x.type = "password";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
             }
         }
     </script>

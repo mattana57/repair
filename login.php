@@ -74,7 +74,7 @@
                             </div>
                             <!-- ปุ่มเปิดปิดตา -->
                             <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-purple-600 focus:outline-none transition-colors" onclick="togglePassword()">
-                                <i id="eyeIcon" class="fas fa-eye text-sm"></i>
+                                <i id="eyeIcon" class="fas fa-eye-slash text-sm"></i>
                             </button>
                         </div>
                     </div>
@@ -104,12 +104,12 @@
             var icon = document.getElementById("eyeIcon");
             if (x.type === "password") {
                 x.type = "text";
-                icon.classList.remove("fa-eye");
-                icon.classList.add("fa-eye-slash");
-            } else {
-                x.type = "password";
                 icon.classList.remove("fa-eye-slash");
                 icon.classList.add("fa-eye");
+            } else {
+                x.type = "password";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
             }
         }
     </script>
