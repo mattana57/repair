@@ -83,6 +83,10 @@
                     <button type="submit" class="relative w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm py-4 rounded-2xl shadow-[0_10px_20px_rgba(139,92,246,0.25)] hover:shadow-[0_15px_25px_rgba(139,92,246,0.4)] transform transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 group mt-4">
                         <span>เข้าสู่ระบบ</span> <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                     </button>
+                    <div class="flex justify-between items-center mt-4 px-1">
+                        <a href="register.php" class="text-[13px] text-slate-500 hover:text-indigo-600 font-bold transition-colors">สมัครสมาชิก</a>
+                        <a href="forgot_password.php" class="text-[13px] text-rose-400 hover:text-rose-500 font-bold transition-colors">ลืมรหัสผ่าน?</a>
+                    </div>
                 </form>
             </div>
         </div>

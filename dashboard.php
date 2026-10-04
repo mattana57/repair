@@ -210,6 +210,16 @@ $conn->query("CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
+// ✨ ตารางบันทึกประวัติการเข้าสู่ระบบ (สร้างอัตโนมัติ) ✨
+$conn->query("CREATE TABLE IF NOT EXISTS login_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    role VARCHAR(50) NULL,
+    ip_address VARCHAR(50) NULL,
+    status VARCHAR(50) DEFAULT 'สำเร็จ',
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
 $users_cols = [
     'password' => 'VARCHAR(255) NULL',
     'full_name' => 'VARCHAR(255) NULL',
@@ -1097,7 +1107,8 @@ if (isset($_GET['api_check_hash'])) {
             'team_cards' => 'Team Management',
             'assets' => 'Assets Database',
             'users' => 'Reporter History',
-            'reports' => 'Official Report'
+            'reports' => 'Official Report',
+            'login_logs' => 'Login History'
         ];
         $currentTitle = isset($pageTitlesArr[$active_tab]) ? $pageTitlesArr[$active_tab] : 'Dashboard Overview';
         ?>
@@ -1112,6 +1123,7 @@ if (isset($_GET['api_check_hash'])) {
             <button onclick="show('assets')" class="nav-btn <?php echo $active_tab === 'assets' ? 'active-btn' : ''; ?>" id="btn-assets"><i class="fas fa-box-open"></i> Assets</button>
             <button onclick="show('users')" class="nav-btn <?php echo $active_tab === 'users' ? 'active-btn' : ''; ?>" id="btn-users"><i class="fas fa-address-book"></i> Contacts</button>
             <button onclick="show('reports')" class="nav-btn <?php echo $active_tab === 'reports' ? 'active-btn' : ''; ?>" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
+            <button onclick="show('login_logs')" class="nav-btn <?php echo $active_tab === 'login_logs' ? 'active-btn' : ''; ?>" id="btn-login_logs"><i class="fas fa-history"></i> Login History</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
                 <a href="logout.php" class="nav-btn group text-slate-500 hover:!bg-rose-50 hover:!text-rose-600">
@@ -2574,6 +2586,55 @@ if (isset($_GET['api_check_hash'])) {
                             </div>
                             <input type="hidden" id="techFilter" value="all">
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ✨ ส่วนแสดงประวัติการเข้าสู่ระบบ ✨ -->
+            <div id="login_logs" class="section <?php echo $active_tab === 'login_logs' ? '' : 'hidden'; ?> space-y-6 no-print">
+                <div class="modern-card overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100 bg-white">
+                        <h2 class="text-xl font-extrabold text-slate-800">ประวัติการเข้าสู่ระบบ (Login History)</h2>
+                        <p class="text-sm font-medium text-slate-400 mt-0.5">ตรวจสอบการเข้าใช้งานระบบของเจ้าหน้าที่และผู้บริหาร</p>
+                    </div>
+                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
+                        <table class="w-full text-left whitespace-nowrap min-w-[700px]">
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                                <tr>
+                                    <th class="px-6 py-4">วัน/เวลา</th>
+                                    <th class="px-6 py-4">ชื่อผู้ใช้ (Username)</th>
+                                    <th class="px-6 py-4 text-center">สิทธิ์ (Role)</th>
+                                    <th class="px-6 py-4 text-center">IP Address</th>
+                                    <th class="px-6 py-4 text-center">สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <?php
+                                $log_res = $conn->query("SELECT * FROM login_logs ORDER BY login_time DESC LIMIT 100");
+                                if($log_res && $log_res->num_rows > 0){
+                                    while($log = $log_res->fetch_assoc()) {
+                                        $statusClass = ($log['status'] === 'สำเร็จ') ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-200';
+                                        $icon = ($log['status'] === 'สำเร็จ') ? '<i class="fas fa-check-circle mr-1"></i>' : '<i class="fas fa-times-circle mr-1"></i>';
+                                        
+                                        $roleBadge = 'bg-slate-100 text-slate-600';
+                                        if (strtolower($log['role']) === 'admin') $roleBadge = 'bg-purple-100 text-purple-700';
+                                        if (strtolower($log['role']) === 'executive') $roleBadge = 'bg-amber-100 text-amber-700';
+                                        if (strtolower($log['role']) === 'technician') $roleBadge = 'bg-sky-100 text-sky-700';
+
+                                        echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                            <td class='px-6 py-4 align-middle text-slate-700 font-medium'>" . date("d/m/Y H:i:s", strtotime($log['login_time'])) . "</td>
+                                            <td class='px-6 py-4 align-middle font-bold text-slate-800'>" . htmlspecialchars($log['username']) . "</td>
+                                            <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleBadge}'>" . htmlspecialchars($log['role'] ?? 'N/A') . "</span></td>
+                                            <td class='px-6 py-4 align-middle text-center text-slate-500 font-mono'>" . htmlspecialchars($log['ip_address']) . "</td>
+                                            <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1.5 rounded-full text-[11px] font-bold {$statusClass}'>{$icon} " . htmlspecialchars($log['status']) . "</span></td>
+                                        </tr>";
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีประวัติการเข้าสู่ระบบ</td></tr>";
+                                }
+                                ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

@@ -114,6 +114,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['full_name'] = $user['full_name'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['auth_version'] = $user['auth_version'];
+
+            // ✨ บันทึกประวัติการเข้าสู่ระบบ (สำเร็จ) ✨
+            $ip_address = $_SERVER['REMOTE_ADDR'];
+            $log_status = 'สำเร็จ';
+            $stmt_log = $conn->prepare("INSERT INTO login_logs (username, role, ip_address, status) VALUES (?, ?, ?, ?)");
+            if ($stmt_log) {
+                $stmt_log->bind_param("ssss", $user['username'], $user['role'], $ip_address, $log_status);
+                $stmt_log->execute();
+                $stmt_log->close();
+            }
             
             if ($role_lower === 'technician') {
                 $_SESSION['technician_id'] = $user['technician_id'];
@@ -167,6 +177,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             // บันทึกการเข้าระบบผิดพลาด (รหัสผ่านผิด)
             record_failed_attempt($attempt_file);
+            
+            // ✨ บันทึกประวัติการเข้าสู่ระบบ (รหัสผ่านผิด) ✨
+            $ip_address = $_SERVER['REMOTE_ADDR'];
+            $log_status = 'รหัสผ่านผิด';
+            $log_role = 'Unknown';
+            $stmt_log = $conn->prepare("INSERT INTO login_logs (username, role, ip_address, status) VALUES (?, ?, ?, ?)");
+            if ($stmt_log) {
+                $stmt_log->bind_param("ssss", $username, $log_role, $ip_address, $log_status);
+                $stmt_log->execute();
+                $stmt_log->close();
+            }
+
             $_SESSION['login_error'] = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
             header("Location: login.php");
             exit();
@@ -174,6 +196,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         // บันทึกการเข้าระบบผิดพลาด (ไม่พบชื่อผู้ใช้)
         record_failed_attempt($attempt_file);
+        
+        // ✨ บันทึกประวัติการเข้าสู่ระบบ (ไม่พบผู้ใช้) ✨
+        $ip_address = $_SERVER['REMOTE_ADDR'];
+        $log_status = 'ไม่พบชื่อผู้ใช้';
+        $log_role = 'Unknown';
+        $stmt_log = $conn->prepare("INSERT INTO login_logs (username, role, ip_address, status) VALUES (?, ?, ?, ?)");
+        if ($stmt_log) {
+            $stmt_log->bind_param("ssss", $username, $log_role, $ip_address, $log_status);
+            $stmt_log->execute();
+            $stmt_log->close();
+        }
+
         $_SESSION['login_error'] = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
         header("Location: login.php");
         exit();
