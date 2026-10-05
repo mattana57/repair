@@ -147,26 +147,46 @@ if ($res_repairs) {
             </div>
         </div>
 
-        <!-- Stats Cards Grid (ดีไซน์เดียวกับ Admin เป๊ะ) -->
+        <!-- Stats Cards Grid (ดีไซน์เดียวกับ Admin เป๊ะ + ไอคอน) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-purple-500">
-                <div class="text-slate-500 font-medium mb-2 text-sm text-center">งานที่รับผิดชอบทั้งหมด</div>
-                <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['total'] ?></div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-purple-500 flex items-center justify-between">
+                <div>
+                    <div class="text-4xl font-bold text-slate-800 mb-1"><?= $stats['total'] ?></div>
+                    <div class="text-slate-500 font-medium text-sm">งานที่รับผิดชอบทั้งหมด</div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 text-xl">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
             </div>
             
-            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-amber-400">
-                <div class="text-slate-500 font-medium mb-2 text-sm text-center">รอรับเรื่อง</div>
-                <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['pending'] ?></div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-amber-400 flex items-center justify-between">
+                <div>
+                    <div class="text-4xl font-bold text-slate-800 mb-1"><?= $stats['pending'] ?></div>
+                    <div class="text-slate-500 font-medium text-sm">รอรับเรื่อง</div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-xl">
+                    <i class="fas fa-clock"></i>
+                </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-sky-400">
-                <div class="text-slate-500 font-medium mb-2 text-sm text-center">กำลังดำเนินการ</div>
-                <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['in_progress'] ?></div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-sky-400 flex items-center justify-between">
+                <div>
+                    <div class="text-4xl font-bold text-slate-800 mb-1"><?= $stats['in_progress'] ?></div>
+                    <div class="text-slate-500 font-medium text-sm">กำลังดำเนินการ</div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-sky-50 flex items-center justify-center text-sky-500 text-xl">
+                    <i class="fas fa-tools"></i>
+                </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-emerald-400">
-                <div class="text-slate-500 font-medium mb-2 text-sm text-center">ซ่อมเสร็จแล้ว</div>
-                <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['completed'] ?></div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-emerald-400 flex items-center justify-between">
+                <div>
+                    <div class="text-4xl font-bold text-slate-800 mb-1"><?= $stats['completed'] ?></div>
+                    <div class="text-slate-500 font-medium text-sm">ซ่อมเสร็จแล้ว</div>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl">
+                    <i class="fas fa-check-double"></i>
+                </div>
             </div>
         </div>
 
@@ -179,44 +199,58 @@ if ($res_repairs) {
                     <h2 class="font-bold text-slate-800 text-lg">ประวัติและรายการใบงานของฉัน</h2>
                 </div>
                 <!-- เพิ่มความสูงสูงสุดและ Scrollbar ตรงนี้ -->
-                <div class="overflow-x-auto overflow-y-auto flex-1 max-h-[400px]">
-                    <table class="w-full text-left border-collapse relative">
-                        <thead class="sticky top-0 bg-slate-50 z-10">
-                            <tr class="text-slate-500 text-xs tracking-wider">
-                                <th class="p-4 font-bold border-b border-slate-100">รหัสงาน</th>
-                                <th class="p-4 font-bold border-b border-slate-100">ปัญหา / สถานที่</th>
-                                <th class="p-4 font-bold border-b border-slate-100">หมายเหตุช่าง</th>
-                                <th class="p-4 font-bold border-b border-slate-100">สถานะ</th>
-                                <th class="p-4 font-bold border-b border-slate-100 text-center">จัดการ</th>
+                <div class="overflow-x-auto overflow-y-auto flex-1 max-h-[500px]">
+                    <table class="w-full text-left border-collapse relative whitespace-nowrap">
+                        <thead class="sticky top-0 bg-[#fef08a] z-10 shadow-sm">
+                            <tr class="text-slate-800 text-[10px] sm:text-xs tracking-wider uppercase">
+                                <th class="p-4 font-bold border-b border-[#fde047]">DATE / TIME</th>
+                                <th class="p-4 font-bold border-b border-[#fde047]">TICKET NO.</th>
+                                <th class="p-4 font-bold border-b border-[#fde047]">REPORTER</th>
+                                <th class="p-4 font-bold border-b border-[#fde047]">EQUIPMENT</th>
+                                <th class="p-4 font-bold border-b border-[#fde047]">ROOT CAUSE</th>
+                                <th class="p-4 font-bold border-b border-[#fde047]">STATUS</th>
+                                <th class="p-4 font-bold border-b border-[#fde047] text-center">ACTION</th>
                             </tr>
                         </thead>
-                        <tbody class="text-sm divide-y divide-slate-100">
+                        <tbody class="text-sm divide-y divide-slate-100 bg-white">
                             <?php if (count($repairs) > 0): ?>
-                                <?php foreach ($repairs as $job): ?>
-                                    <tr class="hover:bg-slate-50/80 transition-colors">
-                                        <td class="p-4 font-medium text-slate-700">#<?= htmlspecialchars($job['repair_code'] ?? $job['id']) ?></td>
+                                <?php foreach ($repairs as $job): 
+                                    $created_at = !empty($job['created_at']) ? strtotime($job['created_at']) : time();
+                                    $date_str = date('Y-m-d', $created_at);
+                                    $time_str = date('H:i', $created_at);
+                                ?>
+                                    <tr class="hover:bg-slate-50 transition-colors">
                                         <td class="p-4">
-                                            <div class="font-medium text-slate-800"><?= htmlspecialchars($job['problem'] ?? 'ไม่ระบุ') ?></div>
-                                            <div class="text-xs text-slate-400 mt-0.5"><?= htmlspecialchars($job['location'] ?? '-') ?></div>
+                                            <div class="text-slate-800"><?= $date_str ?></div>
+                                            <div class="text-blue-600 font-medium"><?= $time_str ?></div>
                                         </td>
-                                        <td class="p-4 text-slate-600 text-xs">
-                                            <?= !empty($job['remark']) ? htmlspecialchars($job['remark']) : '<span class="text-slate-300 italic">ยังไม่มีหมายเหตุ</span>' ?>
+                                        <td class="p-4 font-medium text-slate-700"><?= htmlspecialchars($job['repair_code'] ?? 'MR-'.$job['id']) ?></td>
+                                        <td class="p-4">
+                                            <div class="font-bold text-slate-800"><?= htmlspecialchars($job['reporter_name'] ?? 'ไม่ระบุ') ?></div>
+                                            <div class="text-xs text-slate-500"><?= htmlspecialchars($job['reporter_phone'] ?? '-') ?></div>
+                                        </td>
+                                        <td class="p-4">
+                                            <div class="font-bold text-slate-800"><?= htmlspecialchars($job['equipment'] ?? $job['problem'] ?? 'ไม่ระบุ') ?></div>
+                                            <div class="text-xs text-slate-500"><?= htmlspecialchars($job['location'] ?? '-') ?></div>
+                                        </td>
+                                        <td class="p-4 text-slate-600 text-xs max-w-[200px] truncate" title="<?= htmlspecialchars($job['remark'] ?? '') ?>">
+                                            <?= !empty($job['remark']) ? htmlspecialchars($job['remark']) : '<span class="text-slate-300">-</span>' ?>
                                         </td>
                                         <td class="p-4">
                                             <?php 
                                                 $status = trim($job['status'] ?? 'รอดำเนินการ');
                                                 if ($status === 'เสร็จสิ้น' || $status === 'ซ่อมเสร็จแล้ว') {
-                                                    $badgeClass = 'bg-emerald-100 text-emerald-700';
+                                                    $badgeClass = 'text-emerald-500 border border-emerald-500 bg-emerald-50';
                                                 } elseif ($status === 'กำลังดำเนินการ') {
-                                                    $badgeClass = 'bg-sky-100 text-sky-700';
+                                                    $badgeClass = 'text-sky-500 border border-sky-500 bg-sky-50';
                                                 } else {
-                                                    $badgeClass = 'bg-amber-100 text-amber-700';
+                                                    $badgeClass = 'text-amber-500 border border-amber-500 bg-amber-50';
                                                 }
                                             ?>
-                                            <span class="<?= $badgeClass ?> px-3 py-1 rounded-full text-xs font-medium inline-block"><?= htmlspecialchars($status) ?></span>
+                                            <span class="<?= $badgeClass ?> px-3 py-1 rounded-full text-[11px] font-bold inline-block"><?= htmlspecialchars($status) ?></span>
                                         </td>
                                         <td class="p-4 text-center">
-                                            <button onclick="openModal(<?= $job['id'] ?>, '<?= htmlspecialchars(addslashes($job['remark'] ?? '')) ?>')" class="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors inline-flex items-center justify-center" title="เพิ่ม/แก้ไขหมายเหตุ">
+                                            <button onclick="openModal(<?= $job['id'] ?>, '<?= htmlspecialchars(addslashes($job['remark'] ?? '')) ?>')" class="w-8 h-8 rounded border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-colors inline-flex items-center justify-center shadow-sm" title="เพิ่ม/แก้ไขหมายเหตุ">
                                                 <i class="fas fa-edit text-sm"></i>
                                             </button>
                                         </td>
@@ -224,7 +258,7 @@ if ($res_repairs) {
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="5" class="py-12 text-center text-slate-400">
+                                    <td colspan="7" class="py-12 text-center text-slate-400">
                                         <i class="fas fa-folder-open text-4xl mb-3 text-slate-200 block"></i>
                                         ยังไม่มีประวัติการรับงานในระบบ
                                     </td>
