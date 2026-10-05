@@ -17,7 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $repair_id = $_POST['repair_id'];
     $remark = $_POST['remark'];
     
-    // อัปเดตเฉพาะงานที่เป็นของช่างคนนี้เท่านั้นเพื่อความปลอดภัย
     $stmt = $conn->prepare("UPDATE repairs SET remark = ? WHERE id = ? AND technician_id = ?");
     $stmt->bind_param("sii", $remark, $repair_id, $tech_id);
     if ($stmt->execute()) {
@@ -26,18 +25,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $stmt->close();
 }
 
-// 1. ดึงสถิติภาพรวม (เฉพาะของช่างคนนี้)
-$stats = ['total' => 0, 'pending' => 0, 'completed' => 0];
+// 1. ดึงสถิติภาพรวม 4 สถานะ (เฉพาะของช่างคนนี้)
+$stats = ['total' => 0, 'pending' => 0, 'in_progress' => 0, 'completed' => 0];
 $stmt_stats = $conn->prepare("SELECT status, COUNT(*) as count FROM repairs WHERE technician_id = ? GROUP BY status");
 $stmt_stats->bind_param("i", $tech_id);
 $stmt_stats->execute();
 $res_stats = $stmt_stats->get_result();
 while ($row = $res_stats->fetch_assoc()) {
     $stats['total'] += $row['count'];
-    if ($row['status'] === 'เสร็จสิ้น') {
-        $stats['completed'] += $row['count'];
-    } else {
+    $db_status = trim($row['status']);
+    if ($db_status === 'รอดำเนินการ' || $db_status === 'รอรับเรื่อง') {
         $stats['pending'] += $row['count'];
+    } elseif ($db_status === 'กำลังดำเนินการ') {
+        $stats['in_progress'] += $row['count'];
+    } elseif ($db_status === 'เสร็จสิ้น' || $db_status === 'ซ่อมเสร็จแล้ว') {
+        $stats['completed'] += $row['count'];
     }
 }
 $stmt_stats->close();
@@ -114,10 +116,11 @@ $stmt_repairs->close();
             </div>
         </div>
 
-        <!-- Stats Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-indigo-500">
-                <div class="bg-indigo-50 text-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
+        <!-- Stats Cards Grid (4 ก้อน ใช้สีตามฝั่งแอดมิน) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- ก้อนที่ 1: งานที่รับผิดชอบทั้งหมด (สีฟ้า/น้ำเงิน) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-sky-500">
+                <div class="bg-sky-50 text-sky-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
                     <i class="fas fa-clipboard-list"></i>
                 </div>
                 <div>
@@ -126,22 +129,35 @@ $stmt_repairs->close();
                 </div>
             </div>
             
+            <!-- ก้อนที่ 2: รอรับเรื่อง (สีส้ม/เหลือง) -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-amber-500">
                 <div class="bg-amber-50 text-amber-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
-                    <i class="fas fa-tools"></i>
+                    <i class="fas fa-clock"></i>
                 </div>
                 <div>
-                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">กำลังดำเนินการ</p>
+                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">รอรับเรื่อง</p>
                     <p class="text-3xl font-extrabold text-slate-800 mt-1"><?= $stats['pending'] ?> <span class="text-sm font-normal text-slate-400">รายการ</span></p>
                 </div>
             </div>
 
+            <!-- ก้อนที่ 3: กำลังดำเนินการ (สีม่วง/น้ำเงินเข้ม) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-indigo-600">
+                <div class="bg-indigo-50 text-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">กำลังดำเนินการ</p>
+                    <p class="text-3xl font-extrabold text-slate-800 mt-1"><?= $stats['in_progress'] ?> <span class="text-sm font-normal text-slate-400">รายการ</span></p>
+                </div>
+            </div>
+
+            <!-- ก้อนที่ 4: ซ่อมเสร็จแล้ว (สีเขียว) -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-emerald-500">
                 <div class="bg-emerald-50 text-emerald-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
                     <i class="fas fa-check-double"></i>
                 </div>
                 <div>
-                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">ปิดงานเสร็จสิ้น</p>
+                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">ซ่อมเสร็จแล้ว</p>
                     <p class="text-3xl font-extrabold text-slate-800 mt-1"><?= $stats['completed'] ?> <span class="text-sm font-normal text-slate-400">รายการ</span></p>
                 </div>
             </div>
@@ -184,7 +200,7 @@ $stmt_repairs->close();
                                         <td class="p-4">
                                             <?php 
                                                 $status = $job['status'] ?? 'รอดำเนินการ';
-                                                $badgeClass = $status === 'เสร็จสิ้น' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700';
+                                                $badgeClass = ($status === 'เสร็จสิ้น' || $status === 'ซ่อมเสร็จแล้ว') ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700';
                                             ?>
                                             <span class="<?= $badgeClass ?> px-3 py-1 rounded-full text-xs font-bold inline-block"><?= $status ?></span>
                                         </td>
@@ -262,10 +278,10 @@ $stmt_repairs->close();
         new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['กำลังดำเนินการ', 'เสร็จสิ้นแล้ว'],
+                labels: ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'],
                 datasets: [{
-                    data: [<?= $stats['pending'] ?>, <?= $stats['completed'] ?>],
-                    backgroundColor: ['#f59e0b', '#10b981'],
+                    data: [<?= $stats['pending'] ?>, <?= $stats['in_progress'] ?>, <?= $stats['completed'] ?>],
+                    backgroundColor: ['#f59e0b', '#4f46e5', '#10b981'],
                     borderWidth: 0,
                     hoverOffset: 6
                 }]
