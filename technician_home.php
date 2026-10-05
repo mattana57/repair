@@ -391,7 +391,7 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
                             <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] group">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchHistoryInput" oninput="renderHistoryTable()" placeholder="ค้นหา รหัสงาน, ชื่อผู้แจ้ง, อุปกรณ์..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="searchHistoryInput" oninput="renderHistoryTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                             </div>
 
                             <div class="flex items-center gap-2 shrink-0">
