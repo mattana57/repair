@@ -635,7 +635,6 @@ $current_thai_year = date('Y') + 543;
                 else if (st === 'กำลังดำเนินการ') progress++;
                 else if (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') completed++;
 
-                // ✨ ดึงข้อมูลอุปกรณ์ให้ลึกขึ้น ถ้าไม่มีให้ดึงปัญหามาแสดงแทน เพื่อไม่ให้กลายเป็น "ไม่ระบุ" กระจุกเดียว
                 let eq1 = (r.equipment && r.equipment.trim() !== '' && r.equipment !== '-' && r.equipment !== 'ไม่ระบุ') ? r.equipment : null;
                 let eq2 = (r.equipment_type && r.equipment_type.trim() !== '' && r.equipment_type !== '-' && r.equipment_type !== 'ไม่ระบุ') ? r.equipment_type : null;
                 let p1 = (r.problem && r.problem.trim() !== '' && r.problem !== '-' && r.problem !== 'ไม่ระบุ') ? r.problem : null;
@@ -653,17 +652,30 @@ $current_thai_year = date('Y') + 543;
                 reporterMap[repName] = (reporterMap[repName] || 0) + 1;
             });
 
+            // ตั้งค่า Tooltip มาตรฐานให้เหมือน Admin ทุกประการ
+            const commonTooltipOptions = {
+                backgroundColor: 'rgba(15, 23, 42, 0.9)', // ดำขอบมน
+                titleColor: '#ffffff',
+                bodyColor: '#e2e8f0',
+                bodyFont: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' }, // เปลี่ยนฟอนต์เนื้อหา
+                titleFont: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' }, // เปลี่ยนฟอนต์หัวเรื่อง
+                padding: 12,
+                cornerRadius: 8,
+                displayColors: true, // แสดงสี่เหลี่ยมสี
+                boxPadding: 6,
+                boxWidth: 10,
+                boxHeight: 10
+            };
+
             // Equipment Chart
             let eqSorted = Object.keys(eqMap).map(k => ({name: k, count: eqMap[k]})).sort((a,b) => b.count - a.count).slice(0, 6);
-            
-            // ✨ ทริคแก้ปัญหากราฟเส้น: ถ้ามีข้อมูลแค่จุดเดียว ให้เพิ่มจุดซ้าย-ขวาหลอกๆ ให้มันวาดเป็นเส้นทรงภูเขาได้สวยงาม ✨
             if (eqSorted.length === 1 && eqSorted[0].name !== 'ไม่มีข้อมูล') {
                 eqSorted.unshift({ name: '', count: 0 });
                 eqSorted.push({ name: ' ', count: 0 });
             }
 
             const eqCtx = document.getElementById('eqChart').getContext('2d');
-            if (window.eqChartInstance) window.eqChartInstance.destroy(); // ล้างของเก่ากันซ้อน
+            if (window.eqChartInstance) window.eqChartInstance.destroy(); 
 
             let gradient = eqCtx.createLinearGradient(0, 0, 0, 400);
             gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
@@ -673,6 +685,7 @@ $current_thai_year = date('Y') + 543;
                 data: {
                     labels: eqSorted.length ? eqSorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{
+                        label: 'จำนวน (ครั้ง)', // ตั้งชื่อ Label ให้ Tooltip
                         data: eqSorted.length ? eqSorted.map(e => e.count) : [0],
                         borderColor: '#8b5cf6', backgroundColor: gradient, borderWidth: 3,
                         pointBackgroundColor: '#ffffff', pointBorderColor: '#8b5cf6', pointBorderWidth: 2, pointRadius: 4,
@@ -681,7 +694,15 @@ $current_thai_year = date('Y') + 543;
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            ...commonTooltipOptions,
+                            callbacks: {
+                                label: function(context) { return ' จำนวน (ครั้ง): ' + context.raw; }
+                            }
+                        }
+                    },
                     scales: {
                         y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f8fafc' }, border: {display: false} },
                         x: { grid: { display: false }, border: {display: false}, ticks: { font: { weight: 'bold' } } }
@@ -708,7 +729,13 @@ $current_thai_year = date('Y') + 543;
                     responsive: true, maintainAspectRatio: false, cutout: '75%',
                     plugins: {
                         legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { size: 12, weight: 'bold' } } },
-                        tooltip: { enabled: totalStatus > 0 }
+                        tooltip: { 
+                            enabled: totalStatus > 0,
+                            ...commonTooltipOptions,
+                            callbacks: {
+                                label: function(context) { return ' ' + context.raw + ' งาน'; }
+                            }
+                        }
                     }
                 }
             });
@@ -723,13 +750,22 @@ $current_thai_year = date('Y') + 543;
                 data: {
                     labels: locSorted.length ? locSorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{
+                        label: 'แจ้งซ่อม (ครั้ง)', // ตั้งชื่อ Label ให้ Tooltip
                         data: locSorted.length ? locSorted.map(e => e.count) : [0],
                         backgroundColor: '#f43f5e', borderRadius: 6
                     }]
                 },
                 options: {
                     indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            ...commonTooltipOptions,
+                            callbacks: {
+                                label: function(context) { return ' แจ้งซ่อม (ครั้ง): ' + context.raw; }
+                            }
+                        }
+                    },
                     scales: {
                         x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f8fafc' }, border: {display: false} },
                         y: { grid: { display: false }, border: {display: false}, ticks: { font: { weight: 'bold' } } }
@@ -738,45 +774,6 @@ $current_thai_year = date('Y') + 543;
             });
 
             // Top Reporters List (การ์ดเหรียญรางวัล)
-            let repSorted = Object.keys(reporterMap).map(k => ({name: k, count: reporterMap[k]})).sort((a,b) => b.count - a.count).slice(0, 5);
-            const repContainer = document.getElementById('topReportersContainer');
-            if (repSorted.length === 0) {
-                repContainer.innerHTML = `<div class='py-10 flex flex-col items-center justify-center text-center'>
-                    <div class='w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-3'><i class='fas fa-user-tag text-2xl text-slate-300'></i></div>
-                    <p class='text-slate-400 font-bold text-sm'>ยังไม่มีผู้แจ้งซ่อม</p>
-                </div>`;
-            } else {
-                let html = '<ul class="divide-y divide-slate-100">';
-                repSorted.forEach((r, index) => {
-                    let rankIcon = index === 0 ? '<i class="fas fa-trophy text-lg text-amber-500 drop-shadow-sm"></i>' :
-                                   index === 1 ? '<i class="fas fa-medal text-lg text-slate-400 drop-shadow-sm"></i>' :
-                                   index === 2 ? '<i class="fas fa-medal text-lg text-amber-600 drop-shadow-sm"></i>' :
-                                   `<span class="text-sm font-black text-indigo-500">#${index + 1}</span>`;
-                    let rankBg = index === 0 ? 'bg-[#fefce8] border-[#fde047]' : 
-                                 index === 1 ? 'bg-[#f8fafc] border-[#e2e8f0]' : 
-                                 index === 2 ? 'bg-[#fffbeb] border-[#fde68a]' : 'bg-indigo-50 border-indigo-100';
-                    
-                    html += `
-                        <li class="py-3 flex justify-between items-center hover:bg-slate-50/50 p-2 rounded-xl transition-colors cursor-default">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center border shadow-sm shrink-0 ${rankBg}">${rankIcon}</div>
-                                <div>
-                                    <p class="font-bold text-slate-800 text-sm">${r.name}</p>
-                                    <p class="text-[11px] text-slate-400 font-medium mt-0.5">บุคลากรผู้แจ้งซ่อม</p>
-                                </div>
-                            </div>
-                            <div class="text-right flex items-center gap-3">
-                                <div>
-                                    <p class="font-extrabold text-indigo-600 text-xl leading-none">${r.count}</p>
-                                    <p class="text-[10px] text-slate-400 font-medium mt-1">รายการ</p>
-                                </div>
-                            </div>
-                        </li>`;
-                });
-                html += '</ul>';
-                repContainer.innerHTML = html;
-            }
-        }
 
 
         // 3. ฟังก์ชันวาดตารางย่อ (หน้า Dash) ดึงแค่ 5 อันล่าสุด
