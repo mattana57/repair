@@ -514,9 +514,8 @@ $current_thai_year = date('Y') + 543;
         Chart.defaults.font.family = "'Plus Jakarta Sans', 'Kanit', sans-serif";
         Chart.defaults.color = '#64748b';
 
-        // ✨ การตั้งค่า Tooltip ให้เหมือน Admin แบบ 100% ✨
         const commonTooltipOptions = {
-            backgroundColor: '#1e293b', // สีดำ/เทาเข้ม
+            backgroundColor: '#1e293b',
             titleColor: '#ffffff',
             bodyColor: '#e2e8f0',
             borderColor: '#334155',
@@ -524,10 +523,17 @@ $current_thai_year = date('Y') + 543;
             padding: 10,
             displayColors: true,
             boxPadding: 4,
-            usePointStyle: true, // ทำให้กล่องสีใน Tooltip เป็นวงกลม
+            usePointStyle: true,
             titleFont: { size: 13, weight: 'bold', family: "'Kanit', sans-serif" },
             bodyFont: { size: 12, family: "'Kanit', sans-serif" }
         };
+
+        // ฟังก์ชันช่วยจัดการข้อมูลว่าง
+        function formatValJS(val) {
+            if (!val || String(val).trim() === '-' || String(val).trim() === '') return "<span class='text-rose-500 font-bold'>-</span>";
+            if (String(val).trim() === 'ไม่ระบุ') return "<span class='text-rose-500 font-bold'>ไม่ระบุ</span>";
+            return val;
+        }
 
         // ✨ ควบคุมปุ่มล้างค่าค้นหา
         function toggleClearBtn(inputId, btnId) {
@@ -582,7 +588,6 @@ $current_thai_year = date('Y') + 543;
             if (list) { list.classList.add('hidden'); list.classList.remove('flex'); }
 
             if (trigger && caret) {
-                // ล้างสีสถานะเดิมออกก่อน
                 trigger.classList.remove(
                     'bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50',
                     'bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]',
@@ -650,7 +655,6 @@ $current_thai_year = date('Y') + 543;
                 else if (st === 'กำลังดำเนินการ') progress++;
                 else if (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') completed++;
 
-                // ✨ ดึงข้อมูลอุปกรณ์ให้ลึกขึ้น ถ้าไม่มีให้ดึงปัญหามาแสดงแทน เพื่อไม่ให้กลายเป็น "ไม่ระบุ" กระจุกเดียว
                 let eq1 = (r.equipment && r.equipment.trim() !== '' && r.equipment !== '-' && r.equipment !== 'ไม่ระบุ') ? r.equipment : null;
                 let eq2 = (r.equipment_type && r.equipment_type.trim() !== '' && r.equipment_type !== '-' && r.equipment_type !== 'ไม่ระบุ') ? r.equipment_type : null;
                 let p1 = (r.problem && r.problem.trim() !== '' && r.problem !== '-' && r.problem !== 'ไม่ระบุ') ? r.problem : null;
@@ -668,19 +672,14 @@ $current_thai_year = date('Y') + 543;
                 reporterMap[repName] = (reporterMap[repName] || 0) + 1;
             });
 
-            // ==========================================
             // Equipment Chart
             let eqSorted = Object.keys(eqMap).map(k => ({name: k, count: eqMap[k]})).sort((a,b) => b.count - a.count).slice(0, 6);
-            
-            // ทริคแก้ปัญหากราฟเส้น: ถ้ามีข้อมูลแค่จุดเดียว ให้เพิ่มจุดซ้าย-ขวาหลอกๆ ให้มันวาดเป็นเส้นทรงภูเขาได้สวยงาม
             if (eqSorted.length === 1 && eqSorted[0].name !== 'ไม่มีข้อมูล') {
                 eqSorted.unshift({ name: '', count: 0 });
                 eqSorted.push({ name: ' ', count: 0 });
             }
-
             const eqCtx = document.getElementById('eqChart').getContext('2d');
             if (window.eqChartInstance) window.eqChartInstance.destroy(); 
-
             let gradient = eqCtx.createLinearGradient(0, 0, 0, 400);
             gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
             
@@ -698,10 +697,7 @@ $current_thai_year = date('Y') + 543;
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: commonTooltipOptions // ✨ ใส่ Tooltip สีดำ
-                    },
+                    plugins: { legend: { display: false }, tooltip: commonTooltipOptions },
                     scales: {
                         y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f8fafc' }, border: {display: false} },
                         x: { grid: { display: false }, border: {display: false}, ticks: { font: { weight: 'bold' } } }
@@ -709,11 +705,9 @@ $current_thai_year = date('Y') + 543;
                 }
             });
 
-            // ==========================================
             // Status Chart
             const statusCtx = document.getElementById('statusChart').getContext('2d');
             if (window.statusChartInstance) window.statusChartInstance.destroy();
-
             let totalStatus = pending + progress + completed;
             window.statusChartInstance = new Chart(statusCtx, {
                 type: 'doughnut',
@@ -730,22 +724,18 @@ $current_thai_year = date('Y') + 543;
                     responsive: true, maintainAspectRatio: false, cutout: '75%',
                     plugins: {
                         legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { size: 12, weight: 'bold' } } },
-                        tooltip: Object.assign({}, commonTooltipOptions, { // ✨ ใส่ Tooltip สีดำ + ปิดการแสดงผลถ้าไม่มีข้อมูล
+                        tooltip: Object.assign({}, commonTooltipOptions, {
                             enabled: totalStatus > 0,
-                            callbacks: {
-                                label: function(context) { return ' ' + context.formattedValue + ' งาน'; }
-                            }
+                            callbacks: { label: function(context) { return ' ' + context.formattedValue + ' งาน'; } }
                         })
                     }
                 }
             });
 
-            // ==========================================
             // Location Chart
             let locSorted = Object.keys(locMap).map(k => ({name: k, count: locMap[k]})).sort((a,b) => b.count - a.count).slice(0, 5);
             const locCtx = document.getElementById('locChart').getContext('2d');
             if (window.locChartInstance) window.locChartInstance.destroy();
-
             window.locChartInstance = new Chart(locCtx, {
                 type: 'bar',
                 data: {
@@ -758,10 +748,7 @@ $current_thai_year = date('Y') + 543;
                 },
                 options: {
                     indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: commonTooltipOptions // ✨ ใส่ Tooltip สีดำ
-                    },
+                    plugins: { legend: { display: false }, tooltip: commonTooltipOptions },
                     scales: {
                         x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f8fafc' }, border: {display: false} },
                         y: { grid: { display: false }, border: {display: false}, ticks: { font: { weight: 'bold' } } }
@@ -769,8 +756,7 @@ $current_thai_year = date('Y') + 543;
                 }
             });
 
-            // ==========================================
-            // Top Reporters List (การ์ดเหรียญรางวัล)
+            // Top Reporters List
             let repSorted = Object.keys(reporterMap).map(k => ({name: k, count: reporterMap[k]})).sort((a,b) => b.count - a.count).slice(0, 5);
             const repContainer = document.getElementById('topReportersContainer');
             if (repSorted.length === 0) {
@@ -788,7 +774,6 @@ $current_thai_year = date('Y') + 543;
                     let rankBg = index === 0 ? 'bg-[#fefce8] border-[#fde047]' : 
                                  index === 1 ? 'bg-[#f8fafc] border-[#e2e8f0]' : 
                                  index === 2 ? 'bg-[#fffbeb] border-[#fde68a]' : 'bg-indigo-50 border-indigo-100';
-                    
                     html += `
                         <li class="py-3 flex justify-between items-center hover:bg-slate-50/50 p-2 rounded-xl transition-colors cursor-default">
                             <div class="flex items-center gap-4">
@@ -811,7 +796,7 @@ $current_thai_year = date('Y') + 543;
             }
         }
 
-        // 3. ฟังก์ชันวาดตารางย่อ (หน้า Dash) ดึงแค่ 5 อันล่าสุด
+        // 3. ฟังก์ชันวาดตารางย่อ (หน้า Dash) 
         function renderDashTable() {
             const tbody = document.getElementById('dashTableBody');
             if (!tbody) return;
@@ -832,7 +817,9 @@ $current_thai_year = date('Y') + 543;
                 
                 let raw_name = r.reporter_name || '';
                 let dName = lineUsersMap[raw_name] ? lineUsersMap[raw_name] : (raw_name !== '' ? raw_name : 'ไม่ระบุ');
-                let dPhone = r.phone_number || '-';
+                let dPhone = formatValJS(r.phone_number);
+                let equip = formatValJS(r.equipment || r.problem);
+                let locText = formatValJS(r.location);
                 
                 let imgIcon = r.image_path ? `<i class="fas fa-image text-slate-300 ml-1" title="มีรูปภาพ"></i>` : '';
 
@@ -845,8 +832,8 @@ $current_thai_year = date('Y') + 543;
                         <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
                         <td class="px-6 py-4 align-top">
                             <div class="flex items-center gap-3">
-                                <!-- ✨ ปรับสีไอคอนประจำตัวผู้แจ้งให้เข้มขึ้นเหมือนแอดมิน ✨ -->
-                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0"><i class="fas fa-user text-xs"></i></div>
+                                <!-- ✨ เปลี่ยนสีไอคอนให้เข้มขึ้นเหมือนฝั่งแอดมิน ✨ -->
+                                <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-400 flex items-center justify-center text-xs shrink-0"><i class="fas fa-user"></i></div>
                                 <div>
                                     <div class="font-bold text-slate-800">${dName}</div>
                                     <div class="text-[11px] text-slate-500 font-medium mt-0.5">${dPhone}</div>
@@ -854,8 +841,8 @@ $current_thai_year = date('Y') + 543;
                             </div>
                         </td>
                         <td class="px-6 py-4 align-top">
-                            <div class="font-bold text-slate-800">${r.equipment || r.problem || 'ไม่ระบุ'} ${imgIcon}</div>
-                            <div class="text-[11px] text-slate-500 font-medium mt-0.5 max-w-[180px] truncate" title="${r.location || '-'}">${r.location || '-'}</div>
+                            <div class="font-bold text-slate-800">${equip} ${imgIcon}</div>
+                            <div class="text-[11px] text-slate-500 font-medium mt-0.5 max-w-[180px] truncate" title="${r.location || '-'}">${locText}</div>
                         </td>
                         <td class="px-6 py-4 align-middle text-center">
                             <span class="px-3 py-1 rounded-full text-[11px] font-bold border ${bClass} inline-block shadow-sm">${st}</span>
@@ -865,7 +852,7 @@ $current_thai_year = date('Y') + 543;
             tbody.innerHTML = html;
         }
 
-        // 4. ฟังก์ชันวาดตารางใหญ่ (หน้า History) แบบ Filter ได้
+        // 4. ฟังก์ชันวาดตารางใหญ่ (หน้า History) 
         function renderHistoryTable() {
             const tbody = document.getElementById('historyTableBody');
             if (!tbody) return;
@@ -884,7 +871,7 @@ $current_thai_year = date('Y') + 543;
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="11" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">ไม่พบข้อมูลใบงานที่ตรงกับเงื่อนไข</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">ไม่พบข้อมูลใบงานที่ตรงกับเงื่อนไข</td></tr>`;
                 return;
             }
 
@@ -896,21 +883,20 @@ $current_thai_year = date('Y') + 543;
                 
                 let dt = (r.created_at && r.created_at !== '0000-00-00 00:00:00') ? r.created_at.split(' ') : ['-', ''];
                 
-                // บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันที
                 let dtNow = new Date();
                 let nowStr = dtNow.getFullYear() + '-' + String(dtNow.getMonth()+1).padStart(2,'0') + '-' + String(dtNow.getDate()).padStart(2,'0') + ' ' + String(dtNow.getHours()).padStart(2,'0') + ':' + String(dtNow.getMinutes()).padStart(2,'0') + ':00';
                 let raw_rec_js = (r.received_at && r.received_at != '0000-00-00 00:00:00' && r.received_at != '-') ? r.received_at : (st !== 'รอรับเรื่อง' ? nowStr : '');
                 let has_received = (raw_rec_js !== '');
                 let rec = has_received ? raw_rec_js.split(' ') : ['-', ''];
-                
                 let com = (r.completed_at && r.completed_at !== '0000-00-00 00:00:00') ? r.completed_at.split(' ') : ['-', ''];
                 
-                // ดึงชื่อและเบอร์โทรแบบเต็มพิกัดเหมือนแอดมิน
                 let raw_name = r.reporter_name || '';
                 let dName = lineUsersMap[raw_name] ? lineUsersMap[raw_name] : (raw_name !== '' ? raw_name : 'ไม่ระบุ');
-                let dPhone = r.phone_number || '-';
+                let dPhone = formatValJS(r.phone_number);
 
-                // ข้อมูลช่างและแผนก
+                let equip = formatValJS(r.equipment || r.problem);
+                let pDesc = formatValJS(r.problem_desc);
+
                 let tNameHtml = "<span class='text-rose-500 font-bold'>-</span>";
                 let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
                 if (r.technician_name && r.technician_name !== '-') {
@@ -926,9 +912,9 @@ $current_thai_year = date('Y') + 543;
                 let imgIcon = r.image_path ? `<i class="fas fa-image text-slate-300 ml-1" title="มีรูปภาพ"></i>` : '';
                 let cause = (!r.root_cause || r.root_cause === '-') ? `<span class='text-rose-500 font-bold'>-</span>` : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
 
-                // ✨ แก้ลิงก์ปุ่ม Action ให้ไปหน้า update_repair.php เหมือนแอดมิน ✨
                 let actionBtn = `<a target="_blank" href="update_repair.php?id=${r.id}" class="w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm" title="Edit"><i class="fas fa-pen-to-square"></i></a>`;
 
+                // ✨ ลบตัวอักษรหนา (font-bold) ออกจากส่วนที่แสดงข้อมูลในตารางทั้งหมดให้เหมือนฝั่งแอดมิน ✨
                 html += `
                     <tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
@@ -938,7 +924,7 @@ $current_thai_year = date('Y') + 543;
                         <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
                         <td class="px-6 py-4 align-top">
                             <div class='flex items-center gap-3'>
-                                <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0'><i class='fas fa-user text-xs'></i></div>
+                                <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-400 shrink-0'><i class='fas fa-user text-xs'></i></div>
                                 <div>
                                     <div class="text-slate-800 font-bold">${dName}</div>
                                     <div class="text-slate-500 text-[11px] font-medium mt-0.5">${dPhone}</div>
@@ -946,8 +932,8 @@ $current_thai_year = date('Y') + 543;
                             </div>
                         </td>
                         <td class="px-6 py-4 align-top">
-                            <div class="text-slate-800 font-bold">${r.equipment || r.problem || 'ไม่ระบุ'} ${imgIcon}</div>
-                            <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${r.problem_desc || '-'}">${r.problem_desc || '-'}</div>
+                            <div class="text-slate-800 font-bold">${equip} ${imgIcon}</div>
+                            <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${r.problem_desc || '-'}">${pDesc}</div>
                         </td>
                         <td class="px-6 py-4 align-top">${deptEng}</td>
                         <td class="px-6 py-4 align-top">${tNameHtml}</td>
@@ -971,7 +957,6 @@ $current_thai_year = date('Y') + 543;
             tbody.innerHTML = html;
         }
 
-        // เริ่มวาดข้อมูลตอนโหลดเสร็จ
         document.addEventListener('DOMContentLoaded', () => {
             renderAllCharts();
             renderDashTable();
