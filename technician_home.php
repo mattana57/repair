@@ -3,56 +3,103 @@ session_start();
 require_once 'db_connect.php';
 
 // ตรวจสอบสิทธิ์ ต้องเป็น Technician
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Technician' || empty($_SESSION['technician_id'])) {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Technician') {
     header("Location: login.php");
     exit();
 }
 
-$tech_id = $_SESSION['technician_id'];
+$user_id = $_SESSION['user_id'];
 $full_name = $_SESSION['full_name'];
+
+// 1. ดึง ID ช่างล่าสุดจากตาราง users
+$res_u = $conn->query("SELECT technician_id FROM users WHERE id = $user_id");
+$tech_id = ($res_u && $res_u->num_rows > 0) ? $res_u->fetch_assoc()['technician_id'] : 0;
+
+// 2. ถ้ายังไม่มี tech_id ให้พยายามดึงจากตาราง technicians อัตโนมัติ (Fallback)
+if (empty($tech_id)) {
+    $safe_name = $conn->real_escape_string($full_name);
+    $res_f = $conn->query("SELECT id FROM technicians WHERE full_name = '$safe_name' LIMIT 1");
+    if ($res_f && $res_f->num_rows > 0) {
+        $tech_id = $res_f->fetch_assoc()['id'];
+        $conn->query("UPDATE users SET technician_id = $tech_id WHERE id = $user_id");
+    }
+}
+
+// 3. ดึง LINE ID ของช่าง
+$line_id = '';
+if (!empty($tech_id)) {
+    $res_l = $conn->query("SELECT line_user_id FROM technicians WHERE id = $tech_id");
+    if ($res_l && $res_l->num_rows > 0) {
+        $line_id = $res_l->fetch_assoc()['line_user_id'];
+    }
+}
+
+// 4. สร้างเงื่อนไข "Ultra-Link" ควานหางานจากทุกรูปแบบ (ID, LINE ID, ชื่อ)
+$safe_tech_id = intval($tech_id);
+$safe_line_id = $conn->real_escape_string($line_id);
+$safe_full_name = $conn->real_escape_string($full_name);
+
+$where = "(technician_id = '$safe_tech_id'";
+if (!empty($safe_line_id)) {
+    $where .= " OR technician_id = '$safe_line_id'";
+}
+if ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0) {
+    $where .= " OR technician_name = '$safe_full_name'";
+}
+$where .= ")";
 
 // จัดการการอัปเดตหมายเหตุจากหน้าเว็บ
 $msg = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_remark') {
     $repair_id = intval($_POST['repair_id']);
-    $remark = $_POST['remark'];
-    $stmt = $conn->prepare("UPDATE repairs SET remark = ? WHERE id = ? AND technician_id = ?");
-    $stmt->bind_param("sii", $remark, $repair_id, $tech_id);
-    if ($stmt->execute()) {
+    $remark = $conn->real_escape_string($_POST['remark']);
+    
+    // อัปเดตงานโดยใช้เงื่อนไข Ultra-Link
+    if($conn->query("UPDATE repairs SET remark = '$remark' WHERE id = $repair_id AND $where")) {
         $msg = "บันทึกหมายเหตุสำเร็จเรียบร้อยครับ";
     }
-    $stmt->close();
 }
 
-// 1. ดึงสถิติภาพรวม 4 สถานะ
+// 5. ดึงสถิติภาพรวม 4 สถานะด้วยระบบ Ultra-Link
 $stats = ['total' => 0, 'pending' => 0, 'in_progress' => 0, 'completed' => 0];
-$stmt_stats = $conn->prepare("SELECT status, COUNT(*) as count FROM repairs WHERE technician_id = ? GROUP BY status");
-$stmt_stats->bind_param("i", $tech_id);
-$stmt_stats->execute();
-$res_stats = $stmt_stats->get_result();
-while ($row = $res_stats->fetch_assoc()) {
-    $stats['total'] += $row['count'];
-    $db_status = trim($row['status']);
-    if ($db_status === 'รอดำเนินการ' || $db_status === 'รอรับเรื่อง') {
-        $stats['pending'] += $row['count'];
-    } elseif ($db_status === 'กำลังดำเนินการ') {
-        $stats['in_progress'] += $row['count'];
-    } elseif ($db_status === 'เสร็จสิ้น' || $db_status === 'ซ่อมเสร็จแล้ว') {
-        $stats['completed'] += $row['count'];
+$res_stats = $conn->query("SELECT status, COUNT(*) as count FROM repairs WHERE $where GROUP BY status");
+if ($res_stats) {
+    while ($row = $res_stats->fetch_assoc()) {
+        $stats['total'] += $row['count'];
+        $db_status = trim($row['status']);
+        if ($db_status === 'รอดำเนินการ' || $db_status === 'รอรับเรื่อง') {
+            $stats['pending'] += $row['count'];
+        } elseif ($db_status === 'กำลังดำเนินการ') {
+            $stats['in_progress'] += $row['count'];
+        } elseif ($db_status === 'เสร็จสิ้น' || $db_status === 'ซ่อมเสร็จแล้ว') {
+            $stats['completed'] += $row['count'];
+        }
     }
 }
-$stmt_stats->close();
 
-// 2. ดึงประวัติรายการแจ้งซ่อมทั้งหมดของช่างคนนี้
+// 6. ดึงประวัติรายการแจ้งซ่อมทั้งหมดด้วยระบบ Ultra-Link
 $repairs = [];
-$stmt_repairs = $conn->prepare("SELECT * FROM repairs WHERE technician_id = ? ORDER BY created_at DESC");
-$stmt_repairs->bind_param("i", $tech_id);
-$stmt_repairs->execute();
-$res_repairs = $stmt_repairs->get_result();
-while ($row = $res_repairs->fetch_assoc()) {
-    $repairs[] = $row;
+$res_repairs = $conn->query("SELECT * FROM repairs WHERE $where ORDER BY created_at DESC");
+if ($res_repairs) {
+    while ($row = $res_repairs->fetch_assoc()) {
+        $repairs[] = $row;
+    }
 }
-$stmt_repairs->close();
+
+// ดึงข้อมูล Line Users มาแมปเพื่อแสดงชื่อจริง
+$line_users_map = [];
+$check_lu = $conn->query("SHOW TABLES LIKE 'line_users'");
+if($check_lu && $check_lu->num_rows > 0) {
+    $lu_res = $conn->query("SELECT line_display_name, real_name, phone_number FROM line_users");
+    if($lu_res) {
+        while($lu = $lu_res->fetch_assoc()) {
+            if(!empty($lu['line_display_name']) && !empty($lu['real_name'])) {
+                $line_users_map[$lu['line_display_name']] = $lu['real_name'];
+            }
+        }
+    }
+}
+$line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
 ?>
 
 <!DOCTYPE html>
@@ -260,6 +307,9 @@ $stmt_repairs->close();
                                 } else {
                                     $badgeClass = 'text-amber-600 bg-amber-50 border-amber-200';
                                 }
+
+                                $raw_name = trim($job['reporter_name'] ?? '');
+                                $display_name = isset($line_users_map[$raw_name]) ? $line_users_map[$raw_name] : ($raw_name !== '' ? $raw_name : 'ไม่ระบุ');
                             ?>
                                 <tr class="hover:bg-slate-50 transition-colors">
                                     <td class="px-6 py-4">
@@ -270,7 +320,7 @@ $stmt_repairs->close();
                                     <td class="px-6 py-4 flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-400 flex items-center justify-center text-xs"><i class="fas fa-user"></i></div>
                                         <div>
-                                            <div class="font-bold text-slate-800"><?= htmlspecialchars($job['reporter_name'] ?? 'ไม่ระบุ') ?></div>
+                                            <div class="font-bold text-slate-800"><?= htmlspecialchars($display_name) ?></div>
                                             <div class="text-[11px] text-slate-500 font-medium mt-0.5"><?= htmlspecialchars($job['reporter_phone'] ?? '-') ?></div>
                                         </div>
                                     </td>
@@ -333,9 +383,10 @@ $stmt_repairs->close();
         </div>
     </div>
 
-    <!-- Javascript สำหรับวาดกราฟทั้งหมด (คำนวณจาก Array ของช่างโดยตรง) -->
+    <!-- Javascript สำหรับวาดกราฟทั้งหมด -->
     <script>
         const repairsData = <?php echo json_encode($repairs); ?>;
+        const lineUsersMap = <?php echo $line_users_map_json; ?>;
         
         Chart.defaults.font.family = "'Prompt', sans-serif";
         Chart.defaults.color = '#64748b';
@@ -361,8 +412,9 @@ $stmt_repairs->close();
                     locMap[loc] = (locMap[loc] || 0) + 1;
                 }
 
-                // จัดการข้อมูลผู้แจ้งซ่อม
-                let repName = r.reporter_name || 'ไม่ระบุผู้แจ้ง';
+                // จัดการข้อมูลผู้แจ้งซ่อม (แปลงชื่อจาก LINE เป็นชื่อจริงถ้ามี)
+                let repNameRaw = r.reporter_name || 'ไม่ระบุผู้แจ้ง';
+                let repName = lineUsersMap[repNameRaw] ? lineUsersMap[repNameRaw] : repNameRaw;
                 reporterMap[repName] = (reporterMap[repName] || 0) + 1;
             });
 
@@ -472,7 +524,7 @@ $stmt_repairs->close();
                                  index === 2 ? 'bg-[#fffbeb] border-[#fde68a]' : 'bg-indigo-50 border-indigo-100';
                     
                     html += `
-                        <li class="py-3 flex justify-between items-center">
+                        <li class="py-3 flex justify-between items-center hover:bg-slate-50/50 p-2 rounded-xl transition-colors cursor-default">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center border shadow-sm shrink-0 ${rankBg}">
                                     ${rankIcon}
