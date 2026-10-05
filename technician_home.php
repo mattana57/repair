@@ -198,6 +198,16 @@ if ($res_repairs) {
             </div>
         </div>
 
+        <!-- ปุ่มเมนูแท็บ (ทั้งหมด / ประวัติงาน) -->
+        <div class="flex items-center gap-3 mb-8">
+            <button class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 transition-colors">
+                ทั้งหมด
+            </button>
+            <button class="px-6 py-2.5 bg-white text-slate-600 text-sm font-medium rounded-lg shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
+                ประวัติงาน
+            </button>
+        </div>
+
         <!-- Main Content Area -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
