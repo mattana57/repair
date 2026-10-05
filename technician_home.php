@@ -2,58 +2,90 @@
 session_start();
 require_once 'db_connect.php';
 
-// ตรวจสอบสิทธิ์ ต้องเป็น Technician เท่านั้น และต้องมี technician_id
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Technician' || empty($_SESSION['technician_id'])) {
+// ตรวจสอบสิทธิ์เบื้องต้น
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Technician') {
     header("Location: login.php");
     exit();
 }
 
-$tech_id = $_SESSION['technician_id'];
+$user_id = $_SESSION['user_id'];
 $full_name = $_SESSION['full_name'];
+
+// 1. ดึง ID ช่างล่าสุดจากตาราง users (ป้องกันปัญหาเซสชันค้าง)
+$res_u = $conn->query("SELECT technician_id FROM users WHERE id = $user_id");
+$tech_id = ($res_u && $res_u->num_rows > 0) ? $res_u->fetch_assoc()['technician_id'] : 0;
+
+// 2. ถ้ายังไม่มี tech_id ให้พยายามดึงจากตาราง technicians อัตโนมัติ (Fallback)
+if (empty($tech_id)) {
+    $safe_name = $conn->real_escape_string($full_name);
+    $res_f = $conn->query("SELECT id FROM technicians WHERE full_name = '$safe_name' LIMIT 1");
+    if ($res_f && $res_f->num_rows > 0) {
+        $tech_id = $res_f->fetch_assoc()['id'];
+        $conn->query("UPDATE users SET technician_id = $tech_id WHERE id = $user_id");
+    }
+}
+
+// 3. ดึง LINE ID ของช่าง (สำคัญมาก! เพราะบอทอาจจะผูกงานด้วย LINE ID ไม่ใช่เลข)
+$line_id = '';
+if (!empty($tech_id)) {
+    $res_l = $conn->query("SELECT line_user_id FROM technicians WHERE id = $tech_id");
+    if ($res_l && $res_l->num_rows > 0) {
+        $line_id = $res_l->fetch_assoc()['line_user_id'];
+    }
+}
+
+// 4. สร้างเงื่อนไข "Ultra-Link" ควานหางานจากทุกรูปแบบ (ID, LINE ID, ชื่อ)
+$safe_tech_id = intval($tech_id);
+$safe_line_id = $conn->real_escape_string($line_id);
+$safe_full_name = $conn->real_escape_string($full_name);
+
+$where = "(technician_id = '$safe_tech_id'";
+if (!empty($safe_line_id)) {
+    $where .= " OR technician_id = '$safe_line_id'";
+}
+// เช็คว่าฐานข้อมูลมีคอลัมน์ชื่อช่างไหม ถ้ามีให้เอามาค้นหาด้วย
+if ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0) {
+    $where .= " OR technician_name = '$safe_full_name'";
+}
+$where .= ")";
 
 // จัดการการอัปเดตหมายเหตุจากหน้าเว็บ
 $msg = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_remark') {
-    $repair_id = $_POST['repair_id'];
-    $remark = $_POST['remark'];
+    $repair_id = intval($_POST['repair_id']);
+    $remark = $conn->real_escape_string($_POST['remark']);
     
-    $stmt = $conn->prepare("UPDATE repairs SET remark = ? WHERE id = ? AND technician_id = ?");
-    $stmt->bind_param("sii", $remark, $repair_id, $tech_id);
-    if ($stmt->execute()) {
+    // อัปเดตงานโดยใช้เงื่อนไข Ultra-Link ป้องกันการแก้งานคนอื่น
+    if($conn->query("UPDATE repairs SET remark = '$remark' WHERE id = $repair_id AND $where")) {
         $msg = "บันทึกหมายเหตุสำเร็จเรียบร้อยครับ";
     }
-    $stmt->close();
 }
 
-// 1. ดึงสถิติภาพรวม 4 สถานะ (เฉพาะของช่างคนนี้)
+// 5. ดึงสถิติภาพรวม 4 สถานะ
 $stats = ['total' => 0, 'pending' => 0, 'in_progress' => 0, 'completed' => 0];
-$stmt_stats = $conn->prepare("SELECT status, COUNT(*) as count FROM repairs WHERE technician_id = ? GROUP BY status");
-$stmt_stats->bind_param("i", $tech_id);
-$stmt_stats->execute();
-$res_stats = $stmt_stats->get_result();
-while ($row = $res_stats->fetch_assoc()) {
-    $stats['total'] += $row['count'];
-    $db_status = trim($row['status']);
-    if ($db_status === 'รอดำเนินการ' || $db_status === 'รอรับเรื่อง') {
-        $stats['pending'] += $row['count'];
-    } elseif ($db_status === 'กำลังดำเนินการ') {
-        $stats['in_progress'] += $row['count'];
-    } elseif ($db_status === 'เสร็จสิ้น' || $db_status === 'ซ่อมเสร็จแล้ว') {
-        $stats['completed'] += $row['count'];
+$res_stats = $conn->query("SELECT status, COUNT(*) as count FROM repairs WHERE $where GROUP BY status");
+if ($res_stats) {
+    while ($row = $res_stats->fetch_assoc()) {
+        $stats['total'] += $row['count'];
+        $db_status = trim($row['status']);
+        if ($db_status === 'รอดำเนินการ' || $db_status === 'รอรับเรื่อง') {
+            $stats['pending'] += $row['count'];
+        } elseif ($db_status === 'กำลังดำเนินการ') {
+            $stats['in_progress'] += $row['count'];
+        } elseif ($db_status === 'เสร็จสิ้น' || $db_status === 'ซ่อมเสร็จแล้ว') {
+            $stats['completed'] += $row['count'];
+        }
     }
 }
-$stmt_stats->close();
 
-// 2. ดึงประวัติรายการแจ้งซ่อมทั้งหมดของช่างคนนี้
+// 6. ดึงประวัติรายการแจ้งซ่อมทั้งหมด
 $repairs = [];
-$stmt_repairs = $conn->prepare("SELECT * FROM repairs WHERE technician_id = ? ORDER BY created_at DESC");
-$stmt_repairs->bind_param("i", $tech_id);
-$stmt_repairs->execute();
-$res_repairs = $stmt_repairs->get_result();
-while ($row = $res_repairs->fetch_assoc()) {
-    $repairs[] = $row;
+$res_repairs = $conn->query("SELECT * FROM repairs WHERE $where ORDER BY created_at DESC");
+if ($res_repairs) {
+    while ($row = $res_repairs->fetch_assoc()) {
+        $repairs[] = $row;
+    }
 }
-$stmt_repairs->close();
 ?>
 
 <!DOCTYPE html>
@@ -97,7 +129,6 @@ $stmt_repairs->close();
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Alert Notification -->
         <?php if (!empty($msg)): ?>
             <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-2xl mb-6 flex items-center shadow-sm">
                 <i class="fas fa-check-circle mr-2.5 text-lg"></i> <?= $msg ?>
@@ -116,37 +147,33 @@ $stmt_repairs->close();
             </div>
         </div>
 
-        <!-- Stats Cards Grid (ดีไซน์เดียวกับ Admin เป๊ะ: ไม่มีพื้นหลังไอคอน, ขอบสีอยู่ด้านล่าง) -->
+        <!-- Stats Cards Grid (ดีไซน์เดียวกับ Admin เป๊ะ) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- ก้อนที่ 1: งานที่รับผิดชอบทั้งหมด (สีม่วง) -->
             <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-purple-500">
                 <div class="text-slate-500 font-medium mb-2 text-sm text-center">งานที่รับผิดชอบทั้งหมด</div>
                 <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['total'] ?></div>
             </div>
             
-            <!-- ก้อนที่ 2: รอรับเรื่อง (สีเหลือง/ส้ม) -->
             <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-amber-400">
                 <div class="text-slate-500 font-medium mb-2 text-sm text-center">รอรับเรื่อง</div>
                 <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['pending'] ?></div>
             </div>
 
-            <!-- ก้อนที่ 3: กำลังดำเนินการ (สีฟ้า) -->
             <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-sky-400">
                 <div class="text-slate-500 font-medium mb-2 text-sm text-center">กำลังดำเนินการ</div>
                 <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['in_progress'] ?></div>
             </div>
 
-            <!-- ก้อนที่ 4: ซ่อมเสร็จแล้ว (สีเขียว) -->
             <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-emerald-400">
                 <div class="text-slate-500 font-medium mb-2 text-sm text-center">ซ่อมเสร็จแล้ว</div>
                 <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['completed'] ?></div>
             </div>
         </div>
 
-        <!-- Main Content Area (Table & Chart) -->
+        <!-- Main Content Area -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <!-- Table Section (2/3 Width) -->
+            <!-- Table Section -->
             <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
                 <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
                     <h2 class="font-bold text-slate-800 text-lg">ประวัติและรายการใบงานของฉัน</h2>
@@ -207,7 +234,7 @@ $stmt_repairs->close();
                 </div>
             </div>
 
-            <!-- Chart Section (1/3 Width) -->
+            <!-- Chart Section -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
                 <div>
                     <h2 class="font-bold text-slate-800 text-lg mb-6">สัดส่วนสถานะการดำเนินงาน</h2>
@@ -221,10 +248,9 @@ $stmt_repairs->close();
             </div>
 
         </div>
-
     </div>
 
-    <!-- Modal สำหรับเพิ่ม/แก้ไขหมายเหตุ -->
+    <!-- Modal -->
     <div id="noteModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-xl transform transition-all">
             <div class="flex justify-between items-center mb-4">
@@ -250,26 +276,20 @@ $stmt_repairs->close();
     </div>
 
     <script>
-        // Render Chart.js
         const ctx = document.getElementById('jobChart').getContext('2d');
         
-        // ข้อมูลตัวแปรสำหรับกราฟ
         const pendingCount = <?= $stats['pending'] ?>;
         const inProgressCount = <?= $stats['in_progress'] ?>;
         const completedCount = <?= $stats['completed'] ?>;
-        
-        // ตรวจสอบว่ามีข้อมูลอย่างน้อย 1 รายการหรือไม่เพื่อแสดงกราฟ
         const totalCount = pendingCount + inProgressCount + completedCount;
         
         let chartData, chartColors;
         
         if (totalCount === 0) {
-            // ถ้าไม่มีข้อมูล ให้โชว์โดนัทสีเทา
             chartData = [1];
             chartColors = ['#e2e8f0'];
         } else {
             chartData = [pendingCount, inProgressCount, completedCount];
-            // ใช้สีให้ตรงกับฝั่ง Admin: ส้มเหลือง, ฟ้า, เขียว
             chartColors = ['#fbbf24', '#38bdf8', '#10b981'];
         }
 
@@ -290,7 +310,7 @@ $stmt_repairs->close();
                 cutout: '75%',
                 plugins: {
                     legend: { 
-                        display: totalCount > 0, // ซ่อน Legend ถ้าไม่มีข้อมูล
+                        display: totalCount > 0,
                         position: 'bottom',
                         labels: {
                             usePointStyle: true,
@@ -298,14 +318,11 @@ $stmt_repairs->close();
                             font: { size: 12 }
                         }
                     },
-                    tooltip: {
-                        enabled: totalCount > 0 // ซ่อน Tooltip ถ้าไม่มีข้อมูล
-                    }
+                    tooltip: { enabled: totalCount > 0 }
                 }
             }
         });
 
-        // Modal Controls
         const modal = document.getElementById('noteModal');
         const repairInput = document.getElementById('modal_repair_id');
         const remarkInput = document.getElementById('modal_remark');
