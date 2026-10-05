@@ -514,6 +514,21 @@ $current_thai_year = date('Y') + 543;
         Chart.defaults.font.family = "'Plus Jakarta Sans', 'Kanit', sans-serif";
         Chart.defaults.color = '#64748b';
 
+        // ✨ การตั้งค่า Tooltip ให้เหมือน Admin แบบ 100% ✨
+        const commonTooltipOptions = {
+            backgroundColor: '#1e293b', // สีดำ/เทาเข้ม
+            titleColor: '#ffffff',
+            bodyColor: '#e2e8f0',
+            borderColor: '#334155',
+            borderWidth: 1,
+            padding: 10,
+            displayColors: true,
+            boxPadding: 4,
+            usePointStyle: true, // ทำให้กล่องสีใน Tooltip เป็นวงกลม
+            titleFont: { size: 13, weight: 'bold', family: "'Kanit', sans-serif" },
+            bodyFont: { size: 12, family: "'Kanit', sans-serif" }
+        };
+
         // ✨ ควบคุมปุ่มล้างค่าค้นหา
         function toggleClearBtn(inputId, btnId) {
             const input = document.getElementById(inputId);
@@ -635,6 +650,7 @@ $current_thai_year = date('Y') + 543;
                 else if (st === 'กำลังดำเนินการ') progress++;
                 else if (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') completed++;
 
+                // ✨ ดึงข้อมูลอุปกรณ์ให้ลึกขึ้น ถ้าไม่มีให้ดึงปัญหามาแสดงแทน เพื่อไม่ให้กลายเป็น "ไม่ระบุ" กระจุกเดียว
                 let eq1 = (r.equipment && r.equipment.trim() !== '' && r.equipment !== '-' && r.equipment !== 'ไม่ระบุ') ? r.equipment : null;
                 let eq2 = (r.equipment_type && r.equipment_type.trim() !== '' && r.equipment_type !== '-' && r.equipment_type !== 'ไม่ระบุ') ? r.equipment_type : null;
                 let p1 = (r.problem && r.problem.trim() !== '' && r.problem !== '-' && r.problem !== 'ไม่ระบุ') ? r.problem : null;
@@ -652,23 +668,11 @@ $current_thai_year = date('Y') + 543;
                 reporterMap[repName] = (reporterMap[repName] || 0) + 1;
             });
 
-            // ตั้งค่า Tooltip มาตรฐานให้เหมือน Admin ทุกประการ
-            const commonTooltipOptions = {
-                backgroundColor: 'rgba(15, 23, 42, 0.9)', // ดำขอบมน
-                titleColor: '#ffffff',
-                bodyColor: '#e2e8f0',
-                bodyFont: { family: "'Sarabun', sans-serif", size: 13, weight: 'bold' }, // เปลี่ยนฟอนต์เนื้อหา
-                titleFont: { family: "'Sarabun', sans-serif", size: 14, weight: 'bold' }, // เปลี่ยนฟอนต์หัวเรื่อง
-                padding: 12,
-                cornerRadius: 8,
-                displayColors: true, // แสดงสี่เหลี่ยมสี
-                boxPadding: 6,
-                boxWidth: 10,
-                boxHeight: 10
-            };
-
+            // ==========================================
             // Equipment Chart
             let eqSorted = Object.keys(eqMap).map(k => ({name: k, count: eqMap[k]})).sort((a,b) => b.count - a.count).slice(0, 6);
+            
+            // ทริคแก้ปัญหากราฟเส้น: ถ้ามีข้อมูลแค่จุดเดียว ให้เพิ่มจุดซ้าย-ขวาหลอกๆ ให้มันวาดเป็นเส้นทรงภูเขาได้สวยงาม
             if (eqSorted.length === 1 && eqSorted[0].name !== 'ไม่มีข้อมูล') {
                 eqSorted.unshift({ name: '', count: 0 });
                 eqSorted.push({ name: ' ', count: 0 });
@@ -685,7 +689,7 @@ $current_thai_year = date('Y') + 543;
                 data: {
                     labels: eqSorted.length ? eqSorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{
-                        label: 'จำนวน (ครั้ง)', // ตั้งชื่อ Label ให้ Tooltip
+                        label: 'จำนวน (ครั้ง)',
                         data: eqSorted.length ? eqSorted.map(e => e.count) : [0],
                         borderColor: '#8b5cf6', backgroundColor: gradient, borderWidth: 3,
                         pointBackgroundColor: '#ffffff', pointBorderColor: '#8b5cf6', pointBorderWidth: 2, pointRadius: 4,
@@ -696,12 +700,7 @@ $current_thai_year = date('Y') + 543;
                     responsive: true, maintainAspectRatio: false,
                     plugins: { 
                         legend: { display: false },
-                        tooltip: {
-                            ...commonTooltipOptions,
-                            callbacks: {
-                                label: function(context) { return ' จำนวน (ครั้ง): ' + context.raw; }
-                            }
-                        }
+                        tooltip: commonTooltipOptions // ✨ ใส่ Tooltip สีดำ
                     },
                     scales: {
                         y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f8fafc' }, border: {display: false} },
@@ -710,6 +709,7 @@ $current_thai_year = date('Y') + 543;
                 }
             });
 
+            // ==========================================
             // Status Chart
             const statusCtx = document.getElementById('statusChart').getContext('2d');
             if (window.statusChartInstance) window.statusChartInstance.destroy();
@@ -720,6 +720,7 @@ $current_thai_year = date('Y') + 543;
                 data: {
                     labels: totalStatus === 0 ? ['ไม่มีข้อมูล'] : ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'],
                     datasets: [{
+                        label: 'จำนวนงาน',
                         data: totalStatus === 0 ? [1] : [pending, progress, completed],
                         backgroundColor: totalStatus === 0 ? ['#f1f5f9'] : ['#fbbf24', '#38bdf8', '#10b981'],
                         borderWidth: 0, hoverOffset: 4
@@ -729,17 +730,17 @@ $current_thai_year = date('Y') + 543;
                     responsive: true, maintainAspectRatio: false, cutout: '75%',
                     plugins: {
                         legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { size: 12, weight: 'bold' } } },
-                        tooltip: { 
+                        tooltip: Object.assign({}, commonTooltipOptions, { // ✨ ใส่ Tooltip สีดำ + ปิดการแสดงผลถ้าไม่มีข้อมูล
                             enabled: totalStatus > 0,
-                            ...commonTooltipOptions,
                             callbacks: {
-                                label: function(context) { return ' ' + context.raw + ' งาน'; }
+                                label: function(context) { return ' ' + context.formattedValue + ' งาน'; }
                             }
-                        }
+                        })
                     }
                 }
             });
 
+            // ==========================================
             // Location Chart
             let locSorted = Object.keys(locMap).map(k => ({name: k, count: locMap[k]})).sort((a,b) => b.count - a.count).slice(0, 5);
             const locCtx = document.getElementById('locChart').getContext('2d');
@@ -750,7 +751,7 @@ $current_thai_year = date('Y') + 543;
                 data: {
                     labels: locSorted.length ? locSorted.map(e => e.name) : ['ไม่มีข้อมูล'],
                     datasets: [{
-                        label: 'แจ้งซ่อม (ครั้ง)', // ตั้งชื่อ Label ให้ Tooltip
+                        label: 'แจ้งซ่อม (ครั้ง)',
                         data: locSorted.length ? locSorted.map(e => e.count) : [0],
                         backgroundColor: '#f43f5e', borderRadius: 6
                     }]
@@ -759,12 +760,7 @@ $current_thai_year = date('Y') + 543;
                     indexAxis: 'y', responsive: true, maintainAspectRatio: false,
                     plugins: { 
                         legend: { display: false },
-                        tooltip: {
-                            ...commonTooltipOptions,
-                            callbacks: {
-                                label: function(context) { return ' แจ้งซ่อม (ครั้ง): ' + context.raw; }
-                            }
-                        }
+                        tooltip: commonTooltipOptions // ✨ ใส่ Tooltip สีดำ
                     },
                     scales: {
                         x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f8fafc' }, border: {display: false} },
@@ -773,8 +769,47 @@ $current_thai_year = date('Y') + 543;
                 }
             });
 
+            // ==========================================
             // Top Reporters List (การ์ดเหรียญรางวัล)
-
+            let repSorted = Object.keys(reporterMap).map(k => ({name: k, count: reporterMap[k]})).sort((a,b) => b.count - a.count).slice(0, 5);
+            const repContainer = document.getElementById('topReportersContainer');
+            if (repSorted.length === 0) {
+                repContainer.innerHTML = `<div class='py-10 flex flex-col items-center justify-center text-center'>
+                    <div class='w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-3'><i class='fas fa-user-tag text-2xl text-slate-300'></i></div>
+                    <p class='text-slate-400 font-bold text-sm'>ยังไม่มีผู้แจ้งซ่อม</p>
+                </div>`;
+            } else {
+                let html = '<ul class="divide-y divide-slate-100">';
+                repSorted.forEach((r, index) => {
+                    let rankIcon = index === 0 ? '<i class="fas fa-trophy text-lg text-amber-500 drop-shadow-sm"></i>' :
+                                   index === 1 ? '<i class="fas fa-medal text-lg text-slate-400 drop-shadow-sm"></i>' :
+                                   index === 2 ? '<i class="fas fa-medal text-lg text-amber-600 drop-shadow-sm"></i>' :
+                                   `<span class="text-sm font-black text-indigo-500">#${index + 1}</span>`;
+                    let rankBg = index === 0 ? 'bg-[#fefce8] border-[#fde047]' : 
+                                 index === 1 ? 'bg-[#f8fafc] border-[#e2e8f0]' : 
+                                 index === 2 ? 'bg-[#fffbeb] border-[#fde68a]' : 'bg-indigo-50 border-indigo-100';
+                    
+                    html += `
+                        <li class="py-3 flex justify-between items-center hover:bg-slate-50/50 p-2 rounded-xl transition-colors cursor-default">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center border shadow-sm shrink-0 ${rankBg}">${rankIcon}</div>
+                                <div>
+                                    <p class="font-bold text-slate-800 text-sm">${r.name}</p>
+                                    <p class="text-[11px] text-slate-400 font-medium mt-0.5">บุคลากรผู้แจ้งซ่อม</p>
+                                </div>
+                            </div>
+                            <div class="text-right flex items-center gap-3">
+                                <div>
+                                    <p class="font-extrabold text-indigo-600 text-xl leading-none">${r.count}</p>
+                                    <p class="text-[10px] text-slate-400 font-medium mt-1">รายการ</p>
+                                </div>
+                            </div>
+                        </li>`;
+                });
+                html += '</ul>';
+                repContainer.innerHTML = html;
+            }
+        }
 
         // 3. ฟังก์ชันวาดตารางย่อ (หน้า Dash) ดึงแค่ 5 อันล่าสุด
         function renderDashTable() {
@@ -849,7 +884,7 @@ $current_thai_year = date('Y') + 543;
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">ไม่พบข้อมูลใบงานที่ตรงกับเงื่อนไข</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">ไม่พบข้อมูลใบงานที่ตรงกับเงื่อนไข</td></tr>`;
                 return;
             }
 
@@ -861,7 +896,7 @@ $current_thai_year = date('Y') + 543;
                 
                 let dt = (r.created_at && r.created_at !== '0000-00-00 00:00:00') ? r.created_at.split(' ') : ['-', ''];
                 
-                // ✨ บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันที ✨
+                // บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันที
                 let dtNow = new Date();
                 let nowStr = dtNow.getFullYear() + '-' + String(dtNow.getMonth()+1).padStart(2,'0') + '-' + String(dtNow.getDate()).padStart(2,'0') + ' ' + String(dtNow.getHours()).padStart(2,'0') + ':' + String(dtNow.getMinutes()).padStart(2,'0') + ':00';
                 let raw_rec_js = (r.received_at && r.received_at != '0000-00-00 00:00:00' && r.received_at != '-') ? r.received_at : (st !== 'รอรับเรื่อง' ? nowStr : '');
@@ -903,7 +938,6 @@ $current_thai_year = date('Y') + 543;
                         <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
                         <td class="px-6 py-4 align-top">
                             <div class='flex items-center gap-3'>
-                                <!-- ✨ ปรับสีไอคอนประจำตัวผู้แจ้งให้เข้มขึ้นเหมือนแอดมิน ✨ -->
                                 <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0'><i class='fas fa-user text-xs'></i></div>
                                 <div>
                                     <div class="text-slate-800 font-bold">${dName}</div>
