@@ -49,7 +49,7 @@ if ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows >
 }
 $where .= ")";
 
-// จัดการการอัปเดตหมายเหตุจากหน้าเว็บ
+// จัดการการอัปเดตหมายเหตุจากหน้าเว็บ (ไม่ได้ใช้ Modal แล้ว แต่เก็บ API ไว้เผื่อจำเป็น)
 $msg = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_remark') {
     $repair_id = intval($_POST['repair_id']);
@@ -87,6 +87,21 @@ if ($res_repairs) {
     }
 }
 
+// ดึงข้อมูลแผนกและตำแหน่งของช่างทั้งหมดเพื่อนำไปใช้ในตาราง
+$tech_dept_map = [];
+$tech_info_map = [];
+$td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians");
+if($td_res) {
+    while($tr = $td_res->fetch_assoc()) {
+        $tech_dept_map[$tr['full_name']] = !empty($tr['department']) ? $tr['department'] : 'ฝ่ายงานทั่วไป';
+        $tech_info_map[$tr['full_name']] = [
+            'th' => $tr['full_name'],
+            'eng' => $tr['english_name'] ?? '',
+            'pos' => $tr['position'] ?? ''
+        ];
+    }
+}
+
 // ฟังก์ชันจัดฟอร์แมตข้อมูลว่าให้เป็น -
 function formatEmptyOrDash($val) {
     $val = trim((string)$val);
@@ -109,6 +124,20 @@ if($check_lu && $check_lu->num_rows > 0) {
     }
 }
 $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
+
+// ดึงปีที่มีการซ่อม
+$years_query = $conn->query("SELECT DISTINCT YEAR(created_at) as y FROM repairs WHERE created_at IS NOT NULL ORDER BY y DESC");
+$available_years = [];
+if($years_query && $years_query->num_rows > 0) {
+    while($y_row = $years_query->fetch_assoc()) {
+        if(!empty($y_row['y'])) $available_years[] = $y_row['y'];
+    }
+} else {
+    $available_years[] = date('Y');
+}
+$thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
+$current_month_name = $thai_months[date('n')];
+$current_thai_year = date('Y') + 543;
 ?>
 
 <!DOCTYPE html>
@@ -191,7 +220,7 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
         </div>
     </nav>
 
-    <!-- Header & Tabs (แบบใหม่ ไม่มีแถบสีเทา คลีนๆ) -->
+    <!-- Header & Tabs (ซ่อนไว้เพราะใช้แบบ Capsule แทน) -->
     <div class="bg-white border-b border-slate-200 shrink-0 hidden" id="headerTabs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex pt-4 pb-0 gap-2 overflow-x-auto">
@@ -367,7 +396,6 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
             <!-- ส่วนที่ 2: ประวัติงานเต็มรูปแบบ (id="tab-content-history") -->
             <!-- ========================================== -->
             <div id="tab-content-history" class="hidden animate-fade-in no-print">
-                <!-- ✨ โครงสร้างตารางแบบหน้า Team Management ✨ -->
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
                     <!-- Header ส่วนค้นหา -->
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col gap-4 bg-white shrink-0 relative z-30">
@@ -391,22 +419,31 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
                             <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] group">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchHistoryInput" oninput="renderHistoryTable()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-4 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="searchHistoryInput" oninput="renderHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหา รหัสงาน, ชื่อผู้แจ้ง, อุปกรณ์..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', renderHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
 
                             <div class="flex items-center gap-2 shrink-0">
-                                <select id="filterStatus" onchange="renderHistoryTable()" class="bg-white border border-slate-200 text-sm text-slate-700 rounded-xl px-3 py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold shadow-sm outline-none cursor-pointer">
-                                    <option value="all">ทุกสถานะ</option>
-                                    <option value="รอรับเรื่อง">รอรับเรื่อง</option>
-                                    <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
-                                    <option value="ซ่อมเสร็จแล้ว">ซ่อมเสร็จแล้ว</option>
-                                </select>
+                                <!-- ✨ Dropdown สถานะแบบ Custom เหมือน Admin ✨ -->
+                                <div class="relative w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-StatusContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Status', renderHistoryTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="table-StatusTrigger" class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-3.5 portrait:px-2.5 sm:px-3.5 landscape:px-3.5 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Status')">
+                                        <span id="table-StatusText" class="truncate">ทั้งหมด</span>
+                                        <i id="table-StatusCaret" class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="table-StatusList" class="chart-dropdown-list absolute z-50 w-[155px] right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col p-2 space-y-1.5" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 bg-slate-50 hover:bg-slate-100 text-center" data-value="all" data-display="ทั้งหมด" onclick="selectTableStatusDropdown('all', 'ทั้งหมด')">ทั้งหมด</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#fef3c7] text-[#d97706] hover:brightness-95 text-center shadow-2xs" data-value="รอรับเรื่อง" data-display="รอรับเรื่อง" onclick="selectTableStatusDropdown('รอรับเรื่อง', 'รอรับเรื่อง')">รอรับเรื่อง</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#e0e7ff] text-[#4f46e5] hover:brightness-95 text-center shadow-2xs" data-value="กำลังดำเนินการ" data-display="กำลังดำเนินการ" onclick="selectTableStatusDropdown('กำลังดำเนินการ', 'กำลังดำเนินการ')">กำลังดำเนินการ</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#d1fae5] text-[#059669] hover:brightness-95 text-center shadow-2xs" data-value="ซ่อมเสร็จแล้ว" data-display="ซ่อมเสร็จแล้ว" onclick="selectTableStatusDropdown('ซ่อมเสร็จแล้ว', 'ซ่อมเสร็จแล้ว')">ซ่อมเสร็จแล้ว</div>
+                                    </div>
+                                    <input type="hidden" id="filterStatus" value="all">
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ตารางแบบ History Modal (แสดงครบถ้วนเหมือนรูปที่ 40) -->
-                    <div class="overflow-x-auto pb-4 custom-scrollbar table-wrapper-fix">
+                    <!-- ตารางแบบ History Modal (แสดงครบถ้วนเหมือน Admin) -->
+                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
                         <table class="w-full text-left whitespace-nowrap min-w-[1100px]" id="historyTableFull">
                             <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a] sticky top-0 z-20 shadow-sm">
                                 <tr>
@@ -414,6 +451,8 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                                     <th class="px-6 py-4 border-0">Ticket No.</th>
                                     <th class="px-6 py-4 border-0">Reporter</th>
                                     <th class="px-6 py-4 border-0">Equipment</th>
+                                    <th class="px-6 py-4 border-0">Department</th>
+                                    <th class="px-6 py-4 border-0">Technician</th>
                                     <th class="px-6 py-4 border-0">Received At</th>
                                     <th class="px-6 py-4 border-0">Root Cause</th>
                                     <th class="px-6 py-4 text-center border-0">Status</th>
@@ -432,15 +471,104 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
         </div>
     </main>
 
-    <!-- ✨ ลบ Modal ทิ้งทั้งหมด (เพราะเราจะให้ปุ่ม Action ลิงก์ไปที่ update_repair.php แทน) ✨ -->
-
     <!-- Javascript สำหรับวาดกราฟและตาราง -->
     <script>
         const repairsData = <?php echo json_encode($repairs); ?>;
         const lineUsersMap = <?php echo $line_users_map_json; ?>;
+        const techDeptMap = <?php echo json_encode($tech_dept_map); ?>;
+        const techInfoMap = <?php echo json_encode($tech_info_map); ?>;
         
         Chart.defaults.font.family = "'Plus Jakarta Sans', 'Kanit', sans-serif";
         Chart.defaults.color = '#64748b';
+
+        // ✨ ควบคุมปุ่มล้างค่าค้นหา
+        function toggleClearBtn(inputId, btnId) {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById(btnId);
+            if (!input || !btn) return;
+            if (input.value.length > 0) {
+                btn.classList.remove('hidden'); btn.classList.add('flex');
+            } else {
+                btn.classList.add('hidden'); btn.classList.remove('flex');
+            }
+        }
+
+        function clearSearchInput(inputId, callbackFunction) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = '';
+                toggleClearBtn(inputId, 'clearHistoryBtn');
+                if (typeof callbackFunction === 'function') {
+                    callbackFunction();
+                }
+            }
+        }
+
+        // ✨ ระบบ Custom Dropdown (สถานะ)
+        function toggleChartDropdown(e, idPrefix) {
+            if(e) e.stopPropagation();
+            const list = document.getElementById(idPrefix + 'List');
+            const container = document.getElementById(idPrefix + 'Container');
+
+            document.querySelectorAll('.chart-dropdown-list').forEach(l => {
+                if (l.id !== list.id) { l.classList.add('hidden'); l.classList.remove('flex'); }
+            });
+
+            list.classList.toggle('hidden');
+            list.classList.toggle('flex');
+
+            if (!list.classList.contains('hidden')) {
+                container.focus();
+            }
+        }
+
+        function selectTableStatusDropdown(val, display) {
+            const list = document.getElementById('table-StatusList');
+            const input = document.getElementById('filterStatus');
+            const textEl = document.getElementById('table-StatusText');
+            const trigger = document.getElementById('table-StatusTrigger');
+            const caret = document.getElementById('table-StatusCaret');
+
+            if (input) input.value = val;
+            if (textEl) textEl.innerText = display;
+            if (list) { list.classList.add('hidden'); list.classList.remove('flex'); }
+
+            if (trigger && caret) {
+                // ล้างสีสถานะเดิมออกก่อน
+                trigger.classList.remove(
+                    'bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50',
+                    'bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]',
+                    'bg-[#e0e7ff]', 'text-[#4f46e5]', 'border-[#c7d2fe]',
+                    'bg-[#d1fae5]', 'text-[#059669]', 'border-[#a7f3d0]'
+                );
+                caret.classList.remove('text-slate-400', 'text-[#d97706]', 'text-[#4f46e5]', 'text-[#059669]');
+
+                if (val === 'รอรับเรื่อง') {
+                    trigger.classList.add('bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]');
+                    caret.classList.add('text-[#d97706]');
+                } else if (val === 'กำลังดำเนินการ') {
+                    trigger.classList.add('bg-[#e0e7ff]', 'text-[#4f46e5]', 'border-[#c7d2fe]');
+                    caret.classList.add('text-[#4f46e5]');
+                } else if (val === 'ซ่อมเสร็จแล้ว') {
+                    trigger.classList.add('bg-[#d1fae5]', 'text-[#059669]', 'border-[#a7f3d0]');
+                    caret.classList.add('text-[#059669]');
+                } else {
+                    trigger.classList.add('bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50');
+                    caret.classList.add('text-slate-400');
+                }
+            }
+
+            renderHistoryTable();
+        }
+
+        document.addEventListener('click', function(e) {
+            document.querySelectorAll('.chart-dropdown-list').forEach(list => {
+                if (!list.parentElement.contains(e.target)) {
+                    list.classList.add('hidden');
+                    list.classList.remove('flex');
+                }
+            });
+        });
 
         // 1. ฟังก์ชันจัดการสลับหน้า (Tabs)
         function showTab(tabId, statusFilter = 'all') {
@@ -455,7 +583,8 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
             document.getElementById('capsule-' + tabId).className = "px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-full border border-indigo-600 shadow-md shadow-indigo-200 transition-colors cursor-pointer capsule-btn";
 
             if (tabId === 'history') {
-                document.getElementById('filterStatus').value = statusFilter;
+                const disp = (statusFilter === 'all') ? 'ทั้งหมด' : statusFilter;
+                selectTableStatusDropdown(statusFilter, disp);
                 renderHistoryTable();
             } else if (tabId === 'dash') {
                 renderDashTable();
@@ -615,7 +744,6 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                 
                 let dt = (r.created_at && r.created_at !== '0000-00-00 00:00:00') ? r.created_at.split(' ') : ['-', ''];
                 
-                // ✨ ดึงชื่อและเบอร์โทรแบบเต็มพิกัดเหมือนแอดมิน ✨
                 let raw_name = r.reporter_name || '';
                 let dName = lineUsersMap[raw_name] ? lineUsersMap[raw_name] : (raw_name !== '' ? raw_name : 'ไม่ระบุ');
                 let dPhone = r.phone_number || '-';
@@ -631,6 +759,7 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                         <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
                         <td class="px-6 py-4 align-top">
                             <div class="flex items-center gap-3">
+                                <!-- ✨ ปรับสีไอคอนประจำตัวผู้แจ้งให้เข้มขึ้นเหมือนแอดมิน ✨ -->
                                 <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0"><i class="fas fa-user text-xs"></i></div>
                                 <div>
                                     <div class="font-bold text-slate-800">${dName}</div>
@@ -680,13 +809,33 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                              (st === 'กำลังดำเนินการ') ? 'text-sky-600 bg-sky-50 border-sky-200' : 'text-amber-600 bg-amber-50 border-amber-200';
                 
                 let dt = (r.created_at && r.created_at !== '0000-00-00 00:00:00') ? r.created_at.split(' ') : ['-', ''];
-                let rec = (r.received_at && r.received_at !== '0000-00-00 00:00:00') ? r.received_at.split(' ') : ['-', ''];
+                
+                // ✨ บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันที ✨
+                let dtNow = new Date();
+                let nowStr = dtNow.getFullYear() + '-' + String(dtNow.getMonth()+1).padStart(2,'0') + '-' + String(dtNow.getDate()).padStart(2,'0') + ' ' + String(dtNow.getHours()).padStart(2,'0') + ':' + String(dtNow.getMinutes()).padStart(2,'0') + ':00';
+                let raw_rec_js = (r.received_at && r.received_at != '0000-00-00 00:00:00' && r.received_at != '-') ? r.received_at : (st !== 'รอรับเรื่อง' ? nowStr : '');
+                let has_received = (raw_rec_js !== '');
+                let rec = has_received ? raw_rec_js.split(' ') : ['-', ''];
+                
                 let com = (r.completed_at && r.completed_at !== '0000-00-00 00:00:00') ? r.completed_at.split(' ') : ['-', ''];
                 
-                // ✨ ดึงชื่อและเบอร์โทรแบบเต็มพิกัดเหมือนแอดมิน ✨
+                // ดึงชื่อและเบอร์โทรแบบเต็มพิกัดเหมือนแอดมิน
                 let raw_name = r.reporter_name || '';
                 let dName = lineUsersMap[raw_name] ? lineUsersMap[raw_name] : (raw_name !== '' ? raw_name : 'ไม่ระบุ');
                 let dPhone = r.phone_number || '-';
+
+                // ข้อมูลช่างและแผนก
+                let tNameHtml = "<span class='text-rose-500 font-bold'>-</span>";
+                let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
+                if (r.technician_name && r.technician_name !== '-') {
+                    let info = techInfoMap[r.technician_name] || { th: r.technician_name, eng: '', pos: '' };
+                    tNameHtml = `<div class='text-indigo-600 font-bold'>${info.th}</div>`;
+                    if(info.eng) tNameHtml += `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${info.eng}</div>`;
+                    
+                    let dName = techDeptMap[r.technician_name] || 'General';
+                    deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
+                    if (info.pos) deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
+                }
 
                 let imgIcon = r.image_path ? `<i class="fas fa-image text-slate-300 ml-1" title="มีรูปภาพ"></i>` : '';
                 let cause = (!r.root_cause || r.root_cause === '-') ? `<span class='text-rose-500 font-bold'>-</span>` : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
@@ -703,6 +852,7 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                         <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
                         <td class="px-6 py-4 align-top">
                             <div class='flex items-center gap-3'>
+                                <!-- ✨ ปรับสีไอคอนประจำตัวผู้แจ้งให้เข้มขึ้นเหมือนแอดมิน ✨ -->
                                 <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0'><i class='fas fa-user text-xs'></i></div>
                                 <div>
                                     <div class="text-slate-800 font-bold">${dName}</div>
@@ -714,6 +864,8 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                             <div class="text-slate-800 font-bold">${r.equipment || r.problem || 'ไม่ระบุ'} ${imgIcon}</div>
                             <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${r.problem_desc || '-'}">${r.problem_desc || '-'}</div>
                         </td>
+                        <td class="px-6 py-4 align-top">${deptEng}</td>
+                        <td class="px-6 py-4 align-top">${tNameHtml}</td>
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class='font-medium text-slate-700'>${rec[0]}</div>
                             ${rec[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${rec[1].substring(0, 5)}</div>` : ''}
@@ -816,7 +968,6 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                 }, 250);
             }
         }
-
     </script>
 </body>
 </html>
