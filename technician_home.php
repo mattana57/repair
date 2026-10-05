@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Technician') {
 $user_id = $_SESSION['user_id'];
 $full_name = $_SESSION['full_name'];
 
-// 1. ดึง ID ช่างล่าสุดจากตาราง users (ป้องกันปัญหาเซสชันค้าง)
+// 1. ดึง ID ช่างล่าสุดจากตาราง users
 $res_u = $conn->query("SELECT technician_id FROM users WHERE id = $user_id");
 $tech_id = ($res_u && $res_u->num_rows > 0) ? $res_u->fetch_assoc()['technician_id'] : 0;
 
@@ -25,7 +25,7 @@ if (empty($tech_id)) {
     }
 }
 
-// 3. ดึง LINE ID ของช่าง (สำคัญมาก! เพราะบอทอาจจะผูกงานด้วย LINE ID ไม่ใช่เลข)
+// 3. ดึง LINE ID ของช่าง
 $line_id = '';
 if (!empty($tech_id)) {
     $res_l = $conn->query("SELECT line_user_id FROM technicians WHERE id = $tech_id");
@@ -34,7 +34,7 @@ if (!empty($tech_id)) {
     }
 }
 
-// 4. สร้างเงื่อนไข "Ultra-Link" ควานหางานจากทุกรูปแบบ (ID, LINE ID, ชื่อ)
+// 4. สร้างเงื่อนไข "Ultra-Link" ควานหางานจากทุกรูปแบบ
 $safe_tech_id = intval($tech_id);
 $safe_line_id = $conn->real_escape_string($line_id);
 $safe_full_name = $conn->real_escape_string($full_name);
@@ -43,7 +43,6 @@ $where = "(technician_id = '$safe_tech_id'";
 if (!empty($safe_line_id)) {
     $where .= " OR technician_id = '$safe_line_id'";
 }
-// เช็คว่าฐานข้อมูลมีคอลัมน์ชื่อช่างไหม ถ้ามีให้เอามาค้นหาด้วย
 if ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0) {
     $where .= " OR technician_name = '$safe_full_name'";
 }
@@ -55,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $repair_id = intval($_POST['repair_id']);
     $remark = $conn->real_escape_string($_POST['remark']);
     
-    // อัปเดตงานโดยใช้เงื่อนไข Ultra-Link ป้องกันการแก้งานคนอื่น
     if($conn->query("UPDATE repairs SET remark = '$remark' WHERE id = $repair_id AND $where")) {
         $msg = "บันทึกหมายเหตุสำเร็จเรียบร้อยครับ";
     }
@@ -94,11 +92,17 @@ if ($res_repairs) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Technician Dashboard | MBS Repair</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
 </head>
-<body class="bg-slate-50 font-sans">
+<body class="bg-slate-50">
 
     <!-- Top Navbar -->
     <nav class="bg-indigo-600 text-white shadow-md sticky top-0 z-40">
@@ -136,53 +140,57 @@ if ($res_repairs) {
         <?php endif; ?>
 
         <!-- Welcome Banner -->
-        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white shadow-xl mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white shadow-lg mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 class="text-2xl md:text-3xl font-extrabold mb-2">ยินดีต้อนรับกลับ, คุณ<?= htmlspecialchars($full_name) ?> 👋</h1>
-                <p class="text-indigo-100 text-sm max-w-xl">จัดการใบงาน ตรวจสอบสถิติ และอัปเดตหมายเหตุงานซ่อมของคุณได้จากแดชบอร์ดส่วนตัวนี้ หรือกดรับงานผ่าน LINE Bot ตามปกติ</p>
+                <h1 class="text-2xl md:text-3xl font-bold mb-2">ยินดีต้อนรับกลับ, คุณ<?= htmlspecialchars($full_name) ?> 👋</h1>
+                <p class="text-indigo-100 text-sm max-w-xl font-light">จัดการใบงาน ตรวจสอบสถิติ และอัปเดตหมายเหตุงานซ่อมของคุณได้จากแดชบอร์ดส่วนตัวนี้ หรือกดรับงานผ่าน LINE Bot ตามปกติ</p>
             </div>
             <div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/20 text-center">
-                <span class="block text-xs uppercase tracking-wider text-indigo-200">สถานะระบบ</span>
-                <span class="flex items-center gap-2 font-bold text-sm mt-0.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span> พร้อมปฏิบัติงาน</span>
+                <span class="block text-xs uppercase tracking-wider text-indigo-200 mb-1">สถานะระบบ</span>
+                <span class="flex items-center gap-2 font-bold text-sm"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span> พร้อมปฏิบัติงาน</span>
             </div>
         </div>
 
-        <!-- Stats Cards Grid (ดีไซน์เดียวกับ Admin เป๊ะ + ไอคอน) -->
+        <!-- Stats Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- ก้อนที่ 1: งานที่รับผิดชอบทั้งหมด -->
             <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-purple-500 flex items-center justify-between">
                 <div>
                     <div class="text-4xl font-bold text-slate-800 mb-1"><?= $stats['total'] ?></div>
-                    <div class="text-slate-500 font-medium text-sm">งานที่รับผิดชอบทั้งหมด</div>
+                    <div class="text-sm text-slate-500 font-medium">งานที่รับผิดชอบทั้งหมด</div>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 text-xl">
                     <i class="fas fa-clipboard-list"></i>
                 </div>
             </div>
             
+            <!-- ก้อนที่ 2: รอรับเรื่อง -->
             <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-amber-400 flex items-center justify-between">
                 <div>
                     <div class="text-4xl font-bold text-slate-800 mb-1"><?= $stats['pending'] ?></div>
-                    <div class="text-slate-500 font-medium text-sm">รอรับเรื่อง</div>
+                    <div class="text-sm text-slate-500 font-medium">รอรับเรื่อง</div>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 text-xl">
                     <i class="fas fa-clock"></i>
                 </div>
             </div>
 
+            <!-- ก้อนที่ 3: กำลังดำเนินการ -->
             <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-sky-400 flex items-center justify-between">
                 <div>
                     <div class="text-4xl font-bold text-slate-800 mb-1"><?= $stats['in_progress'] ?></div>
-                    <div class="text-slate-500 font-medium text-sm">กำลังดำเนินการ</div>
+                    <div class="text-sm text-slate-500 font-medium">กำลังดำเนินการ</div>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-sky-50 flex items-center justify-center text-sky-500 text-xl">
                     <i class="fas fa-tools"></i>
                 </div>
             </div>
 
+            <!-- ก้อนที่ 4: ซ่อมเสร็จแล้ว -->
             <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-emerald-400 flex items-center justify-between">
                 <div>
                     <div class="text-4xl font-bold text-slate-800 mb-1"><?= $stats['completed'] ?></div>
-                    <div class="text-slate-500 font-medium text-sm">ซ่อมเสร็จแล้ว</div>
+                    <div class="text-sm text-slate-500 font-medium">ซ่อมเสร็จแล้ว</div>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl">
                     <i class="fas fa-check-double"></i>
@@ -194,62 +202,64 @@ if ($res_repairs) {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <!-- Table Section -->
-            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-                <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-white">
                     <h2 class="font-bold text-slate-800 text-lg">ประวัติและรายการใบงานของฉัน</h2>
                 </div>
-                <!-- เพิ่มความสูงสูงสุดและ Scrollbar ตรงนี้ -->
+                
+                <!-- Table Wrapper (Scrollbar + ธีม Admin) -->
                 <div class="overflow-x-auto overflow-y-auto flex-1 max-h-[500px]">
                     <table class="w-full text-left border-collapse relative whitespace-nowrap">
-                        <thead class="sticky top-0 bg-[#fef08a] z-10 shadow-sm">
-                            <tr class="text-slate-800 text-[10px] sm:text-xs tracking-wider uppercase">
-                                <th class="p-4 font-bold border-b border-[#fde047]">DATE / TIME</th>
-                                <th class="p-4 font-bold border-b border-[#fde047]">TICKET NO.</th>
-                                <th class="p-4 font-bold border-b border-[#fde047]">REPORTER</th>
-                                <th class="p-4 font-bold border-b border-[#fde047]">EQUIPMENT</th>
-                                <th class="p-4 font-bold border-b border-[#fde047]">ROOT CAUSE</th>
-                                <th class="p-4 font-bold border-b border-[#fde047]">STATUS</th>
-                                <th class="p-4 font-bold border-b border-[#fde047] text-center">ACTION</th>
+                        <thead class="sticky top-0 bg-[#fef3c7] z-10">
+                            <tr class="text-slate-800 text-[11px] tracking-wider uppercase">
+                                <th class="px-4 py-3 font-bold border-b border-[#fde68a]">DATE / TIME</th>
+                                <th class="px-4 py-3 font-bold border-b border-[#fde68a]">TICKET NO.</th>
+                                <th class="px-4 py-3 font-bold border-b border-[#fde68a]">REPORTER</th>
+                                <th class="px-4 py-3 font-bold border-b border-[#fde68a]">EQUIPMENT</th>
+                                <th class="px-4 py-3 font-bold border-b border-[#fde68a]">ROOT CAUSE</th>
+                                <th class="px-4 py-3 font-bold border-b border-[#fde68a]">STATUS</th>
+                                <th class="px-4 py-3 font-bold border-b border-[#fde68a] text-center">ACTION</th>
                             </tr>
                         </thead>
                         <tbody class="text-sm divide-y divide-slate-100 bg-white">
                             <?php if (count($repairs) > 0): ?>
                                 <?php foreach ($repairs as $job): 
+                                    // จัดการรูปแบบวันที่และเวลา
                                     $created_at = !empty($job['created_at']) ? strtotime($job['created_at']) : time();
                                     $date_str = date('Y-m-d', $created_at);
                                     $time_str = date('H:i', $created_at);
                                 ?>
                                     <tr class="hover:bg-slate-50 transition-colors">
-                                        <td class="p-4">
+                                        <td class="px-4 py-3">
                                             <div class="text-slate-800"><?= $date_str ?></div>
-                                            <div class="text-blue-600 font-medium"><?= $time_str ?></div>
+                                            <div class="text-blue-600 font-medium text-xs mt-0.5"><?= $time_str ?></div>
                                         </td>
-                                        <td class="p-4 font-medium text-slate-700"><?= htmlspecialchars($job['repair_code'] ?? 'MR-'.$job['id']) ?></td>
-                                        <td class="p-4">
+                                        <td class="px-4 py-3 font-medium text-slate-700"><?= htmlspecialchars($job['repair_code'] ?? 'MR-'.$job['id']) ?></td>
+                                        <td class="px-4 py-3">
                                             <div class="font-bold text-slate-800"><?= htmlspecialchars($job['reporter_name'] ?? 'ไม่ระบุ') ?></div>
-                                            <div class="text-xs text-slate-500"><?= htmlspecialchars($job['reporter_phone'] ?? '-') ?></div>
+                                            <div class="text-xs text-slate-500 mt-0.5"><?= htmlspecialchars($job['reporter_phone'] ?? '-') ?></div>
                                         </td>
-                                        <td class="p-4">
+                                        <td class="px-4 py-3">
                                             <div class="font-bold text-slate-800"><?= htmlspecialchars($job['equipment'] ?? $job['problem'] ?? 'ไม่ระบุ') ?></div>
-                                            <div class="text-xs text-slate-500"><?= htmlspecialchars($job['location'] ?? '-') ?></div>
+                                            <div class="text-xs text-slate-500 mt-0.5"><?= htmlspecialchars($job['location'] ?? '-') ?></div>
                                         </td>
-                                        <td class="p-4 text-slate-600 text-xs max-w-[200px] truncate" title="<?= htmlspecialchars($job['remark'] ?? '') ?>">
+                                        <td class="px-4 py-3 text-slate-600 text-xs max-w-[150px] truncate" title="<?= htmlspecialchars($job['remark'] ?? '') ?>">
                                             <?= !empty($job['remark']) ? htmlspecialchars($job['remark']) : '<span class="text-slate-300">-</span>' ?>
                                         </td>
-                                        <td class="p-4">
+                                        <td class="px-4 py-3">
                                             <?php 
                                                 $status = trim($job['status'] ?? 'รอดำเนินการ');
                                                 if ($status === 'เสร็จสิ้น' || $status === 'ซ่อมเสร็จแล้ว') {
-                                                    $badgeClass = 'text-emerald-500 border border-emerald-500 bg-emerald-50';
+                                                    $badgeClass = 'text-emerald-600 bg-emerald-50 border-emerald-200';
                                                 } elseif ($status === 'กำลังดำเนินการ') {
-                                                    $badgeClass = 'text-sky-500 border border-sky-500 bg-sky-50';
+                                                    $badgeClass = 'text-blue-600 bg-blue-50 border-blue-200';
                                                 } else {
-                                                    $badgeClass = 'text-amber-500 border border-amber-500 bg-amber-50';
+                                                    $badgeClass = 'text-amber-600 bg-amber-50 border-amber-200';
                                                 }
                                             ?>
-                                            <span class="<?= $badgeClass ?> px-3 py-1 rounded-full text-[11px] font-bold inline-block"><?= htmlspecialchars($status) ?></span>
+                                            <span class="px-3 py-1 rounded-full text-[11px] font-bold border <?= $badgeClass ?> inline-block"><?= htmlspecialchars($status) ?></span>
                                         </td>
-                                        <td class="p-4 text-center">
+                                        <td class="px-4 py-3 text-center">
                                             <button onclick="openModal(<?= $job['id'] ?>, '<?= htmlspecialchars(addslashes($job['remark'] ?? '')) ?>')" class="w-8 h-8 rounded border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-colors inline-flex items-center justify-center shadow-sm" title="เพิ่ม/แก้ไขหมายเหตุ">
                                                 <i class="fas fa-edit text-sm"></i>
                                             </button>
@@ -270,7 +280,7 @@ if ($res_repairs) {
             </div>
 
             <!-- Chart Section -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col justify-between">
                 <div>
                     <h2 class="font-bold text-slate-800 text-lg mb-6">สัดส่วนสถานะการดำเนินงาน</h2>
                 </div>
@@ -350,7 +360,7 @@ if ($res_repairs) {
                         labels: {
                             usePointStyle: true,
                             padding: 20,
-                            font: { size: 12 }
+                            font: { family: "'Prompt', sans-serif", size: 12 }
                         }
                     },
                     tooltip: { enabled: totalCount > 0 }
