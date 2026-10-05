@@ -209,11 +209,11 @@ if ($res_recent) {
         </div>
 
         <!-- ปุ่มเมนูแท็บ (ทั้งหมด / ประวัติงาน) -->
-        <div class="flex items-center gap-3 mb-8">
-            <a href="technician_home.php" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 transition-colors">
+        <div class="flex items-center gap-2.5 mb-8">
+            <a href="technician_home.php" class="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-full border border-indigo-600 shadow-md shadow-indigo-200 transition-colors cursor-pointer">
                 ทั้งหมด
             </a>
-            <a href="technician_history.php" class="px-6 py-2.5 bg-white text-slate-600 text-sm font-medium rounded-lg shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
+            <a href="technician_history.php" class="px-6 py-2 bg-white text-slate-600 text-sm font-bold rounded-full shadow-sm border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition-colors cursor-pointer">
                 ประวัติงาน
             </a>
         </div>
