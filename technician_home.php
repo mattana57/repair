@@ -154,20 +154,6 @@ if ($res_recent) {
         </div>
     </nav>
 
-    <!-- Header & Tabs -->
-    <div class="bg-white border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex pt-4 pb-0 gap-2 overflow-x-auto">
-                <a href="technician_home.php" class="px-6 py-3 bg-indigo-600 text-white text-sm font-medium rounded-t-lg shadow-sm">
-                    ทั้งหมด
-                </a>
-                <a href="technician_history.php" class="px-6 py-3 bg-white text-slate-500 hover:text-indigo-600 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:border-indigo-200 transition-colors">
-                    ประวัติงาน
-                </a>
-            </div>
-        </div>
-    </div>
-
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <!-- Welcome Banner -->
@@ -220,6 +206,16 @@ if ($res_recent) {
                     <i class="fas fa-check-double"></i>
                 </div>
             </div>
+        </div>
+
+        <!-- ปุ่มเมนูแท็บ (ทั้งหมด / ประวัติงาน) -->
+        <div class="flex items-center gap-3 mb-8">
+            <a href="technician_home.php" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 transition-colors">
+                ทั้งหมด
+            </a>
+            <a href="technician_history.php" class="px-6 py-2.5 bg-white text-slate-600 text-sm font-medium rounded-lg shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
+                ประวัติงาน
+            </a>
         </div>
 
         <!-- Charts Row 1: Line Chart & Doughnut -->
