@@ -635,7 +635,14 @@ $current_thai_year = date('Y') + 543;
                 else if (st === 'กำลังดำเนินการ') progress++;
                 else if (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') completed++;
 
-                let eq = r.equipment || r.problem || 'ไม่ระบุ';
+                // ✨ ดึงข้อมูลอุปกรณ์ให้ลึกขึ้น ถ้าไม่มีให้ดึงปัญหามาแสดงแทน เพื่อไม่ให้กลายเป็น "ไม่ระบุ" กระจุกเดียว
+                let eq1 = (r.equipment && r.equipment.trim() !== '' && r.equipment !== '-' && r.equipment !== 'ไม่ระบุ') ? r.equipment : null;
+                let eq2 = (r.equipment_type && r.equipment_type.trim() !== '' && r.equipment_type !== '-' && r.equipment_type !== 'ไม่ระบุ') ? r.equipment_type : null;
+                let p1 = (r.problem && r.problem.trim() !== '' && r.problem !== '-' && r.problem !== 'ไม่ระบุ') ? r.problem : null;
+                let p2 = (r.problem_desc && r.problem_desc.trim() !== '' && r.problem_desc !== '-' && r.problem_desc !== 'ไม่ระบุ') ? r.problem_desc : null;
+                
+                let eq = eq1 || eq2 || p1 || p2 || 'ไม่ระบุ';
+                if (eq.length > 20) eq = eq.substring(0, 20) + '...';
                 eqMap[eq] = (eqMap[eq] || 0) + 1;
 
                 let loc = r.location || 'ไม่ระบุสถานที่';
@@ -648,11 +655,20 @@ $current_thai_year = date('Y') + 543;
 
             // Equipment Chart
             let eqSorted = Object.keys(eqMap).map(k => ({name: k, count: eqMap[k]})).sort((a,b) => b.count - a.count).slice(0, 6);
+            
+            // ✨ ทริคแก้ปัญหากราฟเส้น: ถ้ามีข้อมูลแค่จุดเดียว ให้เพิ่มจุดซ้าย-ขวาหลอกๆ ให้มันวาดเป็นเส้นทรงภูเขาได้สวยงาม ✨
+            if (eqSorted.length === 1 && eqSorted[0].name !== 'ไม่มีข้อมูล') {
+                eqSorted.unshift({ name: '', count: 0 });
+                eqSorted.push({ name: ' ', count: 0 });
+            }
+
             const eqCtx = document.getElementById('eqChart').getContext('2d');
+            if (window.eqChartInstance) window.eqChartInstance.destroy(); // ล้างของเก่ากันซ้อน
+
             let gradient = eqCtx.createLinearGradient(0, 0, 0, 400);
             gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
             
-            new Chart(eqCtx, {
+            window.eqChartInstance = new Chart(eqCtx, {
                 type: 'line',
                 data: {
                     labels: eqSorted.length ? eqSorted.map(e => e.name) : ['ไม่มีข้อมูล'],
@@ -675,8 +691,10 @@ $current_thai_year = date('Y') + 543;
 
             // Status Chart
             const statusCtx = document.getElementById('statusChart').getContext('2d');
+            if (window.statusChartInstance) window.statusChartInstance.destroy();
+
             let totalStatus = pending + progress + completed;
-            new Chart(statusCtx, {
+            window.statusChartInstance = new Chart(statusCtx, {
                 type: 'doughnut',
                 data: {
                     labels: totalStatus === 0 ? ['ไม่มีข้อมูล'] : ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'],
@@ -698,7 +716,9 @@ $current_thai_year = date('Y') + 543;
             // Location Chart
             let locSorted = Object.keys(locMap).map(k => ({name: k, count: locMap[k]})).sort((a,b) => b.count - a.count).slice(0, 5);
             const locCtx = document.getElementById('locChart').getContext('2d');
-            new Chart(locCtx, {
+            if (window.locChartInstance) window.locChartInstance.destroy();
+
+            window.locChartInstance = new Chart(locCtx, {
                 type: 'bar',
                 data: {
                     labels: locSorted.length ? locSorted.map(e => e.name) : ['ไม่มีข้อมูล'],
@@ -757,6 +777,7 @@ $current_thai_year = date('Y') + 543;
                 repContainer.innerHTML = html;
             }
         }
+
 
         // 3. ฟังก์ชันวาดตารางย่อ (หน้า Dash) ดึงแค่ 5 อันล่าสุด
         function renderDashTable() {
