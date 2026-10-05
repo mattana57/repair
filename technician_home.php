@@ -243,14 +243,47 @@ $current_thai_year = date('Y') + 543;
                 </div>
             <?php endif; ?>
 
+            <?php
+            // ดึงข้อมูลตำแหน่งและฝ่ายงานเพื่อมาแสดงใน Banner
+            $tech_position = 'ไม่ระบุตำแหน่ง';
+            $tech_department = 'ไม่ระบุฝ่ายงาน';
+            $tech_icon = 'fas fa-tools'; // ไอคอนเริ่มต้น
+
+            if (!empty($full_name)) {
+                if (isset($tech_info_map[$full_name]) && !empty($tech_info_map[$full_name]['pos'])) {
+                    $tech_position = $tech_info_map[$full_name]['pos'];
+                }
+                if (isset($tech_dept_map[$full_name]) && !empty($tech_dept_map[$full_name])) {
+                    $tech_department = $tech_dept_map[$full_name];
+                }
+            }
+
+            // กำหนดไอคอนตามฝ่ายงานให้เหมือนฝั่งแอดมิน
+            if (strpos($tech_department, 'เทคโนโลยีดิจิทัล') !== false) {
+                $tech_icon = 'fas fa-laptop-code';
+            } elseif (strpos($tech_department, 'ยานยนต์') !== false) {
+                $tech_icon = 'fas fa-car';
+            } elseif (strpos($tech_department, 'โสตทัศนูปกรณ์') !== false) {
+                $tech_icon = 'fas fa-video';
+            } elseif (strpos($tech_department, 'แม่บ้าน') !== false) {
+                $tech_icon = 'fas fa-broom';
+            }
+            ?>
             <!-- Welcome Banner -->
-            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white shadow-lg mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-bold mb-2">ยินดีต้อนรับ คุณ<?= htmlspecialchars($full_name) ?> 👋</h1>
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white shadow-lg mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+                <div class="flex items-center gap-4 relative z-10">
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-inner shrink-0">
+                        <i class="<?= $tech_icon ?> text-2xl sm:text-3xl drop-shadow-md"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-extrabold mb-1 drop-shadow-md"><?= htmlspecialchars($full_name) ?> 👋</h1>
+                        <h2 class="text-lg md:text-xl font-bold text-indigo-100 drop-shadow-md"><?= htmlspecialchars($tech_department) ?></h2>
+                        <p class="text-xs md:text-sm font-medium text-indigo-200 mt-0.5 tracking-wider">ทีมเจ้าหน้าที่ผู้รับผิดชอบประจำฝ่าย</p>
+                    </div>
                 </div>
-                <div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/20 text-center">
-                    <span class="block text-xs uppercase tracking-wider text-indigo-200 mb-1">สถานะระบบ</span>
-                    <span class="flex items-center gap-2 font-bold text-sm"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span> พร้อมปฏิบัติงาน</span>
+                <div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/20 text-center relative z-10 shrink-0">
+                    <span class="block text-[10px] uppercase tracking-wider text-indigo-200 mb-1">ตำแหน่งงาน</span>
+                    <span class="flex items-center gap-2 font-bold text-sm"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span> <?= htmlspecialchars($tech_position) ?></span>
                 </div>
             </div>
 
@@ -419,7 +452,7 @@ $current_thai_year = date('Y') + 543;
                         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
                             <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] group">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchHistoryInput" oninput="renderHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหา รหัสงาน, ชื่อผู้แจ้ง, อุปกรณ์..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="searchHistoryInput" oninput="renderHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                                 <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', renderHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
 
