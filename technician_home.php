@@ -132,7 +132,7 @@ $stmt_repairs->close();
                     <div class="text-sm text-slate-500 font-bold">งานที่รับผิดชอบทั้งหมด</div>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 text-xl">
-                    <i class="fas fa-clipboard-list"></i>
+                    <i class="fas fa-layer-group"></i>
                 </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-amber-400 flex items-center justify-between">
@@ -150,7 +150,7 @@ $stmt_repairs->close();
                     <div class="text-sm text-slate-500 font-bold">กำลังดำเนินการ</div>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-sky-50 flex items-center justify-center text-sky-500 text-xl">
-                    <i class="fas fa-tools"></i>
+                    <i class="fas fa-spinner"></i>
                 </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-emerald-400 flex items-center justify-between">
@@ -159,7 +159,7 @@ $stmt_repairs->close();
                     <div class="text-sm text-slate-500 font-bold">ซ่อมเสร็จแล้ว</div>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl">
-                    <i class="fas fa-check-double"></i>
+                    <i class="fas fa-check-circle"></i>
                 </div>
             </div>
         </div>
