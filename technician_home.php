@@ -116,50 +116,30 @@ $stmt_repairs->close();
             </div>
         </div>
 
-        <!-- Stats Cards Grid (4 ก้อน ใช้สีตามฝั่งแอดมิน) -->
+        <!-- Stats Cards Grid (ดีไซน์เดียวกับ Admin เป๊ะ: ไม่มีพื้นหลังไอคอน, ขอบสีอยู่ด้านล่าง) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- ก้อนที่ 1: งานที่รับผิดชอบทั้งหมด (สีฟ้า/น้ำเงิน) -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-sky-500">
-                <div class="bg-sky-50 text-sky-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">งานที่รับผิดชอบทั้งหมด</p>
-                    <p class="text-3xl font-extrabold text-slate-800 mt-1"><?= $stats['total'] ?> <span class="text-sm font-normal text-slate-400">รายการ</span></p>
-                </div>
+            <!-- ก้อนที่ 1: งานที่รับผิดชอบทั้งหมด (สีม่วง) -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-purple-500">
+                <div class="text-slate-500 font-medium mb-2 text-sm text-center">งานที่รับผิดชอบทั้งหมด</div>
+                <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['total'] ?></div>
             </div>
             
-            <!-- ก้อนที่ 2: รอรับเรื่อง (สีส้ม/เหลือง) -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-amber-500">
-                <div class="bg-amber-50 text-amber-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">รอรับเรื่อง</p>
-                    <p class="text-3xl font-extrabold text-slate-800 mt-1"><?= $stats['pending'] ?> <span class="text-sm font-normal text-slate-400">รายการ</span></p>
-                </div>
+            <!-- ก้อนที่ 2: รอรับเรื่อง (สีเหลือง/ส้ม) -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-amber-400">
+                <div class="text-slate-500 font-medium mb-2 text-sm text-center">รอรับเรื่อง</div>
+                <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['pending'] ?></div>
             </div>
 
-            <!-- ก้อนที่ 3: กำลังดำเนินการ (สีม่วง/น้ำเงินเข้ม) -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-indigo-600">
-                <div class="bg-indigo-50 text-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
-                    <i class="fas fa-tools"></i>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">กำลังดำเนินการ</p>
-                    <p class="text-3xl font-extrabold text-slate-800 mt-1"><?= $stats['in_progress'] ?> <span class="text-sm font-normal text-slate-400">รายการ</span></p>
-                </div>
+            <!-- ก้อนที่ 3: กำลังดำเนินการ (สีฟ้า) -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-sky-400">
+                <div class="text-slate-500 font-medium mb-2 text-sm text-center">กำลังดำเนินการ</div>
+                <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['in_progress'] ?></div>
             </div>
 
             <!-- ก้อนที่ 4: ซ่อมเสร็จแล้ว (สีเขียว) -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-emerald-500">
-                <div class="bg-emerald-50 text-emerald-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner">
-                    <i class="fas fa-check-double"></i>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">ซ่อมเสร็จแล้ว</p>
-                    <p class="text-3xl font-extrabold text-slate-800 mt-1"><?= $stats['completed'] ?> <span class="text-sm font-normal text-slate-400">รายการ</span></p>
-                </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border-b-4 border-emerald-400">
+                <div class="text-slate-500 font-medium mb-2 text-sm text-center">ซ่อมเสร็จแล้ว</div>
+                <div class="text-4xl font-bold text-slate-800 text-center"><?= $stats['completed'] ?></div>
             </div>
         </div>
 
@@ -167,17 +147,14 @@ $stmt_repairs->close();
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <!-- Table Section (2/3 Width) -->
-            <div class="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-                <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <h2 class="font-bold text-slate-800 flex items-center gap-2">
-                        <i class="fas fa-history text-indigo-500"></i> ประวัติและรายการใบงานของฉัน
-                    </h2>
-                    <span class="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-1 rounded-full"><?= count($repairs) ?> งานล่าสุด</span>
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
+                    <h2 class="font-bold text-slate-800 text-lg">ประวัติและรายการใบงานของฉัน</h2>
                 </div>
                 <div class="overflow-x-auto flex-1">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-50 text-slate-400 text-[11px] uppercase tracking-wider">
+                            <tr class="bg-slate-50 text-slate-500 text-xs tracking-wider">
                                 <th class="p-4 font-bold border-b border-slate-100">รหัสงาน</th>
                                 <th class="p-4 font-bold border-b border-slate-100">ปัญหา / สถานที่</th>
                                 <th class="p-4 font-bold border-b border-slate-100">หมายเหตุช่าง</th>
@@ -185,28 +162,34 @@ $stmt_repairs->close();
                                 <th class="p-4 font-bold border-b border-slate-100 text-center">จัดการ</th>
                             </tr>
                         </thead>
-                        <tbody class="text-sm divide-y divide-slate-50">
+                        <tbody class="text-sm divide-y divide-slate-100">
                             <?php if (count($repairs) > 0): ?>
                                 <?php foreach ($repairs as $job): ?>
                                     <tr class="hover:bg-slate-50/80 transition-colors">
-                                        <td class="p-4 font-bold text-indigo-600">#<?= htmlspecialchars($job['repair_code'] ?? $job['id']) ?></td>
+                                        <td class="p-4 font-medium text-slate-700">#<?= htmlspecialchars($job['repair_code'] ?? $job['id']) ?></td>
                                         <td class="p-4">
-                                            <div class="font-semibold text-slate-800"><?= htmlspecialchars($job['problem'] ?? 'ไม่ระบุ') ?></div>
-                                            <div class="text-xs text-slate-400 mt-0.5"><i class="fas fa-map-marker-alt text-rose-400 mr-1"></i> <?= htmlspecialchars($job['location'] ?? '-') ?></div>
+                                            <div class="font-medium text-slate-800"><?= htmlspecialchars($job['problem'] ?? 'ไม่ระบุ') ?></div>
+                                            <div class="text-xs text-slate-400 mt-0.5"><?= htmlspecialchars($job['location'] ?? '-') ?></div>
                                         </td>
                                         <td class="p-4 text-slate-600 text-xs">
                                             <?= !empty($job['remark']) ? htmlspecialchars($job['remark']) : '<span class="text-slate-300 italic">ยังไม่มีหมายเหตุ</span>' ?>
                                         </td>
                                         <td class="p-4">
                                             <?php 
-                                                $status = $job['status'] ?? 'รอดำเนินการ';
-                                                $badgeClass = ($status === 'เสร็จสิ้น' || $status === 'ซ่อมเสร็จแล้ว') ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700';
+                                                $status = trim($job['status'] ?? 'รอดำเนินการ');
+                                                if ($status === 'เสร็จสิ้น' || $status === 'ซ่อมเสร็จแล้ว') {
+                                                    $badgeClass = 'bg-emerald-100 text-emerald-700';
+                                                } elseif ($status === 'กำลังดำเนินการ') {
+                                                    $badgeClass = 'bg-sky-100 text-sky-700';
+                                                } else {
+                                                    $badgeClass = 'bg-amber-100 text-amber-700';
+                                                }
                                             ?>
-                                            <span class="<?= $badgeClass ?> px-3 py-1 rounded-full text-xs font-bold inline-block"><?= $status ?></span>
+                                            <span class="<?= $badgeClass ?> px-3 py-1 rounded-full text-xs font-medium inline-block"><?= htmlspecialchars($status) ?></span>
                                         </td>
                                         <td class="p-4 text-center">
-                                            <button onclick="openModal(<?= $job['id'] ?>, '<?= htmlspecialchars(addslashes($job['remark'] ?? '')) ?>')" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 transition-colors inline-flex items-center justify-center shadow-sm" title="เพิ่ม/แก้ไขหมายเหตุ">
-                                                <i class="fas fa-pen text-xs"></i>
+                                            <button onclick="openModal(<?= $job['id'] ?>, '<?= htmlspecialchars(addslashes($job['remark'] ?? '')) ?>')" class="w-8 h-8 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors inline-flex items-center justify-center" title="เพิ่ม/แก้ไขหมายเหตุ">
+                                                <i class="fas fa-edit text-sm"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -225,17 +208,14 @@ $stmt_repairs->close();
             </div>
 
             <!-- Chart Section (1/3 Width) -->
-            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
                 <div>
-                    <h2 class="font-bold text-slate-800 mb-1 flex items-center gap-2">
-                        <i class="fas fa-chart-pie text-indigo-500"></i> สัดส่วนประสิทธิภาพงาน
-                    </h2>
-                    <p class="text-xs text-slate-400 mb-6">เปรียบเทียบงานที่กำลังทำและเสร็จสิ้นแล้ว</p>
+                    <h2 class="font-bold text-slate-800 text-lg mb-6">สัดส่วนสถานะการดำเนินงาน</h2>
                 </div>
                 <div class="relative w-full flex justify-center items-center py-4">
-                    <canvas id="jobChart" style="max-height: 220px;"></canvas>
+                    <canvas id="jobChart" style="max-height: 250px;"></canvas>
                 </div>
-                <div class="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-400">
+                <div class="mt-6 pt-4 text-center text-xs text-slate-400 hidden">
                     ข้อมูลอัปเดตแบบเรียลไทม์จากฐานข้อมูลกลาง
                 </div>
             </div>
@@ -246,13 +226,11 @@ $stmt_repairs->close();
 
     <!-- Modal สำหรับเพิ่ม/แก้ไขหมายเหตุ -->
     <div id="noteModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl transform transition-all">
+        <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-xl transform transition-all">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-comment-medical text-indigo-500"></i> จัดการหมายเหตุใบงาน
-                </h3>
-                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors flex items-center justify-center">
-                    <i class="fas fa-times"></i>
+                <h3 class="text-lg font-bold text-slate-800">เพิ่ม/แก้ไขหมายเหตุ</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <form method="POST">
@@ -260,13 +238,12 @@ $stmt_repairs->close();
                 <input type="hidden" name="repair_id" id="modal_repair_id" value="">
                 
                 <div class="mb-5">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">รายละเอียดหมายเหตุ / ความคืบหน้า / อะไหล่</label>
-                    <textarea name="remark" id="modal_remark" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-100 outline-none resize-none text-slate-700" placeholder="ระบุข้อมูลเพิ่มเติมเพื่อให้ผู้แจ้งรับทราบ..."></textarea>
+                    <textarea name="remark" id="modal_remark" rows="4" class="w-full border border-slate-200 rounded p-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none text-slate-700" placeholder="พิมพ์ข้อความ..."></textarea>
                 </div>
                 
                 <div class="flex justify-end gap-3">
-                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-sm transition-colors">ยกเลิก</button>
-                    <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-colors shadow-md shadow-indigo-100">บันทึกข้อมูล</button>
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-sm font-medium transition-colors">ยกเลิก</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium transition-colors">บันทึก</button>
                 </div>
             </form>
         </div>
@@ -275,15 +252,36 @@ $stmt_repairs->close();
     <script>
         // Render Chart.js
         const ctx = document.getElementById('jobChart').getContext('2d');
+        
+        // ข้อมูลตัวแปรสำหรับกราฟ
+        const pendingCount = <?= $stats['pending'] ?>;
+        const inProgressCount = <?= $stats['in_progress'] ?>;
+        const completedCount = <?= $stats['completed'] ?>;
+        
+        // ตรวจสอบว่ามีข้อมูลอย่างน้อย 1 รายการหรือไม่เพื่อแสดงกราฟ
+        const totalCount = pendingCount + inProgressCount + completedCount;
+        
+        let chartData, chartColors;
+        
+        if (totalCount === 0) {
+            // ถ้าไม่มีข้อมูล ให้โชว์โดนัทสีเทา
+            chartData = [1];
+            chartColors = ['#e2e8f0'];
+        } else {
+            chartData = [pendingCount, inProgressCount, completedCount];
+            // ใช้สีให้ตรงกับฝั่ง Admin: ส้มเหลือง, ฟ้า, เขียว
+            chartColors = ['#fbbf24', '#38bdf8', '#10b981'];
+        }
+
         new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'],
+                labels: totalCount === 0 ? ['ไม่มีข้อมูล'] : ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'],
                 datasets: [{
-                    data: [<?= $stats['pending'] ?>, <?= $stats['in_progress'] ?>, <?= $stats['completed'] ?>],
-                    backgroundColor: ['#f59e0b', '#4f46e5', '#10b981'],
+                    data: chartData,
+                    backgroundColor: chartColors,
                     borderWidth: 0,
-                    hoverOffset: 6
+                    hoverOffset: totalCount === 0 ? 0 : 4
                 }]
             },
             options: {
@@ -292,11 +290,16 @@ $stmt_repairs->close();
                 cutout: '75%',
                 plugins: {
                     legend: { 
+                        display: totalCount > 0, // ซ่อน Legend ถ้าไม่มีข้อมูล
                         position: 'bottom',
                         labels: {
-                            boxWidth: 12,
-                            font: { family: 'sans-serif', size: 12 }
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 12 }
                         }
+                    },
+                    tooltip: {
+                        enabled: totalCount > 0 // ซ่อน Tooltip ถ้าไม่มีข้อมูล
                     }
                 }
             }
