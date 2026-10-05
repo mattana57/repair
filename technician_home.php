@@ -217,7 +217,7 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
             <!-- Welcome Banner -->
             <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white shadow-lg mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-bold mb-2">ยินดีต้อนรับกลับ, คุณ<?= htmlspecialchars($full_name) ?> 👋</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold mb-2">ยินดีต้อนรับ คุณ<?= htmlspecialchars($full_name) ?> 👋</h1>
                     <p class="text-indigo-100 text-sm max-w-xl font-light">จัดการใบงาน ตรวจสอบสถิติ และอัปเดตหมายเหตุงานซ่อมของคุณได้จากแดชบอร์ดส่วนตัวนี้ หรือกดรับงานผ่าน LINE Bot ตามปกติ</p>
                 </div>
                 <div class="bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/20 text-center">
