@@ -178,10 +178,11 @@ if ($res_repairs) {
                 <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
                     <h2 class="font-bold text-slate-800 text-lg">ประวัติและรายการใบงานของฉัน</h2>
                 </div>
-                <div class="overflow-x-auto flex-1">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-500 text-xs tracking-wider">
+                <!-- เพิ่มความสูงสูงสุดและ Scrollbar ตรงนี้ -->
+                <div class="overflow-x-auto overflow-y-auto flex-1 max-h-[400px]">
+                    <table class="w-full text-left border-collapse relative">
+                        <thead class="sticky top-0 bg-slate-50 z-10">
+                            <tr class="text-slate-500 text-xs tracking-wider">
                                 <th class="p-4 font-bold border-b border-slate-100">รหัสงาน</th>
                                 <th class="p-4 font-bold border-b border-slate-100">ปัญหา / สถานที่</th>
                                 <th class="p-4 font-bold border-b border-slate-100">หมายเหตุช่าง</th>
