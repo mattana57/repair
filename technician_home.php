@@ -173,7 +173,7 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                         <i class="fas fa-tools text-xl"></i>
                     </div>
                     <div>
-                        <span class="font-bold text-lg tracking-wide">MBS <span class="font-light">Technician Portal</span></span>
+                        <span class="font-bold text-lg tracking-wide">MBS <span class="font-light">Technician</span></span>
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
@@ -334,7 +334,7 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                     </div>
                 </div>
 
-                <!-- ตารางหน้าแรก -->
+                <!-- ตารางหน้าแรก (สไตล์เดียวกับ Admin) -->
                 <div class="modern-card overflow-hidden flex flex-col mb-12">
                     <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                         <div>
@@ -345,18 +345,19 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                             See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
                         </button>
                     </div>
-                    <div class="overflow-x-auto pb-4 custom-scrollbar table-wrapper-fix">
-                        <table class="w-full text-left whitespace-nowrap">
-                            <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
+                    <!-- ✨ เปลี่ยนโครงสร้าง Class ให้เหมือนฝั่ง Admin 100% ✨ -->
+                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
+                        <table class="w-full text-left whitespace-nowrap min-w-[700px]">
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-extrabold">
                                 <tr>
-                                    <th class="px-6 py-4">Date / Time</th>
-                                    <th class="px-6 py-4">Ticket No.</th>
-                                    <th class="px-6 py-4">Reporter</th>
-                                    <th class="px-6 py-4">Equipment</th>
-                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 border-0">Date / Time</th>
+                                    <th class="px-6 py-4 border-0">Ticket No.</th>
+                                    <th class="px-6 py-4 border-0">Reporter</th>
+                                    <th class="px-6 py-4 border-0">Equipment</th>
+                                    <th class="px-6 py-4 text-center border-0">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-sm divide-y divide-slate-100" id="dashTableBody">
+                            <tbody class="text-sm divide-y divide-slate-100 bg-white" id="dashTableBody">
                                 <!-- JS จะใส่ข้อมูล 5 งานล่าสุดที่นี่ -->
                             </tbody>
                         </table>
@@ -407,19 +408,20 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                     </div>
 
                     <!-- ตารางแบบ History Modal (แสดงครบถ้วนเหมือนรูปที่ 40) -->
-                    <div class="overflow-x-auto lg:overflow-x-hidden w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1 table-wrapper-fix" id="repairsTableContainer">
-                        <table class="w-full text-left whitespace-nowrap lg:whitespace-normal lg:min-w-0" id="historyTableFull">
-                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                    <!-- ✨ เปลี่ยนโครงสร้าง Class ให้เหมือนฝั่ง Admin 100% ✨ -->
+                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
+                        <table class="w-full text-left whitespace-nowrap min-w-[1100px]" id="historyTableFull">
+                            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-extrabold sticky top-0 z-20 shadow-sm">
                                 <tr>
-                                    <th class="px-6 py-4">Date / Time</th>
-                                    <th class="px-6 py-4">Ticket No.</th>
-                                    <th class="px-6 py-4">Reporter</th>
-                                    <th class="px-6 py-4">Equipment</th>
-                                    <th class="px-6 py-4">Received At</th>
-                                    <th class="px-6 py-4">Root Cause</th>
-                                    <th class="px-6 py-4 text-center">Status</th>
-                                    <th class="px-6 py-4">Completed At</th>
-                                    <th class="px-6 py-4 text-center">Action</th>
+                                    <th class="px-6 py-4 border-0">Date / Time</th>
+                                    <th class="px-6 py-4 border-0">Ticket No.</th>
+                                    <th class="px-6 py-4 border-0">Reporter</th>
+                                    <th class="px-6 py-4 border-0">Equipment</th>
+                                    <th class="px-6 py-4 border-0">Received At</th>
+                                    <th class="px-6 py-4 border-0">Root Cause</th>
+                                    <th class="px-6 py-4 text-center border-0">Status</th>
+                                    <th class="px-6 py-4 border-0">Completed At</th>
+                                    <th class="px-6 py-4 text-center border-0">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white" id="historyTableBody">
@@ -433,30 +435,7 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
         </div>
     </main>
 
-    <!-- Modal เพิ่ม/แก้ไขหมายเหตุ (ของเดิม) -->
-    <div id="noteModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-xl transform transition-all">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-slate-800">เพิ่ม/แก้ไขหมายเหตุ</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-rose-500 transition-colors bg-slate-50 hover:bg-rose-50 w-8 h-8 rounded-full flex justify-center items-center">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="update_remark">
-                <input type="hidden" name="repair_id" id="modal_repair_id" value="">
-                
-                <div class="mb-5">
-                    <textarea name="remark" id="modal_remark" rows="4" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none text-slate-700 bg-slate-50" placeholder="พิมพ์ข้อความที่ต้องการแจ้งให้ผู้ใช้งานทราบ..."></textarea>
-                </div>
-                
-                <div class="flex justify-end gap-3">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold transition-colors">ยกเลิก</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-200 transition-all">บันทึกข้อมูล</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- ✨ ลบ Modal ทิ้งทั้งหมด (เพราะเราจะให้ปุ่ม Action ลิงก์ไปที่ update_repair.php แทน) ✨ -->
 
     <!-- Javascript สำหรับวาดกราฟและตาราง -->
     <script>
@@ -643,23 +622,25 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
 
                 html += `
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4">
+                        <td class="px-6 py-4 align-top">
                             <div class="text-slate-800 font-bold">${dt[0]}</div>
                             <div class="text-blue-600 font-bold text-[11px] mt-0.5">${dt[1].substring(0, 5)}</div>
                         </td>
-                        <td class="px-6 py-4 font-mono font-bold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
-                        <td class="px-6 py-4 flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-400 flex items-center justify-center text-xs"><i class="fas fa-user"></i></div>
-                            <div>
-                                <div class="font-bold text-slate-800">${dName}</div>
-                                <div class="text-[11px] text-slate-500 font-medium mt-0.5">${r.reporter_phone || '-'}</div>
+                        <td class="px-6 py-4 align-top font-mono font-bold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
+                        <td class="px-6 py-4 align-top">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-400 flex items-center justify-center text-xs shrink-0"><i class="fas fa-user"></i></div>
+                                <div>
+                                    <div class="font-bold text-slate-800">${dName}</div>
+                                    <div class="text-[11px] text-slate-500 font-medium mt-0.5">${r.reporter_phone || '-'}</div>
+                                </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-6 py-4 align-top">
                             <div class="font-bold text-slate-800">${r.equipment || r.problem || 'ไม่ระบุ'} ${imgIcon}</div>
                             <div class="text-[11px] text-slate-500 font-medium mt-0.5">${r.location || '-'}</div>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-6 py-4 align-middle text-center">
                             <span class="px-3 py-1 rounded-full text-[11px] font-bold border ${bClass} inline-block shadow-sm">${st}</span>
                         </td>
                     </tr>`;
@@ -693,8 +674,9 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
             let html = '';
             filtered.forEach(r => {
                 let st = (r.status || 'รอดำเนินการ').trim();
-                let bClass = (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') ? 'badge-success' :
-                             (st === 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-pending';
+                // ✨ อัปเดตคลาสสีสถานะให้สว่างและสวยเหมือน Admin ✨
+                let bClass = (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
+                             (st === 'กำลังดำเนินการ') ? 'text-sky-600 bg-sky-50 border-sky-200' : 'text-amber-600 bg-amber-50 border-amber-200';
                 
                 let dt = (r.created_at && r.created_at !== '0000-00-00 00:00:00') ? r.created_at.split(' ') : ['-', ''];
                 let rec = (r.received_at && r.received_at !== '0000-00-00 00:00:00') ? r.received_at.split(' ') : ['-', ''];
@@ -704,16 +686,19 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                 let imgIcon = r.image_path ? `<i class="fas fa-image text-slate-300 ml-1" title="มีรูปภาพ"></i>` : '';
                 let cause = (!r.root_cause || r.root_cause === '-') ? `<span class='text-rose-500 font-bold'>-</span>` : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
 
+                // ✨ แก้ลิงก์ปุ่ม Action ให้ไปหน้า update_repair.php เหมือนแอดมิน ✨
+                let actionBtn = `<a target="_blank" href="update_repair.php?id=${r.id}" class="w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm" title="Edit"><i class="fas fa-pen-to-square"></i></a>`;
+
                 html += `
                     <tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
-                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
-                            <div class="font-medium text-slate-700">${dt[0]}</div>
+                        <td class="px-6 py-4 align-top">
+                            <div class="font-bold text-slate-800">${dt[0]}</div>
                             ${dt[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${dt[1].substring(0, 5)}</div>` : ''}
                         </td>
-                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
+                        <td class="px-6 py-4 align-top font-mono font-bold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
                         <td class="px-6 py-4 align-top">
-                            <div class='flex items-center'>
-                                <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mr-3 shrink-0'><i class='fas fa-user text-xs'></i></div>
+                            <div class='flex items-center gap-3'>
+                                <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0'><i class='fas fa-user text-xs'></i></div>
                                 <div>
                                     <div class="text-slate-800 font-bold">${dName}</div>
                                     <div class="text-slate-500 text-[11px] font-medium mt-0.5">${r.reporter_phone || '-'}</div>
@@ -725,18 +710,18 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
                             <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${r.problem_desc || '-'}">${r.problem_desc || '-'}</div>
                         </td>
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
-                            <div class='font-medium text-slate-700'>${rec[0]}</div>
+                            <div class='font-bold text-slate-800'>${rec[0]}</div>
                             ${rec[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${rec[1].substring(0, 5)}</div>` : ''}
                         </td>
                         <td class="px-6 py-4 align-top">${cause}</td>
-                        <td class="px-6 py-4 align-middle text-center"><span class="${bClass}">${st}</span></td>
+                        <td class="px-6 py-4 align-middle text-center"><span class="px-3 py-1 rounded-full text-[11px] font-bold border ${bClass} inline-block shadow-sm">${st}</span></td>
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
-                            <div class='font-medium text-emerald-700'>${com[0]}</div>
+                            <div class='font-bold text-emerald-700'>${com[0]}</div>
                             ${com[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${com[1].substring(0, 5)}</div>` : ''}
                         </td>
                         <td class="px-6 py-4 align-middle text-center">
                             <div class='flex items-center justify-center'>
-                                <div onclick="openModal(${r.id}, '${r.remark ? r.remark.replace(/'/g, "\\'") : ''}')" class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='แก้ไขหมายเหตุช่าง'><i class='fas fa-pen-to-square'></i></div>
+                                ${actionBtn}
                             </div>
                         </td>
                     </tr>`;
@@ -827,20 +812,6 @@ $line_users_map_json = json_encode($line_users_map, JSON_UNESCAPED_UNICODE);
             }
         }
 
-        // ควบคุม Modal หมายเหตุ
-        const modal = document.getElementById('noteModal');
-        const repairInput = document.getElementById('modal_repair_id');
-        const remarkInput = document.getElementById('modal_remark');
-
-        function openModal(id, currentRemark) {
-            repairInput.value = id;
-            remarkInput.value = currentRemark;
-            modal.classList.remove('hidden');
-        }
-
-        function closeModal() {
-            modal.classList.add('hidden');
-        }
     </script>
 </body>
 </html>
