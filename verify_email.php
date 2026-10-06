@@ -60,11 +60,23 @@ if ($action === 'request_otp') {
     }
     $stmt_check_delay->close();
 
+    // จำกัดจำนวนคำขอต่อบัญชี (เช่น ไม่เกิน 5 ครั้งใน 1 ชั่วโมง)
+    $stmt_limit = $conn->prepare("SELECT COUNT(id) as req_count FROM auth_requests WHERE user_id = ? AND purpose = 'email_verification' AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+    $stmt_limit->bind_param("i", $user_id);
+    $stmt_limit->execute();
+    $req_count = $stmt_limit->get_result()->fetch_assoc()['req_count'];
+    $stmt_limit->close();
+    
+    if ($req_count >= 5) {
+        echo json_encode(['status' => 'error', 'message' => 'คุณทำรายการบ่อยเกินไป กรุณาลองใหม่ในอีก 1 ชั่วโมง']);
+        exit();
+    }
+
     // ยกเลิกคำขอยืนยันอีเมลเดิมทั้งหมดที่ยังไม่หมดอายุ
     $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE user_id = $user_id AND purpose = 'email_verification'");
 
-    // สร้าง OTP 6 หลัก และ Token สุ่ม
-    $otp_code = sprintf("%06d", mt_rand(100000, 999999));
+    // สร้าง OTP 6 หลัก แบบปลอดภัยทาง Cryptography (random_int)
+    $otp_code = sprintf("%06d", random_int(100000, 999999));
     $otp_hash = password_hash($otp_code, PASSWORD_DEFAULT);
     $request_token = bin2hex(random_bytes(32)); // ไม่ใช้เลขบัญชีเป็นโทเคน
     

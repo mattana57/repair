@@ -55,29 +55,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // หากบัญชีถูกต้อง ให้สร้างคำขอจริงและส่งอีเมล
+        // หากบัญชีถูกต้อง ให้ตรวจสอบเงื่อนไขก่อนสร้างคำขอจริงและส่งอีเมล
         if ($is_valid && $target_email) {
-            // ยกเลิกคำขอรีเซ็ตรหัสผ่านเดิมทั้งหมด
+            
+            // 1. ตรวจสอบการขอซ้ำซ้อน (Cooldown 60 วินาที)
+            $stmt_check_delay = $conn->prepare("SELECT last_sent_at FROM auth_requests WHERE user_id = ? AND purpose = 'password_reset' AND is_canceled = 0 ORDER BY created_at DESC LIMIT 1");
+            $stmt_check_delay->bind_param("i", $user['id']);
+            $stmt_check_delay->execute();
+            $res_delay = $stmt_check_delay->get_result();
+            if ($res_delay->num_rows > 0) {
+                $last_sent = strtotime($res_delay->fetch_assoc()['last_sent_at']);
+                if ((time() - $last_sent) < 60) {
+                    // ตอบกลับแบบเป็นกลางเพื่อป้องกันการเดาบัญชี แต่ไม่ออกคำขอใหม่
+                    echo json_encode(['status' => 'success', 'token' => $fake_token, 'message' => $neutral_message]);
+                    exit();
+                }
+            }
+            $stmt_check_delay->close();
+
+            // 2. จำกัดจำนวนคำขอต่อบัญชี (เช่น ไม่เกิน 5 ครั้งต่อ 1 ชั่วโมง)
+            $stmt_limit = $conn->prepare("SELECT COUNT(id) as req_count FROM auth_requests WHERE user_id = ? AND purpose = 'password_reset' AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+            $stmt_limit->bind_param("i", $user['id']);
+            $stmt_limit->execute();
+            $req_count = $stmt_limit->get_result()->fetch_assoc()['req_count'];
+            $stmt_limit->close();
+            
+            if ($req_count >= 5) {
+                // ตอบกลับแบบเป็นกลางเพื่อป้องกันการเดาบัญชี
+                echo json_encode(['status' => 'success', 'token' => $fake_token, 'message' => $neutral_message]);
+                exit();
+            }
+
+            // 3. เมื่อส่ง OTP ใหม่ ให้รหัสและสิทธิ์รีเซ็ตจากคำขอเดิมใช้ไม่ได้
             $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE user_id = {$user['id']} AND purpose = 'password_reset'");
 
-            $otp_code = sprintf("%06d", mt_rand(100000, 999999));
+            // 4. สุ่มด้วยวิธีที่ปลอดภัยสำหรับ Cryptography (random_int)
+            $otp_code = sprintf("%06d", random_int(100000, 999999));
             $otp_hash = password_hash($otp_code, PASSWORD_DEFAULT);
             $real_token = bin2hex(random_bytes(32));
 
+            // 5. หมดอายุภายใน 5 นาที
             $stmt_insert = $conn->prepare("
                 INSERT INTO auth_requests (request_token, user_id, purpose, target_email, otp_hash, expires_at, auth_version) 
-                VALUES (?, ?, 'password_reset', ?, ?, DATE_ADD(NOW(), INTERVAL 15 MINUTE), ?)
+                VALUES (?, ?, 'password_reset', ?, ?, DATE_ADD(NOW(), INTERVAL 5 MINUTE), ?)
             ");
             $stmt_insert->bind_param("sissi", $real_token, $user['id'], $target_email, $otp_hash, $user['auth_version']);
             
             if ($stmt_insert->execute()) {
                 $request_id = $conn->insert_id;
-                
-                // ส่งอีเมล
                 $is_sent = sendOtpEmail($target_email, $otp_code, "รีเซ็ตรหัสผ่าน");
                 
                 if (!$is_sent) {
-                    // หากส่งไม่สำเร็จ ยกเลิกคำขอนี้ทันที และตอบกลับข้อความเดิมเพื่อไม่ให้หลุดข้อมูล
                     $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = $request_id");
                 } else {
                     echo json_encode(['status' => 'success', 'token' => $real_token, 'message' => $neutral_message]);
