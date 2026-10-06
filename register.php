@@ -2,18 +2,20 @@
 session_start();
 require_once 'db_connect.php';
 
-// ✨ 1. การป้องกันฝั่งเซิร์ฟเวอร์ (Server-side Protection) ✨
-// หากต้องการปิดรับสมัครเอง (ให้แอดมินสร้างและผูกให้เท่านั้น) ให้เปลี่ยนเป็น false
-$ALLOW_SELF_REGISTER = true; 
+// ==========================================
+// ป้องกันฝั่งเซิร์ฟเวอร์ (Server-side Protection)
+// เปลี่ยนค่าเป็น false หากต้องการปิดไม่ให้สมัครสมาชิกด้วยตนเอง
+$ALLOW_REGISTRATION = true; 
 
-if (!$ALLOW_SELF_REGISTER) {
-    // ป้องกันทั้งการเปิดหน้าเว็บปกติ และการส่ง POST เข้ามาโดยตรง
-    die("<div style='font-family: sans-serif; padding: 20px; text-align: center; color: #334155; margin-top: 50px;'>
-            <h2 style='color: #e11d48;'>ปิดรับสมัครสมาชิกด้วยตนเอง</h2>
-            <p>กรุณาติดต่อผู้ดูแลระบบ (Admin) เพื่อยืนยันตัวตนและสร้างบัญชี/เชื่อมโยงข้อมูลช่าง (Technician) ครับ</p>
-            <a href='login.php' style='color: #4f46e5; text-decoration: none; font-weight: bold;'>กลับไปหน้าเข้าสู่ระบบ</a>
+if (!$ALLOW_REGISTRATION) {
+    // หากปิดการสมัคร จะบล็อกทั้งการเข้าหน้าเว็บและการยิง POST เถื่อนทันที (ไม่ได้ซ่อนแค่ลิงก์)
+    die("<div style='display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; background:#f8fafc;'>
+            <h2 style='color:#334155;'>ระบบปิดรับการสมัครสมาชิกชั่วคราว</h2>
+            <p style='color:#64748b;'>กรุณาติดต่อผู้ดูแลระบบ (Admin) เพื่อสร้างบัญชี</p>
+            <a href='login.php' style='margin-top:15px; padding:10px 20px; background:#4f46e5; color:#fff; text-decoration:none; border-radius:8px;'>กลับไปหน้าเข้าสู่ระบบ</a>
          </div>");
 }
+// ==========================================
 
 $error = '';
 $success = '';
@@ -34,21 +36,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($stmt_check->get_result()->num_rows > 0) {
             $error = "ชื่อผู้ใช้งาน (Username) นี้มีผู้ใช้แล้ว กรุณาตั้งใหม่";
         } else {
-            // ✨ 2. ยกเลิกการได้รับสิทธิ์ Technician อัตโนมัติ ✨
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $role = 'User'; // บังคับเป็นแค่ User ธรรมดา
+            
+            // ห้ามให้สิทธิ์ Technician เด็ดขาด ให้เป็นแค่ User เท่านั้น
+            $role = 'User'; 
             $is_active = 1;
             $auth_version = 1;
+            
+            // ยกเลิกการค้นหาและผูกบัญชีช่างอัตโนมัติ (ห้ามใช้ LIMIT 1)
+            // ต้องเป็นแอดมินเท่านั้นที่จัดการสร้าง/เชื่อมบัญชีโดยอ้างอิงตาราง technicians
+            $tech_id = null; 
 
-            // ✨ 3. ยกเลิกการค้นหาและผูกบัญชีช่างอัตโนมัติ (ลบการใช้ LIMIT 1 และเงื่อนไขชื่อ/เบอร์โทร) ✨
-            $tech_id = null; // ต้องให้แอดมินเป็นคนนำ technician.id มาผูกให้จากหน้า Dashboard เท่านั้น
-
-            // บันทึกผู้ใช้ใหม่ (ข้อมูลเบื้องต้นเพื่อรอการอนุมัติ)
+            // บันทึกผู้ใช้ใหม่ (ให้เป็นแค่ User ทั่วไปที่ไม่มี tech_id)
             $stmt_insert = $conn->prepare("INSERT INTO users (username, password, full_name, phone, role, is_active, auth_version, technician_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt_insert->bind_param("sssssiii", $username, $hashed_password, $full_name, $phone, $role, $is_active, $auth_version, $tech_id);
             
             if ($stmt_insert->execute()) {
-                $success = "สมัครสมาชิกสำเร็จ! สถานะปัจจุบัน: ผู้ใช้ทั่วไป<br><span class='text-xs mt-1 block'>กรุณาติดต่อ Admin เพื่อยืนยันตัวตนและอัปเกรดเป็นสิทธิ์ช่าง (Technician)</span>";
+                $success = "สมัครสมาชิกสำเร็จ! บัญชีของคุณคือ 'ผู้ใช้งานทั่วไป' กรุณาแจ้งแอดมินเพื่อยืนยันตัวตนและผูกสิทธิ์ช่างครับ";
             } else {
                 $error = "เกิดข้อผิดพลาดในการสมัครสมาชิก";
             }
@@ -72,8 +76,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
     <div class="w-full max-w-md bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
         <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold text-slate-800">สมัครสมาชิกเบื้องต้น</h2>
-            <p class="text-slate-500 text-sm mt-1">สร้างบัญชีผู้ใช้ใหม่ (ต้องรอ Admin อนุมัติสิทธิ์ช่าง)</p>
+            <h2 class="text-2xl font-bold text-slate-800">สมัครสมาชิกเจ้าหน้าที่</h2>
+            <p class="text-slate-500 text-sm mt-1">สร้างบัญชีเพื่อเข้าสู่ระบบแจ้งซ่อม</p>
         </div>
 
         <?php if ($error): ?>
@@ -83,8 +87,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
 
         <?php if ($success): ?>
-            <div class="bg-emerald-50 text-emerald-600 p-4 rounded-xl text-sm font-bold mb-4 text-center border border-emerald-100 leading-relaxed">
-                <i class="fas fa-check-circle mr-1 text-lg mb-2 block text-emerald-500"></i> <?php echo $success; ?>
+            <div class="bg-emerald-50 text-emerald-600 p-3 rounded-xl text-sm font-bold mb-4 text-center border border-emerald-100">
+                <i class="fas fa-check-circle mr-1"></i> <?php echo $success; ?>
             </div>
             <a href="login.php" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center px-4 py-3 rounded-xl font-bold transition-all mt-4">กลับไปหน้าเข้าสู่ระบบ</a>
         <?php else: ?>
