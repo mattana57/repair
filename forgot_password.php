@@ -13,29 +13,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($username) || empty($phone) || empty($new_password)) {
         $error = "กรุณากรอกข้อมูลให้ครบทุกช่อง";
     } else {
-        // ตรวจสอบว่า Username และเบอร์โทรตรงกันหรือไม่
-        $stmt_check = $conn->prepare("SELECT id FROM users WHERE username = ? AND phone = ?");
-        $stmt_check->bind_param("ss", $username, $phone);
-        $stmt_check->execute();
-        $res = $stmt_check->get_result();
-
-        if ($res->num_rows > 0) {
-            $user_id = $res->fetch_assoc()['id'];
-            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-            
-            // อัปเดตรหัสผ่านใหม่และเพิ่ม auth_version เพื่อเตะบัญชีเก่าออก
-            $stmt_update = $conn->prepare("UPDATE users SET password = ?, auth_version = auth_version + 1 WHERE id = ?");
-            $stmt_update->bind_param("si", $hashed_password, $user_id);
-            if ($stmt_update->execute()) {
-                $success = "เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่";
-            } else {
-                $error = "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน";
-            }
-            $stmt_update->close();
-        } else {
-            $error = "ชื่อผู้ใช้งาน หรือ เบอร์โทรศัพท์ไม่ถูกต้อง";
-        }
-        $stmt_check->close();
+        // ✨ ปิดช่องทางเปลี่ยนรหัสผ่านด้วย Username/เบอร์โทรทันที เพื่อความปลอดภัย ✨
+        // ระบบจะถูกอัปเกรดไปใช้ระบบยืนยันตัวตนผ่าน OTP ทางอีเมลในอนาคต (ตามที่ฝั่งผู้พัฒนา Dashboard กำหนด)
+        $error = "ระบบตั้งรหัสผ่านใหม่ด้วยเบอร์โทรถูกระงับเพื่อความปลอดภัย กรุณาติดต่อ Admin เพื่อรีเซ็ตรหัสผ่านครับ";
     }
 }
 ?>

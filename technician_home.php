@@ -49,18 +49,6 @@ if ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows >
 }
 $where .= ")";
 
-// จัดการการอัปเดตหมายเหตุจากหน้าเว็บ (ไม่ได้ใช้ Modal แล้ว แต่เก็บ API ไว้เผื่อจำเป็น)
-$msg = "";
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_remark') {
-    $repair_id = intval($_POST['repair_id']);
-    $remark = $conn->real_escape_string($_POST['remark']);
-    
-    // อัปเดตงานโดยใช้เงื่อนไข Ultra-Link ป้องกันการแก้งานคนอื่น
-    if($conn->query("UPDATE repairs SET remark = '$remark' WHERE id = $repair_id AND $where")) {
-        $msg = "บันทึกหมายเหตุสำเร็จเรียบร้อยครับ";
-    }
-}
-
 // 5. ดึงสถิติภาพรวม 4 สถานะ
 $stats = ['total' => 0, 'pending' => 0, 'in_progress' => 0, 'completed' => 0];
 $res_stats = $conn->query("SELECT status, COUNT(*) as count FROM repairs WHERE $where GROUP BY status");
@@ -236,12 +224,6 @@ $current_thai_year = date('Y') + 543;
 
     <main class="flex-1 overflow-y-auto w-full relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            
-            <?php if (!empty($msg)): ?>
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-2xl mb-6 flex items-center shadow-sm">
-                    <i class="fas fa-check-circle mr-2.5 text-lg"></i> <?= $msg ?>
-                </div>
-            <?php endif; ?>
 
             <?php
             // ดึงข้อมูลตำแหน่งและฝ่ายงานเพื่อมาแสดงใน Banner
@@ -548,7 +530,7 @@ $current_thai_year = date('Y') + 543;
                         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
                             <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] group">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchHistoryInput" oninput="renderHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหา รหัสงาน, ชื่อผู้แจ้ง, อุปกรณ์..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <input type="text" id="searchHistoryInput" oninput="renderHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                                 <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', renderHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
 
