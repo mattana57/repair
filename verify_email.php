@@ -75,16 +75,27 @@ if ($action === 'request_otp') {
     ");
     $stmt_insert->bind_param("sissi", $request_token, $user_id, $target_email, $otp_hash, $user_id);
     
+    // โหลดฟังก์ชันส่งเมล์
+    require_once 'mailer.php'; 
+
     if ($stmt_insert->execute()) {
-        // [รอข้อ 2.5] ตรงนี้คือจุดที่ต้องเขียนโค้ดส่งอีเมล (Mailer)
-        // จำลองการส่งอีเมล: mail($target_email, "รหัสยืนยันอีเมลของคุณ", "รหัส OTP คือ: " . $otp_code);
+        $request_id = $conn->insert_id; // เก็บ ID คำขอไว้ เผื่อต้องยกเลิกถ้าส่งอีเมลพัง
         
-        // ⚠️ หมายเหตุ: ห้าม Return ค่า $otp_code กลับไปที่ Frontend เด็ดขาด (เขียนไว้เพื่อการทดสอบในฝั่ง Backend เท่านั้น)
-        echo json_encode([
-            'status' => 'success', 
-            'message' => 'ระบบได้ส่งรหัส OTP ไปยังอีเมล ' . substr($target_email, 0, 3) . '***@*** แล้ว (รหัสมีอายุ 5 นาที)',
-            'token' => $request_token
-        ]);
+        // ✨ เรียกใช้ฟังก์ชันส่งอีเมลผ่าน SMTP ✨
+        $is_sent = sendOtpEmail($target_email, $otp_code, "ยืนยันบัญชีอีเมล");
+
+        if ($is_sent) {
+            // ✅ กฎ: ห้ามแสดงรหัส OTP บน API หรือหน้าเว็บเด็ดขาด!
+            echo json_encode([
+                'status' => 'success', 
+                'message' => 'ระบบได้ส่งรหัส OTP ไปยังอีเมล ' . substr($target_email, 0, 3) . '***@*** แล้ว (รหัสมีอายุ 5 นาที)',
+                'token' => $request_token
+            ]);
+        } else {
+            // ✅ กฎ: หากส่งไม่สำเร็จ ต้องจัดการข้อผิดพลาดและยกเลิกคำขอทันที ห้ามถือว่าสำเร็จ!
+            $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = $request_id");
+            echo json_encode(['status' => 'error', 'message' => 'ระบบส่งอีเมลขัดข้อง ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่อีกครั้ง']);
+        }
     } else {
         echo json_encode(['status' => 'error', 'message' => 'ไม่สามารถสร้างคำขอได้ กรุณาลองใหม่']);
     }

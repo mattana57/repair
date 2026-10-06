@@ -548,7 +548,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         try {
             $tech_id = $user_id;
 
-            // 1. จัดการข้อมูลตาราง technicians
+           // 1. จัดการข้อมูลตาราง technicians
             if (empty($user_id)) {
                 $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
                 $stmt = $conn->prepare("INSERT INTO technicians (full_name, english_name, position, phone, email, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'รอผูกบัญชี')");
@@ -557,6 +557,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 $tech_id = $conn->insert_id;
                 $msg = "เพิ่มข้อมูลเจ้าหน้าที่สำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
             } else {
+                // ✨ ดึงอีเมลเดิมมาตรวจสอบก่อนว่ามีการเปลี่ยนแปลงหรือไม่ (ตามกฎข้อ 2.3) ✨
+                $old_email_q = $conn->query("SELECT email FROM technicians WHERE id = $user_id");
+                $old_email = ($old_email_q && $old_email_q->num_rows > 0) ? $old_email_q->fetch_assoc()['email'] : null;
+
                 if ($delete_avatar_flag === '1' && !$avatar_url) {
                     $q_old = $conn->query("SELECT avatar_url FROM technicians WHERE id = $user_id");
                     if ($q_old && $q_old->num_rows > 0) {
@@ -580,6 +584,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     }
                 }
                 $stmt->execute();
+
+                // ✨ หากแอดมินแก้ไขอีเมลใหม่ ต้องยกเลิกสถานะยืนยันอีเมลเดิม และคำขอ OTP เดิมทิ้งทั้งหมด ✨
+                if ($old_email !== $email) {
+                    $conn->query("UPDATE users SET verified_email = NULL, email_verified_at = NULL WHERE technician_id = $user_id");
+                    $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE purpose = 'email_verification' AND user_id IN (SELECT id FROM users WHERE technician_id = $user_id)");
+                }
             }
 
             // 2. จัดการข้อมูลตาราง users สำหรับช่าง (ข้อ 5.3, 6.1)

@@ -1,1 +1,4 @@
 env.php
+
+# ซ่อนไฟล์ตั้งค่าอีเมลไม่ให้ขึ้น GitHub
+mail_config.php
