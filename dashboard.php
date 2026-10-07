@@ -228,7 +228,8 @@ $users_cols = [
     'phone' => 'VARCHAR(100) NULL',
     'email' => 'VARCHAR(150) NULL',
     'department' => 'VARCHAR(255) NULL',
-    'avatar_url' => 'VARCHAR(255) NULL' // ✨ เพิ่มการรองรับรูปโปรไฟล์ในตาราง users
+    'avatar_url' => 'VARCHAR(255) NULL', // ✨ เพิ่มการรองรับรูปโปรไฟล์ในตาราง users
+    'must_change_password' => 'TINYINT(1) DEFAULT 0' // ✨ ข้อ 2.11 สถานะบังคับเปลี่ยนรหัสผ่านชั่วคราว
 ];
 
 foreach ($users_cols as $col => $def) {
@@ -238,10 +239,21 @@ foreach ($users_cols as $col => $def) {
     }
 }
 
+// ✨ ตารางบันทึกประวัติการดำเนินการของแอดมิน (ข้อ 2.11) ✨
+$conn->query("CREATE TABLE IF NOT EXISTS admin_action_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    action_type VARCHAR(50) NOT NULL,
+    target_user_id INT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
 $conn->query("ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 $conn->query("ALTER TABLE users MODIFY COLUMN department VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 $conn->query("ALTER TABLE users MODIFY COLUMN full_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 $conn->query("ALTER TABLE users MODIFY COLUMN english_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+$conn->query("ALTER TABLE users MODIFY COLUMN position VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 $conn->query("ALTER TABLE users MODIFY COLUMN position VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
 
 $check_repairs_table = $conn->query("SHOW TABLES LIKE 'repairs'");
@@ -613,24 +625,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     // อัปเดตบัญชีเดิม
                     $usr_id = $usr_res->fetch_assoc()['id'];
                     if (!empty($web_password)) {
-                        // เปลี่ยนรหัสผ่านและเพิ่ม auth_version (ข้อ 7.2, 13.1)
+                        // ✨ ข้อ 2.11: เข้ารหัสผ่าน และบังคับให้เปลี่ยนรหัสผ่านเมื่อเข้าใช้งาน (must_change_password = 1)
                         $hashed = password_hash($web_password, PASSWORD_DEFAULT);
-                        $u_upd = $conn->prepare("UPDATE users SET username = ?, password = ?, full_name = ?, is_active = ?, auth_version = auth_version + 1 WHERE id = ?");
+                        $u_upd = $conn->prepare("UPDATE users SET username = ?, password = ?, full_name = ?, is_active = ?, auth_version = auth_version + 1, must_change_password = 1 WHERE id = ?");
                         $u_upd->bind_param("sssii", $web_username, $hashed, $full_name, $is_active, $usr_id);
+                        $u_upd->execute();
+
+                        // ✨ ข้อ 2.11: บันทึก Log การกระทำของแอดมิน
+                        $admin_id = $_SESSION['user_id'];
+                        $log_desc = "ตั้งรหัสผ่านชั่วคราวให้ช่าง (Username: $web_username)";
+                        $stmt_log = $conn->prepare("INSERT INTO admin_action_logs (admin_id, action_type, target_user_id, description) VALUES (?, 'RESET_PASSWORD', ?, ?)");
+                        $stmt_log->bind_param("iis", $admin_id, $usr_id, $log_desc);
+                        $stmt_log->execute();
+                        $stmt_log->close();
                     } else {
                         // ไม่เปลี่ยนรหัสผ่าน (ข้อ 5.7, 13.2)
                         $u_upd = $conn->prepare("UPDATE users SET username = ?, full_name = ?, is_active = ?, auth_version = auth_version + 1 WHERE id = ?");
                         $u_upd->bind_param("ssii", $web_username, $full_name, $is_active, $usr_id);
+                        $u_upd->execute();
                     }
-                    $u_upd->execute();
                 } else {
                     // สร้างบัญชีใหม่
                     if (empty($web_password)) throw new Exception("กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่ของช่าง");
                     $hashed = password_hash($web_password, PASSWORD_DEFAULT);
                     $role_tech = 'Technician';
-                    $u_ins = $conn->prepare("INSERT INTO users (username, password, full_name, role, technician_id, is_active, auth_version) VALUES (?, ?, ?, ?, ?, ?, 1)");
+                    
+                    // ✨ ข้อ 2.11: บังคับเปลี่ยนรหัสผ่านตั้งแต่ครั้งแรกที่ล็อกอิน
+                    $u_ins = $conn->prepare("INSERT INTO users (username, password, full_name, role, technician_id, is_active, auth_version, must_change_password) VALUES (?, ?, ?, ?, ?, ?, 1, 1)");
                     $u_ins->bind_param("ssssii", $web_username, $hashed, $full_name, $role_tech, $tech_id, $is_active);
                     $u_ins->execute();
+                    $new_usr_id = $conn->insert_id;
+
+                    // ✨ ข้อ 2.11: บันทึก Log การสร้างบัญชี
+                    $admin_id = $_SESSION['user_id'];
+                    $log_desc = "สร้างบัญชีใหม่ให้ช่าง (Username: $web_username)";
+                    $stmt_log = $conn->prepare("INSERT INTO admin_action_logs (admin_id, action_type, target_user_id, description) VALUES (?, 'CREATE_USER', ?, ?)");
+                    $stmt_log->bind_param("iis", $admin_id, $new_usr_id, $log_desc);
+                    $stmt_log->execute();
+                    $stmt_log->close();
                 }
             }
 
@@ -677,10 +709,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
 
         if (empty($user_id)) {
-            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, english_name, position, phone, email, department, role, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            // ✨ ข้อ 2.11: เข้ารหัสผ่าน และบังคับต้องเปลี่ยนรหัสตั้งแต่ครั้งแรก (must_change_password=1)
+            $hashed_admin_pwd = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, english_name, position, phone, email, department, role, avatar_url, must_change_password, auth_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)");
             if ($stmt) {
-                $stmt->bind_param("ssssssssss", $username, $password, $full_name, $english_name, $position, $phone, $email, $department, $role, $avatar_url);
+                $stmt->bind_param("ssssssssss", $username, $hashed_admin_pwd, $full_name, $english_name, $position, $phone, $email, $department, $role, $avatar_url);
                 if ($stmt->execute()) {
+                    $new_usr_id = $conn->insert_id;
+                    $admin_id = $_SESSION['user_id'] ?? 0;
+                    $log_desc = "สร้างบัญชีผู้ดูแลระบบ (Username: $username)";
+                    $stmt_log = $conn->prepare("INSERT INTO admin_action_logs (admin_id, action_type, target_user_id, description) VALUES (?, 'CREATE_USER', ?, ?)");
+                    $stmt_log->bind_param("iis", $admin_id, $new_usr_id, $log_desc);
+                    $stmt_log->execute();
+                    $stmt_log->close();
                     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'เพิ่มข้อมูลผู้ดูแลระบบสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
                 } else {
                     $err = addslashes($stmt->error);
@@ -697,16 +738,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             }
 
             if (!empty($password)) {
+                // ✨ ข้อ 2.11: เข้ารหัสผ่าน และบังคับต้องเปลี่ยนรหัส (must_change_password=1) พร้อมอัปเดตเวอร์ชัน
+                $hashed_admin_pwd = password_hash($password, PASSWORD_DEFAULT);
                 if ($delete_avatar_flag === '1' && !$avatar_url) {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=NULL WHERE id=?");
-                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
+                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=NULL, auth_version=auth_version+1, must_change_password=1 WHERE id=?");
+                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $hashed_admin_pwd, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
                 } elseif ($avatar_url) {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("ssssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $email, $department, $role, $avatar_url, $user_id);
+                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=?, auth_version=auth_version+1, must_change_password=1 WHERE id=?");
+                    if ($stmt) $stmt->bind_param("ssssssssssi", $username, $hashed_admin_pwd, $full_name, $english_name, $position, $phone, $email, $department, $role, $avatar_url, $user_id);
                 } else {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $password, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
+                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, auth_version=auth_version+1, must_change_password=1 WHERE id=?");
+                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $hashed_admin_pwd, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
                 }
+                $admin_action_type = 'RESET_PASSWORD'; // แอบจำไว้เพื่อใช้ตอน execute
             } else {
                 if ($delete_avatar_flag === '1' && !$avatar_url) {
                     $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=NULL WHERE id=?");
@@ -720,6 +764,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 }
             }
             if ($stmt && $stmt->execute()) {
+                // ✨ ข้อ 2.11: บันทึกประวัติการกระทำของแอดมิน (ถ้ามีการรีเซ็ตรหัส)
+                if (isset($admin_action_type)) {
+                    $admin_id = $_SESSION['user_id'] ?? 0;
+                    $log_desc = "ตั้งรหัสผ่านชั่วคราวให้ผู้ดูแลระบบ (Username: $username)";
+                    $stmt_log = $conn->prepare("INSERT INTO admin_action_logs (admin_id, action_type, target_user_id, description) VALUES (?, ?, ?, ?)");
+                    $stmt_log->bind_param("isis", $admin_id, $admin_action_type, $user_id, $log_desc);
+                    $stmt_log->execute();
+                    $stmt_log->close();
+                }
                 echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
             } else {
                 $err = addslashes($stmt ? $stmt->error : $conn->error);
@@ -2759,7 +2812,10 @@ if (isset($_GET['api_check_hash'])) {
         <div class="modal-container bg-white w-full max-w-md mx-auto rounded-3xl shadow-2xl z-50 flex flex-col max-h-[90vh] transform transition-all overflow-hidden">
             
             <div class="px-6 py-5 flex justify-between items-center bg-white rounded-t-3xl border-b border-slate-100 shrink-0">
-                <h2 class="text-xl font-bold text-slate-800" id="techAdminModalTitle">Manage Technician</h2>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800" id="techAdminModalTitle">Manage Technician</h2>
+                    <p class="text-[11px] text-amber-600 font-bold mt-1 bg-amber-50 inline-block px-2 py-0.5 rounded border border-amber-200"><i class="fas fa-shield-alt mr-1"></i> กรุณาตรวจสอบตัวตนเจ้าของบัญชีให้แน่ชัดก่อนเสมอ</p>
+                </div>
                 <button type="button" onclick="toggleModal('techAdminModal')" class="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full w-8 h-8 flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
             </div>
 

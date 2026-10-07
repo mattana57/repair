@@ -126,11 +126,12 @@ elseif ($action === 'verify_otp') {
         exit();
     }
 
-    // ค้นหาคำขอที่ยังไม่ถูกยกเลิก ยังไม่หมดอายุ และจุดประสงค์ถูกต้อง
+    // ค้นหาคำขอที่ยังไม่ถูกยกเลิก ยังไม่หมดอายุ และจุดประสงค์ถูกต้อง พร้อมเช็ค auth_version ปัจจุบัน
     $stmt_req = $conn->prepare("
-        SELECT id, otp_hash, target_email, failed_attempts, auth_version, expires_at 
-        FROM auth_requests 
-        WHERE request_token = ? AND user_id = ? AND purpose = 'email_verification' AND is_canceled = 0 AND used_at IS NULL
+        SELECT a.id, a.otp_hash, a.target_email, a.failed_attempts, a.expires_at, a.auth_version AS req_auth_version, u.auth_version AS current_auth_version 
+        FROM auth_requests a
+        JOIN users u ON a.user_id = u.id
+        WHERE a.request_token = ? AND a.user_id = ? AND a.purpose = 'email_verification' AND a.is_canceled = 0 AND a.used_at IS NULL
     ");
     $stmt_req->bind_param("si", $token, $user_id);
     $stmt_req->execute();
@@ -138,7 +139,7 @@ elseif ($action === 'verify_otp') {
     $stmt_req->close();
 
     if (!$request) {
-        echo json_encode(['status' => 'error', 'message' => 'คำขอไม่ถูกต้อง ถูกยกเลิก หรือถูกใช้งานไปแล้ว']);
+        echo json_encode(['status' => 'error', 'message' => 'คำขอไม่ถูกต้อง หรือถูกใช้งานไปแล้ว']);
         exit();
     }
 
@@ -149,6 +150,13 @@ elseif ($action === 'verify_otp') {
         exit();
     }
 
+    // ตรวจสอบการเปลี่ยนแปลงสิทธิ์
+    if ($request['req_auth_version'] != $request['current_auth_version']) {
+        $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = " . $request['id']);
+        echo json_encode(['status' => 'error', 'message' => 'ข้อมูลบัญชีถูกเปลี่ยนแปลงระหว่างดำเนินการ คำขอถูกยกเลิก']);
+        exit();
+    }
+
     // ตรวจสอบจำนวนครั้งที่กรอกผิด
     if ($request['failed_attempts'] >= 5) {
         $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = " . $request['id']);
@@ -156,7 +164,7 @@ elseif ($action === 'verify_otp') {
         exit();
     }
 
-    // ตรวจสอบว่าอีเมลยังตรงกับตอนที่ขอ OTP ไหม (เผื่อแอดมินเปลี่ยนอีเมลช่างระหว่างที่กำลังกรอก OTP)
+    // ตรวจสอบว่าอีเมลยังตรงกับตอนที่ขอ OTP ไหม
     if ($request['target_email'] !== $target_email) {
         $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = " . $request['id']);
         echo json_encode(['status' => 'error', 'message' => 'อีเมลของคุณถูกเปลี่ยนแปลงระหว่างดำเนินการ กรุณาขอรหัสใหม่']);
@@ -176,10 +184,18 @@ elseif ($action === 'verify_otp') {
 
         echo json_encode(['status' => 'success', 'message' => 'ยืนยันอีเมลสำเร็จ!']);
     } else {
-        // บันทึกการกรอกผิด
+        // อัปเดตจำนวนครั้งที่ผิดแบบ Atomic พร้อมดึงค่าล่าสุดมาตรวจสอบ
         $conn->query("UPDATE auth_requests SET failed_attempts = failed_attempts + 1 WHERE id = " . $request['id']);
-        $remain = 4 - $request['failed_attempts'];
-        echo json_encode(['status' => 'error', 'message' => "รหัส OTP ไม่ถูกต้อง (เหลือโอกาส $remain ครั้ง)"]);
+        $res_fail = $conn->query("SELECT failed_attempts FROM auth_requests WHERE id = " . $request['id']);
+        $current_fail = $res_fail->fetch_assoc()['failed_attempts'];
+        
+        if ($current_fail >= 5) {
+            $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = " . $request['id']);
+            echo json_encode(['status' => 'error', 'message' => 'คุณกรอกรหัสผิดเกินจำนวนที่กำหนด คำขอนี้ถูกยกเลิกแล้ว']);
+        } else {
+            $remain = 5 - $current_fail;
+            echo json_encode(['status' => 'error', 'message' => "รหัส OTP ไม่ถูกต้อง (เหลือโอกาส $remain ครั้ง)"]);
+        }
     }
 }
 ?>

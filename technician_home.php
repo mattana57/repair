@@ -1,31 +1,123 @@
 <?php
-session_start();
-require_once 'db_connect.php';
+// ✨ 1. เรียกใช้ auth_guard.php ก่อนอ่านข้อมูลหรือรับ POST เสมอ
+// (ด่านนี้จัดการ: ตรวจว่าบัญชียังมีอยู่ เปิดใช้งาน, auth_version, อายุ Session, และเตะไปหน้าเปลี่ยนรหัสชั่วคราว)
+require_once 'auth_guard.php';
 
-// ตรวจสอบสิทธิ์เบื้องต้น
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Technician') {
+// ✨ 2. ตรวจสอบว่าเป็นบทบาท Technician หรือไม่ (เผื่อคนแปลกหน้า หรือแอดมินพิมพ์ URL เข้ามา)
+if (strtolower($_SESSION['role']) !== 'technician') {
+    header("Location: dashboard.php");
+    exit();
+}
+
+// ✨ 3. ตรวจว่ารหัสช่างตรงกับ Session หรือไม่ (ค่านี้ได้มาจาก auth_guard.php)
+$tech_id_session = $_SESSION['technician_id'] ?? 0;
+if (empty($tech_id_session)) {
+    session_unset();
+    session_destroy();
     header("Location: login.php");
     exit();
 }
 
+require_once 'db_connect.php';
+
+// ✨ 4. ใช้การตรวจบัญชีล่าสุด: ตรวจว่าบัญชีเชื่อมกับช่างที่มีอยู่จริงในระบบหรือไม่
+// (ป้องกันกรณีตาราง users ยังอยู่ แต่ชื่อช่างในตาราง technicians ถูกแอดมินลบทิ้งไปแล้ว)
+$stmt_tech = $conn->prepare("SELECT id, approval_status, full_name FROM technicians WHERE id = ?");
+$stmt_tech->bind_param("i", $tech_id_session);
+$stmt_tech->execute();
+$res_tech = $stmt_tech->get_result();
+
+if ($res_tech->num_rows === 0) {
+    // ช่างคนนี้ไม่มีอยู่จริงแล้ว -> ใช้ Session เดิมไม่ได้
+    $stmt_tech->close();
+    session_unset();
+    session_destroy();
+    header("Location: login.php?error=tech_not_found");
+    exit();
+}
+
+$tech_data = $res_tech->fetch_assoc();
+$stmt_tech->close();
+
+// ✨ 5. ตรวจสอบสถานะการเชื่อมต่อไลน์ (เผื่อแอดมินกด "ยกเลิกผูกบัญชี")
+if ($tech_data['approval_status'] !== 'อนุมัติแล้ว') {
+    session_unset();
+    session_destroy();
+    header("Location: login.php?error=tech_unlinked");
+    exit();
+}
+
+// ====================================================================
+// ✅ สามารถดึงข้อมูลได้อย่างปลอดภัย 100%
+// ====================================================================
+
+// ✨ สร้าง CSRF Token ประจำ Session เพื่อใช้ป้องกันการปลอมแปลงคำขอจากหน้าเว็บอื่น
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// ✨ ข้อ 6: หากต้องการใช้ช่องทางบันทึกหมายเหตุด่วน (update_remark) ข้ามหน้าใบงาน ต้องตรวจสิทธิ์ให้รัดกุม 100%
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_remark') {
+    header('Content-Type: application/json');
+    
+    // 1. ตรวจสอบ CSRF Token ก่อนบันทึก ป้องกันการสวมรอยยิง API
+    $csrf_token_post = $_POST['csrf_token'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'], $csrf_token_post)) {
+        echo json_encode(['status' => 'error', 'message' => 'คำขอไม่ถูกต้อง (Invalid CSRF Token)']);
+        exit();
+    }
+
+    $repair_id = intval($_POST['repair_id'] ?? 0);
+    $remark = $_POST['remark'] ?? '';
+
+    // 2. ตรวจสิทธิ์อีกครั้ง ณ เวลาบันทึก! ด้วย "รหัสช่างจาก Session เท่านั้น"
+    // (รองรับกรณีหน้าจอช่างเปิดค้างไว้ แต่งานใบนี้เพิ่งถูกแอดมินย้ายไปให้ช่างคนอื่นดูแลแทน)
+    $stmt_check = $conn->prepare("SELECT id FROM repairs WHERE id = ? AND technician_id = ?");
+    $stmt_check->bind_param("ii", $repair_id, $tech_id_session);
+    $stmt_check->execute();
+    $res_check = $stmt_check->get_result();
+    
+    if ($res_check->num_rows === 0) {
+        $stmt_check->close();
+        echo json_encode(['status' => 'error', 'message' => 'คุณไม่มีสิทธิ์แก้ไข หรือ งานนี้ถูกเปลี่ยนผู้รับผิดชอบไปแล้ว']);
+        exit();
+    }
+    $stmt_check->close();
+
+    // 3. บันทึกข้อมูลเฉพาะแถวที่เป็นของช่างคนนี้เท่านั้น
+    $stmt_upd = $conn->prepare("UPDATE repairs SET remark = ? WHERE id = ? AND technician_id = ?");
+    $stmt_upd->bind_param("sii", $remark, $repair_id, $tech_id_session);
+    $stmt_upd->execute();
+
+    // 4. ห้ามแสดง "บันทึกสำเร็จ" หากข้อมูลไม่เปลี่ยน ต้องตรวจผลการแก้ไขด้วย affected_rows
+    if ($stmt_upd->affected_rows > 0) {
+        echo json_encode(['status' => 'success', 'message' => 'บันทึกหมายเหตุสำเร็จ']);
+    } else {
+        // กรณีพิมพ์ข้อความเดิมซ้ำ หรืออัปเดตไม่เข้า จะไม่ขึ้นหลอกว่าสำเร็จ
+        echo json_encode(['status' => 'error', 'message' => 'ไม่พบการเปลี่ยนแปลง หรือบันทึกล้มเหลว']);
+    }
+    $stmt_upd->close();
+    exit();
+}
+
 $user_id = $_SESSION['user_id'];
-$full_name = $_SESSION['full_name'];
+$full_name = $tech_data['full_name']; // ดึงชื่อล่าสุดจากตาราง technicians โดยตรง
 
 // 1. ดึง ID ช่างล่าสุดจากตาราง users
 $res_u = $conn->query("SELECT technician_id FROM users WHERE id = $user_id");
 $tech_id = ($res_u && $res_u->num_rows > 0) ? $res_u->fetch_assoc()['technician_id'] : 0;
 
-// 2. ถ้ายังไม่มี tech_id ให้พยายามดึงจากตาราง technicians อัตโนมัติ (Fallback)
+// ✨ ลบการเชื่อมช่างจากชื่อทิ้งไป (ห้ามอัปเดตข้อมูลการเชื่อมบัญชีเองเด็ดขาด)
+// หากบัญชีถูกแอดมินลบการเชื่อมต่อ (ไม่มี technician_id) ให้ปฏิเสธการเข้าถึงและแจ้งให้ติดต่อแอดมิน
 if (empty($tech_id)) {
-    $safe_name = $conn->real_escape_string($full_name);
-    $res_f = $conn->query("SELECT id FROM technicians WHERE full_name = '$safe_name' LIMIT 1");
-    if ($res_f && $res_f->num_rows > 0) {
-        $tech_id = $res_f->fetch_assoc()['id'];
-        $conn->query("UPDATE users SET technician_id = $tech_id WHERE id = $user_id");
-    }
+    session_unset();
+    session_destroy();
+    // เตะกลับไปหน้า Login พร้อมแนบ Error เพื่อแจ้งเตือน
+    header("Location: login.php?error=contact_admin_no_tech");
+    exit();
 }
 
-// 3. ดึง LINE ID ของช่าง
+// 3. ดึง LINE ID ของช่าง (เก็บไว้เผื่อมีเรียกใช้ส่วนอื่น)
 $line_id = '';
 if (!empty($tech_id)) {
     $res_l = $conn->query("SELECT line_user_id FROM technicians WHERE id = $tech_id");
@@ -34,22 +126,18 @@ if (!empty($tech_id)) {
     }
 }
 
-// 4. สร้างเงื่อนไข "Ultra-Link" ควานหางานจากทุกรูปแบบ (ID, LINE ID, ชื่อ)
+// ✨ งานเก่าที่ technician_id เป็น NULL ต้องตรวจและเชื่อมข้อมูลก่อน
+// (สแกนตาราง repairs และผูก ID ช่างให้อัตโนมัติ โดยอ้างอิงจากชื่อที่มีอยู่เดิม)
+$chk_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'");
+if ($chk_col && $chk_col->num_rows > 0) {
+    $conn->query("UPDATE repairs r JOIN technicians t ON r.technician_name = t.full_name SET r.technician_id = t.id WHERE r.technician_id IS NULL OR r.technician_id = 0");
+}
+
+// ✨ ตรวจเจ้าของงานด้วยรหัสช่างเท่านั้น ห้ามใช้ชื่อหรือ LINE ID เป็นสิทธิ์สำรอง
 $safe_tech_id = intval($tech_id);
-$safe_line_id = $conn->real_escape_string($line_id);
-$safe_full_name = $conn->real_escape_string($full_name);
+$where = "technician_id = $safe_tech_id";
 
-$where = "(technician_id = '$safe_tech_id'";
-if (!empty($safe_line_id)) {
-    $where .= " OR technician_id = '$safe_line_id'";
-}
-// เช็คว่าฐานข้อมูลมีคอลัมน์ชื่อช่างไหม ถ้ามีให้เอามาค้นหาด้วย
-if ($conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'")->num_rows > 0) {
-    $where .= " OR technician_name = '$safe_full_name'";
-}
-$where .= ")";
-
-// 5. ดึงสถิติภาพรวม 4 สถานะ
+// 4. ดึงสถิติภาพรวม 4 สถานะ
 $stats = ['total' => 0, 'pending' => 0, 'in_progress' => 0, 'completed' => 0];
 $res_stats = $conn->query("SELECT status, COUNT(*) as count FROM repairs WHERE $where GROUP BY status");
 if ($res_stats) {
@@ -66,7 +154,7 @@ if ($res_stats) {
     }
 }
 
-// 6. ดึงประวัติรายการแจ้งซ่อมทั้งหมด
+// 5. ดึงประวัติรายการแจ้งซ่อมทั้งหมด
 $repairs = [];
 $res_repairs = $conn->query("SELECT * FROM repairs WHERE $where ORDER BY created_at DESC");
 if ($res_repairs) {

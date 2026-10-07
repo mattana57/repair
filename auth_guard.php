@@ -36,7 +36,8 @@ require_once 'db_connect.php';
 
 // ตรวจสอบฐานข้อมูลปัจจุบันว่าบัญชียังมีอยู่ เปิดใช้งาน และข้อมูลตัวตนตรงกับ Session ปัจจุบัน
 $user_id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT role, technician_id, is_active, auth_version FROM users WHERE id = ?");
+// ✨ ข้อ 2.11: ดึงค่า must_change_password ออกมาด้วย
+$stmt = $conn->prepare("SELECT role, technician_id, is_active, auth_version, must_change_password FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -53,11 +54,23 @@ $user = $result->fetch_assoc();
 $stmt->close();
 
 // ปฏิเสธการเข้าถึงหากบัญชีถูกระงับ หรือมีการบังคับยกเลิก Session (auth_version ไม่ตรงกัน)
+// ✨ ข้อ 2.11: เพิ่มกฎการระงับการเข้าถึง หากเพิ่งถูกแอดมินแก้ไขอีเมลแล้วยกเลิกสถานะยืนยันตัวตน
 if ($user['is_active'] != 1 || $user['auth_version'] != $_SESSION['auth_version']) {
     session_unset();
     session_destroy();
     header("Location: login.php");
     exit();
+}
+
+// ✨ ข้อ 2.11: บังคับเปลี่ยนรหัสผ่านชั่วคราว หากถูกแอดมินรีเซ็ตมา
+if ($user['must_change_password'] == 1) {
+    // ดึงชื่อไฟล์ปัจจุบัน เพื่อไม่ให้เกิดลูปรีไดเร็กต์ (Infinite Redirect Loop)
+    $current_page = basename($_SERVER['PHP_SELF']);
+    // ถ้าไม่ได้อยู่หน้าเปลี่ยนรหัส หรือหน้าล็อกเอาต์ ให้เตะไปหน้าเปลี่ยนรหัสทันที
+    if ($current_page !== 'force_change_password.php' && $current_page !== 'logout.php') {
+        header("Location: force_change_password.php");
+        exit();
+    }
 }
 
 // อัปเดตข้อมูลสิทธิ์และรหัสช่างล่าสุดลง Session เพื่อป้องกันข้อมูลคลาดเคลื่อน
@@ -70,6 +83,15 @@ if (strtolower($user['role']) === 'technician') {
         header("Location: login.php");
         exit();
     }
+    
+    // ✨ ข้อ 3: ตรวจสอบว่าแอดมินเปลี่ยนการเชื่อมช่างระหว่างล็อกอินค้างไว้หรือไม่ (ต้องใช้ Session เดิมไม่ได้)
+    if (isset($_SESSION['technician_id']) && $_SESSION['technician_id'] != $user['technician_id']) {
+        session_unset();
+        session_destroy();
+        header("Location: login.php?error=tech_link_changed");
+        exit();
+    }
+    
     $_SESSION['technician_id'] = $user['technician_id'];
 } else {
     // กรณีบัญชีไม่ใช่ช่าง ให้ล้างค่ารหัสช่างที่อาจตกค้างทิ้ง
