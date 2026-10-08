@@ -40,7 +40,6 @@ if ($current_role === 'executive') {
 
 // ✨ API ส่งข้อมูลรูปภาพล่าสุดแบบเรียลไทม์ สำหรับอัปเดตหน้าจออัตโนมัติไม่ต้องกดรีเฟรช ✨
 if (isset($_GET['api_get_admin_avatars'])) {
-if (isset($_GET['api_get_admin_avatars'])) {
     header('Content-Type: application/json; charset=utf-8');
     $avatars_data = [];
     $res_avatars = $conn->query("SELECT id, username, avatar_url FROM users WHERE LOWER(role) IN ('admin', 'executive')");
@@ -516,26 +515,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
     
         // ตรวจข้อมูลทั้งหมดก่อนอัปโหลดหรือบันทึกบัญชี
-    $reject_account_form = function ($message) {
-        $message_js = json_encode(
+        $reject_account_form = function ($message) {
+        http_response_code(400);
+
+        $message_html = htmlspecialchars(
             $message,
-            JSON_UNESCAPED_UNICODE
-            | JSON_HEX_TAG
-            | JSON_HEX_APOS
-            | JSON_HEX_QUOT
-            | JSON_HEX_AMP
+            ENT_QUOTES | ENT_SUBSTITUTE,
+            'UTF-8'
         );
 
-        echo "<script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'ข้อมูลไม่ถูกต้อง',
-                    text: $message_js,
-                    confirmButtonColor: '#ef4444'
-                });
-            });
-        </script>";
+        echo '<!DOCTYPE html>
+        <html lang="th">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>ข้อมูลไม่ถูกต้อง</title>
+        </head>
+        <body>
+            <h1>ไม่สามารถบันทึกข้อมูลได้</h1>
+            <p>' . $message_html . '</p>
+            <a href="?tab=technicians">กลับไปหน้าจัดการบัญชี</a>
+        </body>
+        </html>';
+
         exit();
     };
 
@@ -1191,7 +1193,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             // และไม่ได้เชื่อมกับช่างแล้วก่อนอัปโหลดหรือบันทึก
 
             // ✨ บัญชีที่มีอยู่แล้วต้องไม่ยอมให้ Username ว่าง
-            if (empty($username)) {
+            if ($username === '') {
                 echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ถูกต้อง', text: 'บัญชีที่มีอยู่แล้ว ไม่อนุญาตให้เว้นว่าง Username', confirmButtonColor: '#ef4444' }).then(() => { $js_redirect }); });</script>";
                 exit();
             }
