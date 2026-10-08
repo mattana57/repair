@@ -242,6 +242,9 @@ $current_thai_year = date('Y') + 543;
                         </div>
                         <span class="text-sm font-medium hidden sm:block"><?= htmlspecialchars($full_name) ?></span>
                     </div>
+                                        <a href="verify_email_page.php" class="bg-indigo-500 hover:bg-indigo-600 px-3.5 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-1.5">
+                        <i class="fas fa-envelope"></i> ยืนยันอีเมล
+                    </a>
                     <a href="logout.php" class="bg-rose-500 hover:bg-rose-600 px-3.5 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-1.5">
                         <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">ออกจากระบบ</span>
                     </a>

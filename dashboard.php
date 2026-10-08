@@ -1015,8 +1015,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $phone = $phone === '' ? null : $phone;
     $email = $email === '' ? null : $email;
     $position = $position === '' ? null : $position;
-    $department = $department === '' ? null : $department;
-    
+        $department = $department === '' ? null : $department;
+
+    try {
+        $email_engine_result = $conn->query(
+            "SELECT TABLE_NAME, ENGINE
+             FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME IN ('users', 'technicians', 'auth_requests')"
+        );
+
+        if (!$email_engine_result || $email_engine_result->num_rows !== 3) {
+            throw new Exception('ไม่สามารถตรวจตารางสำหรับจัดการอีเมลได้');
+        }
+
+        while ($email_engine_row = $email_engine_result->fetch_assoc()) {
+            if (strtoupper((string) $email_engine_row['ENGINE']) !== 'INNODB') {
+                throw new Exception('ตารางสำหรับจัดการอีเมลต้องรองรับ Transaction');
+            }
+        }
+
+        $email_engine_result->free();
+
+    } catch (Throwable $e) {
+        $reject_account_form(
+            'ไม่สามารถตรวจความพร้อมของ Transaction ได้ จึงยังไม่บันทึกข้อมูล กรุณาติดต่อผู้ดูแลระบบ'
+        );
+    }
+
     if ($role === 'Technician') {
                 // ใช้ข้อมูลที่ตรวจแล้วจากส่วนต้นของ save_user
         $web_username = $account_username;
@@ -1144,8 +1170,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 $tech_id = $conn->insert_id;
                 $msg = "เพิ่มข้อมูลเจ้าหน้าที่สำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
             } else {
-                $old_email_q = $conn->query("SELECT email FROM technicians WHERE id = $user_id");
-                $old_email = ($old_email_q && $old_email_q->num_rows > 0) ? $old_email_q->fetch_assoc()['email'] : null;
+                                $old_email_q = $conn->query(
+                    "SELECT email FROM technicians WHERE id = $user_id"
+                );
+
+                if (!$old_email_q || $old_email_q->num_rows !== 1) {
+                    throw new Exception('ไม่สามารถตรวจอีเมลเดิมของช่างได้');
+                }
+
+                $old_email = $old_email_q->fetch_assoc()['email'];
 
                 if ($delete_avatar_flag === '1' && !$avatar_url) {
                     $q_old = $conn->query("SELECT avatar_url FROM technicians WHERE id = $user_id");
@@ -1169,9 +1202,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                         $stmt->bind_param("ssssssi", $full_name, $english_name, $position, $phone, $email, $department, $user_id);
                     }
                 }
-                $stmt->execute();
+                                if (!$stmt->execute()) {
+                    throw new Exception('ไม่สามารถบันทึกข้อมูลช่างได้');
+                }
 
-                                if ($old_email !== $email && $existing_user) {
+                if ($old_email !== $email && $existing_user) {
                     $linked_user_id = (int) $existing_user['id'];
 
                     $clear_verified = $conn->prepare(
@@ -1201,8 +1236,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     $cancel_email_request = $conn->prepare(
                         "UPDATE auth_requests
                          SET is_canceled = 1
-                         WHERE purpose = 'email_verification'
-                           AND user_id = ?"
+                         WHERE purpose IN ('email_verification', 'password_reset')
+                           AND user_id = ?
+                           AND is_canceled = 0"
                     );
 
                     if (!$cancel_email_request) {
@@ -1366,7 +1402,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 }
             }
 
-            $conn->commit();
+                        if (!$conn->commit()) {
+                throw new Exception('ไม่สามารถบันทึกข้อมูลและบัญชีได้');
+            }
+
             $msg_success = isset($msg) ? $msg : 'อัปเดตข้อมูลและบัญชีสำเร็จ!';
             echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'สำเร็จ!', html: \"$msg_success\", confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
 
@@ -1514,7 +1553,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 }
             }
 
-                        $update_fields = [
+                                    $admin_email_transaction_started = false;
+
+            try {
+                if (!$conn->begin_transaction()) {
+                    throw new Exception('ไม่สามารถเริ่มบันทึกข้อมูลบัญชีได้');
+                }
+
+                $admin_email_transaction_started = true;
+
+                $fresh_admin_stmt = $conn->prepare(
+                    "SELECT role, technician_id, is_active, email
+                     FROM users
+                     WHERE id = ?
+                     FOR UPDATE"
+                );
+
+                if (!$fresh_admin_stmt) {
+                    throw new Exception('ไม่สามารถตรวจบัญชีล่าสุดได้');
+                }
+
+                $fresh_admin_stmt->bind_param('i', $user_id);
+
+                if (!$fresh_admin_stmt->execute()) {
+                    throw new Exception('ไม่สามารถตรวจบัญชีล่าสุดได้');
+                }
+
+                $fresh_admin_result = $fresh_admin_stmt->get_result();
+
+                if (!$fresh_admin_result
+                    || $fresh_admin_result->num_rows !== 1) {
+                    throw new Exception('ไม่พบบัญชีที่ต้องการแก้ไข');
+                }
+
+                $existing_adm = $fresh_admin_result->fetch_assoc();
+                $fresh_admin_stmt->close();
+
+                if (!in_array(
+                    strtolower((string) $existing_adm['role']),
+                    ['admin', 'executive'],
+                    true
+                ) || $existing_adm['technician_id'] !== null) {
+                    throw new Exception('ประเภทบัญชีเป้าหมายเปลี่ยนไป กรุณารีเฟรชหน้า');
+                }
+
+                $admin_email_changed = $existing_adm['email'] !== $email;
+
+                $update_fields = [
                 'username = ?',
                 'full_name = ?',
                 'english_name = ?',
@@ -1540,12 +1625,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
 
             $update_types = 'ssssssssi';
 
-            // เพิ่มเวอร์ชันเมื่อเปลี่ยนรหัสผ่าน บทบาท หรือสถานะบัญชี
+                        // อีเมลเปลี่ยนต้องยืนยันใหม่ และ Session เดิมต้องใช้ต่อไม่ได้
             $version_increment = (
                 $password !== ''
                 || $existing_adm['role'] !== $role
                 || (int) $existing_adm['is_active'] !== $is_active
+                || $admin_email_changed
             ) ? 1 : 0;
+
+            if ($admin_email_changed) {
+                $update_fields[] = 'verified_email = NULL';
+                $update_fields[] = 'email_verified_at = NULL';
+            }
 
             if ($password !== '') {
                 $hashed_admin_pwd = password_hash(
@@ -1586,19 +1677,75 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             if ($stmt) {
                 $stmt->bind_param($update_types, ...$update_values);
             }
-            if ($stmt && $stmt->execute()) {
-                if (isset($admin_action_type)) {
-                    $admin_id = $_SESSION['user_id'] ?? 0;
-                    $log_desc = "ตั้งรหัสผ่านชั่วคราวให้ผู้ดูแลระบบ (Username: $username)";
-                    $stmt_log = $conn->prepare("INSERT INTO admin_action_logs (admin_id, action_type, target_user_id, description) VALUES (?, ?, ?, ?)");
-                    $stmt_log->bind_param("isis", $admin_id, $admin_action_type, $user_id, $log_desc);
-                    $stmt_log->execute();
-                    $stmt_log->close();
+                        if (!$stmt || !$stmt->execute()) {
+                throw new Exception('ไม่สามารถบันทึกข้อมูลบัญชีได้');
+            }
+
+            if ($admin_email_changed) {
+                $cancel_admin_email_stmt = $conn->prepare(
+                    "UPDATE auth_requests
+                     SET is_canceled = 1
+                     WHERE user_id = ?
+                       AND purpose IN ('email_verification', 'password_reset')
+                       AND is_canceled = 0"
+                );
+
+                if (!$cancel_admin_email_stmt) {
+                    throw new Exception('ไม่สามารถยกเลิกคำขอของอีเมลเดิมได้');
                 }
-                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
-            } else {
-                $err = addslashes($stmt ? $stmt->error : $conn->error);
-                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: '$err', confirmButtonColor: '#ef4444' }); });</script>";
+
+                $cancel_admin_email_stmt->bind_param('i', $user_id);
+
+                if (!$cancel_admin_email_stmt->execute()) {
+                    throw new Exception('ไม่สามารถยกเลิกคำขอของอีเมลเดิมได้');
+                }
+
+                $cancel_admin_email_stmt->close();
+            }
+
+            if (isset($admin_action_type)) {
+                $admin_id = $_SESSION['user_id'] ?? 0;
+                $log_desc = "ตั้งรหัสผ่านชั่วคราวให้ผู้ดูแลระบบ (Username: $username)";
+
+                $stmt_log = $conn->prepare(
+                    "INSERT INTO admin_action_logs
+                     (admin_id, action_type, target_user_id, description)
+                     VALUES (?, ?, ?, ?)"
+                );
+
+                if (!$stmt_log) {
+                    throw new Exception('ไม่สามารถบันทึกประวัติการตั้งรหัสผ่านได้');
+                }
+
+                $stmt_log->bind_param(
+                    'isis',
+                    $admin_id,
+                    $admin_action_type,
+                    $user_id,
+                    $log_desc
+                );
+
+                if (!$stmt_log->execute()) {
+                    throw new Exception('ไม่สามารถบันทึกประวัติการตั้งรหัสผ่านได้');
+                }
+
+                $stmt_log->close();
+            }
+
+            if (!$conn->commit()) {
+                throw new Exception('ไม่สามารถบันทึกข้อมูลบัญชีได้');
+            }
+
+            $admin_email_transaction_started = false;
+
+            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตข้อมูลสำเร็จ!', confirmButtonColor: '#4f46e5' }).then(() => { $js_redirect }); });</script>";
+
+            } catch (Throwable $e) {
+                if ($admin_email_transaction_started) {
+                    $conn->rollback();
+                }
+
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'บันทึกข้อมูลไม่สำเร็จ', text: 'ไม่สามารถบันทึกข้อมูลบัญชีและยกเลิกคำขอเดิมได้ กรุณารีเฟรชหน้าแล้วลองใหม่', confirmButtonColor: '#ef4444' }); });</script>";
             }
         }
     }
@@ -2016,6 +2163,9 @@ if (isset($_GET['api_check_hash'])) {
             <button onclick="show('login_logs')" class="nav-btn <?php echo $active_tab === 'login_logs' ? 'active-btn' : ''; ?>" id="btn-login_logs"><i class="fas fa-history"></i> Login History</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
+                                <a href="verify_email_page.php" class="nav-btn">
+                    <i class="fas fa-envelope"></i> ยืนยันอีเมล
+                </a>
                 <a href="logout.php" class="nav-btn group text-slate-500 hover:!bg-rose-50 hover:!text-rose-600">
                     <i class="fas fa-sign-out-alt group-hover:!text-rose-600"></i> Logout
                 </a>

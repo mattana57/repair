@@ -1,8 +1,8 @@
 <?php
-session_start();
-require_once 'db_connect.php';
+require_once 'auth_guard.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
 
 // ยืนยันอีเมลได้เฉพาะบัญชีของผู้ที่ล็อกอินอยู่
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -256,11 +256,18 @@ if ($action === 'request_otp') {
 // Action 2: ตรวจสอบ OTP (Verify OTP)
 // ---------------------------------------------------------
 elseif ($action === 'verify_otp') {
-    $token = $_POST['token'] ?? '';
-    $otp_input = $_POST['otp'] ?? '';
+        $token = $_POST['token'] ?? null;
+    $otp_input = $_POST['otp'] ?? null;
 
-    if (empty($token) || empty($otp_input)) {
-        echo json_encode(['status' => 'error', 'message' => 'ข้อมูลไม่ครบถ้วน']);
+    if (!is_string($token)
+        || !preg_match('/\A[a-f0-9]{64}\z/', $token)
+        || !is_string($otp_input)
+        || !preg_match('/\A[0-9]{6}\z/', $otp_input)) {
+        http_response_code(400);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'กรุณากรอกรหัส OTP เป็นตัวเลข 6 หลักจากคำขอล่าสุด'
+        ]);
         exit();
     }
 
@@ -310,17 +317,188 @@ elseif ($action === 'verify_otp') {
     }
 
     // ตรวจ OTP
-    if (password_verify($otp_input, $request['otp_hash'])) {
-        // อัปเดตตาราง Users ให้ผูกกับอีเมลที่ยืนยัน
-        $stmt_update_user = $conn->prepare("UPDATE users SET verified_email = ?, email_verified_at = NOW() WHERE id = ?");
-        $stmt_update_user->bind_param("si", $request['target_email'], $user_id);
-        $stmt_update_user->execute();
-        $stmt_update_user->close();
+        if (password_verify($otp_input, $request['otp_hash'])) {
+        $verification_transaction_started = false;
 
-        // อัปเดตตารางคำขอ ว่าถูกใช้งานและยืนยันแล้ว
-        $conn->query("UPDATE auth_requests SET verified_at = NOW(), used_at = NOW() WHERE id = " . $request['id']);
+        try {
+            // ต้องใช้ตารางที่รองรับ Transaction เพื่อไม่บันทึกเพียงบางส่วน
+            $engine_result = $conn->query(
+                "SELECT TABLE_NAME, ENGINE
+                 FROM information_schema.TABLES
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME IN ('users', 'technicians', 'auth_requests')"
+            );
 
-        echo json_encode(['status' => 'success', 'message' => 'ยืนยันอีเมลสำเร็จ!']);
+            if (!$engine_result || $engine_result->num_rows !== 3) {
+                throw new Exception('ไม่สามารถตรวจตารางสำหรับยืนยันอีเมลได้');
+            }
+
+            while ($engine_row = $engine_result->fetch_assoc()) {
+                if (strtoupper((string) $engine_row['ENGINE']) !== 'INNODB') {
+                    throw new Exception('ตารางสำหรับยืนยันอีเมลต้องรองรับ Transaction');
+                }
+            }
+
+            $engine_result->free();
+
+            if (!$conn->begin_transaction()) {
+                throw new Exception('ไม่สามารถเริ่มบันทึกการยืนยันอีเมลได้');
+            }
+
+            $verification_transaction_started = true;
+
+            $fresh_stmt = $conn->prepare(
+                "SELECT u.role, u.is_active, u.auth_version,
+                        u.technician_id, u.email AS account_email,
+                        t.id AS found_technician_id, t.email AS tech_email
+                 FROM users u
+                 LEFT JOIN technicians t ON t.id = u.technician_id
+                 WHERE u.id = ?
+                 FOR UPDATE"
+            );
+
+            if (!$fresh_stmt) {
+                throw new Exception('ไม่สามารถตรวจบัญชีล่าสุดได้');
+            }
+
+            $fresh_stmt->bind_param('i', $user_id);
+
+            if (!$fresh_stmt->execute()) {
+                throw new Exception('ไม่สามารถตรวจบัญชีล่าสุดได้');
+            }
+
+            $fresh_result = $fresh_stmt->get_result();
+            $fresh_user = $fresh_result && $fresh_result->num_rows === 1
+                ? $fresh_result->fetch_assoc()
+                : null;
+
+            $fresh_stmt->close();
+
+            if (!$fresh_user
+                || (int) $fresh_user['is_active'] !== 1
+                || (string) $fresh_user['auth_version']
+                    !== (string) $_SESSION['auth_version']
+                || (string) $fresh_user['auth_version']
+                    !== (string) $request['req_auth_version']) {
+                throw new Exception('บัญชีหรือสิทธิ์เปลี่ยนไป กรุณาเข้าสู่ระบบใหม่');
+            }
+
+            $fresh_role = strtolower((string) $fresh_user['role']);
+            $fresh_email = null;
+
+            if ($fresh_role === 'technician') {
+                if ($fresh_user['technician_id'] === null
+                    || (int) $fresh_user['technician_id'] < 1
+                    || (string) $fresh_user['technician_id']
+                        !== (string) $fresh_user['found_technician_id']
+                    || (string) $fresh_user['technician_id']
+                        !== (string) $user['technician_id']) {
+                    throw new Exception('ข้อมูลการเชื่อมช่างเปลี่ยนไป กรุณาขอรหัสใหม่');
+                }
+
+                $fresh_email = $fresh_user['tech_email'];
+
+            } elseif (in_array($fresh_role, ['admin', 'executive'], true)
+                && $fresh_user['technician_id'] === null) {
+                $fresh_email = $fresh_user['account_email'];
+
+            } else {
+                throw new Exception('บัญชีนี้ไม่มีสิทธิ์ยืนยันอีเมล');
+            }
+
+            if ($fresh_role !== $role
+                || !is_string($fresh_email)
+                || !filter_var(trim($fresh_email), FILTER_VALIDATE_EMAIL)
+                || trim($fresh_email) !== $request['target_email']) {
+                throw new Exception('อีเมลหรือข้อมูลบัญชีเปลี่ยนไป กรุณาขอรหัสใหม่');
+            }
+
+            $request_id = (int) $request['id'];
+            $request_version = (int) $request['req_auth_version'];
+            $verified_target = $request['target_email'];
+
+            // ใช้คำขอได้ครั้งเดียว และตรวจเงื่อนไขอีกครั้งในคำสั่งบันทึก
+            $consume_stmt = $conn->prepare(
+                "UPDATE auth_requests
+                 SET verified_at = NOW(), used_at = NOW()
+                 WHERE id = ?
+                   AND request_token = ?
+                   AND user_id = ?
+                   AND purpose = 'email_verification'
+                   AND auth_version = ?
+                   AND BINARY target_email = BINARY ?
+                   AND is_canceled = 0
+                   AND used_at IS NULL
+                   AND expires_at > NOW()
+                   AND failed_attempts < 5"
+            );
+
+            if (!$consume_stmt) {
+                throw new Exception('ไม่สามารถตรวจคำขอยืนยันได้');
+            }
+
+            $consume_stmt->bind_param(
+                'isiis',
+                $request_id,
+                $token,
+                $user_id,
+                $request_version,
+                $verified_target
+            );
+
+            if (!$consume_stmt->execute()
+                || $consume_stmt->affected_rows !== 1) {
+                throw new Exception('คำขอหมดอายุ ถูกยกเลิก หรือถูกใช้แล้ว กรุณาขอรหัสใหม่');
+            }
+
+            $consume_stmt->close();
+
+            $stmt_update_user = $conn->prepare(
+                "UPDATE users
+                 SET verified_email = ?, email_verified_at = NOW()
+                 WHERE id = ?
+                   AND is_active = 1
+                   AND auth_version = ?"
+            );
+
+            if (!$stmt_update_user) {
+                throw new Exception('ไม่สามารถบันทึกการยืนยันอีเมลได้');
+            }
+
+            $stmt_update_user->bind_param(
+                'sii',
+                $verified_target,
+                $user_id,
+                $request_version
+            );
+
+            if (!$stmt_update_user->execute()) {
+                throw new Exception('ไม่สามารถบันทึกการยืนยันอีเมลได้');
+            }
+
+            $stmt_update_user->close();
+
+            if (!$conn->commit()) {
+                throw new Exception('ไม่สามารถบันทึกการยืนยันอีเมลได้');
+            }
+
+            $verification_transaction_started = false;
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'ยืนยันอีเมลสำเร็จแล้ว'
+            ]);
+
+        } catch (Throwable $e) {
+            if ($verification_transaction_started) {
+                $conn->rollback();
+            }
+
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'ยืนยันอีเมลไม่สำเร็จ คำขออาจหมดอายุหรือข้อมูลบัญชีเปลี่ยนไป กรุณารีเฟรชหน้าแล้วขอรหัสใหม่ หากยังเกิดปัญหาให้ติดต่อแอดมิน'
+            ]);
+        }
     } else {
         // อัปเดตจำนวนครั้งที่ผิดแบบ Atomic พร้อมดึงค่าล่าสุดมาตรวจสอบ
         $conn->query("UPDATE auth_requests SET failed_attempts = failed_attempts + 1 WHERE id = " . $request['id']);
