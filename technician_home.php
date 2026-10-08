@@ -51,54 +51,8 @@ if ($tech_data['approval_status'] !== 'อนุมัติแล้ว') {
 // ✅ สามารถดึงข้อมูลได้อย่างปลอดภัย 100%
 // ====================================================================
 
-// ✨ สร้าง CSRF Token ประจำ Session เพื่อใช้ป้องกันการปลอมแปลงคำขอจากหน้าเว็บอื่น
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
-// ✨ ข้อ 6: หากต้องการใช้ช่องทางบันทึกหมายเหตุด่วน (update_remark) ข้ามหน้าใบงาน ต้องตรวจสิทธิ์ให้รัดกุม 100%
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_remark') {
-    header('Content-Type: application/json');
-    
-    // 1. ตรวจสอบ CSRF Token ก่อนบันทึก ป้องกันการสวมรอยยิง API
-    $csrf_token_post = $_POST['csrf_token'] ?? '';
-    if (!hash_equals($_SESSION['csrf_token'], $csrf_token_post)) {
-        echo json_encode(['status' => 'error', 'message' => 'คำขอไม่ถูกต้อง (Invalid CSRF Token)']);
-        exit();
-    }
-
-    $repair_id = intval($_POST['repair_id'] ?? 0);
-    $remark = $_POST['remark'] ?? '';
-
-    // 2. ตรวจสิทธิ์อีกครั้ง ณ เวลาบันทึก! ด้วย "รหัสช่างจาก Session เท่านั้น"
-    // (รองรับกรณีหน้าจอช่างเปิดค้างไว้ แต่งานใบนี้เพิ่งถูกแอดมินย้ายไปให้ช่างคนอื่นดูแลแทน)
-    $stmt_check = $conn->prepare("SELECT id FROM repairs WHERE id = ? AND technician_id = ?");
-    $stmt_check->bind_param("ii", $repair_id, $tech_id_session);
-    $stmt_check->execute();
-    $res_check = $stmt_check->get_result();
-    
-    if ($res_check->num_rows === 0) {
-        $stmt_check->close();
-        echo json_encode(['status' => 'error', 'message' => 'คุณไม่มีสิทธิ์แก้ไข หรือ งานนี้ถูกเปลี่ยนผู้รับผิดชอบไปแล้ว']);
-        exit();
-    }
-    $stmt_check->close();
-
-    // 3. บันทึกข้อมูลเฉพาะแถวที่เป็นของช่างคนนี้เท่านั้น
-    $stmt_upd = $conn->prepare("UPDATE repairs SET remark = ? WHERE id = ? AND technician_id = ?");
-    $stmt_upd->bind_param("sii", $remark, $repair_id, $tech_id_session);
-    $stmt_upd->execute();
-
-    // 4. ห้ามแสดง "บันทึกสำเร็จ" หากข้อมูลไม่เปลี่ยน ต้องตรวจผลการแก้ไขด้วย affected_rows
-    if ($stmt_upd->affected_rows > 0) {
-        echo json_encode(['status' => 'success', 'message' => 'บันทึกหมายเหตุสำเร็จ']);
-    } else {
-        // กรณีพิมพ์ข้อความเดิมซ้ำ หรืออัปเดตไม่เข้า จะไม่ขึ้นหลอกว่าสำเร็จ
-        echo json_encode(['status' => 'error', 'message' => 'ไม่พบการเปลี่ยนแปลง หรือบันทึกล้มเหลว']);
-    }
-    $stmt_upd->close();
-    exit();
-}
+// ✨ ข้อ 6: ปิดช่องทางบันทึกหมายเหตุที่ข้ามหน้าใบงานโดยสมบูรณ์
+// ลบการประมวลผล POST action=update_remark ทิ้ง เพื่อบังคับให้ช่างเข้าไปอัปเดตงานผ่านหน้า update_repair.php เท่านั้น
 
 $user_id = $_SESSION['user_id'];
 $full_name = $tech_data['full_name']; // ดึงชื่อล่าสุดจากตาราง technicians โดยตรง

@@ -25,17 +25,21 @@ if ($user_chk_q && $user_chk_q->num_rows > 0) {
     exit();
 }
 
-// ✨ 3. ถ้าดึงข้อมูลเสร็จแล้ว พบว่าเป็นผู้บริหารจริงๆ ค่อยเตะไปหน้า executive_dashboard.php ✨
-if (strtolower($_SESSION['role']) === 'executive') {
+// ✨ อนุญาตเฉพาะ Admin หรือ Executive ที่ผ่านการตรวจสอบสิทธิ์แล้วเท่านั้น ✨
+$current_role = strtolower($_SESSION['role'] ?? '');
+if ($current_role === 'executive') {
     header("Location: executive_dashboard.php");
     exit();
-} elseif (strtolower($_SESSION['role']) === 'technician') {
-    // ข้อ 12.2: ปฏิเสธ Technician เข้าหน้าแอดมิน
-    header("Location: technician_home.php");
+} elseif ($current_role !== 'admin') {
+    // ปฏิเสธ Technician, User และบทบาทที่ไม่รู้จักทันทีก่อนประมวลผลใดๆ
+    session_unset();
+    session_destroy();
+    header("Location: login.php?error=unauthorized_role");
     exit();
 }
 
 // ✨ API ส่งข้อมูลรูปภาพล่าสุดแบบเรียลไทม์ สำหรับอัปเดตหน้าจออัตโนมัติไม่ต้องกดรีเฟรช ✨
+if (isset($_GET['api_get_admin_avatars'])) {
 if (isset($_GET['api_get_admin_avatars'])) {
     header('Content-Type: application/json; charset=utf-8');
     $avatars_data = [];
@@ -417,8 +421,12 @@ if (isset($_GET['delete_profile_picture'])) {
     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1000 }).then(() => { window.location.replace('?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || 'technicians') + '&t=' + new Date().getTime()); }); });</script>";
 }
 
-// ✨ ระบบอัปโหลดเปลี่ยนรูปโปรไฟล์แอดมิน ✨
+// ✨ ระบบอัปโหลดเปลี่ยนรูปโปรไฟล์แอดมิน (ตรวจสอบสิทธิ์ซ้ำ ณ จุด Endpoint) ✨
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture'])) {
+    if (strtolower($_SESSION['role'] ?? '') !== 'admin') {
+        header("Location: login.php");
+        exit();
+    }
     $user_id = $_SESSION['user_id'];
     if (isset($_FILES['profile_avatar']) && $_FILES['profile_avatar']['error'] === UPLOAD_ERR_OK) {
         $file_extension = strtolower(pathinfo($_FILES["profile_avatar"]["name"], PATHINFO_EXTENSION));
@@ -506,35 +514,249 @@ if (isset($_GET['delete_user'])) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
-    $user_id = $_POST['user_id'];
-    $role = $_POST['role']; 
     
-    $full_name = !empty($_POST['full_name']) ? $_POST['full_name'] : NULL;
-    $english_name = !empty($_POST['english_name']) ? $_POST['english_name'] : NULL;
-    $phone = !empty($_POST['phone']) ? $_POST['phone'] : NULL;
-    $email = !empty($_POST['email']) ? trim($_POST['email']) : NULL;
-    
-    $position = !empty($_POST['position']) ? $_POST['position'] : NULL;
-    $delete_avatar_flag = isset($_POST['delete_avatar_flag']) ? $_POST['delete_avatar_flag'] : '0';
-    if (isset($_POST['position_select'])) {
-        $pos_val = $_POST['position_select'];
-        if ($pos_val === 'อื่นๆ' && !empty($_POST['position_custom'])) {
-            $position = $_POST['position_custom'];
-        } elseif (!empty($pos_val)) {
-            $position = $pos_val;
-        }
+        // ตรวจข้อมูลทั้งหมดก่อนอัปโหลดหรือบันทึกบัญชี
+    $reject_account_form = function ($message) {
+        $message_js = json_encode(
+            $message,
+            JSON_UNESCAPED_UNICODE
+            | JSON_HEX_TAG
+            | JSON_HEX_APOS
+            | JSON_HEX_QUOT
+            | JSON_HEX_AMP
+        );
+
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อมูลไม่ถูกต้อง',
+                    text: $message_js,
+                    confirmButtonColor: '#ef4444'
+                });
+            });
+        </script>";
+        exit();
+    };
+
+    if (strtolower($_SESSION['role'] ?? '') !== 'admin') {
+        $reject_account_form('ไม่อนุญาตให้จัดการบัญชี');
     }
-    
-    if ($role === 'Technician') {
-        $department = isset($_POST['department_select']) ? $_POST['department_select'] : NULL;
-        if ($department === 'อื่นๆ' && !empty($_POST['department_custom'])) {
-            $department = $_POST['department_custom'];
+
+    // รับเฉพาะข้อความ ปฏิเสธค่าที่ส่งมาเป็นอาร์เรย์
+    $read_account_text = function ($key, $trim_value = true)
+        use ($reject_account_form) {
+        if (!array_key_exists($key, $_POST)) {
+            return '';
         }
 
-        // ข้อ 5.2 และ 6.1: รับค่าสร้างบัญชีเว็บ
-        $web_username = isset($_POST['username']) ? trim($_POST['username']) : '';
-        $web_password = isset($_POST['password']) ? $_POST['password'] : '';
-        $is_active = isset($_POST['is_active']) ? intval($_POST['is_active']) : 1;
+        if (!is_string($_POST[$key])) {
+            $reject_account_form('ประเภทข้อมูลของช่อง ' . $key . ' ไม่ถูกต้อง');
+        }
+
+        $value = $_POST[$key];
+
+        if (!mb_check_encoding($value, 'UTF-8')
+            || strpos($value, "\0") !== false) {
+            $reject_account_form('ข้อมูลของช่อง ' . $key . ' ไม่ถูกต้อง');
+        }
+
+        return $trim_value ? trim($value) : $value;
+    };
+
+    if (!array_key_exists('user_id', $_POST)) {
+        $reject_account_form('ไม่พบรหัสเป้าหมายของรายการ');
+    }
+
+    $raw_user_id = $read_account_text('user_id', false);
+
+    // ฟอร์มสร้างใหม่ส่งค่าว่าง หรือ 0
+    // ฟอร์มแก้ไขต้องส่งเลขจำนวนเต็มบวกเท่านั้น
+    if ($raw_user_id === '' || $raw_user_id === '0') {
+        $user_id = 0;
+    } else {
+        if (!preg_match('/^[1-9][0-9]*$/D', $raw_user_id)) {
+            $reject_account_form('รหัสเป้าหมายต้องเป็นจำนวนเต็มบวก');
+        }
+
+        $validated_user_id = filter_var(
+            $raw_user_id,
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1, 'max_range' => PHP_INT_MAX]]
+        );
+
+        if ($validated_user_id === false) {
+            $reject_account_form('รหัสเป้าหมายไม่ถูกต้อง');
+        }
+
+        $user_id = $validated_user_id;
+    }
+
+    $role = $read_account_text('role', false);
+
+    if (!in_array($role, ['Technician', 'Admin', 'Executive'], true)) {
+        $reject_account_form('บทบาทบัญชีไม่ถูกต้อง');
+    }
+
+    // admin_level ใช้เฉพาะเส้นทาง Admin / Executive
+    if ($role !== 'Technician' && array_key_exists('admin_level', $_POST)) {
+        $admin_level = $read_account_text('admin_level', false);
+
+        if (!in_array($admin_level, ['Admin', 'Executive'], true)) {
+            $reject_account_form('ระดับสิทธิ์ผู้ดูแลไม่ถูกต้อง');
+        }
+
+        $role = $admin_level;
+    }
+
+    $raw_is_active = $read_account_text('is_active', false);
+
+    if (!in_array($raw_is_active, ['0', '1'], true)) {
+        $reject_account_form('สถานะบัญชีต้องเป็น 0 หรือ 1 เท่านั้น');
+    }
+
+    $is_active = (int) $raw_is_active;
+
+    $account_username = $read_account_text('username');
+    $account_password = $read_account_text('password', false);
+
+    // รองรับชื่อผู้ใช้ภาษาไทย แต่ไม่รับช่องว่างหรืออักขระควบคุม
+    if ($account_username !== ''
+        && preg_match('/[\s\p{Z}\p{C}]/u', $account_username)) {
+        $reject_account_form('Username ต้องไม่มีช่องว่างหรืออักขระควบคุม');
+    }
+
+    if ($account_password !== '' && trim($account_password) === '') {
+        $reject_account_form('รหัสผ่านต้องไม่เป็นช่องว่างทั้งหมด');
+    }
+
+    // ป้องกัน bcrypt ตัดรหัสผ่านส่วนที่เกิน 72 ไบต์ทิ้ง
+    if (PASSWORD_DEFAULT === PASSWORD_BCRYPT
+        && strlen($account_password) > 72) {
+        $reject_account_form('รหัสผ่านยาวเกินไป ต้องไม่เกิน 72 ไบต์');
+    }
+
+    $full_name = $read_account_text('full_name');
+    $english_name = $read_account_text('english_name');
+    $phone = $read_account_text('phone');
+    $email = $read_account_text('email');
+    $position = $read_account_text('position');
+    $delete_avatar_flag = $read_account_text('delete_avatar_flag', false);
+
+    if ($full_name === '') {
+        $reject_account_form('กรุณาระบุชื่อเจ้าของบัญชี');
+    }
+
+    if (!in_array($delete_avatar_flag, ['', '0', '1'], true)) {
+        $reject_account_form('ค่าคำสั่งจัดการรูปภาพไม่ถูกต้อง');
+    }
+
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $reject_account_form('กรุณาระบุอีเมลให้ถูกต้อง');
+    }
+
+    $position_select = $read_account_text('position_select');
+    $position_custom = $read_account_text('position_custom');
+
+    if ($position_select === 'อื่นๆ') {
+        if ($position_custom === '') {
+            $reject_account_form('กรุณาระบุตำแหน่งงานเพิ่มเติม');
+        }
+
+        $position = $position_custom;
+    } elseif ($position_select !== '') {
+        $position = $position_select;
+    }
+
+    $department = $read_account_text('department_select');
+    $department_custom = $read_account_text('department_custom');
+
+    if ($department === 'อื่นๆ') {
+        if ($department_custom === '') {
+            $reject_account_form('กรุณาระบุฝ่ายงานเพิ่มเติม');
+        }
+
+        $department = $department_custom;
+    }
+
+    // อ่านขนาดคอลัมน์จริง ไม่สร้างหรือแก้โครงสร้างฐานข้อมูล
+    $account_column_limits = [];
+    $account_tables = $role === 'Technician'
+        ? ['technicians', 'users']
+        : ['users'];
+
+    try {
+        foreach ($account_tables as $account_table) {
+            $column_result = $conn->query(
+                "SHOW COLUMNS FROM `" . $account_table . "`"
+            );
+
+            if (!$column_result) {
+                $reject_account_form('ไม่สามารถตรวจโครงสร้างข้อมูลบัญชีได้');
+            }
+
+            while ($column = $column_result->fetch_assoc()) {
+                if (preg_match(
+                    '/^(?:var)?char\(([0-9]+)\)/i',
+                    $column['Type'],
+                    $column_match
+                )) {
+                    $account_column_limits[$account_table][$column['Field']]
+                        = (int) $column_match[1];
+                }
+            }
+
+            $column_result->free();
+        }
+    } catch (Throwable $e) {
+        $reject_account_form('ไม่สามารถตรวจโครงสร้างข้อมูลบัญชีได้');
+    }
+
+    $check_account_length = function ($table, $column, $value)
+        use ($account_column_limits, $reject_account_form) {
+        if (!isset($account_column_limits[$table][$column])) {
+            $reject_account_form('ไม่สามารถตรวจความยาวข้อมูลบัญชีได้');
+        }
+
+        if (mb_strlen($value, 'UTF-8')
+            > $account_column_limits[$table][$column]) {
+            $reject_account_form('ข้อมูลในช่อง ' . $column . ' ยาวเกินกำหนด');
+        }
+    };
+
+    $account_fields = [
+        'full_name' => $full_name,
+        'english_name' => $english_name,
+        'position' => $position,
+        'phone' => $phone,
+        'email' => $email,
+        'department' => $department
+    ];
+
+    $profile_table = $role === 'Technician' ? 'technicians' : 'users';
+
+    foreach ($account_fields as $column_name => $column_value) {
+        $check_account_length(
+            $profile_table,
+            $column_name,
+            $column_value
+        );
+    }
+
+    $check_account_length('users', 'username', $account_username);
+    $check_account_length('users', 'full_name', $full_name);
+
+    // คงการบันทึกช่องที่ไม่ระบุเป็น NULL
+    $english_name = $english_name === '' ? null : $english_name;
+    $phone = $phone === '' ? null : $phone;
+    $email = $email === '' ? null : $email;
+    $position = $position === '' ? null : $position;
+    $department = $department === '' ? null : $department;
+    
+    if ($role === 'Technician') {
+                // ใช้ข้อมูลที่ตรวจแล้วจากส่วนต้นของ save_user
+        $web_username = $account_username;
+        $web_password = $account_password;
 
         $avatar_url = NULL;
         $upload_dir = 'uploads/';
@@ -555,13 +777,102 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             }
         }
 
-        // ข้อ 6.5: ใช้ Transaction เพื่อผูกการบันทึก 2 ตาราง
         $conn->begin_transaction();
         try {
-            $tech_id = $user_id;
+                        $tech_id = $user_id;
+            $existing_user = null;
 
-           // 1. จัดการข้อมูลตาราง technicians
-            if (empty($user_id)) {
+            if ($user_id > 0) {
+                $chk_t = $conn->prepare(
+                    "SELECT id FROM technicians WHERE id = ? FOR UPDATE"
+                );
+
+                if (!$chk_t) {
+                    throw new Exception('ไม่สามารถตรวจข้อมูลช่างได้');
+                }
+
+                $chk_t->bind_param("i", $user_id);
+
+                if (!$chk_t->execute()) {
+                    throw new Exception('ไม่สามารถตรวจข้อมูลช่างได้');
+                }
+
+                $tech_result = $chk_t->get_result();
+
+                if (!$tech_result || $tech_result->num_rows !== 1) {
+                    throw new Exception('ไม่พบข้อมูลช่างที่ต้องการแก้ไข');
+                }
+
+                $chk_t->close();
+
+                // ตรวจบัญชีที่เชื่อมทั้งหมดก่อนแก้ข้อมูลบัญชี
+                $usr_q = $conn->prepare(
+                    "SELECT id, role, technician_id
+                     FROM users
+                     WHERE technician_id = ?
+                     FOR UPDATE"
+                );
+
+                if (!$usr_q) {
+                    throw new Exception('ไม่สามารถตรวจบัญชีที่เชื่อมกับช่างได้');
+                }
+
+                $usr_q->bind_param("i", $tech_id);
+
+                if (!$usr_q->execute()) {
+                    throw new Exception('ไม่สามารถตรวจบัญชีที่เชื่อมกับช่างได้');
+                }
+
+                $usr_res = $usr_q->get_result();
+
+                if (!$usr_res) {
+                    throw new Exception('ไม่สามารถตรวจบัญชีที่เชื่อมกับช่างได้');
+                }
+
+                if ($usr_res->num_rows > 1) {
+                    throw new Exception(
+                        'พบหลายบัญชีเชื่อมกับช่างคนเดียวกัน กรุณาตรวจสอบข้อมูลก่อน'
+                    );
+                }
+
+                if ($usr_res->num_rows === 1) {
+                    $existing_user = $usr_res->fetch_assoc();
+
+                    if (strtolower($existing_user['role']) !== 'technician'
+                        || (int) $existing_user['technician_id'] !== $tech_id) {
+                        throw new Exception(
+                            'บัญชีที่เชื่อมไม่ใช่บัญชี Technician ของช่างคนนี้'
+                        );
+                    }
+                }
+
+                $usr_q->close();
+            }
+
+            if ($existing_user && $web_username === '') {
+                throw new Exception(
+                    'บัญชีเว็บที่มีอยู่แล้ว ไม่อนุญาตให้เว้นว่าง Username'
+                );
+            }
+
+            if (!$existing_user
+                && $web_username !== ''
+                && $web_password === '') {
+                throw new Exception(
+                    'กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่ของช่าง'
+                );
+            }
+
+            if (!$existing_user
+                && $web_username === ''
+                && $web_password !== '') {
+                throw new Exception(
+                    'กรุณาระบุ Username เมื่อต้องการสร้างบัญชีเว็บ'
+                );
+            }
+
+            // 1. จัดการข้อมูลตาราง technicians
+            if ($user_id === 0) {
                 $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
                 $stmt = $conn->prepare("INSERT INTO technicians (full_name, english_name, position, phone, email, department, avatar_url, secret_code, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'รอผูกบัญชี')");
                 $stmt->bind_param("ssssssss", $full_name, $english_name, $position, $phone, $email, $department, $avatar_url, $secret_code);
@@ -569,7 +880,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 $tech_id = $conn->insert_id;
                 $msg = "เพิ่มข้อมูลเจ้าหน้าที่สำเร็จ<br>รหัสผูกบัญชีไลน์คือ: <b style='font-size:24px; color:#4f46e5; margin-top:10px; display:block;'>$secret_code</b>";
             } else {
-                // ✨ ดึงอีเมลเดิมมาตรวจสอบก่อนว่ามีการเปลี่ยนแปลงหรือไม่ (ตามกฎข้อ 2.3) ✨
                 $old_email_q = $conn->query("SELECT email FROM technicians WHERE id = $user_id");
                 $old_email = ($old_email_q && $old_email_q->num_rows > 0) ? $old_email_q->fetch_assoc()['email'] : null;
 
@@ -597,15 +907,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 }
                 $stmt->execute();
 
-                // ✨ หากแอดมินแก้ไขอีเมลใหม่ ต้องยกเลิกสถานะยืนยันอีเมลเดิม และคำขอ OTP เดิมทิ้งทั้งหมด ✨
-                if ($old_email !== $email) {
-                    $conn->query("UPDATE users SET verified_email = NULL, email_verified_at = NULL WHERE technician_id = $user_id");
-                    $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE purpose = 'email_verification' AND user_id IN (SELECT id FROM users WHERE technician_id = $user_id)");
+                                if ($old_email !== $email && $existing_user) {
+                    $linked_user_id = (int) $existing_user['id'];
+
+                    $clear_verified = $conn->prepare(
+                        "UPDATE users
+                         SET verified_email = NULL, email_verified_at = NULL
+                         WHERE id = ?
+                           AND technician_id = ?
+                           AND LOWER(role) = 'technician'"
+                    );
+
+                    if (!$clear_verified) {
+                        throw new Exception('ไม่สามารถอัปเดตข้อมูลยืนยันอีเมลได้');
+                    }
+
+                    $clear_verified->bind_param(
+                        "ii",
+                        $linked_user_id,
+                        $tech_id
+                    );
+
+                    if (!$clear_verified->execute()) {
+                        throw new Exception('ไม่สามารถอัปเดตข้อมูลยืนยันอีเมลได้');
+                    }
+
+                    $clear_verified->close();
+
+                    $cancel_email_request = $conn->prepare(
+                        "UPDATE auth_requests
+                         SET is_canceled = 1
+                         WHERE purpose = 'email_verification'
+                           AND user_id = ?"
+                    );
+
+                    if (!$cancel_email_request) {
+                        throw new Exception('ไม่สามารถยกเลิกคำขอยืนยันอีเมลได้');
+                    }
+
+                    $cancel_email_request->bind_param("i", $linked_user_id);
+
+                    if (!$cancel_email_request->execute()) {
+                        throw new Exception('ไม่สามารถยกเลิกคำขอยืนยันอีเมลได้');
+                    }
+
+                    $cancel_email_request->close();
                 }
             }
 
-            // 2. จัดการข้อมูลตาราง users สำหรับช่าง (ข้อ 5.3, 6.1)
-            if (!empty($web_username)) {
+            // ตรวจบัญชีที่เชื่อมและข้อมูลสำหรับสร้าง/แก้บัญชี
+            // ก่อนบันทึกข้อมูลแล้วในส่วนต้นของ Transaction
+
+            // 2. จัดการข้อมูลตาราง users สำหรับช่าง
+            // ✨ การส่ง Username ว่างต้องไม่ทำให้คำสั่งระงับบัญชีถูกข้าม (ย้ายเงื่อนไขออกจากการเช็ค !empty อย่างเดียว)
+            if ($existing_user || $web_username !== '') {
+                
                 // ตรวจ Username ซ้ำ
                 $chk_u = $conn->prepare("SELECT id FROM users WHERE username = ? AND technician_id != ?");
                 $chk_u->bind_param("si", $web_username, $tech_id);
@@ -615,23 +971,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 }
                 $chk_u->close();
 
-                // ตรวจว่ามีบัญชีแล้วหรือยัง
-                $usr_q = $conn->prepare("SELECT id FROM users WHERE technician_id = ?");
-                $usr_q->bind_param("i", $tech_id);
-                $usr_q->execute();
-                $usr_res = $usr_q->get_result();
-
-                if ($usr_res->num_rows > 0) {
-                    // อัปเดตบัญชีเดิม
-                    $usr_id = $usr_res->fetch_assoc()['id'];
-                    if (!empty($web_password)) {
-                        // ✨ ข้อ 2.11: เข้ารหัสผ่าน และบังคับให้เปลี่ยนรหัสผ่านเมื่อเข้าใช้งาน (must_change_password = 1)
+                if ($existing_user) {
+                    $usr_id = $existing_user['id'];
+                    // ✨ คงการเว้นรหัสผ่านว่างเพื่อไม่เปลี่ยนรหัสเดิม
+                                        if ($web_password !== '') {
                         $hashed = password_hash($web_password, PASSWORD_DEFAULT);
-                        $u_upd = $conn->prepare("UPDATE users SET username = ?, password = ?, full_name = ?, is_active = ?, auth_version = auth_version + 1, must_change_password = 1 WHERE id = ?");
-                        $u_upd->bind_param("sssii", $web_username, $hashed, $full_name, $is_active, $usr_id);
-                        $u_upd->execute();
 
-                        // ✨ ข้อ 2.11: บันทึก Log การกระทำของแอดมิน
+                        $u_upd = $conn->prepare(
+                            "UPDATE users
+                             SET username = ?, password = ?, full_name = ?,
+                                 is_active = ?, auth_version = auth_version + 1,
+                                 must_change_password = 1
+                             WHERE id = ?
+                               AND technician_id = ?
+                               AND LOWER(role) = 'technician'"
+                        );
+
+                        if (!$u_upd) {
+                            throw new Exception('ไม่สามารถอัปเดตบัญชีช่างได้');
+                        }
+
+                        $u_upd->bind_param(
+                            "sssiii",
+                            $web_username,
+                            $hashed,
+                            $full_name,
+                            $is_active,
+                            $usr_id,
+                            $tech_id
+                        );
+
+                        if (!$u_upd->execute() || $u_upd->affected_rows !== 1) {
+                            throw new Exception('ไม่สามารถอัปเดตบัญชีช่างได้');
+                        }
+
                         $admin_id = $_SESSION['user_id'];
                         $log_desc = "ตั้งรหัสผ่านชั่วคราวให้ช่าง (Username: $web_username)";
                         $stmt_log = $conn->prepare("INSERT INTO admin_action_logs (admin_id, action_type, target_user_id, description) VALUES (?, 'RESET_PASSWORD', ?, ?)");
@@ -639,24 +1012,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                         $stmt_log->execute();
                         $stmt_log->close();
                     } else {
-                        // ไม่เปลี่ยนรหัสผ่าน (ข้อ 5.7, 13.2)
-                        $u_upd = $conn->prepare("UPDATE users SET username = ?, full_name = ?, is_active = ?, auth_version = auth_version + 1 WHERE id = ?");
-                        $u_upd->bind_param("ssii", $web_username, $full_name, $is_active, $usr_id);
-                        $u_upd->execute();
+                                                $u_upd = $conn->prepare(
+                            "UPDATE users
+                             SET username = ?, full_name = ?, is_active = ?,
+                                 auth_version = auth_version + 1
+                             WHERE id = ?
+                               AND technician_id = ?
+                               AND LOWER(role) = 'technician'"
+                        );
+
+                        if (!$u_upd) {
+                            throw new Exception('ไม่สามารถอัปเดตบัญชีช่างได้');
+                        }
+
+                        $u_upd->bind_param(
+                            "ssiii",
+                            $web_username,
+                            $full_name,
+                            $is_active,
+                            $usr_id,
+                            $tech_id
+                        );
+
+                        if (!$u_upd->execute() || $u_upd->affected_rows !== 1) {
+                            throw new Exception('ไม่สามารถอัปเดตบัญชีช่างได้');
+                        }
                     }
                 } else {
-                    // สร้างบัญชีใหม่
-                    if (empty($web_password)) throw new Exception("กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่ของช่าง");
                     $hashed = password_hash($web_password, PASSWORD_DEFAULT);
                     $role_tech = 'Technician';
                     
-                    // ✨ ข้อ 2.11: บังคับเปลี่ยนรหัสผ่านตั้งแต่ครั้งแรกที่ล็อกอิน
                     $u_ins = $conn->prepare("INSERT INTO users (username, password, full_name, role, technician_id, is_active, auth_version, must_change_password) VALUES (?, ?, ?, ?, ?, ?, 1, 1)");
                     $u_ins->bind_param("ssssii", $web_username, $hashed, $full_name, $role_tech, $tech_id, $is_active);
                     $u_ins->execute();
                     $new_usr_id = $conn->insert_id;
 
-                    // ✨ ข้อ 2.11: บันทึก Log การสร้างบัญชี
                     $admin_id = $_SESSION['user_id'];
                     $log_desc = "สร้างบัญชีใหม่ให้ช่าง (Username: $web_username)";
                     $stmt_log = $conn->prepare("INSERT INTO admin_action_logs (admin_id, action_type, target_user_id, description) VALUES (?, 'CREATE_USER', ?, ?)");
@@ -677,18 +1067,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
 
     } else {
-        $username = $_POST['username'];
-        $password = $_POST['password']; 
-        if (isset($_POST['admin_level'])) {
-            $role = $_POST['admin_level'];
-        }
-        
-        $department = isset($_POST['department_select']) ? $_POST['department_select'] : NULL;
-        if ($department === 'อื่นๆ' && !empty($_POST['department_custom'])) {
-            $department = $_POST['department_custom'];
+                // ใช้ข้อมูลที่ตรวจแล้วสำหรับเส้นทาง Admin / Executive
+        $username = $account_username;
+        $password = $account_password;
+        $existing_adm = null;
+
+        if ($username === '') {
+            $reject_account_form('กรุณาระบุ Username');
         }
 
-        // ✨ จัดการอัปโหลดไฟล์รูปภาพโปรไฟล์ของ Admin และ Executive ✨
+        if ($user_id === 0 && $password === '') {
+            $reject_account_form('กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่');
+        }
+
+        if ($user_id > 0) {
+            $chk_adm = $conn->prepare(
+                "SELECT role, technician_id, is_active
+                 FROM users
+                 WHERE id = ?"
+            );
+
+            if (!$chk_adm) {
+                $reject_account_form('ไม่สามารถตรวจบัญชีเป้าหมายได้');
+            }
+
+            $chk_adm->bind_param("i", $user_id);
+
+            if (!$chk_adm->execute()) {
+                $reject_account_form('ไม่สามารถตรวจบัญชีเป้าหมายได้');
+            }
+
+            $adm_res = $chk_adm->get_result();
+
+            if (!$adm_res || $adm_res->num_rows !== 1) {
+                $reject_account_form('ไม่พบบัญชีที่ต้องการแก้ไข');
+            }
+
+            $existing_adm = $adm_res->fetch_assoc();
+            $chk_adm->close();
+
+            if (!in_array(
+                strtolower($existing_adm['role']),
+                ['admin', 'executive'],
+                true
+            ) || $existing_adm['technician_id'] !== null) {
+                $reject_account_form(
+                    'ฟอร์มนี้แก้ได้เฉพาะบัญชี Admin หรือ Executive ที่ไม่ได้เชื่อมกับช่าง'
+                );
+            }
+        }
+
         $avatar_url = NULL;
         $upload_dir = 'uploads/';
         if (!is_dir($upload_dir)) {
@@ -709,11 +1137,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
 
         if (empty($user_id)) {
-            // ✨ ข้อ 2.11: เข้ารหัสผ่าน และบังคับต้องเปลี่ยนรหัสตั้งแต่ครั้งแรก (must_change_password=1)
+            // ✨ บัญชีผู้ดูแลต้องไม่ยอมให้ Username ว่าง / สร้างบัญชีต้องห้ามว่าง
+            if ($username === '') {
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ครบ', text: 'กรุณาระบุ Username', confirmButtonColor: '#ef4444' }).then(() => { $js_redirect }); });</script>";
+                exit();
+            }
+            if ($password === '') {
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ครบ', text: 'กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่', confirmButtonColor: '#ef4444' }).then(() => { $js_redirect }); });</script>";
+                exit();
+            }
+
             $hashed_admin_pwd = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("INSERT INTO users (username, password, full_name, english_name, position, phone, email, department, role, avatar_url, must_change_password, auth_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)");
+                        $stmt = $conn->prepare(
+                "INSERT INTO users
+                 (username, password, full_name, english_name, position,
+                  phone, email, department, role, avatar_url,
+                  is_active, must_change_password, auth_version)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)"
+            );
+
             if ($stmt) {
-                $stmt->bind_param("ssssssssss", $username, $hashed_admin_pwd, $full_name, $english_name, $position, $phone, $email, $department, $role, $avatar_url);
+                $stmt->bind_param(
+                    "ssssssssssi",
+                    $username,
+                    $hashed_admin_pwd,
+                    $full_name,
+                    $english_name,
+                    $position,
+                    $phone,
+                    $email,
+                    $department,
+                    $role,
+                    $avatar_url,
+                    $is_active
+                );
                 if ($stmt->execute()) {
                     $new_usr_id = $conn->insert_id;
                     $admin_id = $_SESSION['user_id'] ?? 0;
@@ -729,6 +1186,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 }
             }
         } else {
+
+            // ตรวจบัญชีเป้าหมายว่าเป็น Admin / Executive
+            // และไม่ได้เชื่อมกับช่างแล้วก่อนอัปโหลดหรือบันทึก
+
+            // ✨ บัญชีที่มีอยู่แล้วต้องไม่ยอมให้ Username ว่าง
+            if (empty($username)) {
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ถูกต้อง', text: 'บัญชีที่มีอยู่แล้ว ไม่อนุญาตให้เว้นว่าง Username', confirmButtonColor: '#ef4444' }).then(() => { $js_redirect }); });</script>";
+                exit();
+            }
+
             if (($delete_avatar_flag === '1' && !$avatar_url) || $avatar_url) {
                 $q_old = $conn->query("SELECT avatar_url FROM users WHERE id = $user_id");
                 if ($q_old && $q_old->num_rows > 0) {
@@ -737,34 +1204,79 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 }
             }
 
-            if (!empty($password)) {
-                // ✨ ข้อ 2.11: เข้ารหัสผ่าน และบังคับต้องเปลี่ยนรหัส (must_change_password=1) พร้อมอัปเดตเวอร์ชัน
-                $hashed_admin_pwd = password_hash($password, PASSWORD_DEFAULT);
-                if ($delete_avatar_flag === '1' && !$avatar_url) {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=NULL, auth_version=auth_version+1, must_change_password=1 WHERE id=?");
-                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $hashed_admin_pwd, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
-                } elseif ($avatar_url) {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=?, auth_version=auth_version+1, must_change_password=1 WHERE id=?");
-                    if ($stmt) $stmt->bind_param("ssssssssssi", $username, $hashed_admin_pwd, $full_name, $english_name, $position, $phone, $email, $department, $role, $avatar_url, $user_id);
-                } else {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, password=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, auth_version=auth_version+1, must_change_password=1 WHERE id=?");
-                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $hashed_admin_pwd, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
-                }
-                $admin_action_type = 'RESET_PASSWORD'; // แอบจำไว้เพื่อใช้ตอน execute
-            } else {
-                if ($delete_avatar_flag === '1' && !$avatar_url) {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=NULL WHERE id=?");
-                    if ($stmt) $stmt->bind_param("ssssssssi", $username, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
-                } elseif ($avatar_url) {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=?, avatar_url=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("sssssssssi", $username, $full_name, $english_name, $position, $phone, $email, $department, $role, $avatar_url, $user_id);
-                } else {
-                    $stmt = $conn->prepare("UPDATE users SET username=?, full_name=?, english_name=?, position=?, phone=?, email=?, department=?, role=? WHERE id=?");
-                    if ($stmt) $stmt->bind_param("ssssssssi", $username, $full_name, $english_name, $position, $phone, $email, $department, $role, $user_id);
-                }
+                        $update_fields = [
+                'username = ?',
+                'full_name = ?',
+                'english_name = ?',
+                'position = ?',
+                'phone = ?',
+                'email = ?',
+                'department = ?',
+                'role = ?',
+                'is_active = ?'
+            ];
+
+            $update_values = [
+                $username,
+                $full_name,
+                $english_name,
+                $position,
+                $phone,
+                $email,
+                $department,
+                $role,
+                $is_active
+            ];
+
+            $update_types = 'ssssssssi';
+
+            // เพิ่มเวอร์ชันเมื่อเปลี่ยนรหัสผ่าน บทบาท หรือสถานะบัญชี
+            $version_increment = (
+                $password !== ''
+                || $existing_adm['role'] !== $role
+                || (int) $existing_adm['is_active'] !== $is_active
+            ) ? 1 : 0;
+
+            if ($password !== '') {
+                $hashed_admin_pwd = password_hash(
+                    $password,
+                    PASSWORD_DEFAULT
+                );
+
+                $update_fields[] = 'password = ?';
+                $update_fields[] = 'must_change_password = 1';
+                $update_values[] = $hashed_admin_pwd;
+                $update_types .= 's';
+                $admin_action_type = 'RESET_PASSWORD';
+            }
+
+            if ($delete_avatar_flag === '1' && !$avatar_url) {
+                $update_fields[] = 'avatar_url = NULL';
+            } elseif ($avatar_url) {
+                $update_fields[] = 'avatar_url = ?';
+                $update_values[] = $avatar_url;
+                $update_types .= 's';
+            }
+
+            $update_fields[] = 'auth_version = auth_version + ?';
+            $update_values[] = $version_increment;
+            $update_types .= 'i';
+
+            $update_values[] = $user_id;
+            $update_types .= 'i';
+
+            $update_sql = "UPDATE users SET "
+                . implode(', ', $update_fields)
+                . " WHERE id = ?
+                    AND LOWER(role) IN ('admin', 'executive')
+                    AND technician_id IS NULL";
+
+            $stmt = $conn->prepare($update_sql);
+
+            if ($stmt) {
+                $stmt->bind_param($update_types, ...$update_values);
             }
             if ($stmt && $stmt->execute()) {
-                // ✨ ข้อ 2.11: บันทึกประวัติการกระทำของแอดมิน (ถ้ามีการรีเซ็ตรหัส)
                 if (isset($admin_action_type)) {
                     $admin_id = $_SESSION['user_id'] ?? 0;
                     $log_desc = "ตั้งรหัสผ่านชั่วคราวให้ผู้ดูแลระบบ (Username: $username)";
@@ -825,8 +1337,13 @@ if ($u_sync_q) { while($r = $u_sync_q->fetch_assoc()) $all_users_sync[] = $r; }
 
 $full_system_hash = md5(json_encode($reps) . json_encode($all_techs_sync) . json_encode($all_users_sync) . json_encode($line_users_map));
 
-// ✨ API เช็คอัปเดตแบบคลุมทุกตารางและ Modal 100% ✨
+// ✨ API เช็คอัปเดตแบบคลุมทุกตารางและ Modal 100% (ตรวจสอบสิทธิ์ซ้ำ ณ จุด Endpoint) ✨
 if (isset($_GET['api_check_hash'])) {
+    if (strtolower($_SESSION['role'] ?? '') !== 'admin') {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+        exit();
+    }
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
         'hash' => $full_system_hash,
