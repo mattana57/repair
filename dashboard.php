@@ -915,7 +915,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         $reject_account_form('ค่าคำสั่งจัดการรูปภาพไม่ถูกต้อง');
     }
 
-    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if ($email === '') {
+        $reject_account_form('กรุณาระบุอีเมล');
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $reject_account_form('กรุณาระบุอีเมลให้ถูกต้อง');
     }
 
@@ -4111,8 +4115,8 @@ if (isset($_GET['api_check_hash'])) {
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">EMAIL <span class="text-slate-400 font-normal normal-case">(ไม่บังคับ)</span></label>
-                        <input type="email" name="email" id="techAdmin_email" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น somporn@mbs.com" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น somporn@mbs.com">
+                                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">EMAIL <span class="text-rose-500">*</span></label>
+                        <input type="email" name="email" id="techAdmin_email" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="เช่น somporn@mbs.com" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="เช่น somporn@mbs.com" required>
                         <p id="err_techAdmin_email" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>รูปแบบอีเมลไม่ถูกต้อง (เช่น example@mbs.com)</span></p>
                     </div>
                     
@@ -6659,10 +6663,16 @@ if (isset($_GET['api_check_hash'])) {
                 if (!firstErrorEl) firstErrorEl = phoneEl;
             }
 
-            // 4.5 เช็ครูปแบบอีเมล (EMAIL) - ไม่บังคับกรอก แต่ถ้ากรอกมาต้องถูกรูปแบบอีเมล
-            if (emailEl && emailEl.value.trim() !== '' && emailEl.value.trim() !== '-') {
+            // อีเมล (EMAIL) - บังคับกรอกและตรวจรูปแบบ
+            if (emailEl) {
+                const emailVal = emailEl.value.trim();
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(emailEl.value.trim())) {
+
+                if (emailVal === '' || emailVal === '-' || emailVal === 'ไม่ระบุ') {
+                    setFieldError(emailEl, 'กรุณาระบุอีเมล');
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = emailEl;
+                } else if (!emailRegex.test(emailVal)) {
                     setFieldError(emailEl, 'รูปแบบอีเมลไม่ถูกต้อง (เช่น example@mbs.com)');
                     isValid = false;
                     if (!firstErrorEl) firstErrorEl = emailEl;
