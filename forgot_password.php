@@ -2,6 +2,60 @@
 session_start();
 require_once 'db_connect.php';
 
+// เลือกอีเมลตามบทบาทจากข้อมูลฐานข้อมูลเท่านั้น
+function getPasswordResetEmailSource($account) {
+    if (!is_array($account)) {
+        return null;
+    }
+
+    $role = strtolower((string) ($account['role'] ?? ''));
+
+    if ($role === 'technician') {
+        $technician_id = filter_var(
+            $account['technician_id'] ?? null,
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]]
+        );
+
+        $found_technician_id = filter_var(
+            $account['found_technician_id'] ?? null,
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]]
+        );
+
+        if ($technician_id === false
+            || $found_technician_id === false
+            || $technician_id !== $found_technician_id) {
+            return null;
+        }
+
+        $email = $account['tech_email'] ?? null;
+
+    } elseif (in_array($role, ['admin', 'executive'], true)) {
+        // บัญชีผู้ดูแลต้องไม่ใช้ข้อมูลช่างเป็นช่องทางสำรอง
+        if (($account['technician_id'] ?? null) !== null) {
+            return null;
+        }
+
+        $email = $account['account_email'] ?? null;
+
+    } else {
+        return null;
+    }
+
+    if (!is_string($email)) {
+        return null;
+    }
+
+    $email = trim($email);
+
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return null;
+    }
+
+    return $email;
+}
+
 // นำเข้าระบบส่งอีเมลมาใช้งาน
 require_once 'mailer.php';
 
@@ -38,33 +92,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        // ค้นหาบัญชีโดยตรวจสอบอีเมลที่ยืนยันแล้ว
+                // อ่านอีเมลของบัญชีและช่างแยกกันอย่างชัดเจน
         $stmt = $conn->prepare("
-            SELECT u.id, u.role, u.is_active, u.verified_email, u.email_verified_at, u.auth_version, t.email AS tech_email 
-            FROM users u 
-            LEFT JOIN technicians t ON u.technician_id = t.id 
+            SELECT
+                u.id,
+                u.role,
+                u.is_active,
+                u.technician_id,
+                u.email AS account_email,
+                u.verified_email,
+                u.email_verified_at,
+                u.auth_version,
+                t.id AS found_technician_id,
+                t.email AS tech_email
+            FROM users u
+            LEFT JOIN technicians t ON u.technician_id = t.id
             WHERE u.username = ?
         ");
+
+        if (!$stmt) {
+            echo json_encode([
+                'status' => 'success',
+                'token' => $fake_token,
+                'message' => $neutral_message
+            ]);
+            exit();
+        }
+
         $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $user = $stmt->get_result()->fetch_assoc();
+
+        if (!$stmt->execute()) {
+            $stmt->close();
+            echo json_encode([
+                'status' => 'success',
+                'token' => $fake_token,
+                'message' => $neutral_message
+            ]);
+            exit();
+        }
+
+        $user_result = $stmt->get_result();
+
+        // หากมี Username ซ้ำ ไม่เลือกบัญชีใดเอง
+        $user = $user_result && $user_result->num_rows === 1
+            ? $user_result->fetch_assoc()
+            : null;
+
         $stmt->close();
 
         $is_valid = false;
         $target_email = null;
 
-        // ตรวจสอบเงื่อนไขว่าบัญชีนี้พร้อมสำหรับรีเซ็ตรหัสผ่านหรือไม่
-        if ($user && $user['is_active'] == 1 && !empty($user['email_verified_at'])) {
-            if ($user['role'] === 'Technician') {
-                if (!empty($user['tech_email']) && $user['tech_email'] === $user['verified_email']) {
-                    $target_email = $user['tech_email'];
-                    $is_valid = true;
-                }
-            } else {
-                if (!empty($user['verified_email'])) {
-                    $target_email = $user['verified_email'];
-                    $is_valid = true;
-                }
+        if ($user
+            && (int) $user['is_active'] === 1
+            && !empty($user['email_verified_at'])) {
+
+            $current_account_email = getPasswordResetEmailSource($user);
+
+            if ($current_account_email !== null
+                && is_string($user['verified_email'])
+                && $current_account_email === $user['verified_email']) {
+                $target_email = $current_account_email;
+                $is_valid = true;
             }
         }
 
@@ -154,16 +243,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        // ค้นหาคำขอพร้อมข้อมูลบัญชีและอีเมลเพื่อตรวจสอบเงื่อนไขทั้งหมดแบบ Real-time
+                // อ่านแหล่งอีเมลปัจจุบันด้วยกฎเดียวกับตอนขอ OTP
         $stmt = $conn->prepare("
-            SELECT 
-                a.id, a.user_id, a.otp_hash, a.failed_attempts, a.expires_at, a.auth_version AS req_auth_version, a.target_email,
-                u.auth_version AS current_auth_version, u.is_active, u.role, u.verified_email, u.technician_id,
+            SELECT
+                a.id,
+                a.user_id,
+                a.otp_hash,
+                a.failed_attempts,
+                a.expires_at,
+                a.auth_version AS req_auth_version,
+                a.target_email,
+                u.auth_version AS current_auth_version,
+                u.is_active,
+                u.role,
+                u.verified_email,
+                u.email_verified_at,
+                u.technician_id,
+                u.email AS account_email,
+                t.id AS found_technician_id,
                 t.email AS tech_email
             FROM auth_requests a
             JOIN users u ON a.user_id = u.id
             LEFT JOIN technicians t ON u.technician_id = t.id
-            WHERE a.request_token = ? AND a.purpose = 'password_reset' AND a.is_canceled = 0 AND a.used_at IS NULL
+            WHERE a.request_token = ?
+              AND a.purpose = 'password_reset'
+              AND a.is_canceled = 0
+              AND a.used_at IS NULL
         ");
         $stmt->bind_param("s", $token);
         $stmt->execute();
@@ -196,22 +301,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        $current_email = null;
-        if ($request['role'] === 'Technician') {
-            if (empty($request['technician_id'])) {
-                $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = {$request['id']}");
-                echo json_encode(['status' => 'error', 'message' => 'บัญชีนี้ไม่ได้เชื่อมโยงกับข้อมูลเจ้าหน้าที่ คำขอถูกยกเลิก']);
-                exit();
-            }
-            $current_email = $request['tech_email'];
-        } else {
-            $current_email = $request['verified_email'];
-        }
+                $current_email = getPasswordResetEmailSource($request);
 
-        // ตรวจสอบว่าอีเมลยังตรงกับตอนที่ขอ OTP หรือไม่
-        if ($current_email !== $request['target_email']) {
-            $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = {$request['id']}");
-            echo json_encode(['status' => 'error', 'message' => 'อีเมลของบัญชีถูกเปลี่ยนแปลง กรุณาทำรายการใหม่']);
+        // ต้องตรงทั้งอีเมลปัจจุบัน อีเมลที่ยืนยัน และอีเมลของคำขอ
+        if ($current_email === null
+            || empty($request['email_verified_at'])
+            || !is_string($request['verified_email'])
+            || $current_email !== $request['verified_email']
+            || $current_email !== $request['target_email']) {
+
+            $cancel_email_stmt = $conn->prepare(
+                "UPDATE auth_requests
+                 SET is_canceled = 1
+                 WHERE id = ?"
+            );
+
+            if ($cancel_email_stmt) {
+                $cancel_request_id = (int) $request['id'];
+                $cancel_email_stmt->bind_param("i", $cancel_request_id);
+                $cancel_email_stmt->execute();
+                $cancel_email_stmt->close();
+            }
+
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'ข้อมูลอีเมลหรือการเชื่อมบัญชีไม่ถูกต้อง กรุณาทำรายการใหม่หรือติดต่อแอดมิน'
+            ]);
             exit();
         }
 

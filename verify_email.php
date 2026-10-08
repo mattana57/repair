@@ -4,35 +4,173 @@ require_once 'db_connect.php';
 
 header('Content-Type: application/json');
 
-// 1. ตรวจสอบว่าล็อกอินอยู่หรือไม่ (แอดมินเท่านั้นที่ช่วยคนที่ล็อกอินไม่ได้)
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+// ยืนยันอีเมลได้เฉพาะบัญชีของผู้ที่ล็อกอินอยู่
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'คำขอไม่ถูกต้อง'
+    ]);
     exit();
 }
 
-$user_id = $_SESSION['user_id'];
-$action = $_POST['action'] ?? '';
+$user_id = filter_var(
+    $_SESSION['user_id'] ?? null,
+    FILTER_VALIDATE_INT,
+    ['options' => ['min_range' => 1]]
+);
 
-// ดึงข้อมูลบัญชีและอีเมลปัจจุบันของช่าง
+if ($user_id === false
+    || !isset($_SESSION['auth_version'])) {
+    http_response_code(401);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'กรุณาเข้าสู่ระบบก่อนทำรายการ'
+    ]);
+    exit();
+}
+
+$csrf_received = $_POST['csrf_token'] ?? null;
+$csrf_expected = $_SESSION['csrf_token'] ?? null;
+
+if (!is_string($csrf_received)
+    || !is_string($csrf_expected)
+    || $csrf_expected === ''
+    || !hash_equals($csrf_expected, $csrf_received)) {
+    http_response_code(403);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'คำขอไม่ถูกต้อง กรุณารีเฟรชหน้าแล้วลองใหม่'
+    ]);
+    exit();
+}
+
+$action = $_POST['action'] ?? null;
+
+if (!is_string($action)
+    || !in_array($action, ['request_otp', 'verify_otp'], true)) {
+    http_response_code(400);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'คำสั่งไม่ถูกต้อง'
+    ]);
+    exit();
+}
+
 $stmt = $conn->prepare("
-    SELECT u.id, u.role, u.technician_id, u.verified_email, u.email_verified_at, t.email AS tech_email 
-    FROM users u 
-    LEFT JOIN technicians t ON u.technician_id = t.id 
+    SELECT
+        u.id,
+        u.role,
+        u.is_active,
+        u.auth_version,
+        u.technician_id,
+        u.email AS account_email,
+        u.verified_email,
+        u.email_verified_at,
+        t.id AS found_technician_id,
+        t.email AS tech_email
+    FROM users u
+    LEFT JOIN technicians t ON u.technician_id = t.id
     WHERE u.id = ?
 ");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
-$stmt->close();
 
-if (!$user || $user['role'] !== 'Technician' || empty($user['technician_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'บัญชีของคุณยังไม่ได้เชื่อมโยงกับข้อมูลช่าง กรุณาติดต่อแอดมิน']);
+if (!$stmt) {
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'ไม่สามารถตรวจข้อมูลบัญชีได้'
+    ]);
     exit();
 }
 
-$target_email = trim($user['tech_email'] ?? '');
-if (empty($target_email)) {
-    echo json_encode(['status' => 'error', 'message' => 'ไม่พบอีเมลในระบบ กรุณาติดต่อแอดมินเพื่อเพิ่มอีเมลก่อนทำรายการ']);
+$stmt->bind_param("i", $user_id);
+
+if (!$stmt->execute()) {
+    $stmt->close();
+    http_response_code(500);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'ไม่สามารถตรวจข้อมูลบัญชีได้'
+    ]);
+    exit();
+}
+
+$user_result = $stmt->get_result();
+$user = $user_result && $user_result->num_rows === 1
+    ? $user_result->fetch_assoc()
+    : null;
+
+$stmt->close();
+
+if (!$user
+    || (int) $user['is_active'] !== 1
+    || (string) $user['auth_version']
+        !== (string) $_SESSION['auth_version']) {
+    http_response_code(403);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'บัญชีหรือสิทธิ์การใช้งานเปลี่ยนไป กรุณาเข้าสู่ระบบใหม่'
+    ]);
+    exit();
+}
+
+$role = strtolower((string) $user['role']);
+
+if ($role === 'technician') {
+    $technician_id = filter_var(
+        $user['technician_id'],
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]
+    );
+
+    $found_technician_id = filter_var(
+        $user['found_technician_id'],
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]
+    );
+
+    if ($technician_id === false
+        || $found_technician_id === false
+        || $technician_id !== $found_technician_id) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'บัญชีไม่ได้เชื่อมกับช่างที่มีอยู่จริง กรุณาติดต่อแอดมิน'
+        ]);
+        exit();
+    }
+
+    $email_source = $user['tech_email'];
+
+} elseif (in_array($role, ['admin', 'executive'], true)) {
+    if ($user['technician_id'] !== null) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'ข้อมูลการเชื่อมบัญชีไม่ถูกต้อง กรุณาติดต่อแอดมิน'
+        ]);
+        exit();
+    }
+
+    $email_source = $user['account_email'];
+
+} else {
+    http_response_code(403);
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'บัญชีนี้ไม่มีสิทธิ์ใช้การยืนยันอีเมล'
+    ]);
+    exit();
+}
+
+$target_email = is_string($email_source)
+    ? trim($email_source)
+    : '';
+
+if ($target_email === ''
+    || !filter_var($target_email, FILTER_VALIDATE_EMAIL)) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'ไม่มีอีเมลหรือรูปแบบอีเมลไม่ถูกต้อง กรุณาติดต่อแอดมินเพื่อแก้ไขข้อมูลก่อน'
+    ]);
     exit();
 }
 

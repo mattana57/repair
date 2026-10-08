@@ -38,6 +38,268 @@ if ($current_role === 'executive') {
     exit();
 }
 
+// ข้อ 1: แอดมินเชื่อมบัญชีเว็บเดิมกับข้อมูลช่างเดิม
+if ($_SERVER['REQUEST_METHOD'] === 'POST'
+    && isset($_POST['link_existing_account'])) {
+
+    $link_transaction_started = false;
+
+    try {
+        $csrf_received = $_POST['csrf_token'] ?? null;
+
+        if (!is_string($csrf_received)
+            || !is_string($_SESSION['csrf_token'] ?? null)
+            || !hash_equals($_SESSION['csrf_token'], $csrf_received)) {
+            throw new Exception('คำขอไม่ถูกต้อง กรุณารีเฟรชหน้าแล้วลองใหม่');
+        }
+
+        if (($_POST['identity_confirmed'] ?? null) !== '1') {
+            throw new Exception(
+                'กรุณายืนยันว่าตรวจสอบเจ้าของบัญชีและตัวตนช่างแล้ว'
+            );
+        }
+
+        $read_link_id = function ($key) {
+            $raw = $_POST[$key] ?? null;
+
+            if (!is_string($raw)
+                || !preg_match('/^[1-9][0-9]*$/D', $raw)) {
+                throw new Exception('รหัสบัญชีหรือรหัสช่างไม่ถูกต้อง');
+            }
+
+            $id = filter_var(
+                $raw,
+                FILTER_VALIDATE_INT,
+                ['options' => [
+                    'min_range' => 1,
+                    'max_range' => PHP_INT_MAX
+                ]]
+            );
+
+            if ($id === false) {
+                throw new Exception('รหัสบัญชีหรือรหัสช่างไม่ถูกต้อง');
+            }
+
+            return $id;
+        };
+
+        $link_user_id = $read_link_id('existing_account_id');
+        $link_tech_id = $read_link_id('existing_technician_id');
+
+        // ต้องใช้ตารางที่รองรับ Transaction และการล็อกแถว
+        $engine_result = $conn->query(
+            "SELECT TABLE_NAME, ENGINE
+             FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME IN ('users', 'technicians', 'auth_requests')"
+        );
+
+        if (!$engine_result) {
+            throw new Exception('ไม่สามารถตรวจความพร้อมของฐานข้อมูลได้');
+        }
+
+        $link_engines = [];
+
+        while ($engine_row = $engine_result->fetch_assoc()) {
+            $link_engines[$engine_row['TABLE_NAME']] =
+                strtoupper((string) $engine_row['ENGINE']);
+        }
+
+        $engine_result->free();
+
+        foreach (['users', 'technicians', 'auth_requests'] as $table_name) {
+            if (($link_engines[$table_name] ?? '') !== 'INNODB') {
+                throw new Exception(
+                    'ฐานข้อมูลยังไม่พร้อมสำหรับการเชื่อมบัญชีอย่างปลอดภัย'
+                );
+            }
+        }
+
+        if (!$conn->begin_transaction()) {
+            throw new Exception('ไม่สามารถเริ่มการเชื่อมบัญชีได้');
+        }
+
+        $link_transaction_started = true;
+
+        $run_link_statement = function ($sql, $types, $values)
+            use ($conn) {
+            $statement = $conn->prepare($sql);
+
+            if (!$statement) {
+                throw new Exception('ไม่สามารถประมวลผลการเชื่อมบัญชีได้');
+            }
+
+            if (!$statement->bind_param($types, ...$values)
+                || !$statement->execute()) {
+                $statement->close();
+                throw new Exception('ไม่สามารถประมวลผลการเชื่อมบัญชีได้');
+            }
+
+            return $statement;
+        };
+
+        // ตรวจสิทธิ์แอดมินล่าสุดอีกครั้งก่อนเปลี่ยนการเชื่อมบัญชี
+        $admin_link_id = (int) $_SESSION['user_id'];
+
+        $admin_statement = $run_link_statement(
+            "SELECT role, is_active, auth_version
+             FROM users WHERE id = ? FOR UPDATE",
+            'i',
+            [$admin_link_id]
+        );
+
+        $admin_result = $admin_statement->get_result();
+
+        if (!$admin_result || $admin_result->num_rows !== 1) {
+            throw new Exception('ไม่สามารถยืนยันสิทธิ์ผู้ดำเนินการได้');
+        }
+
+        $link_admin = $admin_result->fetch_assoc();
+        $admin_statement->close();
+
+        if (strtolower($link_admin['role']) !== 'admin'
+            || (int) $link_admin['is_active'] !== 1
+            || (string) $link_admin['auth_version']
+                !== (string) ($_SESSION['auth_version'] ?? '')) {
+            throw new Exception('สิทธิ์ผู้ดำเนินการเปลี่ยนไป กรุณาเข้าสู่ระบบใหม่');
+        }
+
+        // ล็อกช่างเดิม เพื่อไม่ให้คำขอเชื่อมพร้อมกันผ่านทั้งคู่
+        $tech_statement = $run_link_statement(
+            "SELECT id FROM technicians WHERE id = ? FOR UPDATE",
+            'i',
+            [$link_tech_id]
+        );
+
+        $tech_result = $tech_statement->get_result();
+
+        if (!$tech_result || $tech_result->num_rows !== 1) {
+            throw new Exception('ไม่พบข้อมูลช่างที่เลือก');
+        }
+
+        $tech_statement->close();
+
+        $occupied_statement = $run_link_statement(
+            "SELECT id FROM users
+             WHERE technician_id = ? FOR UPDATE",
+            'i',
+            [$link_tech_id]
+        );
+
+        $occupied_result = $occupied_statement->get_result();
+
+        if (!$occupied_result) {
+            throw new Exception('ไม่สามารถตรวจบัญชีของช่างได้');
+        }
+
+        if ($occupied_result->num_rows !== 0) {
+            throw new Exception(
+                'ช่างคนนี้มีบัญชีเชื่อมอยู่แล้ว กรุณาใช้บัญชีนั้น'
+            );
+        }
+
+        $occupied_statement->close();
+
+        $account_statement = $run_link_statement(
+            "SELECT id, username, password, role, technician_id
+             FROM users WHERE id = ? FOR UPDATE",
+            'i',
+            [$link_user_id]
+        );
+
+        $account_result = $account_statement->get_result();
+
+        if (!$account_result || $account_result->num_rows !== 1) {
+            throw new Exception('ไม่พบบัญชีเดิมที่เลือก');
+        }
+
+        $link_account = $account_result->fetch_assoc();
+        $account_statement->close();
+
+        if ($link_account['technician_id'] !== null) {
+            throw new Exception('บัญชีนี้เชื่อมกับช่างอยู่แล้ว');
+        }
+
+        if (!in_array(
+            strtolower($link_account['role']),
+            ['user', 'technician'],
+            true
+        )) {
+            throw new Exception(
+                'เชื่อมได้เฉพาะบัญชี User หรือ Technician ที่ยังไม่เชื่อมช่าง'
+            );
+        }
+
+        if (trim((string) $link_account['username']) === ''
+            || (string) $link_account['password'] === '') {
+            throw new Exception(
+                'บัญชีเดิมต้องมี Username และรหัสผ่านก่อนเชื่อมช่าง'
+            );
+        }
+
+        $update_statement = $run_link_statement(
+            "UPDATE users
+             SET technician_id = ?,
+                 role = 'Technician',
+                 auth_version = auth_version + 1,
+                 verified_email = NULL,
+                 email_verified_at = NULL
+             WHERE id = ?
+               AND technician_id IS NULL
+               AND LOWER(role) IN ('user', 'technician')",
+            'ii',
+            [$link_tech_id, $link_user_id]
+        );
+
+        if ($update_statement->affected_rows !== 1) {
+            throw new Exception(
+                'ข้อมูลบัญชีเปลี่ยนระหว่างดำเนินการ กรุณาลองใหม่'
+            );
+        }
+
+        $update_statement->close();
+
+        $cancel_statement = $run_link_statement(
+            "UPDATE auth_requests
+             SET is_canceled = 1
+             WHERE user_id = ?
+               AND purpose IN ('email_verification', 'password_reset')
+               AND is_canceled = 0",
+            'i',
+            [$link_user_id]
+        );
+
+        $cancel_statement->close();
+
+        if (!$conn->commit()) {
+            throw new Exception('ไม่สามารถบันทึกการเชื่อมบัญชีได้');
+        }
+
+        $link_transaction_started = false;
+
+        $_SESSION['account_link_notice'] = [
+            'success' => true,
+            'message' => 'เชื่อมบัญชีเดิมกับช่างเดิมสำเร็จ'
+        ];
+
+    } catch (Throwable $e) {
+        if ($link_transaction_started) {
+            $conn->rollback();
+        }
+
+        $_SESSION['account_link_notice'] = [
+            'success' => false,
+            'message' => $e instanceof Exception
+                && !($e instanceof mysqli_sql_exception)
+                    ? $e->getMessage()
+                    : 'ไม่สามารถเชื่อมบัญชีได้ กรุณาลองใหม่'
+        ];
+    }
+
+    header('Location: dashboard.php?tab=technicians', true, 303);
+    exit();
+}
+
 // ✨ API ส่งข้อมูลรูปภาพล่าสุดแบบเรียลไทม์ สำหรับอัปเดตหน้าจออัตโนมัติไม่ต้องกดรีเฟรช ✨
 if (isset($_GET['api_get_admin_avatars'])) {
     header('Content-Type: application/json; charset=utf-8');
@@ -964,13 +1226,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             // ✨ การส่ง Username ว่างต้องไม่ทำให้คำสั่งระงับบัญชีถูกข้าม (ย้ายเงื่อนไขออกจากการเช็ค !empty อย่างเดียว)
             if ($existing_user || $web_username !== '') {
                 
-                // ตรวจ Username ซ้ำ
-                $chk_u = $conn->prepare("SELECT id FROM users WHERE username = ? AND technician_id != ?");
-                $chk_u->bind_param("si", $web_username, $tech_id);
-                $chk_u->execute();
-                if ($chk_u->get_result()->num_rows > 0) {
-                    throw new Exception("Username นี้ถูกใช้งานแล้ว กรุณาใช้ชื่ออื่น");
+                                // ตรวจบัญชีเดิมก่อนสร้างบัญชีให้ช่าง
+                $current_account_id = $existing_user
+                    ? (int) $existing_user['id']
+                    : 0;
+
+                $chk_u = $conn->prepare(
+                    "SELECT id, role, technician_id
+                     FROM users
+                     WHERE username = ?
+                       AND id <> ?"
+                );
+
+                if (!$chk_u) {
+                    throw new Exception('ไม่สามารถตรวจบัญชีเดิมได้');
                 }
+
+                $chk_u->bind_param(
+                    "si",
+                    $web_username,
+                    $current_account_id
+                );
+
+                if (!$chk_u->execute()) {
+                    throw new Exception('ไม่สามารถตรวจบัญชีเดิมได้');
+                }
+
+                $duplicate_result = $chk_u->get_result();
+
+                if (!$duplicate_result) {
+                    throw new Exception('ไม่สามารถตรวจบัญชีเดิมได้');
+                }
+
+                if ($duplicate_result->num_rows > 0) {
+                    $duplicate_account = $duplicate_result->fetch_assoc();
+                    $chk_u->close();
+
+                    if (!$existing_user
+                        && $duplicate_account['technician_id'] === null
+                        && in_array(
+                            strtolower($duplicate_account['role']),
+                            ['user', 'technician'],
+                            true
+                        )) {
+                        throw new Exception(
+                            'Username นี้มีบัญชีเดิมอยู่แล้ว '
+                            . 'กรุณาใช้ฟอร์มเชื่อมบัญชีเว็บเดิมกับช่างเดิม '
+                            . 'หลังตรวจสอบตัวตน'
+                        );
+                    }
+
+                    throw new Exception('Username นี้ถูกใช้งานแล้ว');
+                }
+
                 $chk_u->close();
 
                 if ($existing_user) {
@@ -2573,6 +2881,196 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                     </div>
                     
+                                        <?php
+                    $account_link_notice =
+                        $_SESSION['account_link_notice'] ?? null;
+                    unset($_SESSION['account_link_notice']);
+
+                    $link_available_accounts = [];
+                    $link_available_technicians = [];
+                    $link_list_ready = true;
+
+                    try {
+                        $accounts_result = $conn->query(
+                            "SELECT id, username, full_name, role, is_active
+                             FROM users
+                             WHERE technician_id IS NULL
+                               AND LOWER(role) IN ('user', 'technician')
+                               AND TRIM(username) <> ''
+                               AND password IS NOT NULL
+                               AND password <> ''
+                             ORDER BY id ASC"
+                        );
+
+                        $technicians_result = $conn->query(
+                            "SELECT t.id, t.full_name, t.department
+                             FROM technicians t
+                             WHERE NOT EXISTS (
+                                 SELECT 1 FROM users u
+                                 WHERE u.technician_id = t.id
+                             )
+                             ORDER BY t.id ASC"
+                        );
+
+                        if (!$accounts_result || !$technicians_result) {
+                            throw new Exception('โหลดรายการไม่ได้');
+                        }
+
+                        while ($row = $accounts_result->fetch_assoc()) {
+                            $link_available_accounts[] = $row;
+                        }
+
+                        while ($row = $technicians_result->fetch_assoc()) {
+                            $link_available_technicians[] = $row;
+                        }
+
+                        $accounts_result->free();
+                        $technicians_result->free();
+
+                    } catch (Throwable $e) {
+                        $link_list_ready = false;
+                    }
+
+                    $link_html = function ($value) {
+                        return htmlspecialchars(
+                            (string) $value,
+                            ENT_QUOTES | ENT_SUBSTITUTE,
+                            'UTF-8'
+                        );
+                    };
+
+                    $link_form_available = $link_list_ready
+                        && count($link_available_accounts) > 0
+                        && count($link_available_technicians) > 0;
+                    ?>
+
+                    <?php if (is_array($account_link_notice)): ?>
+                        <div role="status"
+                             class="rounded-xl border p-4 mb-4 <?php
+                             echo !empty($account_link_notice['success'])
+                                 ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                 : 'bg-rose-50 border-rose-200 text-rose-700';
+                             ?>">
+                            <?php
+                            echo $link_html(
+                                $account_link_notice['message'] ?? ''
+                            );
+                            ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <details class="bg-white border border-slate-200 rounded-2xl p-5 mb-5">
+                        <summary class="font-bold text-indigo-700 cursor-pointer">
+                            เชื่อมบัญชีเว็บเดิมกับช่างเดิม
+                        </summary>
+
+                        <p class="text-sm text-slate-600 mt-3">
+                            หากเจ้าหน้าที่มีบัญชีเว็บอยู่แล้ว ให้เลือกบัญชีเดิมและ
+                            ข้อมูลช่างเดิมที่ตรวจสอบตัวตนแล้ว เพื่อใช้บัญชีเดิมต่อ
+                        </p>
+
+                        <?php if (!$link_list_ready): ?>
+                            <p class="text-sm text-rose-600 mt-3">
+                                ไม่สามารถโหลดรายการสำหรับเชื่อมบัญชีได้
+                            </p>
+                        <?php elseif (!$link_form_available): ?>
+                            <p class="text-sm text-slate-500 mt-3">
+                                ไม่มีบัญชีเดิมหรือช่างที่ยังไม่เชื่อมให้เลือก
+                            </p>
+                        <?php endif; ?>
+
+                        <form method="POST"
+                              action="dashboard.php"
+                              class="space-y-4 mt-4">
+
+                            <input type="hidden"
+                                   name="link_existing_account"
+                                   value="1">
+
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="<?php
+                                   echo $link_html($_SESSION['csrf_token']);
+                                   ?>">
+
+                            <div>
+                                <label for="existing_account_id"
+                                       class="block text-sm font-bold text-slate-700 mb-2">
+                                    บัญชีเว็บเดิม
+                                </label>
+
+                                <select id="existing_account_id"
+                                        name="existing_account_id"
+                                        required
+                                        class="w-full border border-slate-200 rounded-xl px-3 py-3">
+                                    <option value="">-- เลือกบัญชีเดิม --</option>
+
+                                    <?php foreach ($link_available_accounts as $account): ?>
+                                        <option value="<?php echo (int) $account['id']; ?>">
+                                            <?php
+                                            echo $link_html(
+                                                'บัญชี #' . $account['id']
+                                                . ' | ' . $account['username']
+                                                . ' | ' . ($account['full_name'] ?? '')
+                                                . ' | ' . $account['role']
+                                                . ((int) $account['is_active'] === 1
+                                                    ? ' | เปิดใช้งาน'
+                                                    : ' | ระงับอยู่')
+                                            );
+                                            ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="existing_technician_id"
+                                       class="block text-sm font-bold text-slate-700 mb-2">
+                                    ข้อมูลช่างเดิม
+                                </label>
+
+                                <select id="existing_technician_id"
+                                        name="existing_technician_id"
+                                        required
+                                        class="w-full border border-slate-200 rounded-xl px-3 py-3">
+                                    <option value="">-- เลือกช่างเดิม --</option>
+
+                                    <?php foreach ($link_available_technicians as $technician): ?>
+                                        <option value="<?php echo (int) $technician['id']; ?>">
+                                            <?php
+                                            echo $link_html(
+                                                'ช่าง #' . $technician['id']
+                                                . ' | ' . $technician['full_name']
+                                                . ' | ' . ($technician['department'] ?? '')
+                                            );
+                                            ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <label class="flex items-start gap-3 text-sm text-slate-700">
+                                <input type="checkbox"
+                                       name="identity_confirmed"
+                                       value="1"
+                                       required
+                                       class="mt-1">
+                                <span>
+                                    ฉันตรวจสอบเจ้าของบัญชีและตัวตนช่างผ่านช่องทาง
+                                    ที่หน่วยงานเชื่อถือได้แล้ว โดยไม่ได้อาศัยเพียง
+                                    ชื่อหรือเบอร์โทร และยืนยันว่าทั้งสองรายการ
+                                    เป็นบุคคลเดียวกัน
+                                </span>
+                            </label>
+
+                            <button type="submit"
+                                    <?php echo $link_form_available ? '' : 'disabled'; ?>
+                                    class="bg-indigo-600 text-white font-bold rounded-xl px-5 py-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                                เชื่อมบัญชีเดิม
+                            </button>
+                        </form>
+                    </details>
+
                     <div id="techniciansTableContainer" class="w-full overflow-x-auto lg:overflow-x-hidden pb-4 custom-scrollbar">
                         <table class="w-full text-left whitespace-nowrap lg:min-w-0">
                             <tbody class="text-sm" id="techniciansTableBody">
