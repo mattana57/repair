@@ -178,78 +178,65 @@ if ($target_email === ''
 // Action 1: ขอรับรหัส OTP (Request OTP)
 // ---------------------------------------------------------
 if ($action === 'request_otp') {
-    // เช็คว่าอีเมลนี้ยืนยันไปแล้วหรือยัง (เช็คว่าอีเมลตรงกันและมีเวลายืนยัน)
-    if ($user['verified_email'] === $target_email && !empty($user['email_verified_at'])) {
-        echo json_encode(['status' => 'error', 'message' => 'อีเมลนี้ได้รับการยืนยันเรียบร้อยแล้ว']);
-        exit();
-    }
+    try {
+        require_once __DIR__ . '/otp_request_service.php';
 
-    // ตรวจสอบการขอซ้ำซ้อน (Cooldown 60 วินาที)
-    $stmt_check_delay = $conn->prepare("SELECT last_sent_at FROM auth_requests WHERE user_id = ? AND purpose = 'email_verification' AND is_canceled = 0 ORDER BY created_at DESC LIMIT 1");
-    $stmt_check_delay->bind_param("i", $user_id);
-    $stmt_check_delay->execute();
-    $res_delay = $stmt_check_delay->get_result();
-    if ($res_delay->num_rows > 0) {
-        $last_sent = strtotime($res_delay->fetch_assoc()['last_sent_at']);
-        if ((time() - $last_sent) < 60) {
-            echo json_encode(['status' => 'error', 'message' => 'กรุณารอ 60 วินาทีก่อนขอรหัสใหม่']);
+        $result = otpRequestCreateAndSend(
+            $conn,
+            'email_verification',
+            $user_id,
+            $_SESSION['auth_version'] ?? null
+        );
+
+        $result_status = $result['status'] ?? 'error';
+
+        if ($result_status === 'sent'
+            && isset($result['token'])
+            && is_string($result['token'])
+            && preg_match('/\A[a-f0-9]{64}\z/', $result['token'])) {
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'ระบบได้ส่งรหัส OTP ไปยังอีเมลที่บันทึกไว้แล้ว'
+                    . ' (รหัสมีอายุ '
+                    . (int) $result['expires_in']
+                    . ' วินาที)',
+                'token' => $result['token'],
+            ], JSON_UNESCAPED_UNICODE);
+
             exit();
         }
+
+        $messages = [
+            'source_limit' =>
+                'มีการขอรหัสจากเครือข่ายนี้มากเกินไป กรุณารอแล้วลองใหม่',
+            'account_limit' =>
+                'บัญชีนี้ขอรหัสครบจำนวนที่กำหนดแล้ว กรุณารอแล้วลองใหม่',
+            'cooldown' =>
+                'ยังไม่ครบระยะเว้นการส่งรหัส กรุณารอแล้วลองใหม่',
+            'already_verified' =>
+                'อีเมลนี้ได้รับการยืนยันเรียบร้อยแล้ว',
+            'not_eligible' =>
+                'ข้อมูลบัญชีหรืออีเมลเปลี่ยนไป กรุณารีเฟรชหน้า'
+                . ' หากยังทำรายการไม่ได้ให้ติดต่อแอดมิน',
+            'error' =>
+                'ไม่สามารถสร้างคำขอหรือส่งอีเมลได้ กรุณาลองใหม่ภายหลัง',
+        ];
+
+        echo json_encode([
+            'status' => 'error',
+            'message' => $messages[$result_status] ?? $messages['error'],
+        ], JSON_UNESCAPED_UNICODE);
+
+    } catch (Throwable $e) {
+        error_log('Email verification OTP request failed');
+
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'ไม่สามารถทำรายการได้ กรุณาลองใหม่ภายหลัง',
+        ], JSON_UNESCAPED_UNICODE);
     }
-    $stmt_check_delay->close();
 
-    // จำกัดจำนวนคำขอต่อบัญชี (เช่น ไม่เกิน 5 ครั้งใน 1 ชั่วโมง)
-    $stmt_limit = $conn->prepare("SELECT COUNT(id) as req_count FROM auth_requests WHERE user_id = ? AND purpose = 'email_verification' AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
-    $stmt_limit->bind_param("i", $user_id);
-    $stmt_limit->execute();
-    $req_count = $stmt_limit->get_result()->fetch_assoc()['req_count'];
-    $stmt_limit->close();
-    
-    if ($req_count >= 5) {
-        echo json_encode(['status' => 'error', 'message' => 'คุณทำรายการบ่อยเกินไป กรุณาลองใหม่ในอีก 1 ชั่วโมง']);
-        exit();
-    }
-
-    // ยกเลิกคำขอยืนยันอีเมลเดิมทั้งหมดที่ยังไม่หมดอายุ
-    $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE user_id = $user_id AND purpose = 'email_verification'");
-
-    // สร้าง OTP 6 หลัก แบบปลอดภัยทาง Cryptography (random_int)
-    $otp_code = sprintf("%06d", random_int(100000, 999999));
-    $otp_hash = password_hash($otp_code, PASSWORD_DEFAULT);
-    $request_token = bin2hex(random_bytes(32)); // ไม่ใช้เลขบัญชีเป็นโทเคน
-    
-    // บันทึกคำขอลงฐานข้อมูล (หมดอายุใน 5 นาที)
-    $stmt_insert = $conn->prepare("
-        INSERT INTO auth_requests (request_token, user_id, purpose, target_email, otp_hash, expires_at, auth_version) 
-        VALUES (?, ?, 'email_verification', ?, ?, DATE_ADD(NOW(), INTERVAL 5 MINUTE), (SELECT auth_version FROM users WHERE id = ?))
-    ");
-    $stmt_insert->bind_param("sissi", $request_token, $user_id, $target_email, $otp_hash, $user_id);
-    
-    // โหลดฟังก์ชันส่งเมล์
-    require_once 'mailer.php'; 
-
-    if ($stmt_insert->execute()) {
-        $request_id = $conn->insert_id; // เก็บ ID คำขอไว้ เผื่อต้องยกเลิกถ้าส่งอีเมลพัง
-        
-        // ✨ เรียกใช้ฟังก์ชันส่งอีเมลผ่าน SMTP ✨
-        $is_sent = sendOtpEmail($target_email, $otp_code, "ยืนยันบัญชีอีเมล");
-
-        if ($is_sent) {
-            // ✅ กฎ: ห้ามแสดงรหัส OTP บน API หรือหน้าเว็บเด็ดขาด!
-            echo json_encode([
-                'status' => 'success', 
-                'message' => 'ระบบได้ส่งรหัส OTP ไปยังอีเมล ' . substr($target_email, 0, 3) . '***@*** แล้ว (รหัสมีอายุ 5 นาที)',
-                'token' => $request_token
-            ]);
-        } else {
-            // ✅ กฎ: หากส่งไม่สำเร็จ ต้องจัดการข้อผิดพลาดและยกเลิกคำขอทันที ห้ามถือว่าสำเร็จ!
-            $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = $request_id");
-            echo json_encode(['status' => 'error', 'message' => 'ระบบส่งอีเมลขัดข้อง ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่อีกครั้ง']);
-        }
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'ไม่สามารถสร้างคำขอได้ กรุณาลองใหม่']);
-    }
-    $stmt_insert->close();
+    exit();
 }
 
 // ---------------------------------------------------------
