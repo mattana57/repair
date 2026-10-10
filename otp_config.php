@@ -6,6 +6,10 @@ return [
     // OTP มีอายุ 5 นาที
     'otp_lifetime_seconds' => 300,
 
+    // จำกัดการกรอก OTP ผิด และอายุสิทธิ์ตั้งรหัสผ่านใหม่
+    'otp_max_failed_attempts' => 5,
+    'reset_grant_lifetime_seconds' => 120,
+
     // เว้นการสร้างคำขอใหม่ของบัญชีเดิม
     // และวัตถุประสงค์เดิมอย่างน้อย 60 วินาที
     'account_cooldown_seconds' => 60,

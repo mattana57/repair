@@ -72,7 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // ตรวจสอบ CSRF Token ทุกครั้งที่มีการส่ง POST (การป้องกันคำขอและการใช้ซ้ำ)
     $csrf_token_post = $_POST['csrf_token'] ?? '';
-    if (!hash_equals($_SESSION['csrf_token'], $csrf_token_post)) {
+        if (!is_string($csrf_token_post)
+        || !is_string($_SESSION['csrf_token'] ?? null)
+        || !hash_equals($_SESSION['csrf_token'], $csrf_token_post)) {
         echo json_encode(['status' => 'error', 'message' => 'คำขอไม่ถูกต้องหรือ Session หมดอายุ กรุณารีเฟรชหน้าเว็บ']);
         exit();
     }
@@ -80,7 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
         // 1. ขอรับรหัส OTP
-    if ($action === 'request_otp') {
+        if ($action === 'request_otp') {
+        unset($_SESSION['password_reset_grant']);
         header('Cache-Control: no-store');
 
         $fake_token = bin2hex(random_bytes(32));
@@ -121,175 +124,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
     
-    // 2. ตรวจสอบ OTP และตั้งรหัสผ่านใหม่
-    if ($action === 'verify_and_reset') {
-        $token = $_POST['token'] ?? '';
-        $otp = $_POST['otp'] ?? '';
-        $new_password = $_POST['new_password'] ?? '';
-        $confirm_password = $_POST['confirm_password'] ?? '';
-
-        if (empty($token) || empty($otp) || empty($new_password) || empty($confirm_password)) {
-            echo json_encode(['status' => 'error', 'message' => 'กรุณากรอกข้อมูลให้ครบถ้วน']);
-            exit();
-        }
-
-        // นโยบายรหัสผ่าน: ความยาวอย่างน้อย 6 ตัวอักษร และต้องตรงกัน
-        if ($new_password !== $confirm_password) {
-            echo json_encode(['status' => 'error', 'message' => 'รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน']);
-            exit();
-        }
-        if (strlen($new_password) < 6) {
-            echo json_encode(['status' => 'error', 'message' => 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร']);
-            exit();
-        }
-
-                // อ่านแหล่งอีเมลปัจจุบันด้วยกฎเดียวกับตอนขอ OTP
-        $stmt = $conn->prepare("
-            SELECT
-                a.id,
-                a.user_id,
-                a.otp_hash,
-                a.failed_attempts,
-                a.expires_at,
-                a.auth_version AS req_auth_version,
-                a.target_email,
-                u.auth_version AS current_auth_version,
-                u.is_active,
-                u.role,
-                u.verified_email,
-                u.email_verified_at,
-                u.technician_id,
-                u.email AS account_email,
-                t.id AS found_technician_id,
-                t.email AS tech_email
-            FROM auth_requests a
-            JOIN users u ON a.user_id = u.id
-            LEFT JOIN technicians t ON u.technician_id = t.id
-            WHERE a.request_token = ?
-              AND a.purpose = 'password_reset'
-              AND a.is_canceled = 0
-              AND a.used_at IS NULL
-        ");
-        $stmt->bind_param("s", $token);
-        $stmt->execute();
-        $request = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-
-        if (!$request) {
-            echo json_encode(['status' => 'error', 'message' => 'รหัสคำขอไม่ถูกต้องหรือถูกใช้งานไปแล้ว กรุณาทำรายการใหม่']);
-            exit();
-        }
-
-        // ตรวจสอบเวลาหมดอายุ
-        if (strtotime($request['expires_at']) < time()) {
-            $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = {$request['id']}");
-            echo json_encode(['status' => 'error', 'message' => 'รหัส OTP หมดอายุแล้ว กรุณาขอใหม่']);
-            exit();
-        }
-
-        // ตรวจสอบการเปลี่ยนแปลงสิทธิ์ (auth_version)
-        if ($request['req_auth_version'] != $request['current_auth_version']) {
-            $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = {$request['id']}");
-            echo json_encode(['status' => 'error', 'message' => 'ข้อมูลบัญชีถูกเปลี่ยนแปลงระหว่างการทำรายการ คำขอถูกยกเลิก']);
-            exit();
-        }
-
-        // ตรวจสอบสถานะบัญชีและการเชื่อมโยงข้อมูลช่าง
-        if ($request['is_active'] != 1) {
-            $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = {$request['id']}");
-            echo json_encode(['status' => 'error', 'message' => 'บัญชีนี้ถูกระงับการใช้งาน คำขอถูกยกเลิก']);
-            exit();
-        }
-
-                $current_email = getPasswordResetEmailSource($request);
-
-        // ต้องตรงทั้งอีเมลปัจจุบัน อีเมลที่ยืนยัน และอีเมลของคำขอ
-        if ($current_email === null
-            || empty($request['email_verified_at'])
-            || !is_string($request['verified_email'])
-            || $current_email !== $request['verified_email']
-            || $current_email !== $request['target_email']) {
-
-            $cancel_email_stmt = $conn->prepare(
-                "UPDATE auth_requests
-                 SET is_canceled = 1
-                 WHERE id = ?"
+        // ตรวจ OTP และออกสิทธิ์รีเซ็ตเท่านั้น
+    if ($action === 'verify_otp') {
+        header('Cache-Control: no-store');
+        try {
+            require_once __DIR__ . '/otp_verification_service.php';
+            $result = otpVerificationCheck(
+                $conn, 'password_reset',
+                $_POST['token'] ?? null, $_POST['otp'] ?? null
             );
-
-            if ($cancel_email_stmt) {
-                $cancel_request_id = (int) $request['id'];
-                $cancel_email_stmt->bind_param("i", $cancel_request_id);
-                $cancel_email_stmt->execute();
-                $cancel_email_stmt->close();
-            }
-
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'ข้อมูลอีเมลหรือการเชื่อมบัญชีไม่ถูกต้อง กรุณาทำรายการใหม่หรือติดต่อแอดมิน'
-            ]);
-            exit();
+        } catch (Throwable $e) {
+            error_log('Password reset OTP verification failed');
+            $result = ['status' => 'error', 'message' => 'ไม่สามารถตรวจ OTP ได้ กรุณาลองใหม่ภายหลัง'];
         }
-
-        // ตรวจสอบจำนวนครั้งที่กรอกผิด
-        if ($request['failed_attempts'] >= 5) {
-            $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = {$request['id']}");
-            echo json_encode(['status' => 'error', 'message' => 'กรอกรหัสผิดเกินกำหนด คำขอนี้ถูกยกเลิกแล้ว']);
-            exit();
-        }
-
-        // ยืนยัน OTP และเริ่มกระบวนการตั้งรหัสผ่านใหม่ (Transaction)
-        if (password_verify($otp, $request['otp_hash'])) {
-            
-            $conn->begin_transaction();
-            try {
-                // 1. ป้องกัน Race Condition (คำขอพร้อมกัน): บล็อกและตรวจสอบสถานะการใช้ซ้ำในจังหวะอัปเดตแบบ Atomic
-                $stmt_consume = $conn->prepare("UPDATE auth_requests SET verified_at = NOW(), used_at = NOW() WHERE id = ? AND used_at IS NULL AND is_canceled = 0");
-                $stmt_consume->bind_param("i", $request['id']);
-                $stmt_consume->execute();
-                
-                if ($stmt_consume->affected_rows === 0) {
-                    throw new Exception("คำขอนี้ถูกใช้งานหรือยกเลิกไปแล้ว (Race Condition Protection)");
-                }
-                $stmt_consume->close();
-
-                // 2. บันทึกรหัสผ่านใหม่ (hash) และเพิ่ม auth_version เพื่อทำลาย Session เก่า
-                $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                $stmt_update = $conn->prepare("UPDATE users SET password = ?, auth_version = auth_version + 1 WHERE id = ?");
-                $stmt_update->bind_param("si", $hashed_password, $request['user_id']);
-                $stmt_update->execute();
-                $stmt_update->close();
-
-                // 3. ยกเลิกคำขอรีเซ็ตอื่นๆ ทั้งหมดของบัญชีนี้ที่อาจค้างอยู่
-                $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE user_id = {$request['user_id']} AND purpose = 'password_reset' AND id != {$request['id']}");
-
-                $conn->commit();
-
-                // ดึงระบบส่งอีเมลมาใช้งาน เพื่อส่งแจ้งเตือนความปลอดภัย
-                sendOtpEmail($current_email, "SUCCESS", "แจ้งเตือนการเปลี่ยนรหัสผ่านสำเร็จ (หากคุณไม่ได้ทำรายการ กรุณาติดต่อแอดมินทันที)");
-
-                echo json_encode(['status' => 'success', 'message' => 'ตั้งรหัสผ่านใหม่สำเร็จ! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่']);
-            } catch (Exception $e) {
-                // หากล้มเหลว ยกเลิกการทำงานทั้งหมด ข้อผิดพลาดฝั่งเซิร์ฟเวอร์จะไม่รั่วไหลออกไป
-                $conn->rollback();
-                error_log("Password Reset Transaction Error: " . $e->getMessage());
-                echo json_encode(['status' => 'error', 'message' => 'คำขอไม่ถูกต้องหรือถูกใช้งานไปแล้ว กรุณาทำรายการใหม่']);
-            }
-        } else {
-            // อัปเดตจำนวนครั้งที่ผิด
-            $conn->query("UPDATE auth_requests SET failed_attempts = failed_attempts + 1 WHERE id = {$request['id']}");
-            $res_fail = $conn->query("SELECT failed_attempts FROM auth_requests WHERE id = {$request['id']}");
-            $current_fail = $res_fail->fetch_assoc()['failed_attempts'];
-            
-            if ($current_fail >= 5) {
-                $conn->query("UPDATE auth_requests SET is_canceled = 1 WHERE id = {$request['id']}");
-                echo json_encode(['status' => 'error', 'message' => 'กรอกรหัสผิดเกินกำหนด คำขอนี้ถูกยกเลิกแล้ว']);
-            } else {
-                $remain = 5 - $current_fail;
-                echo json_encode(['status' => 'error', 'message' => "รหัส OTP ไม่ถูกต้อง (เหลือโอกาส $remain ครั้ง)"]);
-            }
-        }
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
         exit();
     }
+
+    // ห้ามเรียกเส้นทางเดิมเพื่อข้ามสิทธิ์รีเซ็ตหลังตรวจ OTP
+    // เชื่อม Endpoint บันทึกรหัสผ่านในข้อ 2.9 ก่อนเปิดใช้งานจริง
+    if ($action === 'verify_and_reset' || $action === 'reset_password') {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'ขั้นตอนตั้งรหัสผ่านใหม่ยังไม่เปิดใช้งาน กรุณาติดต่อแอดมิน'
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
     exit();
 }
 ?>
@@ -347,19 +208,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" id="otp_code" required maxlength="6" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-center text-xl tracking-widest text-slate-800 font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" placeholder="------">
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-slate-700 mb-2">รหัสผ่านใหม่</label>
-                    <input type="password" id="new_password" required minlength="6" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" placeholder="รหัสผ่านใหม่อย่างน้อย 6 ตัวอักษร">
-                </div>
-
-                <div class="mb-5">
-                    <label class="block text-sm font-bold text-slate-700 mb-2">ยืนยันรหัสผ่านใหม่</label>
-                    <input type="password" id="confirm_password" required minlength="6" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง">
-                </div>
-
+                                <input type="hidden" id="reset_grant" value="">
                 <button type="submit" id="btnReset" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md">
-                    บันทึกรหัสผ่านใหม่
+                    ตรวจสอบ OTP
                 </button>
+
             </form>
 
             <div class="mt-8 pt-6 border-t border-slate-100 text-center">
@@ -391,6 +244,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fetch('', { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
+                if (data.status !== 'success' || typeof data.token !== 'string') {
+                    throw new Error('request failed');
+                }
+                document.getElementById('reset_grant').value = '';
                 document.getElementById('requestForm').classList.add('hidden');
                 document.getElementById('resetForm').classList.remove('hidden');
                 document.getElementById('neutralMessage').innerText = data.message;
@@ -403,54 +260,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }
 
-        function handleResetPassword(e) {
+                function handleResetPassword(e) {
             e.preventDefault();
             const btn = document.getElementById('btnReset');
-            
-            const newPwd = document.getElementById('new_password').value;
-            const confPwd = document.getElementById('confirm_password').value;
-
-            if (newPwd !== confPwd) {
-                Swal.fire('ข้อผิดพลาด', 'รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน', 'error');
-                return;
-            }
-
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> กำลังตรวจสอบ...';
-
+            btn.innerText = 'กำลังตรวจสอบ...';
             const formData = new FormData();
             formData.append('csrf_token', csrfToken);
-            formData.append('action', 'verify_and_reset');
+            formData.append('action', 'verify_otp');
             formData.append('token', document.getElementById('reset_token').value);
             formData.append('otp', document.getElementById('otp_code').value);
-            formData.append('new_password', newPwd);
-            formData.append('confirm_password', confPwd);
-
-            fetch('', { method: 'POST', body: formData })
-            .then(response => response.json())
+            fetch('', { method: 'POST', body: formData, cache: 'no-store' })
+            .then(response => {
+                if (!response.ok) throw new Error('verification failed');
+                return response.json();
+            })
             .then(data => {
-                btn.disabled = false;
-                btn.innerHTML = 'บันทึกรหัสผ่านใหม่';
-                
-                if (data.status === 'success') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'สำเร็จ',
-                        text: data.message,
-                        confirmButtonColor: '#4f46e5'
-                    }).then(() => {
-                        window.location.href = 'login.php';
-                    });
+                if (data.status === 'success' && typeof data.reset_grant === 'string') {
+                    document.getElementById('reset_grant').value = data.reset_grant;
+                    document.getElementById('otp_code').value = '';
+                    document.getElementById('otp_code').disabled = true;
+                    btn.innerText = 'ตรวจ OTP สำเร็จ';
+                    Swal.fire('ตรวจ OTP สำเร็จ',
+                        'ยืนยันตัวตนแล้ว ขั้นตอนตั้งรหัสผ่านใหม่ยังไม่เปิดใช้งาน กรุณาติดต่อแอดมิน', 'success');
                 } else {
-                    Swal.fire('ข้อผิดพลาด', data.message, 'error');
+                    btn.disabled = false;
+                    btn.innerText = 'ตรวจสอบ OTP';
+                    Swal.fire('ตรวจ OTP ไม่สำเร็จ', data.message || 'กรุณาลองใหม่', 'error');
                 }
             })
-            .catch(error => {
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+            .catch(() => {
                 btn.disabled = false;
-                btn.innerHTML = 'บันทึกรหัสผ่านใหม่';
+                btn.innerText = 'ตรวจสอบ OTP';
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถตรวจ OTP ได้ กรุณาลองใหม่', 'error');
             });
         }
+
     </script>
 </body>
 </html>

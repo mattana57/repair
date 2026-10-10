@@ -678,6 +678,18 @@ function otpRequestCreateAndSend(
             return ['status' => 'error'];
         }
 
+        // ผูกคำขอกับเบราว์เซอร์เดิม และเก็บตัวตนตอนออก OTP
+        // แยกจากคีย์ล็อกอิน ไม่คืนข้อมูลบัญชีให้เบราว์เซอร์
+        $_SESSION['otp_request_context'][$purpose] = [
+            'token_hash' => hash('sha256', $request_token),
+            'request_id' => $request_id,
+            'user_id' => $user_id,
+            'auth_version' => (string) $user['auth_version'],
+            'role' => (string) $user['role'],
+            'technician_id' => $user['technician_id'],
+            'target_email' => $target_email,
+        ];
+
         return [
             'status' => 'sent',
             'token' => $request_token,
