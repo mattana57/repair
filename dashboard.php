@@ -772,6 +772,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     $account_username = $read_account_text('username');
     $account_password = $read_account_text('password', false);
 
+    if ($role === 'Technician'
+        && ($account_username === '' || $account_username === '-')) {
+        $reject_account_form('กรุณาระบุชื่อผู้ใช้งาน (Username)');
+    }
+
+    if ($role === 'Technician'
+        && $user_id === 0
+        && $account_password === '') {
+        $reject_account_form('กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่ของช่าง');
+    }
+
     // รองรับชื่อผู้ใช้ภาษาไทย แต่ไม่รับช่องว่างหรืออักขระควบคุม
     if ($account_username !== ''
         && preg_match('/[\s\p{Z}\p{C}]/u', $account_username)) {
@@ -831,6 +842,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         }
 
         $department = $department_custom;
+    }
+
+        if ($role === 'Technician') {
+        $required_tech_fields = [
+            'ชื่อ-นามสกุล' => $full_name,
+            'เบอร์โทรศัพท์' => $phone,
+            'ตำแหน่งงาน' => $position,
+            'ฝ่ายงาน' => $department
+        ];
+
+        foreach ($required_tech_fields as $label => $value) {
+            if ($value === '' || $value === '-' || $value === 'ไม่ระบุ') {
+                $reject_account_form('กรุณาระบุ' . $label);
+            }
+        }
     }
 
     // อ่านขนาดคอลัมน์จริง ไม่สร้างหรือแก้โครงสร้างฐานข้อมูล
@@ -6510,8 +6536,8 @@ if (isset($_GET['api_check_hash'])) {
             const posSelectEl = document.getElementById('techAdmin_position_select');
             const posCustomEl = document.getElementById('techAdmin_position_custom');
 
-            // 1. เช็คกรณีเป็น Admin / Executive (ตอนเพิ่มใหม่หรือแก้ไข)
-            if (isManagement) {
+            // 1. ทุกบทบาทต้องกรอก Username; บัญชีใหม่ต้องกรอก Password
+            {
                 const userEl = document.getElementById('techAdmin_username');
                 const pwdEl = document.getElementById('techAdmin_password');
                 if (!userEl.value.trim() || userEl.value.trim() === '-') {
@@ -6654,12 +6680,14 @@ if (isset($_GET['api_check_hash'])) {
             } else {
                 adminLevelDiv.classList.add('hidden'); deptDiv.classList.remove('hidden'); document.getElementById('techAdmin_department_select').required = true;
                 
-                // ข้อ 5.1: เปิดการแสดง Login Creds ให้ช่าง
+                // เปิดการแสดง Login Creds ให้ช่าง
                 loginCredsDiv.classList.remove('hidden'); 
                 if(accountStatusDiv) accountStatusDiv.classList.remove('hidden');
-                document.getElementById('techAdmin_username').required = false; 
-                document.getElementById('techAdmin_password').required = false;
-                if(document.getElementById('usernameReqStar')) document.getElementById('usernameReqStar').style.display = 'none';
+                    document.getElementById('techAdmin_username').required = true;
+                document.getElementById('techAdmin_password').required = (id === '');
+                if (document.getElementById('usernameReqStar')) {
+                    document.getElementById('usernameReqStar').style.display = 'inline';
+                }
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 if(avatarPreviewWrapper) {
                     avatarPreviewWrapper.classList.remove('rounded-full');
@@ -6733,7 +6761,13 @@ if (isset($_GET['api_check_hash'])) {
             const eyeIcon = document.getElementById('eyeIcon');
             pwdInput.value = ''; pwdInput.type = 'password'; 
             if(eyeIcon) { eyeIcon.classList.remove('fa-eye'); eyeIcon.classList.add('fa-eye-slash'); }
-            if(id === '') { if(isManagement) pwdInput.required = true; pwdHint.innerText = "(จำเป็นต้องกรอก)"; } else { pwdInput.required = false; pwdHint.innerText = "(เว้นว่างไว้หากไม่ต้องการเปลี่ยน)"; }
+                        if (id === '') {
+                pwdInput.required = true;
+                pwdHint.innerText = "(จำเป็นต้องกรอก)";
+            } else {
+                pwdInput.required = false;
+                pwdHint.innerText = "(เว้นว่างไว้หากไม่ต้องการเปลี่ยน)";
+            }
             
             document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
             setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
