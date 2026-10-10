@@ -141,12 +141,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // ห้ามเรียกเส้นทางเดิมเพื่อข้ามสิทธิ์รีเซ็ตหลังตรวจ OTP
-    // เชื่อม Endpoint บันทึกรหัสผ่านในข้อ 2.9 ก่อนเปิดใช้งานจริง
-    if ($action === 'verify_and_reset' || $action === 'reset_password') {
+    // ตั้งรหัสผ่านได้เฉพาะสิทธิ์ที่ออกหลังตรวจ OTP ใน Session เดียวกัน
+    if ($action === 'reset_password') {
+        header('Cache-Control: no-store');
+        try {
+            require_once __DIR__ . '/password_reset_service.php';
+            $result = passwordResetSave(
+                $conn,
+                $_POST['reset_grant'] ?? null,
+                $_POST['new_password'] ?? null,
+                $_POST['confirm_password'] ?? null
+            );
+        } catch (Throwable $e) {
+            error_log('Password reset endpoint failed');
+            $result = ['status' => 'error', 'message' => 'ไม่สามารถบันทึกรหัสผ่านได้ กรุณาลองใหม่ภายหลัง'];
+        }
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    // ปิดเส้นทางเดิมที่รวมการตรวจ OTP และตั้งรหัสผ่าน
+    if ($action === 'verify_and_reset') {
         echo json_encode([
             'status' => 'error',
-            'message' => 'ขั้นตอนตั้งรหัสผ่านใหม่ยังไม่เปิดใช้งาน กรุณาติดต่อแอดมิน'
+            'message' => 'กรุณาขอ OTP และตรวจรหัสก่อนตั้งรหัสผ่านใหม่'
         ], JSON_UNESCAPED_UNICODE);
         exit();
     }
@@ -215,6 +233,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             </form>
 
+            <!-- แสดงหลังตรวจ OTP ผ่าน; Endpoint ตรวจสิทธิ์ซ้ำทุกครั้ง -->
+            <form id="newPasswordForm" class="hidden" onsubmit="handleSavePassword(event)">
+                <p class="text-sm text-indigo-700 mb-5">ตรวจ OTP สำเร็จ กรุณาตั้งรหัสผ่านใหม่ก่อนสิทธิ์หมดอายุ</p>
+                <div class="mb-4">
+                    <label for="new_password" class="block text-sm font-bold text-slate-700 mb-2">รหัสผ่านใหม่</label>
+                    <input type="password" id="new_password" required autocomplete="new-password"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <p class="text-xs text-slate-500 mt-2">ต้องไม่เป็นช่องว่างทั้งหมด และไม่เกิน 72 ไบต์ ตัวอักษรไทยอาจใช้หลายไบต์ต่อหนึ่งตัว</p>
+                </div>
+                <div class="mb-5">
+                    <label for="confirm_password" class="block text-sm font-bold text-slate-700 mb-2">ยืนยันรหัสผ่านใหม่</label>
+                    <input type="password" id="confirm_password" required autocomplete="new-password"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <button type="submit" id="btnSavePassword" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md">บันทึกรหัสผ่านใหม่</button>
+                <a href="forgot_password.php" class="block mt-4 text-center text-sm font-bold text-indigo-600">ขอ OTP ใหม่</a>
+            </form>
+
             <div class="mt-8 pt-6 border-t border-slate-100 text-center">
                 <p class="text-sm font-bold text-slate-600 mb-2">เข้าถึงอีเมลไม่ได้ใช่หรือไม่?</p>
                 <p class="text-xs text-slate-500 mb-4">หากคุณยังไม่เคยยืนยันอีเมล หรือไม่สามารถเข้าถึงอีเมลเดิมได้ กรุณาติดต่อแอดมินเพื่อขอรหัสผ่านชั่วคราว</p>
@@ -281,8 +317,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     document.getElementById('otp_code').value = '';
                     document.getElementById('otp_code').disabled = true;
                     btn.innerText = 'ตรวจ OTP สำเร็จ';
-                    Swal.fire('ตรวจ OTP สำเร็จ',
-                        'ยืนยันตัวตนแล้ว ขั้นตอนตั้งรหัสผ่านใหม่ยังไม่เปิดใช้งาน กรุณาติดต่อแอดมิน', 'success');
+                    document.getElementById('resetForm').classList.add('hidden');
+                    document.getElementById('newPasswordForm').classList.remove('hidden');
+                    document.getElementById('new_password').focus();
                 } else {
                     btn.disabled = false;
                     btn.innerText = 'ตรวจสอบ OTP';
@@ -296,6 +333,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }
 
+            function handleSavePassword(e) {
+            e.preventDefault();
+            const password = document.getElementById('new_password').value;
+            const confirmation = document.getElementById('confirm_password').value;
+            const grant = document.getElementById('reset_grant').value;
+            if (password === '' || password.trim() === '' || password.includes('\0')) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณากรอกรหัสผ่านที่ไม่เป็นช่องว่างทั้งหมด', 'error');
+                return;
+            }
+            if (new TextEncoder().encode(password).length > 72) {
+                Swal.fire('ข้อผิดพลาด', 'รหัสผ่านต้องไม่เกิน 72 ไบต์', 'error');
+                return;
+            }
+            if (password !== confirmation) {
+                Swal.fire('ข้อผิดพลาด', 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน', 'error');
+                return;
+            }
+            if (!/^[a-f0-9]{64}$/.test(grant)) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณาขอ OTP และตรวจรหัสใหม่', 'error');
+                return;
+            }
+            const btn = document.getElementById('btnSavePassword');
+            btn.disabled = true;
+            btn.innerText = 'กำลังบันทึก...';
+            const formData = new FormData();
+            formData.append('csrf_token', csrfToken);
+            formData.append('action', 'reset_password');
+            formData.append('reset_grant', grant);
+            formData.append('new_password', password);
+            formData.append('confirm_password', confirmation);
+            fetch('', { method: 'POST', body: formData, cache: 'no-store' })
+            .then(response => {
+                if (!response.ok) throw new Error('reset failed');
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('new_password').value = '';
+                    document.getElementById('confirm_password').value = '';
+                    document.getElementById('reset_grant').value = '';
+                    document.getElementById('reset_token').value = '';
+                    document.getElementById('new_password').disabled = true;
+                    document.getElementById('confirm_password').disabled = true;
+                    Swal.fire('สำเร็จ', data.message, 'success')
+                    .then(() => window.location.replace('login.php'));
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = 'บันทึกรหัสผ่านใหม่';
+                    Swal.fire('ตั้งรหัสผ่านไม่สำเร็จ', data.message || 'กรุณาลองใหม่', 'error');
+                }
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.innerText = 'บันทึกรหัสผ่านใหม่';
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถยืนยันผลการบันทึกได้ กรุณาลองเข้าสู่ระบบด้วยรหัสผ่านใหม่ หากยังไม่ได้ให้ขอ OTP ใหม่', 'error');
+            });
+        }
     </script>
 </body>
 </html>
