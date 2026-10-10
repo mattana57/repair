@@ -146,18 +146,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // ==========================================
             // ตรวจสอบว่าระบบมีการฝากจำ URL ไว้ก่อนล็อกอินหรือไม่
             // ==========================================
-            $redirect = "";
-            if (isset($_SESSION['redirect_url']) && !empty($_SESSION['redirect_url'])) {
-                $saved_url = $_SESSION['redirect_url'];
-                
-                if (strpos($saved_url, 'update_repair.php') !== false) {
-                    $url_parts = parse_url($saved_url);
-                    parse_str($url_parts['query'] ?? '', $query_params);
-                    if (isset($query_params['id']) && is_numeric($query_params['id'])) {
-                        $redirect = "update_repair.php?id=" . (int)$query_params['id'];
+                        $redirect = "";
+            $saved_url = $_SESSION['redirect_url'] ?? null;
+
+            // ใช้ได้ครั้งเดียว และล้างแม้ปลายทางไม่ถูกต้อง
+            unset($_SESSION['redirect_url']);
+
+            if (is_string($saved_url) && $saved_url !== '') {
+                $script_dir = dirname($_SERVER['SCRIPT_NAME'] ?? '/auth.php');
+                $app_path = ($script_dir === '/' || $script_dir === '.')
+                    ? '' : rtrim($script_dir, '/');
+                $repair_path = $app_path . '/update_repair.php';
+
+                // รับเฉพาะหน้าใบงานของระบบนี้
+                $allowed_paths = ['update_repair.php', $repair_path];
+                $request_host = $_SERVER['HTTP_HOST'] ?? '';
+                if (is_string($request_host) && $request_host !== '') {
+                    $allowed_paths[] = 'http://' . $request_host . $repair_path;
+                    $allowed_paths[] = 'https://' . $request_host . $repair_path;
+                }
+
+                $quoted_paths = array_map(static function ($path) {
+                    return preg_quote($path, '~');
+                }, $allowed_paths);
+                $target_pattern = '~\A(?:' . implode('|', $quoted_paths)
+                    . ')\?id=([1-9][0-9]*)\z~';
+
+                // ต้องมี id เดียว เป็นเลขจำนวนเต็มบวก และไม่เกินขนาด Integer
+                if (preg_match($target_pattern, $saved_url, $matches) === 1) {
+                    $repair_id = filter_var($matches[1], FILTER_VALIDATE_INT, [
+                        'options' => ['min_range' => 1, 'max_range' => PHP_INT_MAX]
+                    ]);
+                    if ($repair_id !== false) {
+                        $redirect = 'update_repair.php?id=' . $repair_id;
                     }
                 }
-                unset($_SESSION['redirect_url']);
             }
 
             // ==========================================
