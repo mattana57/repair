@@ -69,13 +69,8 @@ if (!empty($tech_id)) {
     }
 }
 
-// ✨ งานเก่าที่ technician_id เป็น NULL ต้องตรวจและเชื่อมข้อมูลก่อน
-// (สแกนตาราง repairs และผูก ID ช่างให้อัตโนมัติ โดยอ้างอิงจากชื่อที่มีอยู่เดิม)
-$chk_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'");
-if ($chk_col && $chk_col->num_rows > 0) {
-    $conn->query("UPDATE repairs r JOIN technicians t ON r.technician_name = t.full_name SET r.technician_id = t.id WHERE r.technician_id IS NULL OR r.technician_id = 0");
-}
-
+// งานเก่าที่ technician_id เป็น NULL หรือ 0 ต้องตรวจเจ้าของงานก่อนเชื่อมด้วย ID
+// ห้ามผูกเจ้าของงานจากชื่ออัตโนมัติเมื่อเปิดหน้านี้
 // ✨ ตรวจเจ้าของงานด้วยรหัสช่างเท่านั้น ห้ามใช้ชื่อหรือ LINE ID เป็นสิทธิ์สำรอง
 $safe_tech_id = intval($tech_id);
 $where = "technician_id = $safe_tech_id";
