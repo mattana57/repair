@@ -3980,7 +3980,10 @@ if (isset($_GET['api_check_hash'])) {
                             <p id="err_techAdmin_username" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุชื่อผู้ใช้งาน (Username)</span></p>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span></label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                Password <span class="text-rose-500" id="passwordReqStar">*</span>
+                                <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span>
+                            </label>
                             <div class="relative">
                                 <input type="password" name="password" id="techAdmin_password" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="••••••••" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="••••••••">
                                 <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
@@ -6756,17 +6759,27 @@ if (isset($_GET['api_check_hash'])) {
             const avatarInput = document.getElementById('techAdmin_avatar');
             if(avatarInput) avatarInput.value = '';
 
-            const pwdInput = document.getElementById('techAdmin_password'); 
-            const pwdHint = document.getElementById('pwdHint'); 
+                        const pwdInput = document.getElementById('techAdmin_password');
+            const pwdHint = document.getElementById('pwdHint');
+            const passwordReqStar = document.getElementById('passwordReqStar');
             const eyeIcon = document.getElementById('eyeIcon');
-            pwdInput.value = ''; pwdInput.type = 'password'; 
-            if(eyeIcon) { eyeIcon.classList.remove('fa-eye'); eyeIcon.classList.add('fa-eye-slash'); }
-                        if (id === '') {
+
+            pwdInput.value = '';
+            pwdInput.type = 'password';
+
+            if (eyeIcon) {
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            }
+
+            if (id === '') {
                 pwdInput.required = true;
-                pwdHint.innerText = "(จำเป็นต้องกรอก)";
+                passwordReqStar.style.display = 'inline';
+                pwdHint.innerText = '';
             } else {
                 pwdInput.required = false;
-                pwdHint.innerText = "(เว้นว่างไว้หากไม่ต้องการเปลี่ยน)";
+                passwordReqStar.style.display = 'none';
+                pwdHint.innerText = '(เว้นว่างไว้หากไม่ต้องการเปลี่ยน)';
             }
             
             document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
