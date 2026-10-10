@@ -1323,7 +1323,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                             $tech_id
                         );
 
-                        if (!$u_upd->execute() || $u_upd->affected_rows !== 1) {
+                        if (!$execute_username_write($u_upd) || $u_upd->affected_rows !== 1) {
                             throw new Exception('ไม่สามารถอัปเดตบัญชีช่างได้');
                         }
                     }
