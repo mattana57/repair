@@ -663,6 +663,33 @@ if (isset($_GET['delete_user'])) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
+
+    // จัดการผลบันทึกบัญชีทั้งโหมดคืน false และโหมดโยน Exception
+    $execute_username_write = function ($statement) {
+        try {
+            $saved = $statement->execute();
+            $error_code = (int) $statement->errno;
+            $error_detail = $statement->error;
+        } catch (mysqli_sql_exception $e) {
+            $saved = false;
+            $error_code = (int) $e->getCode();
+            $error_detail = $e->getMessage();
+        }
+
+        if (!$saved) {
+            if ($error_code === 1062
+                && strpos($error_detail, 'uq_users_username') !== false) {
+                throw new Exception(
+                    'Username นี้ถูกใช้งานแล้ว กรุณาเลือกชื่อผู้ใช้งานอื่น',
+                    1062
+                );
+            }
+
+            throw new Exception('ไม่สามารถบันทึกข้อมูลบัญชีได้ กรุณาลองใหม่');
+        }
+
+        return true;
+    };
     
         // ตรวจข้อมูลทั้งหมดก่อนอัปโหลดหรือบันทึกบัญชี
         $reject_account_form = function ($message) {
@@ -1263,7 +1290,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                             $tech_id
                         );
 
-                        if (!$u_upd->execute() || $u_upd->affected_rows !== 1) {
+                        if (!$execute_username_write($u_upd) || $u_upd->affected_rows !== 1) {
                             throw new Exception('ไม่สามารถอัปเดตบัญชีช่างได้');
                         }
 
@@ -1306,7 +1333,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     
                     $u_ins = $conn->prepare("INSERT INTO users (username, password, full_name, role, technician_id, is_active, auth_version, must_change_password) VALUES (?, ?, ?, ?, ?, ?, 1, 1)");
                     $u_ins->bind_param("ssssii", $web_username, $hashed, $full_name, $role_tech, $tech_id, $is_active);
-                    $u_ins->execute();
+                    $execute_username_write($u_ins);
                     $new_usr_id = $conn->insert_id;
 
                     $admin_id = $_SESSION['user_id'];
@@ -1377,9 +1404,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 true
             ) || $existing_adm['technician_id'] !== null) {
                 $reject_account_form(
-                    'ฟอร์มนี้แก้ได้เฉพาะบัญชี Admin หรือ Executive ที่ไม่ได้เชื่อมกับช่าง'
+                                        'ฟอร์มนี้แก้ได้เฉพาะบัญชี Admin หรือ Executive ที่ไม่ได้เชื่อมกับช่าง'
                 );
             }
+        }
+
+        // ตรวจชื่อซ้ำกับทุกบทบาท ยกเว้นเฉพาะบัญชีที่กำลังแก้
+        try {
+            $check_username = $conn->prepare(
+                "SELECT id FROM users WHERE username = ? AND id <> ? LIMIT 1"
+            );
+
+            if (!$check_username) {
+                throw new Exception('ไม่สามารถตรวจ Username ได้');
+            }
+
+            $check_username->bind_param('si', $username, $user_id);
+
+            if (!$check_username->execute()) {
+                throw new Exception('ไม่สามารถตรวจ Username ได้');
+            }
+
+            $username_result = $check_username->get_result();
+
+            if (!$username_result) {
+                throw new Exception('ไม่สามารถตรวจ Username ได้');
+            }
+
+            $username_taken = $username_result->num_rows > 0;
+            $check_username->close();
+        } catch (Throwable $e) {
+            $reject_account_form('ไม่สามารถตรวจ Username ได้ กรุณาลองใหม่');
+        }
+
+        if ($username_taken) {
+            $reject_account_form('Username นี้ถูกใช้งานแล้ว กรุณาเลือกชื่อผู้ใช้งานอื่น');
         }
 
         $avatar_url = NULL;
@@ -1436,7 +1495,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     $avatar_url,
                     $is_active
                 );
-                if ($stmt->execute()) {
+                try {
+                    $execute_username_write($stmt);
+                } catch (Exception $e) {
+                    $reject_account_form($e->getMessage());
+                }
+
+                if ($stmt->affected_rows === 1) {
                     $new_usr_id = $conn->insert_id;
                     $admin_id = $_SESSION['user_id'] ?? 0;
                     $log_desc = "สร้างบัญชีผู้ดูแลระบบ (Username: $username)";
@@ -1593,9 +1658,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             if ($stmt) {
                 $stmt->bind_param($update_types, ...$update_values);
             }
-                        if (!$stmt || !$stmt->execute()) {
+            if (!$stmt) {
                 throw new Exception('ไม่สามารถบันทึกข้อมูลบัญชีได้');
             }
+
+            $execute_username_write($stmt);
 
             if ($admin_email_changed) {
                 $cancel_admin_email_stmt = $conn->prepare(
@@ -1661,7 +1728,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     $conn->rollback();
                 }
 
-                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'บันทึกข้อมูลไม่สำเร็จ', text: 'ไม่สามารถบันทึกข้อมูลบัญชีและยกเลิกคำขอเดิมได้ กรุณารีเฟรชหน้าแล้วลองใหม่', confirmButtonColor: '#ef4444' }); });</script>";
+                                $admin_save_message = ((int) $e->getCode() === 1062)
+                    ? 'Username นี้ถูกใช้งานแล้ว กรุณาเลือกชื่อผู้ใช้งานอื่น'
+                    : 'ไม่สามารถบันทึกข้อมูลบัญชีและยกเลิกคำขอเดิมได้ กรุณารีเฟรชหน้าแล้วลองใหม่';
+
+                $admin_save_message_json = json_encode(
+                    $admin_save_message,
+                    JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+                );
+
+                echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'บันทึกข้อมูลไม่สำเร็จ', text: $admin_save_message_json, confirmButtonColor: '#ef4444' }); });</script>";
             }
         }
     }
