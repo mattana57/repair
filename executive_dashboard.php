@@ -1,5 +1,5 @@
 <?php 
-session_start();
+require_once 'auth_guard.php';
 
 // 1. เช็คว่าได้ล็อกอินเข้ามาหรือยัง? ถ้ายังให้เด้งไปหน้า login
 if (!isset($_SESSION['user_id'])) {
@@ -13,7 +13,7 @@ if (strtolower($_SESSION['role']) === 'technician') {
     exit();
 }
 
-include 'db_connect.php'; 
+require_once 'db_connect.php';
 
 $conn->set_charset("utf8mb4");
 

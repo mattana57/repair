@@ -51,25 +51,14 @@ if ($tech_data['approval_status'] !== 'อนุมัติแล้ว') {
 // ✅ สามารถดึงข้อมูลได้อย่างปลอดภัย 100%
 // ====================================================================
 
-// ✨ ข้อ 6: ปิดช่องทางบันทึกหมายเหตุที่ข้ามหน้าใบงานโดยสมบูรณ์
+// ✨ ปิดช่องทางบันทึกหมายเหตุที่ข้ามหน้าใบงานโดยสมบูรณ์
 // ลบการประมวลผล POST action=update_remark ทิ้ง เพื่อบังคับให้ช่างเข้าไปอัปเดตงานผ่านหน้า update_repair.php เท่านั้น
 
 $user_id = $_SESSION['user_id'];
 $full_name = $tech_data['full_name']; // ดึงชื่อล่าสุดจากตาราง technicians โดยตรง
 
-// 1. ดึง ID ช่างล่าสุดจากตาราง users
-$res_u = $conn->query("SELECT technician_id FROM users WHERE id = $user_id");
-$tech_id = ($res_u && $res_u->num_rows > 0) ? $res_u->fetch_assoc()['technician_id'] : 0;
-
-// ✨ ลบการเชื่อมช่างจากชื่อทิ้งไป (ห้ามอัปเดตข้อมูลการเชื่อมบัญชีเองเด็ดขาด)
-// หากบัญชีถูกแอดมินลบการเชื่อมต่อ (ไม่มี technician_id) ให้ปฏิเสธการเข้าถึงและแจ้งให้ติดต่อแอดมิน
-if (empty($tech_id)) {
-    session_unset();
-    session_destroy();
-    // เตะกลับไปหน้า Login พร้อมแนบ Error เพื่อแจ้งเตือน
-    header("Location: login.php?error=contact_admin_no_tech");
-    exit();
-}
+// ใช้ตัวตนที่ Guard ตรวจแล้ว ไม่เปลี่ยนรหัสช่างของคำขอนี้จากการอ่านซ้ำ
+$tech_id = (int) $tech_id_session;
 
 // 3. ดึง LINE ID ของช่าง (เก็บไว้เผื่อมีเรียกใช้ส่วนอื่น)
 $line_id = '';

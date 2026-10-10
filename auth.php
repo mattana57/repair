@@ -114,6 +114,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['full_name'] = $user['full_name'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['auth_version'] = $user['auth_version'];
+            $_SESSION['LAST_ACTIVITY'] = time();
 
             // ✨ บันทึกประวัติการเข้าสู่ระบบ (สำเร็จ) ✨
             $ip_address = $_SERVER['REMOTE_ADDR'];

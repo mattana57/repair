@@ -1,30 +1,6 @@
 <?php
-session_start();
-require_once 'db_connect.php';
+require_once 'auth_guard.php';
 require_once __DIR__ . '/password_policy.php';
-
-// 1. ตรวจสอบว่ามีการล็อกอินอยู่หรือไม่ (ถ้าไม่มี ให้เด้งไปหน้าล็อกอิน)
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-$user_id = $_SESSION['user_id'];
-
-// 2. ตรวจสอบสถานะบัญชีปัจจุบันจากฐานข้อมูล
-$stmt = $conn->prepare("SELECT role, must_change_password, auth_version FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$res = $stmt->get_result();
-
-if ($res->num_rows === 0) {
-    session_destroy();
-    header("Location: login.php");
-    exit();
-}
-
-$user = $res->fetch_assoc();
-$stmt->close();
 
 // 3. ป้องกันคนแอบพิมพ์ URL เข้ามา: ถ้าบัญชีนี้ไม่ต้องเปลี่ยนรหัสแล้ว ให้เตะกลับไปหน้า Dashboard ตามสิทธิ์ทันที
 if ($user['must_change_password'] == 0) {
@@ -39,7 +15,7 @@ if ($user['must_change_password'] == 0) {
 }
 
 // 4. สร้าง CSRF Token
-if (empty($_SESSION['csrf_token'])) {
+if (!is_string($_SESSION['csrf_token'] ?? null) || $_SESSION['csrf_token'] === '') {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
@@ -51,7 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // ตรวจสอบ CSRF Token
     $csrf_token_post = $_POST['csrf_token'] ?? '';
-    if (!hash_equals($_SESSION['csrf_token'], $csrf_token_post)) {
+        if (!is_string($csrf_token_post)
+        || !is_string($_SESSION['csrf_token'] ?? null)
+        || !hash_equals($_SESSION['csrf_token'], $csrf_token_post)) {
         echo json_encode(['status' => 'error', 'message' => 'คำขอไม่ถูกต้องหรือ Session หมดอายุ กรุณารีเฟรชหน้าเว็บ']);
         exit();
     }
@@ -59,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
-        // ตรวจด้วยกติกาส่วนกลางก่อน hash; ไม่แก้การตรวจ Session ในขั้นตอนนี้
+    // ตรวจรหัสผ่านด้วยกติกาส่วนกลางก่อนเริ่มบันทึก
     $password_error = passwordPolicyError($new_password);
     if ($password_error !== null) {
         echo json_encode(['status' => 'error', 'message' => $password_error], JSON_UNESCAPED_UNICODE);
@@ -74,42 +52,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // เข้ารหัสผ่านใหม่
-    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-    
-    // เพิ่ม auth_version ขึ้นอีก 1 ขั้น เพื่อป้องกันช่องโหว่ Session เก่า
-    $new_auth_version = $user['auth_version'] + 1;
-
-    $conn->begin_transaction();
+        // เข้ารหัสก่อนล็อกแถว เพื่อลดเวลาที่คำขออื่นต้องรอ
+    $transaction_started = false;
+    $invalid_session = false;
     try {
-        // ✨ ข้อ 2.11: บันทึกรหัสผ่านใหม่, ปลดล็อกบัญชี (must_change_password = 0) และอัปเดตเวอร์ชันความปลอดภัย
-        $upd = $conn->prepare("UPDATE users SET password = ?, must_change_password = 0, auth_version = ? WHERE id = ?");
-        $upd->bind_param("sii", $hashed_password, $new_auth_version, $user_id);
-        $upd->execute();
-        
-        if ($upd->affected_rows === 0) {
-            throw new Exception("ไม่สามารถอัปเดตข้อมูลได้");
+        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+        if (!is_string($hashed_password)) {
+            throw new RuntimeException('Password hashing failed');
+        }
+
+        // ต้องรองรับ Transaction ก่อนบันทึก ไม่สร้างหรือแก้โครงสร้างตาราง
+        $engine_result = $conn->query(
+            "SELECT TABLE_NAME, ENGINE FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME IN ('users', 'technicians', 'auth_requests')"
+        );
+        if (!$engine_result) {
+            throw new RuntimeException('Password change table check failed');
+        }
+        $engines = [];
+        while ($engine_row = $engine_result->fetch_assoc()) {
+            $engines[$engine_row['TABLE_NAME']] = strtoupper((string) $engine_row['ENGINE']);
+        }
+        $engine_result->free();
+        foreach (['users', 'technicians', 'auth_requests'] as $table_name) {
+            if (($engines[$table_name] ?? '') !== 'INNODB') {
+                throw new RuntimeException('Password change tables require InnoDB');
+            }
+        }
+
+        if (!$conn->begin_transaction()) {
+            throw new RuntimeException('Password change transaction failed');
+        }
+        $transaction_started = true;
+
+        // อ่านบัญชีและช่างซ้ำภายใต้ล็อก ห้ามใช้ Session เก่ารับเวอร์ชันใหม่เอง
+        $fresh_user = authGuardLoadAccount($conn, $user_id, true);
+        if (!authGuardSessionMatches($fresh_user, $_SESSION, time())
+            || (int) $fresh_user['must_change_password'] !== 1) {
+            $invalid_session = true;
+            throw new RuntimeException('Password change session invalid');
+        }
+        $old_auth_version = filter_var($fresh_user['auth_version'], FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1, 'max_range' => 2147483646]]);
+        if ($old_auth_version === false) {
+            throw new RuntimeException('Invalid account version');
+        }
+        $new_auth_version = $old_auth_version + 1;
+
+        $upd = authGuardStatement($conn,
+            'UPDATE users
+             SET password = ?, must_change_password = 0, auth_version = auth_version + 1
+             WHERE id = ? AND is_active = 1 AND auth_version = ? AND must_change_password = 1',
+            'sii', [$hashed_password, $user_id, $old_auth_version]);
+        if ($upd->affected_rows !== 1) {
+            $upd->close();
+            throw new RuntimeException('Password change update failed');
         }
         $upd->close();
-        
-        $conn->commit();
-        
-        // ✨ สำคัญมาก: ต้องอัปเดต Session auth_version ให้ตรงกับฐานข้อมูลใหม่ ไม่เช่นนั้น auth_guard.php จะเตะผู้ใช้ออกทันทีที่เปลี่ยนหน้า
-        $_SESSION['auth_version'] = $new_auth_version;
 
-        // กำหนด URL หน้าแรกตามตำแหน่ง (Role)
+        // ยกเลิกคำขอเก่าใน Transaction เดียวกับการเปลี่ยนรหัส
+        $cancel = authGuardStatement($conn,
+            "UPDATE auth_requests SET is_canceled = 1
+             WHERE user_id = ? AND purpose IN ('email_verification', 'password_reset')
+               AND is_canceled = 0", 'i', [$user_id]);
+        $cancel->close();
+
+        if (!$conn->commit()) {
+            throw new RuntimeException('Password change commit failed');
+        }
+        $transaction_started = false;
+
+        // คงพฤติกรรมเดิม: เบราว์เซอร์ที่เปลี่ยนรหัสสำเร็จใช้งานต่อได้
+        // อุปกรณ์อื่นยังถือเวอร์ชันเก่า และถูก Guard ปฏิเสธในการร้องขอครั้งถัดไป
+        $_SESSION['auth_version'] = $new_auth_version;
+        $_SESSION['LAST_ACTIVITY'] = time();
+        unset($_SESSION['password_reset_grant'], $_SESSION['otp_request_context']);
+
         $redirect_url = 'dashboard.php';
-        if (strtolower($user['role']) === 'executive') {
+        if (strtolower($fresh_user['role']) === 'executive') {
             $redirect_url = 'executive_dashboard.php';
-        } else if (strtolower($user['role']) === 'technician') {
+        } elseif (strtolower($fresh_user['role']) === 'technician') {
             $redirect_url = 'technician_home.php';
         }
-
-        echo json_encode(['status' => 'success', 'message' => 'เปลี่ยนรหัสผ่านส่วนตัวสำเร็จ!', 'redirect' => $redirect_url]);
-    } catch (Exception $e) {
-        $conn->rollback();
-        error_log("Force Change Password Error: " . $e->getMessage());
-        echo json_encode(['status' => 'error', 'message' => 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง']);
+        echo json_encode(['status' => 'success',
+            'message' => 'เปลี่ยนรหัสผ่านส่วนตัวสำเร็จ!', 'redirect' => $redirect_url],
+            JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $e) {
+        if ($transaction_started) {
+            try { $conn->rollback(); } catch (Throwable $rollback_error) {}
+        }
+        if ($invalid_session) {
+            $_SESSION = [];
+            session_destroy();
+        }
+        error_log('Force password change failed');
+        echo json_encode(['status' => 'error',
+            'message' => $invalid_session
+                ? 'ข้อมูลบัญชีหรือ Session เปลี่ยนไป กรุณาเข้าสู่ระบบใหม่'
+                : 'ไม่สามารถบันทึกรหัสผ่านได้ กรุณาลองใหม่ภายหลัง'], JSON_UNESCAPED_UNICODE);
     }
     exit();
 }

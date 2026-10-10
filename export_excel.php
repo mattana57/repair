@@ -1,6 +1,6 @@
 <?php
-session_start();
-include 'db_connect.php'; 
+require_once 'auth_guard.php';
+require_once 'db_connect.php';
 
 // 1. รับค่าชื่อช่างที่ส่งมาจากการเลือก Dropdown ในหน้า Dashboard
 $filter_tech = isset($_GET['tech']) ? trim($_GET['tech']) : 'all';

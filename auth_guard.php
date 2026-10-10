@@ -14,87 +14,165 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// ตรวจสอบและตั้งเวลาหมดอายุของ Session (8 ชั่วโมง)
-$timeout_duration = 28800;
-if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > $timeout_duration)) {
-    session_unset();
-    session_destroy();
-    header("Location: login.php");
+// ตรวจ Session เดิม ห้ามเติมหรือเขียนทับตัวตนด้วยข้อมูลบัญชีปัจจุบัน
+function authGuardPositiveInt($value)
+{
+    if (!is_int($value)
+        && (!is_string($value) || !preg_match('/\A[1-9][0-9]*\z/', $value))) {
+        return false;
+    }
+    return filter_var($value, FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1, 'max_range' => PHP_INT_MAX]]);
+}
+
+function authGuardSessionIsWellFormed($session, $now)
+{
+    if (!is_array($session)
+        || authGuardPositiveInt($session['user_id'] ?? null) === false
+        || authGuardPositiveInt($session['auth_version'] ?? null) === false
+        || !is_string($session['username'] ?? null)
+        || trim($session['username']) === ''
+        || !is_string($session['full_name'] ?? null)
+        || !is_string($session['role'] ?? null)
+        || !in_array(strtolower($session['role']), ['admin', 'executive', 'technician'], true)
+        || !is_int($session['LAST_ACTIVITY'] ?? null)
+        || $session['LAST_ACTIVITY'] < 1
+        || $session['LAST_ACTIVITY'] > $now
+        || $now - $session['LAST_ACTIVITY'] > 28800) {
+        return false;
+    }
+    if (strtolower($session['role']) === 'technician') {
+        return authGuardPositiveInt($session['technician_id'] ?? null) !== false;
+    }
+    // auth.php เดิมไม่เก็บรหัสช่างสำหรับ Admin/Executive
+    return !array_key_exists('technician_id', $session)
+        || $session['technician_id'] === null;
+}
+
+function authGuardSessionMatches($account, $session, $now)
+{
+    if (!authGuardSessionIsWellFormed($session, $now)
+        || !is_array($account)
+        || authGuardPositiveInt($account['id'] ?? null) === false
+        || authGuardPositiveInt($account['auth_version'] ?? null) === false
+        || !in_array($account['is_active'] ?? null, [1, '1'], true)
+        || !in_array($account['must_change_password'] ?? null, [0, '0', 1, '1'], true)
+        || !is_string($account['role'] ?? null)
+        || !array_key_exists('technician_id', $account)
+        || (string) $account['id'] !== (string) $session['user_id']
+        || (string) $account['auth_version'] !== (string) $session['auth_version']
+        || $account['role'] !== $session['role']) {
+        return false;
+    }
+    if (strtolower($account['role']) === 'technician') {
+        return authGuardPositiveInt($account['technician_id']) !== false
+            && (string) $account['technician_id'] === (string) $session['technician_id']
+            && (string) ($account['linked_technician_id'] ?? '')
+                === (string) $account['technician_id'];
+    }
+    return $account['technician_id'] === null;
+}
+
+function authGuardStatement($conn, $sql, $types, $values)
+{
+    $statement = $conn->prepare($sql);
+    if (!$statement) {
+        throw new RuntimeException('Account check failed');
+    }
+    try {
+        if (!$statement->bind_param($types, ...$values) || !$statement->execute()) {
+            throw new RuntimeException('Account check failed');
+        }
+        return $statement;
+    } catch (Throwable $e) {
+        $statement->close();
+        throw $e;
+    }
+}
+
+function authGuardReadRow($statement)
+{
+    try {
+        $result = $statement->get_result();
+        if (!$result) {
+            throw new RuntimeException('Account check failed');
+        }
+        $row = $result->num_rows === 1 ? $result->fetch_assoc() : null;
+        $result->free();
+        return $row;
+    } finally {
+        $statement->close();
+    }
+}
+
+function authGuardLoadAccount($conn, $user_id, $for_update = false)
+{
+    $suffix = $for_update ? ' FOR UPDATE' : '';
+    $account = authGuardReadRow(authGuardStatement($conn,
+        'SELECT id, role, technician_id, is_active, auth_version, must_change_password
+         FROM users WHERE id = ?' . $suffix, 'i', [$user_id]));
+    if ($account === null) {
+        return null;
+    }
+    $account['linked_technician_id'] = null;
+    if (strtolower((string) $account['role']) === 'technician') {
+        $tech_id = authGuardPositiveInt($account['technician_id']);
+        if ($tech_id !== false) {
+            // ลำดับล็อกบัญชี -> ช่าง ตรงกับระบบ OTP
+            $technician = authGuardReadRow(authGuardStatement($conn,
+                'SELECT id FROM technicians WHERE id = ?' . $suffix, 'i', [$tech_id]));
+            $account['linked_technician_id'] = $technician['id'] ?? null;
+        }
+    }
+    return $account;
+}
+
+function authGuardRejectSession()
+{
+    $_SESSION = [];
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
+    header('Cache-Control: no-store');
+    header('Location: login.php');
     exit();
 }
-$_SESSION['LAST_ACTIVITY'] = time();
 
-// ตรวจสอบเบื้องต้นว่ามีการล็อกอินหรือไม่
-if (!isset($_SESSION['user_id'])) {
-    // ฝาก URL ปัจจุบันไว้ เพื่อให้หลังล็อกอินสำเร็จ เด้งกลับมาหน้าเดิมได้
+// คงการฝากปลายทางของผู้ที่ยังไม่ได้ล็อกอินตามรูปแบบเดิม
+if (!array_key_exists('user_id', $_SESSION)) {
     $_SESSION['redirect_url'] = "http" . (isset($_SERVER['HTTPS']) ? "s" : "") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-    header("Location: login.php");
+    header('Cache-Control: no-store');
+    header('Location: login.php');
     exit();
+}
+
+$guard_now = time();
+if (!authGuardSessionIsWellFormed($_SESSION, $guard_now)) {
+    authGuardRejectSession();
 }
 
 require_once 'db_connect.php';
-
-// ตรวจสอบฐานข้อมูลปัจจุบันว่าบัญชียังมีอยู่ เปิดใช้งาน และข้อมูลตัวตนตรงกับ Session ปัจจุบัน
-$user_id = $_SESSION['user_id'];
-// ✨ ข้อ 2.11: ดึงค่า must_change_password ออกมาด้วย
-$stmt = $conn->prepare("SELECT role, technician_id, is_active, auth_version, must_change_password FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows === 0) {
-    // กรณีถูกลบบัญชีออกจากฐานข้อมูล
-    session_unset();
-    session_destroy();
-    header("Location: login.php");
-    exit();
+$user_id = authGuardPositiveInt($_SESSION['user_id']);
+try {
+    $user = authGuardLoadAccount($conn, $user_id);
+} catch (Throwable $e) {
+    // ปฏิเสธการเข้าถึงเมื่อยืนยันบัญชีไม่ได้ ไม่เปิดเผยรายละเอียดฐานข้อมูล
+    error_log('Session account check failed');
+    authGuardRejectSession();
 }
 
-$user = $result->fetch_assoc();
-$stmt->close();
-
-// ปฏิเสธการเข้าถึงหากบัญชีถูกระงับ หรือมีการบังคับยกเลิก Session (auth_version ไม่ตรงกัน)
-// ✨ ข้อ 2.11: เพิ่มกฎการระงับการเข้าถึง หากเพิ่งถูกแอดมินแก้ไขอีเมลแล้วยกเลิกสถานะยืนยันตัวตน
-if ($user['is_active'] != 1 || $user['auth_version'] != $_SESSION['auth_version']) {
-    session_unset();
-    session_destroy();
-    header("Location: login.php");
-    exit();
+if (!authGuardSessionMatches($user, $_SESSION, $guard_now)) {
+    authGuardRejectSession();
 }
 
-// ✨ ข้อ 2.11: บังคับเปลี่ยนรหัสผ่านชั่วคราว หากถูกแอดมินรีเซ็ตมา
-if ($user['must_change_password'] == 1) {
-    // ดึงชื่อไฟล์ปัจจุบัน เพื่อไม่ให้เกิดลูปรีไดเร็กต์ (Infinite Redirect Loop)
-    $current_page = basename($_SERVER['PHP_SELF']);
-    // ถ้าไม่ได้อยู่หน้าเปลี่ยนรหัส หรือหน้าล็อกเอาต์ ให้เตะไปหน้าเปลี่ยนรหัสทันที
+header('Cache-Control: no-store');
+// อัปเดตเฉพาะเวลา หลังผ่านการตรวจตัวตนและรุ่นสิทธิ์แล้ว
+$_SESSION['LAST_ACTIVITY'] = $guard_now;
+
+if ((int) $user['must_change_password'] === 1) {
+    $current_page = basename($_SERVER['SCRIPT_FILENAME'] ?? '');
     if ($current_page !== 'force_change_password.php' && $current_page !== 'logout.php') {
-        header("Location: force_change_password.php");
+        header('Location: force_change_password.php');
         exit();
     }
 }
-
-// อัปเดตข้อมูลสิทธิ์และรหัสช่างล่าสุดลง Session เพื่อป้องกันข้อมูลคลาดเคลื่อน
-$_SESSION['role'] = $user['role'];
-if (strtolower($user['role']) === 'technician') {
-    // กรณีเป็นช่าง ต้องตรวจสอบว่ามีการผูกรหัสช่างไว้จริง
-    if (empty($user['technician_id'])) {
-        session_unset();
-        session_destroy();
-        header("Location: login.php");
-        exit();
-    }
-    
-    // ✨ ข้อ 3: ตรวจสอบว่าแอดมินเปลี่ยนการเชื่อมช่างระหว่างล็อกอินค้างไว้หรือไม่ (ต้องใช้ Session เดิมไม่ได้)
-    if (isset($_SESSION['technician_id']) && $_SESSION['technician_id'] != $user['technician_id']) {
-        session_unset();
-        session_destroy();
-        header("Location: login.php?error=tech_link_changed");
-        exit();
-    }
-    
-    $_SESSION['technician_id'] = $user['technician_id'];
-} else {
-    // กรณีบัญชีไม่ใช่ช่าง ให้ล้างค่ารหัสช่างที่อาจตกค้างทิ้ง
-    unset($_SESSION['technician_id']);
-}
-?>

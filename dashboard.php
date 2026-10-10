@@ -15,7 +15,9 @@ $uid_chk = intval($_SESSION['user_id']);
 $user_chk_q = $conn->query("SELECT role, full_name, english_name, username FROM users WHERE id = $uid_chk");
 if ($user_chk_q && $user_chk_q->num_rows > 0) {
     $u_data = $user_chk_q->fetch_assoc();
-    $_SESSION['role'] = $u_data['role'];
+    if (!is_string($u_data['role']) || $u_data['role'] !== $_SESSION['role']) {
+        authGuardRejectSession();
+    }
     $_SESSION['full_name'] = $u_data['full_name'];
     $_SESSION['english_name'] = $u_data['english_name'];
     $_SESSION['username'] = $u_data['username'];
