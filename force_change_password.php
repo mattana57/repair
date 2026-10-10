@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db_connect.php';
+require_once __DIR__ . '/password_policy.php';
 
 // 1. ตรวจสอบว่ามีการล็อกอินอยู่หรือไม่ (ถ้าไม่มี ให้เด้งไปหน้าล็อกอิน)
 if (!isset($_SESSION['user_id'])) {
@@ -58,9 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
-    // ตรวจสอบความถูกต้องของรหัสผ่าน
-    if (strlen($new_password) < 6) {
-        echo json_encode(['status' => 'error', 'message' => 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร']);
+        // ตรวจด้วยกติกาส่วนกลางก่อน hash; ไม่แก้การตรวจ Session ในขั้นตอนนี้
+    $password_error = passwordPolicyError($new_password);
+    if ($password_error !== null) {
+        echo json_encode(['status' => 'error', 'message' => $password_error], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+    if (!is_string($confirm_password)) {
+        echo json_encode(['status' => 'error', 'message' => 'กรุณากรอกการยืนยันรหัสผ่านเป็นข้อความ'], JSON_UNESCAPED_UNICODE);
         exit();
     }
     if ($new_password !== $confirm_password) {
@@ -148,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">รหัสผ่านใหม่ (New Password)</label>
                         <div class="relative">
                             <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="password" id="new_password" required minlength="6" placeholder="รหัสผ่านใหม่อย่างน้อย 6 ตัวอักษร" 
+                            <input type="password" id="new_password" required autocomplete="new-password" placeholder="กรอกรหัสผ่านตามเงื่อนไขด้านล่าง"
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-12 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-colors font-medium">
                             <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePassword('new_password', 'eyeIcon1')">
                                 <i id="eyeIcon1" class="fas fa-eye-slash"></i>
@@ -160,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ยืนยันรหัสผ่านใหม่ (Confirm Password)</label>
                         <div class="relative">
                             <i class="fas fa-check-circle absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="password" id="confirm_password" required minlength="6" placeholder="กรอกรหัสผ่านใหม่อีกครั้งให้ตรงกัน" 
+                            <input type="password" id="confirm_password" required autocomplete="new-password" placeholder="กรอกรหัสผ่านใหม่อีกครั้งให้ตรงกัน"
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-12 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-colors font-medium">
                             <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePassword('confirm_password', 'eyeIcon2')">
                                 <i id="eyeIcon2" class="fas fa-eye-slash"></i>
@@ -168,6 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
                 </div>
+
+                <p class="text-xs text-slate-500 mt-4"><?php echo htmlspecialchars(passwordPolicyHint(), ENT_QUOTES, 'UTF-8'); ?></p>
 
                 <div class="mt-8">
                     <button type="submit" id="btnSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl transition-colors shadow-md shadow-indigo-200/50 flex items-center justify-center">
@@ -185,7 +193,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+    <script src="password_policy.js"></script>
     <script>
+        const sharedPasswordPolicy = <?php echo json_encode(passwordPolicyConfig(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+
         const csrfToken = "<?php echo $_SESSION['csrf_token']; ?>";
 
         function togglePassword(inputId, iconId) {
@@ -208,8 +219,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const newPwd = document.getElementById('new_password').value;
             const confPwd = document.getElementById('confirm_password').value;
 
-            if (newPwd.length < 6) {
-                Swal.fire('ข้อผิดพลาด', 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร', 'error');
+            const passwordError = PasswordPolicy.error(newPwd, sharedPasswordPolicy);
+            if (passwordError !== null) {
+                Swal.fire('ข้อผิดพลาด', passwordError, 'error');
                 return;
             }
 

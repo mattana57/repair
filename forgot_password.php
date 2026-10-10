@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db_connect.php';
+require_once __DIR__ . '/password_policy.php';
 
 // เลือกอีเมลตามบทบาทจากข้อมูลฐานข้อมูลเท่านั้น
 function getPasswordResetEmailSource($account) {
@@ -240,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label for="new_password" class="block text-sm font-bold text-slate-700 mb-2">รหัสผ่านใหม่</label>
                     <input type="password" id="new_password" required autocomplete="new-password"
                         class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    <p class="text-xs text-slate-500 mt-2">ต้องไม่เป็นช่องว่างทั้งหมด และไม่เกิน 72 ไบต์ ตัวอักษรไทยอาจใช้หลายไบต์ต่อหนึ่งตัว</p>
+                    <p class="text-xs text-slate-500 mt-2"><?php echo htmlspecialchars(passwordPolicyHint(), ENT_QUOTES, 'UTF-8'); ?></p>
                 </div>
                 <div class="mb-5">
                     <label for="confirm_password" class="block text-sm font-bold text-slate-700 mb-2">ยืนยันรหัสผ่านใหม่</label>
@@ -259,7 +260,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+    <script src="password_policy.js"></script>
     <script>
+        const sharedPasswordPolicy = <?php echo json_encode(passwordPolicyConfig(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+
         // กำหนดตัวแปร CSRF Token สำหรับส่งไปกับ API
         const csrfToken = "<?php echo $_SESSION['csrf_token']; ?>";
 
@@ -338,14 +342,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const password = document.getElementById('new_password').value;
             const confirmation = document.getElementById('confirm_password').value;
             const grant = document.getElementById('reset_grant').value;
-            if (password === '' || password.trim() === '' || password.includes('\0')) {
-                Swal.fire('ข้อผิดพลาด', 'กรุณากรอกรหัสผ่านที่ไม่เป็นช่องว่างทั้งหมด', 'error');
+                        const passwordError = PasswordPolicy.error(password, sharedPasswordPolicy);
+            if (passwordError !== null) {
+                Swal.fire('ข้อผิดพลาด', passwordError, 'error');
                 return;
             }
-            if (new TextEncoder().encode(password).length > 72) {
-                Swal.fire('ข้อผิดพลาด', 'รหัสผ่านต้องไม่เกิน 72 ไบต์', 'error');
-                return;
-            }
+
             if (password !== confirmation) {
                 Swal.fire('ข้อผิดพลาด', 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน', 'error');
                 return;

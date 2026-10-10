@@ -5,6 +5,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     exit();
 }
 require_once __DIR__ . '/otp_verification_service.php';
+require_once __DIR__ . '/password_policy.php';
 
 function passwordResetSave($conn, $token, $password, $confirmation)
 {
@@ -32,16 +33,14 @@ function passwordResetSave($conn, $token, $password, $confirmation)
         || !is_string($grant['target_email'] ?? null)) {
         return otpVerificationResult($invalid);
     }
-    // ใช้กติกาสร้างบัญชีใน Dashboard: ไม่ว่าง/ไม่เป็นช่องว่างทั้งหมด
-    // ไม่ trim รหัสผ่านก่อน hash เพื่อรักษาค่าที่ผู้ใช้กรอก
-    if (!is_string($password) || !is_string($confirmation)
-        || $password === '' || trim($password) === ''
-        || strpos($password, "\0") !== false) {
-        return otpVerificationResult('กรุณากรอกรหัสผ่านที่ไม่เป็นช่องว่างทั้งหมด');
+        $password_error = passwordPolicyError($password);
+    if ($password_error !== null) {
+        return otpVerificationResult($password_error);
     }
-    if (PASSWORD_DEFAULT === PASSWORD_BCRYPT && strlen($password) > 72) {
-        return otpVerificationResult('รหัสผ่านยาวเกินไป ต้องไม่เกิน 72 ไบต์');
+    if (!is_string($confirmation)) {
+        return otpVerificationResult('กรุณากรอกการยืนยันรหัสผ่านเป็นข้อความ');
     }
+
     if ($password !== $confirmation) {
         return otpVerificationResult('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
     }

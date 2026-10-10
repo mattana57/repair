@@ -1,6 +1,7 @@
 <?php 
 // เรียกใช้ระบบตรวจสิทธิ์ส่วนกลาง (ตรวจสอบ Session, อายุการใช้งาน, และสถานะบัญชี)
 require_once 'auth_guard.php';
+require_once __DIR__ . '/password_policy.php';
 
 // สร้าง CSRF Token สำหรับป้องกันการแนบสคริปต์สวมรอยส่งคำสั่ง (CSRF Protection)
 if (empty($_SESSION['csrf_token'])) {
@@ -890,14 +891,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         $reject_account_form('Username ต้องไม่มีช่องว่างหรืออักขระควบคุม');
     }
 
-    if ($account_password !== '' && trim($account_password) === '') {
-        $reject_account_form('รหัสผ่านต้องไม่เป็นช่องว่างทั้งหมด');
-    }
-
-    // ป้องกัน bcrypt ตัดรหัสผ่านส่วนที่เกิน 72 ไบต์ทิ้ง
-    if (PASSWORD_DEFAULT === PASSWORD_BCRYPT
-        && strlen($account_password) > 72) {
-        $reject_account_form('รหัสผ่านยาวเกินไป ต้องไม่เกิน 72 ไบต์');
+        // เว้นว่างตอนแก้ไขได้เพื่อคงรหัสเดิม; ถ้าตั้งรหัสต้องผ่านกติกาส่วนกลาง
+    if ($account_password !== '') {
+        $password_error = passwordPolicyError($account_password);
+        if ($password_error !== null) {
+            $reject_account_form($password_error);
+        }
     }
 
     $full_name = $read_account_text('full_name');
@@ -1823,6 +1822,10 @@ if (isset($_GET['api_check_hash'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBS Repair Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="password_policy.js"></script>
+    <script>
+        const sharedPasswordPolicy = <?php echo json_encode(passwordPolicyConfig(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4072,6 +4075,7 @@ if (isset($_GET['api_check_hash'])) {
                                 </button>
                             </div>
                             <p id="err_techAdmin_password" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณากำหนดรหัสผ่าน (Password)</span></p>
+                            <p class="text-[11px] text-slate-500 mt-2"><?php echo htmlspecialchars(passwordPolicyHint(), ENT_QUOTES, 'UTF-8'); ?></p>
                         </div>
                     </div>
 
@@ -6632,6 +6636,17 @@ if (isset($_GET['api_check_hash'])) {
                     setFieldError(pwdEl, 'กรุณากำหนดรหัสผ่าน (Password)');
                     isValid = false;
                     if (!firstErrorEl) firstErrorEl = pwdEl;
+                }
+            }
+
+            // รหัสที่กรอกใหม่ทุกบทบาทต้องผ่านกติกาเดียวกัน; ว่างยังคงใช้กติกาเดิม
+            const passwordEl = document.getElementById('techAdmin_password');
+            if (passwordEl && passwordEl.value !== '') {
+                const passwordError = PasswordPolicy.error(passwordEl.value, sharedPasswordPolicy);
+                if (passwordError !== null) {
+                    setFieldError(passwordEl, passwordError);
+                    isValid = false;
+                    if (!firstErrorEl) firstErrorEl = passwordEl;
                 }
             }
 
