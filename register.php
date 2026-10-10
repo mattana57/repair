@@ -21,36 +21,8 @@ $error = '';
 $success = '';
 $form_values = ['full_name' => '', 'phone' => '', 'email' => '', 'username' => ''];
 
-// กติกาของหน้าสมัครนี้ ยังไม่เปลี่ยนกติกาหน้าอื่น
-$registration_password_policy = [
-    'min_length' => 15,
-    'max_bytes' => 72,
-    // รายการตัวอย่างในระบบ ไม่ส่งรหัสผ่านไปตรวจบริการภายนอก
-    'common_passwords' => [
-        'password123456!', 'password123456789!', 'password123456789.',
-        'password123456789_', 'qwerty123456789!', 'abcdef123456789!',
-        'welcome123456789!', 'administrator123!',
-    ],
-];
-
-function registrationPasswordRules($password, $policy)
-{
-    $valid_utf8 = is_string($password) && preg_match('//u', $password) === 1;
-    $length = $valid_utf8 ? preg_match_all('/./us', $password, $characters) : 0;
-    return [
-        'length' => $valid_utf8 && $length >= $policy['min_length'],
-        'uppercase' => $valid_utf8 && preg_match('/[A-Z]/', $password) === 1,
-        'lowercase' => $valid_utf8 && preg_match('/[a-z]/', $password) === 1,
-        'number' => $valid_utf8 && preg_match('/[0-9]/', $password) === 1,
-        // เครื่องหมาย ASCII ทุกตัว รวม _ และ .; ช่องว่างไม่นับเป็นอักขระพิเศษ
-        'special' => $valid_utf8
-            && preg_match('/[\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]/', $password) === 1,
-        'bytes' => $valid_utf8 && strlen($password) <= $policy['max_bytes'],
-        'printable' => $valid_utf8 && preg_match('/[\x00-\x1F\x7F]/', $password) === 0,
-        'common' => $valid_utf8 && $password !== ''
-            && !in_array(strtolower($password), $policy['common_passwords'], true),
-    ];
-}
+require_once __DIR__ . '/password_policy.php';
+$registration_password_policy = passwordPolicyConfig();
 
 if (!is_string($_SESSION['csrf_token'] ?? null) || $_SESSION['csrf_token'] === '') {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -86,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // รักษารหัสผ่านตามที่กรอก ไม่ trim และไม่ใส่กลับลง HTML
         $password = $input['password'];
         $confirmation = $input['confirm_password'];
-        $rules = registrationPasswordRules($password, $registration_password_policy);
+        $rules = passwordPolicyRules($password);
 
         if ($full_name === '' || $phone === '' || $email === '' || $username === ''
             || $password === '' || $confirmation === '') {
@@ -274,8 +246,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
     </div>
+    <script src="password_policy.js"></script>
     <script>
-                const registrationPolicy = <?php echo json_encode($registration_password_policy, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+        const registrationPolicy = <?php echo json_encode($registration_password_policy, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
         function togglePassword(inputId, iconId, button) {
             const input = document.getElementById(inputId);
@@ -291,17 +264,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        function registrationPasswordRules(password) {
-            return {
-                length: Array.from(password).length >= registrationPolicy.min_length,
-                uppercase: /[A-Z]/.test(password),
-                lowercase: /[a-z]/.test(password),
-                number: /[0-9]/.test(password),
-                special: /[\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E]/.test(password),
-                bytes: new TextEncoder().encode(password).length <= registrationPolicy.max_bytes,
-                printable: !/[\x00-\x1F\x7F]/.test(password),
-                common: password !== '' && !registrationPolicy.common_passwords.includes(password.toLowerCase())
-            };
+            function registrationPasswordRules(password) {
+            return PasswordPolicy.rules(password, registrationPolicy);
         }
 
         const registrationForm = document.getElementById('registrationForm');
