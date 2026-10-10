@@ -13,7 +13,24 @@ function record_failed_attempt($file) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
+
+    // เก็บเฉพาะ URL กลับใบงาน แล้วล้างตัวตนและสิทธิ์ของบัญชีก่อนหน้า
+    $saved_redirect_url = $_SESSION['redirect_url'] ?? null;
+    $_SESSION = [];
+
+    if (is_string($saved_redirect_url) && $saved_redirect_url !== '') {
+        $_SESSION['redirect_url'] = $saved_redirect_url;
+    }
+    unset($saved_redirect_url);
+
+    // เปลี่ยน Session ID ก่อนตรวจล็อกอิน เพื่อไม่ใช้ Session เดิมต่อ
+    if (!session_regenerate_id(true)) {
+        $_SESSION = [];
+        $_SESSION['login_error'] = "ไม่สามารถเริ่มการเข้าสู่ระบบได้ กรุณาลองใหม่";
+        header("Location: login.php");
+        exit();
+    }
+
     // จำกัดความถี่การล็อกอิน (Rate Limiting) ป้องกันการเดารหัสผ่านโดยอ้างอิงจาก IP Address
     $ip_address = $_SERVER['REMOTE_ADDR'];
     $attempt_file = 'uploads/login_attempts_' . md5($ip_address) . '.txt';
@@ -54,24 +71,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
 
-        // ✨ ระบบตรวจสอบรหัสผ่าน และ Auto-Migration (ย้ายรหัสผ่านเดิมให้เป็น Hash) ✨
-        $is_password_correct = false;
-        
-        // 1. ตรวจสอบรหัสผ่านแบบ Hash ตามมาตรฐานความปลอดภัยใหม่ (ข้อ 7.1, 7.2)
-        if (password_verify($password, $user['password'])) {
-            $is_password_correct = true;
-        } 
-        // 2. ตรวจสอบรหัสผ่านบัญชีเก่าที่เป็น Plain text และแปลงเป็น Hash ให้อัตโนมัติ (ข้อ 7.4)
-        elseif ($password === $user['password']) {
-            $is_password_correct = true;
-            $new_hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt_update_pwd = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-            if ($stmt_update_pwd) {
-                $stmt_update_pwd->bind_param("si", $new_hash, $user['id']);
-                $stmt_update_pwd->execute();
-                $stmt_update_pwd->close();
-            }
-        }
+        // ตรวจด้วย Hash เท่านั้น ไม่รองรับการเทียบรหัสผ่านแบบ Plain text
+        $is_password_correct = is_string($password)
+            && is_string($user['password'])
+            && password_verify($password, $user['password']);
 
         if ($is_password_correct) {
             
@@ -86,7 +89,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit();
             }
         
-            $role_lower = strtolower($user['role']);
+            $role_lower = strtolower((string) $user['role']);
+
+            // ตรวจบทบาทก่อนสร้าง Session แม้มี URL กลับใบงาน
+            if (!in_array($role_lower, ['admin', 'executive', 'technician'], true)) {
+                $_SESSION = [];
+                $_SESSION['login_error'] = "ไม่อนุญาตให้เข้าสู่ระบบ";
+                header("Location: login.php");
+                exit();
+            }
 
             if ($role_lower === 'technician') {
                 if (empty($user['technician_id'])) {
