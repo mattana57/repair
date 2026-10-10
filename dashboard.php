@@ -419,49 +419,8 @@ function formatPhoneHtml($phone_str) {
     return $html;
 }
 
-// =====================================================================
-// 🛠️ ระบบซ่อมแซมและปรับปรุงฐานข้อมูลอัตโนมัติ (AUTO-FIX DB STRUCTURE)
-// =====================================================================
-
-$conn->query("CREATE TABLE IF NOT EXISTS assets (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    asset_code VARCHAR(50) NOT NULL,
-    asset_name VARCHAR(100) NOT NULL,
-    category VARCHAR(50) NOT NULL,
-    status VARCHAR(20) DEFAULT 'ใช้งานปกติ',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)");
-
-$conn->query("CREATE TABLE IF NOT EXISTS technicians (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    full_name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)");
-
-$tech_cols = [
-    'line_user_id' => 'VARCHAR(100) NULL',
-    'department' => 'VARCHAR(255) NULL',
-    'position' => 'VARCHAR(255) NULL',
-    'phone' => 'VARCHAR(100) NULL',
-    'email' => 'VARCHAR(150) NULL',
-    'avatar_url' => 'VARCHAR(255) NULL',
-    'secret_code' => 'VARCHAR(10) NULL',
-    'approval_status' => "VARCHAR(50) DEFAULT 'รอผูกบัญชี'",
-    'status' => "VARCHAR(50) DEFAULT 'ว่าง'",
-    'english_name' => 'VARCHAR(255) NULL'
-];
-
-foreach ($tech_cols as $col => $def) {
-    $chk = $conn->query("SHOW COLUMNS FROM technicians LIKE '$col'");
-    if($chk && $chk->num_rows == 0) {
-        $conn->query("ALTER TABLE technicians ADD COLUMN $col $def");
-    }
-}
-
-$conn->query("ALTER TABLE technicians CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-$conn->query("ALTER TABLE technicians MODIFY COLUMN department VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
-$conn->query("ALTER TABLE technicians MODIFY COLUMN english_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
-$conn->query("ALTER TABLE technicians MODIFY COLUMN position VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+// จัดการโครงสร้างฐานข้อมูลผ่าน phpMyAdmin เท่านั้น
+// คงคำสั่งจัดการข้อมูลเดิมไว้
 
 $res_fix = $conn->query("SELECT id FROM technicians WHERE approval_status IN ('รออนุมัติ', 'รอผูกบัญชี') AND (secret_code IS NULL OR secret_code = '')");
 if ($res_fix && $res_fix->num_rows > 0) {
@@ -471,82 +430,8 @@ if ($res_fix && $res_fix->num_rows > 0) {
     }
 }
 
-$conn->query("CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
-    role VARCHAR(50) DEFAULT 'User',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)");
-
-// ✨ ตารางบันทึกประวัติการเข้าสู่ระบบ (สร้างอัตโนมัติ) ✨
-$conn->query("CREATE TABLE IF NOT EXISTS login_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
-    role VARCHAR(50) NULL,
-    ip_address VARCHAR(50) NULL,
-    status VARCHAR(50) DEFAULT 'สำเร็จ',
-    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)");
-
-$users_cols = [
-    'password' => 'VARCHAR(255) NULL',
-    'full_name' => 'VARCHAR(255) NULL',
-    'english_name' => 'VARCHAR(255) NULL',
-    'position' => 'VARCHAR(255) NULL',
-    'phone' => 'VARCHAR(100) NULL',
-    'email' => 'VARCHAR(150) NULL',
-    'department' => 'VARCHAR(255) NULL',
-    'avatar_url' => 'VARCHAR(255) NULL', // ✨ เพิ่มการรองรับรูปโปรไฟล์ในตาราง users
-    'must_change_password' => 'TINYINT(1) DEFAULT 0' // ✨ ข้อ 2.11 สถานะบังคับเปลี่ยนรหัสผ่านชั่วคราว
-];
-
-foreach ($users_cols as $col => $def) {
-    $chk = $conn->query("SHOW COLUMNS FROM users LIKE '$col'");
-    if($chk && $chk->num_rows == 0) {
-        $conn->query("ALTER TABLE users ADD COLUMN $col $def");
-    }
-}
-
-// ✨ ตารางบันทึกประวัติการดำเนินการของแอดมิน (ข้อ 2.11) ✨
-$conn->query("CREATE TABLE IF NOT EXISTS admin_action_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    admin_id INT NOT NULL,
-    action_type VARCHAR(50) NOT NULL,
-    target_user_id INT NULL,
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)");
-
-$conn->query("ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-$conn->query("ALTER TABLE users MODIFY COLUMN department VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
-$conn->query("ALTER TABLE users MODIFY COLUMN full_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
-$conn->query("ALTER TABLE users MODIFY COLUMN english_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
-$conn->query("ALTER TABLE users MODIFY COLUMN position VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
-$conn->query("ALTER TABLE users MODIFY COLUMN position VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
-
 $check_repairs_table = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs_table && $check_repairs_table->num_rows > 0) {
-    $conn->query("ALTER TABLE repairs CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-    
-    $check_tech_name = $conn->query("SHOW COLUMNS FROM repairs LIKE 'technician_name'");
-    if($check_tech_name && $check_tech_name->num_rows == 0) {
-        $conn->query("ALTER TABLE repairs ADD COLUMN technician_name VARCHAR(100) NULL");
-    }
-
-    $check_root_cause = $conn->query("SHOW COLUMNS FROM repairs LIKE 'root_cause'");
-    if($check_root_cause && $check_root_cause->num_rows == 0) {
-        $conn->query("ALTER TABLE repairs ADD COLUMN root_cause TEXT NULL");
-    }
-
-    $check_rating = $conn->query("SHOW COLUMNS FROM repairs LIKE 'rating'");
-    if($check_rating && $check_rating->num_rows == 0) {
-        $conn->query("ALTER TABLE repairs ADD COLUMN rating INT DEFAULT 0");
-    }
-    $check_review = $conn->query("SHOW COLUMNS FROM repairs LIKE 'review_comment'");
-    if($check_review && $check_review->num_rows == 0) {
-        $conn->query("ALTER TABLE repairs ADD COLUMN review_comment TEXT NULL");
-    }
-
     $conn->query("INSERT INTO users (username, full_name, phone, department, role) 
                   SELECT CONCAT('U', REPLACE(phone_number, '-', '')), reporter_name, phone_number, 'บุคลากรทั่วไป', 'User' 
                   FROM repairs 
