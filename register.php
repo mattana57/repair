@@ -178,8 +178,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>body { font-family: 'Kanit', sans-serif; }</style>
 </head>
-<body class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
+<body class="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-6 sm:py-10">
+    <div class="w-full max-w-4xl bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100">
         <div class="text-center mb-6">
             <h2 class="text-2xl font-bold text-slate-800">สมัครสมาชิกเจ้าหน้าที่</h2>
             <p class="text-slate-500 text-sm mt-1">สร้างบัญชีเพื่อเข้าสู่ระบบแจ้งซ่อม</p>
@@ -197,66 +197,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <a href="login.php" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center px-4 py-3 rounded-xl font-bold transition-all mt-4">กลับไปหน้าเข้าสู่ระบบ</a>
         <?php else: ?>
-                        <form id="registrationForm" action="" method="POST" class="space-y-4">
+            <form id="registrationForm" action="" method="POST" class="space-y-6">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
-                <div>
-                    <label for="full_name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ชื่อ–นามสกุล <span class="text-rose-500">*</span></label>
-                    <input type="text" name="full_name" id="full_name" required autocomplete="name"
-                        value="<?php echo htmlspecialchars($form_values['full_name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
-                </div>
-                <div>
-                    <label for="phone" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">เบอร์โทรศัพท์ <span class="text-rose-500">*</span></label>
-                    <input type="tel" name="phone" id="phone" required autocomplete="tel"
-                        value="<?php echo htmlspecialchars($form_values['phone'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
-                </div>
-                <div>
-                    <label for="email" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">อีเมล <span class="text-rose-500">*</span></label>
-                    <input type="email" name="email" id="email" required maxlength="255" autocomplete="email"
-                        value="<?php echo htmlspecialchars($form_values['email'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
-                        placeholder="name@example.com"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
-                    <p class="text-xs text-slate-500 mt-1.5">การกรอกอีเมลยังไม่ถือเป็นการยืนยันอีเมล</p>
-                </div>
-                <div>
-                    <label for="username" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ชื่อผู้ใช้งาน <span class="text-rose-500">*</span></label>
-                    <input type="text" name="username" id="username" required autocomplete="username"
-                        value="<?php echo htmlspecialchars($form_values['username'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
-                </div>
-                <div>
-                    <label for="password" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">รหัสผ่าน <span class="text-rose-500">*</span></label>
-                    <div class="relative">
-                        <input type="password" name="password" id="password" required autocomplete="new-password" aria-describedby="passwordRules"
-                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-12 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
-                        <button type="button" onclick="togglePassword('password', 'eyeIcon', this)" aria-label="แสดงรหัสผ่าน" aria-pressed="false"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600 transition-colors">
-                            <i id="eyeIcon" class="fas fa-eye-slash text-sm" aria-hidden="true"></i>
-                        </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-start">
+                    <!-- ฝั่งซ้าย: ชื่อ เบอร์โทร และอีเมล -->
+                    <div class="space-y-4 min-w-0">
+                        <div>
+                            <label for="full_name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ชื่อ–นามสกุล <span class="text-rose-500">*</span></label>
+                            <input type="text" name="full_name" id="full_name" required autocomplete="name"
+                                value="<?php echo htmlspecialchars($form_values['full_name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">เบอร์โทรศัพท์ <span class="text-rose-500">*</span></label>
+                            <input type="tel" name="phone" id="phone" required autocomplete="tel"
+                                value="<?php echo htmlspecialchars($form_values['phone'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">อีเมล <span class="text-rose-500">*</span></label>
+                            <input type="email" name="email" id="email" required maxlength="255" autocomplete="email"
+                                value="<?php echo htmlspecialchars($form_values['email'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
+                                placeholder="name@example.com"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                            <p class="text-xs text-slate-500 mt-1.5">การกรอกอีเมลยังไม่ถือเป็นการยืนยันอีเมล</p>
+                        </div>
                     </div>
-                    <ul id="passwordRules" class="mt-3 rounded-xl bg-slate-50 p-3 space-y-1.5 text-xs text-slate-500" aria-live="polite">
-                        <li data-rule="length">○ มีอย่างน้อย 15 ตัวอักษร</li>
-                        <li data-rule="uppercase">○ มีตัวพิมพ์ใหญ่ A–Z</li>
-                        <li data-rule="lowercase">○ มีตัวพิมพ์เล็ก a–z</li>
-                        <li data-rule="number">○ มีตัวเลข 0–9</li>
-                        <li data-rule="special">○ มีอักขระพิเศษ เช่น _ . ! @ # $ % &amp; *</li>
-                        <li data-rule="bytes">○ ไม่เกิน 72 ไบต์ (ตัวอักษรไทยใช้หลายไบต์)</li>
-                        <li data-rule="printable">○ ไม่มีอักขระควบคุม เช่น ขึ้นบรรทัดใหม่</li>
-                        <li data-rule="common">○ ไม่ใช่รหัสตัวอย่างที่เดาง่ายในรายการของระบบ</li>
-                    </ul>
-                </div>
-                <div>
-                    <label for="confirm_password" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ยืนยันรหัสผ่าน <span class="text-rose-500">*</span></label>
-                    <div class="relative">
-                        <input type="password" name="confirm_password" id="confirm_password" required autocomplete="new-password" aria-describedby="confirmMessage"
-                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-12 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
-                        <button type="button" onclick="togglePassword('confirm_password', 'confirmEyeIcon', this)" aria-label="แสดงรหัสผ่านยืนยัน" aria-pressed="false"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600 transition-colors">
-                            <i id="confirmEyeIcon" class="fas fa-eye-slash text-sm" aria-hidden="true"></i>
-                        </button>
+                    <!-- ฝั่งขวา: Username รหัสผ่าน และยืนยันรหัสผ่าน -->
+                    <div class="space-y-4 min-w-0">
+                        <div>
+                            <label for="username" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ชื่อผู้ใช้งาน <span class="text-rose-500">*</span></label>
+                            <input type="text" name="username" id="username" required autocomplete="username"
+                                value="<?php echo htmlspecialchars($form_values['username'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                        </div>
+                        <div>
+                            <label for="password" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">รหัสผ่าน <span class="text-rose-500">*</span></label>
+                            <div class="relative">
+                                <input type="password" name="password" id="password" required autocomplete="new-password" aria-describedby="passwordRules"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-12 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                                <button type="button" onclick="togglePassword('password', 'eyeIcon', this)" aria-label="แสดงรหัสผ่าน" aria-pressed="false"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600 transition-colors">
+                                    <i id="eyeIcon" class="fas fa-eye-slash text-sm" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="confirm_password" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ยืนยันรหัสผ่าน <span class="text-rose-500">*</span></label>
+                            <div class="relative">
+                                <input type="password" name="confirm_password" id="confirm_password" required autocomplete="new-password" aria-describedby="confirmMessage"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 pr-12 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                                <button type="button" onclick="togglePassword('confirm_password', 'confirmEyeIcon', this)" aria-label="แสดงรหัสผ่านยืนยัน" aria-pressed="false"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-indigo-600 transition-colors">
+                                    <i id="confirmEyeIcon" class="fas fa-eye-slash text-sm" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <p id="confirmMessage" class="text-xs text-slate-500 mt-1.5" aria-live="polite">○ กรอกรหัสผ่านอีกครั้งให้ตรงกัน</p>
+                        </div>
+                        <ul id="passwordRules" class="mt-3 rounded-xl bg-slate-50 p-3 space-y-1.5 text-xs text-slate-500" aria-live="polite">
+                            <li data-rule="length">○ มีอย่างน้อย 15 ตัวอักษร</li>
+                            <li data-rule="uppercase">○ มีตัวพิมพ์ใหญ่ A–Z</li>
+                            <li data-rule="lowercase">○ มีตัวพิมพ์เล็ก a–z</li>
+                            <li data-rule="number">○ มีตัวเลข 0–9</li>
+                            <li data-rule="special">○ มีอักขระพิเศษ เช่น _ . ! @ # $ % &amp; *</li>
+                            <li data-rule="bytes">○ ไม่เกิน 72 ไบต์ (ตัวอักษรไทยใช้หลายไบต์)</li>
+                            <li data-rule="printable">○ ไม่มีอักขระควบคุม เช่น ขึ้นบรรทัดใหม่</li>
+                            <li data-rule="common">○ ไม่ใช่รหัสตัวอย่างที่เดาง่ายในรายการของระบบ</li>
+                        </ul>
                     </div>
-                    <p id="confirmMessage" class="text-xs text-slate-500 mt-1.5" aria-live="polite">○ กรอกรหัสผ่านอีกครั้งให้ตรงกัน</p>
                 </div>
                 <p class="text-xs text-slate-500">ช่องที่มี * ต้องกรอกทุกช่อง</p>
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md mt-6">ยืนยันการสมัครสมาชิก</button>
