@@ -7602,7 +7602,7 @@ if (isset($_GET['api_check_hash'])) {
                     if (btnEdit) {
                         const targetParam = hasAvatar ? adm.avatar_url : '';
                         let currentOnClick = btnEdit.getAttribute('onclick') || '';
-                        currentOnClick = currentOnClick.replace(/,\s*'[^']*'\s*,\s*('[^']*')\)$/, `, '${targetParam}', $1)`);
+                        currentOnClick = currentOnClick.replace(/,\s*'[^']*'\s*,\s*('[^']*')\s*,\s*('[^']*')\)$/, `, '${targetParam}', $1, $2)`);
                         btnEdit.setAttribute('onclick', currentOnClick);
                     }
 
