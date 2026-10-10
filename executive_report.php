@@ -1,16 +1,13 @@
 <?php
 require_once 'auth_guard.php';
+
+// อนุญาตเฉพาะ Admin และ Executive ก่อนอ่านข้อมูลหรือรับคำสั่ง
+if (!in_array(strtolower($_SESSION['role'] ?? ''), ['admin', 'executive'], true)) {
+    http_response_code(403);
+    exit('ไม่อนุญาตให้เข้าถึงหน้านี้');
+}
+
 require_once 'db_connect.php';
-
-// ตรวจสอบการเข้าสู่ระบบ
-if (!isset($_SESSION['user_id'])) {
-    die("กรุณาเข้าสู่ระบบก่อนดูรายงาน");
-}
-
-// ป้องกันช่างซ่อม (Technician) แอบเข้ามาดูหน้าผู้บริหาร
-if (isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'technician') {
-    die("ไม่อนุญาตให้เข้าถึงหน้านี้");
-}
 
 // รับค่าจาก URL
 $selected_tech = isset($_GET['tech']) ? trim($_GET['tech']) : 'all';

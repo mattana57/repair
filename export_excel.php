@@ -1,5 +1,12 @@
 <?php
 require_once 'auth_guard.php';
+
+// อนุญาตเฉพาะ Admin และ Executive ก่อนอ่านข้อมูลหรือรับคำสั่ง
+if (!in_array(strtolower($_SESSION['role'] ?? ''), ['admin', 'executive'], true)) {
+    http_response_code(403);
+    exit('ไม่อนุญาตให้เข้าถึงหน้านี้');
+}
+
 require_once 'db_connect.php';
 
 // 1. รับค่าชื่อช่างที่ส่งมาจากการเลือก Dropdown ในหน้า Dashboard
