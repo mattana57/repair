@@ -1,6 +1,42 @@
 <?php
 require_once __DIR__ . '/session_bootstrap.php';
-require_once 'db_connect.php'; 
+require_once 'db_connect.php';
+
+// บันทึกประวัติแยกจากผลการตรวจล็อกอิน
+function authRecordLoginHistory($conn, $username, $role, $ip_address, $status)
+{
+    $statement = null;
+
+    try {
+        $statement = @$conn->prepare(
+            'INSERT INTO login_logs (username, role, ip_address, status)
+             VALUES (?, ?, ?, ?)'
+        );
+
+        if (!$statement
+            || !@$statement->bind_param(
+                'ssss', $username, $role, $ip_address, $status
+            )
+            || !@$statement->execute()
+            || $statement->affected_rows !== 1) {
+            throw new RuntimeException('Login history write failed');
+        }
+
+        return true;
+    } catch (Throwable $e) {
+        // ไม่บันทึกรหัสผ่าน OTP หรือรายละเอียดฐานข้อมูล
+        error_log('Login history write failed');
+        return false;
+    } finally {
+        if ($statement instanceof mysqli_stmt) {
+            try {
+                @$statement->close();
+            } catch (Throwable $e) {
+                error_log('Login history cleanup failed');
+            }
+        }
+    }
+}
 
 // ฟังก์ชันช่วยบันทึกการเข้าระบบผิดพลาด (Rate Limiting)
 function record_failed_attempt($file) {
@@ -130,12 +166,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // ✨ บันทึกประวัติการเข้าสู่ระบบ (สำเร็จ) ✨
             $ip_address = $_SERVER['REMOTE_ADDR'];
             $log_status = 'สำเร็จ';
-            $stmt_log = $conn->prepare("INSERT INTO login_logs (username, role, ip_address, status) VALUES (?, ?, ?, ?)");
-            if ($stmt_log) {
-                $stmt_log->bind_param("ssss", $user['username'], $user['role'], $ip_address, $log_status);
-                $stmt_log->execute();
-                $stmt_log->close();
-            }
+            authRecordLoginHistory(
+                $conn,
+                $user['username'],
+                $user['role'],
+                $ip_address,
+                $log_status
+            );
             
             if ($role_lower === 'technician') {
                 $_SESSION['technician_id'] = $user['technician_id'];
@@ -215,14 +252,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             // ✨ บันทึกประวัติการเข้าสู่ระบบ (รหัสผ่านผิด) ✨
             $ip_address = $_SERVER['REMOTE_ADDR'];
-            $log_status = 'รหัสผ่านผิด';
+                        $log_status = 'รหัสผ่านผิด';
             $log_role = 'Unknown';
-            $stmt_log = $conn->prepare("INSERT INTO login_logs (username, role, ip_address, status) VALUES (?, ?, ?, ?)");
-            if ($stmt_log) {
-                $stmt_log->bind_param("ssss", $username, $log_role, $ip_address, $log_status);
-                $stmt_log->execute();
-                $stmt_log->close();
-            }
+            authRecordLoginHistory(
+                $conn,
+                $username,
+                $log_role,
+                $ip_address,
+                $log_status
+            );
 
             $_SESSION['login_error'] = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
             header("Location: login.php");
@@ -236,12 +274,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $ip_address = $_SERVER['REMOTE_ADDR'];
         $log_status = 'ไม่พบชื่อผู้ใช้';
         $log_role = 'Unknown';
-        $stmt_log = $conn->prepare("INSERT INTO login_logs (username, role, ip_address, status) VALUES (?, ?, ?, ?)");
-        if ($stmt_log) {
-            $stmt_log->bind_param("ssss", $username, $log_role, $ip_address, $log_status);
-            $stmt_log->execute();
-            $stmt_log->close();
-        }
+        authRecordLoginHistory(
+            $conn,
+            $username,
+            $log_role,
+            $ip_address,
+            $log_status
+        );
 
         $_SESSION['login_error'] = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
         header("Location: login.php");
