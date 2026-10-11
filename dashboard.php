@@ -426,6 +426,8 @@ function formatPhoneHtml($phone_str) {
     return $html;
 }
 
+require_once __DIR__ . '/contact_history_pagination.php';
+
 // ส่งเฉพาะรายการ Transactions และปุ่มแบ่งหน้า หลังตรวจสิทธิ์แล้ว
 if ($_SERVER['REQUEST_METHOD'] === 'GET'
     && isset($_GET['pg_repairs_fragment'])
@@ -3998,7 +4000,7 @@ if (isset($_GET['api_check_hash'])) {
                         <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
                         <div class="w-full md:w-[320px] relative group">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="searchHistoryInput" oninput="searchHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
+                                <input type="text" id="searchHistoryInput" value="<?php echo tp_text(tp_get('pg_reporters_q')); ?>" oninput="searchHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
                             <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', searchHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                         </div>
                     </div>
@@ -4014,7 +4016,8 @@ if (isset($_GET['api_check_hash'])) {
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                $reporter_res = $conn->query("SELECT reporter_name, MAX(phone_number) as fallback_phone, COUNT(id) as total_repairs FROM repairs WHERE reporter_name IS NOT NULL AND reporter_name != '' GROUP BY reporter_name ORDER BY MAX(created_at) DESC");
+                                $reporters_paging = ch_contacts_page($conn, $line_users_map);
+                                $reporter_res = $reporters_paging['result'];
                                 
                                 if($reporter_res && $reporter_res->num_rows > 0){
                                     while($r = $reporter_res->fetch_assoc()) {
@@ -4074,6 +4077,7 @@ if (isset($_GET['api_check_hash'])) {
                             </tbody>
                         </table>
                     </div>
+                    <?php tp_footer($reporters_paging); ?>
                 </div>
             </div>
 
@@ -4576,6 +4580,7 @@ if (isset($_GET['api_check_hash'])) {
                         <tbody class="text-sm divide-y divide-slate-100 bg-white" id="historyTableBody">
                         </tbody>
                     </table>
+                    <div id="historyPagingFooter"></div>
                 </div>
             </div>
         </div>
@@ -5920,6 +5925,7 @@ if (isset($_GET['api_check_hash'])) {
             const urlParams = new URLSearchParams(window.location.search);
             const currentTabUrl = urlParams.get('tab');
             restoreRepairsFiltersFromUrl(urlParams);
+            toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');
             
             // 🚨 โหลดกลับแท็บเป้าหมาย
             const finalTab = currentTabUrl ? currentTabUrl : (savedTab ? savedTab : 'dash');
@@ -5943,7 +5949,23 @@ if (isset($_GET['api_check_hash'])) {
             if(document.getElementById('topReportersList')) renderTopReporters();
 
             const openModal = sessionStorage.getItem('modalOpen');
-            if (openModal === 'historyModal') {
+
+            if (
+                urlParams.has('pg_history_name')
+                && ['reporter', 'technician'].includes(
+                    urlParams.get('pg_history_type')
+                )
+            ) {
+                viewHistory(
+                    urlParams.get('pg_history_name'),
+                    urlParams.get('pg_history_type'),
+                    false,
+                    true
+                );
+
+                sessionStorage.removeItem('modalOpen');
+                sessionStorage.removeItem('historyModalTitle');
+            } else if (openModal === 'historyModal') {
                 const titleStr = sessionStorage.getItem('historyModalTitle');
                 if (titleStr) {
                     let fullName = titleStr.replace('ประวัติงานเจ้าหน้าที่: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
@@ -5986,22 +6008,78 @@ if (isset($_GET['api_check_hash'])) {
             }
         });
         
+        let contactsTimer = null;
+        let contactsController = null;
+        let contactsVersion = 0;
+        let contactsPending = false;
+
         function searchHistoryTable() {
-            let input = document.getElementById('searchHistoryInput');
-            if(!input) return;
-            let filter = input.value.toLowerCase().replace(/\s+/g, '');
-            let table = document.getElementById('usersTable');
-            if(!table) return;
-            let rows = table.querySelectorAll('tbody .user-row');
-            
-            rows.forEach(row => {
-                let text = row.innerText.toLowerCase().replace(/\s+/g, '');
-                if (text.includes(filter)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
+            const input = document.getElementById('searchHistoryInput');
+            if (!input) return;
+
+            const q = input.value.trim();
+            const url = new URL(window.location.href);
+
+            if (q === (url.searchParams.get('pg_reporters_q') || '')) return;
+
+            clearTimeout(contactsTimer);
+            if (contactsController) contactsController.abort();
+
+            const version = ++contactsVersion;
+            contactsPending = true;
+
+            url.searchParams.set('tab', 'users');
+            url.searchParams.delete('pg_reporters_page');
+
+            if (q) url.searchParams.set('pg_reporters_q', q);
+            else url.searchParams.delete('pg_reporters_q');
+
+            contactsTimer = setTimeout(async () => {
+                const controller = new AbortController();
+                contactsController = controller;
+
+                const request = new URL(url);
+                request.searchParams.set('pg_ch_fragment', 'contacts');
+
+                try {
+                    const response = await fetch(request, {
+                        cache: 'no-store',
+                        signal: controller.signal
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('โหลด Contacts ไม่สำเร็จ');
+                    }
+
+                    const data = await response.json();
+
+                    if (
+                        version !== contactsVersion
+                        || input.value.trim() !== q
+                    ) return;
+
+                    if (
+                        document.getElementById('users')
+                            .classList.contains('hidden')
+                    ) return;
+
+                    document.querySelector('#usersTable tbody')
+                        .innerHTML = data.html;
+
+                    document.getElementById('pg-reporters-footer')
+                        .outerHTML = data.footer;
+
+                    history.replaceState(
+                        null, '', url.pathname + url.search + url.hash
+                    );
+
+                    toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');
+                } catch (error) {
+                    if (error.name !== 'AbortError') console.error(error);
+                } finally {
+                    if (version === contactsVersion) contactsPending = false;
                 }
-            });
+            }, 80);
         }
 
         function safeString(val) { return val ? String(val) : ''; }
@@ -6888,10 +6966,37 @@ if (isset($_GET['api_check_hash'])) {
             }
         }
 
-        function toggleModal(m) { 
-            document.getElementById(m).classList.toggle('opacity-0'); 
-            document.getElementById(m).classList.toggle('pointer-events-none'); 
-            document.body.classList.toggle('modal-active'); 
+        function toggleModal(m) {
+            document.getElementById(m).classList.toggle('opacity-0');
+            document.getElementById(m).classList.toggle('pointer-events-none');
+            document.body.classList.toggle('modal-active');
+
+            if (
+                m === 'historyModal'
+                && document.getElementById(m).classList.contains('opacity-0')
+            ) {
+                clearTimeout(historyFilterTimer);
+
+                if (historyController) historyController.abort();
+                ++historyVersion;
+
+                const url = new URL(window.location.href);
+
+                for (const key of Array.from(url.searchParams.keys())) {
+                    if (key.startsWith('pg_history_')) {
+                        url.searchParams.delete(key);
+                    }
+                }
+
+                url.searchParams.delete('pg_full');
+
+                history.replaceState(
+                    null, '', url.pathname + url.search + url.hash
+                );
+
+                sessionStorage.removeItem('modalOpen');
+                sessionStorage.removeItem('historyModalTitle');
+            }
         }
 
         function updateExcelLink() {
@@ -7271,18 +7376,76 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
-        function viewHistory(fullName, type) {
-            window.currentHistoryName = fullName; // ✨ จำชื่อที่เปิดอยู่
-            window.currentHistoryType = type;     // ✨ จำประเภทที่เปิดอยู่
+        let historyController = null;
+        let historyVersion = 0;
+        let historyFilterTimer = null;
+        let historyFiltersRestoring = false;
+
+        async function viewHistory(fullName, type, refresh = false, restore = false) {
+            if (!['reporter', 'technician'].includes(type)) return;
+
+            const url = new URL(window.location.href);
+            url.searchParams.set('pg_history_name', fullName);
+            url.searchParams.set('pg_history_type', type);
+
+            if (!refresh && !restore) {
+                url.searchParams.delete('pg_history_page');
+                url.searchParams.delete('pg_history_q');
+                url.searchParams.set(
+                    'pg_history_month',
+                    document.getElementById('historyMonth').value
+                );
+                url.searchParams.set(
+                    'pg_history_year',
+                    document.getElementById('historyYear').value
+                );
+            }
+
+            if (historyController) historyController.abort();
+
+            const controller = new AbortController();
+            historyController = controller;
+            const version = ++historyVersion;
+
+            const request = new URL(url);
+            request.searchParams.set('pg_ch_fragment', 'history');
+
+            let data;
+
+            try {
+                const response = await fetch(request, {
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error('โหลดประวัติไม่สำเร็จ');
+                }
+
+                data = await response.json();
+            } catch (error) {
+                if (error.name !== 'AbortError') console.error(error);
+                return;
+            }
+
+            if (version !== historyVersion) return;
+
+            window.currentHistoryName = fullName;
+            window.currentHistoryType = type;
+
+            url.searchParams.set('pg_history_page', data.page);
+
+            history.replaceState(
+                null, '', url.pathname + url.search + url.hash
+            );
+
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = '';
 
-            const userRepairs = allRepairs.filter(r => {
-                let nameToCompare = (type === 'reporter') ? r.reporter_name : r.technician_name;
-                if (!nameToCompare) return false;
-                nameToCompare = nameToCompare.trim();
-                return nameToCompare === fullName;
-            });
+            document.getElementById('historyPagingFooter')
+                .innerHTML = data.footer;
+
+            const userRepairs = data.rows;
 
             if(userRepairs.length === 0) {
                 let emptyMsg = type === 'reporter' ? 'ยังไม่มีประวัติการแจ้งซ่อม' : 'ยังไม่เคยรับงานซ่อมในระบบ';
@@ -7398,6 +7561,8 @@ if (isset($_GET['api_check_hash'])) {
                 });
             }
             
+            if (refresh) return;
+
             let displayTitleName = fullName;
             if (type === 'reporter' && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
                 displayTitleName = lineUsersMap[fullName].real_name;
@@ -7409,7 +7574,35 @@ if (isset($_GET['api_check_hash'])) {
                 // ✨ แทรก <span class="block sm:inline"> เพื่อบังคับให้ชื่อถูกปัดลงบรรทัดใหม่เฉพาะในมือถือแนวตั้ง ✨
                 el.innerHTML = `${prefix} <span class="block sm:inline mt-0.5 sm:mt-0">${displayTitleName}</span>`;
             });
-            document.querySelectorAll('[id="searchHistoryModalInput"]').forEach(el => el.value = '');
+            historyFiltersRestoring = true;
+
+            const savedQuery = restore
+                ? (url.searchParams.get('pg_history_q') || '')
+                : '';
+
+            document.querySelectorAll('[id="searchHistoryModalInput"]')
+                .forEach(el => el.value = savedQuery);
+
+            for (const [key, prefix, fallback] of [
+                ['month', 'history-Month', '<?php echo $current_month_name; ?>'],
+                ['year', 'history-Year', '<?php echo $current_thai_year; ?>']
+            ]) {
+                const value = url.searchParams.get('pg_history_' + key) || 'all';
+
+                const item = Array.from(
+                    document.querySelectorAll('#' + prefix + 'List [data-value]')
+                ).find(el => el.dataset.value === value);
+
+                selectChartDropdown(
+                    prefix,
+                    item ? value : 'all',
+                    item ? item.dataset.display : fallback,
+                    null
+                );
+            }
+
+            historyFiltersRestoring = false;
+            toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');
 
             const isContactsPage = !document.getElementById('users').classList.contains('hidden');
             let isLinkBtnHidden = true;
@@ -7455,7 +7648,13 @@ if (isset($_GET['api_check_hash'])) {
                 }
             });
             
-            toggleModal('historyModal');
+            if (document.getElementById('historyModal').classList.contains('opacity-0')) {
+                toggleModal('historyModal');
+            }
+
+            if (restore && url.searchParams.get('pg_full') === '1') {
+                toggleMaximizeHistoryModal();
+            }
         }
 
         // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ ✨
@@ -7511,6 +7710,19 @@ if (isset($_GET['api_check_hash'])) {
                     if (linkText) { linkText.classList.remove('portrait:inline'); }
                 }
             });
+
+            const url = new URL(window.location.href);
+            const container = document.querySelector('#historyModal .modal-container');
+
+            if (container.classList.contains('w-full')) {
+                url.searchParams.set('pg_full', '1');
+            } else {
+                url.searchParams.delete('pg_full');
+            }
+
+            history.replaceState(
+                null, '', url.pathname + url.search + url.hash
+            );
         }
 
         // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) ซูมเข้า-ออกสมูท ไร้ดีเลย์และไม่กระตุก 100% ✨
@@ -7609,58 +7821,41 @@ if (isset($_GET['api_check_hash'])) {
 
         // ✨ ฟังก์ชันค้นหาข้อมูลในตารางประวัติ (History Modal) ✨
         function searchHistoryModalTable() {
-            let input = document.getElementById('searchHistoryModalInput');
-            let filter = input ? input.value.toLowerCase().replace(/\s+/g, '') : '';
-            
-            let monthFilter = document.getElementById('historyMonth') ? document.getElementById('historyMonth').value : 'all';
-            let yearFilter = document.getElementById('historyYear') ? document.getElementById('historyYear').value : 'all';
+            if (historyFiltersRestoring || !window.currentHistoryName) return;
 
-            let tbody = document.getElementById('historyTableBody');
-            if(!tbody) return;
-            
-            let rows = tbody.querySelectorAll('tr');
-            let visibleCount = 0;
+            clearTimeout(historyFilterTimer);
+            if (historyController) historyController.abort();
+            ++historyVersion;
 
-            rows.forEach(row => {
-                // ข้ามแถวที่ใช้บอกว่าไม่มีข้อมูล (ถ้ามี)
-                if(row.classList.contains('empty-filter-row') || row.cells.length === 1) return;
-                
-                let textMatch = true;
-                let dateMatch = true;
+            const url = new URL(window.location.href);
 
-                // 1. กรองช่องค้นหาข้อความ
-                if (filter !== '') {
-                    let text = row.textContent.toLowerCase().replace(/\s+/g, '');
-                    if (!text.includes(filter)) {
-                        textMatch = false;
-                    }
-                }
+            const values = {
+                q: document.getElementById('searchHistoryModalInput').value.trim(),
+                month: document.getElementById('historyMonth').value,
+                year: document.getElementById('historyYear').value
+            };
 
-                // 2. กรองเดือน/ปี
-                if (monthFilter !== 'all' || yearFilter !== 'all') {
-                    // ข้อมูลวันที่อยู่ในคอลัมน์แรกสุด
-                    let dateText = row.cells[0].textContent.trim();
-                    let dateMatchObj = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
-                    
-                    if (dateMatchObj) {
-                        let rowYear = dateMatchObj[1];
-                        let rowMonth = dateMatchObj[2];
-
-                        if (monthFilter !== 'all' && rowMonth !== monthFilter) dateMatch = false;
-                        if (yearFilter !== 'all' && rowYear !== yearFilter) dateMatch = false;
-                    } else {
-                        dateMatch = false; 
-                    }
-                }
-
-                // สรุปการแสดงผล
-                if (textMatch && dateMatch) {
-                    row.style.display = '';
-                    visibleCount++;
+            for (const [key, value] of Object.entries(values)) {
+                if (value && value !== 'all') {
+                    url.searchParams.set('pg_history_' + key, value);
                 } else {
-                    row.style.display = 'none';
+                    url.searchParams.delete('pg_history_' + key);
                 }
-            });
+            }
+
+            url.searchParams.delete('pg_history_page');
+
+            history.replaceState(
+                null, '', url.pathname + url.search + url.hash
+            );
+
+            historyFilterTimer = setTimeout(() => {
+                viewHistory(
+                    window.currentHistoryName,
+                    window.currentHistoryType,
+                    true
+                );
+            }, 80);
         }
 
         function confirmUnlink(id) {
@@ -8099,7 +8294,7 @@ if (isset($_GET['api_check_hash'])) {
         let autoRefreshInProgress = false;
 
         async function autoRefreshAllData() {
-            if (autoRefreshInProgress || repairsFilterPending) return;
+            if (autoRefreshInProgress || repairsFilterPending || contactsPending) return;
 
             autoRefreshInProgress = true;
 
@@ -8166,10 +8361,16 @@ if (isset($_GET['api_check_hash'])) {
                         '#assets table tbody',        // Assets (Admin)
                         '#pg-assets-footer',          // จำนวนรายการและปุ่มแบ่งหน้า Assets
                         '#usersTable tbody',          // Reporter History (Admin)
+                        '#pg-reporters-footer',       // จำนวนรายการและปุ่มแบ่งหน้า Contacts
                         '#topReportersList'           // Top Reporters List
                     ];
                     
                     selectorsToUpdate.forEach(selector => {
+                        if (
+                            contactsPending
+                            && ['#usersTable tbody', '#pg-reporters-footer'].includes(selector)
+                        ) return;
+
                         const newEl = doc.querySelector(selector);
                         const oldEl = document.querySelector(selector);
                         if (newEl && oldEl) {
@@ -8197,7 +8398,7 @@ if (isset($_GET['api_check_hash'])) {
                     const historyModal = document.getElementById('historyModal');
                     if (historyModal && !historyModal.classList.contains('opacity-0')) {
                         if (window.currentHistoryName && window.currentHistoryType) {
-                            viewHistory(window.currentHistoryName, window.currentHistoryType);
+                            viewHistory(window.currentHistoryName, window.currentHistoryType, true);
                         }
                     }
 
