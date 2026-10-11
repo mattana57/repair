@@ -1872,9 +1872,11 @@ if (isset($_GET['api_check_hash'])) {
     exit();
 }
 ?>
+<?php require_once __DIR__ . '/table_pagination.php'; ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
+    <?php tp_styles(); ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBS Repair Dashboard</title>
@@ -2216,15 +2218,15 @@ if (isset($_GET['api_check_hash'])) {
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dashboard</p>
             <button onclick="show('dash')" class="nav-btn <?php echo $active_tab === 'dash' ? 'active-btn' : ''; ?>" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
-            <button onclick="show('repairs')" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?>" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
+            <a href="?tab=repairs" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?>" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</a>
             <button onclick="show('technicians')" class="nav-btn <?php echo $active_tab === 'technicians' ? 'active-btn' : ''; ?>" id="btn-technicians"><i class="fas fa-user-friends"></i> Team</button>
             <button onclick="show('team_cards')" class="nav-btn <?php echo $active_tab === 'team_cards' ? 'active-btn' : ''; ?>" id="btn-team_cards"><i class="fas fa-id-badge"></i> Technician</button>
             
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Management</p>
-            <button onclick="show('assets')" class="nav-btn <?php echo $active_tab === 'assets' ? 'active-btn' : ''; ?>" id="btn-assets"><i class="fas fa-box-open"></i> Assets</button>
+            <a href="?tab=assets" class="nav-btn <?php echo $active_tab === 'assets' ? 'active-btn' : ''; ?>" id="btn-assets"><i class="fas fa-box-open"></i> Assets</a>
             <button onclick="show('users')" class="nav-btn <?php echo $active_tab === 'users' ? 'active-btn' : ''; ?>" id="btn-users"><i class="fas fa-address-book"></i> Contacts</button>
             <button onclick="show('reports')" class="nav-btn <?php echo $active_tab === 'reports' ? 'active-btn' : ''; ?>" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
-            <button onclick="show('login_logs')" class="nav-btn <?php echo $active_tab === 'login_logs' ? 'active-btn' : ''; ?>" id="btn-login_logs"><i class="fas fa-history"></i> Login History</button>
+            <a href="?tab=login_logs" class="nav-btn <?php echo $active_tab === 'login_logs' ? 'active-btn' : ''; ?>" id="btn-login_logs"><i class="fas fa-history"></i> Login History</a>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
                                 <a href="verify_email_page.php" class="nav-btn">
@@ -2676,9 +2678,9 @@ if (isset($_GET['api_check_hash'])) {
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">Latest 5 repairs in system</p>
                             </div>
-                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
+                            <a href="?tab=repairs" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
                                 See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
-                            </button>
+                            </a>
                         </div>
                         <div class="overflow-x-auto pb-4 custom-scrollbar table-wrapper-fix">
                             <table class="w-full text-left whitespace-nowrap">
@@ -2776,58 +2778,15 @@ if (isset($_GET['api_check_hash'])) {
 
                         <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง -->
                         <!-- ✨ ใช้ portrait:justify-start เพื่อบังคับดรอปดาวน์เดือน/ปีชิดซ้ายในมือถือแนวตั้ง และ md:portrait:justify-end เพื่อคงชิดขวาใน iPad แนวตั้ง ✨ -->
-                        <div class="flex flex-wrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
-                            
-                            <!-- ✨ ช่องค้นหา: ขยายความยาวในจอคอมและไอแพดแนวนอน (lg:w-[580px] xl:w-[680px] 2xl:w-[850px]) เพื่อดันซ้ายให้ตรงกับคอลัมน์ Reporter เป๊ะๆ ✨ -->
-                            <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
-                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
-                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchInput" oninput="filterRepairsTable(); toggleClearBtn('searchInput', 'clearSearchBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                                <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
-                            </div>
-                            
-                            <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
-                            <div class="flex items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 relative z-40">
-                                <!-- ✨ ย่อความกว้าง (w-92px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
-                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Month')">
-                                        <span id="table-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
-                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
-                                    </div>
-                                    <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('table-Month', '{$num_pad}', '{$name}', filterRepairsTable)\">{$name}</div>"; } ?>
-                                    </div>
-                                    <input type="hidden" id="tableMonth" value="all">
-                                </div>
-
-                                <!-- ✨ ย่อความกว้าง (w-82px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
-                                <div class="relative w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
-                                        <span id="table-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
-                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
-                                    </div>
-                                    <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', '{$thai_y}', filterRepairsTable)\">{$thai_y}</div>"; } ?>
-                                    </div>
-                                    <input type="hidden" id="tableYear" value="all">
-                                </div>
-
-                                <!-- ✨ ดรอปดาวน์เลือกสถานะ (สีเดียวกับในตารางเป๊ะๆ) ✨ -->
-                                <div class="relative w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-StatusContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Status', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div id="table-StatusTrigger" class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-3.5 portrait:px-2.5 sm:px-3.5 landscape:px-3.5 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Status')">
-                                        <span id="table-StatusText" class="truncate">ทั้งหมด</span>
-                                        <i id="table-StatusCaret" class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
-                                    </div>
-                                    <div id="table-StatusList" class="chart-dropdown-list absolute z-50 w-[155px] right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col p-2 space-y-1.5" style="font-family: 'Sarabun', sans-serif;">
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 bg-slate-50 hover:bg-slate-100 text-center" data-value="all" data-display="ทั้งหมด" onclick="selectTableStatusDropdown('all', 'ทั้งหมด')">ทั้งหมด</div>
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#fef3c7] text-[#d97706] hover:brightness-95 text-center shadow-2xs" data-value="รอรับเรื่อง" data-display="รอรับเรื่อง" onclick="selectTableStatusDropdown('รอรับเรื่อง', 'รอรับเรื่อง')">รอรับเรื่อง</div>
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#e0e7ff] text-[#4f46e5] hover:brightness-95 text-center shadow-2xs" data-value="กำลังดำเนินการ" data-display="กำลังดำเนินการ" onclick="selectTableStatusDropdown('กำลังดำเนินการ', 'กำลังดำเนินการ')">กำลังดำเนินการ</div>
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#d1fae5] text-[#059669] hover:brightness-95 text-center shadow-2xs" data-value="ซ่อมเสร็จแล้ว" data-display="ซ่อมเสร็จแล้ว" onclick="selectTableStatusDropdown('ซ่อมเสร็จแล้ว', 'ซ่อมเสร็จแล้ว')">ซ่อมเสร็จแล้ว</div>
-                                    </div>
-                                    <input type="hidden" id="tableStatus" value="all">
-                                </div>
-                            </div> 
-                        </div>
+                        <?php
+                        tp_form(
+                            'repairs',
+                            'repairs',
+                            $thai_months,
+                            $available_years,
+                            true
+                        );
+                        ?>
                     </div>
 
                     <div class="overflow-x-auto lg:overflow-x-hidden w-full max-h-[70vh] overflow-y-auto custom-scrollbar relative flex-1 table-wrapper-fix" id="repairsTableContainer">
@@ -2849,8 +2808,19 @@ if (isset($_GET['api_check_hash'])) {
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
-                                $res = $conn->query($select_query);
+                                $repairs_paging = tp_repairs(
+                                    $conn,
+                                    'repairs',
+                                    'repairs',
+                                    $line_users_map,
+                                    $tech_info_map,
+                                    '1=1',
+                                    '',
+                                    [],
+                                    $tech_dept_map
+                                );
+
+                                $res = $repairs_paging['result'];
 
                                 if($res && $res->num_rows > 0){
                                     while($row = $res->fetch_assoc()) {
@@ -2969,6 +2939,8 @@ if (isset($_GET['api_check_hash'])) {
                             </tbody>
                         </table>
                     </div>
+
+                    <?php tp_footer($repairs_paging); ?>
                 </div>
             </div>
             <!-- ✨ สิ้นสุดส่วนหน้า Transactions ✨ -->
@@ -3694,7 +3666,17 @@ if (isset($_GET['api_check_hash'])) {
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                $asset_res = $conn->query("SELECT * FROM assets ORDER BY created_at DESC");
+                                $assets_paging = tp_page(
+                                $conn,
+                                'SELECT * FROM assets ORDER BY created_at DESC, id DESC',
+                                'SELECT COUNT(*) AS total FROM assets',
+                                '',
+                                [],
+                                'assets',
+                                'assets'
+                            );
+
+                            $asset_res = $assets_paging['result'];
                                 if($asset_res && $asset_res->num_rows > 0){
                                     while($a = $asset_res->fetch_assoc()) {
                                         $a_statusClass = ($a['status'] == 'ใช้งานปกติ') ? 'badge-success' : 'bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-[11px] font-bold';
@@ -3723,6 +3705,8 @@ if (isset($_GET['api_check_hash'])) {
                             </tbody>
                         </table>
                     </div>
+
+                    <?php tp_footer($assets_paging); ?>
                 </div>
             </div>
 
@@ -3905,7 +3889,17 @@ if (isset($_GET['api_check_hash'])) {
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                $log_res = $conn->query("SELECT * FROM login_logs ORDER BY login_time DESC LIMIT 100");
+                                $logs_paging = tp_page(
+                                $conn,
+                                'SELECT * FROM login_logs ORDER BY login_time DESC, id DESC',
+                                'SELECT COUNT(*) AS total FROM login_logs',
+                                '',
+                                [],
+                                'logs',
+                                'login_logs'
+                            );
+
+                            $log_res = $logs_paging['result'];
                                 if($log_res && $log_res->num_rows > 0){
                                     while($log = $log_res->fetch_assoc()) {
                                         $statusClass = ($log['status'] === 'สำเร็จ') ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-200';
@@ -3931,6 +3925,8 @@ if (isset($_GET['api_check_hash'])) {
                             </tbody>
                         </table>
                     </div>
+
+                    <?php tp_footer($logs_paging); ?>
                 </div>
             </div>
 
@@ -5219,7 +5215,9 @@ if (isset($_GET['api_check_hash'])) {
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'System Management';
             
             // อัปเดต URL เงียบๆ ให้ตรงกับแท็บที่กดเสมอ
-            history.replaceState(null, '', '?tab=' + id);
+            if (!preventScrollReset) {
+                history.replaceState(null, '', '?tab=' + id);
+            }
 
             // 🚨 ล็อกเป้าฟอร์มทั้งหมดให้เป็นหน้าปัจจุบันทันที ป้องกันหน้าจอเด้งไปผิดแท็บเวลากด Save 🚨
             document.querySelectorAll('.modal form').forEach(f => {
@@ -5258,34 +5256,7 @@ if (isset($_GET['api_check_hash'])) {
 
         // ✨ ฟังก์ชันเมื่อคลิกการ์ด 4 ก้อนด้านบน (TOTAL / WAITING / ACTIVE / DONE) ✨
         window.currentStatusFilter = 'all';
-        function filterRepairs(status) {
-            window.currentStatusFilter = status;
-            window._fromCardClick = true;
-
-            // เคลียร์ช่องค้นหาและตัวกรองเดือน/ปี เพื่อให้แสดงรายการตามยอดบนการ์ดครบถ้วน
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.value = '';
-                toggleClearBtn('searchInput', 'clearSearchBtn');
-            }
-            if (typeof selectChartDropdown === 'function') {
-                selectChartDropdown('table-Month', 'all', '<?php echo $current_month_name; ?>', null);
-                selectChartDropdown('table-Year', 'all', '<?php echo $current_thai_year; ?>', null);
-            }
-
-            // สลับไปหน้า Transactions (Repairs List)
-            show('repairs');
-            window._fromCardClick = false;
-
-            // กรองตารางตามสถานะที่เลือก
-            filterRepairsTable();
-
-            // กางตารางแบบเต็มจอ (Fullscreen) ทันทีเหมือนในรูปที่ 2
-            const card = document.getElementById('repairsMainCard');
-            if (card && !card.classList.contains('is-fullscreen')) {
-                toggleMaximizeRepairs();
-            }
-        }
+            // ใช้ฟังก์ชัน filterRepairs(status) ที่ประกาศด้านล่างเพียงจุดเดียว
 
         // ✨ ฟังก์ชันสำหรับค้นหาและกรองตารางหน้า Transactions (Repairs List) ✨
         // ✨ ฟังก์ชันเลือกสถานะในดรอปดาวน์ พร้อมเปลี่ยนสีปุ่มให้ตรงกับสีสถานะในตารางเป๊ะๆ ✨
@@ -5330,88 +5301,20 @@ if (isset($_GET['api_check_hash'])) {
 
         // ✨ เมื่อคลิกการ์ดสรุป 4 ใบบนหน้า Overview ให้สลับมาหน้า Transactions และกรองสถานะทันที ✨
         function filterRepairs(status) {
-            show('repairs');
-            const disp = (status === 'all') ? 'ทุกสถานะ' : status;
-            selectTableStatusDropdown(status, disp);
+            const query = new URLSearchParams();
+
+            query.set('tab', 'repairs');
+
+            if (status !== 'all') {
+                query.set('pg_repairs_status', status);
+            }
+
+            window.location.assign('?' + query.toString());
         }
 
         // ✨ ฟังก์ชันสำหรับค้นหาและกรองตารางหน้า Transactions (Repairs List) ✨
         function filterRepairsTable() {
-            let searchInput = document.getElementById('searchInput');
-            let searchFilter = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '') : '';
-            
-            let monthFilter = document.getElementById('tableMonth') ? document.getElementById('tableMonth').value : 'all';
-            let yearFilter = document.getElementById('tableYear') ? document.getElementById('tableYear').value : 'all';
-            let statusFilter = document.getElementById('tableStatus') ? document.getElementById('tableStatus').value : 'all';
-
-            let tbody = document.querySelector('#repairsTable tbody');
-            if(!tbody) return;
-
-            let rows = tbody.querySelectorAll('tr.search-row');
-            let visibleCount = 0; // ✨ เพิ่มตัวแปรนับจำนวนแถวที่แสดงผล
-            
-            rows.forEach(row => {
-                let textMatch = true;
-                let dateMatch = true;
-                let statusMatch = true;
-
-                // 1. กรองช่องค้นหาข้อความ
-                if (searchFilter !== '') {
-                    let text = row.textContent.toLowerCase().replace(/\s+/g, '');
-                    if (!text.includes(searchFilter)) {
-                        textMatch = false;
-                    }
-                }
-
-                // 2. กรองเดือน/ปี
-                if (monthFilter !== 'all' || yearFilter !== 'all') {
-                    let dateText = row.cells[0].textContent.trim();
-                    let dateMatchObj = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
-                    
-                    if (dateMatchObj) {
-                        let rowYear = dateMatchObj[1];
-                        let rowMonth = dateMatchObj[2];
-
-                        if (monthFilter !== 'all' && rowMonth !== monthFilter) dateMatch = false;
-                        if (yearFilter !== 'all' && rowYear !== yearFilter) dateMatch = false;
-                    } else {
-                        dateMatch = false; 
-                    }
-                }
-
-                // 3. กรองสถานะ ('รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว')
-                if (statusFilter !== 'all') {
-                    let statusCell = row.cells[8];
-                    let rowStatus = statusCell ? statusCell.textContent.trim() : '';
-                    if (rowStatus !== statusFilter) {
-                        statusMatch = false;
-                    }
-                }
-
-                // แสดงแถวก็ต่อเมื่อตรงกับเงื่อนไขทั้งหมด
-                if (textMatch && dateMatch && statusMatch) {
-                    row.style.display = '';
-                    visibleCount++; // ✨ นับเพิ่มถ้ามีข้อมูลแสดง
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            // ✨ โลจิกจัดการข้อความเมื่อซ่อนข้อมูลจนหมดตาราง ✨
-            let emptyRow = tbody.querySelector('.empty-filter-row');
-            if (visibleCount === 0 && rows.length > 0) {
-                if (!emptyRow) {
-                    emptyRow = document.createElement('tr');
-                    emptyRow.className = 'empty-filter-row';
-                    // สร้างข้อความพร้อมขยายความสูง 400px
-                    emptyRow.innerHTML = `<td colspan="11" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">ยังไม่เคยรับงานซ่อมในระบบ</td>`;
-                    tbody.appendChild(emptyRow);
-                } else {
-                    emptyRow.style.display = '';
-                }
-            } else if (emptyRow) {
-                emptyRow.style.display = 'none';
-            }
+            // ตารางใบงานค้นหาและแบ่งหน้าด้วย PHP เท่านั้น
         }
 
         function toggleSidebar() {
@@ -5584,7 +5487,7 @@ if (isset($_GET['api_check_hash'])) {
             const currentTabUrl = urlParams.get('tab');
             
             // 🚨 โหลดกลับแท็บเป้าหมาย
-            const finalTab = savedTab ? savedTab : (currentTabUrl ? currentTabUrl : 'dash');
+            const finalTab = currentTabUrl ? currentTabUrl : (savedTab ? savedTab : 'dash');
             show(finalTab, true);
 
             // 🚨 ย้ำค่า Scroll อีกรอบหลัง DOM โหลดเสร็จ เพื่อความชัวร์ 100%
@@ -7771,7 +7674,12 @@ if (isset($_GET['api_check_hash'])) {
 
                     // 2. ถ้ามีอัปเดต โหลดหน้า HTML ปัจจุบันมาแบบซ่อนๆ
                     const tab = new URLSearchParams(window.location.search).get('tab') || 'dash';
-                    const htmlRes = await fetch(window.location.href.split('?')[0] + '?tab=' + tab + '&_=' + Date.now());
+                    const htmlRes = await fetch(
+                        window.location.href.split('#')[0]
+                        + (window.location.search ? '&' : '?')
+                        + '_='
+                        + Date.now()
+                    );
                     const htmlText = await htmlRes.text();
                     
                     const parser = new DOMParser();
@@ -7794,10 +7702,12 @@ if (isset($_GET['api_check_hash'])) {
                     // 5. อัปเดตทุกตารางบนหน้าจอ 100% แบบเจาะจง (ไม่กวน UI เดิม)
                     const selectorsToUpdate = [
                         '#dash table tbody',          // Recent Transactions
-                        '#repairsTable tbody',        // All Repairs List (รองรับทั้งโหมดปกติและเต็มจอ 100%)
+                        '#repairsTable tbody',        // All Repairs List
+                        '#pg-repairs-footer',         // จำนวนรายการและปุ่มแบ่งหน้า
                         '#techniciansTableBody',      // Technicians (Admin)
                         '#techCardsContainer',        // Tech Cards (Executive)
                         '#assets table tbody',        // Assets (Admin)
+                        '#pg-assets-footer',          // จำนวนรายการและปุ่มแบ่งหน้า Assets
                         '#usersTable tbody',          // Reporter History (Admin)
                         '#topReportersList'           // Top Reporters List
                     ];
