@@ -2777,177 +2777,58 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
 
                         <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง -->
-                        <?php
-                        $repair_month_options = ['all' => 'ทั้งหมด'];
-
-                        foreach ($thai_months as $num => $name) {
-                            $repair_month_options[
-                                str_pad((string)$num, 2, '0', STR_PAD_LEFT)
-                            ] = $name;
-                        }
-
-                        $repair_year_options = ['all' => 'ทั้งหมด'];
-
-                        foreach ($available_years as $year) {
-                            $repair_year_options[(string)$year] = $year + 543;
-                        }
-
-                        $repair_status_options = [
-                            'all' => 'ทั้งหมด',
-                            'รอรับเรื่อง' => 'รอรับเรื่อง',
-                            'กำลังดำเนินการ' => 'กำลังดำเนินการ',
-                            'ซ่อมเสร็จแล้ว' => 'ซ่อมเสร็จแล้ว'
-                        ];
-
-                        $repair_dropdowns = [
-                            'Month' => [
-                                'parameter' => 'month',
-                                'options' => $repair_month_options,
-                                'width' => 'w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px]'
-                            ],
-                            'Year' => [
-                                'parameter' => 'year',
-                                'options' => $repair_year_options,
-                                'width' => 'w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px]'
-                            ],
-                            'Status' => [
-                                'parameter' => 'status',
-                                'options' => $repair_status_options,
-                                'width' => 'w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px]'
-                            ]
-                        ];
-
-                        $repair_status_styles = [
-                            'all' => 'text-slate-700 bg-slate-50 hover:bg-slate-100',
-                            'รอรับเรื่อง' => 'bg-[#fef3c7] text-[#d97706] hover:brightness-95',
-                            'กำลังดำเนินการ' => 'bg-[#e0e7ff] text-[#4f46e5] hover:brightness-95',
-                            'ซ่อมเสร็จแล้ว' => 'bg-[#d1fae5] text-[#059669] hover:brightness-95'
-                        ];
-                        ?>
-
+                        <!-- ✨ ใช้ portrait:justify-start เพื่อบังคับดรอปดาวน์เดือน/ปีชิดซ้ายในมือถือแนวตั้ง และ md:portrait:justify-end เพื่อคงชิดขวาใน iPad แนวตั้ง ✨ -->
                         <div class="flex flex-wrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
-
-                            <form method="get"
-                                  class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
-
-                                <input type="hidden" name="tab" value="repairs">
-
-                                <?php foreach (['month', 'year', 'status'] as $filter) { ?>
-                                    <input type="hidden"
-                                           name="<?php echo tp_text('pg_repairs_' . $filter); ?>"
-                                           value="<?php echo tp_text(tp_get('pg_repairs_' . $filter, 'all')); ?>">
-                                <?php } ?>
-
+                            
+                            <!-- ✨ ช่องค้นหา: ขยายความยาวในจอคอมและไอแพดแนวนอน (lg:w-[580px] xl:w-[680px] 2xl:w-[850px]) เพื่อดันซ้ายให้ตรงกับคอลัมน์ Reporter เป๊ะๆ ✨ -->
+                            <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
+                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-
-                                <input type="text"
-                                       id="searchInput"
-                                       name="pg_repairs_q"
-                                       value="<?php echo tp_text(tp_get('pg_repairs_q')); ?>"
-                                       oninput="toggleClearBtn('searchInput', 'clearSearchBtn');"
-                                       placeholder="ค้นหาข้อมูลในตาราง..."
-                                       aria-label="ค้นหาข้อมูลในตาราง พิมพ์แล้วกด Enter"
-                                       class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-
-                                <a id="clearSearchBtn"
-                                   href="<?php echo tp_text(tp_url(
-                                       ['tab' => 'repairs'],
-                                       ['pg_repairs_q', 'pg_repairs_page']
-                                   )); ?>"
-                                   class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 <?php echo tp_get('pg_repairs_q') === '' ? 'hidden' : 'flex'; ?> items-center justify-center transition-colors rounded-r-xl">
-                                    <i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า
-                                </a>
-                            </form>
-
-                            <div class="flex items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 relative z-40">
-
-                                <?php foreach ($repair_dropdowns as $dropdown_name => $dropdown) {
-                                    $parameter = $dropdown['parameter'];
-                                    $options = $dropdown['options'];
-                                    $selected = tp_get('pg_repairs_' . $parameter, 'all');
-                                    $selected_label = $options[$selected] ?? 'ทั้งหมด';
-                                    $prefix = 'table-' . $dropdown_name;
-
-                                    $trigger_colors = 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50';
-                                    $caret_color = 'text-slate-400';
-
-                                    if ($dropdown_name === 'Status') {
-                                        if ($selected === 'รอรับเรื่อง') {
-                                            $trigger_colors = 'bg-[#fef3c7] border-[#fde68a] text-[#d97706]';
-                                            $caret_color = 'text-[#d97706]';
-                                        } elseif ($selected === 'กำลังดำเนินการ') {
-                                            $trigger_colors = 'bg-[#e0e7ff] border-[#c7d2fe] text-[#4f46e5]';
-                                            $caret_color = 'text-[#4f46e5]';
-                                        } elseif ($selected === 'ซ่อมเสร็จแล้ว') {
-                                            $trigger_colors = 'bg-[#d1fae5] border-[#a7f3d0] text-[#059669]';
-                                            $caret_color = 'text-[#059669]';
-                                        }
-                                    }
-                                ?>
-
-                                    <div class="relative <?php echo $dropdown['width']; ?> outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl"
-                                         id="<?php echo tp_text($prefix . 'Container'); ?>"
-                                         tabindex="0"
-                                         onkeydown="handleChartKeydown(event, '<?php echo $prefix; ?>', null)"
-                                         style="font-family: 'Sarabun', sans-serif;">
-
-                                        <div id="<?php echo tp_text($prefix . 'Trigger'); ?>"
-                                             class="flex items-center justify-between w-full border text-sm portrait:text-xs sm:text-sm landscape:text-sm rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors shadow-sm <?php echo $trigger_colors; ?>"
-                                             onclick="toggleChartDropdown(event, '<?php echo $prefix; ?>')">
-
-                                            <span id="<?php echo tp_text($prefix . 'Text'); ?>"
-                                                  class="truncate">
-                                                <?php echo tp_text($selected_label); ?>
-                                            </span>
-
-                                            <i id="<?php echo tp_text($prefix . 'Caret'); ?>"
-                                               class="fas fa-caret-down <?php echo $caret_color; ?> ml-1.5 text-[10px]"></i>
-                                        </div>
-
-                                        <div id="<?php echo tp_text($prefix . 'List'); ?>"
-                                             class="chart-dropdown-list absolute z-50 <?php echo $dropdown_name === 'Status' ? 'w-[155px] p-2 space-y-1.5' : 'w-full py-2'; ?> right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col max-h-48 overflow-y-auto custom-scrollbar"
-                                             style="font-family: 'Sarabun', sans-serif;">
-
-                                            <?php foreach ($options as $value => $label) {
-                                                $option_url = tp_url(
-                                                    [
-                                                        'tab' => 'repairs',
-                                                        'pg_repairs_' . $parameter => $value
-                                                    ],
-                                                    ['pg_repairs_page']
-                                                );
-
-                                                if ($dropdown_name === 'Status') {
-                                                    $option_classes = $repair_status_styles[$value]
-                                                        . ' text-center shadow-2xs '
-                                                        . ($value === 'all' ? 'rounded-xl' : 'rounded-full');
-                                                } else {
-                                                    $option_classes = 'mx-2 mb-0.5 rounded-xl '
-                                                        . ((string)$value === $selected
-                                                            ? 'bg-indigo-50 text-indigo-600'
-                                                            : 'text-slate-700 hover:bg-slate-100 hover:text-indigo-600');
-                                                }
-                                            ?>
-
-                                                <a href="<?php echo tp_text($option_url); ?>"
-                                                   class="chart-dropdown-item block px-3 py-1.5 text-xs font-bold cursor-pointer transition-all <?php echo $option_classes; ?>"
-                                                   data-value="<?php echo tp_text($value); ?>"
-                                                   data-display="<?php echo tp_text($label); ?>">
-                                                    <?php echo tp_text($label); ?>
-                                                </a>
-
-                                            <?php } ?>
-
-                                        </div>
-
-                                        <input type="hidden"
-                                               id="<?php echo tp_text('table' . $dropdown_name); ?>"
-                                               value="<?php echo tp_text($selected); ?>">
-                                    </div>
-
-                                <?php } ?>
-
+                                <input type="text" id="searchInput" oninput="filterRepairsTable(); toggleClearBtn('searchInput', 'clearSearchBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
+                            
+                            <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
+                            <div class="flex items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 relative z-40">
+                                <!-- ✨ ย่อความกว้าง (w-92px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
+                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Month')">
+                                        <span id="table-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('table-Month', '{$num_pad}', '{$name}', filterRepairsTable)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="tableMonth" value="all">
+                                </div>
+
+                                <!-- ✨ ย่อความกว้าง (w-82px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
+                                <div class="relative w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
+                                        <span id="table-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', '{$thai_y}', filterRepairsTable)\">{$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="tableYear" value="all">
+                                </div>
+
+                                <!-- ✨ ดรอปดาวน์เลือกสถานะ (สีเดียวกับในตารางเป๊ะๆ) ✨ -->
+                                <div class="relative w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-StatusContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Status', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="table-StatusTrigger" class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-3.5 portrait:px-2.5 sm:px-3.5 landscape:px-3.5 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Status')">
+                                        <span id="table-StatusText" class="truncate">ทั้งหมด</span>
+                                        <i id="table-StatusCaret" class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="table-StatusList" class="chart-dropdown-list absolute z-50 w-[155px] right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col p-2 space-y-1.5" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 bg-slate-50 hover:bg-slate-100 text-center" data-value="all" data-display="ทั้งหมด" onclick="selectTableStatusDropdown('all', 'ทั้งหมด')">ทั้งหมด</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#fef3c7] text-[#d97706] hover:brightness-95 text-center shadow-2xs" data-value="รอรับเรื่อง" data-display="รอรับเรื่อง" onclick="selectTableStatusDropdown('รอรับเรื่อง', 'รอรับเรื่อง')">รอรับเรื่อง</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#e0e7ff] text-[#4f46e5] hover:brightness-95 text-center shadow-2xs" data-value="กำลังดำเนินการ" data-display="กำลังดำเนินการ" onclick="selectTableStatusDropdown('กำลังดำเนินการ', 'กำลังดำเนินการ')">กำลังดำเนินการ</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#d1fae5] text-[#059669] hover:brightness-95 text-center shadow-2xs" data-value="ซ่อมเสร็จแล้ว" data-display="ซ่อมเสร็จแล้ว" onclick="selectTableStatusDropdown('ซ่อมเสร็จแล้ว', 'ซ่อมเสร็จแล้ว')">ซ่อมเสร็จแล้ว</div>
+                                    </div>
+                                    <input type="hidden" id="tableStatus" value="all">
+                                </div>
+                            </div> 
                         </div>
                     </div>
 
