@@ -2218,15 +2218,15 @@ if (isset($_GET['api_check_hash'])) {
         <nav class="flex-1 py-6 flex flex-col overflow-y-auto">
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dashboard</p>
             <button onclick="show('dash')" class="nav-btn <?php echo $active_tab === 'dash' ? 'active-btn' : ''; ?>" id="btn-dash"><i class="fas fa-chart-pie"></i> Overview</button>
-            <a href="?tab=repairs" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?>" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</a>
+            <button onclick="show('repairs')" class="nav-btn <?php echo $active_tab === 'repairs' ? 'active-btn' : ''; ?>" id="btn-repairs"><i class="fas fa-list-ul"></i> Transactions</button>
             <button onclick="show('technicians')" class="nav-btn <?php echo $active_tab === 'technicians' ? 'active-btn' : ''; ?>" id="btn-technicians"><i class="fas fa-user-friends"></i> Team</button>
             <button onclick="show('team_cards')" class="nav-btn <?php echo $active_tab === 'team_cards' ? 'active-btn' : ''; ?>" id="btn-team_cards"><i class="fas fa-id-badge"></i> Technician</button>
             
             <p class="px-6 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Management</p>
-            <a href="?tab=assets" class="nav-btn <?php echo $active_tab === 'assets' ? 'active-btn' : ''; ?>" id="btn-assets"><i class="fas fa-box-open"></i> Assets</a>
+            <button onclick="show('assets')" class="nav-btn <?php echo $active_tab === 'assets' ? 'active-btn' : ''; ?>" id="btn-assets"><i class="fas fa-box-open"></i> Assets</button>
             <button onclick="show('users')" class="nav-btn <?php echo $active_tab === 'users' ? 'active-btn' : ''; ?>" id="btn-users"><i class="fas fa-address-book"></i> Contacts</button>
             <button onclick="show('reports')" class="nav-btn <?php echo $active_tab === 'reports' ? 'active-btn' : ''; ?>" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
-            <a href="?tab=login_logs" class="nav-btn <?php echo $active_tab === 'login_logs' ? 'active-btn' : ''; ?>" id="btn-login_logs"><i class="fas fa-history"></i> Login History</a>
+            <button onclick="show('login_logs')" class="nav-btn <?php echo $active_tab === 'login_logs' ? 'active-btn' : ''; ?>" id="btn-login_logs"><i class="fas fa-history"></i> Login History</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
                                 <a href="verify_email_page.php" class="nav-btn">
@@ -2678,9 +2678,9 @@ if (isset($_GET['api_check_hash'])) {
                                 <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">Latest 5 repairs in system</p>
                             </div>
-                            <a href="?tab=repairs" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
+                            <button onclick="show('repairs')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
                                 See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
-                            </a>
+                            </button>
                         </div>
                         <div class="overflow-x-auto pb-4 custom-scrollbar table-wrapper-fix">
                             <table class="w-full text-left whitespace-nowrap">
@@ -5259,7 +5259,9 @@ if (isset($_GET['api_check_hash'])) {
             
             // อัปเดต URL เงียบๆ ให้ตรงกับแท็บที่กดเสมอ
             if (!preventScrollReset) {
-                history.replaceState(null, '', '?tab=' + id);
+                const query = new URLSearchParams(window.location.search);
+                query.set('tab', id);
+                history.replaceState(null, '', '?' + query.toString());
             }
 
             // 🚨 ล็อกเป้าฟอร์มทั้งหมดให้เป็นหน้าปัจจุบันทันที ป้องกันหน้าจอเด้งไปผิดแท็บเวลากด Save 🚨
@@ -5344,20 +5346,173 @@ if (isset($_GET['api_check_hash'])) {
 
         // ✨ เมื่อคลิกการ์ดสรุป 4 ใบบนหน้า Overview ให้สลับมาหน้า Transactions และกรองสถานะทันที ✨
         function filterRepairs(status) {
-            const query = new URLSearchParams();
-
-            query.set('tab', 'repairs');
-
-            if (status !== 'all') {
-                query.set('pg_repairs_status', status);
-            }
-
-            window.location.assign('?' + query.toString());
+            show('repairs');
+            const disp = (status === 'all') ? 'ทุกสถานะ' : status;
+            selectTableStatusDropdown(status, disp);
         }
 
         // ✨ ฟังก์ชันสำหรับค้นหาและกรองตารางหน้า Transactions (Repairs List) ✨
+        let repairsFiltersReady = false;
+        let repairsFiltersRestoring = false;
+        let repairsFilterTimer = null;
+        let repairsFilterController = null;
+        let repairsFilterVersion = 0;
+        let repairsFilterPending = false;
+
+        function restoreRepairsFiltersFromUrl(query) {
+            repairsFiltersRestoring = true;
+
+            try {
+                const search = document.getElementById('searchInput');
+                if (search) search.value = query.get('pg_repairs_q') || '';
+                toggleClearBtn('searchInput', 'clearSearchBtn');
+
+                let month = query.get('pg_repairs_month') || 'all';
+                if (!/^(0[1-9]|1[0-2])$/.test(month)) month = 'all';
+
+                const monthItem = month === 'all' ? null : document.querySelector(
+                    '#table-MonthList [data-value="' + month + '"]'
+                );
+
+                selectChartDropdown(
+                    'table-Month',
+                    month,
+                    monthItem ? monthItem.dataset.display : <?php echo json_encode($current_month_name, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?>,
+                    null
+                );
+
+                let year = query.get('pg_repairs_year') || 'all';
+                if (!/^[1-9][0-9]{3}$/.test(year)) year = 'all';
+
+                selectChartDropdown(
+                    'table-Year',
+                    year,
+                    year === 'all' ? <?php echo json_encode((string)$current_thai_year); ?> : String(Number(year) + 543),
+                    null
+                );
+
+                let status = query.get('pg_repairs_status') || 'all';
+
+                if (!['all', 'รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'].includes(status)) {
+                    status = 'all';
+                }
+
+                selectTableStatusDropdown(
+                    status,
+                    status === 'all' ? 'ทั้งหมด' : status
+                );
+            } finally {
+                repairsFiltersRestoring = false;
+                repairsFiltersReady = true;
+            }
+        }
+
         function filterRepairsTable() {
-            // ตารางใบงานค้นหาและแบ่งหน้าด้วย PHP เท่านั้น
+            if (!repairsFiltersReady || repairsFiltersRestoring) return;
+
+            const values = {
+                q: (document.getElementById('searchInput')?.value || '').trim(),
+                month: document.getElementById('tableMonth')?.value || 'all',
+                year: document.getElementById('tableYear')?.value || 'all',
+                status: document.getElementById('tableStatus')?.value || 'all'
+            };
+
+            const url = new URL(window.location.href);
+
+            const changed = Object.entries(values).some(([key, value]) => {
+                const fallback = key === 'q' ? '' : 'all';
+
+                return (
+                    url.searchParams.get('pg_repairs_' + key) || fallback
+                ) !== value;
+            });
+
+            clearTimeout(repairsFilterTimer);
+
+            if (repairsFilterController) {
+                repairsFilterController.abort();
+            }
+
+            const version = ++repairsFilterVersion;
+
+            if (!changed) {
+                repairsFilterPending = false;
+                return;
+            }
+
+            const currentQuery = window.location.search;
+
+            url.searchParams.set('tab', 'repairs');
+            url.searchParams.delete('pg_repairs_page');
+            url.searchParams.delete('_');
+
+            Object.entries(values).forEach(([key, value]) => {
+                if (value === '' || value === 'all') {
+                    url.searchParams.delete('pg_repairs_' + key);
+                } else {
+                    url.searchParams.set('pg_repairs_' + key, value);
+                }
+            });
+
+            repairsFilterPending = true;
+
+            repairsFilterTimer = setTimeout(async () => {
+                const controller = new AbortController();
+                repairsFilterController = controller;
+
+                try {
+                    const requestUrl = new URL(url);
+                    requestUrl.searchParams.set('_', Date.now());
+
+                    const response = await fetch(requestUrl, {
+                        signal: controller.signal,
+                        cache: 'no-store'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('โหลดรายการไม่สำเร็จ');
+                    }
+
+                    const html = await response.text();
+
+                    if (
+                        version !== repairsFilterVersion
+                        || currentQuery !== window.location.search
+                    ) return;
+
+                    const doc = new DOMParser().parseFromString(
+                        html,
+                        'text/html'
+                    );
+
+                    const newBody = doc.querySelector('#repairsTable tbody');
+                    const newFooter = doc.querySelector('#pg-repairs-footer');
+                    const oldBody = document.querySelector('#repairsTable tbody');
+                    const oldFooter = document.querySelector('#pg-repairs-footer');
+
+                    if (!newBody || !newFooter || !oldBody || !oldFooter) {
+                        throw new Error('ไม่พบตารางหรือปุ่มแบ่งหน้าในผลตอบกลับ');
+                    }
+
+                    oldBody.innerHTML = newBody.innerHTML;
+                    oldFooter.innerHTML = newFooter.innerHTML;
+
+                    history.replaceState(
+                        null,
+                        '',
+                        url.pathname + url.search + url.hash
+                    );
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('ค้นหารายการซ่อมไม่สำเร็จ', err);
+                    }
+                } finally {
+                    if (version === repairsFilterVersion) {
+                        repairsFilterPending = false;
+                        repairsFilterController = null;
+                    }
+                }
+            }, 300);
         }
 
         function toggleSidebar() {
@@ -5528,6 +5683,7 @@ if (isset($_GET['api_check_hash'])) {
             const savedTab = sessionStorage.getItem('activeTabBeforeRefresh');
             const urlParams = new URLSearchParams(window.location.search);
             const currentTabUrl = urlParams.get('tab');
+            restoreRepairsFiltersFromUrl(urlParams);
             
             // 🚨 โหลดกลับแท็บเป้าหมาย
             const finalTab = currentTabUrl ? currentTabUrl : (savedTab ? savedTab : 'dash');
@@ -7704,16 +7860,23 @@ if (isset($_GET['api_check_hash'])) {
         
         // ✨ ระบบ Auto-Refresh ดึงข้อมูลและอัปเดตทุกตารางบนหน้าจอแบบเรียลไทม์ ✨
         let globalDataHash = '<?php echo $full_system_hash; ?>';
+        let autoRefreshInProgress = false;
 
         async function autoRefreshAllData() {
+            if (autoRefreshInProgress || repairsFilterPending) return;
+
+            autoRefreshInProgress = true;
+
+            const currentQuery = window.location.search;
+            const filterVersion = repairsFilterVersion;
+
             try {
                 // 1. เช็ค Hash จาก API เบาๆ ก่อนว่ามีอะไรเปลี่ยนไหม
                 const apiRes = await fetch('?api_check_hash=1&_=' + Date.now());
                 if (!apiRes.ok) return;
                 const apiData = await apiRes.json();
 
-                if (apiData.hash !== globalDataHash) {
-                    globalDataHash = apiData.hash;
+                    if (apiData.hash !== globalDataHash) {
 
                     // 2. ถ้ามีอัปเดต โหลดหน้า HTML ปัจจุบันมาแบบซ่อนๆ
                     const tab = new URLSearchParams(window.location.search).get('tab') || 'dash';
@@ -7723,10 +7886,25 @@ if (isset($_GET['api_check_hash'])) {
                         + '_='
                         + Date.now()
                     );
+                                        if (!htmlRes.ok) return;
+
                     const htmlText = await htmlRes.text();
-                    
+
+                    if (
+                        repairsFilterPending
+                        || filterVersion !== repairsFilterVersion
+                        || currentQuery !== window.location.search
+                    ) return;
+
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlText, 'text/html');
+
+                    if (
+                        !doc.querySelector('#repairsTable tbody')
+                        || !doc.querySelector('#dash')
+                    ) return;
+
+                    globalDataHash = apiData.hash;
 
                     // 3. แจ้งเตือนถ้ายอดงานรวมเพิ่มขึ้น
                     const newTotalStr = doc.querySelector('#dash .grid-cols-2 h3')?.innerText || '0';
@@ -7794,7 +7972,11 @@ if (isset($_GET['api_check_hash'])) {
                         }
                     }
                 }
-            } catch (err) {}
+            } catch (err) {
+                console.error('อัปเดตข้อมูลอัตโนมัติไม่สำเร็จ', err);
+            } finally {
+                autoRefreshInProgress = false;
+            }
         }
         setInterval(autoRefreshAllData, 1000);
         window.addEventListener('focus', autoRefreshAllData);
