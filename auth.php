@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session_bootstrap.php';
 require_once 'db_connect.php'; 
 
 // ฟังก์ชันช่วยบันทึกการเข้าระบบผิดพลาด (Rate Limiting)

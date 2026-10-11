@@ -1,18 +1,5 @@
 <?php
-// ตั้งค่า Session สำหรับ HTTPS (ngrok) และป้องกันข้ามโดเมน แต่รองรับการเปิดผ่าน LINE
-$session_params = session_get_cookie_params();
-session_set_cookie_params([
-    'lifetime' => 28800, // กำหนดอายุ Session 8 ชั่วโมง
-    'path' => '/',
-    'domain' => '', // ปล่อยว่างเพื่อรองรับโดเมนปัจจุบันที่เปลี่ยนไปมาของ ngrok
-    'secure' => true, // บังคับส่ง Cookie ผ่าน HTTPS เท่านั้น
-    'httponly' => true, // ป้องกันการดึง Cookie ผ่าน JavaScript (XSS)
-    'samesite' => 'None' // จำเป็นต้องใช้ None เพื่อให้เปิดหน้าเว็บซ้อนใน LINE (LIFF/In-App Browser) ได้
-]);
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/session_bootstrap.php';
 
 // ตรวจ Session เดิม ห้ามเติมหรือเขียนทับตัวตนด้วยข้อมูลบัญชีปัจจุบัน
 function authGuardPositiveInt($value)
@@ -38,7 +25,7 @@ function authGuardSessionIsWellFormed($session, $now)
         || !is_int($session['LAST_ACTIVITY'] ?? null)
         || $session['LAST_ACTIVITY'] < 1
         || $session['LAST_ACTIVITY'] > $now
-        || $now - $session['LAST_ACTIVITY'] > 28800) {
+        || $now - $session['LAST_ACTIVITY'] > MBS_SESSION_IDLE_TIMEOUT) {
         return false;
     }
     if (strtolower($session['role']) === 'technician') {
