@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
 
         // ล็อกช่างเดิม เพื่อไม่ให้คำขอเชื่อมพร้อมกันผ่านทั้งคู่
         $tech_statement = $run_link_statement(
-            "SELECT id FROM technicians WHERE id = ? FOR UPDATE",
+            "SELECT id FROM technicians WHERE id = ? AND deleted_at IS NULL FOR UPDATE",
             'i',
             [$link_tech_id]
         );
