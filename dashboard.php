@@ -962,28 +962,133 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
 }
 
 if (isset($_GET['delete_tech'])) {
-    if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
-    $del_id = intval($_GET['delete_tech']);
-    
-    // ข้อ 14.1, 14.2, 14.6: ตรวจสอบบัญชีเว็บและประวัติใบงานก่อนลบ
-    $t_name_q = $conn->query("SELECT full_name FROM technicians WHERE id = $del_id");
-    if ($t_name_q && $t_name_q->num_rows > 0) {
-        $t_name = $t_name_q->fetch_assoc()['full_name'];
-        
-        $chk_usr = $conn->query("SELECT id FROM users WHERE technician_id = $del_id LIMIT 1");
-        $chk_rep = $conn->prepare("SELECT id FROM repairs WHERE technician_id = ? OR technician_name = ? LIMIT 1");
-        $chk_rep->bind_param("is", $del_id, $t_name);
-        $chk_rep->execute();
-        $res_rep = $chk_rep->get_result();
+    $archive_started = false;
+    $archive_commit_attempted = false;
+    $archive_ok = false;
+    $archive_message = 'ไม่สามารถลบช่างได้ กรุณาลองใหม่';
 
-        if (($chk_usr && $chk_usr->num_rows > 0) || ($res_rep && $res_rep->num_rows > 0)) {
-            echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'ไม่สามารถลบได้', text: 'ช่างรายนี้มีบัญชีเว็บหรือมีประวัติผูกกับใบงานแล้ว แนะนำให้ใช้การระงับบัญชีแทน', confirmButtonColor: '#ef4444' }).then(() => { $js_redirect }); });</script>";
-        } else {
-            $conn->query("DELETE FROM technicians WHERE id = $del_id");
-            echo "<script>$js_redirect</script>";
+    try {
+        $archive_token = $_GET['csrf_token'] ?? null;
+        if (!is_string($archive_token)
+            || !is_string($_SESSION['csrf_token'] ?? null)
+            || !hash_equals($_SESSION['csrf_token'], $archive_token)) {
+            throw new RuntimeException('Invalid archive token');
         }
-        $chk_rep->close();
+
+        $archive_id = authGuardPositiveInt($_GET['delete_tech']);
+        if ($archive_id === false) {
+            throw new RuntimeException('Invalid technician ID');
+        }
+
+        // ตรวจความพร้อมเท่านั้น ไม่สร้างหรือแก้โครงสร้างฐานข้อมูล
+        $archive_engines = $conn->query(
+            "SELECT TABLE_NAME, ENGINE FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME IN ('users', 'technicians')"
+        );
+        if (!$archive_engines || $archive_engines->num_rows !== 2) {
+            throw new RuntimeException('Archive table check failed');
+        }
+        while ($archive_engine = $archive_engines->fetch_assoc()) {
+            if (strtoupper((string) $archive_engine['ENGINE']) !== 'INNODB') {
+                throw new RuntimeException('Archive requires InnoDB');
+            }
+        }
+        $archive_engines->free();
+
+        if (!$conn->begin_transaction()) {
+            throw new RuntimeException('Archive transaction failed');
+        }
+        $archive_started = true;
+
+        $archive_admin = authGuardLoadAccount(
+            $conn, (int) $_SESSION['user_id'], true
+        );
+        if (!authGuardSessionMatches($archive_admin, $_SESSION, time())
+            || strtolower((string) $archive_admin['role']) !== 'admin') {
+            throw new RuntimeException('Archive permission changed');
+        }
+
+        $archive_tech = authGuardReadRow(authGuardStatement(
+            $conn,
+            'SELECT id, deleted_at FROM technicians WHERE id = ? FOR UPDATE',
+            'i', [$archive_id]
+        ));
+        if ($archive_tech === null) {
+            throw new RuntimeException('Technician not found');
+        }
+
+        $archive_accounts = authGuardStatement(
+            $conn,
+            'SELECT id, role, auth_version FROM users
+             WHERE technician_id = ? FOR UPDATE',
+            'i', [$archive_id]
+        );
+        try {
+            $archive_result = $archive_accounts->get_result();
+            if (!$archive_result) {
+                throw new RuntimeException('Linked account check failed');
+            }
+            while ($archive_account = $archive_result->fetch_assoc()) {
+                if (strtolower((string) $archive_account['role']) !== 'technician'
+                    || filter_var($archive_account['auth_version'], FILTER_VALIDATE_INT,
+                        ['options' => ['min_range' => 1, 'max_range' => 2147483646]]) === false) {
+                    throw new RuntimeException('Invalid linked account');
+                }
+            }
+            $archive_result->free();
+        } finally {
+            $archive_accounts->close();
+        }
+
+        // ปิดบัญชีเว็บและทำให้ Session เดิมใช้ต่อไม่ได้
+        $archive_disable = authGuardStatement(
+            $conn,
+            "UPDATE users SET is_active = 0, auth_version = auth_version + 1
+             WHERE technician_id = ? AND LOWER(role) = 'technician'",
+            'i', [$archive_id]
+        );
+        $archive_disable->close();
+
+        // เก็บข้อมูลเดิมทั้งหมด ใช้เวลาลบเป็นเงื่อนไขซ่อนจาก Dashboard
+        $archive_hide = authGuardStatement(
+            $conn,
+            'UPDATE technicians SET deleted_at = COALESCE(deleted_at, NOW())
+             WHERE id = ?',
+            'i', [$archive_id]
+        );
+        $archive_hide->close();
+
+        $archive_commit_attempted = true;
+        if (!$conn->commit()) {
+            throw new RuntimeException('Archive commit failed');
+        }
+        $archive_started = false;
+        $archive_ok = true;
+        $archive_message = 'ลบออกจาก Dashboard และปิดบัญชีเว็บแล้ว ข้อมูลเดิมยังเก็บอยู่ในฐานข้อมูล';
+    } catch (Throwable $e) {
+        $archive_rollback_ok = !$archive_started;
+        if ($archive_started) {
+            try { $archive_rollback_ok = $conn->rollback(); }
+            catch (Throwable $rollback_error) { $archive_rollback_ok = false; }
+        }
+        error_log('Technician archive failed');
+        if (!$archive_rollback_ok || $archive_commit_attempted) {
+            $archive_message = 'ไม่สามารถยืนยันผลการลบได้ กรุณาตรวจรายการและสถานะบัญชีก่อนลองซ้ำ';
+        }
     }
+
+    $archive_icon = $archive_ok ? 'success' : 'error';
+    $archive_title = $archive_ok ? 'ลบสำเร็จ' : 'ลบไม่สำเร็จ';
+    $archive_message_json = json_encode(
+        $archive_message,
+        JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+    );
+    echo "<script>document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({ icon: '$archive_icon', title: '$archive_title',
+            text: $archive_message_json, confirmButtonColor: '#4f46e5'
+        }).then(() => { $js_redirect });
+    });</script>";
 }
 
 if (isset($_GET['unlink_tech'])) {
@@ -1351,7 +1456,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
 
             if ($user_id > 0) {
                 $chk_t = $conn->prepare(
-                    "SELECT id FROM technicians WHERE id = ? FOR UPDATE"
+                    "SELECT id FROM technicians WHERE id = ? AND deleted_at IS NULL FOR UPDATE"
                 );
 
                 if (!$chk_t) {
@@ -2082,7 +2187,7 @@ $dept_icons = [
 
 // ✨ ดึงข้อมูลชุดเต็มของช่างและแอดมินมาสร้าง Hash เพื่อให้ตรวจจับการแก้ไขเบอร์โทร/อีเมล/รูปภาพ แบบเรียลไทม์ 100% ✨
 $all_techs_sync = [];
-$t_sync_q = $conn->query("SELECT id, full_name, english_name, department, position, phone, email, avatar_url, approval_status, secret_code FROM technicians ORDER BY id ASC");
+$t_sync_q = $conn->query("SELECT id, full_name, english_name, department, position, phone, email, avatar_url, approval_status, secret_code FROM technicians WHERE deleted_at IS NULL ORDER BY id ASC");
 if ($t_sync_q) { while($r = $t_sync_q->fetch_assoc()) $all_techs_sync[] = $r; }
 
 $all_users_sync = [];
@@ -3372,7 +3477,8 @@ if (isset($_GET['api_check_hash'])) {
                         $technicians_result = $conn->query(
                             "SELECT t.id, t.full_name, t.department
                              FROM technicians t
-                             WHERE NOT EXISTS (
+                             WHERE t.deleted_at IS NULL
+                               AND NOT EXISTS (
                                  SELECT 1 FROM users u
                                  WHERE u.technician_id = t.id
                              )
@@ -3543,11 +3649,12 @@ if (isset($_GET['api_check_hash'])) {
                             <tbody class="text-sm" id="techniciansTableBody">
                             <?php 
                             $techs_by_dept = [];
-                            // ข้อ 5.4: โหลดบัญชีด้วย users.technician_id
+                            // โหลดบัญชีด้วย users.technician_id
                             $tech_res = $conn->query("
                                 SELECT t.*, u.username AS web_username, u.is_active AS web_is_active 
                                 FROM technicians t 
                                 LEFT JOIN users u ON t.id = u.technician_id 
+                                WHERE t.deleted_at IS NULL
                                 ORDER BY t.department ASC, t.id DESC
                             ");
                             
@@ -3744,7 +3851,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 <?php 
                 $departments_data = [];
-                $res_techs = $conn->query("SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว'");
+                $res_techs = $conn->query("SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว' AND deleted_at IS NULL");
                 if($res_techs && $res_techs->num_rows > 0) {
                     while($row = $res_techs->fetch_assoc()) {
                         $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป';
@@ -7867,8 +7974,19 @@ if (isset($_GET['api_check_hash'])) {
             }); 
         }
 
-        function confirmDelete(type, id) { 
-            Swal.fire({ title: 'ยืนยันการลบข้อมูล?', text: "เมื่อลบแล้วจะไม่สามารถกู้คืนได้!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { 
+        function confirmDelete(type, id) {
+            const isTechnician = type === 'tech';
+            Swal.fire({
+                title: isTechnician ? 'ลบช่างออกจาก Dashboard?' : 'ยืนยันการลบข้อมูล?',
+                text: isTechnician
+                    ? 'จะซ่อนช่างและปิดบัญชีเว็บ โดยเก็บข้อมูลเดิมและประวัติใบงานไว้ในฐานข้อมูล'
+                    : 'เมื่อลบแล้วจะไม่สามารถกู้คืนได้!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'ยืนยัน ลบข้อมูล',
+                cancelButtonText: 'ยกเลิก'
+            }).then((r) => {
                 if(r.isConfirmed) {
                     let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
                     let csrf = '&csrf_token=<?php echo $_SESSION['csrf_token']; ?>';
@@ -7876,7 +7994,7 @@ if (isset($_GET['api_check_hash'])) {
                     else if(type === 'user') window.location.href = '?delete_user=' + id + '&tab=' + t + csrf;
                     else if(type === 'asset') window.location.href = '?delete_asset=' + id + '&tab=' + t + csrf;
                 }
-            }); 
+            });
         }
 
         function confirmDeleteReporter(name) { 
