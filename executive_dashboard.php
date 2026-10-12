@@ -1001,7 +1001,7 @@ if (isset($_GET['api_check_hash'])) {
                                     <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('table-Month', '{$num_pad}', '{$name}', filterRepairsTable)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="tableMonth" value="all">
+                                    <input type="hidden" id="tableMonth" value="<?php echo date('m'); ?>">
                                 </div>
 
                                 <!-- ✨ ย่อความกว้าง (w-82px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
@@ -1013,7 +1013,7 @@ if (isset($_GET['api_check_hash'])) {
                                     <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', '{$thai_y}', filterRepairsTable)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="tableYear" value="all">
+                                    <input type="hidden" id="tableYear" value="<?php echo date('Y'); ?>">
                                 </div>
 
                                 <!-- ✨ ดรอปดาวน์เลือกสถานะ (สีเดียวกับในตารางเป๊ะๆ) ✨ -->
@@ -1492,7 +1492,7 @@ if (isset($_GET['api_check_hash'])) {
                                 <div id="history-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('history-Month', '{$num_pad}', '{$name}', searchHistoryModalTable)\">{$name}</div>"; } ?>
                                 </div>
-                                <input type="hidden" id="historyMonth" value="all">
+                                <input type="hidden" id="historyMonth" value="<?php echo date('m'); ?>">
                             </div>
 
                             <div class="relative w-[110px] portrait:w-[85px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Year', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
@@ -1503,7 +1503,7 @@ if (isset($_GET['api_check_hash'])) {
                                 <div id="history-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('history-Year', '{$y}', '{$thai_y}', searchHistoryModalTable)\">{$thai_y}</div>"; } ?>
                                 </div>
-                                <input type="hidden" id="historyYear" value="all">
+                                <input type="hidden" id="historyYear" value="<?php echo date('Y'); ?>">
                             </div>
                         </div>
                     </div>
@@ -1964,8 +1964,8 @@ if (isset($_GET['api_check_hash'])) {
                 toggleClearBtn('searchInput', 'clearSearchBtn');
             }
             if (typeof selectChartDropdown === 'function') {
-                selectChartDropdown('table-Month', 'all', '<?php echo $current_month_name; ?>', null);
-                selectChartDropdown('table-Year', 'all', '<?php echo $current_thai_year; ?>', null);
+                selectChartDropdown('table-Month', 'all', 'ทุกเดือน', null);
+                selectChartDropdown('table-Year', 'all', 'ทุกปี', null);
             }
 
             // สลับไปหน้า Transactions (Repairs List)
@@ -3063,8 +3063,9 @@ if (isset($_GET['api_check_hash'])) {
                 }
             });
             
-            toggleModal('historyModal');
-        }
+                searchHistoryModalTable();
+                toggleModal('historyModal');
+            }
 
         // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอ (Fullscreen) ของหน้าต่างประวัติ (Executive) ✨
         function toggleMaximizeHistoryModal() {
@@ -3088,8 +3089,8 @@ if (isset($_GET['api_check_hash'])) {
                     if (header) { header.classList.add('rounded-t-3xl'); header.classList.remove('rounded-none'); }
                     
                     // รีเซ็ตตัวกรองเวลากลับมาจอเล็ก (ถ้าต้องการ)
-                    selectChartDropdown('history-Month', 'all', '<?php echo $current_month_name; ?>', searchHistoryModalTable);
-                    selectChartDropdown('history-Year', 'all', '<?php echo $current_thai_year; ?>', searchHistoryModalTable);
+                    selectChartDropdown('history-Month', '<?php echo date('m'); ?>', '<?php echo $current_month_name; ?>', searchHistoryModalTable);
+                    selectChartDropdown('history-Year', '<?php echo date('Y'); ?>', '<?php echo $current_thai_year; ?>', searchHistoryModalTable);
                     
                     if (icon) { icon.classList.add('fa-expand'); icon.classList.remove('fa-compress'); }
                 }

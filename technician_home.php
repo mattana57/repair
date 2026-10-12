@@ -242,11 +242,11 @@ $current_thai_year = date('Y') + 543;
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex pt-4 pb-0 gap-2 overflow-x-auto">
                 <button onclick="showTab('dash')" id="tab-dash" class="px-6 py-3 bg-indigo-600 text-white text-sm font-medium rounded-t-lg shadow-sm tab-btn">
-                    ทั้งหมด
-                </button>
-                <button onclick="showTab('history')" id="tab-history" class="px-6 py-3 bg-white text-slate-500 hover:text-indigo-600 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:border-indigo-200 transition-colors tab-btn">
-                    ประวัติงาน
-                </button>
+                ทั้งหมด
+            </button>
+            <button onclick="showTab('history')" id="tab-history" class="px-6 py-3 bg-white text-slate-500 hover:text-indigo-600 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:border-indigo-200 transition-colors tab-btn">
+                ประวัติงาน
+            </button>
             </div>
         </div>
     </div>
@@ -300,7 +300,7 @@ $current_thai_year = date('Y') + 543;
 
             <!-- Stats Cards Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="modern-card p-6 border-b-4 border-b-violet-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history')">
+                <div class="modern-card p-6 border-b-4 border-b-violet-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'all', true)">
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <div class="text-4xl font-extrabold text-slate-800 mb-1"><?= $stats['total'] ?></div>
@@ -311,7 +311,7 @@ $current_thai_year = date('Y') + 543;
                         </div>
                     </div>
                 </div>
-                <div class="modern-card p-6 border-b-4 border-b-amber-400 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'รอรับเรื่อง')">
+                <div class="modern-card p-6 border-b-4 border-b-amber-400 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'รอรับเรื่อง', true)">
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <div class="text-4xl font-extrabold text-slate-800 mb-1"><?= $stats['pending'] ?></div>
@@ -322,7 +322,7 @@ $current_thai_year = date('Y') + 543;
                         </div>
                     </div>
                 </div>
-                <div class="modern-card p-6 border-b-4 border-b-indigo-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'กำลังดำเนินการ')">
+                <div class="modern-card p-6 border-b-4 border-b-indigo-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'กำลังดำเนินการ', true)">
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <div class="text-4xl font-extrabold text-slate-800 mb-1"><?= $stats['in_progress'] ?></div>
@@ -333,7 +333,7 @@ $current_thai_year = date('Y') + 543;
                         </div>
                     </div>
                 </div>
-                <div class="modern-card p-6 border-b-4 border-b-emerald-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'ซ่อมเสร็จแล้ว')">
+                <div class="modern-card p-6 border-b-4 border-b-emerald-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'ซ่อมเสร็จแล้ว', true)">
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <div class="text-4xl font-extrabold text-slate-800 mb-1"><?= $stats['completed'] ?></div>
@@ -573,7 +573,7 @@ $current_thai_year = date('Y') + 543;
                                     <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('table-Month', '{$num_pad}', '{$name}', renderHistoryTable)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="tableMonth" value="all">
+                                    <input type="hidden" id="tableMonth" value="<?php echo date('m'); ?>">
                                 </div>
                                 <div class="relative w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', renderHistoryTable)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
@@ -583,7 +583,7 @@ $current_thai_year = date('Y') + 543;
                                     <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', '{$thai_y}', renderHistoryTable)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="tableYear" value="all">
+                                    <input type="hidden" id="tableYear" value="<?php echo date('Y'); ?>">
                                 </div>
 
                                 <!-- ✨ Dropdown สถานะแบบ Custom เหมือน Admin ✨ -->
@@ -821,7 +821,7 @@ $current_thai_year = date('Y') + 543;
         });
 
         // 1. ฟังก์ชันจัดการสลับหน้า (Tabs)
-        function showTab(tabId, statusFilter = 'all') {
+        function showTab(tabId, statusFilter = 'all', allDates = false) {
             document.getElementById('tab-content-dash').classList.add('hidden');
             document.getElementById('tab-content-history').classList.add('hidden');
             
@@ -836,8 +836,19 @@ $current_thai_year = date('Y') + 543;
                 const disp = (statusFilter === 'all') ? 'ทั้งหมด' : statusFilter;
                 selectTableStatusDropdown(statusFilter, disp);
                 // ตั้งค่าเดือนปีเป็น 'all' หรือ 'ปัจจุบัน' 
-                selectChartDropdown('table-Month', 'all', '<?php echo $current_month_name; ?>', null);
-                selectChartDropdown('table-Year', 'all', '<?php echo $current_thai_year; ?>', null);
+                selectChartDropdown(
+                    'table-Month',
+                    allDates ? 'all' : '<?php echo date('m'); ?>',
+                    allDates ? 'ทุกเดือน' : '<?php echo $current_month_name; ?>',
+                    null
+                );
+
+                selectChartDropdown(
+                    'table-Year',
+                    allDates ? 'all' : '<?php echo date('Y'); ?>',
+                    allDates ? 'ทุกปี' : '<?php echo $current_thai_year; ?>',
+                    null
+                );
                 renderHistoryTable();
             } else if (tabId === 'dash') {
                 renderDashTable();
@@ -1095,7 +1106,10 @@ $current_thai_year = date('Y') + 543;
             const searchVal = document.getElementById('searchHistoryInput').value.toLowerCase().trim();
             const statusVal = document.getElementById('filterStatus').value;
 
-            let filtered = repairsData.filter(r => {
+            const monthVal = document.getElementById('tableMonth').value;
+            const yearVal = document.getElementById('tableYear').value;
+
+            let filtered = getFilteredRepairsByMonthYear(monthVal, yearVal).filter(r => {
                 let st = (r.status || 'รอดำเนินการ').trim();
                 let isStatusMatch = (statusVal === 'all') ? true : (st === statusVal);
                 
