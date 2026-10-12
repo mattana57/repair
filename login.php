@@ -1,34 +1,26 @@
 <?php
 require_once __DIR__ . '/session_bootstrap.php';
+require_once __DIR__ . '/login_rate_limit.php';
 
-// อ่านข้อมูลเพื่อแสดงผลเท่านั้น การอนุญาตล็อกอินยังตรวจใน auth.php
-$login_max_attempts = 5;
-$login_lockout_time = 5 * 60;
+$login_max_attempts = LoginRateLimit::MAX_ATTEMPTS;
+$login_lockout_time = LoginRateLimit::LOCK_SECONDS;
 $login_failed_attempts = 0;
 $login_wait_seconds = 0;
+$login_limit_storage_error = false;
+$login_limit_view = null;
 
-$login_ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
-$login_attempt_file = __DIR__ . '/uploads/login_attempts_'
-    . md5($login_ip) . '.txt';
-
-if ($login_ip !== '' && is_file($login_attempt_file)) {
-    $login_attempt_json = @file_get_contents($login_attempt_file);
-    $login_attempt_data = is_string($login_attempt_json)
-        ? json_decode($login_attempt_json, true) : null;
-
-    if (is_array($login_attempt_data)
-        && is_int($login_attempt_data['attempts'] ?? null)
-        && is_int($login_attempt_data['last_time'] ?? null)) {
-        $login_failed_attempts = min(
-            $login_max_attempts,
-            max(0, $login_attempt_data['attempts'])
-        );
-        if ($login_failed_attempts >= $login_max_attempts) {
-            $login_wait_seconds = max(
-                0,
-                $login_attempt_data['last_time'] + $login_lockout_time - time()
-            );
-        }
+try {
+    $login_limit_view = new LoginRateLimit(
+        (string) ($_SERVER['REMOTE_ADDR'] ?? '')
+    );
+    $login_failed_attempts = $login_limit_view->attempts();
+    $login_wait_seconds = $login_limit_view->remaining();
+} catch (Throwable $e) {
+    error_log('Login rate limit display unavailable');
+    $login_limit_storage_error = true;
+} finally {
+    if ($login_limit_view instanceof LoginRateLimit) {
+        $login_limit_view->close();
     }
 }
 ?>
@@ -73,6 +65,12 @@ if ($login_ip !== '' && is_file($login_attempt_file)) {
                     <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">เข้าสู่ระบบเจ้าหน้าที่</h2>
                     <p class="text-slate-500 text-xs mt-2 text-center font-medium">คณะการบัญชีและการจัดการ (MBS)</p>
                 </div>
+
+                <?php if ($login_limit_storage_error): ?>
+                    <div class="mb-6 p-4 rounded-xl bg-red-50 border-l-4 border-red-500 text-red-700 text-sm">
+                        ไม่สามารถตรวจจำนวนครั้งเข้าสู่ระบบได้ กรุณาลองใหม่ภายหลัง
+                    </div>
+                <?php endif; ?>
 
                 <!-- แสดงข้อความ Error จาก Session -->
                 <?php if (isset($_SESSION['login_error']) && !empty($_SESSION['login_error'])): ?>

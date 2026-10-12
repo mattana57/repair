@@ -38,14 +38,26 @@ function authRecordLoginHistory($conn, $username, $role, $ip_address, $status)
     }
 }
 
-// ฟังก์ชันช่วยบันทึกการเข้าระบบผิดพลาด (Rate Limiting)
-function record_failed_attempt($file) {
-    $data = ['attempts' => 1, 'last_time' => time()];
-    if (file_exists($file)) {
-        $existing = json_decode(file_get_contents($file), true);
-        $data['attempts'] = $existing['attempts'] + 1;
+require_once __DIR__ . '/login_rate_limit.php';
+
+function loginRateLimitUnavailable()
+{
+    error_log('Login rate limit unavailable');
+    $_SESSION['login_error'] =
+        'ไม่สามารถตรวจจำนวนครั้งเข้าสู่ระบบได้ กรุณาลองใหม่ภายหลัง';
+    header('Location: login.php');
+    exit();
+}
+
+function record_failed_attempt($file)
+{
+    global $login_rate_limit;
+
+    try {
+        $login_rate_limit->recordFailure();
+    } catch (Throwable $e) {
+        loginRateLimitUnavailable();
     }
-    file_put_contents($file, json_encode($data));
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -67,24 +79,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // จำกัดความถี่การล็อกอิน (Rate Limiting) ป้องกันการเดารหัสผ่านโดยอ้างอิงจาก IP Address
-    $ip_address = $_SERVER['REMOTE_ADDR'];
-    $attempt_file = 'uploads/login_attempts_' . md5($ip_address) . '.txt';
-    $max_attempts = 5;
-    $lockout_time = 5 * 60; // ระงับ 5 นาที
-    
-    if (file_exists($attempt_file)) {
-        $attempts_data = json_decode(file_get_contents($attempt_file), true);
-        if ($attempts_data['attempts'] >= $max_attempts) {
-            if (time() - $attempts_data['last_time'] < $lockout_time) {
-                    $_SESSION['login_error'] = "พยายามเข้าสู่ระบบผิดพลาดครบ 5/5 ครั้ง กรุณาดูเวลารอที่เหลือด้านล่าง";
-                header("Location: login.php");
-                exit();
-            } else {
-                // ปลดล็อกเมื่อครบเวลาที่กำหนด
-                unlink($attempt_file);
-            }
+    // คงใช้ REMOTE_ADDR เดิม ไม่อ่าน Header ของ Proxy/ngrok
+    $ip_address = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    $attempt_file = __DIR__ . '/uploads/login_attempts_'
+        . md5($ip_address) . '.txt';
+
+    try {
+        $login_rate_limit = new LoginRateLimit($ip_address);
+        $login_rate_limit->resetExpired();
+
+        if ($login_rate_limit->remaining() > 0) {
+            $_SESSION['login_error'] =
+                'พยายามเข้าสู่ระบบผิดพลาดครบ 5/5 ครั้ง กรุณาดูเวลารอที่เหลือด้านล่าง';
+            header('Location: login.php');
+            exit();
         }
+    } catch (Throwable $e) {
+        loginRateLimitUnavailable();
     }
 
     $username = trim($_POST['username'] ?? '');
@@ -115,8 +126,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($is_password_correct) {
             
             // ล้างประวัติการล็อกอินผิดพลาดเมื่อเข้าสู่ระบบสำเร็จ
-            if (file_exists($attempt_file)) {
-                unlink($attempt_file);
+            try {
+                $login_rate_limit->reset();
+            } catch (Throwable $e) {
+                loginRateLimitUnavailable();
             }
 
             if ($user['is_active'] != 1) {
