@@ -102,13 +102,25 @@ function ch_history_page(
         throw new RuntimeException('ไม่พบชื่อเจ้าของประวัติ');
     }
 
-    $owner = $type === 'reporter'
-        ? 'r.reporter_name'
-        : 'r.technician_name';
+    if ($type === 'technician') {
+        $technicianId = filter_var(
+            tp_get('pg_history_technician_id'),
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]]
+        );
 
-    $where = "BINARY TRIM($owner) = BINARY ?";
-    $params = [$name];
-    $types = 's';
+        if ($technicianId === false) {
+            throw new RuntimeException('ไม่พบรหัสเจ้าของประวัติ');
+        }
+
+        $where = 'r.technician_id = ?';
+        $params = [$technicianId];
+        $types = 'i';
+    } else {
+        $where = 'BINARY TRIM(r.reporter_name) = BINARY ?';
+        $params = [$name];
+        $types = 's';
+    }
 
     $q = preg_replace('/\s+/u', '', tp_get('pg_history_q'));
 
@@ -163,7 +175,7 @@ function ch_history_page(
             . " LIKE ? ESCAPE '!'";
 
         $params[] = tp_like($q);
-        $types = str_repeat('s', count($params));
+        $types .= str_repeat('s', count($params) - strlen($types));
     }
 
     $month = tp_get('pg_history_month', 'all');

@@ -30,7 +30,7 @@ function tp_url(array $changes = [], array $remove = []) {
                 )
                 || in_array(
                     $key,
-                    ['pg_history_type', 'pg_history_name', 'pg_full'],
+                    ['pg_history_type', 'pg_history_name', 'pg_history_technician_id', 'pg_full'],
                     true
                 )
             )

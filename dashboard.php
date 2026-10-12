@@ -3742,10 +3742,14 @@ if (isset($_GET['api_check_hash'])) {
                                         $js_web_active = isset($t['web_is_active']) ? $t['web_is_active'] : 1;
                                         
                                         $total_jobs = 0;
-                                        if(!empty($t['full_name'])) {
-                                            $safe_tech_name = $conn->real_escape_string($t['full_name']);
-                                            $job_res = $conn->query("SELECT COUNT(id) as c FROM repairs WHERE technician_name = '{$safe_tech_name}'");
-                                            if($job_res) $total_jobs = $job_res->fetch_assoc()['c'];
+                                        $tech_id_for_count = (int)$t['id'];
+
+                                        if ($tech_id_for_count > 0) {
+                                            $job_res = $conn->query("SELECT COUNT(id) as c FROM repairs WHERE technician_id = {$tech_id_for_count}");
+
+                                            if ($job_res) {
+                                                $total_jobs = (int)$job_res->fetch_assoc()['c'];
+                                            }
                                         }
 
                                         $statusBadge = ($t['approval_status'] == 'อนุมัติแล้ว') 
@@ -3793,7 +3797,7 @@ if (isset($_GET['api_check_hash'])) {
                                             <td class='px-6 py-4 align-middle text-right'>
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     {$unlinkBtn}
-                                                    <button onclick=\"viewHistory('{$js_raw_fname}', 'technician')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                                                    <button onclick=\"viewHistory('{$js_raw_fname}', 'technician', false, false, {$js_uid})\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
                                                     <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_web_uname', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}', '$js_email', '$js_web_active')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                     <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:text-white hover:bg-rose-500 transition-all flex items-center justify-center shadow-xs'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
@@ -3868,7 +3872,8 @@ if (isset($_GET['api_check_hash'])) {
                             'phone' => $row['phone'],
                             'email' => $row['email'] ?? '',
                             'img' => $img,
-                            'raw_name' => $row['full_name']
+                            'raw_name' => $row['full_name'],
+                            'technician_id' => (int)$row['id']
                         ];
                     }
                 }
@@ -4002,7 +4007,7 @@ if (isset($_GET['api_check_hash'])) {
                                 </div>
 
                                 <div class="mt-auto pt-4">
-                                    <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician')" 
+                                    <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician', false, false, <?php echo (int)$tech['technician_id']; ?>)" 
                                             class="w-full text-[11px] font-bold text-sky-600 bg-white border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn">
                                         <i class="fas fa-history mr-1.5 text-sky-400 group-hover/btn:text-white transition-colors"></i> 
                                         ดูประวัติงาน
@@ -6067,7 +6072,8 @@ if (isset($_GET['api_check_hash'])) {
                     urlParams.get('pg_history_name'),
                     urlParams.get('pg_history_type'),
                     false,
-                    true
+                    true,
+                    urlParams.get('pg_history_technician_id')
                 );
 
                 sessionStorage.removeItem('modalOpen');
@@ -6077,7 +6083,13 @@ if (isset($_GET['api_check_hash'])) {
                 if (titleStr) {
                     let fullName = titleStr.replace('ประวัติงานเจ้าหน้าที่: ', '').replace('ประวัติการแจ้งซ่อม: ', '').trim();
                     let type = titleStr.includes('เจ้าหน้าที่') ? 'technician' : 'reporter';
-                    viewHistory(fullName, type);
+                viewHistory(
+                    fullName,
+                    type,
+                    false,
+                    false,
+                    sessionStorage.getItem('historyTechnicianId')
+                );
                     
                     setTimeout(() => {
                         const savedHistoryScrollX = sessionStorage.getItem('historyScrollX');
@@ -7488,10 +7500,31 @@ if (isset($_GET['api_check_hash'])) {
         let historyFilterTimer = null;
         let historyFiltersRestoring = false;
 
-        async function viewHistory(fullName, type, refresh = false, restore = false) {
+        async function viewHistory(fullName, type, refresh = false, restore = false, technicianId = null) {
             if (!['reporter', 'technician'].includes(type)) return;
 
             const url = new URL(window.location.href);
+            let historyTechId = null;
+
+            if (type === 'technician') {
+                const candidate = technicianId !== null
+                    ? technicianId
+                    : (refresh
+                        ? window.currentHistoryTechnicianId
+                        : (restore
+                            ? url.searchParams.get('pg_history_technician_id')
+                            : null));
+
+                const id = Number(candidate);
+
+                if (!Number.isSafeInteger(id) || id <= 0) return;
+
+                historyTechId = id;
+                url.searchParams.set('pg_history_technician_id', String(id));
+            } else {
+                url.searchParams.delete('pg_history_technician_id');
+            }
+
             url.searchParams.set('pg_history_name', fullName);
             url.searchParams.set('pg_history_type', type);
 
@@ -7539,6 +7572,13 @@ if (isset($_GET['api_check_hash'])) {
 
             window.currentHistoryName = fullName;
             window.currentHistoryType = type;
+            window.currentHistoryTechnicianId = historyTechId;
+
+            if (type === 'technician') {
+                sessionStorage.setItem('historyTechnicianId', String(historyTechId));
+            } else {
+                sessionStorage.removeItem('historyTechnicianId');
+            }
 
             url.searchParams.set('pg_history_page', data.page);
 
