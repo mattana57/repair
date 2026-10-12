@@ -3,7 +3,8 @@ require_once __DIR__ . '/session_bootstrap.php';
 
 // อ่านข้อมูลเพื่อแสดงผลเท่านั้น การอนุญาตล็อกอินยังตรวจใน auth.php
 $login_max_attempts = 5;
-$login_lockout_time = 15 * 60;
+//$login_lockout_time = 15 * 60;
+$login_lockout_time = 1 * 60; // ชั่วคราวสำหรับทดสอบ
 $login_failed_attempts = 0;
 $login_wait_seconds = 0;
 
@@ -91,7 +92,7 @@ if ($login_ip !== '' && is_file($login_attempt_file)) {
 
                         <?php if ($login_failed_attempts < $login_max_attempts): ?>
                             <p class="mt-1">
-                                เหลืออีก <?php echo $login_max_attempts - $login_failed_attempts; ?> ครั้งก่อนล็อกชั่วคราว 15 นาที
+                                เหลืออีก <?php echo $login_max_attempts - $login_failed_attempts; ?> ครั้งก่อนล็อกชั่วคราว 1 นาที
                             </p>
                         <?php else: ?>
                             <p id="login-lock-countdown" class="mt-1"
