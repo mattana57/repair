@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $attempts_data = json_decode(file_get_contents($attempt_file), true);
         if ($attempts_data['attempts'] >= $max_attempts) {
             if (time() - $attempts_data['last_time'] < $lockout_time) {
-                $_SESSION['login_error'] = "พยายามเข้าสู่ระบบผิดพลาดหลายครั้งเกินไป กรุณารอ 15 นาทีแล้วลองใหม่";
+                    $_SESSION['login_error'] = "พยายามเข้าสู่ระบบผิดพลาดครบ 5/5 ครั้ง กรุณาดูเวลารอที่เหลือด้านล่าง";
                 header("Location: login.php");
                 exit();
             } else {

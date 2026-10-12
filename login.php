@@ -1,4 +1,37 @@
-<?php require_once __DIR__ . '/session_bootstrap.php'; ?>
+<?php
+require_once __DIR__ . '/session_bootstrap.php';
+
+// อ่านข้อมูลเพื่อแสดงผลเท่านั้น การอนุญาตล็อกอินยังตรวจใน auth.php
+$login_max_attempts = 5;
+$login_lockout_time = 15 * 60;
+$login_failed_attempts = 0;
+$login_wait_seconds = 0;
+
+$login_ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+$login_attempt_file = __DIR__ . '/uploads/login_attempts_'
+    . md5($login_ip) . '.txt';
+
+if ($login_ip !== '' && is_file($login_attempt_file)) {
+    $login_attempt_json = @file_get_contents($login_attempt_file);
+    $login_attempt_data = is_string($login_attempt_json)
+        ? json_decode($login_attempt_json, true) : null;
+
+    if (is_array($login_attempt_data)
+        && is_int($login_attempt_data['attempts'] ?? null)
+        && is_int($login_attempt_data['last_time'] ?? null)) {
+        $login_failed_attempts = min(
+            $login_max_attempts,
+            max(0, $login_attempt_data['attempts'])
+        );
+        if ($login_failed_attempts >= $login_max_attempts) {
+            $login_wait_seconds = max(
+                0,
+                $login_attempt_data['last_time'] + $login_lockout_time - time()
+            );
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -49,6 +82,35 @@
                     </div>
                     <?php unset($_SESSION['login_error']); ?>
                 <?php endif; ?>
+
+                <?php if ($login_failed_attempts > 0): ?>
+                    <div class="mb-6 p-4 rounded-xl bg-amber-50 border-l-4 border-amber-500 text-amber-800 text-sm shadow-sm">
+                        <p class="font-medium">
+                            ล็อกอินผิด <?php echo $login_failed_attempts; ?>/<?php echo $login_max_attempts; ?> ครั้ง
+                        </p>
+
+                        <?php if ($login_failed_attempts < $login_max_attempts): ?>
+                            <p class="mt-1">
+                                เหลืออีก <?php echo $login_max_attempts - $login_failed_attempts; ?> ครั้งก่อนล็อกชั่วคราว 15 นาที
+                            </p>
+                        <?php else: ?>
+                            <p id="login-lock-countdown" class="mt-1"
+                               data-remaining="<?php echo $login_wait_seconds; ?>">
+                                <?php if ($login_wait_seconds > 0): ?>
+                                    ถูกล็อกชั่วคราว เหลืออีก
+                                    <?php echo intdiv($login_wait_seconds, 60); ?> นาที
+                                    <?php echo $login_wait_seconds % 60; ?> วินาที
+                                <?php else: ?>
+                                    ครบเวลารอแล้ว สามารถลองเข้าสู่ระบบได้อีกครั้ง
+                                <?php endif; ?>
+                            </p>
+                        <?php endif; ?>
+
+                        <p class="mt-2 text-xs">
+                            จำนวนครั้งอาจนับร่วมกับบัญชีอื่นที่ใช้อินเทอร์เน็ตเดียวกัน
+                        </p>
+                    </div>
+                <?php endif; ?>
                 
                 <!-- ฟอร์มเข้าสู่ระบบ (ข้อ 8.1 และ 8.2: คงฟอร์มเดิม ไม่เพิ่มช่องเลือกระดับสิทธิ์) -->
                 <form action="auth.php" method="POST" class="space-y-6">
@@ -97,7 +159,7 @@
 
     </div>
 
-    <!-- Script สำหรับปุ่มแสดงรหัสผ่าน -->
+        <!-- Script สำหรับปุ่มแสดงรหัสผ่าน -->
     <script>
         function togglePassword() {
             var x = document.getElementById("password");
@@ -112,6 +174,39 @@
                 icon.classList.add("fa-eye-slash");
             }
         }
+
+        // นับถอยหลังเพื่อแสดงผลเท่านั้น auth.php ยังเป็นผู้ตรวจเวลาล็อกจริง
+        (function () {
+            const countdown = document.getElementById('login-lock-countdown');
+            if (!countdown) return;
+
+            const initialRemaining = Number(countdown.dataset.remaining);
+            if (!Number.isFinite(initialRemaining) || initialRemaining < 0) return;
+
+            const startedAt = performance.now();
+            let countdownTimer = null;
+
+            function renderLoginCountdown() {
+                const elapsed = Math.floor((performance.now() - startedAt) / 1000);
+                const remaining = Math.max(0, initialRemaining - elapsed);
+
+                if (remaining === 0) {
+                    countdown.textContent = 'ครบเวลารอแล้ว สามารถลองเข้าสู่ระบบได้อีกครั้ง';
+                    if (countdownTimer !== null) clearInterval(countdownTimer);
+                    return;
+                }
+
+                const minutes = Math.floor(remaining / 60);
+                const seconds = remaining % 60;
+                countdown.textContent = 'ถูกล็อกชั่วคราว เหลืออีก '
+                    + minutes + ' นาที ' + seconds + ' วินาที';
+            }
+
+            renderLoginCountdown();
+            if (initialRemaining > 0) {
+                countdownTimer = setInterval(renderLoginCountdown, 1000);
+            }
+        })();
     </script>
 </body>
 </html>
