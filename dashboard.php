@@ -4647,7 +4647,7 @@ if (isset($_GET['api_check_hash'])) {
                                 <div id="history-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                     <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('history-Month', '{$num_pad}', '{$name}', searchHistoryModalTable)\">{$name}</div>"; } ?>
                                 </div>
-                                <input type="hidden" id="historyMonth" value="all">
+                                <input type="hidden" id="historyMonth" value="<?php echo date('m'); ?>">
                             </div>
 
                             <div class="relative w-[110px] portrait:w-[85px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Year', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
@@ -4658,7 +4658,7 @@ if (isset($_GET['api_check_hash'])) {
                                 <div id="history-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
                                     <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('history-Year', '{$y}', '{$thai_y}', searchHistoryModalTable)\">{$thai_y}</div>"; } ?>
                                 </div>
-                                <input type="hidden" id="historyYear" value="all">
+                                <input type="hidden" id="historyYear" value="<?php echo date('Y'); ?>">
                             </div>
                         </div>
 
@@ -7541,6 +7541,19 @@ if (isset($_GET['api_check_hash'])) {
                 );
             }
 
+            const rawHistoryMonth = url.searchParams.get('pg_history_month') || '';
+            const historyMonthValue = /^(0?[1-9]|1[0-2])$/.test(rawHistoryMonth)
+                ? rawHistoryMonth.padStart(2, '0')
+                : '<?php echo date('m'); ?>';
+
+            const rawHistoryYear = url.searchParams.get('pg_history_year') || '';
+            const historyYearValue = /^[1-9][0-9]{3}$/.test(rawHistoryYear)
+                ? rawHistoryYear
+                : '<?php echo date('Y'); ?>';
+
+            url.searchParams.set('pg_history_month', historyMonthValue);
+            url.searchParams.set('pg_history_year', historyYearValue);
+
             if (historyController) historyController.abort();
 
             const controller = new AbortController();
@@ -7742,8 +7755,9 @@ if (isset($_GET['api_check_hash'])) {
 
                 selectChartDropdown(
                     prefix,
-                    item ? value : 'all',
-                    item ? item.dataset.display : fallback,
+                    value,
+                    item ? item.dataset.display
+                        : (key === 'year' ? String(Number(value) + 543) : fallback),
                     null
                 );
             }
@@ -7847,8 +7861,8 @@ if (isset($_GET['api_check_hash'])) {
                         } else {
                             filterGroup.classList.add('hidden'); filterGroup.classList.remove('flex');
                         }
-                        selectChartDropdown('history-Month', 'all', '<?php echo $current_month_name; ?>', searchHistoryModalTable);
-                        selectChartDropdown('history-Year', 'all', '<?php echo $current_thai_year; ?>', searchHistoryModalTable);
+                        selectChartDropdown('history-Month', '<?php echo date('m'); ?>', '<?php echo $current_month_name; ?>', searchHistoryModalTable);
+                        selectChartDropdown('history-Year', '<?php echo date('Y'); ?>', '<?php echo $current_thai_year; ?>', searchHistoryModalTable);
                     }
                     if (iconDesktop) { iconDesktop.classList.add('fa-expand'); iconDesktop.classList.remove('fa-compress'); }
                     if (iconMobile) { iconMobile.classList.add('fa-expand'); iconMobile.classList.remove('fa-compress'); }
