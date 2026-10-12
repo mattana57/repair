@@ -71,8 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $ip_address = $_SERVER['REMOTE_ADDR'];
     $attempt_file = 'uploads/login_attempts_' . md5($ip_address) . '.txt';
     $max_attempts = 5;
-    //$lockout_time = 15 * 60; // ระงับ 15 นาที
-    $lockout_time = 1 * 60; // ชั่วคราวสำหรับทดสอบ: ระงับ 1 นาที
+    $lockout_time = 5 * 60; // ระงับ 5 นาที
     
     if (file_exists($attempt_file)) {
         $attempts_data = json_decode(file_get_contents($attempt_file), true);
