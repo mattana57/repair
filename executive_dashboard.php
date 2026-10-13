@@ -14,13 +14,8 @@ $conn->set_charset("utf8mb4");
 // ✨ ระบบอัปโหลดรูปโปรไฟล์ผู้บริหาร (ล็อกเป้าบันทึกลงบัญชีผู้บริหารโดยตรง) ✨
 $js_redirect = "history.replaceState(null, '', '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash'));";
 
-// 1. ค้นหา ID ของแถวผู้บริหารในตาราง users
-$target_exec_id = null;
-$exec_chk = $conn->query("SELECT id FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
-if ($exec_chk && $exec_chk->num_rows > 0) {
-    $target_exec_id = $exec_chk->fetch_assoc()['id'];
-}
-$target_user_id = $target_exec_id ? $target_exec_id : $_SESSION['user_id'];
+// ใช้บัญชีที่กำลังล็อกอินและผ่านการตรวจจาก auth_guard.php
+$target_user_id = (int) $_SESSION['user_id'];
 
 // 2. ถ้ามีการกดบันทึกรูปภาพ ให้บันทึกใส่ ID ของผู้บริหารทันที
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture'])) {
@@ -68,7 +63,7 @@ $current_user_role = 'Executive';
 $current_username = 'exec';
 $current_user_avatar = "https://api.dicebear.com/7.x/notionists/svg?seed=exec&backgroundColor=e2e8f0";
 
-$exec_res = $conn->query("SELECT id, username, full_name, english_name, role, position, avatar_url FROM users WHERE LOWER(role) = 'executive' ORDER BY id ASC LIMIT 1");
+$exec_res = $conn->query("SELECT id, username, full_name, english_name, role, position, avatar_url FROM users WHERE id = $target_user_id LIMIT 1");
 if ($exec_res && $exec_res->num_rows > 0) {
     $exec_data = $exec_res->fetch_assoc();
     $current_username = $exec_data['username'];
