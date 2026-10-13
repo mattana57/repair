@@ -1,6 +1,19 @@
 <?php
-session_start();
-include 'db_connect.php';
+require_once __DIR__ . '/auth_guard.php';
+
+// ตรวจสิทธิ์ก่อนอ่านรายละเอียดใบงาน
+if (!in_array(
+    strtolower($_SESSION['role'] ?? ''),
+    ['admin', 'executive'],
+    true
+)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=UTF-8');
+    header('Cache-Control: no-store');
+    exit('ไม่อนุญาตให้เข้าถึงหน้านี้');
+}
+
+require_once __DIR__ . '/db_connect.php';
 
 // ✨ เช็คสิทธิ์ว่าเป็น Executive หรือไม่ เพื่อใช้ซ่อนปุ่มและเปลี่ยนหน้ากลับ ✨
 $is_executive = isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'executive';
