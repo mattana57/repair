@@ -1163,7 +1163,7 @@ $current_thai_year = date('Y') + 543;
                 let cause = (!r.root_cause || r.root_cause === '-') ? `<span class='text-rose-500 font-bold'>-</span>` : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
 
                 // ✨ แก้ลิงก์ปุ่ม Action ให้ไปหน้า update_repair.php เหมือนแอดมิน ✨
-                let actionBtn = `<a target="_blank" href="update_repair.php?id=${r.id}" class="w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm" title="Edit"><i class="fas fa-pen-to-square"></i></a>`;
+                let actionBtn = `<a target="_blank" href="update_repair.php?id=${r.id}" onclick="window.open(this.href, 'mbsTechnicianRepair'); return false;" class="w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm" title="Edit"><i class="fas fa-pen-to-square"></i></a>`;
 
                 html += `
                     <tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
@@ -1211,6 +1211,10 @@ $current_thai_year = date('Y') + 543;
         document.addEventListener('DOMContentLoaded', () => {
             renderAllCharts();
             renderDashTable();
+
+            if (new URLSearchParams(window.location.search).get('tab') === 'history') {
+                showTab('history');
+            }
         });
 
         // 5. โหมดเต็มจอของตาราง (Fullscreen)

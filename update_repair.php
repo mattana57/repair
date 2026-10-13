@@ -474,7 +474,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> ระบบจัดการใบงานแจ้งซ่อม</h1>
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
-            <a href="technician_home.php" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
+            <a href="technician_home.php?tab=history" onclick="if (window.name === 'mbsTechnicianRepair') { window.close(); setTimeout(() => window.location.replace(this.href), 300); return false; }" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
         </div>
