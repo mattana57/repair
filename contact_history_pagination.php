@@ -1,4 +1,12 @@
 <?php
+// ปฏิเสธการเปิดไฟล์ช่วยผ่าน URL โดยตรง
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=UTF-8');
+    header('Cache-Control: no-store');
+    exit('ไม่อนุญาตให้เปิดไฟล์นี้โดยตรง');
+}
+
 // โหลดจาก dashboard.php หลังตรวจสิทธิ์แล้วเท่านั้น
 require_once __DIR__ . '/table_pagination.php';
 
