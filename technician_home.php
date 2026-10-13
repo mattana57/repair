@@ -242,7 +242,7 @@ $current_thai_year = date('Y') + 543;
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex pt-4 pb-0 gap-2 overflow-x-auto">
                 <button onclick="showTab('dash')" id="tab-dash" class="px-6 py-3 bg-indigo-600 text-white text-sm font-medium rounded-t-lg shadow-sm tab-btn">
-                ทั้งหมด
+                หน้าแรก
             </button>
             <button onclick="showTab('history')" id="tab-history" class="px-6 py-3 bg-white text-slate-500 hover:text-indigo-600 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:border-indigo-200 transition-colors tab-btn">
                 ประวัติงาน
