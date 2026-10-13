@@ -349,7 +349,7 @@ $current_thai_year = date('Y') + 543;
             <!-- ปุ่มเมนูแท็บแบบ Capsule -->
             <div class="flex items-center gap-2.5 mb-8">
                 <button onclick="showTab('dash')" id="capsule-dash" class="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-full border border-indigo-600 shadow-md shadow-indigo-200 transition-colors cursor-pointer capsule-btn">
-                    ทั้งหมด
+                    หน้าแรก
                 </button>
                 <button onclick="showTab('history')" id="capsule-history" class="px-6 py-2 bg-white text-slate-600 text-sm font-bold rounded-full shadow-sm border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition-colors cursor-pointer capsule-btn">
                     ประวัติงาน
