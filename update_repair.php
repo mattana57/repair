@@ -287,7 +287,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // บันทึก repairs.technician_id ควบคู่กับชื่อเสมอ
         $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_id = ?, technician_name = ?, asset_code = ?, received_at = ?, completed_at = ? WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("sssississi", $status, $repair_note, $repair_note, $technician_id, $technician_name, $asset_code, $final_received, $final_completed, $update_id);
+        $update_stmt->bind_param("sssissssi", $status, $repair_note, $repair_note, $technician_id, $technician_name, $asset_code, $final_received, $final_completed, $update_id);
 
         if ($update_stmt->execute()) {
             $show_alert = true;
