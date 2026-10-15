@@ -215,7 +215,7 @@ function verificationPageEscape($value) {
                 </button>
                 <p id="resend-countdown" hidden></p>
 
-                <form id="otp-form" hidden>
+                <form id="otp-form" method="post" hidden>
                     <label for="otp">รหัส OTP 6 หลักจากอีเมล</label>
                     <p id="otp-countdown" hidden></p>
                     <input

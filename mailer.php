@@ -49,7 +49,7 @@ function sendOtpEmail($target_email, $otp_code, $purpose_text = "ยืนยั
         
     } catch (Exception $e) {
         // บันทึก Error ฝั่งเซิร์ฟเวอร์ แต่ไม่บอกรายละเอียด Error ออกไปให้ User ทราบ (ความปลอดภัย)
-        error_log("MBS Mailer Error: {$mail->ErrorInfo}");
+        error_log('MBS Mailer: OTP email delivery failed');
         return false;
     }
 }
