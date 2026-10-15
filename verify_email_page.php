@@ -211,11 +211,11 @@ function verificationPageEscape($value) {
                 </p>
 
                 <button type="button" id="request-button">
-                    ส่งรหัสยืนยันอีเมล
+                    ส่งรหัส OTP ยืนยันอีเมล
                 </button>
 
                 <form id="otp-form" hidden>
-                    <label for="otp">รหัส OTP จากอีเมล มีอายุ 5 นาที</label>
+                    <label for="otp">รหัส OTP 6 หลักจากอีเมล มีอายุ 5 นาที</label>
                     <input
                         id="otp"
                         name="otp"
@@ -228,7 +228,7 @@ function verificationPageEscape($value) {
                         required
                     >
                     <button type="submit" id="verify-button">
-                        ยืนยันอีเมล
+                        ยืนยันรหัส OTP
                     </button>
                 </form>
             </div>
@@ -318,7 +318,7 @@ requestButton.addEventListener('click', async () => {
     requestToken = '';
     otpForm.hidden = true;
     otpInput.value = '';
-    showMessage('กำลังส่งรหัสยืนยันอีเมล…');
+    showMessage('กำลังส่งรหัส OTP ยืนยันอีเมล…');
 
     try {
         const data = await callVerification('request_otp');
@@ -328,16 +328,17 @@ requestButton.addEventListener('click', async () => {
         if (data.status !== 'success'
             || typeof data.token !== 'string'
             || !/^[a-f0-9]{64}$/.test(data.token)) {
-            throw new Error(data.message || 'ไม่สามารถส่งรหัสได้');
+            throw new Error(data.message || 'ไม่สามารถส่งรหัส OTP ได้');
         }
 
         requestToken = data.token;
         otpForm.hidden = false;
-        showMessage(data.message || 'ส่งรหัสไปยังอีเมลแล้ว', true);
+        showMessage(data.message || 'ส่งรหัส OTP ไปยังอีเมลแล้ว', true);
+        requestButton.textContent = 'ส่งรหัส OTP อีกครั้ง';
         otpInput.focus();
 
     } catch (error) {
-        showMessage(error.message || 'ไม่สามารถส่งรหัสได้ กรุณาลองใหม่');
+        showMessage(error.message || 'ไม่สามารถส่งรหัส OTP ได้ กรุณาลองใหม่');
     } finally {
         setBusy(false);
     }
