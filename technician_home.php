@@ -22,7 +22,7 @@ require_once 'db_connect.php';
 
 // ✨ 4. ใช้การตรวจบัญชีล่าสุด: ตรวจว่าบัญชีเชื่อมกับช่างที่มีอยู่จริงในระบบหรือไม่
 // (ป้องกันกรณีตาราง users ยังอยู่ แต่ชื่อช่างในตาราง technicians ถูกแอดมินลบทิ้งไปแล้ว)
-$stmt_tech = $conn->prepare("SELECT id, approval_status, full_name FROM technicians WHERE id = ?");
+$stmt_tech = $conn->prepare("SELECT id, approval_status, full_name, english_name, avatar_url FROM technicians WHERE id = ?");
 $stmt_tech->bind_param("i", $tech_id_session);
 $stmt_tech->execute();
 $res_tech = $stmt_tech->get_result();
@@ -56,6 +56,18 @@ if ($tech_data['approval_status'] !== 'อนุมัติแล้ว') {
 
 $user_id = $_SESSION['user_id'];
 $full_name = $tech_data['full_name']; // ดึงชื่อล่าสุดจากตาราง technicians โดยตรง
+
+// อ่านรูปที่แอดมินกำหนดไว้ ไม่บันทึกหรือเปลี่ยนข้อมูล
+$tech_profile_image = '';
+$tech_avatar_path = (string) ($tech_data['avatar_url'] ?? '');
+
+if (preg_match('~\Auploads/[A-Za-z0-9_.-]+\.(?:jpg|jpeg|png|webp|gif)\z~i', $tech_avatar_path)
+    && is_file(__DIR__ . '/' . $tech_avatar_path)) {
+    $tech_profile_image = $tech_avatar_path
+        . '?v=' . filemtime(__DIR__ . '/' . $tech_avatar_path);
+}
+
+$tech_profile_english = (string) ($tech_data['english_name'] ?? '');
 
 // ใช้ตัวตนที่ Guard ตรวจแล้ว ไม่เปลี่ยนรหัสช่างของคำขอนี้จากการอ่านซ้ำ
 $tech_id = (int) $tech_id_session;
@@ -170,6 +182,143 @@ $current_thai_year = date('Y') + 543;
     <style>
         /* ✨ นำ Style ธีมของ Admin มาใช้ 100% ✨ */
         body { font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif; background-color: #f8fafc; color: #1e293b; }
+
+        /* ส่วนใหม่ซ่อนในคอมพิวเตอร์และมือถือแนวนอน */
+        .tech-mobile-menu,
+        .tech-mobile-profile {
+            display: none;
+        }
+
+        #tech-profile-viewer:not([open]) {
+            display: none;
+        }
+
+        @media (max-width: 639px) and (orientation: portrait) {
+            .tech-desktop-actions {
+                display: none;
+            }
+
+            .tech-mobile-menu,
+            .tech-mobile-profile {
+                display: block;
+                position: relative;
+            }
+
+            .tech-mobile-menu > summary,
+            .tech-mobile-profile > summary {
+                list-style: none;
+                cursor: pointer;
+            }
+
+            .tech-mobile-menu > summary::-webkit-details-marker,
+            .tech-mobile-profile > summary::-webkit-details-marker {
+                display: none;
+            }
+
+            .tech-mobile-popover {
+                position: absolute;
+                top: calc(100% + 14px);
+                right: 0;
+                width: min(280px, calc(100vw - 32px));
+                border: 1px solid #e2e8f0;
+                border-radius: 20px;
+                background: #fff;
+                color: #1e293b;
+                box-shadow: 0 16px 40px rgb(15 23 42 / 18%);
+                padding: 16px;
+                z-index: 50;
+            }
+
+            .tech-mobile-popover a {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 12px;
+                border-radius: 12px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            .tech-mobile-popover a:hover {
+                background: #f1f5f9;
+            }
+
+            .tech-mobile-photo {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid #fff;
+            }
+
+            .tech-mobile-photo-large {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid #c4b5fd;
+            }
+
+            #tech-profile-viewer[open] {
+                position: fixed;
+                inset: 0;
+                margin: auto;
+                width: min(92vw, 480px);
+                max-height: 85vh;
+                padding: 16px;
+                border: 0;
+                border-radius: 20px;
+                background: #fff;
+                color: #1e293b;
+                overflow: auto;
+            }
+
+            #tech-profile-viewer::backdrop {
+                background: rgb(15 23 42 / 75%);
+            }
+
+            #tech-profile-viewer img {
+                display: block;
+                width: 100%;
+                max-height: 65vh;
+                object-fit: contain;
+                border-radius: 12px;
+            }
+
+            .tech-stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .tech-stats-grid > .modern-card {
+                min-width: 0;
+                padding: 16px;
+            }
+
+            .tech-stats-grid > .modern-card > div {
+                flex-direction: column-reverse;
+                gap: 12px;
+                margin-bottom: 0;
+            }
+
+            .tech-stats-grid .text-4xl {
+                font-size: 28px;
+                line-height: 1.2;
+            }
+
+            .tech-stats-grid .text-sm {
+                font-size: 12px;
+                line-height: 1.5;
+                overflow-wrap: anywhere;
+            }
+        }
+
+        /* ซ่อนหน้าต่างรูปนอกมือถือแนวตั้ง */
+        @media (min-width: 640px), (orientation: landscape) {
+            #tech-profile-viewer {
+                display: none;
+            }
+        }
         .modern-card { background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); border: 1px solid #f1f5f9; }
         
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 12px; } 
@@ -219,7 +368,80 @@ $current_thai_year = date('Y') + 543;
                         <span class="font-bold text-lg tracking-wide">MBS <span class="font-light">Technician</span></span>
                     </div>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <details class="tech-mobile-menu">
+                        <summary class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center"
+                                 aria-label="เมนูเจ้าหน้าที่">
+                            <i class="fas fa-bars text-xl" aria-hidden="true"></i>
+                        </summary>
+
+                        <div class="tech-mobile-popover">
+                            <a href="verify_email_page.php">
+                                <i class="fas fa-envelope text-indigo-500" aria-hidden="true"></i>
+                                ยืนยันอีเมล
+                            </a>
+                            <a href="logout.php" class="text-rose-600">
+                                <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                                ออกจากระบบ
+                            </a>
+                        </div>
+                    </details>
+
+                    <details class="tech-mobile-profile">
+                        <summary aria-label="ดูโปรไฟล์เจ้าหน้าที่">
+                            <?php if ($tech_profile_image !== ''): ?>
+                                <img
+                                    src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>"
+                                    alt="รูปโปรไฟล์เจ้าหน้าที่"
+                                    class="tech-mobile-photo"
+                                >
+                            <?php else: ?>
+                                <span class="tech-mobile-photo bg-indigo-500 inline-flex items-center justify-center">
+                                    <i class="fas fa-user" aria-hidden="true"></i>
+                                </span>
+                            <?php endif; ?>
+                        </summary>
+
+                        <div class="tech-mobile-popover">
+                            <div class="flex items-center gap-3">
+                                <?php if ($tech_profile_image !== ''): ?>
+                                    <button type="button"
+                                            class="relative shrink-0"
+                                            onclick="document.getElementById('tech-profile-viewer').showModal()"
+                                            aria-label="ดูรูปโปรไฟล์ขนาดใหญ่">
+                                        <img
+                                            src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>"
+                                            alt="ดูรูปโปรไฟล์"
+                                            class="tech-mobile-photo-large"
+                                        >
+                                        <span class="absolute bottom-0 inset-x-0 bg-slate-800/80 text-white rounded-b-full text-xs py-0.5">
+                                            <i class="fas fa-eye" aria-hidden="true"></i>
+                                        </span>
+                                    </button>
+                                <?php else: ?>
+                                    <span class="tech-mobile-photo-large bg-indigo-50 inline-flex items-center justify-center shrink-0 text-indigo-500">
+                                        <i class="fas fa-user text-2xl" aria-hidden="true"></i>
+                                    </span>
+                                <?php endif; ?>
+
+                                <div class="min-w-0">
+                                    <p class="font-bold text-sm break-words">
+                                        <?= htmlspecialchars($full_name, ENT_QUOTES, 'UTF-8') ?>
+                                    </p>
+                                    <?php if ($tech_profile_english !== ''): ?>
+                                        <p class="text-xs text-slate-400 break-words mt-1">
+                                            <?= htmlspecialchars($tech_profile_english, ENT_QUOTES, 'UTF-8') ?>
+                                        </p>
+                                    <?php endif; ?>
+                                    <span class="inline-block mt-2 rounded-lg bg-violet-50 text-violet-600 text-xs font-semibold px-2 py-1">
+                                        เจ้าหน้าที่
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <div class="tech-desktop-actions flex items-center gap-4">
                     <div class="flex items-center gap-2 bg-indigo-700/50 px-3 py-1.5 rounded-xl border border-indigo-500/30">
                         <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-sm">
                             <?= mb_substr($full_name, 0, 1) ?>
@@ -232,10 +454,27 @@ $current_thai_year = date('Y') + 543;
                     <a href="logout.php" class="bg-rose-500 hover:bg-rose-600 px-3.5 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-1.5">
                         <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">ออกจากระบบ</span>
                     </a>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
+
+    <?php if ($tech_profile_image !== ''): ?>
+        <dialog id="tech-profile-viewer">
+            <div class="flex justify-end mb-3">
+                <button type="button"
+                        class="rounded-xl bg-slate-100 text-slate-700 px-4 py-2 text-sm font-semibold"
+                        onclick="document.getElementById('tech-profile-viewer').close()">
+                    ปิดรูป
+                </button>
+            </div>
+            <img
+                src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>"
+                alt="รูปโปรไฟล์ของ <?= htmlspecialchars($full_name, ENT_QUOTES, 'UTF-8') ?>"
+            >
+        </dialog>
+    <?php endif; ?>
 
     <!-- Header & Tabs (ซ่อนไว้เพราะใช้แบบ Capsule แทน) -->
     <div class="bg-white border-b border-slate-200 shrink-0 hidden" id="headerTabs">
@@ -299,7 +538,7 @@ $current_thai_year = date('Y') + 543;
             </div>
 
             <!-- Stats Cards Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="tech-stats-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="modern-card p-6 border-b-4 border-b-violet-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'all', true)">
                     <div class="flex justify-between items-start mb-4">
                         <div>
@@ -1293,6 +1532,31 @@ $current_thai_year = date('Y') + 543;
                 }, 250);
             }
         }
+    </script>
+
+    <script>
+        (() => {
+            const portraitMobile = window.matchMedia(
+                '(max-width: 639px) and (orientation: portrait)'
+            );
+
+            function closeProfileOutsidePortrait() {
+                const viewer = document.getElementById('tech-profile-viewer');
+
+                if (!portraitMobile.matches && viewer && viewer.open) {
+                    viewer.close();
+                }
+            }
+
+            if (portraitMobile.addEventListener) {
+                portraitMobile.addEventListener(
+                    'change',
+                    closeProfileOutsidePortrait
+                );
+            } else {
+                portraitMobile.addListener(closeProfileOutsidePortrait);
+            }
+        })();
     </script>
 </body>
 </html>
