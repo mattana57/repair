@@ -662,13 +662,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </button>
         </div>
         <?php else: ?>
-        <!-- โครงสร้างสำหรับช่าง (คงเดิม) -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+            
+        <!-- ส่วนหัวใบงานของเจ้าหน้าที่ -->
+        <style>
+            @media (max-width: 639px) and (orientation: portrait) {
+                .tech-repair-header {
+                    flex-direction: column-reverse;
+                }
+
+                .tech-repair-header > .tech-repair-back {
+                    width: auto;
+                    align-self: flex-end;
+                    flex-shrink: 0;
+                    white-space: nowrap;
+                }
+            }
+        </style>
+
+        <div class="tech-repair-header flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
             <div>
                 <h1 class="text-xl md:text-2xl font-bold text-slate-800"><i class="fas fa-clipboard-check text-sky-500 mr-2"></i> ระบบจัดการใบงานแจ้งซ่อม</h1>
                 <p class="text-sm md:text-base text-slate-500 mt-1">ตรวจสอบรายละเอียดและอัปเดตสถานะให้ผู้แจ้ง</p>
             </div>
-            <a href="technician_home.php?tab=history" onclick="if (window.name === 'mbsTechnicianRepair') { window.close(); setTimeout(() => window.location.replace(this.href), 300); return false; }" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
+            <a href="technician_home.php?tab=history" onclick="if (window.name === 'mbsTechnicianRepair') { window.close(); setTimeout(() => window.location.replace(this.href), 300); return false; }" class="tech-repair-back bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm w-full sm:w-auto">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการ
             </a>
         </div>
@@ -1269,8 +1285,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             confirmButtonColor: '#0284c7',
             confirmButtonText: 'ตกลง'
         }).then((result) => {
-            if (result.isConfirmed) {
-                goBack(); 
+            const isTechnician = <?php echo json_encode($is_tech); ?>;
+
+            if (result.isConfirmed && !isTechnician) {
+                goBack();
             }
         });
     </script>
