@@ -206,6 +206,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Plus Jakarta Sans', 'Kanit', sans-serif; background-color: #f8fafc; }
+
+        #otpRequestAgain[hidden] {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -529,8 +533,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }
 
-            function handleSavePassword(e) {
+        function handleSavePassword(e) {
             e.preventDefault();
+
+            if (countdownExpired('grant')) {
+                renderResetCountdown();
+                Swal.fire(
+                    'สิทธิ์หมดอายุ',
+                    'กรุณาขอรหัส OTP ใหม่ก่อนตั้งรหัสผ่าน',
+                    'error'
+                );
+                return;
+            }
+
+            if (document.getElementById('btnSavePassword').disabled) {
+                return;
+            }
+
             const password = document.getElementById('new_password').value;
             const confirmation = document.getElementById('confirm_password').value;
             const grant = document.getElementById('reset_grant').value;
