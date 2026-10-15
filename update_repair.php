@@ -72,18 +72,56 @@ if (isset($_GET['id'])) {
         die("ไม่พบข้อมูลใบงาน");
     }
 
-    // ตรวจสิทธิ์เจ้าของงาน (ช่างเปิดได้เฉพาะงานของตัวเอง หรืองานที่ยังว่าง)
-    if ($is_tech && !empty($repair['technician_id']) && $repair['technician_id'] != $_SESSION['technician_id']) {
-        die("<div style='text-align:center; padding: 50px; font-family: sans-serif;'><h2 style='color:#ef4444;'>ไม่มีสิทธิ์เข้าถึง</h2><p>ใบงานนี้มีเจ้าหน้าที่ท่านอื่นรับผิดชอบแล้ว คุณไม่สามารถตรวจสอบหรือแก้ไขได้</p></div>");
+    // เจ้าหน้าที่เปิดได้เฉพาะใบงานที่ผูกกับรหัสของบัญชีตนเอง
+    if ($is_tech) {
+        $owner_tech_id = filter_var(
+            $_SESSION['technician_id'] ?? null,
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]]
+        );
+
+        $repair_owner_id = filter_var(
+            $repair['technician_id'] ?? null,
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]]
+        );
+
+        if ($owner_tech_id === false
+            || $repair_owner_id === false
+            || $repair_owner_id !== $owner_tech_id) {
+            http_response_code(403);
+            exit('ไม่อนุญาตให้เข้าถึงใบงานนี้');
+        }
     }
 
     // ✨ ถ้าช่างรับงานผ่าน LINE มาแล้ว แต่เวลา received_at ยังว่าง ให้ประทับเวลาปัจจุบันแบบเรียลไทม์ทันที ✨
     if ($repair && (empty($repair['received_at']) || $repair['received_at'] === '0000-00-00 00:00:00' || $repair['received_at'] === '-')) {
         if ($repair['status'] !== 'รอรับเรื่อง') {
             $auto_rec_time = (!empty($repair['completed_at']) && $repair['completed_at'] !== '0000-00-00 00:00:00') ? $repair['completed_at'] : date('Y-m-d H:i:s');
-            $stmt_fix = $conn->prepare("UPDATE repairs SET received_at = ? WHERE id = ?");
+                        if ($is_tech) {
+                $stmt_fix = $conn->prepare(
+                    "UPDATE repairs
+                     SET received_at = ?
+                     WHERE id = ? AND technician_id = ?"
+                );
+            } else {
+                $stmt_fix = $conn->prepare(
+                    "UPDATE repairs SET received_at = ? WHERE id = ?"
+                );
+            }
+
             if ($stmt_fix) {
-                $stmt_fix->bind_param("si", $auto_rec_time, $id);
+                if ($is_tech) {
+                    $stmt_fix->bind_param(
+                        "sii",
+                        $auto_rec_time,
+                        $id,
+                        $owner_tech_id
+                    );
+                } else {
+                    $stmt_fix->bind_param("si", $auto_rec_time, $id);
+                }
+
                 $stmt_fix->execute();
                 $stmt_fix->close();
                 $repair['received_at'] = $auto_rec_time;
@@ -204,7 +242,32 @@ $show_alert = false;
 $show_asset_alert = false; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
+
+    if ($is_tech) {
+        if (!is_array($repair)
+            || !isset($owner_tech_id)
+            || (int) ($repair['technician_id'] ?? 0) !== $owner_tech_id) {
+            http_response_code(403);
+            exit('ไม่อนุญาตให้บันทึกใบงานนี้');
+        }
+
+        // ฟอร์มเพิ่มอุปกรณ์เดิมไม่มีช่อง id ของใบงาน
+        // ตรวจเลขใบงานจาก POST เฉพาะคำสั่งบันทึกใบงาน
+        if (!isset($_POST['save_asset_only'])) {
+            $posted_repair_id = filter_var(
+                $_POST['id'] ?? null,
+                FILTER_VALIDATE_INT,
+                ['options' => ['min_range' => 1]]
+            );
+
+            if ($posted_repair_id === false
+                || $posted_repair_id !== (int) $repair['id']) {
+                http_response_code(403);
+                exit('เลขใบงานไม่ตรงกับใบงานที่ได้รับอนุญาต');
+            }
+        }
+    }
+
     if (isset($_POST['save_asset_only'])) {
         $acode = trim($_POST['modal_asset_code']);
         $aname = trim($_POST['modal_asset_name']);
@@ -238,8 +301,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $status = $_POST['status'];
         $repair_note = trim($_POST['repair_note']);
         
-        $technician_id = (isset($_POST['technician_id']) && $_POST['technician_id'] !== '') ? intval($_POST['technician_id']) : null;
-        $technician_name = (isset($_POST['technician_name']) && $_POST['technician_name'] !== '') ? trim($_POST['technician_name']) : null;
+                if ($is_tech) {
+            $technician_id = $owner_tech_id;
+            $technician_name = null;
+        } else {
+            $technician_id = (isset($_POST['technician_id']) && $_POST['technician_id'] !== '')
+                ? intval($_POST['technician_id'])
+                : null;
+
+            $technician_name = (isset($_POST['technician_name']) && $_POST['technician_name'] !== '')
+                ? trim($_POST['technician_name'])
+                : null;
+        }
         
         // ตรวจสอบความถูกต้องของรหัสช่างจากฐานข้อมูล ห้ามเชื่อ hidden input 100%
         if ($technician_id) {
@@ -284,12 +357,133 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $final_completed = null;
         }
         
-        // บันทึก repairs.technician_id ควบคู่กับชื่อเสมอ
-        $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_id = ?, technician_name = ?, asset_code = ?, received_at = ?, completed_at = ? WHERE id = ?";
-        $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("sssissssi", $status, $repair_note, $repair_note, $technician_id, $technician_name, $asset_code, $final_received, $final_completed, $update_id);
+        // ตรวจเจ้าของงานซ้ำและล็อกแถวเฉพาะการบันทึกของเจ้าหน้าที่
+        $owner_transaction_started = false;
+        $owner_lock_stmt = null;
 
-        if ($update_stmt->execute()) {
+        try {
+            if ($is_tech) {
+                if (!$conn->begin_transaction()) {
+                    throw new RuntimeException('Cannot start owner check');
+                }
+                $owner_transaction_started = true;
+
+                $owner_lock_stmt = $conn->prepare(
+                    "SELECT id
+                     FROM repairs
+                     WHERE id = ? AND technician_id = ?
+                     FOR UPDATE"
+                );
+
+                if (!$owner_lock_stmt
+                    || !$owner_lock_stmt->bind_param(
+                        "ii",
+                        $update_id,
+                        $owner_tech_id
+                    )
+                    || !$owner_lock_stmt->execute()) {
+                    throw new RuntimeException('Cannot check repair owner');
+                }
+
+                $owner_result = $owner_lock_stmt->get_result();
+
+                if (!$owner_result) {
+                    throw new RuntimeException('Cannot read repair owner');
+                }
+
+                $owner_matches = $owner_result->num_rows === 1;
+                $owner_lock_stmt->close();
+                $owner_lock_stmt = null;
+
+                if (!$owner_matches) {
+                    if (!$conn->rollback()) {
+                        throw new RuntimeException('Cannot release owner check');
+                    }
+                    $owner_transaction_started = false;
+
+                    http_response_code(403);
+                    exit('ผู้รับผิดชอบใบงานเปลี่ยนแล้ว ไม่อนุญาตให้บันทึก');
+                }
+            }
+
+            // บันทึกรหัสและชื่อผู้รับผิดชอบด้วยวิธีเดิม
+            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_id = ?, technician_name = ?, asset_code = ?, received_at = ?, completed_at = ? WHERE id = ?";
+
+            if ($is_tech) {
+                $update_sql .= " AND technician_id = ?";
+            }
+
+            $update_stmt = $conn->prepare($update_sql);
+
+            if (!$update_stmt) {
+                throw new RuntimeException('Cannot prepare repair update');
+            }
+
+            if ($is_tech) {
+                $bound = $update_stmt->bind_param(
+                    "sssissssii",
+                    $status,
+                    $repair_note,
+                    $repair_note,
+                    $technician_id,
+                    $technician_name,
+                    $asset_code,
+                    $final_received,
+                    $final_completed,
+                    $update_id,
+                    $owner_tech_id
+                );
+            } else {
+                $bound = $update_stmt->bind_param(
+                    "sssissssi",
+                    $status,
+                    $repair_note,
+                    $repair_note,
+                    $technician_id,
+                    $technician_name,
+                    $asset_code,
+                    $final_received,
+                    $final_completed,
+                    $update_id
+                );
+            }
+
+            if (!$bound) {
+                throw new RuntimeException('Cannot bind repair update');
+            }
+
+            $update_saved = $update_stmt->execute();
+
+            if ($is_tech) {
+                if (!$update_saved) {
+                    throw new RuntimeException('Cannot save repair');
+                }
+
+                if (!$conn->commit()) {
+                    throw new RuntimeException('Cannot confirm repair update');
+                }
+
+                $owner_transaction_started = false;
+            }
+        } catch (Throwable $error) {
+            if ($owner_lock_stmt instanceof mysqli_stmt) {
+                $owner_lock_stmt->close();
+            }
+
+            if ($owner_transaction_started) {
+                try {
+                    $conn->rollback();
+                } catch (Throwable $rollback_error) {
+                    error_log('Repair owner transaction rollback failed');
+                }
+            }
+
+            error_log('Repair owner check or update failed');
+            http_response_code(500);
+            exit('ไม่สามารถยืนยันผลการบันทึกได้ กรุณาเปิดใบงานตรวจสอบก่อนทำรายการซ้ำ');
+        }
+
+        if ($update_saved) {
             $show_alert = true;
 
             if (!empty($asset_code) && !empty($asset_status)) {
