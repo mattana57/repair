@@ -213,9 +213,11 @@ function verificationPageEscape($value) {
                 <button type="button" id="request-button">
                     ส่งรหัส OTP ยืนยันอีเมล
                 </button>
+                <p id="resend-countdown" hidden></p>
 
                 <form id="otp-form" hidden>
-                    <label for="otp">รหัส OTP 6 หลักจากอีเมล มีอายุ 5 นาที</label>
+                    <label for="otp">รหัส OTP 6 หลักจากอีเมล</label>
+                    <p id="otp-countdown" hidden></p>
                     <input
                         id="otp"
                         name="otp"
@@ -258,19 +260,90 @@ const verifyButton = document.getElementById('verify-button');
 const otpForm = document.getElementById('otp-form');
 const otpInput = document.getElementById('otp');
 const message = document.getElementById('message');
+const otpCountdown = document.getElementById('otp-countdown');
+const resendCountdown = document.getElementById('resend-countdown');
 
 let requestToken = '';
 let busy = false;
+let otpDeadline = 0;
+let resendDeadline = 0;
+let timerId = null;
+let hasRequested = false;
 
 function showMessage(text, success = false) {
     message.textContent = text;
     message.className = 'message ' + (success ? 'success' : 'error');
 }
 
+function remainingSeconds(deadline) {
+    return Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+}
+
+function renderCountdowns() {
+    const otpSeconds = remainingSeconds(otpDeadline);
+    const resendSeconds = remainingSeconds(resendDeadline);
+
+    requestButton.disabled = busy || resendSeconds > 0;
+    requestButton.textContent = hasRequested
+        ? 'ส่งรหัส OTP อีกครั้ง'
+        : 'ส่งรหัส OTP ยืนยันอีเมล';
+
+    resendCountdown.hidden = resendSeconds === 0;
+    resendCountdown.textContent = resendSeconds > 0
+        ? `ขอรหัส OTP ใหม่ได้ใน ${resendSeconds} วินาที`
+        : '';
+
+    const hasOtp = requestToken !== '';
+    otpCountdown.hidden = !hasOtp;
+
+    if (hasOtp) {
+        const minutes = String(Math.floor(otpSeconds / 60))
+            .padStart(2, '0');
+        const seconds = String(otpSeconds % 60)
+            .padStart(2, '0');
+
+        otpCountdown.textContent = otpSeconds > 0
+            ? `รหัส OTP หมดอายุใน ${minutes}:${seconds}`
+            : 'รหัส OTP หมดอายุ กรุณาขอรหัสใหม่';
+
+        otpCountdown.className = otpSeconds > 0 ? 'success' : 'error';
+    }
+
+    verifyButton.disabled = busy || !hasOtp || otpSeconds === 0;
+    otpInput.disabled = busy || !hasOtp || otpSeconds === 0;
+
+    if (otpSeconds === 0
+        && resendSeconds === 0
+        && timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+    }
+}
+
+function startCountdowns(expiresIn, resendAfter) {
+    const now = Date.now();
+
+    otpDeadline = expiresIn === null
+        ? 0
+        : now + expiresIn * 1000;
+
+    resendDeadline = now + resendAfter * 1000;
+
+    if (timerId !== null) {
+        clearInterval(timerId);
+    }
+
+    timerId = setInterval(renderCountdowns, 1000);
+    renderCountdowns();
+}
+
 function setBusy(value) {
     busy = value;
-    requestButton.disabled = value;
-    verifyButton.disabled = value;
+    renderCountdowns();
+}
+
+function isSeconds(value) {
+    return Number.isSafeInteger(value) && value >= 0;
 }
 
 async function callVerification(action, extra = {}) {
@@ -312,10 +385,13 @@ async function callVerification(action, extra = {}) {
 }
 
 requestButton.addEventListener('click', async () => {
-    if (busy) return;
+    if (busy || remainingSeconds(resendDeadline) > 0) {
+        return;
+    }
 
-    setBusy(true);
     requestToken = '';
+    otpDeadline = 0;
+    setBusy(true);
     otpForm.hidden = true;
     otpInput.value = '';
     showMessage('กำลังส่งรหัส OTP ยืนยันอีเมล…');
@@ -325,22 +401,38 @@ requestButton.addEventListener('click', async () => {
 
         if (!data) return;
 
-        if (data.status !== 'success'
-            || typeof data.token !== 'string'
-            || !/^[a-f0-9]{64}$/.test(data.token)) {
+        if (data.status !== 'success') {
+            if (data.code === 'cooldown'
+                && isSeconds(data.resend_after)) {
+                hasRequested = true;
+                startCountdowns(null, data.resend_after);
+            }
+
             throw new Error(data.message || 'ไม่สามารถส่งรหัส OTP ได้');
         }
 
+        if (typeof data.token !== 'string'
+            || !/^[a-f0-9]{64}$/.test(data.token)
+            || !isSeconds(data.expires_in)
+            || !isSeconds(data.resend_after)) {
+            throw new Error('ไม่สามารถอ่านข้อมูลเวลา OTP ได้ กรุณารีเฟรชหน้า');
+        }
+
         requestToken = data.token;
+        hasRequested = true;
         otpForm.hidden = false;
+
+        startCountdowns(data.expires_in, data.resend_after);
         showMessage(data.message || 'ส่งรหัส OTP ไปยังอีเมลแล้ว', true);
-        requestButton.textContent = 'ส่งรหัส OTP อีกครั้ง';
-        otpInput.focus();
 
     } catch (error) {
         showMessage(error.message || 'ไม่สามารถส่งรหัส OTP ได้ กรุณาลองใหม่');
     } finally {
         setBusy(false);
+
+        if (requestToken && remainingSeconds(otpDeadline) > 0) {
+            otpInput.focus();
+        }
     }
 });
 
@@ -348,6 +440,12 @@ otpForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     if (busy) return;
+
+    if (requestToken && remainingSeconds(otpDeadline) === 0) {
+        renderCountdowns();
+        showMessage('รหัส OTP หมดอายุ กรุณาขอรหัสใหม่');
+        return;
+    }
 
     if (!requestToken || !/^[0-9]{6}$/.test(otpInput.value)) {
         showMessage('กรุณาขอรหัสและกรอก OTP เป็นตัวเลข 6 หลัก');
@@ -370,6 +468,14 @@ otpForm.addEventListener('submit', async (event) => {
 
         requestToken = '';
         otpInput.value = '';
+        otpDeadline = 0;
+        resendDeadline = 0;
+
+        if (timerId !== null) {
+            clearInterval(timerId);
+        }
+        timerId = null;
+
         document.getElementById('verification-controls').hidden = true;
         showMessage(data.message || 'ยืนยันอีเมลสำเร็จแล้ว', true);
 
@@ -379,6 +485,9 @@ otpForm.addEventListener('submit', async (event) => {
         setBusy(false);
     }
 });
+
+document.addEventListener('visibilitychange', renderCountdowns);
+renderCountdowns();
 </script>
 <?php endif; ?>
 </body>

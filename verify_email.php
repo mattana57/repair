@@ -175,7 +175,7 @@ if ($target_email === ''
 }
 
 // ---------------------------------------------------------
-// Action 1: ขอรับรหัส OTP (Request OTP)
+// Action 1: ขอรับรหัส OTP
 // ---------------------------------------------------------
 if ($action === 'request_otp') {
     try {
@@ -189,18 +189,92 @@ if ($action === 'request_otp') {
         );
 
         $result_status = $result['status'] ?? 'error';
+        $resend_after = 0;
+
+        // อ่านระยะรอจากค่าตั้งค่าเดิมและเวลาส่งจริงในฐานข้อมูล
+        // ไม่เปลี่ยนจำนวนครั้งหรือกติกาการขอ OTP
+        if (in_array($result_status, ['sent', 'cooldown'], true)) {
+            $timing_config = otpRequestConfig();
+            $cooldown_seconds = $timing_config['account_cooldown_seconds'];
+
+            $wait_row = otpRequestRow(
+                otpRequestStatement(
+                    $conn,
+                    "SELECT
+                        GREATEST(
+                            0,
+                            ? - COALESCE(
+                                TIMESTAMPDIFF(
+                                    SECOND,
+                                    MAX(last_sent_at),
+                                    NOW()
+                                ),
+                                ?
+                            )
+                        ) AS resend_after
+                     FROM auth_requests
+                     WHERE user_id = ?
+                       AND purpose = 'email_verification'",
+                    'iii',
+                    [
+                        $cooldown_seconds,
+                        $cooldown_seconds,
+                        $user_id
+                    ]
+                )
+            );
+
+            if (!$wait_row) {
+                throw new RuntimeException('Cannot read OTP resend timing');
+            }
+
+            $resend_after = max(0, (int) $wait_row['resend_after']);
+        }
 
         if ($result_status === 'sent'
             && isset($result['token'])
             && is_string($result['token'])
             && preg_match('/\A[a-f0-9]{64}\z/', $result['token'])) {
+
+            // อ่านอายุที่เหลือหลัง SMTP ส่งอีเมลเสร็จ
+            // จึงไม่เริ่มนับอายุเต็มใหม่หลังรอส่งอีเมล
+            $timing_row = otpRequestRow(
+                otpRequestStatement(
+                    $conn,
+                    "SELECT
+                        GREATEST(
+                            0,
+                            TIMESTAMPDIFF(SECOND, NOW(), expires_at)
+                        ) AS expires_in
+                     FROM auth_requests
+                     WHERE request_token = ?
+                       AND user_id = ?
+                       AND purpose = 'email_verification'
+                       AND auth_version = ?
+                       AND target_email = ?
+                       AND is_canceled = 0
+                       AND used_at IS NULL
+                       AND verified_at IS NULL",
+                    'siss',
+                    [
+                        $result['token'],
+                        $user_id,
+                        (string) $_SESSION['auth_version'],
+                        $target_email
+                    ]
+                )
+            );
+
+            if (!$timing_row) {
+                throw new RuntimeException('Cannot read OTP expiry timing');
+            }
+
             echo json_encode([
                 'status' => 'success',
-                'message' => 'ระบบได้ส่งรหัส OTP ไปยังอีเมลที่บันทึกไว้แล้ว'
-                    . ' (รหัสมีอายุ '
-                    . (int) $result['expires_in']
-                    . ' วินาที)',
+                'message' => 'ระบบได้ส่งรหัส OTP ไปยังอีเมลที่บันทึกไว้แล้ว',
                 'token' => $result['token'],
+                'expires_in' => max(0, (int) $timing_row['expires_in']),
+                'resend_after' => $resend_after,
             ], JSON_UNESCAPED_UNICODE);
 
             exit();
@@ -222,10 +296,17 @@ if ($action === 'request_otp') {
                 'ไม่สามารถสร้างคำขอหรือส่งอีเมลได้ กรุณาลองใหม่ภายหลัง',
         ];
 
-        echo json_encode([
+        $response_data = [
             'status' => 'error',
             'message' => $messages[$result_status] ?? $messages['error'],
-        ], JSON_UNESCAPED_UNICODE);
+        ];
+
+        if ($result_status === 'cooldown') {
+            $response_data['code'] = 'cooldown';
+            $response_data['resend_after'] = $resend_after;
+        }
+
+        echo json_encode($response_data, JSON_UNESCAPED_UNICODE);
 
     } catch (Throwable $e) {
         error_log('Email verification OTP request failed');
@@ -240,7 +321,7 @@ if ($action === 'request_otp') {
 }
 
 // ---------------------------------------------------------
-// Action 2: ตรวจสอบ OTP (Verify OTP)
+// Action 2: ตรวจสอบ OTP
 // ---------------------------------------------------------
 elseif ($action === 'verify_otp') {
     try {
@@ -253,8 +334,12 @@ elseif ($action === 'verify_otp') {
         );
     } catch (Throwable $e) {
         error_log('Email OTP verification failed');
-        $result = ['status' => 'error', 'message' => 'ไม่สามารถตรวจ OTP ได้ กรุณาลองใหม่ภายหลัง'];
+        $result = [
+            'status' => 'error',
+            'message' => 'ไม่สามารถตรวจ OTP ได้ กรุณาลองใหม่ภายหลัง'
+        ];
     }
+
     echo json_encode($result, JSON_UNESCAPED_UNICODE);
     exit();
 }
