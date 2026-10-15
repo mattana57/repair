@@ -92,8 +92,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $response_token = $fake_token;
 
+        // ใช้เวลาแสดงผลแบบเดียวกันทุกบัญชี
+        // ไม่เปิดเผยว่าพบบัญชีหรือส่งอีเมลสำเร็จหรือไม่
+        $countdown_started_at = microtime(true);
+        $countdown_lifetime = 300;
+
         try {
             require_once __DIR__ . '/otp_request_service.php';
+
+            $countdown_config = otpRequestConfig();
+            $countdown_lifetime = (int) $countdown_config['otp_lifetime_seconds'];
 
             // ส่งค่าดิบให้ Service ตรวจประเภทข้อมูล
             // และนับ IP ก่อนตรวจว่าบัญชีมีอยู่หรือไม่
@@ -115,11 +123,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log('Password reset OTP request failed');
         }
 
+        // หักเวลาที่ใช้ประมวลผลและส่งอีเมลออกแล้ว
+        // ตัวนับนี้ไม่ต่ออายุ OTP และเซิร์ฟเวอร์ยังตรวจวันหมดอายุจริง
+        $countdown_elapsed = max(
+            0,
+            (int) ceil(microtime(true) - $countdown_started_at)
+        );
+
+        $countdown_remaining = max(
+            0,
+            $countdown_lifetime - $countdown_elapsed
+        );
+
         // คงคำตอบกลางทุกกรณี รวมถึงเกินโควตาและส่งเมลล้มเหลว
         echo json_encode([
             'status' => 'success',
             'token' => $response_token,
             'message' => $neutral_message,
+            'expires_in' => $countdown_remaining,
         ], JSON_UNESCAPED_UNICODE);
 
         exit();
@@ -223,8 +244,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-slate-700 mb-2">รหัส OTP 6 หลัก</label>
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <label for="otp_code" class="block text-sm font-bold text-slate-700">
+                            รหัส OTP 6 หลัก
+                        </label>
+                        <span id="otpCountdown" class="text-sm font-bold" style="color: #dc2626;" hidden></span>
+                    </div>
                     <input type="text" id="otp_code" required maxlength="6" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-center text-xl tracking-widest text-slate-800 font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" placeholder="------">
+                    <a id="otpRequestAgain" href="forgot_password.php" class="block mt-3 text-center text-sm font-bold text-indigo-600" hidden>
+                        ขอรหัส OTP ใหม่
+                    </a>
                 </div>
 
                                 <input type="hidden" id="reset_grant" value="">
@@ -236,7 +265,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- แสดงหลังตรวจ OTP ผ่าน; Endpoint ตรวจสิทธิ์ซ้ำทุกครั้ง -->
             <form id="newPasswordForm" class="hidden" onsubmit="handleSavePassword(event)">
-                <p class="text-sm text-indigo-700 mb-5">ตรวจ OTP สำเร็จ กรุณาตั้งรหัสผ่านใหม่ก่อนสิทธิ์หมดอายุ</p>
+                <p class="text-sm text-indigo-700 mb-2">ตรวจ OTP สำเร็จ กรุณาตั้งรหัสผ่านใหม่ก่อนสิทธิ์หมดอายุ</p>
+                <p id="grantCountdown" class="text-sm font-bold mb-5" style="color: #dc2626;" hidden></p>
                 <div class="mb-4">
                     <label for="new_password" class="block text-sm font-bold text-slate-700 mb-2">รหัสผ่านใหม่</label>
                     <input type="password" id="new_password" required autocomplete="new-password"
@@ -267,6 +297,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // กำหนดตัวแปร CSRF Token สำหรับส่งไปกับ API
         const csrfToken = "<?php echo $_SESSION['csrf_token']; ?>";
 
+        let countdownStage = '';
+        let countdownDeadline = 0;
+        let countdownTimer = null;
+
+        function countdownRemaining() {
+            return Math.max(
+                0,
+                Math.ceil((countdownDeadline - Date.now()) / 1000)
+            );
+        }
+
+        function countdownExpired(stage) {
+            return countdownStage === stage
+                && countdownRemaining() === 0;
+        }
+
+        function stopResetCountdown() {
+            if (countdownTimer !== null) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+
+            countdownStage = '';
+            countdownDeadline = 0;
+        }
+
+        function renderResetCountdown() {
+            if (countdownStage === '') {
+                return;
+            }
+
+            const seconds = countdownRemaining();
+            const minutesText = String(
+                Math.floor(seconds / 60)
+            ).padStart(2, '0');
+            const secondsText = String(seconds % 60).padStart(2, '0');
+
+            if (countdownStage === 'otp') {
+                const label = document.getElementById('otpCountdown');
+                label.hidden = false;
+
+                if (seconds > 0) {
+                    label.textContent =
+                        `เหลือเวลา ${minutesText}:${secondsText}`;
+                } else {
+                    label.textContent =
+                        'รหัส OTP หมดอายุ กรุณาขอรหัสใหม่';
+
+                    document.getElementById('otp_code').disabled = true;
+                    document.getElementById('btnReset').disabled = true;
+                    document.getElementById('otpRequestAgain').hidden = false;
+                }
+            }
+
+            if (countdownStage === 'grant') {
+                const label = document.getElementById('grantCountdown');
+                label.hidden = false;
+
+                if (seconds > 0) {
+                    label.textContent =
+                        `เหลือเวลาตั้งรหัสผ่าน ${minutesText}:${secondsText}`;
+                } else {
+                    label.textContent =
+                        'สิทธิ์ตั้งรหัสผ่านหมดอายุ กรุณาขอรหัส OTP ใหม่';
+
+                    document.getElementById('new_password').disabled = true;
+                    document.getElementById('confirm_password').disabled = true;
+                    document.getElementById('btnSavePassword').disabled = true;
+                }
+            }
+
+            if (seconds === 0 && countdownTimer !== null) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+        }
+
+        function startResetCountdown(stage, seconds) {
+            if (!Number.isSafeInteger(seconds) || seconds < 0) {
+                throw new Error('Invalid countdown duration');
+            }
+
+            stopResetCountdown();
+
+            countdownStage = stage;
+            countdownDeadline = Date.now() + seconds * 1000;
+            countdownTimer = setInterval(renderResetCountdown, 1000);
+
+            renderResetCountdown();
+        }
+
+        document.addEventListener(
+            'visibilitychange',
+            renderResetCountdown
+        );
+
         function handleRequestOtp(e) {
             e.preventDefault();
             const btn = document.getElementById('btnRequest');
@@ -284,14 +410,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fetch('', { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
-                if (data.status !== 'success' || typeof data.token !== 'string') {
+                if (data.status !== 'success'
+                    || typeof data.token !== 'string'
+                    || !Number.isSafeInteger(data.expires_in)
+                    || data.expires_in < 0) {
                     throw new Error('request failed');
                 }
+
                 document.getElementById('reset_grant').value = '';
                 document.getElementById('requestForm').classList.add('hidden');
                 document.getElementById('resetForm').classList.remove('hidden');
                 document.getElementById('neutralMessage').innerText = data.message;
                 document.getElementById('reset_token').value = data.token;
+
+                document.getElementById('otp_code').disabled = false;
+                document.getElementById('btnReset').disabled = false;
+                document.getElementById('otpRequestAgain').hidden = true;
+
+                startResetCountdown('otp', data.expires_in);
             })
             .catch(error => {
                 Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
@@ -300,40 +436,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }
 
-                function handleResetPassword(e) {
+        function handleResetPassword(e) {
             e.preventDefault();
+
+            if (countdownExpired('otp')) {
+                renderResetCountdown();
+                Swal.fire(
+                    'รหัส OTP หมดอายุ',
+                    'กรุณาขอรหัส OTP ใหม่',
+                    'error'
+                );
+                return;
+            }
+
             const btn = document.getElementById('btnReset');
+
+            if (btn.disabled) {
+                return;
+            }
+
             btn.disabled = true;
             btn.innerText = 'กำลังตรวจสอบ...';
+
             const formData = new FormData();
             formData.append('csrf_token', csrfToken);
             formData.append('action', 'verify_otp');
-            formData.append('token', document.getElementById('reset_token').value);
-            formData.append('otp', document.getElementById('otp_code').value);
-            fetch('', { method: 'POST', body: formData, cache: 'no-store' })
+            formData.append(
+                'token',
+                document.getElementById('reset_token').value
+            );
+            formData.append(
+                'otp',
+                document.getElementById('otp_code').value
+            );
+
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                cache: 'no-store'
+            })
             .then(response => {
-                if (!response.ok) throw new Error('verification failed');
+                if (!response.ok) {
+                    throw new Error('verification failed');
+                }
+
                 return response.json();
             })
             .then(data => {
-                if (data.status === 'success' && typeof data.reset_grant === 'string') {
-                    document.getElementById('reset_grant').value = data.reset_grant;
+                if (data.status === 'success'
+                    && typeof data.reset_grant === 'string'
+                    && Number.isSafeInteger(data.expires_in)
+                    && data.expires_in >= 0) {
+                    document.getElementById('reset_grant').value =
+                        data.reset_grant;
+
                     document.getElementById('otp_code').value = '';
                     document.getElementById('otp_code').disabled = true;
                     btn.innerText = 'ตรวจ OTP สำเร็จ';
-                    document.getElementById('resetForm').classList.add('hidden');
-                    document.getElementById('newPasswordForm').classList.remove('hidden');
-                    document.getElementById('new_password').focus();
+
+                    document.getElementById('resetForm')
+                        .classList.add('hidden');
+                    document.getElementById('newPasswordForm')
+                        .classList.remove('hidden');
+
+                    startResetCountdown('grant', data.expires_in);
+
+                    if (!countdownExpired('grant')) {
+                        document.getElementById('new_password').focus();
+                    }
                 } else {
-                    btn.disabled = false;
+                    btn.disabled = countdownExpired('otp');
                     btn.innerText = 'ตรวจสอบ OTP';
-                    Swal.fire('ตรวจ OTP ไม่สำเร็จ', data.message || 'กรุณาลองใหม่', 'error');
+                    renderResetCountdown();
+
+                    Swal.fire(
+                        'ตรวจ OTP ไม่สำเร็จ',
+                        data.message || 'กรุณาลองใหม่',
+                        'error'
+                    );
                 }
             })
             .catch(() => {
-                btn.disabled = false;
+                btn.disabled = countdownExpired('otp');
                 btn.innerText = 'ตรวจสอบ OTP';
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถตรวจ OTP ได้ กรุณาลองใหม่', 'error');
+                renderResetCountdown();
+
+                Swal.fire(
+                    'ข้อผิดพลาด',
+                    'ไม่สามารถตรวจ OTP ได้ กรุณาลองใหม่',
+                    'error'
+                );
             });
         }
 
@@ -372,6 +564,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             })
             .then(data => {
                 if (data.status === 'success') {
+                    stopResetCountdown();
+                    document.getElementById('grantCountdown').hidden = true;
                     document.getElementById('new_password').value = '';
                     document.getElementById('confirm_password').value = '';
                     document.getElementById('reset_grant').value = '';
@@ -381,15 +575,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     Swal.fire('สำเร็จ', data.message, 'success')
                     .then(() => window.location.replace('login.php'));
                 } else {
-                    btn.disabled = false;
+                    btn.disabled = countdownExpired('grant');
                     btn.innerText = 'บันทึกรหัสผ่านใหม่';
-                    Swal.fire('ตั้งรหัสผ่านไม่สำเร็จ', data.message || 'กรุณาลองใหม่', 'error');
+                    renderResetCountdown();
+
+                    Swal.fire(
+                        'ตั้งรหัสผ่านไม่สำเร็จ',
+                        data.message || 'กรุณาลองใหม่',
+                        'error'
+                    );
                 }
             })
             .catch(() => {
-                btn.disabled = false;
+                btn.disabled = countdownExpired('grant');
                 btn.innerText = 'บันทึกรหัสผ่านใหม่';
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถยืนยันผลการบันทึกได้ กรุณาลองเข้าสู่ระบบด้วยรหัสผ่านใหม่ หากยังไม่ได้ให้ขอ OTP ใหม่', 'error');
+                renderResetCountdown();
+
+                Swal.fire(
+                    'ข้อผิดพลาด',
+                    'ไม่สามารถยืนยันผลการบันทึกได้ กรุณาลองเข้าสู่ระบบด้วยรหัสผ่านใหม่ หากยังไม่ได้ให้ขอ OTP ใหม่',
+                    'error'
+                );
             });
         }
     </script>
