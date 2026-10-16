@@ -81,11 +81,30 @@ if (!empty($tech_id)) {
     }
 }
 
-// งานเก่าที่ technician_id เป็น NULL หรือ 0 ต้องตรวจเจ้าของงานก่อนเชื่อมด้วย ID
-// ห้ามผูกเจ้าของงานจากชื่ออัตโนมัติเมื่อเปิดหน้านี้
-// ✨ ตรวจเจ้าของงานด้วยรหัสช่างเท่านั้น ห้ามใช้ชื่อหรือ LINE ID เป็นสิทธิ์สำรอง
+// ใช้รหัสเจ้าหน้าที่เป็นหลัก
 $safe_tech_id = intval($tech_id);
 $where = "technician_id = $safe_tech_id";
+
+// รองรับข้อมูลจากขั้นตอน LINE เดิมที่บันทึกชื่อ แต่ยังไม่มีรหัส
+// อ่านเพื่อแสดงผลเท่านั้น ไม่ผูกรหัสหรือแก้ข้อมูลอัตโนมัติ
+$legacy_staff_name = (string) $full_name;
+
+if (trim($legacy_staff_name) !== '') {
+    $escaped_staff_name = $conn->real_escape_string($legacy_staff_name);
+
+    $where = "(
+        technician_id = $safe_tech_id
+        OR (
+            (technician_id IS NULL OR technician_id = 0)
+            AND BINARY technician_name = BINARY '$escaped_staff_name'
+            AND (
+                SELECT COUNT(*)
+                FROM technicians AS legacy_staff
+                WHERE legacy_staff.full_name = '$escaped_staff_name'
+            ) = 1
+        )
+    )";
+}
 
 // 4. ดึงสถิติภาพรวม 4 สถานะ
 $stats = ['total' => 0, 'pending' => 0, 'in_progress' => 0, 'completed' => 0];
