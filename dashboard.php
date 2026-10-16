@@ -4473,7 +4473,7 @@ if (isset($_GET['api_check_hash'])) {
                 <?php endif; ?>
 
                 <?php if (in_array($login_detail, ['', 'success', 'all'], true)): ?>
-                <div id="login-history-table" class="modern-card overflow-hidden flex flex-col scroll-mt-28">
+                <div id="login-history-table" class="modern-card overflow-hidden flex flex-col" style="scroll-margin-top: 12px;">
                     <div class="p-6 border-b border-slate-100 bg-white">
                         <h2 class="text-xl font-extrabold text-slate-800">ประวัติการเข้าสู่ระบบ (Login History)</h2>
                         <p class="text-sm font-medium text-slate-400 mt-0.5">ตรวจสอบการเข้าใช้งานระบบของเจ้าหน้าที่และผู้บริหาร</p>
