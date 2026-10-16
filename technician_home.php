@@ -283,30 +283,132 @@ $current_thai_year = date('Y') + 543;
                 border: 2px solid #c4b5fd;
             }
 
+            .tech-avatar-actions {
+                position: relative;
+            }
+
+            .tech-avatar-actions > summary {
+                position: relative;
+                display: block;
+                width: 64px;
+                height: 64px;
+                list-style: none;
+                cursor: pointer;
+            }
+
+            .tech-avatar-actions > summary::-webkit-details-marker {
+                display: none;
+            }
+
+            .tech-avatar-actions > summary::marker {
+                content: "";
+            }
+
+            .tech-avatar-camera {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 23px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 0 0 32px 32px;
+                background: rgb(31 41 55 / 90%);
+                color: #fff;
+                font-size: 12px;
+            }
+
+            .tech-avatar-action-menu {
+                position: absolute;
+                top: calc(100% + 8px);
+                left: 0;
+                width: 200px;
+                padding: 8px;
+                border: 1px solid rgb(255 255 255 / 12%);
+                border-radius: 16px;
+                background: #272a33;
+                box-shadow: 0 16px 36px rgb(15 23 42 / 25%);
+                z-index: 70;
+            }
+
+            .tech-avatar-action-menu > button {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+                padding: 13px 14px;
+                border: 0;
+                border-radius: 10px;
+                background: transparent;
+                color: #fff;
+                font: inherit;
+                font-size: 14px;
+                font-weight: 700;
+                text-align: left;
+                cursor: pointer;
+            }
+
+            .tech-avatar-action-menu > button:hover,
+            .tech-avatar-action-menu > button:focus-visible {
+                background: rgb(255 255 255 / 10%);
+            }
+
             #tech-profile-viewer[open] {
                 position: fixed;
                 inset: 0;
-                margin: auto;
-                width: min(92vw, 480px);
-                max-height: 85vh;
-                padding: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100vw;
+                height: 100vh;
+                height: 100dvh;
+                max-width: none;
+                max-height: none;
+                margin: 0;
+                padding: 70px 16px;
                 border: 0;
-                border-radius: 20px;
-                background: #fff;
-                color: #1e293b;
+                border-radius: 0;
+                background: transparent;
                 overflow: auto;
             }
 
             #tech-profile-viewer::backdrop {
-                background: rgb(15 23 42 / 75%);
+                background: rgb(15 23 42 / 78%);
+                backdrop-filter: blur(7px);
+                -webkit-backdrop-filter: blur(7px);
+            }
+
+            #tech-profile-viewer .tech-profile-close {
+                position: fixed;
+                top: 16px;
+                right: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 42px;
+                height: 42px;
+                padding: 0;
+                border: 1px solid rgb(255 255 255 / 30%);
+                border-radius: 50%;
+                background: rgb(255 255 255 / 12%);
+                color: #fff;
+                font-size: 21px;
+                cursor: pointer;
+                z-index: 1;
             }
 
             #tech-profile-viewer img {
                 display: block;
-                width: 100%;
-                max-height: 65vh;
+                width: auto;
+                height: auto;
+                max-width: 100%;
+                max-height: calc(100vh - 140px);
+                max-height: calc(100dvh - 140px);
                 object-fit: contain;
+                border: 3px solid #fff;
                 border-radius: 12px;
+                box-shadow: 0 20px 50px rgb(0 0 0 / 30%);
             }
 
             .tech-stats-grid {
@@ -403,22 +505,28 @@ $current_thai_year = date('Y') + 543;
                             <div class="flex items-center gap-3 pb-4 mb-2 border-b border-slate-100">
                                 <div class="shrink-0">
                                     <?php if ($tech_profile_image !== ''): ?>
-                                        <button
-                                            type="button"
-                                            class="relative block"
-                                            onclick="document.getElementById('tech-profile-viewer').showModal()"
-                                            aria-label="ดูรูปโปรไฟล์เจ้าหน้าที่"
-                                        >
-                                            <img
-                                                src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>"
-                                                alt="รูปโปรไฟล์เจ้าหน้าที่"
-                                                class="tech-mobile-photo-large"
-                                            >
-                                            <span class="absolute bottom-0 inset-x-0 rounded-b-full bg-slate-800/90 text-white text-xs py-0.5">
-                                                <i class="fas fa-eye" aria-hidden="true"></i>
-                                                ดูรูป
-                                            </span>
-                                        </button>
+                                        <details class="tech-avatar-actions">
+                                            <summary aria-label="เปิดเมนูรูปโปรไฟล์">
+                                                <img
+                                                    src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>"
+                                                    alt="รูปโปรไฟล์เจ้าหน้าที่"
+                                                    class="tech-mobile-photo-large"
+                                                >
+                                                <span class="tech-avatar-camera">
+                                                    <i class="fas fa-camera" aria-hidden="true"></i>
+                                                </span>
+                                            </summary>
+
+                                            <div class="tech-avatar-action-menu">
+                                                <button
+                                                    type="button"
+                                                    onclick="this.closest('details').removeAttribute('open'); document.getElementById('tech-profile-viewer').showModal();"
+                                                >
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                                    <span>ดูรูปภาพ</span>
+                                                </button>
+                                            </div>
+                                        </details>
                                     <?php else: ?>
                                         <span class="tech-mobile-photo-large bg-indigo-50 inline-flex items-center justify-center text-indigo-500">
                                             <i class="fas fa-user text-2xl" aria-hidden="true"></i>
@@ -476,14 +584,17 @@ $current_thai_year = date('Y') + 543;
     </nav>
 
     <?php if ($tech_profile_image !== ''): ?>
-        <dialog id="tech-profile-viewer">
-            <div class="flex justify-end mb-3">
-                <button type="button"
-                        class="rounded-xl bg-slate-100 text-slate-700 px-4 py-2 text-sm font-semibold"
-                        onclick="document.getElementById('tech-profile-viewer').close()">
-                    ปิดรูป
-                </button>
-            </div>
+        <dialog id="tech-profile-viewer"
+                aria-label="ดูรูปโปรไฟล์เจ้าหน้าที่">
+            <button
+                type="button"
+                class="tech-profile-close"
+                onclick="document.getElementById('tech-profile-viewer').close()"
+                aria-label="ปิดรูปภาพ"
+            >
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+
             <img
                 src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>"
                 alt="รูปโปรไฟล์ของ <?= htmlspecialchars($full_name, ENT_QUOTES, 'UTF-8') ?>"
