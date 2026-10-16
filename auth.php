@@ -79,12 +79,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // คงใช้ REMOTE_ADDR เดิม ไม่อ่าน Header ของ Proxy/ngrok
-    $ip_address = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
-    $attempt_file = __DIR__ . '/uploads/login_attempts_'
-        . md5($ip_address) . '.txt';
-
     try {
+        $ip_address = LoginRateLimit::clientIp($_SERVER);
+
+        $attempt_file = __DIR__ . '/uploads/login_attempts_'
+            . md5($ip_address) . '.txt';
+
         $login_rate_limit = new LoginRateLimit($ip_address);
         $login_rate_limit->resetExpired();
 
@@ -177,7 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['LAST_ACTIVITY'] = time();
 
             // ✨ บันทึกประวัติการเข้าสู่ระบบ (สำเร็จ) ✨
-            $ip_address = $_SERVER['REMOTE_ADDR'];
+            // ใช้ $ip_address ที่ตรวจไว้ก่อนเริ่มตรวจบัญชี
             $log_status = 'สำเร็จ';
             authRecordLoginHistory(
                 $conn,

@@ -11,7 +11,7 @@ $login_limit_view = null;
 
 try {
     $login_limit_view = new LoginRateLimit(
-        (string) ($_SERVER['REMOTE_ADDR'] ?? '')
+        LoginRateLimit::clientIp($_SERVER)
     );
     $login_failed_attempts = $login_limit_view->attempts();
     $login_wait_seconds = $login_limit_view->remaining();

@@ -3,6 +3,53 @@
 // ไม่เริ่ม Session หรือเชื่อมฐานข้อมูล
 class LoginRateLimit
 {
+    public static function clientIp(array $server)
+    {
+        $peer = $server['REMOTE_ADDR'] ?? '';
+
+        if (!is_string($peer)
+            || filter_var($peer, FILTER_VALIDATE_IP) === false) {
+            throw new RuntimeException('Invalid login limit address');
+        }
+
+        $host = $server['HTTP_HOST'] ?? '';
+        $trustedNgrok = $peer === '127.0.0.1'
+            && is_string($host)
+            && strtolower($host)
+                === 'autism-unfreeze-snooze.ngrok-free.dev';
+
+        // การเชื่อมต่อโดยตรงใช้ IP ของผู้เชื่อมต่อจริง
+        if (!$trustedNgrok) {
+            return $peer;
+        }
+
+        // ใช้เฉพาะค่าท้ายรายการที่ ngrok เพิ่มเข้ามา
+        $forwardedFor = $server['HTTP_X_FORWARDED_FOR'] ?? '';
+        $forwardedProto = $server['HTTP_X_FORWARDED_PROTO'] ?? '';
+
+        if (!is_string($forwardedFor)
+            || !is_string($forwardedProto)
+            || strlen($forwardedFor) > 8192
+            || strlen($forwardedProto) > 1024) {
+            throw new RuntimeException('Invalid login proxy headers');
+        }
+
+        $addresses = explode(',', $forwardedFor);
+        $protocols = explode(',', $forwardedProto);
+
+        $clientIp = trim($addresses[count($addresses) - 1]);
+        $protocol = strtolower(
+            trim($protocols[count($protocols) - 1])
+        );
+
+        if ($protocol !== 'https'
+            || filter_var($clientIp, FILTER_VALIDATE_IP) === false) {
+            throw new RuntimeException('Invalid login proxy headers');
+        }
+
+        return $clientIp;
+    }
+
     const MAX_ATTEMPTS = 5;
     const LOCK_SECONDS = 300;
 
