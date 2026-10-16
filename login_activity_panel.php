@@ -110,6 +110,7 @@ try {
     $lh_actions = mbsActivityLabels();
 ?>
 
+<?php if ($lh_user === 0): ?>
 <div class="modern-card overflow-hidden">
     <div class="p-6 border-b border-slate-100">
         <h3 class="text-lg font-extrabold text-slate-800">
@@ -194,7 +195,9 @@ try {
         'lh_people_page'
     ); ?>
 </div>
+<?php endif; ?>
 
+<?php if ($lh_user > 0): ?>
 <div class="modern-card overflow-hidden">
     <div class="p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -283,6 +286,7 @@ try {
         'lh_activity_page'
     ); ?>
 </div>
+<?php endif; ?>
 
 <?php
     $lh_people_result->free();

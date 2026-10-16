@@ -4375,6 +4375,19 @@ if (isset($_GET['api_check_hash'])) {
                 ];
                 ?>
 
+                <?php
+                $login_detail = tp_get('pg_logs_status', '');
+
+                if (!in_array(
+                    $login_detail,
+                    ['', 'success', 'all', 'technician', 'admin', 'executive'],
+                    true
+                )) {
+                    $login_detail = '';
+                }
+                ?>
+
+                <?php if ($login_detail === ''): ?>
                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                     <?php foreach ($login_cards as $login_card): ?>
                         <a
@@ -4422,8 +4435,11 @@ if (isset($_GET['api_check_hash'])) {
 
                     <a
                         href="<?= tp_text(tp_url(
-                            ['tab' => 'login_logs'],
-                            ['pg_logs_status', 'pg_logs_page', 'pg_logs_q']
+                            [
+                                'tab' => 'login_logs',
+                                'pg_logs_status' => 'all',
+                            ],
+                            ['pg_logs_page', 'pg_logs_q']
                         )) ?>"
                         class="font-bold text-indigo-600 hover:underline"
                     >
@@ -4431,11 +4447,30 @@ if (isset($_GET['api_check_hash'])) {
                     </a>
                 </div>
 
-                <?php
-                define('MBS_ACTIVITY_PANEL', true);
-                require __DIR__ . '/login_activity_panel.php';
-                ?>
+                <?php else: ?>
+                    <div>
+                        <a
+                            href="?tab=login_logs"
+                            class="inline-flex items-center gap-2 rounded-xl border border-indigo-100 bg-white px-4 py-2.5 text-sm font-bold text-indigo-600 shadow-sm hover:bg-indigo-50"
+                        >
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                            กลับหน้าสรุปการเข้าสู่ระบบ
+                        </a>
+                    </div>
 
+                    <?php
+                    if (in_array(
+                        $login_detail,
+                        ['technician', 'admin', 'executive'],
+                        true
+                    )) {
+                        define('MBS_ACTIVITY_PANEL', true);
+                        require __DIR__ . '/login_activity_panel.php';
+                    }
+                    ?>
+                <?php endif; ?>
+
+                <?php if (in_array($login_detail, ['success', 'all'], true)): ?>
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 bg-white">
                         <h2 class="text-xl font-extrabold text-slate-800">ประวัติการเข้าสู่ระบบ (Login History)</h2>
@@ -4520,6 +4555,7 @@ if (isset($_GET['api_check_hash'])) {
 
                     <?php tp_footer($logs_paging); ?>
                 </div>
+                <?php endif; ?>
             </div>
 
         </div>
