@@ -217,7 +217,8 @@ $current_thai_year = date('Y') + 543;
             display: none;
         }
 
-        @media (max-width: 639px) and (orientation: portrait) {
+    @media (max-width: 639px),
+       (max-width: 1366px) and (hover: none) and (pointer: coarse) {
             nav .tech-desktop-actions {
                 display: none !important;
             }
@@ -414,6 +415,9 @@ $current_thai_year = date('Y') + 543;
                 box-shadow: 0 20px 50px rgb(0 0 0 / 30%);
             }
 
+        }
+
+        @media (max-width: 639px) and (orientation: portrait) {
             .tech-stats-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 12px;
@@ -1666,7 +1670,7 @@ $current_thai_year = date('Y') + 543;
     <script>
         (() => {
             const portraitMobile = window.matchMedia(
-                '(max-width: 639px) and (orientation: portrait)'
+                '(max-width: 639px), (max-width: 1366px) and (hover: none) and (pointer: coarse)'
             );
 
             function closeProfileOutsidePortrait() {
