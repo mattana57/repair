@@ -2,6 +2,7 @@
 // เรียกใช้ระบบตรวจสิทธิ์ส่วนกลาง (ตรวจสอบ Session, อายุการใช้งาน, และสถานะบัญชี)
 require_once 'auth_guard.php';
 require_once __DIR__ . '/password_policy.php';
+require_once __DIR__ . '/activity_log.php';
 
 // สร้าง CSRF Token สำหรับป้องกันการแนบสคริปต์สวมรอยส่งคำสั่ง (CSRF Protection)
 if (empty($_SESSION['csrf_token'])) {
@@ -281,6 +282,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         }
 
         $link_transaction_started = false;
+
+        mbsActivityLog(
+            $conn,
+            'LINK_ACCOUNT',
+            'user',
+            (int) $link_user_id,
+            'เชื่อมบัญชีกับเจ้าหน้าที่รหัส ' . (int) $link_tech_id
+        );
 
         $_SESSION['account_link_notice'] = [
             'success' => true,
@@ -917,6 +926,17 @@ if (isset($_GET['delete_profile_picture'])
         $profile_commit_attempted = true;
         if (!$conn->commit()) throw new RuntimeException('ยืนยันการบันทึกไม่ได้');
         $profile_started = false;
+
+        mbsActivityLog(
+            $conn,
+            'PROFILE_PHOTO',
+            'user',
+            (int) $profile_id,
+            $profile_delete
+                ? 'ลบรูปโปรไฟล์แอดมิน'
+                : 'อัปเดตรูปโปรไฟล์แอดมิน'
+        );
+
         $account_remove_unused_avatar($profile_old_avatar);
         $profile_title = $profile_delete ? 'ลบรูปโปรไฟล์สำเร็จ!' : 'อัปเดตรูปโปรไฟล์สำเร็จ!';
         $profile_title_json = json_encode($profile_title, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
@@ -1064,6 +1084,15 @@ if (isset($_GET['delete_tech'])) {
             throw new RuntimeException('Archive commit failed');
         }
         $archive_started = false;
+
+        mbsActivityLog(
+            $conn,
+            'ARCHIVE_TECHNICIAN',
+            'technician',
+            (int) $archive_id,
+            'นำเจ้าหน้าที่ออกจาก Dashboard และปิดบัญชีเว็บ'
+        );
+
         $archive_ok = true;
         $archive_message = 'ลบออกจาก Dashboard และปิดบัญชีเว็บแล้ว ข้อมูลเดิมยังเก็บอยู่ในฐานข้อมูล';
     } catch (Throwable $e) {
@@ -1880,6 +1909,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 throw new RuntimeException('ไม่สามารถยืนยันการบันทึกข้อมูลช่างและบัญชีได้');
             }
             $tech_transaction_started = false;
+
+            mbsActivityLog(
+                $conn,
+                $user_id === 0 ? 'CREATE_TECHNICIAN' : 'SAVE_TECHNICIAN',
+                'technician',
+                (int) $tech_id,
+                'บันทึกข้อมูลเจ้าหน้าที่และบัญชี'
+                    . ' — สถานะบัญชี: '
+                    . ($is_active === 1 ? 'เปิดใช้งาน' : 'ระงับ')
+                    . ($account_password !== ''
+                        ? ' — กำหนดรหัสผ่าน'
+                        : '')
+            );
+
             $account_remove_unused_avatar($old_avatar_to_delete);
 
             $msg_success = isset($msg) ? $msg : 'อัปเดตข้อมูลและบัญชีสำเร็จ!';
@@ -2126,6 +2169,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             $admin_commit_attempted = true;
             if (!$conn->commit()) throw new RuntimeException('ยืนยันการบันทึกไม่ได้');
             $admin_transaction_started = false;
+
+            $activity_account_action = $user_id === 0
+                ? 'CREATE_ACCOUNT'
+                : ($password !== '' ? 'RESET_ACCOUNT' : 'SAVE_ACCOUNT');
+
+            mbsActivityLog(
+                $conn,
+                $activity_account_action,
+                'user',
+                (int) $saved_admin_id,
+                'บันทึกบัญชี ' . $role
+                    . ' — สถานะบัญชี: '
+                    . ($is_active === 1 ? 'เปิดใช้งาน' : 'ระงับ')
+            );
+
             $account_remove_unused_avatar($old_admin_avatar);
             $admin_title = $user_id === 0 ? 'เพิ่มข้อมูลผู้ดูแลระบบสำเร็จ!' : 'อัปเดตข้อมูลสำเร็จ!';
             $admin_title_json = json_encode($admin_title, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
@@ -4325,7 +4383,7 @@ if (isset($_GET['api_check_hash'])) {
                                     'tab' => 'login_logs',
                                     'pg_logs_status' => $login_card['filter'],
                                 ],
-                                ['pg_logs_page']
+                                ['pg_logs_page', 'pg_logs_q']
                             )) ?>"
                             class="modern-card block p-5 transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500"
                         >
@@ -4365,13 +4423,18 @@ if (isset($_GET['api_check_hash'])) {
                     <a
                         href="<?= tp_text(tp_url(
                             ['tab' => 'login_logs'],
-                            ['pg_logs_status', 'pg_logs_page']
+                            ['pg_logs_status', 'pg_logs_page', 'pg_logs_q']
                         )) ?>"
                         class="font-bold text-indigo-600 hover:underline"
                     >
                         ดูประวัติทั้งหมด รวมรายการไม่สำเร็จ
                     </a>
                 </div>
+
+                <?php
+                define('MBS_ACTIVITY_PANEL', true);
+                require __DIR__ . '/login_activity_panel.php';
+                ?>
 
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 bg-white">

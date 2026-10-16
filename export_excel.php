@@ -8,6 +8,7 @@ if (!in_array(strtolower($_SESSION['role'] ?? ''), ['admin', 'executive'], true)
 }
 
 require_once 'db_connect.php';
+require_once __DIR__ . '/activity_log.php';
 
 // 1. รับค่าชื่อช่างที่ส่งมาจากการเลือก Dropdown ในหน้า Dashboard
 $filter_tech = isset($_GET['tech']) ? trim($_GET['tech']) : 'all';
@@ -38,6 +39,16 @@ if ($filter_tech !== 'all' && !empty($filter_tech)) {
     $sql = "SELECT * FROM repairs ORDER BY created_at DESC";
     $result = $conn->query($sql);
     $report_title_suffix = "(ภาพรวมระบบทั้งหมด)";
+}
+
+if ($result !== false) {
+    mbsActivityLog(
+        $conn,
+        'EXPORT_EXCEL',
+        'report',
+        null,
+        'สร้างไฟล์รายงาน Excel จากข้อมูลใบงาน'
+    );
 }
 
 // 5. เตรียมข้อมูลส่วนหัวรายงาน

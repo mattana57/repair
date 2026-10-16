@@ -1,6 +1,7 @@
 <?php
 // เรียกใช้ระบบตรวจสิทธิ์ส่วนกลางแทนการเช็คแบบแยกไฟล์
 require_once 'auth_guard.php';
+require_once __DIR__ . '/activity_log.php';
 
 $back_url = 'dashboard.php?tab=repairs';
 $query_params = [];
@@ -499,6 +500,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if ($update_saved) {
+            $activity_action =
+                $status === 'ซ่อมเสร็จแล้ว'
+                && $old_status !== 'ซ่อมเสร็จแล้ว'
+                    ? 'CLOSE_REPAIR'
+                    : 'SAVE_REPAIR';
+
+            mbsActivityLog(
+                $conn,
+                $activity_action,
+                'repair',
+                (int) $update_id,
+                'บันทึกใบงาน #' . (int) $update_id
+                    . ' — สถานะ: ' . $status
+            );
+
             $show_alert = true;
 
             if (!empty($asset_code) && !empty($asset_status)) {

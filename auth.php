@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/session_bootstrap.php';
 require_once 'db_connect.php';
+require_once __DIR__ . '/activity_log.php';
 
 // บันทึกประวัติแยกจากผลการตรวจล็อกอิน
 function authRecordLoginHistory($conn, $username, $role, $ip_address, $status)
@@ -296,6 +297,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($role_lower === 'technician' && strpos($redirect, 'dashboard.php') !== false) {
                 $redirect = "technician_home.php";
             }
+
+            mbsActivityLog(
+                $conn,
+                'LOGIN',
+                'user',
+                (int) $user['id'],
+                'ตรวจสอบบัญชีและเข้าสู่ระบบสำเร็จ'
+            );
 
             header("Location: " . $redirect);
             exit();

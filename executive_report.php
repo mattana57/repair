@@ -8,6 +8,7 @@ if (!in_array(strtolower($_SESSION['role'] ?? ''), ['admin', 'executive'], true)
 }
 
 require_once 'db_connect.php';
+require_once __DIR__ . '/activity_log.php';
 
 // รับค่าจาก URL
 $selected_tech = isset($_GET['tech']) ? trim($_GET['tech']) : 'all';
@@ -123,6 +124,17 @@ if($repairs_list &&$repairs_list->num_rows > 0) {
 
 $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 $thai_year =$selected_year + 543;
+
+if ($repairs_list !== false) {
+    mbsActivityLog(
+        $conn,
+        'OPEN_REPORT',
+        'report',
+        null,
+        'เปิดหน้ารายงาน executive_report.php — เดือน '
+            . $selected_month . ' ปี ' . $thai_year
+    );
+}
 
 if ($selected_tech !== 'all' && !empty($selected_tech)) {$report_title = "รายงานสรุปผลการปฏิบัติงานรายบุคคล ของ " . htmlspecialchars($tech_formal_name) . " (สังกัด: " . htmlspecialchars($tech_department) . ")";
 } else {
