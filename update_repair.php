@@ -86,9 +86,12 @@ if (isset($_GET['id'])) {
             ['options' => ['min_range' => 1]]
         );
 
+        // คงขั้นตอนเดิม: งานที่รหัสว่างเปิดได้
+        // งานที่มีรหัสเจ้าของแล้ว ต้องเป็นเจ้าหน้าที่คนนั้น
         if ($owner_tech_id === false
-            || $repair_owner_id === false
-            || $repair_owner_id !== $owner_tech_id) {
+            || (!empty($repair['technician_id'])
+                && ($repair_owner_id === false
+                    || $repair_owner_id !== $owner_tech_id))) {
             http_response_code(403);
             exit('ไม่อนุญาตให้เข้าถึงใบงานนี้');
         }
@@ -102,7 +105,10 @@ if (isset($_GET['id'])) {
                 $stmt_fix = $conn->prepare(
                     "UPDATE repairs
                      SET received_at = ?
-                     WHERE id = ? AND technician_id = ?"
+                     WHERE id = ?
+                       AND (technician_id = ?
+                            OR technician_id IS NULL
+                            OR technician_id = 0)"
                 );
             } else {
                 $stmt_fix = $conn->prepare(
@@ -246,7 +252,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($is_tech) {
         if (!is_array($repair)
             || !isset($owner_tech_id)
-            || (int) ($repair['technician_id'] ?? 0) !== $owner_tech_id) {
+            || $owner_tech_id === false
+            || (!empty($repair['technician_id'])
+                && (int) $repair['technician_id'] !== $owner_tech_id)) {
             http_response_code(403);
             exit('ไม่อนุญาตให้บันทึกใบงานนี้');
         }
@@ -371,7 +379,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $owner_lock_stmt = $conn->prepare(
                     "SELECT id
                      FROM repairs
-                     WHERE id = ? AND technician_id = ?
+                     WHERE id = ?
+                       AND (technician_id = ?
+                            OR technician_id IS NULL
+                            OR technician_id = 0)
                      FOR UPDATE"
                 );
 
@@ -410,7 +421,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_id = ?, technician_name = ?, asset_code = ?, received_at = ?, completed_at = ? WHERE id = ?";
 
             if ($is_tech) {
-                $update_sql .= " AND technician_id = ?";
+                $update_sql .= " AND (technician_id = ?
+                                     OR technician_id IS NULL
+                                     OR technician_id = 0)";
             }
 
             $update_stmt = $conn->prepare($update_sql);
