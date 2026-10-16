@@ -4357,6 +4357,10 @@ if (isset($_GET['api_check_hash'])) {
                 </div>
 
                 <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    <p class="text-slate-500">
+                        การ์ดนับเฉพาะการเข้าสู่ระบบสำเร็จของทั้งสามบทบาท
+                        จากประวัติทั้งหมดที่ระบบเก็บไว้
+                    </p>
 
                     <a
                         href="<?= tp_text(tp_url(
