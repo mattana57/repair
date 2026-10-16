@@ -7,8 +7,9 @@ const MBS_SESSION_IDLE_TIMEOUT = 28800; // 8 ชั่วโมง
         return;
     }
 
-    // ปรับเฉพาะ HTTP ของ IP ที่ใช้งานอยู่
-    // โดเมนอื่นคง Secure=true / SameSite=None ตามค่าของ Guard เดิม
+    // HTTP ของ IP เดิมใช้ Secure=false
+    // โดเมน HTTPS ใช้ Secure=true แม้ Proxy ส่งเข้า Apache ผ่าน HTTP
+    // ใช้ SameSite=Lax และทดสอบความต่อเนื่องจาก LINE ในเบราว์เซอร์เดียวกัน
     $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
     $https = strtolower((string) ($_SERVER['HTTPS'] ?? ''));
     $direct_https = ($https !== '' && $https !== 'off' && $https !== '0')
@@ -22,7 +23,7 @@ const MBS_SESSION_IDLE_TIMEOUT = 28800; // 8 ชั่วโมง
         'domain' => '',
         'secure' => !$plain_http_ip,
         'httponly' => true,
-        'samesite' => $plain_http_ip ? 'Lax' : 'None',
+        'samesite' => 'Lax',
     ];
 
     // ค่าการเก็บ Session ฝั่ง PHP ใช้อายุเดียวกับการตรวจใน Guard

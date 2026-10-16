@@ -125,9 +125,10 @@ function authGuardRejectSession()
     exit();
 }
 
-// คงการฝากปลายทางของผู้ที่ยังไม่ได้ล็อกอินตามรูปแบบเดิม
+// จำเฉพาะพาธ เพื่อคงโดเมนและโปรโตคอลที่ผู้ใช้เปิดอยู่
+// auth.php ตรวจปลายทางใบงานอีกครั้งก่อนนำไปใช้
 if (!array_key_exists('user_id', $_SESSION)) {
-    $_SESSION['redirect_url'] = "http" . (isset($_SERVER['HTTPS']) ? "s" : "") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    $_SESSION['redirect_url'] = (string) ($_SERVER['REQUEST_URI'] ?? '');
     header('Cache-Control: no-store');
     header('Location: login.php');
     exit();
