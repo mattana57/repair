@@ -4470,7 +4470,7 @@ if (isset($_GET['api_check_hash'])) {
                     ?>
                 <?php endif; ?>
 
-                <?php if (in_array($login_detail, ['success', 'all'], true)): ?>
+                <?php if (in_array($login_detail, ['', 'success', 'all'], true)): ?>
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 bg-white">
                         <h2 class="text-xl font-extrabold text-slate-800">ประวัติการเข้าสู่ระบบ (Login History)</h2>
