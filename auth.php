@@ -264,8 +264,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             record_failed_attempt($attempt_file);
             
             // ✨ บันทึกประวัติการเข้าสู่ระบบ (รหัสผ่านผิด) ✨
-            $ip_address = $_SERVER['REMOTE_ADDR'];
-                        $log_status = 'รหัสผ่านผิด';
+            // ใช้ $ip_address ที่ตรวจไว้ก่อนเริ่มตรวจบัญชี
+            $log_status = 'รหัสผ่านผิด';
             $log_role = 'Unknown';
             authRecordLoginHistory(
                 $conn,
@@ -284,7 +284,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         record_failed_attempt($attempt_file);
         
         // ✨ บันทึกประวัติการเข้าสู่ระบบ (ไม่พบผู้ใช้) ✨
-        $ip_address = $_SERVER['REMOTE_ADDR'];
+        // ใช้ $ip_address ที่ตรวจไว้ก่อนเริ่มตรวจบัญชี
         $log_status = 'ไม่พบชื่อผู้ใช้';
         $log_role = 'Unknown';
         authRecordLoginHistory(
