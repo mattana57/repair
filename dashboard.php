@@ -4265,6 +4265,114 @@ if (isset($_GET['api_check_hash'])) {
 
             <!-- ✨ ส่วนแสดงประวัติการเข้าสู่ระบบ ✨ -->
             <div id="login_logs" class="section <?php echo $active_tab === 'login_logs' ? '' : 'hidden'; ?> space-y-6 no-print">
+                <?php
+                $login_summary_result = tp_query(
+                    $conn,
+                    "SELECT
+                        COUNT(*) AS total,
+                        COALESCE(SUM(LOWER(role) = 'technician'), 0) AS technician,
+                        COALESCE(SUM(LOWER(role) = 'admin'), 0) AS admin,
+                        COALESCE(SUM(LOWER(role) = 'executive'), 0) AS executive
+                     FROM login_logs
+                     WHERE status = 'สำเร็จ'
+                       AND LOWER(role) IN ('admin', 'executive', 'technician')"
+                );
+
+                $login_summary = $login_summary_result->fetch_assoc();
+                $login_summary_result->free();
+
+                $login_cards = [
+                    [
+                        'filter' => 'success',
+                        'title' => 'เข้าสู่ระบบสำเร็จทั้งหมด',
+                        'count' => (int) $login_summary['total'],
+                        'icon' => 'fa-sign-in-alt',
+                        'color' => 'text-violet-600',
+                        'background' => 'bg-violet-50',
+                    ],
+                    [
+                        'filter' => 'technician',
+                        'title' => 'เจ้าหน้าที่',
+                        'count' => (int) $login_summary['technician'],
+                        'icon' => 'fa-user-cog',
+                        'color' => 'text-sky-600',
+                        'background' => 'bg-sky-50',
+                    ],
+                    [
+                        'filter' => 'admin',
+                        'title' => 'แอดมิน',
+                        'count' => (int) $login_summary['admin'],
+                        'icon' => 'fa-user-shield',
+                        'color' => 'text-indigo-600',
+                        'background' => 'bg-indigo-50',
+                    ],
+                    [
+                        'filter' => 'executive',
+                        'title' => 'ผู้บริหาร',
+                        'count' => (int) $login_summary['executive'],
+                        'icon' => 'fa-user-tie',
+                        'color' => 'text-fuchsia-600',
+                        'background' => 'bg-fuchsia-50',
+                    ],
+                ];
+                ?>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <?php foreach ($login_cards as $login_card): ?>
+                        <a
+                            href="<?= tp_text(tp_url(
+                                [
+                                    'tab' => 'login_logs',
+                                    'pg_logs_status' => $login_card['filter'],
+                                ],
+                                ['pg_logs_page']
+                            )) ?>"
+                            class="modern-card block p-5 transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500"
+                        >
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-500">
+                                        <?= tp_text($login_card['title']) ?>
+                                    </p>
+                                    <p class="mt-3 text-3xl font-extrabold text-slate-800">
+                                        <?= number_format($login_card['count']) ?>
+                                        <span class="text-sm font-semibold text-slate-400">
+                                            ครั้ง
+                                        </span>
+                                    </p>
+                                </div>
+
+                                <span class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 <?= tp_text($login_card['background']) ?> <?= tp_text($login_card['color']) ?>">
+                                    <i class="fas <?= tp_text($login_card['icon']) ?> text-xl"
+                                       aria-hidden="true"></i>
+                                </span>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold <?= tp_text($login_card['color']) ?>">
+                                <span>ดูรายละเอียด</span>
+                                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    <p class="text-slate-500">
+                        การ์ดนับเฉพาะการเข้าสู่ระบบสำเร็จของทั้งสามบทบาท
+                        จากประวัติทั้งหมดที่ระบบเก็บไว้
+                    </p>
+
+                    <a
+                        href="<?= tp_text(tp_url(
+                            ['tab' => 'login_logs'],
+                            ['pg_logs_status', 'pg_logs_page']
+                        )) ?>"
+                        class="font-bold text-indigo-600 hover:underline"
+                    >
+                        ดูประวัติทั้งหมด รวมรายการไม่สำเร็จ
+                    </a>
+                </div>
+
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 bg-white">
                         <h2 class="text-xl font-extrabold text-slate-800">ประวัติการเข้าสู่ระบบ (Login History)</h2>
@@ -4283,15 +4391,42 @@ if (isset($_GET['api_check_hash'])) {
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
+                                $login_filter = tp_get('pg_logs_status', '');
+
+                                $login_where = '';
+                                $login_types = '';
+                                $login_values = [];
+
+                                if ($login_filter === 'success') {
+                                    $login_where =
+                                        " WHERE status = 'สำเร็จ'
+                                          AND LOWER(role) IN (
+                                              'admin', 'executive', 'technician'
+                                          )";
+                                } elseif (in_array(
+                                    $login_filter,
+                                    ['admin', 'executive', 'technician'],
+                                    true
+                                )) {
+                                    $login_where =
+                                        " WHERE status = 'สำเร็จ'
+                                          AND LOWER(role) = ?";
+                                    $login_types = 's';
+                                    $login_values = [$login_filter];
+                                }
+
                                 $logs_paging = tp_page(
-                                $conn,
-                                'SELECT * FROM login_logs ORDER BY login_time DESC, id DESC',
-                                'SELECT COUNT(*) AS total FROM login_logs',
-                                '',
-                                [],
-                                'logs',
-                                'login_logs'
-                            );
+                                    $conn,
+                                    'SELECT * FROM login_logs'
+                                        . $login_where
+                                        . ' ORDER BY login_time DESC, id DESC',
+                                    'SELECT COUNT(*) AS total FROM login_logs'
+                                        . $login_where,
+                                    $login_types,
+                                    $login_values,
+                                    'logs',
+                                    'login_logs'
+                                );
 
                             $log_res = $logs_paging['result'];
                                 if($log_res && $log_res->num_rows > 0){
