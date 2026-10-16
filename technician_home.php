@@ -292,6 +292,8 @@ $current_thai_year = date('Y') + 543;
                 display: block;
                 width: 64px;
                 height: 64px;
+                border-radius: 50%;
+                overflow: hidden;
                 list-style: none;
                 cursor: pointer;
             }
@@ -323,10 +325,10 @@ $current_thai_year = date('Y') + 543;
                 position: absolute;
                 top: calc(100% + 8px);
                 left: 0;
-                width: 200px;
-                padding: 8px;
+                width: max-content;
+                padding: 5px;
                 border: 1px solid rgb(255 255 255 / 12%);
-                border-radius: 16px;
+                border-radius: 12px;
                 background: #272a33;
                 box-shadow: 0 16px 36px rgb(15 23 42 / 25%);
                 z-index: 70;
@@ -335,17 +337,18 @@ $current_thai_year = date('Y') + 543;
             .tech-avatar-action-menu > button {
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                width: 100%;
-                padding: 13px 14px;
+                gap: 8px;
+                width: auto;
+                padding: 8px 10px;
                 border: 0;
-                border-radius: 10px;
+                border-radius: 8px;
                 background: transparent;
                 color: #fff;
                 font: inherit;
                 font-size: 14px;
                 font-weight: 700;
                 text-align: left;
+                white-space: nowrap;
                 cursor: pointer;
             }
 
@@ -513,7 +516,7 @@ $current_thai_year = date('Y') + 543;
                                                     class="tech-mobile-photo-large"
                                                 >
                                                 <span class="tech-avatar-camera">
-                                                    <i class="fas fa-camera" aria-hidden="true"></i>
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
                                                 </span>
                                             </summary>
 
