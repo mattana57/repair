@@ -57,8 +57,13 @@ if ($tech_data['approval_status'] !== 'อนุมัติแล้ว') {
 $user_id = $_SESSION['user_id'];
 $full_name = $tech_data['full_name']; // ดึงชื่อล่าสุดจากตาราง technicians โดยตรง
 
-// อ่านรูปที่แอดมินกำหนดไว้ ไม่บันทึกหรือเปลี่ยนข้อมูล
-$tech_profile_image = '';
+// ใช้อวตารเริ่มต้นแบบเดียวกับตาราง Team ฝั่งแอดมิน
+$tech_profile_image =
+    'https://api.dicebear.com/7.x/notionists/svg?seed='
+    . urlencode($full_name)
+    . '&backgroundColor=e2e8f0';
+
+// ถ้าแอดมินกำหนดรูปเจ้าหน้าที่ไว้ ให้ใช้รูปนั้นแทน
 $tech_avatar_path = (string) ($tech_data['avatar_url'] ?? '');
 
 if (preg_match('~\Auploads/[A-Za-z0-9_.-]+\.(?:jpg|jpeg|png|webp|gif)\z~i', $tech_avatar_path)
