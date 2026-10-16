@@ -213,8 +213,8 @@ $current_thai_year = date('Y') + 543;
         }
 
         @media (max-width: 639px) and (orientation: portrait) {
-            .tech-desktop-actions {
-                display: none;
+            nav .tech-desktop-actions {
+                display: none !important;
             }
 
             .tech-mobile-menu,
