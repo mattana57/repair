@@ -58,11 +58,20 @@ class LoginRateLimit
     private $file;
     private $data = ['attempts' => 0, 'last_time' => 0];
 
-    public function __construct($ip)
+    public function __construct($ip, $accountKey = null)
     {
         if (!is_string($ip)
             || filter_var($ip, FILTER_VALIDATE_IP) === false) {
             throw new RuntimeException('Invalid login limit address');
+        }
+
+        if ($accountKey !== null
+            && (!is_string($accountKey)
+                || !preg_match(
+                    '/\A(?:id:[1-9][0-9]*|unknown)\z/',
+                    $accountKey
+                ))) {
+            throw new RuntimeException('Invalid login limit account');
         }
 
         $this->directory = __DIR__ . '/uploads';
@@ -72,8 +81,16 @@ class LoginRateLimit
             throw new RuntimeException('Login limit storage unavailable');
         }
 
-        $this->file = $this->directory
-            . '/login_attempts_' . md5($ip) . '.txt';
+        if ($accountKey === null) {
+            // รองรับชุดทดสอบเดิมที่ส่งเฉพาะ IP
+            $this->file = $this->directory
+                . '/login_attempts_' . md5($ip) . '.txt';
+        } else {
+            $this->file = $this->directory
+                . '/login_account_attempts_'
+                . hash('sha256', $accountKey . "\0" . $ip)
+                . '.txt';
+        }
 
         // ใช้ไฟล์ล็อกแยกที่ไม่ถูกลบเมื่อรีเซ็ตตัวนับ
         $this->handle = @fopen($this->file . '.lock', 'c+b');

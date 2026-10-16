@@ -10,9 +10,23 @@ $login_limit_storage_error = false;
 $login_limit_view = null;
 
 try {
+    $accountKey = $_SESSION['login_limit_account'] ?? 'unknown';
+
+    if (!is_string($accountKey)
+        || !preg_match(
+            '/\A(?:id:[1-9][0-9]*|unknown)\z/',
+            $accountKey
+        )) {
+        $accountKey = 'unknown';
+    }
+
     $login_limit_view = new LoginRateLimit(
-        LoginRateLimit::clientIp($_SERVER)
+        LoginRateLimit::clientIp($_SERVER),
+        $accountKey
     );
+
+    $login_limit_view->resetExpired();
+
     $login_failed_attempts = $login_limit_view->attempts();
     $login_wait_seconds = $login_limit_view->remaining();
 } catch (Throwable $e) {
@@ -105,7 +119,7 @@ try {
                         <?php endif; ?>
 
                         <p class="mt-2 text-xs">
-                            จำนวนครั้งอาจนับร่วมกับบัญชีอื่นที่ใช้อินเทอร์เน็ตเดียวกัน
+                            นับแยกตามบัญชีและ IP ของการเชื่อมต่อที่ใช้เข้าสู่ระบบ
                         </p>
                     </div>
                 <?php endif; ?>

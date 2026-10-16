@@ -79,13 +79,64 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
+    $username = isset($_POST['username'])
+        && is_string($_POST['username'])
+        ? trim($_POST['username']) : '';
+
+    $password = isset($_POST['password'])
+        && is_string($_POST['password'])
+        ? $_POST['password'] : '';
+
     try {
         $ip_address = LoginRateLimit::clientIp($_SERVER);
 
-        $attempt_file = __DIR__ . '/uploads/login_attempts_'
-            . md5($ip_address) . '.txt';
+        $sql = "SELECT id, username, password, full_name, role,
+                       technician_id, is_active, auth_version
+                FROM users WHERE username = ?";
 
-        $login_rate_limit = new LoginRateLimit($ip_address);
+        $stmt = $conn->prepare($sql);
+
+        if (!$stmt
+            || !$stmt->bind_param("s", $username)
+            || !$stmt->execute()) {
+            throw new RuntimeException('Login account lookup failed');
+        }
+
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            throw new RuntimeException('Login account lookup failed');
+        }
+
+        $user = $result->num_rows === 1
+            ? $result->fetch_assoc() : null;
+
+        $accountKey = 'unknown';
+
+        if (is_array($user)) {
+            $accountId = filter_var(
+                $user['id'],
+                FILTER_VALIDATE_INT,
+                ['options' => ['min_range' => 1]]
+            );
+
+            if ($accountId === false) {
+                throw new RuntimeException('Invalid login account');
+            }
+
+            $accountKey = 'id:' . $accountId;
+        }
+
+        // จำไว้เพื่อแสดงตัวนับเท่านั้น
+        // ทุก POST จะค้นหารหัสบัญชีจากฐานข้อมูลใหม่เสมอ
+        $_SESSION['login_limit_account'] = $accountKey;
+
+        $attempt_file = null;
+
+        $login_rate_limit = new LoginRateLimit(
+            $ip_address,
+            $accountKey
+        );
         $login_rate_limit->resetExpired();
 
         if ($login_rate_limit->remaining() > 0) {
@@ -98,25 +149,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         loginRateLimitUnavailable();
     }
 
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
-
     // ตรวจสอบค่าว่างและบันทึกการผิดพลาด
-    if (empty($username) || empty($password)) {
+    if ($username === '' || $password === '') {
         record_failed_attempt($attempt_file);
         $_SESSION['login_error'] = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
         header("Location: login.php");
         exit();
     }
 
-    $sql = "SELECT id, username, password, full_name, role, technician_id, is_active, auth_version FROM users WHERE username = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
+    if (is_array($user)) {
 
         // ตรวจด้วย Hash เท่านั้น ไม่รองรับการเทียบรหัสผ่านแบบ Plain text
         $is_password_correct = is_string($password)
