@@ -395,6 +395,49 @@ $current_thai_year = date('Y') + 543;
                         </summary>
 
                         <div class="tech-mobile-popover">
+                            <div class="flex items-center gap-3 pb-4 mb-2 border-b border-slate-100">
+                                <div class="shrink-0">
+                                    <?php if ($tech_profile_image !== ''): ?>
+                                        <button
+                                            type="button"
+                                            class="relative block"
+                                            onclick="document.getElementById('tech-profile-viewer').showModal()"
+                                            aria-label="ดูรูปโปรไฟล์เจ้าหน้าที่"
+                                        >
+                                            <img
+                                                src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>"
+                                                alt="รูปโปรไฟล์เจ้าหน้าที่"
+                                                class="tech-mobile-photo-large"
+                                            >
+                                            <span class="absolute bottom-0 inset-x-0 rounded-b-full bg-slate-800/90 text-white text-xs py-0.5">
+                                                <i class="fas fa-eye" aria-hidden="true"></i>
+                                                ดูรูป
+                                            </span>
+                                        </button>
+                                    <?php else: ?>
+                                        <span class="tech-mobile-photo-large bg-indigo-50 inline-flex items-center justify-center text-indigo-500">
+                                            <i class="fas fa-user text-2xl" aria-hidden="true"></i>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="min-w-0">
+                                    <p class="font-bold text-sm break-words">
+                                        <?= htmlspecialchars($full_name, ENT_QUOTES, 'UTF-8') ?>
+                                    </p>
+
+                                    <?php if ($tech_profile_english !== ''): ?>
+                                        <p class="text-xs text-slate-400 break-words mt-1">
+                                            <?= htmlspecialchars($tech_profile_english, ENT_QUOTES, 'UTF-8') ?>
+                                        </p>
+                                    <?php endif; ?>
+
+                                    <span class="inline-block mt-2 rounded-lg bg-violet-50 text-violet-600 text-xs font-semibold px-2 py-1">
+                                        เจ้าหน้าที่
+                                    </span>
+                                </div>
+                            </div>
+
                             <a href="verify_email_page.php">
                                 <i class="fas fa-envelope text-indigo-500" aria-hidden="true"></i>
                                 ยืนยันอีเมล
@@ -406,59 +449,7 @@ $current_thai_year = date('Y') + 543;
                         </div>
                     </details>
 
-                    <details class="tech-mobile-profile">
-                        <summary aria-label="ดูโปรไฟล์เจ้าหน้าที่">
-                            <?php if ($tech_profile_image !== ''): ?>
-                                <img
-                                    src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>"
-                                    alt="รูปโปรไฟล์เจ้าหน้าที่"
-                                    class="tech-mobile-photo"
-                                >
-                            <?php else: ?>
-                                <span class="tech-mobile-photo bg-indigo-500 inline-flex items-center justify-center">
-                                    <i class="fas fa-user" aria-hidden="true"></i>
-                                </span>
-                            <?php endif; ?>
-                        </summary>
-
-                        <div class="tech-mobile-popover">
-                            <div class="flex items-center gap-3">
-                                <?php if ($tech_profile_image !== ''): ?>
-                                    <button type="button"
-                                            class="relative shrink-0"
-                                            onclick="document.getElementById('tech-profile-viewer').showModal()"
-                                            aria-label="ดูรูปโปรไฟล์ขนาดใหญ่">
-                                        <img
-                                            src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>"
-                                            alt="ดูรูปโปรไฟล์"
-                                            class="tech-mobile-photo-large"
-                                        >
-                                        <span class="absolute bottom-0 inset-x-0 bg-slate-800/80 text-white rounded-b-full text-xs py-0.5">
-                                            <i class="fas fa-eye" aria-hidden="true"></i>
-                                        </span>
-                                    </button>
-                                <?php else: ?>
-                                    <span class="tech-mobile-photo-large bg-indigo-50 inline-flex items-center justify-center shrink-0 text-indigo-500">
-                                        <i class="fas fa-user text-2xl" aria-hidden="true"></i>
-                                    </span>
-                                <?php endif; ?>
-
-                                <div class="min-w-0">
-                                    <p class="font-bold text-sm break-words">
-                                        <?= htmlspecialchars($full_name, ENT_QUOTES, 'UTF-8') ?>
-                                    </p>
-                                    <?php if ($tech_profile_english !== ''): ?>
-                                        <p class="text-xs text-slate-400 break-words mt-1">
-                                            <?= htmlspecialchars($tech_profile_english, ENT_QUOTES, 'UTF-8') ?>
-                                        </p>
-                                    <?php endif; ?>
-                                    <span class="inline-block mt-2 rounded-lg bg-violet-50 text-violet-600 text-xs font-semibold px-2 py-1">
-                                        เจ้าหน้าที่
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </details>
+                    <!-- โปรไฟล์มือถือย้ายเข้าเมนูแฮมเบอร์เกอร์แล้ว -->
 
                     <div class="tech-desktop-actions flex items-center gap-4">
                     <div class="flex items-center gap-2 bg-indigo-700/50 px-3 py-1.5 rounded-xl border border-indigo-500/30">
