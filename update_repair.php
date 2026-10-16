@@ -313,17 +313,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $technician_id = $owner_tech_id;
             $technician_name = null;
         } else {
-            $technician_id = (isset($_POST['technician_id']) && $_POST['technician_id'] !== '')
-                ? intval($_POST['technician_id'])
-                : null;
-
-            $technician_name = (isset($_POST['technician_name']) && $_POST['technician_name'] !== '')
-                ? trim($_POST['technician_name'])
-                : null;
+            // ใช้เจ้าของใบงานเดิม ไม่รับการเปลี่ยนผู้รับผิดชอบจาก POST
+            $technician_id = $repair['technician_id'] ?? null;
+            $technician_name = $repair['technician_name'] ?? null;
         }
         
-        // ตรวจสอบความถูกต้องของรหัสช่างจากฐานข้อมูล ห้ามเชื่อ hidden input 100%
-        if ($technician_id) {
+        // ฝั่งเจ้าหน้าที่ใช้รหัสจาก Session และค้นชื่อจากฐานข้อมูล
+        if ($is_tech && $technician_id) {
             $chk_t = $conn->prepare("SELECT full_name FROM technicians WHERE id = ?");
             $chk_t->bind_param("i", $technician_id);
             $chk_t->execute();
@@ -335,8 +331,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $technician_name = null;
             }
             $chk_t->close();
-        } else {
-            // ถ้ายกเลิกผู้รับผิดชอบ ให้ล้างรหัสและชื่ออย่างสอดคล้อง
+        } elseif ($is_tech) {
             $technician_name = null;
         }
 
@@ -417,13 +412,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
 
-            // บันทึกรหัสและชื่อผู้รับผิดชอบด้วยวิธีเดิม
-            $update_sql = "UPDATE repairs SET status = ?, repair_note = ?, root_cause = ?, technician_id = ?, technician_name = ?, asset_code = ?, received_at = ?, completed_at = ? WHERE id = ?";
-
             if ($is_tech) {
-                $update_sql .= " AND (technician_id = ?
-                                     OR technician_id IS NULL
-                                     OR technician_id = 0)";
+                $update_sql = "UPDATE repairs
+                    SET status = ?, repair_note = ?, root_cause = ?,
+                        technician_id = ?, technician_name = ?,
+                        asset_code = ?, received_at = ?, completed_at = ?
+                    WHERE id = ?
+                      AND (technician_id = ?
+                           OR technician_id IS NULL
+                           OR technician_id = 0)";
+            } else {
+                // คงผู้รับผิดชอบที่อยู่ในฐานข้อมูล แม้มี POST ปลอมส่งมา
+                $update_sql = "UPDATE repairs
+                    SET status = ?, repair_note = ?, root_cause = ?,
+                        asset_code = ?, received_at = ?, completed_at = ?
+                    WHERE id = ?";
             }
 
             $update_stmt = $conn->prepare($update_sql);
@@ -446,14 +449,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $update_id,
                     $owner_tech_id
                 );
+                
             } else {
                 $bound = $update_stmt->bind_param(
-                    "sssissssi",
+                    "ssssssi",
                     $status,
                     $repair_note,
                     $repair_note,
-                    $technician_id,
-                    $technician_name,
                     $asset_code,
                     $final_received,
                     $final_completed,
@@ -853,7 +855,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             }
                         ?>
                         <div class="mb-4 relative" id="techDropdownContainer">
-                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> มอบหมายช่างผู้รับผิดชอบ</label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> เจ้าหน้าที่ผู้รับผิดชอบ</label>
                             
                             <?php if ($is_tech): ?>
                                 <!-- ล็อกสิทธิ์ผู้รับผิดชอบตามรหัสช่างของ Account ที่กำลังล็อกอิน (กรณีรับงานที่ว่างอยู่ จะผูกกับตัวเองอัตโนมัติ) -->
@@ -868,63 +870,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <p class="text-[11px] text-slate-500 mt-0.5">รับผิดชอบใบงานนี้ (ล็อกสิทธิ์ตามบัญชี)</p>
                                     </div>
                                 </div>
-                            <?php else: ?>
-                                <input type="hidden" name="technician_id" id="technician_id" value="<?php echo htmlspecialchars($repair['technician_id'] ?? ''); ?>">
-                                <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($current_tech_full); ?>">
-                                <div class="flex items-center w-full bg-slate-50 border border-slate-200 rounded-xl overflow-hidden focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-100 transition-all cursor-text shadow-sm" onclick="toggleTechDropdown(event, true)">
-                                    <input type="text" id="techSearchInput" oninput="filterTechDropdown()" onfocus="focusTechSearch(event)" onblur="blurTechSearch(event)" autocomplete="off" class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 focus:outline-none font-medium placeholder-slate-400" placeholder="-- ค้นหาหรือเลือกช่าง --">
-                                    
-                                    <button type="button" class="px-4 py-3 text-slate-400 hover:text-sky-600 focus:outline-none flex items-center justify-center" onclick="toggleTechDropdown(event)">
-                                        <i class="fas fa-caret-down text-lg"></i>
-                                    </button>
-                                </div>
-                                
-                                <div id="techDropdownList" class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl max-h-80 overflow-y-auto hidden flex-col py-3 custom-scrollbar">
-                                    <!-- เลือกค่าว่างส่ง ID ว่าง -->
-                                    <div class="tech-dropdown-item px-4 py-2 mx-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors flex items-center" data-value="" data-search="" onmousedown="selectTech('', '', '-- ยังไม่ระบุผู้รับผิดชอบ --')">
-                                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400">
-                                            <i class="fas fa-user-slash text-xs"></i>
-                                        </div>
-                                        -- ยังไม่ระบุผู้รับผิดชอบ --
+                                                        <?php else: ?>
+                                <?php
+                                    $assigned_name = trim(
+                                        (string) ($repair['technician_name'] ?? '')
+                                    );
+
+                                    $has_assigned_name = $assigned_name !== ''
+                                        && $assigned_name !== '-';
+
+                                    $assigned_display = $has_assigned_name
+                                        ? $assigned_name
+                                        : 'ยังไม่มีเจ้าหน้าที่รับงาน';
+                                ?>
+
+                                <input type="hidden"
+                                       id="technician_name"
+                                       value="<?php echo htmlspecialchars(
+                                           $has_assigned_name ? $assigned_name : '',
+                                           ENT_QUOTES,
+                                           'UTF-8'
+                                       ); ?>">
+
+                                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center shadow-sm">
+                                    <div class="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center mr-4 text-sky-600 shrink-0">
+                                        <i class="fas fa-user-check"></i>
                                     </div>
-                                    
-                                    <?php foreach($techs_by_dept as $dept => $techList): 
-                                        $count = count($techList);
-                                    ?>
-                                        <div class="tech-dept-header flex justify-between items-center px-4 py-2.5 mt-2 mb-1 bg-indigo-50/60 border-y border-indigo-100" data-dept="<?php echo htmlspecialchars($dept); ?>">
-                                            <span class="text-[15px] font-extrabold text-indigo-700 tracking-wide"><?php echo htmlspecialchars($dept); ?></span>
-                                            <span class="text-[10px] font-bold text-indigo-600 bg-white border border-indigo-200 shadow-sm px-2 py-0.5 rounded-md flex items-center">
-                                                <i class="fas fa-users mr-1 opacity-70 text-[9px]"></i> <?php echo $count; ?> คน
-                                            </span>
-                                        </div>
-                                        
-                                        <?php foreach($techList as $t): 
-                                            list($th_name, $en_name) = splitThaiEngName($t['name'], '');
-                                            $searchStr = preg_replace('/\s+/', '', strtolower($th_name . $dept));
-                                        ?>
-                                            <div class="tech-dropdown-item px-4 py-2 mx-2 mb-1 rounded-xl text-sm text-slate-700 font-bold hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer flex justify-between items-center transition-all group" data-value="<?php echo htmlspecialchars($t['name']); ?>" data-display="<?php echo htmlspecialchars($th_name); ?>" data-search="<?php echo htmlspecialchars($searchStr); ?>" data-dept="<?php echo htmlspecialchars($dept); ?>" onmousedown="selectTech('<?php echo htmlspecialchars($t['id'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($t['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($th_name, ENT_QUOTES); ?>')">
-                                                <div class="flex items-center pointer-events-none">
-                                                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors">
-                                                        <i class="fas fa-user text-xs"></i>
-                                                    </div>
-                                                    <div>
-                                                        <span><?php echo htmlspecialchars($th_name); ?></span>
-                                                        <span class="text-[10px] text-slate-400 block -mt-1 font-medium">(รหัส: <?php echo htmlspecialchars($t['id']); ?>)</span>
-                                                    </div>
-                                                </div>
-                                                <div class="flex items-center pointer-events-none">
-                                                    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors">
-                                                        <i class="fas fa-user text-xs"></i>
-                                                    </div>
-                                                    <span><?php echo htmlspecialchars($th_name); ?></span>
-                                                </div>
-                                                <i class="fas fa-check text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity check-icon pointer-events-none"></i>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php endforeach; ?>
+
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-800">
+                                            <?php echo htmlspecialchars(
+                                                $assigned_display,
+                                                ENT_QUOTES,
+                                                'UTF-8'
+                                            ); ?>
+                                        </p>
+
+                                        <p class="text-[11px] text-slate-500 mt-0.5">
+                                            ผู้รับผิดชอบตามข้อมูลใบงาน
+                                        </p>
+                                    </div>
                                 </div>
-                                
-                                <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($repair['technician_name'] ?? ''); ?>">
                             <?php endif; ?>
                         </div>
 
@@ -1193,8 +1179,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('techSearchInput').value = currentTechDisplay || '-- ยังไม่ระบุผู้รับผิดชอบ --';
-            updateTechCheckmarks();
+            const techSearchInput = document.getElementById('techSearchInput');
+
+            if (techSearchInput) {
+                techSearchInput.value = currentTechDisplay || '-- ยังไม่ระบุผู้รับผิดชอบ --';
+                updateTechCheckmarks();
+            }
         });
         <?php endif; ?>
 
@@ -1250,8 +1240,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     e.preventDefault(); 
                     Swal.fire({
                         icon: 'warning',
-                        title: 'ลืมระบุชื่อช่างหรือเปล่าคะ?',
-                        text: 'กรุณาเลือก "ช่างผู้รับผิดชอบ" ก่อนอัปเดตสถานะรับงานหรือปิดงานค่ะ',
+                        title: 'ยังไม่มีข้อมูลผู้รับผิดชอบ',
+                        text: 'ใบงานนี้ยังไม่มีชื่อเจ้าหน้าที่ผู้รับผิดชอบ กรุณาตรวจสอบข้อมูลการรับงานก่อนบันทึกสถานะนี้',
                         confirmButtonColor: '#0284c7',
                         confirmButtonText: 'ตกลงเข้าใจแล้ว'
                     });
