@@ -595,7 +595,7 @@ $current_thai_year = date('Y') + 543;
         /* การ์ดสถิติ */
         .tech-dashboard-ui .tech-stats-grid {
             gap: 16px;
-            margin-bottom: 20px;
+            margin-bottom: clamp(36px, 4vw, 44px);
         }
 
         .tech-dashboard-ui .tech-stats-grid > .modern-card {
