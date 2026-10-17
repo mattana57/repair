@@ -24,13 +24,11 @@ $thYear = $thGet('hy', date('Y'));
 $thStatus = $thGet('hs', 'all');
 $thSearch = $thGet('hq', '');
 
-if ($thMonth !== 'all'
-    && !preg_match('/\A(?:0[1-9]|1[0-2])\z/', $thMonth)) {
+if (!preg_match('/\A(?:0[1-9]|1[0-2])\z/', $thMonth)) {
     $thMonth = date('m');
 }
 
-if ($thYear !== 'all'
-    && !preg_match('/\A[1-9][0-9]{3}\z/', $thYear)) {
+if (!preg_match('/\A[1-9][0-9]{3}\z/', $thYear)) {
     $thYear = date('Y');
 }
 
@@ -879,9 +877,7 @@ rsort($thYears);
                     <details class="th-dropdown" name="th-history-filters">
                         <summary>
                             <span>
-                                <?= $thMonth === 'all'
-                                    ? 'ทุกเดือน'
-                                    : $thEscape($thai_months[(int) $thMonth]) ?>
+                                <?= $thEscape($thai_months[(int) $thMonth]) ?>
                             </span>
                             <i class="fas fa-caret-down" aria-hidden="true"></i>
                         </summary>
@@ -905,9 +901,7 @@ rsort($thYears);
                     <details class="th-dropdown">
                         <summary>
                             <span>
-                                <?= $thYear === 'all'
-                                    ? 'ทุกปี'
-                                    : (int) $thYear + 543 ?>
+                                <?= (int) $thYear + 543 ?>
                             </span>
                             <i class="fas fa-caret-down" aria-hidden="true"></i>
                         </summary>
