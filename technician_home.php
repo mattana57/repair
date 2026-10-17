@@ -486,11 +486,386 @@ $current_thai_year = date('Y') + 543;
             }
         }
     </style>
+
+    <style>
+        body.tech-dashboard-ui {
+            background: #f5f7fc;
+            color: #17213a;
+        }
+
+        .tech-dashboard-ui .tech-topbar {
+            background: linear-gradient(
+                110deg, #3730a3, #4f46e5 65%, #6366f1
+            );
+            border-bottom: 1px solid rgb(255 255 255 / 15%);
+            box-shadow: 0 4px 18px rgb(49 46 129 / 12%);
+        }
+
+        .tech-dashboard-ui .tech-page-shell {
+            max-width: 1320px;
+            padding-top: 24px;
+            padding-bottom: 32px;
+        }
+
+        .tech-dashboard-ui .modern-card {
+            min-width: 0;
+            border: 1px solid #e5eaf4;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgb(30 41 59 / 4%);
+        }
+
+        /* แบนเนอร์ข้อมูลเจ้าหน้าที่ */
+        .tech-dashboard-ui .tech-welcome {
+            padding: 24px;
+            gap: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e4f6;
+            border-radius: 24px;
+            background: linear-gradient(
+                115deg, #fff, #f2efff 72%, #eaf2ff
+            );
+            color: #1e1b4b;
+            box-shadow: 0 6px 24px rgb(79 70 229 / 5%);
+        }
+
+        .tech-dashboard-ui .tech-welcome > div:first-child {
+            min-width: 0;
+            gap: 16px;
+        }
+
+        .tech-dashboard-ui .tech-welcome > div:first-child > div:first-child {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #dcd7fe;
+            background: #e9e5ff;
+            color: #6550da;
+            box-shadow: none;
+        }
+
+        .tech-dashboard-ui .tech-welcome > div:first-child > div:last-child {
+            min-width: 0;
+        }
+
+        .tech-dashboard-ui .tech-welcome .drop-shadow-md {
+            filter: none;
+        }
+
+        .tech-dashboard-ui .tech-welcome h1 {
+            font-size: clamp(22px, 2.2vw, 28px);
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+        }
+
+        .tech-dashboard-ui .tech-welcome h2 {
+            margin-top: 3px;
+            color: #6253bc;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .tech-dashboard-ui .tech-welcome p {
+            margin-top: 4px;
+            color: #778098;
+            font-size: 12px;
+            letter-spacing: 0;
+        }
+
+        .tech-dashboard-ui .tech-welcome > div:last-child {
+            max-width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e1ddf5;
+            background: rgb(255 255 255 / 85%);
+            color: #514590;
+            text-align: left;
+        }
+
+        .tech-dashboard-ui .tech-welcome > div:last-child > span:first-child {
+            color: #85839c;
+            letter-spacing: 0;
+        }
+
+        .tech-dashboard-ui .tech-welcome > div:last-child > span:last-child {
+            overflow-wrap: anywhere;
+        }
+
+        .tech-dashboard-ui .tech-welcome .animate-pulse {
+            animation: none;
+        }
+
+        /* การ์ดสถิติ */
+        .tech-dashboard-ui .tech-stats-grid {
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .tech-dashboard-ui .tech-stats-grid > .modern-card {
+            --stat-color: #7c3aed;
+            --stat-bg: #f3edff;
+            padding: 20px;
+            border-bottom-width: 1px;
+            border-bottom-color: #e5eaf4;
+            border-left: 4px solid var(--stat-color);
+            transition:
+                border-color 150ms ease,
+                box-shadow 150ms ease;
+        }
+
+        .tech-dashboard-ui .tech-stats-grid > .modern-card:nth-child(2) {
+            --stat-color: #d49a16;
+            --stat-bg: #fff7df;
+        }
+
+        .tech-dashboard-ui .tech-stats-grid > .modern-card:nth-child(3) {
+            --stat-color: #4f65df;
+            --stat-bg: #edf1ff;
+        }
+
+        .tech-dashboard-ui .tech-stats-grid > .modern-card:nth-child(4) {
+            --stat-color: #059669;
+            --stat-bg: #e8f8f1;
+        }
+
+        .tech-dashboard-ui .tech-stats-grid > .modern-card:hover {
+            transform: none;
+            border-left-color: var(--stat-color);
+            box-shadow: 0 8px 24px rgb(49 46 129 / 10%);
+        }
+
+        .tech-dashboard-ui .tech-stats-grid > .modern-card > div {
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 0;
+        }
+
+        .tech-dashboard-ui .tech-stats-grid > .modern-card > div > div:first-child {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tech-dashboard-ui .tech-stats-grid > .modern-card > div > div:last-child {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border: 0;
+            border-radius: 14px;
+            background: var(--stat-bg);
+            color: var(--stat-color);
+            font-size: 19px;
+            box-shadow: none;
+        }
+
+        .tech-dashboard-ui .tech-stats-grid .text-4xl {
+            margin-bottom: 5px;
+            color: #202942;
+            font-size: 34px;
+            line-height: 1.15;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tech-dashboard-ui .tech-stats-grid .text-sm {
+            color: #758096;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        /* แท็บเลือกหน้า */
+        .tech-dashboard-ui .tech-tabs {
+            width: fit-content;
+            max-width: 100%;
+            gap: 4px;
+            padding: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e7f2;
+            border-radius: 16px;
+            background: #eaeef7;
+        }
+
+        .tech-dashboard-ui .tech-tabs .capsule-btn {
+            min-height: 42px;
+            padding: 9px 24px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            background: transparent;
+            color: #647089;
+            font-size: 13px;
+            box-shadow: none;
+        }
+
+        .tech-dashboard-ui .tech-tabs .capsule-btn.bg-indigo-600 {
+            background: #fff;
+            color: #4f46c9;
+            border-color: #e2e5f5;
+            box-shadow: 0 2px 7px rgb(49 46 129 / 8%);
+        }
+
+        /* การ์ดกราฟและตัวกรอง */
+        .tech-dashboard-ui #tab-content-dash > .grid {
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .tech-dashboard-ui .tech-chart-card {
+            padding: 22px;
+        }
+
+        .tech-dashboard-ui .tech-chart-card > div:first-child {
+            row-gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tech-dashboard-ui .tech-chart-card h3 {
+            white-space: normal;
+            overflow: visible;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .tech-dashboard-ui .tech-chart-card p {
+            white-space: normal;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .tech-dashboard-ui .tech-chart-card > div:last-child {
+            min-height: 240px;
+            height: 240px;
+            max-height: 240px;
+        }
+
+        .tech-dashboard-ui .tech-chart-card [id$="Container"] > div:first-child {
+            min-height: 36px;
+            border-color: #e3e7f2;
+            background: #f8f9fd;
+            box-shadow: none;
+        }
+
+        /* ตาราง */
+        .tech-dashboard-ui .tech-recent-card {
+            margin-top: 24px;
+            margin-bottom: 24px;
+        }
+
+        .tech-dashboard-ui .tech-recent-card > div:first-child {
+            padding: 20px 22px;
+            gap: 12px;
+        }
+
+        .tech-dashboard-ui main table {
+            width: 100% !important;
+            table-layout: auto !important;
+        }
+
+        .tech-dashboard-ui .tech-recent-card table {
+            min-width: 720px !important;
+        }
+
+        .tech-dashboard-ui #repairsMainCard table {
+            min-width: 1120px !important;
+        }
+
+        .tech-dashboard-ui main table thead {
+            border-bottom: 1px solid #e4e9f6;
+            background: #f0f3fc;
+            color: #59668a;
+        }
+
+        .tech-dashboard-ui main table th {
+            padding: 14px 16px !important;
+            font-size: 11px !important;
+            font-weight: 600;
+            letter-spacing: 0 !important;
+        }
+
+        .tech-dashboard-ui main table td {
+            padding: 15px 16px !important;
+            font-size: 13px !important;
+            line-height: 1.6;
+        }
+
+        .tech-dashboard-ui main table tbody tr:hover {
+            background: #f7f8fe;
+        }
+
+        .tech-dashboard-ui main :is(button, a, input, select, [tabindex]):focus-visible,
+        .tech-dashboard-ui .tech-topbar :is(button, a, summary):focus-visible {
+            outline: 3px solid #a5b4fc;
+            outline-offset: 3px;
+        }
+
+        /* มือถือและแท็บเล็ตขนาดเล็ก */
+        @media (max-width: 767px) {
+            .tech-dashboard-ui .tech-page-shell {
+                padding-top: 16px;
+            }
+
+            .tech-dashboard-ui .tech-welcome {
+                padding: 20px;
+                gap: 16px;
+            }
+
+            .tech-dashboard-ui .tech-welcome > div:last-child {
+                align-self: flex-start;
+            }
+        }
+
+        @media (max-width: 639px) {
+            .tech-dashboard-ui .tech-stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .tech-dashboard-ui .tech-stats-grid > .modern-card {
+                padding: 14px 12px;
+                border-radius: 16px;
+            }
+
+            .tech-dashboard-ui .tech-stats-grid > .modern-card > div {
+                gap: 8px;
+            }
+
+            .tech-dashboard-ui .tech-stats-grid > .modern-card > div > div:last-child {
+                width: 32px;
+                height: 32px;
+                border-radius: 10px;
+                font-size: 15px;
+            }
+
+            .tech-dashboard-ui .tech-stats-grid .text-4xl {
+                font-size: 28px;
+            }
+
+            .tech-dashboard-ui .tech-stats-grid .text-sm {
+                font-size: 11px;
+            }
+
+            .tech-dashboard-ui .tech-tabs {
+                display: flex;
+                width: 100%;
+            }
+
+            .tech-dashboard-ui .tech-tabs .capsule-btn {
+                flex: 1;
+                padding: 9px 12px;
+            }
+
+            .tech-dashboard-ui .tech-chart-card {
+                padding: 18px 16px;
+            }
+
+            .tech-dashboard-ui .tech-recent-card > div:first-child {
+                padding: 18px 16px;
+                align-items: flex-start;
+            }
+        }
+    </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="tech-dashboard-ui flex flex-col min-h-screen">
 
     <!-- Top Navbar -->
-    <nav class="bg-indigo-600 text-white shadow-md sticky top-0 z-40 shrink-0">
+       <nav class="tech-topbar bg-indigo-600 text-white shadow-md sticky top-0 z-40 shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-3">
@@ -624,7 +999,7 @@ $current_thai_year = date('Y') + 543;
     </div>
 
     <main class="flex-1 overflow-y-auto w-full relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="tech-page-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
             <?php
             // ดึงข้อมูลตำแหน่งและฝ่ายงานเพื่อมาแสดงใน Banner
@@ -653,7 +1028,7 @@ $current_thai_year = date('Y') + 543;
             }
             ?>
             <!-- Welcome Banner -->
-            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white shadow-lg mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+            <div class="tech-welcome bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 text-white shadow-lg mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
                 <div class="flex items-center gap-4 relative z-10">
                     <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-inner shrink-0">
                         <i class="<?= $tech_icon ?> text-2xl sm:text-3xl drop-shadow-md"></i>
@@ -719,7 +1094,7 @@ $current_thai_year = date('Y') + 543;
             </div>
 
             <!-- ปุ่มเมนูแท็บแบบ Capsule -->
-            <div class="flex items-center gap-2.5 mb-8">
+            <div class="tech-tabs flex items-center gap-2.5 mb-8">
                 <button onclick="showTab('dash')" id="capsule-dash" class="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-full border border-indigo-600 shadow-md shadow-indigo-200 transition-colors cursor-pointer capsule-btn">
                     หน้าแรก
                 </button>
@@ -734,7 +1109,7 @@ $current_thai_year = date('Y') + 543;
             <div id="tab-content-dash" class="space-y-8 animate-fade-in">
                 <!-- กราฟแถวที่ 1 -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="modern-card p-6 flex flex-col">
+                    <div class="tech-chart-card modern-card p-6 flex flex-col">
                         <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-lg truncate">อุปกรณ์ที่แจ้งซ่อมบ่อยที่สุด</h3>
@@ -875,7 +1250,7 @@ $current_thai_year = date('Y') + 543;
                 </div>
 
                 <!-- ตารางหน้าแรก (สไตล์เดียวกับ Admin) -->
-                <div class="modern-card overflow-hidden flex flex-col mb-12">
+                <div class="tech-recent-card modern-card overflow-hidden flex flex-col mb-12">
                     <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
