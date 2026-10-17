@@ -178,22 +178,12 @@ if (isset($_GET['id'])) {
         }
     }
 
-    // ✨ ดึงข้อมูล ID LINE และ ชื่อจริง จากตาราง line_users เพื่อนำมาโชว์
-    $repair_line_id = $repair['reporter_name'];
-    $repair_real_name = $repair['reporter_name'];
-    if (!empty($repair['reporter_name'])) {
-        $stmt_lu = $conn->prepare("SELECT line_display_name, real_name FROM line_users WHERE line_display_name = ? OR real_name = ? LIMIT 1");
-        if ($stmt_lu) {
-            $stmt_lu->bind_param("ss", $repair['reporter_name'], $repair['reporter_name']);
-            $stmt_lu->execute();
-            $res_lu = $stmt_lu->get_result();
-            if ($row_lu = $res_lu->fetch_assoc()) {
-                if (!empty($row_lu['line_display_name'])) $repair_line_id = $row_lu['line_display_name'];
-                if (!empty($row_lu['real_name'])) $repair_real_name = $row_lu['real_name'];
-            }
-            $stmt_lu->close();
-        }
-    }
+    // แยกชื่อบัญชี LINE กับชื่อที่ผู้แจ้งกรอกตามข้อมูลในใบงาน
+    $repair_line_id = trim((string)($repair['line_display_name'] ?? ''));
+    $repair_real_name = trim((string)($repair['reporter_name'] ?? ''));
+
+    if ($repair_line_id === '') $repair_line_id = '-';
+    if ($repair_real_name === '') $repair_real_name = '-';
 }
 
 $form_action = "update_repair.php?id=" . ($repair['id'] ?? '');
