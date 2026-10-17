@@ -2610,8 +2610,8 @@ if (isset($_GET['api_check_hash'])) {
             </div>
         </header>
 
-        <!-- ✨ ซ่อนความทึบเป็น 0 ไว้ชั่วคราวก่อน เพื่อไม่ให้เห็นจังหวะจอเด้งขึ้นบนสุด ✨ -->
-        <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" style="opacity: 0;">
+        <!-- แสดงข้อมูลหลักได้ทันที แม้ส่วนเสริมหรือ JavaScript โหลดไม่สำเร็จ -->
+        <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             
             <div id="dash" class="section <?php echo $active_tab === 'dash' ? '' : 'hidden'; ?> space-y-6 animate-fade-in no-print">
 
@@ -4061,13 +4061,19 @@ if (isset($_GET['api_check_hash'])) {
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                $reporters_paging = ch_contacts_page($conn, $line_users_map);
-                                ch_contacts_rows($reporters_paging['result'], $line_users_map);
+                                try {
+                                    $reporters_paging = ch_contacts_page($conn, $line_users_map);
+                                    ch_contacts_rows($reporters_paging['result'], $line_users_map);
+                                } catch (Throwable $contactsError) {
+                                    error_log('Admin Contacts load failed: ' . $contactsError->getMessage());
+                                    $reporters_paging = null;
+                                    echo '<tr><td colspan="4" class="px-6 py-8 text-center text-rose-600" role="alert">โหลดประวัติผู้แจ้งไม่สำเร็จ กรุณาตรวจสอบบันทึกข้อผิดพลาดของ PHP</td></tr>';
+                                }
                                 ?>
                             </tbody>
                         </table>
                     </div>
-                    <?php tp_footer($reporters_paging); ?>
+                    <?php if (is_array($reporters_paging)) tp_footer($reporters_paging); ?>
                 </div>
             </div>
 
@@ -5663,6 +5669,13 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         function show(id, preventScrollReset = false) {
+            // Trash อ่านข้อมูลด้วย PHP เมื่อเปิดแท็บจริง ไม่โหลดร่วมกับทุกหน้า
+            if (id === 'trash' && new URLSearchParams(window.location.search).get('tab') !== 'trash') {
+                const target = new URL(window.location.href);
+                target.searchParams.set('tab', 'trash');
+                window.location.assign(target.pathname + target.search);
+                return;
+            }
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));

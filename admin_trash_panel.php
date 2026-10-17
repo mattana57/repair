@@ -1,7 +1,16 @@
 <?php
 if (!defined('MBS_ADMIN_TRASH')) { http_response_code(403); exit('ไม่อนุญาตให้เปิดไฟล์นี้โดยตรง'); }
 $atEscape = static function ($value) { return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); };
-$atData = at_page($conn);
+$atError = false;
+$atData = ['rows'=>[], 'page'=>1, 'pages'=>1, 'total'=>0, 'offset'=>0, 'q'=>'', 'kind'=>'all'];
+if ($active_tab === 'trash') {
+    try {
+        $atData = at_page($conn);
+    } catch (Throwable $trashError) {
+        $atError = true;
+        error_log('Admin Trash load failed: ' . $trashError->getMessage());
+    }
+}
 $atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชีผู้ใช้', 'tech' => 'เจ้าหน้าที่', 'repair' => 'ใบงานแจ้งซ่อม'];
 $atNotice = $_SESSION['admin_trash_notice'] ?? null;
 unset($_SESSION['admin_trash_notice']);
@@ -14,6 +23,9 @@ unset($_SESSION['admin_trash_notice']);
             <p class="text-xs text-slate-500">การกู้คืนบัญชีหรือเจ้าหน้าที่จะไม่เปิดบัญชีเว็บอัตโนมัติ กรุณาตรวจสอบสถานะบัญชีก่อนเปิดใช้งาน</p>
             <?php if (is_array($atNotice)): ?>
             <div role="status" class="p-4 rounded-xl text-sm font-semibold <?= ($atNotice['type'] ?? '') === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' ?>"><?= $atEscape($atNotice['message'] ?? '') ?></div>
+            <?php endif; ?>
+            <?php if ($atError): ?>
+            <div role="alert" class="p-4 rounded-xl bg-rose-50 text-rose-700 text-sm font-semibold">โหลดถังขยะไม่สำเร็จ กรุณาตรวจสอบบันทึกข้อผิดพลาดของ PHP แล้วลองใหม่ ข้อความนี้ไม่ได้หมายความว่าข้อมูลถูกลบ</div>
             <?php endif; ?>
             <form action="dashboard.php" method="get" class="flex flex-wrap gap-3 items-center">
                 <input type="hidden" name="tab" value="trash">
@@ -49,10 +61,11 @@ unset($_SESSION['admin_trash_notice']);
                         </div></td>
                     </tr>
                 <?php endforeach; ?>
-                <?php if (!$atData['rows']): ?><tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">ไม่พบข้อมูลในถังขยะ</td></tr><?php endif; ?>
+                <?php if (!$atError && !$atData['rows']): ?><tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">ไม่พบข้อมูลในถังขยะ</td></tr><?php endif; ?>
                 </tbody>
             </table>
         </div>
+        <?php if (!$atError): ?>
         <div class="flex flex-wrap gap-3 justify-between items-center px-6 py-4 border-t border-slate-100 text-sm text-slate-500">
             <p>แสดงรายการ <?= $atData['total'] ? number_format($atData['offset'] + 1) : '0' ?>–<?= number_format(min($atData['offset'] + 50, $atData['total'])) ?> จากทั้งหมด <?= number_format($atData['total']) ?> รายการ · หน้า <?= $atData['page'] ?> / <?= $atData['pages'] ?></p>
             <nav class="flex flex-wrap gap-2" aria-label="แบ่งหน้าถังขยะ">
@@ -70,6 +83,7 @@ unset($_SESSION['admin_trash_notice']);
             ?>
             </nav>
         </div>
+        <?php endif; ?>
     </div>
 </div>
 <script>
