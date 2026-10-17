@@ -4257,12 +4257,7 @@ if (isset($_GET['api_check_hash'])) {
                     <?php endforeach; ?>
                 </div>
 
-                <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
-                    <p class="text-slate-500">
-                        การ์ดนับเฉพาะการเข้าสู่ระบบสำเร็จของทั้งสามบทบาท
-                        จากประวัติทั้งหมดที่ระบบเก็บไว้
-                    </p>
-
+                <div class="flex flex-wrap items-center justify-end gap-2 text-sm pt-6 md:pt-10">
                     <a
                         href="<?= tp_text(tp_url(
                             [
@@ -4301,12 +4296,108 @@ if (isset($_GET['api_check_hash'])) {
                 <?php endif; ?>
 
                 <?php if (in_array($login_detail, ['', 'success', 'failed'], true)): ?>
-                <div id="login-history-table" class="modern-card overflow-hidden flex flex-col" style="scroll-margin-top: 12px;">
-                    <div class="p-6 border-b border-slate-100 bg-white">
-                        <h2 class="text-xl font-extrabold text-slate-800"><?php echo $login_detail === 'failed' ? 'ประวัติการเข้าสู่ระบบที่ไม่สำเร็จ' : 'Login History'; ?></h2>
-                        <p class="text-sm font-medium text-slate-400 mt-0.5">ตรวจสอบการเข้าใช้งานระบบของเจ้าหน้าที่และผู้บริหาร</p>
-                    </div>
-                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
+                <?php
+                $login_now = new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
+                $login_day = tp_get('pg_logs_day', $login_now->format('j'));
+                if ($login_day !== 'all') $login_day = ctype_digit($login_day) && (int)$login_day >= 1 && (int)$login_day <= 31 ? (string)(int)$login_day : $login_now->format('j');
+                $login_month = tp_get('pg_logs_month', $login_now->format('m'));
+                if ($login_month !== 'all') $login_month = ctype_digit($login_month) && (int)$login_month >= 1 && (int)$login_month <= 12 ? str_pad((string)(int)$login_month, 2, '0', STR_PAD_LEFT) : $login_now->format('m');
+                $login_year = tp_get('pg_logs_year', $login_now->format('Y'));
+                if ($login_year !== 'all' && !preg_match('/^[1-9][0-9]{3}$/D', $login_year)) $login_year = $login_now->format('Y');
+                $login_roles = ['all' => 'ทั้งหมด', 'admin' => 'Admin', 'executive' => 'Executive', 'technician' => 'Technician'];
+                $login_role_colors = ['all' => 'bg-slate-50 text-slate-600', 'admin' => 'bg-purple-100 text-purple-700', 'executive' => 'bg-amber-100 text-amber-700', 'technician' => 'bg-sky-100 text-sky-700'];
+                $login_role = tp_get('pg_logs_role', 'all');
+                if (!isset($login_roles[$login_role])) $login_role = 'all';
+                $login_years = [(int)$login_now->format('Y')];
+                if ($login_year !== 'all') $login_years[] = (int)$login_year;
+                $login_year_result = tp_query($conn, 'SELECT DISTINCT YEAR(login_time) AS year FROM login_logs WHERE login_time IS NOT NULL AND YEAR(login_time) BETWEEN 1000 AND 9999');
+                while ($login_year_row = $login_year_result->fetch_assoc()) $login_years[] = (int)$login_year_row['year'];
+                $login_year_result->free();
+                $login_years = array_unique($login_years);
+                rsort($login_years, SORT_NUMERIC);
+                ?>
+                <style>
+                    #login-history-table.login-logs-fullscreen {position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:10000;margin:0;border-radius:0;background:white;}
+                    #login-history-table.login-logs-fullscreen .login-logs-scroll {flex:1;min-height:0;overflow:auto;}
+                </style>
+                <div id="login-history-table" class="modern-card overflow-hidden flex flex-col bg-white" style="scroll-margin-top: 12px;">
+                    <form id="loginLogsFilterForm" method="get" action="dashboard.php" onsubmit="clearTimeout(loginLogsFilterTimer)" class="p-4 md:p-6 border-b border-slate-100 flex flex-col gap-4 bg-white shrink-0 relative z-30">
+                        <input type="hidden" name="tab" value="login_logs">
+                        <?php if ($login_detail !== ''): ?><input type="hidden" name="pg_logs_status" value="<?= tp_text($login_detail); ?>"><?php endif; ?>
+                        <input type="hidden" id="loginLogsFull" name="pg_logs_full" value="<?= tp_get('pg_logs_full') === '1' ? '1' : '0'; ?>">
+
+                        <div class="flex justify-between items-start w-full">
+                            <div class="shrink-0 flex-1">
+                                <h2 class="text-xl font-extrabold text-slate-800"><?php echo $login_detail === 'failed' ? 'ประวัติการเข้าสู่ระบบที่ไม่สำเร็จ' : 'Login History'; ?></h2>
+                                <p class="text-sm font-medium text-slate-400 mt-0.5">ตรวจสอบการเข้าใช้งานระบบของเจ้าหน้าที่และผู้บริหาร</p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0 ml-4">
+                                <button type="button" onclick="toggleMaximizeLoginLogs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
+                                    <i class="fas fa-expand text-sm md:text-base" id="maximizeLoginLogsIcon"></i>
+                                </button>
+                                <button type="button" onclick="if(document.getElementById('login-history-table').classList.contains('login-logs-fullscreen')) toggleMaximizeLoginLogs(); else show('dash');" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
+                                    <i class="fas fa-times text-sm md:text-base"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
+                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
+                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="loginLogSearch" name="pg_logs_q" value="<?= tp_text(tp_get('pg_logs_q')); ?>" oninput="filterLoginLogs(event); toggleClearBtn('loginLogSearch', 'clearLoginLogSearch');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
+                                <button type="button" id="clearLoginLogSearch" onclick="clearLoginLogsSearch()" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 <?= tp_get('pg_logs_q') === '' ? 'hidden' : 'flex' ?> items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 max-w-full relative z-40">
+                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="login-DayContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'login-Day', filterLoginLogs)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'login-Day')">
+                                        <span id="login-DayText" class="truncate"><?php echo $login_day === 'all' ? 'ทุกวัน' : 'วันที่ ' . tp_text($login_day); ?></span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="login-DayList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:bg-indigo-100" data-value="all" data-display="ทุกวัน" onclick="selectChartDropdown('login-Day', 'all', 'ทุกวัน', filterLoginLogs)">ทุกวัน</div>
+                                        <?php for ($day_number = 1; $day_number <= 31; $day_number++) { echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$day_number}' data-display='วันที่ {$day_number}' onclick=\"selectChartDropdown('login-Day', '{$day_number}', 'วันที่ {$day_number}', filterLoginLogs)\">วันที่ {$day_number}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="loginDay" name="pg_logs_day" value="<?php echo tp_text($login_day); ?>">
+                                </div>
+
+                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="login-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'login-Month', filterLoginLogs)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'login-Month')">
+                                        <span id="login-MonthText" class="truncate"><?php echo $login_month === 'all' ? 'ทุกเดือน' : tp_text($thai_months[(int)$login_month]); ?></span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="login-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:bg-indigo-100" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('login-Month', 'all', 'ทุกเดือน', filterLoginLogs)">ทุกเดือน</div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('login-Month', '{$num_pad}', '{$name}', filterLoginLogs)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="loginMonth" name="pg_logs_month" value="<?php echo tp_text($login_month); ?>">
+                                </div>
+                                <div class="relative w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="login-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'login-Year', filterLoginLogs)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'login-Year')">
+                                        <span id="login-YearText" class="truncate"><?php echo $login_year === 'all' ? 'ทุกปี' : tp_text((int)$login_year + 543); ?></span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="login-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:bg-indigo-100" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('login-Year', 'all', 'ทุกปี', filterLoginLogs)">ทุกปี</div>
+                                        <?php foreach($login_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('login-Year', '{$y}', '{$thai_y}', filterLoginLogs)\">{$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="loginYear" name="pg_logs_year" value="<?php echo tp_text($login_year); ?>">
+                                </div>
+                                <div class="relative w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="login-RoleContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'login-Role', filterLoginLogs)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm text-slate-700 rounded-xl px-3.5 py-2.5 h-[42px] font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'login-Role')">
+                                        <span id="login-RoleText" class="truncate"><?= tp_text($login_roles[$login_role]); ?></span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="login-RoleList" class="chart-dropdown-list absolute z-50 w-[155px] right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col p-2 space-y-1.5">
+                                        <?php foreach ($login_roles as $role_value => $role_label): ?>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all text-center <?= $login_role_colors[$role_value]; ?>" data-value="<?= tp_text($role_value); ?>" data-display="<?= tp_text($role_label); ?>" onclick="selectLoginLogRole('<?= tp_text($role_value); ?>', '<?= tp_text($role_label); ?>')"><?= tp_text($role_label); ?></div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <input type="hidden" id="loginRole" name="pg_logs_role" value="<?= tp_text($login_role); ?>">
+                                </div>
+                            </div> 
+                        </div>
+                    </form>
+
+                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix login-logs-scroll">
                         <table class="w-full text-left whitespace-nowrap min-w-[700px]">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
@@ -4344,6 +4435,25 @@ if (isset($_GET['api_check_hash'])) {
                                     $login_types = 's';
                                     $login_values = [$login_filter];
                                 }
+
+                                // ตัวกรองของ Login History เท่านั้น ใช้เงื่อนไขเดียวกันกับ SELECT และ COUNT
+                                $login_extra = [];
+                                foreach (['day' => $login_day, 'month' => $login_month, 'year' => $login_year] as $part => $value) {
+                                    if ($value !== 'all') {
+                                        $login_extra[] = strtoupper($part) . '(login_time) = ?';
+                                        $login_types .= 'i'; $login_values[] = (int)$value;
+                                    }
+                                }
+                                if ($login_role !== 'all') {
+                                    $login_extra[] = 'LOWER(role) = ?';
+                                    $login_types .= 's'; $login_values[] = $login_role;
+                                }
+                                $login_search = tp_get('pg_logs_q');
+                                if ($login_search !== '') {
+                                    $login_extra[] = "CONCAT_WS(' ', username, role, ip_address, status, login_time, CONCAT(DATE_FORMAT(login_time, '%d/%m/'), YEAR(login_time) + 543)) LIKE ? ESCAPE '!'";
+                                    $login_types .= 's'; $login_values[] = tp_like($login_search);
+                                }
+                                if ($login_extra) $login_where .= ($login_where === '' ? ' WHERE ' : ' AND ') . implode(' AND ', $login_extra);
 
                                 $logs_paging = tp_page(
                                     $conn,
@@ -8118,6 +8228,59 @@ if (isset($_GET['api_check_hash'])) {
                 );
             }, 80);
         }
+
+        // UI controls submit GET filters; PHP filters/counts and limits rows to 50.
+        let loginLogsFilterTimer;
+        function filterLoginLogs(event) {
+            clearTimeout(loginLogsFilterTimer);
+            const form = document.getElementById('loginLogsFilterForm');
+            if (!form) return;
+            if (event && event.type === 'input') {
+                loginLogsFilterTimer = setTimeout(() => form.requestSubmit(), 500);
+            } else form.requestSubmit();
+        }
+        function clearLoginLogsSearch() {
+            document.getElementById('loginLogSearch').value = '';
+            filterLoginLogs();
+        }
+        function selectLoginLogRole(value, label) {
+            document.getElementById('loginRole').value = value;
+            document.getElementById('login-RoleText').innerText = label;
+            filterLoginLogs();
+        }
+        function toggleMaximizeLoginLogs() {
+            const card = document.getElementById('login-history-table');
+            if (!card) return;
+            const icon = document.getElementById('maximizeLoginLogsIcon');
+            const input = document.getElementById('loginLogsFull');
+            if (!card.classList.contains('login-logs-fullscreen')) {
+                const placeholder = document.createElement('div');
+                placeholder.id = 'loginLogsPlaceholder';
+                placeholder.style.height = card.offsetHeight + 'px';
+                card.parentNode.insertBefore(placeholder, card);
+                document.body.appendChild(card);
+                card.classList.add('login-logs-fullscreen');
+                icon.classList.replace('fa-expand', 'fa-compress');
+                input.value = '1';
+            } else {
+                const placeholder = document.getElementById('loginLogsPlaceholder');
+                if (placeholder) { placeholder.parentNode.insertBefore(card, placeholder); placeholder.remove(); }
+                card.classList.remove('login-logs-fullscreen');
+                icon.classList.replace('fa-compress', 'fa-expand');
+                input.value = '0';
+            }
+            const url = new URL(window.location.href);
+            if (input.value === '1') url.searchParams.set('pg_logs_full', '1');
+            else url.searchParams.delete('pg_logs_full');
+            history.replaceState(null, '', url.pathname + url.search + url.hash);
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('loginLogsFull');
+            if (input && input.value === '1' && new URL(window.location.href).searchParams.get('tab') === 'login_logs') toggleMaximizeLoginLogs();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && document.getElementById('login-history-table')?.classList.contains('login-logs-fullscreen')) toggleMaximizeLoginLogs();
+        });
 
         function confirmUnlink(id) {
             Swal.fire({ title: 'ยกเลิกการผูกบัญชี?', text: "เจ้าหน้าที่จะไม่สามารถรับงานผ่าน LINE ได้จนกว่าจะนำรหัสใหม่ไปผูกบัญชีอีกครั้ง", icon: 'warning', showCancelButton: true, confirmButtonColor: '#f97316', confirmButtonText: 'ยืนยันการยกเลิก', cancelButtonText: 'ปิด' }).then((r) => { 
