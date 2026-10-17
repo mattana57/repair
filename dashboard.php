@@ -2848,9 +2848,10 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('equip-Month', 'all', 'ทุกเดือน', renderEquipChart)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('equip-Month', '{$num_pad}', '{$name}', renderEquipChart)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="equipMonth" value="all">
+                                    <input type="hidden" id="equipMonth" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'); ?>">
                                 </div>
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="equip-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Year', renderEquipChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'equip-Year')">
@@ -2858,9 +2859,10 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('equip-Year', 'all', 'ทุกปี', renderEquipChart)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('equip-Year', '{$y}', '{$thai_y}', renderEquipChart)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="equipYear" value="all">
+                                    <input type="hidden" id="equipYear" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y'); ?>">
                                 </div>
                             </div>
                         </div>
@@ -2883,9 +2885,10 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="status-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('status-Month', 'all', 'ทุกเดือน', renderStatusChart)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('status-Month', '{$num_pad}', '{$name}', renderStatusChart)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="statusMonth" value="all">
+                                    <input type="hidden" id="statusMonth" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'); ?>">
                                 </div>
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="status-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Year', renderStatusChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'status-Year')">
@@ -2893,9 +2896,10 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="status-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('status-Year', 'all', 'ทุกปี', renderStatusChart)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('status-Year', '{$y}', '{$thai_y}', renderStatusChart)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="statusYear" value="all">
+                                    <input type="hidden" id="statusYear" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y'); ?>">
                                 </div>
                             </div>
                         </div>
@@ -2919,9 +2923,10 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="loc-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('loc-Month', 'all', 'ทุกเดือน', renderLocChart)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('loc-Month', '{$num_pad}', '{$name}', renderLocChart)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="locMonth" value="all">
+                                    <input type="hidden" id="locMonth" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'); ?>">
                                 </div>
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="loc-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Year', renderLocChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'loc-Year')">
@@ -2929,9 +2934,10 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="loc-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('loc-Year', 'all', 'ทุกปี', renderLocChart)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('loc-Year', '{$y}', '{$thai_y}', renderLocChart)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="locYear" value="all">
+                                    <input type="hidden" id="locYear" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y'); ?>">
                                 </div>
                             </div>
                         </div>
@@ -2953,9 +2959,10 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="tech-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('tech-Month', 'all', 'ทุกเดือน', renderTechChart)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('tech-Month', '{$num_pad}', '{$name}', renderTechChart)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="techMonth" value="all">
+                                    <input type="hidden" id="techMonth" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'); ?>">
                                 </div>
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="tech-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'tech-Year', renderTechChart)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'tech-Year')">
@@ -2963,9 +2970,10 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="tech-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('tech-Year', 'all', 'ทุกปี', renderTechChart)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('tech-Year', '{$y}', '{$thai_y}', renderTechChart)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="techYear" value="all">
+                                    <input type="hidden" id="techYear" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y'); ?>">
                                 </div>
                             </div>
                         </div>
@@ -2994,9 +3002,10 @@ if (isset($_GET['api_check_hash'])) {
                                             <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                         </div>
                                         <div id="rating-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('rating-Month', 'all', 'ทุกเดือน', renderRatingChart)">ทุกเดือน</div>
                                             <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('rating-Month', '{$num_pad}', '{$name}', renderRatingChart)\">{$name}</div>"; } ?>
                                         </div>
-                                        <input type="hidden" id="ratingMonth" value="all">
+                                        <input type="hidden" id="ratingMonth" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'); ?>">
                                     </div>
                                     <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg shrink-0" id="rating-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rating-Year', renderRatingChart)" style="font-family: 'Sarabun', sans-serif;">
                                         <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'rating-Year')">
@@ -3004,9 +3013,10 @@ if (isset($_GET['api_check_hash'])) {
                                             <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                         </div>
                                         <div id="rating-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('rating-Year', 'all', 'ทุกปี', renderRatingChart)">ทุกปี</div>
                                             <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('rating-Year', '{$y}', '{$thai_y}', renderRatingChart)\">{$thai_y}</div>"; } ?>
                                         </div>
-                                        <input type="hidden" id="ratingYear" value="all">
+                                        <input type="hidden" id="ratingYear" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y'); ?>">
                                     </div>
                                 </div>
                             </div>
@@ -3034,9 +3044,10 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="reporter-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('reporter-Month', 'all', 'ทุกเดือน', renderTopReporters)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('reporter-Month', '{$num_pad}', '{$name}', renderTopReporters)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="reporterMonth" value="all">
+                                    <input type="hidden" id="reporterMonth" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'); ?>">
                                 </div>
                                 <div class="relative w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-lg" id="reporter-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'reporter-Year', renderTopReporters)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100" onclick="toggleChartDropdown(event, 'reporter-Year')">
@@ -3044,9 +3055,10 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="reporter-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('reporter-Year', 'all', 'ทุกปี', renderTopReporters)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('reporter-Year', '{$y}', '{$thai_y}', renderTopReporters)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="reporterYear" value="all">
+                                    <input type="hidden" id="reporterYear" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y'); ?>">
                                 </div>
                             </div>
                         </div>
