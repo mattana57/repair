@@ -3,6 +3,15 @@
 function mbsActivityLabels()
 {
     return [
+        'VIEW_DASHBOARD' => 'เปิดหน้า/เปลี่ยนมุมมอง Dashboard',
+        'UI_CLICK' => 'กดเมนู/ปุ่ม/เปิดรายละเอียด',
+        'UI_FILTER' => 'เปลี่ยนตัวกรอง/แก้ไขช่องข้อมูล',
+        'UI_SEARCH' => 'ค้นหาข้อมูล',
+        'UI_SUBMIT' => 'ส่งฟอร์ม/คำขอ (ยังไม่ใช่ผลสำเร็จ)',
+        'TRASH_MOVE' => 'ย้ายข้อมูลเข้าถังขยะสำเร็จ',
+        'TRASH_RESTORE' => 'กู้คืนข้อมูลสำเร็จ',
+        'TRASH_PURGE' => 'ลบข้อมูลถาวรสำเร็จ',
+        'SAVE_ASSET' => 'บันทึกข้อมูลครุภัณฑ์สำเร็จ',
         'LOGIN' => 'เข้าสู่ระบบสำเร็จ',
         'SAVE_REPAIR' => 'บันทึกข้อมูลใบงาน',
         'CLOSE_REPAIR' => 'บันทึกสถานะซ่อมเสร็จ',
@@ -119,27 +128,25 @@ function mbsActivityUrl(array $changes = [])
     );
 }
 
-function mbsActivityPager($page, $pages, $key)
+function mbsActivityPager($page, $pages, $key, $total = 0)
 {
-    echo '<div class="flex flex-wrap items-center justify-end gap-3 p-4 border-t border-slate-100 text-sm">';
-
-    if ($page > 1) {
-        echo '<a class="rounded-xl border border-slate-200 px-4 py-2 font-bold text-indigo-600 hover:bg-indigo-50" href="'
-            . tp_text(mbsActivityUrl([$key => $page - 1]))
-            . '">ก่อนหน้า</a>';
+    $first = $total ? ($page - 1) * 50 + 1 : 0;
+    $last = min($page * 50, $total);
+    echo '<div class="tp-footer"><p class="tp-summary">แสดงรายการ <strong>' . number_format($first) . '–' . number_format($last)
+        . '</strong> จากทั้งหมด <strong>' . number_format($total) . '</strong> รายการ · หน้า ' . number_format($page) . ' / ' . number_format($pages)
+        . '</p><nav class="tp-nav" aria-label="แบ่งหน้ากิจกรรม">';
+    $link = static function ($number, $label) use ($page, $pages, $key) {
+        if ($number < 1 || $number > $pages) echo '<span class="tp-disabled" aria-disabled="true">' . $label . '</span>';
+        elseif ($number === $page) echo '<span class="tp-link tp-current" aria-current="page">' . $label . '</span>';
+        else echo '<a class="tp-link" href="' . tp_text(mbsActivityUrl([$key => $number])) . '">' . $label . '</a>';
+    };
+    $link($page - 1, '‹ ก่อนหน้า');
+    $numbers = array_unique(array_merge([1], range(max(1, $page - 1), min($pages, $page + 1)), [$pages]));
+    sort($numbers); $previous = 0;
+    foreach ($numbers as $number) {
+        if ($previous && $number > $previous + 1) echo '<span class="tp-dots">…</span>';
+        $link($number, number_format($number)); $previous = $number;
     }
-
-    echo '<span class="font-semibold text-slate-500">หน้า '
-        . number_format($page)
-        . ' / '
-        . number_format($pages)
-        . '</span>';
-
-    if ($page < $pages) {
-        echo '<a class="rounded-xl bg-indigo-600 px-4 py-2 font-bold text-white hover:bg-indigo-700" href="'
-            . tp_text(mbsActivityUrl([$key => $page + 1]))
-            . '">ถัดไป</a>';
-    }
-
-    echo '</div>';
+    $link($page + 1, 'ถัดไป ›');
+    echo '</nav></div>';
 }

@@ -47,6 +47,9 @@ if ($tech_data['approval_status'] !== 'อนุมัติแล้ว') {
     exit();
 }
 
+define('MBS_DASHBOARD_ACTIVITY', true);
+require_once __DIR__ . '/dashboard_activity.php';
+
 // ====================================================================
 // ✅ สามารถดึงข้อมูลได้อย่างปลอดภัย 100%
 // ====================================================================
@@ -2508,5 +2511,6 @@ if (isset($_GET['th_fragment'])
         });
     </script>
 
+<?php mbsDashboardActivityScript(); ?>
 </body>
 </html>

@@ -9,6 +9,9 @@ if (!in_array(strtolower($_SESSION['role'] ?? ''), ['admin', 'executive'], true)
 
 require_once 'db_connect.php';
 
+define('MBS_DASHBOARD_ACTIVITY', true);
+require_once __DIR__ . '/dashboard_activity.php';
+
 $conn->set_charset("utf8mb4");
 
 // ✨ ระบบอัปโหลดรูปโปรไฟล์ผู้บริหาร (ล็อกเป้าบันทึกลงบัญชีผู้บริหารโดยตรง) ✨
@@ -33,6 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile_picture
                 $stmt = $conn->prepare("UPDATE users SET avatar_url=? WHERE id=?");
                 $stmt->bind_param("si", $target_path, $target_user_id);
                 $stmt->execute();
+                if ($stmt->affected_rows > 0) mbsActivityLog($conn, 'PROFILE_PHOTO', 'user', $target_user_id, 'จัดการรูปโปรไฟล์ผู้บริหารสำเร็จ');
                 
                 echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'อัปเดตรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect location.reload(); }); });</script>";
             }
@@ -52,6 +56,7 @@ if (isset($_GET['delete_profile_picture'])) {
     $stmt = $conn->prepare("UPDATE users SET avatar_url=NULL WHERE id=?");
     $stmt->bind_param("i", $target_user_id);
     $stmt->execute();
+                if ($stmt->affected_rows > 0) mbsActivityLog($conn, 'PROFILE_PHOTO', 'user', $target_user_id, 'จัดการรูปโปรไฟล์ผู้บริหารสำเร็จ');
     echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบรูปโปรไฟล์สำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect location.href = '?tab=' + (sessionStorage.getItem('activeTabBeforeRefresh') || 'dash'); }); });</script>";
 }
 
@@ -4166,5 +4171,6 @@ if (isset($_GET['api_check_hash'])) {
         setInterval(autoRefreshAllData, 1000);
         window.addEventListener('focus', autoRefreshAllData);
     </script>
+<?php mbsDashboardActivityScript(); ?>
 </body>
 </html>

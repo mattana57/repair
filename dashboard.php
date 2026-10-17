@@ -42,6 +42,9 @@ if ($current_role === 'executive') {
     exit();
 }
 
+define('MBS_DASHBOARD_ACTIVITY', true);
+require_once __DIR__ . '/dashboard_activity.php';
+
 define('MBS_ADMIN_TRASH', true);
 require_once __DIR__ . '/admin_trash.php';
 
@@ -974,7 +977,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
         $stmt = $conn->prepare("UPDATE assets SET asset_code=?, asset_name=?, category=?, status=? WHERE id=? AND deleted_at IS NULL");
         $stmt->bind_param("ssssi", $asset_code, $asset_name, $category, $status, $asset_id);
     }
-    $stmt->execute();
+    $asset_saved = $stmt->execute();
+    if ($asset_saved) mbsActivityLog($conn, 'SAVE_ASSET', 'asset', empty($asset_id) ? $conn->insert_id : (int)$asset_id, 'บันทึกข้อมูลครุภัณฑ์ผ่าน Dashboard');
     echo "<script>$js_redirect</script>";
 }
 
@@ -4165,6 +4169,13 @@ if (isset($_GET['api_check_hash'])) {
                 $login_summary = $login_summary_result->fetch_assoc();
                 $login_summary_result->free();
 
+                $activity_summary = ['admin' => 0, 'executive' => 0, 'technician' => 0];
+                try {
+                    $activity_counts = tp_query($conn, "SELECT role, COUNT(*) AS total FROM user_activity_logs WHERE role IN ('admin','executive','technician') GROUP BY role");
+                    while ($activity_count = $activity_counts->fetch_assoc()) $activity_summary[$activity_count['role']] = (int)$activity_count['total'];
+                    $activity_counts->free();
+                } catch (Throwable $activityError) { error_log('Activity summary load failed'); }
+
                 $login_cards = [
                     [
                         'filter' => 'success',
@@ -4177,7 +4188,7 @@ if (isset($_GET['api_check_hash'])) {
                     [
                         'filter' => 'technician',
                         'title' => 'เจ้าหน้าที่',
-                        'count' => (int) $login_summary['technician'],
+                        'count' => (int) $activity_summary['technician'],
                         'icon' => 'fa-user-cog',
                         'color' => 'text-sky-600',
                         'background' => 'bg-sky-50',
@@ -4185,7 +4196,7 @@ if (isset($_GET['api_check_hash'])) {
                     [
                         'filter' => 'admin',
                         'title' => 'แอดมิน',
-                        'count' => (int) $login_summary['admin'],
+                        'count' => (int) $activity_summary['admin'],
                         'icon' => 'fa-user-shield',
                         'color' => 'text-indigo-600',
                         'background' => 'bg-indigo-50',
@@ -4193,7 +4204,7 @@ if (isset($_GET['api_check_hash'])) {
                     [
                         'filter' => 'executive',
                         'title' => 'ผู้บริหาร',
-                        'count' => (int) $login_summary['executive'],
+                        'count' => (int) $activity_summary['executive'],
                         'icon' => 'fa-user-tie',
                         'color' => 'text-fuchsia-600',
                         'background' => 'bg-fuchsia-50',
@@ -4233,7 +4244,7 @@ if (isset($_GET['api_check_hash'])) {
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <p class="text-sm font-bold text-slate-500">
-                                        <?= tp_text($login_card['title']) ?>
+                                        <?= tp_text($login_card['title']) ?><?php if ($login_card['filter'] !== 'success'): ?><span class="block text-xs font-medium mt-1">กิจกรรมการใช้งาน</span><?php endif; ?>
                                     </p>
                                     <p class="mt-3 text-3xl font-extrabold text-slate-800">
                                         <?= number_format($login_card['count']) ?>
@@ -4480,7 +4491,7 @@ if (isset($_GET['api_check_hash'])) {
                                         if (strtolower($log['role']) === 'technician') $roleBadge = 'bg-sky-100 text-sky-700';
 
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                            <td class='px-6 py-4 align-middle text-slate-700 font-medium'>" . (date('d/m/', strtotime($log['login_time'])) . ((int)date('Y', strtotime($log['login_time'])) + 543)) . "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>" . date("H:i:s", strtotime($log['login_time'])) . "</div>" . "</td>
+                                            <td class='px-6 py-4 align-middle text-slate-700 font-medium'>" . (date('d/m/', strtotime($log['login_time'])) . ((int)date('Y', strtotime($log['login_time'])) + 543)) . "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>" . date("H:i", strtotime($log['login_time'])) . "</div>" . "</td>
                                             <td class='px-6 py-4 align-middle font-bold text-slate-800'>" . htmlspecialchars($log['username']) . "</td>
                                             <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleBadge}'>" . htmlspecialchars($log['role'] ?? 'N/A') . "</span></td>
                                             <td class='px-6 py-4 align-middle text-center text-slate-500 font-mono'>" . htmlspecialchars($log['ip_address']) . "</td>
@@ -4816,27 +4827,44 @@ if (isset($_GET['api_check_hash'])) {
                         <!-- ตัวกรอง (ถ้ามี) -->
                         <div id="historyModalFilterGroup" class="hidden items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0">
                             
-                            <div class="relative w-[110px] portrait:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Month', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
-                                <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-3 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Month')">
-                                    <span id="history-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
-                                    <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-DayContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Day', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Day')">
+                                        <span id="history-DayText" class="truncate"><?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j') === 'all' ? 'ทุกวัน' : 'วันที่ ' . tp_text((new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j')); ?></span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="history-DayList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกวัน" onclick="selectChartDropdown('history-Day', 'all', 'ทุกวัน', searchHistoryModalTable)">ทุกวัน</div>
+                                        <?php for ($day_number = 1; $day_number <= 31; $day_number++) { echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$day_number}' data-display='วันที่ {$day_number}' onclick=\"selectChartDropdown('history-Day', '{$day_number}', 'วันที่ {$day_number}', searchHistoryModalTable)\">วันที่ {$day_number}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="historyDay" value="<?php echo tp_text((new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j')); ?>">
                                 </div>
-                                <div id="history-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('history-Month', '{$num_pad}', '{$name}', searchHistoryModalTable)\">{$name}</div>"; } ?>
-                                </div>
-                                <input type="hidden" id="historyMonth" value="<?php echo date('m'); ?>">
-                            </div>
 
-                            <div class="relative w-[110px] portrait:w-[85px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Year', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
-                                <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-2.5 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Year')">
-                                    <span id="history-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
-                                    <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Month', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Month')">
+                                        <span id="history-MonthText" class="truncate"><?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m') === 'all' ? 'ทุกเดือน' : tp_text($thai_months[(int)(new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m')]); ?></span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="history-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('history-Month', 'all', 'ทุกเดือน', searchHistoryModalTable)">ทุกเดือน</div>
+                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('history-Month', '{$num_pad}', '{$name}', searchHistoryModalTable)\">{$name}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="historyMonth" value="<?php echo tp_text((new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m')); ?>">
                                 </div>
-                                <div id="history-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('history-Year', '{$y}', '{$thai_y}', searchHistoryModalTable)\">{$thai_y}</div>"; } ?>
+
+                                <!-- ✨ ย่อความกว้าง (w-82px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
+                                <div class="relative w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Year', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Year')">
+                                        <span id="history-YearText" class="truncate"><?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y') === 'all' ? 'ทุกปี' : tp_text((int)(new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y') + 543); ?></span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="history-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('history-Year', 'all', 'ทุกปี', searchHistoryModalTable)">ทุกปี</div>
+                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('history-Year', '{$y}', '{$thai_y}', searchHistoryModalTable)\">{$thai_y}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="historyYear" value="<?php echo tp_text((new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')); ?>">
                                 </div>
-                                <input type="hidden" id="historyYear" value="<?php echo date('Y'); ?>">
-                            </div>
+
+                                <!-- ✨ ดรอปดาวน์เลือกสถานะ (สีเดียวกับในตารางเป๊ะๆ) ✨ -->
                         </div>
 
                         <!-- ปุ่ม Contacts -->
@@ -7737,6 +7765,7 @@ if (isset($_GET['api_check_hash'])) {
             if (!refresh && !restore) {
                 url.searchParams.delete('pg_history_page');
                 url.searchParams.delete('pg_history_q');
+                url.searchParams.set('pg_history_day', document.getElementById('historyDay').value);
                 url.searchParams.set(
                     'pg_history_month',
                     document.getElementById('historyMonth').value
@@ -7747,18 +7776,12 @@ if (isset($_GET['api_check_hash'])) {
                 );
             }
 
-            const rawHistoryMonth = url.searchParams.get('pg_history_month') || '';
-            const historyMonthValue = /^(0?[1-9]|1[0-2])$/.test(rawHistoryMonth)
-                ? rawHistoryMonth.padStart(2, '0')
-                : '<?php echo date('m'); ?>';
-
-            const rawHistoryYear = url.searchParams.get('pg_history_year') || '';
-            const historyYearValue = /^[1-9][0-9]{3}$/.test(rawHistoryYear)
-                ? rawHistoryYear
-                : '<?php echo date('Y'); ?>';
-
-            url.searchParams.set('pg_history_month', historyMonthValue);
-            url.searchParams.set('pg_history_year', historyYearValue);
+            const periodDefaults = <?= json_encode(['day' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j'), 'month' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'), 'year' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')]); ?>;
+            for (const part of ['day', 'month', 'year']) {
+                const value = url.searchParams.get('pg_history_' + part);
+                const valid = value === 'all' || (part === 'year' ? /^[1-9][0-9]{3}$/.test(value || '') : /^\d{1,2}$/.test(value || '') && Number(value) >= 1 && Number(value) <= (part === 'day' ? 31 : 12));
+                url.searchParams.set('pg_history_' + part, valid ? (part === 'month' && value !== 'all' ? value.padStart(2, '0') : value) : periodDefaults[part]);
+            }
 
             if (historyController) historyController.abort();
 
@@ -7946,7 +7969,7 @@ if (isset($_GET['api_check_hash'])) {
             });
             historyFiltersRestoring = true;
 
-            const savedQuery = restore
+            const savedQuery = (restore || refresh)
                 ? (url.searchParams.get('pg_history_q') || '')
                 : '';
 
@@ -7954,6 +7977,7 @@ if (isset($_GET['api_check_hash'])) {
                 .forEach(el => el.value = savedQuery);
 
             for (const [key, prefix, fallback] of [
+                ['day', 'history-Day', 'ทุกวัน'],
                 ['month', 'history-Month', '<?php echo $current_month_name; ?>'],
                 ['year', 'history-Year', '<?php echo $current_thai_year; ?>']
             ]) {
@@ -7990,13 +8014,8 @@ if (isset($_GET['api_check_hash'])) {
             });
 
             document.querySelectorAll('[id="historyModalFilterGroup"]').forEach(group => {
-                if (type === 'technician' || isLinkBtnHidden) {
-                    group.classList.remove('hidden');
-                    group.classList.add('flex');
-                } else {
-                    group.classList.add('hidden');
-                    group.classList.remove('flex');
-                }
+                group.classList.remove('hidden');
+                group.classList.add('flex');
             });
 
             document.querySelectorAll('[id="historyModal"]').forEach(wrapper => {
@@ -8066,13 +8085,8 @@ if (isset($_GET['api_check_hash'])) {
                         const linkBtn = wrapper.querySelector('[id="historyModalLinkBtn"]');
                         const isLinkBtnHidden = !linkBtn || linkBtn.style.display === 'none';
 
-                        if (titleText.includes('ประวัติงานเจ้าหน้าที่') || isLinkBtnHidden) {
-                            filterGroup.classList.remove('hidden'); filterGroup.classList.add('flex');
-                        } else {
-                            filterGroup.classList.add('hidden'); filterGroup.classList.remove('flex');
-                        }
-                        selectChartDropdown('history-Month', '<?php echo date('m'); ?>', '<?php echo $current_month_name; ?>', searchHistoryModalTable);
-                        selectChartDropdown('history-Year', '<?php echo date('Y'); ?>', '<?php echo $current_thai_year; ?>', searchHistoryModalTable);
+                        filterGroup.classList.remove('hidden'); filterGroup.classList.add('flex');
+
                     }
                     if (iconDesktop) { iconDesktop.classList.add('fa-expand'); iconDesktop.classList.remove('fa-compress'); }
                     if (iconMobile) { iconMobile.classList.add('fa-expand'); iconMobile.classList.remove('fa-compress'); }
@@ -8202,12 +8216,13 @@ if (isset($_GET['api_check_hash'])) {
 
             const values = {
                 q: document.getElementById('searchHistoryModalInput').value.trim(),
+                day: document.getElementById('historyDay').value,
                 month: document.getElementById('historyMonth').value,
                 year: document.getElementById('historyYear').value
             };
 
             for (const [key, value] of Object.entries(values)) {
-                if (value && value !== 'all') {
+                if (value) {
                     url.searchParams.set('pg_history_' + key, value);
                 } else {
                     url.searchParams.delete('pg_history_' + key);
@@ -8833,5 +8848,6 @@ if (isset($_GET['api_check_hash'])) {
         setInterval(autoRefreshAllData, 1000);
         window.addEventListener('focus', autoRefreshAllData);
     </script>
+<?php mbsDashboardActivityScript(); ?>
 </body>
 </html>

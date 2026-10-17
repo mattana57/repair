@@ -119,25 +119,26 @@ try {
         </h3>
         <p class="mt-1 text-sm text-slate-500">
             นับจากประวัติกิจกรรมใหม่ตั้งแต่เปิดใช้ส่วนนี้
-            ประวัติล็อกอินเดิมยังอยู่ในตารางด้านล่าง
+            รวมการเปิดหน้า กดปุ่ม ค้นหา เปลี่ยนตัวกรอง ส่งคำขอ และรายการสำเร็จที่ระบบบันทึกไว้
         </p>
     </div>
 
     <div class="overflow-x-auto">
         <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-indigo-50 text-indigo-700">
+            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e]">
                 <tr>
-                    <th class="p-4">บัญชีผู้ใช้</th>
-                    <th class="p-4">บทบาทขณะทำรายการ</th>
-                    <th class="p-4 text-center">เข้าสู่ระบบสำเร็จ</th>
-                    <th class="p-4">กิจกรรมล่าสุด</th>
-                    <th class="p-4 text-right">รายละเอียด</th>
+                    <th style="color:#854d0e" class="p-4">บัญชีผู้ใช้</th>
+                    <th style="color:#854d0e" class="p-4">บทบาทขณะทำรายการ</th>
+                    <th style="color:#854d0e" class="p-4 text-center">เข้าสู่ระบบสำเร็จ</th>
+                    <th style="color:#854d0e" class="p-4 text-center">กิจกรรมทั้งหมด</th>
+                    <th style="color:#854d0e" class="p-4">กิจกรรมล่าสุด</th>
+                    <th style="color:#854d0e" class="p-4 text-right">รายละเอียด</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 <?php if ($lh_people_result->num_rows === 0): ?>
                     <tr>
-                        <td colspan="5" class="p-8 text-center text-slate-400">
+                        <td colspan="6" class="p-8 text-center text-slate-400">
                             ยังไม่มีประวัติกิจกรรมใหม่ของกลุ่มนี้
                         </td>
                     </tr>
@@ -165,11 +166,10 @@ try {
                             <?= number_format((int) $lh_person['login_count']) ?>
                             ครั้ง
                         </td>
+                        <td class="p-4 text-center font-bold text-indigo-600"><?= number_format((int)$lh_person['event_count']); ?> ครั้ง</td>
                         <td class="p-4 text-slate-500">
-                            <?= tp_text(date(
-                                'd/m/Y H:i:s',
-                                strtotime($lh_person['latest_time'])
-                            )) ?>
+                            <div><?= tp_text((date('d/m/', strtotime($lh_person['latest_time'])) . ((int)date('Y', strtotime($lh_person['latest_time'])) + 543))) ?></div>
+                            <div class="text-[11px] text-blue-600 font-bold mt-0.5"><?= tp_text(date('H:i', strtotime($lh_person['latest_time']))) ?></div>
                         </td>
                         <td class="p-4 text-right">
                             <a
@@ -192,7 +192,8 @@ try {
     <?php mbsActivityPager(
         $lh_people_page,
         $lh_people_pages,
-        'lh_people_page'
+        'lh_people_page',
+        $lh_people_total
     ); ?>
 </div>
 <?php endif; ?>
@@ -227,12 +228,12 @@ try {
 
     <div class="overflow-x-auto">
         <table class="w-full text-left text-sm min-w-[650px]">
-            <thead class="bg-violet-50 text-violet-700">
+            <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e]">
                 <tr>
-                    <th class="p-4 whitespace-nowrap">วัน / เวลา</th>
-                    <th class="p-4">ผู้ทำรายการ</th>
-                    <th class="p-4">กิจกรรม</th>
-                    <th class="p-4">รายละเอียด</th>
+                    <th style="color:#854d0e" class="p-4 whitespace-nowrap">วัน / เวลา</th>
+                    <th style="color:#854d0e" class="p-4">ผู้ทำรายการ</th>
+                    <th style="color:#854d0e" class="p-4">กิจกรรม</th>
+                    <th style="color:#854d0e" class="p-4">รายละเอียด</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -247,10 +248,8 @@ try {
                 <?php while ($lh_event = $lh_events->fetch_assoc()): ?>
                     <tr class="hover:bg-slate-50">
                         <td class="p-4 whitespace-nowrap text-slate-500">
-                            <?= tp_text(date(
-                                'd/m/Y H:i:s',
-                                strtotime($lh_event['created_at'])
-                            )) ?>
+                            <div><?= tp_text((date('d/m/', strtotime($lh_event['created_at'])) . ((int)date('Y', strtotime($lh_event['created_at'])) + 543))) ?></div>
+                            <div class="text-[11px] text-blue-600 font-bold mt-0.5"><?= tp_text(date('H:i', strtotime($lh_event['created_at']))) ?></div>
                         </td>
                         <td class="p-4">
                             <p class="font-bold text-slate-800">
@@ -283,7 +282,8 @@ try {
     <?php mbsActivityPager(
         $lh_event_page,
         $lh_event_pages,
-        'lh_activity_page'
+        'lh_activity_page',
+        $lh_event_total
     ); ?>
 </div>
 <?php endif; ?>

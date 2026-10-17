@@ -60,7 +60,7 @@ function tp_url(array $changes = [], array $remove = []) {
                     '/^pg_(repairs|admins|techs|assets|reporters|logs|history)_(page|q|month|year|status|department)$/D',
                     $key
                 )
-                || in_array($key, ['pg_repairs_day', 'pg_logs_day', 'pg_logs_role', 'pg_logs_full'], true)
+                || in_array($key, ['pg_repairs_day', 'pg_logs_day', 'pg_logs_role', 'pg_logs_full', 'pg_history_day'], true)
                 || in_array(
                     $key,
                     ['pg_history_type', 'pg_history_name', 'pg_history_technician_id', 'pg_history_line_user_id', 'pg_full'],

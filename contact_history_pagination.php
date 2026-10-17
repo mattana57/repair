@@ -174,6 +174,11 @@ function ch_history_page(
         $types .= str_repeat('s', count($params) - strlen($types));
     }
 
+    $day = tp_get('pg_history_day', 'all');
+    if (ctype_digit($day) && (int)$day >= 1 && (int)$day <= 31) {
+        $where .= ' AND DAY(r.created_at) = ?';
+        $types .= 'i'; $params[] = (int)$day;
+    }
     $month = tp_get('pg_history_month', 'all');
     $year = tp_get('pg_history_year', 'all');
 
