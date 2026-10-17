@@ -527,19 +527,30 @@ rsort($thYears);
 
 .th-dropdown-menu {
     position: absolute;
-    top: calc(100% + 5px);
+    top: calc(100% + 4px);
     right: 0;
     z-index: 50;
     width: 100%;
     max-height: 192px;
     overflow-y: auto;
-    padding: 8px;
+    padding: 8px 0;
     border: 1px solid #f1f5f9;
     border-radius: 16px;
     background: #fff;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
     box-shadow:
         0 20px 25px -5px rgb(0 0 0 / 10%),
         0 8px 10px -6px rgb(0 0 0 / 10%);
+}
+
+.th-dropdown-menu::-webkit-scrollbar {
+    width: 5px;
+}
+
+.th-dropdown-menu::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: #cbd5e1;
 }
 
 .th-dropdown:not([open]) > .th-dropdown-menu {
@@ -548,8 +559,8 @@ rsort($thYears);
 
 .th-dropdown-menu a {
     display: block;
-    padding: 6px 10px;
-    margin-bottom: 2px;
+    padding: 6px 12px;
+    margin: 0 8px 2px;
     border-radius: 12px;
     color: #334155;
     font-size: 12px;
@@ -558,8 +569,7 @@ rsort($thYears);
 }
 
 .th-dropdown-menu a:hover,
-.th-dropdown-menu a:focus-visible,
-.th-dropdown-menu a.is-selected {
+.th-dropdown-menu a:focus-visible {
     background: #f1f5f9;
     color: #4f46e5;
 }
@@ -569,6 +579,7 @@ rsort($thYears);
     flex-direction: column;
     gap: 6px;
     width: 155px;
+    padding: 8px;
 }
 
 .th-status-menu a {
@@ -678,7 +689,7 @@ rsort($thYears);
 @media (min-width: 1280px) {
     .th-search {
         flex: none;
-        width: 380px;
+        width: 440px;
     }
 }
 
@@ -723,6 +734,10 @@ rsort($thYears);
     .th-pages {
         justify-content: center;
     }
+}
+/* ช่องว่างอยู่ให้ซ่อนปุ่ม พอพิมพ์ให้แสดงทันที */
+.th-search:has(input[name="hq"]:placeholder-shown) .th-search-clear {
+    display: none;
 }
 </style>
 
@@ -795,19 +810,17 @@ rsort($thYears);
                         placeholder="ค้นหาข้อมูลในตาราง..."
                         aria-label="ค้นหาข้อมูลในตาราง กด Enter เพื่อค้นหา">
 
-                    <?php if ($thSearch !== ''): ?>
-                        <a class="th-search-clear"
+                    <a class="th-search-clear"
                         href="<?= $thEscape($thUrl(1, ['hq' => ''])) ?>"
                         aria-label="ล้างคำค้น">
-                            <i class="fas fa-times" aria-hidden="true"></i>
-                            ล้างค่า
-                        </a>
-                    <?php endif; ?>
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                        ล้างค่า
+                    </a>
                 </form>
 
                 <div class="th-filter-group">
 
-                    <details class="th-dropdown">
+                    <details class="th-dropdown" name="th-history-filters">
                         <summary>
                             <span>
                                 <?= $thMonth === 'all'
@@ -818,10 +831,6 @@ rsort($thYears);
                         </summary>
 
                         <div class="th-dropdown-menu">
-                            <a href="<?= $thEscape($thUrl(1, ['hm' => 'all'])) ?>"
-                            class="<?= $thMonth === 'all' ? 'is-selected' : '' ?>">
-                                ทุกเดือน
-                            </a>
 
                             <?php foreach ($thai_months as $number => $label):
                                 $value = sprintf('%02d', $number);
@@ -848,10 +857,6 @@ rsort($thYears);
                         </summary>
 
                         <div class="th-dropdown-menu">
-                            <a href="<?= $thEscape($thUrl(1, ['hy' => 'all'])) ?>"
-                            class="<?= $thYear === 'all' ? 'is-selected' : '' ?>">
-                                ทุกปี
-                            </a>
 
                             <?php foreach ($thYears as $year): ?>
                                 <a href="<?= $thEscape(
@@ -865,7 +870,7 @@ rsort($thYears);
                         </div>
                     </details>
 
-                    <details class="th-dropdown th-status-dropdown">
+                    <details class="th-dropdown th-status-dropdown" name="th-history-filters">
                         <summary style="<?= $thStatus === 'all'
                             ? ''
                             : $thStatusColors[$thStatus] ?>">
