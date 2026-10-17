@@ -3208,24 +3208,27 @@ if (isset($_GET['api_check_hash'])) {
 
                                 <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Month')">
-                                        <span id="table-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
+                                        <span id="table-MonthText" class="truncate"><?php echo tp_repairs_period('month') === 'all' ? 'ทุกเดือน' : tp_text($thai_months[(int)tp_repairs_period('month')]); ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('table-Month', 'all', 'ทุกเดือน', filterRepairsTable)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('table-Month', '{$num_pad}', '{$name}', filterRepairsTable)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="tableMonth" value="all">
+                                    <input type="hidden" id="tableMonth" value="<?php echo tp_text(tp_repairs_period('month')); ?>">
                                 </div>
+
                                 <!-- ✨ ย่อความกว้าง (w-82px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
                                 <div class="relative w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
-                                        <span id="table-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
+                                        <span id="table-YearText" class="truncate"><?php echo tp_repairs_period('year') === 'all' ? 'ทุกปี' : tp_text((int)tp_repairs_period('year') + 543); ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('table-Year', 'all', 'ทุกปี', filterRepairsTable)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', '{$thai_y}', filterRepairsTable)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="tableYear" value="all">
+                                    <input type="hidden" id="tableYear" value="<?php echo tp_text(tp_repairs_period('year')); ?>">
                                 </div>
 
                                 <!-- ✨ ดรอปดาวน์เลือกสถานะ (สีเดียวกับในตารางเป๊ะๆ) ✨ -->
@@ -5972,7 +5975,7 @@ if (isset($_GET['api_check_hash'])) {
                 if (search) search.value = query.get('pg_repairs_q') || '';
                 toggleClearBtn('searchInput', 'clearSearchBtn');
 
-                                let day = query.get('pg_repairs_day') || <?php echo json_encode(tp_repairs_day()); ?>;
+                let day = query.get('pg_repairs_day') || <?php echo json_encode(tp_repairs_day()); ?>;
                 if (day !== 'all') {
                     day = /^\d{1,2}$/.test(day) && Number(day) >= 1 && Number(day) <= 31
                         ? String(Number(day))
@@ -5982,8 +5985,7 @@ if (isset($_GET['api_check_hash'])) {
                     'table-Day', day, day === 'all' ? 'ทุกวัน' : 'วันที่ ' + day, null
                 );
 
-                let month = query.get('pg_repairs_month') || (day === 'all' ? 'all' : <?php echo json_encode((new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m')); ?>);
-                if (!/^(0[1-9]|1[0-2])$/.test(month)) month = 'all';
+                const month = <?php echo json_encode(tp_repairs_period('month')); ?>;
 
                 const monthItem = month === 'all' ? null : document.querySelector(
                     '#table-MonthList [data-value="' + month + '"]'
@@ -5992,17 +5994,16 @@ if (isset($_GET['api_check_hash'])) {
                 selectChartDropdown(
                     'table-Month',
                     month,
-                    monthItem ? monthItem.dataset.display : <?php echo json_encode($current_month_name, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?>,
+                    month === 'all' ? 'ทุกเดือน' : (monthItem ? monthItem.dataset.display : <?php echo json_encode(($thai_months[(int)tp_repairs_period('month')] ?? ''), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?>),
                     null
                 );
 
-                let year = query.get('pg_repairs_year') || (day === 'all' ? 'all' : <?php echo json_encode((new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')); ?>);
-                if (!/^[1-9][0-9]{3}$/.test(year)) year = 'all';
+                const year = <?php echo json_encode(tp_repairs_period('year')); ?>;
 
                 selectChartDropdown(
                     'table-Year',
                     year,
-                    year === 'all' ? <?php echo json_encode((string)$current_thai_year); ?> : String(Number(year) + 543),
+                    year === 'all' ? 'ทุกปี' : String(Number(year) + 543),
                     null
                 );
 
@@ -6036,13 +6037,14 @@ if (isset($_GET['api_check_hash'])) {
             const url = new URL(window.location.href);
 
             const changed = Object.entries(values).some(([key, value]) => {
-            const fallback = key === 'q' ? '' : (
+                const fallback = key === 'q' ? '' : (
                     key === 'day' ? <?php echo json_encode(tp_repairs_day()); ?> : (
-                        key === 'month' && values.day !== 'all' ? <?php echo json_encode((new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m')); ?> : (
-                            key === 'year' && values.day !== 'all' ? <?php echo json_encode((new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')); ?> : 'all'
+                        key === 'month' ? <?php echo json_encode(tp_repairs_period('month')); ?> : (
+                            key === 'year' ? <?php echo json_encode(tp_repairs_period('year')); ?> : 'all'
                         )
                     )
                 );
+
                 return (
                     url.searchParams.get('pg_repairs_' + key) || fallback
                 ) !== value;
@@ -6068,7 +6070,7 @@ if (isset($_GET['api_check_hash'])) {
             url.searchParams.delete('_');
 
             Object.entries(values).forEach(([key, value]) => {
-                if (key !== 'day' && (value === '' || value === 'all')) {
+                if (!['day', 'month', 'year'].includes(key) && (value === '' || value === 'all')) {
                     url.searchParams.delete('pg_repairs_' + key);
                 } else {
                     url.searchParams.set('pg_repairs_' + key, value);
