@@ -19,6 +19,10 @@ $thGet = static function ($key, $default) {
         : $default;
 };
 
+// โหมดประวัติรายผู้แจ้งเปิดได้ผ่านหน้าเจ้าหน้าที่ที่ผ่าน Guard แล้วเท่านั้น
+$thReporterMode = defined('MBS_TECH_REPORTER_HISTORY') && MBS_TECH_REPORTER_HISTORY;
+$thReporterName = $thReporterMode ? $thGet('thr', '') : '';
+
 $thToday = new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
 $thDay = $thGet('hd', $thToday->format('j'));
 if ($thDay !== 'all') {
@@ -67,10 +71,31 @@ $thOnHistory = $thGet('tab', '') === 'history';
 // ใช้เงื่อนไขเจ้าของจากหน้าเดิมที่ตรวจสิทธิ์แล้ว
 // ไม่รับรหัสเจ้าหน้าที่จาก GET
 if ($thOnHistory) {
-    // คิวรอรับเรื่องทุกคนเห็น งานที่รับแล้วใช้เงื่อนไขเจ้าของเดิมเท่านั้น
-    $thWhere = "(TRIM(status) = 'รอรับเรื่อง' OR (" . $where . '))';
+    // หน้าประวัติหลักมีคิวรอร่วมกัน แต่ป๊อปอัปผู้แจ้งจำกัดเฉพาะงานของตน
+    $thWhere = $thReporterMode
+        ? '(' . $where . ')'
+        : "(TRIM(status) = 'รอรับเรื่อง' OR (" . $where . '))';
     $thTypes = '';
     $thParams = [];
+
+    if ($thReporterMode) {
+        // จับชื่อผู้แจ้งตรงตัว รวมชื่อ LINE ที่ถูกแมปเป็นชื่อจริงในอันดับ
+        $thReporterKeys = [];
+        if (!isset($line_users_map[$thReporterName]) || (string)$line_users_map[$thReporterName] === $thReporterName) {
+            $thReporterKeys[] = $thReporterName;
+        }
+        foreach ($line_users_map as $rawName => $displayName) {
+            if ((string)$displayName === $thReporterName) $thReporterKeys[] = (string)$rawName;
+        }
+        $thReporterKeys = array_values(array_unique($thReporterKeys));
+        if ($thReporterKeys) {
+            $thWhere .= ' AND BINARY reporter_name IN (' . implode(',', array_fill(0, count($thReporterKeys), '?')) . ')';
+            $thTypes .= str_repeat('s', count($thReporterKeys));
+            $thParams = array_merge($thParams, $thReporterKeys);
+        } else {
+            $thWhere .= ' AND 1=0';
+        }
+    }
 
     if ($thDay !== 'all') {
         $thWhere .= ' AND DAY(created_at) = ?';
@@ -220,7 +245,9 @@ $thUrl = static function ($page, array $changes = []) use (
     $thMonth,
     $thYear,
     $thStatus,
-    $thSearch
+    $thSearch,
+    $thReporterMode,
+    $thReporterName
 ) {
     $query = array_merge(
         [
@@ -234,6 +261,11 @@ $thUrl = static function ($page, array $changes = []) use (
         ],
         $changes
     );
+
+    if ($thReporterMode) {
+        $query['thr'] = $thReporterName;
+        $query['th_fragment'] = '1';
+    }
 
     return 'technician_home.php?' . http_build_query(
         $query,

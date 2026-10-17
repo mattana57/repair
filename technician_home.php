@@ -197,6 +197,13 @@ if (isset($_GET['th_fragment'])
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: no-store');
 
+    if (isset($_GET['thr'])) {
+        if (!is_string($_GET['thr']) || !preg_match('/\A.{1,200}\z/us', trim($_GET['thr']))) {
+            http_response_code(400);
+            exit('ชื่อผู้แจ้งไม่ถูกต้อง');
+        }
+        define('MBS_TECH_REPORTER_HISTORY', true);
+    }
     define('MBS_TECH_HISTORY', true);
     require __DIR__ . '/technician_history_pagination.php';
     exit();
@@ -1788,10 +1795,10 @@ if (isset($_GET['th_fragment'])
                     tab: 'history', hd: 'all',
                     hm: document.getElementById('repMonth').value,
                     hy: document.getElementById('repYear').value,
-                    hs: 'all', hq: String(r.name), hp: '1'
+                    hs: 'all', hq: '', hp: '1', thr: String(r.name), th_fragment: '1'
                 });
                 const href = escape('technician_home.php?' + query.toString() + '#tab-content-history');
-                return `<a href="${href}" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group no-underline" title="ค้นหาประวัติงานของ ${escape(r.name)}">
+                return `<a href="${href}" data-tech-reporter="${escape(r.name)}" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group no-underline" title="ดูประวัติการแจ้งซ่อมของ ${escape(r.name)}">
                     <div class="flex items-center gap-4 min-w-0">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${rankColor} shrink-0 group-hover:scale-110 transition-transform">${rankIcon}</div>
                         <div class="min-w-0">
@@ -2305,6 +2312,186 @@ if (isset($_GET['th_fragment'])
             if (!composing) queue(true);
         });
     })();
+    </script>
+
+
+    <style>
+        #techReporterModal {position:fixed;inset:0;margin:auto;padding:0;border:0;width:95vw;max-width:95vw;height:85vh;max-height:850px;border-radius:24px;overflow:hidden;background:#fff;color:#334155;box-shadow:0 25px 60px #0f172a40}
+        #techReporterModal[open] {display:flex;flex-direction:column}
+        #techReporterModal::backdrop {background:rgba(15,23,42,.4);backdrop-filter:blur(4px)}
+        #techReporterModal.tech-reporter-expanded {width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0}
+        #techReporterModal .tech-reporter-scroll {overflow:auto;flex:1;min-height:0;background:#fff}
+        #techReporterTable {width:100%;min-width:1400px;border-collapse:collapse;text-align:left}
+        #techReporterTable th {padding:16px 12px;font-size:10px;white-space:nowrap}
+        #techReporterTable td {padding:16px 12px;font-size:12px;line-height:1.6;vertical-align:top}
+        #techReporterModalFooter {flex-shrink:0}
+        #techReporterModalFooter .th-pagination {margin:0}
+        @media(max-width:640px) {#techReporterModal {width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0}}
+    </style>
+    <dialog id="techReporterModal" aria-labelledby="techReporterModalTitle">
+        <div class="px-5 py-4 xl:pb-3 border-b border-slate-100 flex flex-col gap-4 xl:gap-3 bg-slate-50 shrink-0 relative z-30">
+            <div class="flex justify-between items-start sm:items-center w-full">
+                <p class="text-lg md:text-xl font-extrabold text-slate-800 flex-1 leading-tight" id="techReporterModalTitle">ประวัติการแจ้งซ่อม</p>
+                <div class="flex items-center gap-2 shrink-0 ml-4">
+                    <button type="button" onclick="toggleTechReporterMaximize()" class="text-slate-400 hover:text-indigo-600 bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm" title="สลับเต็มจอ"><i class="fas fa-expand" id="techReporterMaximizeIcon"></i></button>
+                    <button type="button" onclick="closeTechReporterHistory()" class="text-slate-400 hover:text-rose-500 bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm" title="ปิด"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center justify-end gap-3 w-full">
+                <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px]">
+                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="techReporterSearch" maxlength="200" oninput="queueTechReporterHistory()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium shadow-sm">
+                    <button type="button" id="techReporterSearchClear" onclick="document.getElementById('techReporterSearch').value=''; queueTechReporterHistory();" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 border-l border-slate-200 hidden items-center justify-center rounded-r-xl"><i class="fas fa-times mr-1.5"></i>ล้างค่า</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <div class="relative w-[110px] portrait:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="techReporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'techReporter-Month', queueTechReporterHistory)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-3 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'techReporter-Month')">
+                                    <span id="techReporter-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
+                                    <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                </div>
+                                <div id="techReporter-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('techReporter-Month', 'all', 'ทุกเดือน', queueTechReporterHistory)">ทุกเดือน</div>
+                                    <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('techReporter-Month', '{$num_pad}', '{$name}', queueTechReporterHistory)\">{$name}</div>"; } ?>
+                                </div>
+                                <input type="hidden" id="techReporterMonth" value="<?php echo date('m'); ?>">
+                            </div>
+                            <div class="relative w-[110px] portrait:w-[85px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="techReporter-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'techReporter-Year', queueTechReporterHistory)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-2.5 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'techReporter-Year')">
+                                    <span id="techReporter-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
+                                    <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                </div>
+                                <div id="techReporter-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('techReporter-Year', 'all', 'ทุกปี', queueTechReporterHistory)">ทุกปี</div>
+                                    <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('techReporter-Year', '{$y}', '{$thai_y}', queueTechReporterHistory)\">{$thai_y}</div>"; } ?>
+                                </div>
+                                <input type="hidden" id="techReporterYear" value="<?php echo date('Y'); ?>">
+                            </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-0 md:p-4 overflow-hidden flex-1 min-h-0 bg-slate-50">
+            <div class="tech-reporter-scroll h-full md:rounded-2xl border border-slate-200 custom-scrollbar">
+                <table id="techReporterTable">
+                    <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
+                            <tr>
+                                <th class="px-6 py-4">ID</th>
+                                <th class="px-6 py-4">Date / Time</th>
+                                <th class="px-6 py-4">Ticket No.</th>
+                                <th class="px-6 py-4">Reporter</th>
+                                <th class="px-6 py-4">Equipment</th>
+                                <th class="px-6 py-4">Department</th>
+                                <th class="px-6 py-4">Technician</th>
+                                <th class="px-6 py-4">Received At</th>
+                                <th class="px-6 py-4">Root Cause</th>
+                                <th class="px-6 py-4 text-center">Status</th>
+                                <th class="px-6 py-4">Completed At</th>
+                                <th class="px-6 py-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                    <tbody id="techReporterTableBody" class="divide-y divide-slate-100 bg-white"></tbody>
+                </table>
+            </div>
+        </div>
+        <div id="techReporterModalFooter"></div>
+    </dialog>
+    <script>
+        const techReporterHistory = {name:'', page:1, timer:null, controller:null, version:0, previousOverflow:''};
+        function openTechReporterHistory(name) {
+            const modal = document.getElementById('techReporterModal');
+            techReporterHistory.name = String(name);
+            techReporterHistory.page = 1;
+            document.getElementById('techReporterModalTitle').textContent = 'ประวัติการแจ้งซ่อม: ' + name;
+            document.getElementById('techReporterSearch').value = '';
+            document.getElementById('techReporterSearchClear').classList.add('hidden');
+            document.getElementById('techReporterSearchClear').classList.remove('flex');
+            for (const part of ['Month', 'Year']) {
+                const value = document.getElementById('rep' + part).value;
+                const list = document.getElementById('techReporter-' + part + 'List');
+                const item = Array.from(list.querySelectorAll('[data-value]')).find(item => item.dataset.value === value);
+                selectChartDropdown('techReporter-' + part, value, item ? item.dataset.display || item.textContent : (part === 'Year' && value !== 'all' ? String(Number(value) + 543) : value), null);
+            }
+            document.getElementById('techReporterTableBody').innerHTML = '<tr><td colspan="12" class="p-10 text-center text-slate-400">กำลังโหลดรายการ...</td></tr>';
+            document.getElementById('techReporterModalFooter').innerHTML = '';
+            if (!modal.open) {
+                techReporterHistory.previousOverflow = document.body.style.overflow;
+                document.body.style.overflow = 'hidden';
+                modal.showModal();
+            }
+            loadTechReporterHistory(1);
+        }
+        function closeTechReporterHistory() {document.getElementById('techReporterModal').close();}
+        function toggleTechReporterMaximize() {
+            const expanded = document.getElementById('techReporterModal').classList.toggle('tech-reporter-expanded');
+            document.getElementById('techReporterMaximizeIcon').className = expanded ? 'fas fa-compress' : 'fas fa-expand';
+        }
+        function queueTechReporterHistory() {
+            clearTimeout(techReporterHistory.timer);
+            techReporterHistory.version++;
+            techReporterHistory.controller?.abort();
+            const visible = document.getElementById('techReporterSearch').value !== '';
+            document.getElementById('techReporterSearchClear').classList.toggle('hidden', !visible);
+            document.getElementById('techReporterSearchClear').classList.toggle('flex', visible);
+            techReporterHistory.timer = setTimeout(() => loadTechReporterHistory(1), 250);
+        }
+        async function loadTechReporterHistory(page) {
+            const modal = document.getElementById('techReporterModal');
+            if (!modal.open) return;
+            clearTimeout(techReporterHistory.timer);
+            techReporterHistory.controller?.abort();
+            const controller = new AbortController();
+            techReporterHistory.controller = controller;
+            const version = ++techReporterHistory.version;
+            const url = new URL('technician_home.php', window.location.href);
+            url.search = new URLSearchParams({tab:'history', th_fragment:'1', thr:techReporterHistory.name, hd:'all', hm:document.getElementById('techReporterMonth').value, hy:document.getElementById('techReporterYear').value, hs:'all', hq:document.getElementById('techReporterSearch').value.trim(), hp:String(page)}).toString();
+            const body = document.getElementById('techReporterTableBody');
+            const footer = document.getElementById('techReporterModalFooter');
+            body.setAttribute('aria-busy', 'true');
+            try {
+                const response = await fetch(url.href, {signal:controller.signal, credentials:'same-origin', cache:'no-store'});
+                if (version !== techReporterHistory.version || !modal.open) return;
+                if (response.redirected) {window.location.assign(response.url); return;}
+                if (!response.ok) throw new Error('request');
+                const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+                if (version !== techReporterHistory.version || !modal.open) return;
+                const nextBody = doc.getElementById('historyTableBody');
+                const nextFooter = doc.querySelector('.th-pagination');
+                if (!nextBody || !nextFooter) throw new Error('response');
+                body.innerHTML = nextBody.innerHTML;
+                footer.replaceChildren(document.importNode(nextFooter, true));
+                const selected = nextFooter.querySelector('[aria-current="page"]');
+                techReporterHistory.page = selected ? Number(selected.textContent.replace(/,/g, '').trim()) || 1 : 1;
+                modal.querySelector('.tech-reporter-scroll').scrollTop = 0;
+            } catch (error) {
+                if (error.name !== 'AbortError' && version === techReporterHistory.version && modal.open) {
+                    footer.innerHTML = '<div class="th-pagination"><span class="text-rose-600" role="alert">โหลดรายการไม่สำเร็จ กรุณาลองใหม่</span><button type="button" onclick="loadTechReporterHistory(' + (Number(page) || 1) + ')" class="text-indigo-600 font-bold">ลองใหม่</button></div>';
+                }
+            } finally {
+                if (version === techReporterHistory.version) body.removeAttribute('aria-busy');
+            }
+        }
+        document.addEventListener('click', event => {
+            const rank = event.target.closest('a[data-tech-reporter]');
+            if (rank && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+                event.preventDefault(); openTechReporterHistory(rank.dataset.techReporter); return;
+            }
+            const link = event.target.closest('#techReporterModalFooter .th-pages a');
+            if (link && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+                event.preventDefault(); loadTechReporterHistory(new URL(link.href).searchParams.get('hp') || 1);
+            }
+        });
+        document.getElementById('techReporterModal').addEventListener('close', () => {
+            clearTimeout(techReporterHistory.timer);
+            techReporterHistory.version++;
+            techReporterHistory.controller?.abort();
+            document.body.style.overflow = techReporterHistory.previousOverflow;
+            document.getElementById('techReporterModal').classList.remove('tech-reporter-expanded');
+            document.getElementById('techReporterMaximizeIcon').className = 'fas fa-expand';
+        });
+        document.getElementById('techReporterModal').addEventListener('click', event => {
+            if (event.target !== event.currentTarget) return;
+            const bounds = event.currentTarget.getBoundingClientRect();
+            if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeTechReporterHistory();
+        });
     </script>
 
 </body>
