@@ -125,14 +125,14 @@ function mbsReadableFlexNode($node, $inside_flex = false) {
         $node['size'] = 'mega';
     }
     if ($inside_flex && $type === 'text') {
-        if (!isset($node['size']) || in_array($node['size'], ['xxs', 'xs', 'sm'], true)) {
-            $node['size'] = 'md';
+        if (!isset($node['size']) || in_array($node['size'], ['xxs', 'xs'], true)) {
+            $node['size'] = 'sm';
         }
         $node['wrap'] = true;
         $node['color'] = ($node['weight'] ?? '') === 'bold' ? '#1E3A5F' : '#222222';
     }
     if ($inside_flex && $type === 'button') {
-        $node['height'] = 'md';
+        $node['height'] = 'sm';
         if (($node['style'] ?? '') === 'primary') {
             $node['color'] = '#1E3A5F';
         }
@@ -146,48 +146,33 @@ function mbsReadableFlexNode($node, $inside_flex = false) {
 }
 
 
-// การ์ดเลขใบงานและตำแหน่งเดิมทุกขั้นตอน เพื่อช่วยจับคู่งานในแชต
+// ก่อนรับงานแสดงคำขอเต็ม หลังรับงานแสดงสรุปเพื่อลดพื้นที่ในกลุ่ม
 function mbsServiceJobCard($ticket, $location, $category, $detail, $reporter, $phone,
     $stage, $actions, $staff = '', $department = '', $has_image = false, $compact = false) {
     $items = [
-        ['type' => 'text', 'text' => $stage, 'weight' => 'bold', 'size' => 'md', 'wrap' => true],
-        ['type' => 'text', 'text' => $ticket, 'weight' => 'bold', 'size' => 'xl', 'wrap' => true],
-        ['type' => 'text', 'text' => 'สถานที่: ' . $location, 'weight' => 'bold', 'size' => 'lg', 'wrap' => true],
-        ['type' => 'separator', 'margin' => 'md'],
-        ['type' => 'text', 'text' => 'ข้อความจากผู้แจ้ง', 'weight' => 'bold', 'size' => 'md', 'margin' => 'md', 'wrap' => true],
-        ['type' => 'text', 'text' => trim((string) $detail) !== '' ? (string) $detail : 'ไม่ระบุรายละเอียดเพิ่มเติม', 'size' => 'lg', 'wrap' => true],
-        ['type' => 'separator', 'margin' => 'md'],
-        ['type' => 'text', 'text' => 'เรื่องที่แจ้ง: ' . $category, 'size' => 'md', 'wrap' => true],
-        ['type' => 'text', 'text' => 'ผู้แจ้ง: ' . $reporter, 'size' => 'md', 'wrap' => true],
-        ['type' => 'text', 'text' => 'เบอร์ติดต่อ: ' . $phone, 'size' => 'md', 'wrap' => true]
+        ['type' => 'text', 'text' => $ticket . ' · ' . $stage, 'weight' => 'bold', 'size' => 'md', 'wrap' => true],
+        ['type' => 'text', 'text' => 'สถานที่: ' . $location . '  |  เรื่อง: ' . $category, 'weight' => 'bold', 'size' => 'md', 'wrap' => true]
     ];
-    // หลังรับงานและตอนยืนยันปิดงาน แสดงเฉพาะข้อมูลสรุป
-    if ($compact) {
-        $items = [
-            ['type' => 'text', 'text' => $stage, 'weight' => 'bold', 'size' => 'md', 'wrap' => true],
-            ['type' => 'text', 'text' => $ticket, 'weight' => 'bold', 'size' => 'xl', 'wrap' => true],
-            ['type' => 'text', 'text' => 'สถานที่: ' . $location, 'weight' => 'bold', 'size' => 'lg', 'wrap' => true],
-            ['type' => 'text', 'text' => 'เรื่องที่แจ้ง: ' . $category, 'size' => 'md', 'wrap' => true]
-        ];
+    if (!$compact) {
+        $items[] = ['type' => 'separator', 'margin' => 'sm'];
+        $items[] = ['type' => 'text', 'text' => trim((string) $detail) !== '' ? (string) $detail : 'ไม่ระบุรายละเอียดเพิ่มเติม', 'size' => 'md', 'margin' => 'sm', 'wrap' => true];
+        $items[] = ['type' => 'text', 'text' => 'ผู้แจ้ง: ' . $reporter . ' · โทร ' . $phone, 'size' => 'sm', 'wrap' => true];
     }
     if ($staff !== '') {
-        $items[] = ['type' => 'text', 'text' => 'ผู้รับผิดชอบ: ' . $staff, 'weight' => 'bold', 'size' => 'md', 'margin' => 'md', 'wrap' => true];
+        $items[] = ['type' => 'text', 'text' => 'จนท.: ' . $staff, 'size' => 'sm', 'wrap' => true];
     }
     if (!$compact && $department !== '') {
-        $items[] = ['type' => 'text', 'text' => $department, 'size' => 'md', 'wrap' => true];
+        $items[] = ['type' => 'text', 'text' => $department, 'size' => 'sm', 'wrap' => true];
     }
     if (!$compact && $has_image) {
-        $items[] = ['type' => 'text', 'text' => 'มีรูปภาพแนบในใบงาน', 'size' => 'md', 'wrap' => true];
+        $items[] = ['type' => 'text', 'text' => 'มีรูปแนบในใบงาน', 'size' => 'sm', 'wrap' => true];
     }
     return mbsReadableFlexNode([
         'type' => 'flex', 'altText' => $stage . ' ' . $ticket,
         'contents' => [
             'type' => 'bubble', 'size' => 'mega',
-            'header' => ['type' => 'box', 'layout' => 'vertical', 'paddingAll' => '6px', 'backgroundColor' => '#1E3A5F', 'contents' => [
-                ['type' => 'filler']
-            ]],
-            'body' => ['type' => 'box', 'layout' => 'vertical', 'spacing' => 'md', 'paddingAll' => '20px', 'contents' => $items],
-            'footer' => ['type' => 'box', 'layout' => 'vertical', 'spacing' => 'md', 'paddingAll' => '20px', 'paddingTop' => '0px', 'contents' => $actions]
+            'body' => ['type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm', 'paddingAll' => '14px', 'backgroundColor' => '#F5F7FA', 'contents' => $items],
+            'footer' => ['type' => 'box', 'layout' => $compact ? 'horizontal' : 'vertical', 'spacing' => 'sm', 'paddingAll' => '12px', 'paddingTop' => '8px', 'contents' => $actions]
         ]
     ]);
 }
@@ -599,9 +584,9 @@ if (!is_null($events['events'])) {
                                 'รับงานแล้ว',
                                 [
                                     ['type' => 'button', 'style' => 'primary', 'height' => 'md',
-                                        'action' => ['type' => 'uri', 'label' => 'จัดการ / หมายเหตุ', 'uri' => $job_url]],
+                                        'action' => ['type' => 'uri', 'label' => 'จัดการงาน', 'uri' => $job_url]],
                                     ['type' => 'button', 'style' => 'secondary', 'height' => 'md',
-                                        'action' => ['type' => 'postback', 'label' => 'ดำเนินการเสร็จแล้ว', 'data' => "action=confirm_close&ticket=$ticket_no"]]
+                                        'action' => ['type' => 'postback', 'label' => 'ปิดงาน', 'data' => "action=close&ticket=$ticket_no"]]
                                 ], $tech_name, $tech_dept, !empty($job['image_path']), true
                             );
 
@@ -628,36 +613,7 @@ if (!is_null($events['events'])) {
                         }
                     }
                 }
-                elseif ($postbackData['action'] == 'confirm_close') {
-                    // แสดงใบงานให้ตรวจอีกครั้ง ยังไม่เปลี่ยนสถานะจนกดยืนยัน
-                    $confirm_stmt = $conn->prepare("SELECT r.id, r.location, r.equipment_type, r.problem_desc, r.reporter_name, r.phone_number, t.full_name FROM repairs r JOIN technicians t ON t.id = r.technician_id WHERE r.ticket_no = ? AND t.line_user_id = ? AND t.approval_status = 'อนุมัติแล้ว' AND r.status IN ('กำลังดำเนินการ', 'ช่างรับเรื่องแจ้งซ่อมแล้ว')");
-                    if (!$confirm_stmt) {
-                        send_reply($replyToken, ['type' => 'text', 'text' => 'ไม่สามารถตรวจสอบใบงานได้ กรุณาลองอีกครั้งค่ะ'], $channelAccessToken);
-                        continue;
-                    }
-                    $confirm_stmt->bind_param("ss", $ticket_no, $userId);
-                    $confirm_stmt->execute();
-                    $confirm_job = $confirm_stmt->get_result()->fetch_assoc();
-                    $confirm_stmt->close();
-                    if (!$confirm_job) {
-                        send_reply($replyToken, ['type' => 'text', 'text' => 'ไม่สามารถทำรายการได้ กรุณาตรวจสอบผู้รับผิดชอบและสถานะใบงานค่ะ'], $channelAccessToken);
-                        continue;
-                    }
-                    $confirm_url = "https://autism-unfreeze-snooze.ngrok-free.dev/repair/update_repair.php?id=" . (int) $confirm_job['id'];
-                    $confirm_card = mbsServiceJobCard(
-                        $ticket_no, $confirm_job['location'], $confirm_job['equipment_type'],
-                        $confirm_job['problem_desc'] ?? '', $confirm_job['reporter_name'],
-                        $confirm_job['phone_number'], 'ยืนยันปิดงาน',
-                        [
-                            ['type' => 'button', 'style' => 'primary', 'height' => 'md',
-                                'action' => ['type' => 'postback', 'label' => 'ยืนยันเสร็จแล้ว', 'data' => "action=close&ticket=$ticket_no"]],
-                            ['type' => 'button', 'style' => 'secondary', 'height' => 'md',
-                                'action' => ['type' => 'uri', 'label' => 'กลับไปจัดการงาน', 'uri' => $confirm_url]]
-                        ], $confirm_job['full_name'], '', false, true
-                    );
-                    send_reply($replyToken, $confirm_card, $channelAccessToken);
-                }
-                elseif ($postbackData['action'] == 'close') {
+                elseif (in_array($postbackData['action'], ['close', 'confirm_close'], true)) {
                     $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_id, technician_name, reporter_name FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
