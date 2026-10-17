@@ -1170,8 +1170,8 @@ if (isset($_GET['api_check_hash'])) {
             <!-- ✨ หน้า Technician (Team Management) ให้ผู้บริหาร ✨ -->
             <div id="technician" class="section <?php echo $active_tab === 'technician' ? '' : 'hidden'; ?> space-y-6 no-print animate-fade-in">
                 <?php
-                // แสดงฝ่ายงานที่มีเจ้าหน้าที่อนุมัติแล้วและยังไม่ถูกลบ
-                $techs_query = "SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว' AND deleted_at IS NULL ORDER BY department ASC, full_name ASC";
+                // กรองเฉพาะช่าง (ไม่เอาแม่บ้าน) ให้ตรงกับฝั่งแอดมิน
+                $techs_query = "SELECT * FROM technicians WHERE department != 'แม่บ้าน' ORDER BY department ASC, full_name ASC";
                 $techs_result = $conn->query($techs_query);
                 $grouped_technicians = [];
                 
@@ -1182,7 +1182,7 @@ if (isset($_GET['api_check_hash'])) {
                     }
                 }
                 
-                $custom_dept_order_ui = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานโสตทัศนูปกรณ์', 'ฝ่ายงานยานยนต์', 'แม่บ้าน', 'ฝ่ายงานทั่วไป', 'อื่นๆ'];
+                $custom_dept_order_ui = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานโสตทัศนูปกรณ์', 'ฝ่ายงานยานยนต์', 'ฝ่ายงานทั่วไป', 'อื่นๆ'];
                 uksort($grouped_technicians, function($a, $b) use ($custom_dept_order_ui) {
                     $pos_a = array_search($a, $custom_dept_order_ui); $pos_b = array_search($b, $custom_dept_order_ui);
                     $pos_a = ($pos_a === false) ? 999 : $pos_a; $pos_b = ($pos_b === false) ? 999 : $pos_b;
@@ -1205,19 +1205,9 @@ if (isset($_GET['api_check_hash'])) {
                         <div class="flex flex-wrap gap-2.5">
                             <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
                             <?php
-                            $filter_departments = array_values(array_unique(array_merge(
-                                [
-                                    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
-                                    'ฝ่ายงานโสตทัศนูปกรณ์',
-                                    'ฝ่ายงานยานยนต์'
-                                ],
-                                array_keys($grouped_technicians)
-                            )));
-
-                            foreach ($filter_departments as $d_name) {
-
-                            // คงการซ่อนปุ่มฝ่ายงานทั่วไปและอื่นๆ แต่อนุญาตให้แสดงแม่บ้าน
-                            if ($d_name === 'ฝ่ายงานทั่วไป' || $d_name === 'อื่นๆ') continue;
+                            foreach(array_keys($grouped_technicians) as $d_name) {
+                                // ✨ ซ่อนปุ่มแม่บ้าน ฝ่ายงานทั่วไป และ อื่นๆ ให้เหมือนหน้าแอดมิน ✨
+                                if ($d_name === 'แม่บ้าน' || $d_name === 'ฝ่ายงานทั่วไป' || $d_name === 'อื่นๆ') continue;
                                 $short_name = str_replace('ฝ่ายงาน', '', $d_name); // ตัดคำว่าฝ่ายงานออกเหมือนแอดมิน
                                 echo "<button onclick=\"filterByDept('{$d_name}', this)\" class='tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer'>{$short_name}</button>";
                             }
@@ -1230,12 +1220,12 @@ if (isset($_GET['api_check_hash'])) {
                     <?php 
                     $departments_data = [];
                     // ✨ ดึงเฉพาะช่างที่แอดมินอนุมัติแล้ว (ผูก LINE แล้ว) เหมือนหน้าแอดมินเป๊ะ ✨
-                    $res_techs = $conn->query("SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว' AND deleted_at IS NULL");
+                    $res_techs = $conn->query("SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว'");
                     if($res_techs && $res_techs->num_rows > 0) {
                         while($row = $res_techs->fetch_assoc()) {
                             $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป';
-                            // คงการซ่อนอื่นๆ แต่อนุญาตให้แสดงแม่บ้าน
-                            if ($dept === 'อื่นๆ') continue;
+                            // 🚫 ซ่อนแม่บ้านและอื่นๆ ไม่ให้ผู้บริหารเห็น
+                            if ($dept === 'แม่บ้าน' || $dept === 'อื่นๆ') continue;
 
                             if(!isset($departments_data[$dept])) $departments_data[$dept] = [];
                             
@@ -1258,11 +1248,10 @@ if (isset($_GET['api_check_hash'])) {
                         'ฝ่ายงานบริการเทคโนโลยีดิจิทัล' => 'fas fa-laptop-code',
                         'ฝ่ายงานยานยนต์' => 'fas fa-car',
                         'ฝ่ายงานโสตทัศนูปกรณ์' => 'fas fa-video',
-                        'แม่บ้าน' => 'fas fa-broom',
                         'ฝ่ายงานทั่วไป' => 'fas fa-users'
                     ];
                     
-                    $custom_dept_order_ui = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานโสตทัศนูปกรณ์', 'ฝ่ายงานยานยนต์', 'แม่บ้าน', 'ฝ่ายงานทั่วไป'];
+                    $custom_dept_order_ui = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานโสตทัศนูปกรณ์', 'ฝ่ายงานยานยนต์', 'ฝ่ายงานทั่วไป'];
                     
                     uksort($departments_data, function($a, $b) use ($custom_dept_order_ui) {
                         $pos_a = array_search($a, $custom_dept_order_ui);
