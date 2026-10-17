@@ -237,8 +237,8 @@ if (isset($_GET['th_fragment'])
             display: none;
         }
 
-    @media (max-width: 639px),
-       (max-width: 1366px) and (hover: none) and (pointer: coarse) {
+    /* Use the existing hamburger menu on all screen sizes. */
+    @media all {
             nav .tech-desktop-actions {
                 display: none !important;
             }
