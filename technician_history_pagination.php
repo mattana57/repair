@@ -135,7 +135,12 @@ if ($thOnHistory) {
                 ' OR EXISTS (
                     SELECT 1
                     FROM line_users AS th_reporter
-                    WHERE th_reporter.line_display_name = repairs.reporter_name
+                    WHERE
+                        CONVERT(th_reporter.line_display_name USING utf8mb4)
+                            COLLATE utf8mb4_unicode_ci
+                        =
+                        CONVERT(repairs.reporter_name USING utf8mb4)
+                            COLLATE utf8mb4_unicode_ci
                     AND LOCATE(
                         LOWER(?),
                         LOWER(COALESCE(th_reporter.real_name, \'\'))
