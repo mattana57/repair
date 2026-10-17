@@ -1253,8 +1253,8 @@ $current_thai_year = date('Y') + 543;
                 <div class="tech-recent-card modern-card overflow-hidden flex flex-col mb-12">
                     <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                         <div>
-                            <h3 class="font-extrabold text-slate-800 text-lg">Recent Transactions</h3>
-                            <p class="text-sm font-medium text-slate-400 mt-0.5">Latest 5 repairs in system</p>
+                            <h3 class="font-extrabold text-slate-800 text-lg">รายการงานซ่อมล่าสุด</h3>
+                            <p class="text-sm font-medium text-slate-400 mt-0.5">งานซ่อมที่คุณรับผิดชอบ 5 รายการล่าสุด</p>
                         </div>
                         <button onclick="showTab('history')" class="flex items-center text-sm text-slate-600 font-bold hover:text-indigo-600 transition-colors group">
                             See All <i class="fas fa-arrow-right ml-2 text-xs text-slate-400 group-hover:text-indigo-600 transition-transform group-hover:translate-x-1"></i>
@@ -1805,8 +1805,9 @@ $current_thai_year = date('Y') + 543;
             let html = '';
             recentRepairs.forEach(r => {
                 let st = (r.status || 'รอดำเนินการ').trim();
-                let bClass = (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
-                             (st === 'กำลังดำเนินการ') ? 'text-sky-600 bg-sky-50 border-sky-200' : 'text-amber-600 bg-amber-50 border-amber-200';
+                
+                let bClass = (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') ? 'badge-success' :
+                            (st === 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-pending';
                 
                 let dt = (r.created_at && r.created_at !== '0000-00-00 00:00:00') ? r.created_at.split(' ') : ['-', ''];
                 
@@ -1826,7 +1827,7 @@ $current_thai_year = date('Y') + 543;
                         <td class="px-6 py-4 align-top">
                             <div class="flex items-center gap-3">
                                 <!-- ✨ ปรับสีไอคอนประจำตัวผู้แจ้งให้เข้มขึ้นเหมือนแอดมิน ✨ -->
-                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0"><i class="fas fa-user text-xs"></i></div>
+                                <div class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 shrink-0"><i class="fas fa-user text-xs"></i></div>
                                 <div>
                                     <div class="font-bold text-slate-800">${dName}</div>
                                     <div class="text-[11px] text-slate-500 font-medium mt-0.5">${dPhone}</div>
@@ -1838,7 +1839,7 @@ $current_thai_year = date('Y') + 543;
                             <div class="text-[11px] text-slate-500 font-medium mt-0.5 max-w-[180px] truncate" title="${r.location || '-'}">${r.location || '-'}</div>
                         </td>
                         <td class="px-6 py-4 align-middle text-center">
-                            <span class="px-3 py-1 rounded-full text-[11px] font-bold border ${bClass} inline-block shadow-sm">${st}</span>
+                            <span class="${bClass}">${st}</span>
                         </td>
                     </tr>`;
             });
@@ -1874,8 +1875,8 @@ $current_thai_year = date('Y') + 543;
             let html = '';
             filtered.forEach(r => {
                 let st = (r.status || 'รอดำเนินการ').trim();
-                let bClass = (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
-                             (st === 'กำลังดำเนินการ') ? 'text-sky-600 bg-sky-50 border-sky-200' : 'text-amber-600 bg-amber-50 border-amber-200';
+                let bClass = (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') ? 'badge-success' :
+                            (st === 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-pending';
                 
                 let dt = (r.created_at && r.created_at !== '0000-00-00 00:00:00') ? r.created_at.split(' ') : ['-', ''];
                 
@@ -1906,7 +1907,7 @@ $current_thai_year = date('Y') + 543;
                     if (info.pos) deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
                 }
 
-                let imgIcon = r.image_path ? `<i class="fas fa-image text-slate-300 ml-1" title="มีรูปภาพ"></i>` : '';
+                let imgIcon = r.image_path ? `<i class="fas fa-image text-slate-400 ml-1" title="มีรูปภาพแนบ"></i>` : '';
                 let cause = (!r.root_cause || r.root_cause === '-') ? `<span class='text-rose-500 font-bold'>-</span>` : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
 
                 // ✨ แก้ลิงก์ปุ่ม Action ให้ไปหน้า update_repair.php เหมือนแอดมิน ✨
@@ -1939,7 +1940,7 @@ $current_thai_year = date('Y') + 543;
                             ${rec[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${rec[1].substring(0, 5)}</div>` : ''}
                         </td>
                         <td class="px-6 py-4 align-top">${cause}</td>
-                        <td class="px-6 py-4 align-middle text-center"><span class="px-3 py-1 rounded-full text-[11px] font-bold border ${bClass} inline-block shadow-sm">${st}</span></td>
+                        <td class="px-6 py-4 align-middle text-center"><span class="${bClass}">${st}</span></td>
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class='font-medium text-emerald-700'>${com[0]}</div>
                             ${com[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${com[1].substring(0, 5)}</div>` : ''}
