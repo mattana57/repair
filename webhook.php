@@ -97,6 +97,24 @@ function extract_repair_info($text) {
     return [$category, $location];
 }
 
+
+// ชื่อที่ผู้แจ้งเลือกใช้ ไม่บังคับชื่อจริงและไม่ตัดเหลือเพียงคำแรก
+function reporterChosenName($text, $phone) {
+    $name = (string) $text;
+    if (is_string($phone) && $phone !== '') {
+        $pos = mb_strpos($name, $phone, 0, 'UTF-8');
+        if ($pos !== false) {
+            $name = mb_substr($name, 0, $pos, 'UTF-8')
+                . mb_substr($name, $pos + mb_strlen($phone, 'UTF-8'), null, 'UTF-8');
+        }
+    }
+    $name = preg_replace('/^\s*(?:เปลี่ยนชื่อ|แก้ไขข้อมูล|แก้ชื่อ|เปลี่ยนเบอร์|แก้เบอร์)\s*[:：]?\s*/u', '', $name);
+    $name = preg_replace('/^\s*(?:ชื่อเล่น|ชื่อที่ใช้ติดต่อ|ชื่อ[\s-]*นามสกุล|ชื่อ[\s-]*สกุล|ชื่อ)\s*[:：]?\s*/u', '', $name);
+    $name = preg_replace('/(?:\s|^)(?:เบอร์โทรศัพท์|เบอร์โทร|เบอร์|โทรศัพท์|tel)\s*[:：]?\s*$/iu', '', $name);
+    $name = preg_replace('/\s+(?:นะครับ|นะคะ|ครับ|ค่ะ|คะ|คับ)\s*$/u', '', $name);
+    return trim($name);
+}
+
 $content = file_get_contents('php://input');
 $events = json_decode($content, true);
 
@@ -129,7 +147,10 @@ if (!is_null($events['events'])) {
             $stmt_chk_user->bind_param("s", $userId);
             $stmt_chk_user->execute();
             if ($stmt_chk_user->get_result()->num_rows === 0) {
-                send_reply($replyToken, ['type' => 'text', 'text' => "🛑 คุณยังไม่ได้ให้ข้อมูลติดต่อค่ะ\n\nกรุณาพิมพ์ ชื่อ และ เบอร์โทรศัพท์ ส่งมาได้เลยนะคะ (ไม่ต้องมีคำสั่งใดๆ)\n\nตัวอย่าง:\nดวงดาว 098009809"], $channelAccessToken);
+                send_reply($replyToken, ['type' => 'text', 'text' => "กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรค่ะ
+ใช้ชื่อเล่น ชื่อทั่วไป หรือชื่อเต็มได้ตามสะดวก
+
+ตัวอย่าง: แพรว 0812345678"], $channelAccessToken);
                 continue;
             }
 
@@ -204,7 +225,7 @@ if (!is_null($events['events'])) {
                         $stmt_update->bind_param("si", $userId, $tech_id);
                         
                         if ($stmt_update->execute()) {
-                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ ยืนยันตัวตนสำเร็จ\n\nยินดีต้อนรับ ช่าง$tech_name\n($tech_dept)\n\nคุณสามารถเริ่มรับงานซ่อมได้เลยค่ะ 🛠️"], $channelAccessToken);
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ ยืนยันตัวตนสำเร็จ\n\nยินดีต้อนรับ เจ้าหน้าที่ $tech_name\n($tech_dept)\n\nคุณสามารถเริ่มรับงานซ่อมได้เลยค่ะ 🛠️"], $channelAccessToken);
                         }
                     } else {
                         send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รหัสลับไม่ถูกต้อง หรือรหัสนี้ถูกใช้งานไปแล้วค่ะ"], $channelAccessToken);
@@ -227,17 +248,7 @@ if (!is_null($events['events'])) {
                 preg_match('/(0[0-9]{8,9})/', $text, $matches);
                 $phone = !empty($matches[1]) ? $matches[1] : null;
 
-                $name_part = str_replace($phone, '', $text);
-                $real_name = str_replace($words_to_remove, ' ', $name_part);
-                $real_name = preg_replace('/\s+/', ' ', $real_name);
-                $real_name = trim($real_name);
-
-                foreach ($prefixes_to_strip as $prefix) {
-                    if (mb_strpos($real_name, $prefix) === 0) {
-                        $real_name = trim(mb_substr($real_name, mb_strlen($prefix)));
-                        break;
-                    }
-                }
+                $real_name = reporterChosenName($text, $phone);
 
                 $stmt_old = $conn->prepare("SELECT real_name, phone_number FROM line_users WHERE line_user_id = ?");
                 $stmt_old->bind_param("s", $userId);
@@ -265,7 +276,7 @@ if (!is_null($events['events'])) {
                             $stmt2->execute();
                         }
                     }
-                    send_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nครั้งต่อไปที่แจ้งซ่อม ระบบจะใช้ข้อมูลใหม่นี้ทันทีค่ะ ✨"], $channelAccessToken);
+                    send_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nระบบจะใช้ข้อมูลนี้สำหรับคำขอครั้งต่อไปค่ะ"], $channelAccessToken);
                 } else {
                     send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการอัปเดตข้อมูลค่ะ"], $channelAccessToken);
                 }
@@ -281,30 +292,21 @@ if (!is_null($events['events'])) {
                 
                 if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {
                     $phone = $matches[1];
-                    $name_part = str_replace($phone, '', $text);
-                    $real_name = str_replace($words_to_remove, ' ', $name_part);
-                    $real_name = preg_replace('/\s+/', ' ', $real_name);
-                    $real_name = trim($real_name);
+                    $real_name = reporterChosenName($text, $phone);
                     
-                    foreach ($prefixes_to_strip as $prefix) {
-                        if (mb_strpos($real_name, $prefix) === 0) {
-                            $real_name = trim(mb_substr($real_name, mb_strlen($prefix)));
-                            break;
-                        }
+                    if ($real_name === '') {
+                        send_reply($replyToken, ['type' => 'text', 'text' => "กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรค่ะ ใช้ชื่อเล่นได้ เช่น แพรว 0812345678"], $channelAccessToken);
+                        continue;
                     }
                     
-                    if (empty($real_name)) {
-                        $real_name = $line_name; 
-                    }
-                    
-                    $real_name = explode(' ', trim($real_name))[0];
+
 
                     if (!empty($real_name)) {
                         $stmt = $conn->prepare("INSERT INTO line_users (line_user_id, line_display_name, real_name, phone_number) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE line_display_name=?, real_name=?, phone_number=?");
                         $stmt->bind_param("sssssss", $userId, $line_name, $real_name, $phone, $line_name, $real_name, $phone);
                         
                         if ($stmt->execute()) {
-                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกข้อมูลสำเร็จ!\nยินดีต้อนรับคุณ $real_name\n\nจากนี้สามารถพิมพ์แจ้งซ่อมเข้ามาได้เลยค่ะ เช่น 'แอร์น้ำหยด ห้อง 901' 🛠️"], $channelAccessToken);
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกข้อมูลแล้วค่ะ\nชื่อที่ใช้ติดต่อ: $real_name\nเบอร์โทร: $phone\n\nส่งคำขอพร้อมสถานที่ได้เลยค่ะ เช่น แอร์ไม่เย็น ห้อง 901"], $channelAccessToken);
                         } else {
                             send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการบันทึกข้อมูลค่ะ"], $channelAccessToken);
                         }
@@ -342,7 +344,10 @@ if (!is_null($events['events'])) {
                     }
                 }
 
-                send_reply($replyToken, ['type' => 'text', 'text' => "🛑 คุณยังไม่ได้ให้ข้อมูลติดต่อค่ะ\n\nเพื่อให้ช่างติดต่อกลับได้สะดวก กรุณาพิมพ์ ชื่อ และ เบอร์โทรศัพท์ ส่งมาให้ระบบได้เลยนะคะ\n\nตัวอย่าง:\nดวงดาว 098009809"], $channelAccessToken);
+                send_reply($replyToken, ['type' => 'text', 'text' => "กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรค่ะ
+ใช้ชื่อเล่น ชื่อทั่วไป หรือชื่อเต็มได้ตามสะดวก
+
+ตัวอย่าง: แพรว 0812345678"], $channelAccessToken);
                 continue;
             }
 
@@ -384,13 +389,13 @@ if (!is_null($events['events'])) {
                 $stmt->bind_param("sssssssssss", $ticket_no, $category, $location, $problem, $status, $user_reg['real_name'], $line_name, $user_reg['phone_number'], $userId, $message_id, $image_path);
                 
                 if($stmt->execute()) {
-                    $replyText = "✅ รับเรื่องแจ้งซ่อมเรียบร้อยค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n⚠️ ปัญหา: $category\n📍 สถานที่: $location\n📝 รายละเอียด: $problem\n\nระบบจะแจ้งเตือนให้ทราบเมื่อช่างเริ่มดำเนินการนะคะ";
+                    $replyText = "✅ รับคำขอเรียบร้อยแล้วค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n📌 เรื่องที่แจ้ง: $category\n📍 สถานที่: $location\n📝 ข้อความจากผู้แจ้ง: $problem\n\nระบบจะแจ้งเมื่อเจ้าหน้าที่รับงานค่ะ";
                     if ($image_path) {
                         $replyText .= "\n📸 (ระบบได้รับและแนบรูปภาพของคุณเข้าไปในใบงานเรียบร้อยแล้วค่ะ)";
                     }
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
-                    $short_reporter_name = explode(' ', trim($user_reg['real_name']))[0];
+                    $short_reporter_name = trim($user_reg['real_name']);
 
                     $flex_details = [
                         ['type' => 'text', 'text' => "ปัญหา: $category", 'size' => 'xs', 'color' => '#333333', 'wrap' => true],
@@ -404,14 +409,14 @@ if (!is_null($events['events'])) {
 
                     $pushMsg = [
                         'type' => 'flex',
-                        'altText' => 'แจ้งงานซ่อมใหม่: '.$ticket_no,
+                        'altText' => 'คำขอรับบริการใหม่: '.$ticket_no,
                         'contents' => [
                             'type' => 'bubble',
                             'size' => 'kilo',
                             'body' => [
                                 'type' => 'box', 'layout' => 'vertical', 'paddingAll' => '15px',
                                 'contents' => [
-                                    ['type' => 'text', 'text' => '🔔 งานแจ้งซ่อมใหม่', 'weight' => 'bold', 'color' => '#ef4444', 'size' => 'xs'],
+                                    ['type' => 'text', 'text' => '🔔 คำขอรับบริการใหม่', 'weight' => 'bold', 'color' => '#ef4444', 'size' => 'xs'],
                                     ['type' => 'text', 'text' => $ticket_no, 'weight' => 'bold', 'size' => 'lg', 'margin' => 'xs'],
                                     ['type' => 'separator', 'margin' => 'sm'],
                                     [
@@ -438,29 +443,19 @@ if (!is_null($events['events'])) {
             else {
                 if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {
                     $phone = $matches[1];
-                    $name_part = str_replace($phone, '', $text);
-                    $real_name = str_replace($words_to_remove, ' ', $name_part);
-                    $real_name = preg_replace('/\s+/', ' ', $real_name);
-                    $real_name = trim($real_name);
-                    
-                    foreach ($prefixes_to_strip as $prefix) {
-                        if (mb_strpos($real_name, $prefix) === 0) {
-                            $real_name = trim(mb_substr($real_name, mb_strlen($prefix)));
-                            break;
-                        }
-                    }
+                    $real_name = reporterChosenName($text, $phone);
                     
                     if (mb_strlen($text, 'UTF-8') < 50) {
                         if (empty($real_name)) {
                             $real_name = $user_reg['real_name']; 
                         }
-                        $real_name = explode(' ', trim($real_name))[0];
+    
 
                         $stmt = $conn->prepare("UPDATE line_users SET line_display_name=?, real_name=?, phone_number=? WHERE line_user_id=?");
                         $stmt->bind_param("ssss", $line_name, $real_name, $phone, $userId);
                         $stmt->execute();
                         
-                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nครั้งต่อไปที่แจ้งซ่อม ระบบจะใช้ข้อมูลใหม่นี้ทันทีค่ะ ✨"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nระบบจะใช้ข้อมูลนี้สำหรับคำขอครั้งต่อไปค่ะ"], $channelAccessToken);
                         continue;
                     }
                 }
@@ -518,13 +513,13 @@ if (!is_null($events['events'])) {
                 $ticket_no = $postbackData['ticket'];
 
                 if ($postbackData['action'] == 'accept') {
-                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_name, equipment_type, location, reporter_name, phone_number, line_display_name FROM repairs WHERE ticket_no = ?");
+                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_id, technician_name, equipment_type, location, reporter_name, phone_number, line_display_name FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
 
                     if ($job) {
-                        if ($job['status'] == 'รอรับเรื่อง') {
+                        if ($job['status'] == 'รอรับเรื่อง' && empty($job['technician_id'])) {
                             
                             $stmt_tech = $conn->prepare("SELECT * FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
                             $stmt_tech->bind_param("s", $userId);
@@ -534,17 +529,21 @@ if (!is_null($events['events'])) {
                             if ($tech_result) {
                                 $tech_name = $tech_result['full_name'];
                                 $tech_phone = !empty($tech_result['phone']) ? $tech_result['phone'] : "-"; 
-                                $tech_dept = isset($tech_result['department']) && !empty($tech_result['department']) ? $tech_result['department'] : "ทีมช่าง";
+                                $tech_dept = isset($tech_result['department']) && !empty($tech_result['department']) ? $tech_result['department'] : "ทีมเจ้าหน้าที่";
                             } else {
-                                send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: คุณยังไม่ได้ผูกบัญชีช่างเทคนิคค่ะ\nกรุณาพิมพ์ 'ผูกบัญชี [รหัส 4 หลัก]' เพื่อใช้งานนะคะ"], $channelAccessToken);
+                                send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: คุณยังไม่ได้ผูกบัญชีเจ้าหน้าที่เทคนิคค่ะ\nกรุณาพิมพ์ 'ผูกบัญชี [รหัส 4 หลัก]' เพื่อใช้งานนะคะ"], $channelAccessToken);
                                 continue;
                             }
 
-                            $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_name = ? WHERE ticket_no = ?");
-                            $stmt->bind_param("ss", $tech_name, $ticket_no);
-                            $stmt->execute();
+                            $tech_id = (int) $tech_result['id'];
+                            $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_id = ?, technician_name = ?, received_at = COALESCE(received_at, CURRENT_TIMESTAMP) WHERE ticket_no = ? AND status = 'รอรับเรื่อง' AND (technician_id IS NULL OR technician_id = 0)");
+                            $stmt->bind_param("iss", $tech_id, $tech_name, $ticket_no);
+                            if (!$stmt->execute() || $stmt->affected_rows !== 1) {
+                                send_reply($replyToken, ['type' => 'text', 'text' => "ไม่สามารถรับงานได้ ใบงานอาจมีผู้รับแล้ว กรุณาตรวจสอบอีกครั้งค่ะ"], $channelAccessToken);
+                                continue;
+                            }
 
-                            $disp_name = explode(' ', trim($job['reporter_name']))[0];
+                            $disp_name = trim($job['reporter_name']);
 
                             $replyMsg = [
                                 'type' => 'flex',
@@ -556,7 +555,7 @@ if (!is_null($events['events'])) {
                                         'type' => 'box', 'layout' => 'vertical', 'paddingAll' => '15px',
                                         'contents' => [
                                             ['type' => 'text', 'text' => '✅ รับงานเรียบร้อย', 'weight' => 'bold', 'color' => '#10b981', 'size' => 'xs'],
-                                            ['type' => 'text', 'text' => "ช่าง $tech_name", 'weight' => 'bold', 'size' => 'md', 'margin' => 'xs'],
+                                            ['type' => 'text', 'text' => "เจ้าหน้าที่ $tech_name", 'weight' => 'bold', 'size' => 'md', 'margin' => 'xs'],
                                             ['type' => 'text', 'text' => "($tech_dept)", 'size' => 'xxs', 'color' => '#888888', 'margin' => 'none'],
                                             ['type' => 'separator', 'margin' => 'sm'],
                                             [
@@ -578,7 +577,7 @@ if (!is_null($events['events'])) {
                                                 'action' => ['type' => 'postback', 'label' => 'แจ้งปิดงาน', 'data' => "action=close&ticket=$ticket_no"]
                                             ],
                                             ['type' => 'button', 'style' => 'secondary', 'height' => 'sm',
-                                                'action' => ['type' => 'uri', 'label' => '📝 จัดการ/เพิ่มหมายเหตุ', 'uri' => "http://103.99.11.147/repair/update_repair.php?id=" . $job['id']]
+                                                'action' => ['type' => 'uri', 'label' => '📝 จัดการ/เพิ่มหมายเหตุ', 'uri' => "https://autism-unfreeze-snooze.ngrok-free.dev/repair/update_repair.php?id=" . $job['id']]
                                             ]
                                         ]
                                     ]
@@ -587,12 +586,12 @@ if (!is_null($events['events'])) {
                             
                             send_reply($replyToken, $replyMsg, $channelAccessToken);
                             
-                            $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 ช่าง $tech_name รับงานซ่อมของคุณแล้วนะคะ\n📞 เบอร์ติดต่อ: $tech_phone\n\nช่างกำลังเตรียมตัวเข้าไปดำเนินการแก้ไขให้ค่ะ 🛠️"];
+                            $pushMsgToUser = ['type' => 'text', 'text' => "👨‍🔧 เจ้าหน้าที่ $tech_name รับงานของคุณแล้วค่ะ\n📞 เบอร์ติดต่อ: $tech_phone\n\nเจ้าหน้าที่จะตรวจสอบและประสานงานค่ะ"];
                             send_push($job['line_user_id'], $pushMsgToUser, $channelAccessToken);
 
                             if(!empty($line_group_id)) {
-                                $groupMessage = "📢 มีช่างรับงานแล้วจ้า!\n" .
-                                                "👨‍🔧 ช่าง: " . $tech_name . "\n" .
+                                $groupMessage = "📢 มีเจ้าหน้าที่รับงานแล้วจ้า!\n" .
+                                                "👨‍🔧 เจ้าหน้าที่: " . $tech_name . "\n" .
                                                 "💻 งาน: " . $job['equipment_type'] . " (" . $job['location'] . ")";
                                 
                                 $postDataGroup = [
@@ -603,13 +602,13 @@ if (!is_null($events['events'])) {
                             }
 
                         } else {
-                            $taken_by = !empty($job['technician_name']) ? $job['technician_name'] : "ช่างท่านอื่น";
-                            send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ใบงาน $ticket_no ถูกรับไปแล้วโดยช่าง $taken_by"], $channelAccessToken);
+                            $taken_by = !empty($job['technician_name']) ? $job['technician_name'] : "เจ้าหน้าที่ท่านอื่น";
+                            send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ใบงาน $ticket_no ถูกรับไปแล้วโดยเจ้าหน้าที่ $taken_by"], $channelAccessToken);
                         }
                     }
                 }
                 elseif ($postbackData['action'] == 'close') {
-                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_name, reporter_name FROM repairs WHERE ticket_no = ?");
+                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_id, technician_name, reporter_name FROM repairs WHERE ticket_no = ?");
                     $stmt_check->bind_param("s", $ticket_no);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
@@ -617,7 +616,7 @@ if (!is_null($events['events'])) {
                     if ($job) {
                         if ($job['status'] == 'กำลังดำเนินการ' || $job['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') {
                             
-                            $stmt_tech = $conn->prepare("SELECT full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
+                            $stmt_tech = $conn->prepare("SELECT id, full_name FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
                             $stmt_tech->bind_param("s", $userId);
                             $stmt_tech->execute();
                             $tech_result = $stmt_tech->get_result()->fetch_assoc();
@@ -625,16 +624,20 @@ if (!is_null($events['events'])) {
                             if ($tech_result) {
                                 $clicker_name = $tech_result['full_name'];
                                 
-                                if ($clicker_name === $job['technician_name']) {
+                                if ((int) ($job['technician_id'] ?? 0) > 0 && (int) $tech_result['id'] === (int) $job['technician_id']) {
                                     
-                                    $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว', completed_at = CURRENT_TIMESTAMP WHERE ticket_no = ?");
-                                    $stmt->bind_param("s", $ticket_no);
-                                    $stmt->execute();
+                                    $clicker_id = (int) $tech_result['id'];
+                                    $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว', completed_at = CURRENT_TIMESTAMP WHERE ticket_no = ? AND technician_id = ? AND status IN ('กำลังดำเนินการ', 'ช่างรับเรื่องแจ้งซ่อมแล้ว')");
+                                    $stmt->bind_param("si", $ticket_no, $clicker_id);
+                                    if (!$stmt->execute() || $stmt->affected_rows !== 1) {
+                                        send_reply($replyToken, ['type' => 'text', 'text' => "ไม่สามารถปิดงานได้ สิทธิ์หรือสถานะใบงานเปลี่ยนแล้วค่ะ"], $channelAccessToken);
+                                        continue;
+                                    }
 
                                     $close_reply = "🎉 บันทึกปิดงานใบงาน $ticket_no เรียบร้อยค่ะ ระบบได้ส่งแบบประเมินให้ผู้แจ้งแล้ว";
                                     send_reply($replyToken, ['type' => 'text', 'text' => $close_reply], $channelAccessToken);
 
-                                    $short_reporter_name_close = explode(' ', trim($job['reporter_name']))[0];
+                                    $short_reporter_name_close = trim($job['reporter_name']);
 
                                     $review_msg = [
                                         'type' => 'flex',
@@ -646,7 +649,7 @@ if (!is_null($events['events'])) {
                                                 'contents' => [
                                                     ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'md'],
                                                     ['type' => 'text', 'text' => "ถึงคุณ ".$short_reporter_name_close, 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'xs'],
-                                                    ['type' => 'text', 'text' => 'ช่าง '.$clicker_name.' ดำเนินการซ่อมเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'size' => 'xs', 'wrap' => true],
+                                                    ['type' => 'text', 'text' => 'เจ้าหน้าที่ '.$clicker_name.' ดำเนินการซ่อมเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'size' => 'xs', 'wrap' => true],
                                                     ['type' => 'separator', 'margin' => 'sm'],
                                                     ['type' => 'text', 'text' => '1️⃣ ให้คะแนนดาว (กดเปลี่ยนได้)', 'size' => 'xs', 'color' => '#aaaaaa', 'margin' => 'sm'],
                                                     [
@@ -682,7 +685,7 @@ if (!is_null($events['events'])) {
                                     send_push($job['line_user_id'], $review_msg, $channelAccessToken);
                                     
                                 } else {
-                                    send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: เฉพาะช่าง ".$job['technician_name']." ที่สามารถแจ้งปิดงานใบงาน $ticket_no ได้ค่ะ"], $channelAccessToken);
+                                    send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: เฉพาะเจ้าหน้าที่ ".$job['technician_name']." ที่สามารถแจ้งปิดงานใบงาน $ticket_no ได้ค่ะ"], $channelAccessToken);
                                 }
                             } else {
                                 send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ระบบปฏิเสธ: ผู้กดไม่มีสิทธิ์ทำรายการนี้ค่ะ"], $channelAccessToken);

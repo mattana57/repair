@@ -29,7 +29,7 @@ $query_string = '';
 if (isset($_GET['source'])) {
     $source = $_GET['source'];
     if ($source === 'tech_reviews') {
-        // 🚨 ถ้าเปิดมาจากหน้ารีวิวช่าง (แท็บใหม่) ให้เปลี่ยน URL ของปุ่มกลับ เป็นการปิดแท็บทันที
+        // 🚨 ถ้าเปิดมาจากหน้ารีวิวเจ้าหน้าที่ (แท็บใหม่) ให้เปลี่ยน URL ของปุ่มกลับ เป็นการปิดแท็บทันที
         $back_url = 'javascript:window.close();';
     } elseif ($source === 'tech_history' && !empty($_GET['tech'])) {
         $query_string = '&source=tech_history&tech=' . urlencode($_GET['tech']);
@@ -76,13 +76,22 @@ $repair_line_id = "";
 $repair_real_name = "";
 
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
+    $id = filter_var($_GET['id'], FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]);
+    if ($id === false || $id === null) {
+        http_response_code(400);
+        exit('เลขใบงานไม่ถูกต้อง');
+    }
     $sql = "SELECT * FROM repairs WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result();
     $repair = $result->fetch_assoc();
+    if (!$repair) {
+        http_response_code(404);
+        exit('ไม่พบใบงาน');
+    }
 
     // ✨ ดึง ID LINE และ ชื่อจริง จากตาราง line_users
     $repair_line_id = $repair['reporter_name'];
@@ -101,11 +110,11 @@ if (isset($_GET['id'])) {
         }
     }
 
-    // ดึงเบอร์โทรศัพท์ของช่างผู้รับผิดชอบจากตาราง users
-    if (!empty($repair['technician_name'])) {
-        $stmt_tech = $conn->prepare("SELECT phone FROM users WHERE full_name = ? LIMIT 1");
+    // ดึงเบอร์โทรศัพท์ของเจ้าหน้าที่ผู้รับผิดชอบจากตาราง users
+    if (!empty($repair['technician_id'])) {
+        $stmt_tech = $conn->prepare("SELECT phone FROM users WHERE technician_id = ? LIMIT 1");
         if ($stmt_tech) {
-            $stmt_tech->bind_param("s", $repair['technician_name']);
+            $stmt_tech->bind_param("i", $repair['technician_id']);
             $stmt_tech->execute();
             $res_tech = $stmt_tech->get_result();
             if ($row_tech = $res_tech->fetch_assoc()) {
@@ -147,7 +156,7 @@ if (isset($_GET['id'])) {
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 mobile-header-fix">
             <div class="w-full sm:w-auto text-left">
                 <h1 class="text-2xl font-bold text-slate-800"><i class="fas fa-file-alt text-sky-500 mr-2"></i> รายละเอียดใบงานแจ้งซ่อม</h1>
-                <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของช่าง</p>
+                <p class="text-slate-500 mt-1 text-sm">ข้อมูลการแจ้งซ่อมจากบุคลากร และบันทึกการปฏิบัติงานของเจ้าหน้าที่</p>
             </div>
             <div class="flex gap-3 w-full sm:w-auto mobile-btn-wrap">
                 <a href="<?php echo htmlspecialchars($back_url); ?>" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-md inline-flex items-center justify-center text-sm whitespace-nowrap mobile-btn">
@@ -178,7 +187,7 @@ if (isset($_GET['id'])) {
                     <!-- ✨ ปรับข้อความให้ชิดขวาในแนวนอน (landscape) เสมอ ✨ -->
                     <p class="font-bold text-slate-800 mb-2 text-left landscape:text-right md:text-right">สถานะปัจจุบัน</p>
                     <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold border <?php echo $statusColor; ?> shadow-sm">
-                        <i class="fas <?php echo $statusIcon; ?> mr-2 text-lg"></i> <?php echo $repair['status']; ?>
+                        <i class="fas <?php echo $statusIcon; ?> mr-2 text-lg"></i> <?php echo htmlspecialchars(str_replace('ช่าง', 'เจ้าหน้าที่', $repair['status']), ENT_QUOTES, 'UTF-8'); ?>
                     </span>
                 </div>
             </div>
@@ -207,7 +216,7 @@ if (isset($_GET['id'])) {
                             </div>
                             <!-- ✨ ปรับให้แสดง 1 คอลัมน์ (บน-ล่าง) เฉพาะมือถือและไอแพดแนวตั้งของฝั่งผู้บริหาร ✨ -->
                             <div class="<?php echo $is_executive ? 'col-span-2 landscape:col-span-1 lg:col-span-1' : ''; ?>">
-                                <p class="<?php echo $label_class; ?>">ชื่อ-นามสกุล</p>
+                                <p class="<?php echo $label_class; ?>">ชื่อที่ใช้ติดต่อ</p>
                                 <p class="font-semibold text-slate-800"><?php echo htmlspecialchars($repair_real_name); ?></p>
                             </div>
                             <div class="<?php echo $is_executive ? 'col-span-2 landscape:col-span-1 lg:col-span-1' : ''; ?>">
@@ -275,9 +284,9 @@ if (isset($_GET['id'])) {
                                 <i class="fas fa-tools text-sm"></i>
                             </div>
                             <div>
-                                <h3 class="font-bold text-slate-800">บันทึกการปฏิบัติงาน (ฝ่ายช่าง)</h3>
+                                <h3 class="font-bold text-slate-800">บันทึกการปฏิบัติงาน (เจ้าหน้าที่)</h3>
                                 <div class="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
-                                    <span>ผู้รับผิดชอบ: <span class="font-bold <?php echo !empty($repair['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>"><?php echo !empty($repair['technician_name']) ? htmlspecialchars($repair['technician_name']) : '- ยังไม่ระบุช่าง -'; ?></span></span>
+                                    <span>ผู้รับผิดชอบ: <span class="font-bold <?php echo !empty($repair['technician_name']) ? 'text-indigo-600' : 'text-slate-400'; ?>"><?php echo !empty($repair['technician_name']) ? htmlspecialchars($repair['technician_name']) : '- ยังไม่ระบุเจ้าหน้าที่ -'; ?></span></span>
                                     <?php 
                                     if(!empty($tech_phone)): 
                                         if ($repair['status'] == 'กำลังดำเนินการ' || $repair['status'] == 'ช่างรับเรื่องแจ้งซ่อมแล้ว') {
@@ -317,7 +326,7 @@ if (isset($_GET['id'])) {
                         <div class="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start">
                             <i class="fas fa-info-circle text-amber-500 mt-0.5 mr-3"></i>
                             <div class="text-sm text-amber-700">
-                                <p class="font-bold mb-0.5">รอการตอบรับจากฝ่ายช่าง</p>
+                                <p class="font-bold mb-0.5">รอการตอบรับจากฝ่ายเจ้าหน้าที่</p>
                                 <p class="opacity-80">ใบงานนี้ยังไม่ถูกรับเข้าสู่กระบวนการซ่อมแซม</p>
                             </div>
                         </div>
@@ -408,7 +417,7 @@ if (isset($_GET['id'])) {
                                         </div>
                                     </div>
                                     <?php else: ?>
-                                    <!-- ✨ โครงสร้างสำหรับแอดมินและช่าง (ทุกอุปกรณ์) ✨ -->
+                                    <!-- ✨ โครงสร้างสำหรับแอดมินและเจ้าหน้าที่ (ทุกอุปกรณ์) ✨ -->
                                     <div class="flex flex-col sm:flex-row sm:items-center justify-start mb-2 gap-1.5 sm:gap-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm">
@@ -451,7 +460,7 @@ if (isset($_GET['id'])) {
 
                                     <div class="pl-[52px] mt-2.5">
                                         <div class="text-[11px] text-indigo-600 font-bold inline-block bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
-                                            <i class="fas fa-tools mr-1.5 opacity-70"></i>ให้คะแนนช่าง: <?php echo !empty($repair['technician_name']) && $repair['technician_name'] !== '-' ? htmlspecialchars($repair['technician_name']) : 'ไม่ระบุช่าง'; ?>
+                                            <i class="fas fa-tools mr-1.5 opacity-70"></i>ให้คะแนนเจ้าหน้าที่: <?php echo !empty($repair['technician_name']) && $repair['technician_name'] !== '-' ? htmlspecialchars($repair['technician_name']) : 'ไม่ระบุเจ้าหน้าที่'; ?>
                                         </div>
                                     </div>
                                 <?php else: ?>

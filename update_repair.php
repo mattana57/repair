@@ -23,8 +23,23 @@ if (isset($_GET['source'])) {
 
 date_default_timezone_set('Asia/Bangkok');
 
-$is_admin = isset($_SESSION['role']) && in_array(strtolower($_SESSION['role']), ['admin', 'executive']);
+$is_admin = isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'admin';
 $is_tech = isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'technician';
+
+if (!$is_admin && !$is_tech) {
+    http_response_code(403);
+    exit('ไม่อนุญาตให้แก้ไขใบงานนี้');
+}
+if (!isset($_SESSION['repair_csrf']) || !is_string($_SESSION['repair_csrf'])) {
+    $_SESSION['repair_csrf'] = bin2hex(random_bytes(32));
+}
+$validated_repair_id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT,
+    ['options' => ['min_range' => 1]]);
+if ($validated_repair_id === false || $validated_repair_id === null) {
+    http_response_code(400);
+    exit('เลขใบงานไม่ถูกต้อง');
+}
+
 
 function splitThaiEngName($fullName, $engName) {
     $th = trim((string)$fullName);
@@ -61,7 +76,7 @@ $repair_line_id = "";
 $repair_real_name = "";
 
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
+    $id = $validated_repair_id;
     $sql = "SELECT * FROM repairs WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
@@ -87,55 +102,15 @@ if (isset($_GET['id'])) {
             ['options' => ['min_range' => 1]]
         );
 
-        // คงขั้นตอนเดิม: งานที่รหัสว่างเปิดได้
-        // งานที่มีรหัสเจ้าของแล้ว ต้องเป็นเจ้าหน้าที่คนนั้น
+        // เปิดได้เฉพาะใบงานที่รับแล้วและมีรหัสเจ้าของตรงกับบัญชี
         if ($owner_tech_id === false
-            || (!empty($repair['technician_id'])
-                && ($repair_owner_id === false
-                    || $repair_owner_id !== $owner_tech_id))) {
+            || $repair_owner_id === false
+            || $repair_owner_id !== $owner_tech_id) {
             http_response_code(403);
             exit('ไม่อนุญาตให้เข้าถึงใบงานนี้');
         }
     }
 
-    // ✨ ถ้าช่างรับงานผ่าน LINE มาแล้ว แต่เวลา received_at ยังว่าง ให้ประทับเวลาปัจจุบันแบบเรียลไทม์ทันที ✨
-    if ($repair && (empty($repair['received_at']) || $repair['received_at'] === '0000-00-00 00:00:00' || $repair['received_at'] === '-')) {
-        if ($repair['status'] !== 'รอรับเรื่อง') {
-            $auto_rec_time = (!empty($repair['completed_at']) && $repair['completed_at'] !== '0000-00-00 00:00:00') ? $repair['completed_at'] : date('Y-m-d H:i:s');
-                        if ($is_tech) {
-                $stmt_fix = $conn->prepare(
-                    "UPDATE repairs
-                     SET received_at = ?
-                     WHERE id = ?
-                       AND (technician_id = ?
-                            OR technician_id IS NULL
-                            OR technician_id = 0)"
-                );
-            } else {
-                $stmt_fix = $conn->prepare(
-                    "UPDATE repairs SET received_at = ? WHERE id = ?"
-                );
-            }
-
-            if ($stmt_fix) {
-                if ($is_tech) {
-                    $stmt_fix->bind_param(
-                        "sii",
-                        $auto_rec_time,
-                        $id,
-                        $owner_tech_id
-                    );
-                } else {
-                    $stmt_fix->bind_param("si", $auto_rec_time, $id);
-                }
-
-                $stmt_fix->execute();
-                $stmt_fix->close();
-                $repair['received_at'] = $auto_rec_time;
-            }
-        }
-    }
-    
     // ✨ ดึงข้อมูล ID LINE และ ชื่อจริง จากตาราง line_users เพื่อนำมาโชว์
     $repair_line_id = $repair['reporter_name'];
     $repair_real_name = $repair['reporter_name'];
@@ -164,7 +139,7 @@ if (!empty($query_params)) {
 }
 
 $techs_by_dept = [];
-// ดึงรหัสช่างมาด้วยเพื่อแยกคนชื่อซ้ำและใช้บันทึกข้อมูล
+// ดึงรหัสเจ้าหน้าที่มาด้วยเพื่อแยกคนชื่อซ้ำและใช้บันทึกข้อมูล
 $tech_res = $conn->query("SELECT id, full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != ''");
 if($tech_res && $tech_res->num_rows > 0){
     while($t = $tech_res->fetch_assoc()) {
@@ -249,13 +224,26 @@ $show_alert = false;
 $show_asset_alert = false; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $csrf = $_POST['repair_csrf'] ?? null;
+    if (!is_string($csrf) || !hash_equals($_SESSION['repair_csrf'], $csrf)) {
+        http_response_code(403);
+        exit('คำขอไม่ถูกต้อง กรุณาเปิดใบงานใหม่แล้วลองอีกครั้ง');
+    }
+    if (!isset($_POST['save_asset_only'])) {
+        $posted_id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]]);
+        if ($posted_id === false || $posted_id !== $validated_repair_id) {
+            http_response_code(400);
+            exit('เลขใบงานไม่ตรงกับหน้าที่เปิด');
+        }
+    }
 
     if ($is_tech) {
         if (!is_array($repair)
             || !isset($owner_tech_id)
             || $owner_tech_id === false
-            || (!empty($repair['technician_id'])
-                && (int) $repair['technician_id'] !== $owner_tech_id)) {
+            || (int) ($repair['technician_id'] ?? 0) < 1
+            || (int) $repair['technician_id'] !== $owner_tech_id) {
             http_response_code(403);
             exit('ไม่อนุญาตให้บันทึกใบงานนี้');
         }
@@ -307,7 +295,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $old_status = isset($repair['status']) ? $repair['status'] : '';
         $old_note = isset($repair['repair_note']) ? trim($repair['repair_note']) : '';
 
-        $status = $_POST['status'];
+        $status = $_POST['status'] ?? null;
+        if (!is_string($status) || !in_array($status,
+            ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'], true)) {
+            http_response_code(400);
+            exit('สถานะใบงานไม่ถูกต้อง');
+        }
         $repair_note = trim($_POST['repair_note']);
         
                 if ($is_tech) {
@@ -328,8 +321,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($res_t->num_rows > 0) {
                 $technician_name = $res_t->fetch_assoc()['full_name'];
             } else {
-                $technician_id = null;
-                $technician_name = null;
+                http_response_code(403);
+                exit('ไม่พบข้อมูลเจ้าหน้าที่ กรุณาเข้าสู่ระบบใหม่');
             }
             $chk_t->close();
         } elseif ($is_tech) {
@@ -376,9 +369,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     "SELECT id
                      FROM repairs
                      WHERE id = ?
-                       AND (technician_id = ?
-                            OR technician_id IS NULL
-                            OR technician_id = 0)
+                       AND technician_id = ?
                      FOR UPDATE"
                 );
 
@@ -419,9 +410,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         technician_id = ?, technician_name = ?,
                         asset_code = ?, received_at = ?, completed_at = ?
                     WHERE id = ?
-                      AND (technician_id = ?
-                           OR technician_id IS NULL
-                           OR technician_id = 0)";
+                      AND technician_id = ?";
             } else {
                 // คงผู้รับผิดชอบที่อยู่ในฐานข้อมูล แม้มี POST ปลอมส่งมา
                 $update_sql = "UPDATE repairs
@@ -555,7 +544,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $messages = [];
                 
                 if ($status === 'ซ่อมเสร็จแล้ว' && $old_status !== 'ซ่อมเสร็จแล้ว') {
-                    $textMsg = "🎉 ช่างได้ดำเนินการแก้ไขใบงาน {$repair['ticket_no']} เสร็จสิ้นแล้วค่ะ\n\n" .
+                    $textMsg = "🎉 ดำเนินการใบงาน {$repair['ticket_no']} เสร็จสิ้นแล้วค่ะ\n\n" .
                                "📝 หมายเหตุ: " . (!empty($repair_note) ? $repair_note : "- ไม่มีหมายเหตุ -");
                                
                     $review_msg = [
@@ -568,7 +557,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 'contents' => [
                                     ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'md'],
                                     ['type' => 'text', 'text' => "ถึงคุณ ".$repair['reporter_name'], 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'xs'],
-                                    ['type' => 'text', 'text' => 'ช่าง '.$tech_display.' ดำเนินการซ่อมเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'size' => 'xs', 'wrap' => true],
+                                    ['type' => 'text', 'text' => 'เจ้าหน้าที่ '.$tech_display.' ดำเนินการซ่อมเสร็จเรียบร้อยแล้ว!', 'weight' => 'bold', 'size' => 'xs', 'wrap' => true],
                                     ['type' => 'separator', 'margin' => 'sm'],
                                     ['type' => 'text', 'text' => '1️⃣ ให้คะแนนดาว (กดเปลี่ยนได้)', 'size' => 'xs', 'color' => '#aaaaaa', 'margin' => 'sm'],
                                     [
@@ -607,10 +596,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     ];
                 } 
                 else if ($repair_note !== $old_note && $repair_note !== '') {
-                    $textMsg = "📝 ช่างได้อัปเดตหมายเหตุในงานซ่อม\n\n" .
+                    $textMsg = "📝 อัปเดตความคืบหน้าใบงาน\n\n" .
                                "📋 ใบงาน: {$repair['ticket_no']}\n" .
                                "💻 ปัญหา: {$repair['equipment_type']} ({$repair['location']})\n" .
-                               "👨‍🔧 ช่างดูแล: {$tech_display}\n" .
+                               "👨‍🔧 ผู้รับผิดชอบ: {$tech_display}\n" .
                                "💬 หมายเหตุ: {$repair_note}";
                                
                     $messages = [['type' => 'text', 'text' => $textMsg]];
@@ -839,7 +828,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                             <div class="pl-[52px] mt-2.5">
                                 <div class="text-[11px] text-indigo-600 font-bold inline-block bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
-                                    <i class="fas fa-tools mr-1.5 opacity-70"></i>ให้คะแนนช่าง: <?php echo !empty($repair['technician_name']) && $repair['technician_name'] !== '-' ? htmlspecialchars($repair['technician_name']) : 'ไม่ระบุช่าง'; ?>
+                                    <i class="fas fa-tools mr-1.5 opacity-70"></i>ให้คะแนนเจ้าหน้าที่: <?php echo !empty($repair['technician_name']) && $repair['technician_name'] !== '-' ? htmlspecialchars($repair['technician_name']) : 'ไม่ระบุเจ้าหน้าที่'; ?>
                                 </div>
                             </div>
                         <?php else: ?>
@@ -860,6 +849,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-6">บันทึกการปฏิบัติงาน</h2>
 
                     <form id="updateForm" action="<?php echo htmlspecialchars($form_action); ?>" method="POST" class="space-y-6 flex-1 flex flex-col">
+                        <input type="hidden" name="repair_csrf" value="<?php echo htmlspecialchars($_SESSION['repair_csrf'], ENT_QUOTES, 'UTF-8'); ?>">
                         <input type="hidden" name="id" value="<?php echo $repair['id']; ?>">
 
                         <?php
@@ -874,7 +864,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-user-cog text-sky-500 mr-2"></i> เจ้าหน้าที่ผู้รับผิดชอบ</label>
                             
                             <?php if ($is_tech): ?>
-                                <!-- ล็อกสิทธิ์ผู้รับผิดชอบตามรหัสช่างของ Account ที่กำลังล็อกอิน (กรณีรับงานที่ว่างอยู่ จะผูกกับตัวเองอัตโนมัติ) -->
+                                <!-- ล็อกสิทธิ์ผู้รับผิดชอบตามรหัสเจ้าหน้าที่ของ Account ที่กำลังล็อกอิน (ต้องรับงานก่อนเปิดหน้านี้) -->
                                 <input type="hidden" name="technician_id" id="technician_id" value="<?php echo $_SESSION['technician_id']; ?>">
                                 <input type="hidden" name="technician_name" id="technician_name" value="<?php echo htmlspecialchars($_SESSION['full_name']); ?>">
                                 <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center shadow-sm">
@@ -1016,7 +1006,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
 
                         <div class="w-full">
-                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-edit text-sky-500 mr-2"></i> บันทึกผลการดำเนินการ / หมายเหตุช่าง</label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-edit text-sky-500 mr-2"></i> บันทึกผลการดำเนินการ / หมายเหตุเจ้าหน้าที่</label>
                             <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
                         </div>
 
@@ -1051,6 +1041,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <button onclick="toggleModal('assetModal')" class="text-slate-400 hover:text-rose-500 transition-colors bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm"><i class="fas fa-times"></i></button>
             </div>
             <form action="update_repair.php?id=<?php echo $id; ?>" method="POST" class="p-6">
+                <input type="hidden" name="repair_csrf" value="<?php echo htmlspecialchars($_SESSION['repair_csrf'], ENT_QUOTES, 'UTF-8'); ?>">
                 <input type="hidden" name="save_asset_only" value="1"><input type="hidden" name="asset_id" id="asset_id" value="">
                 <div class="space-y-5">
                     <div>
@@ -1267,9 +1258,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // ✅ วาง goBack ไว้ด้านนอกสุดแบบนี้ ปุ่มถึงจะมองเห็นและกดได้
         function goBack() {
-            const source = "<?php echo isset($_GET['source']) ? $_GET['source'] : ''; ?>";
+            const source = <?php echo json_encode(is_string($_GET['source'] ?? null) ? $_GET['source'] : '', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
             if (source === 'tech_reviews') {
-                // 🚨 ถ้าเปิดมาจากหน้ารีวิวช่าง (แท็บใหม่) พอกดกลับ ให้ "ปิดแท็บนี้ลง" ทันที!
+                // 🚨 ถ้าเปิดมาจากหน้ารีวิวเจ้าหน้าที่ (แท็บใหม่) พอกดกลับ ให้ "ปิดแท็บนี้ลง" ทันที!
                 window.close();
             } else if (source !== '') {
                 // หากเปิดมาจากจุดอื่น ให้พากลับไปหน้าเดิม
