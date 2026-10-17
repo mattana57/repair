@@ -1,4 +1,37 @@
 <?php
+
+// แสดงข้อความแจ้งเตือนให้อ่านได้บนมือถือ โดยคงสถานะ HTTP เดิม
+function mbsViewRepairNotice($message) {
+    $status = http_response_code();
+    if (!$status || $status < 400) {
+        $status = 400;
+    }
+    http_response_code($status);
+    header('Content-Type: text/html; charset=UTF-8');
+    header('Cache-Control: no-store');
+    $safe_message = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+    $role = strtolower((string) ($_SESSION['role'] ?? ''));
+    $back = $role === 'admin' ? 'dashboard.php?tab=repairs'
+        : ($role === 'executive' ? 'executive_dashboard.php' : 'technician_home.php');
+    echo '<!doctype html><html lang="th"><head><meta charset="utf-8">'
+        . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        . '<title>แจ้งเตือนการทำรายการ</title><style>'
+        . '*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#1e293b;'
+        . 'font-family:Tahoma,Arial,sans-serif;font-size:20px;line-height:1.7;'
+        . 'padding:32px 20px}main{max-width:560px;margin:8vh auto;background:#fff;'
+        . 'padding:28px 24px;border:1px solid #e2e8f0;border-radius:16px}'
+        . 'h1{font-size:25px;line-height:1.5;margin:0 0 16px}'
+        . 'p{margin:0 0 24px;overflow-wrap:anywhere}'
+        . 'a{display:inline-block;font-size:18px;font-weight:bold;padding:12px 20px;'
+        . 'background:#0369a1;color:white;text-decoration:none;border-radius:10px}'
+        . 'small{display:block;margin-top:20px;font-size:16px;color:#64748b}'
+        . '</style></head><body><main><h1>ไม่สามารถทำรายการได้</h1><p>'
+        . $safe_message . '</p><a href="' . $back . '">กลับหน้ารายการ</a>'
+        . '<small>หากบัญชีไม่ถูกต้อง กรุณาออกจากระบบแล้วเข้าสู่ระบบใหม่</small>'
+        . '</main></body></html>';
+    exit;
+}
+
 require_once __DIR__ . '/auth_guard.php';
 
 // ตรวจสิทธิ์ก่อนอ่านรายละเอียดใบงาน
@@ -10,7 +43,7 @@ if (!in_array(
     http_response_code(403);
     header('Content-Type: text/plain; charset=UTF-8');
     header('Cache-Control: no-store');
-    exit('ไม่อนุญาตให้เข้าถึงหน้านี้');
+    mbsViewRepairNotice('ไม่อนุญาตให้เข้าถึงหน้านี้');
 }
 
 require_once __DIR__ . '/db_connect.php';
@@ -80,7 +113,7 @@ if (isset($_GET['id'])) {
         ['options' => ['min_range' => 1]]);
     if ($id === false || $id === null) {
         http_response_code(400);
-        exit('เลขใบงานไม่ถูกต้อง');
+        mbsViewRepairNotice('เลขใบงานไม่ถูกต้อง');
     }
     $sql = "SELECT * FROM repairs WHERE id = ?";
     $stmt = $conn->prepare($sql);
@@ -90,7 +123,7 @@ if (isset($_GET['id'])) {
     $repair = $result->fetch_assoc();
     if (!$repair) {
         http_response_code(404);
-        exit('ไม่พบใบงาน');
+        mbsViewRepairNotice('ไม่พบใบงาน');
     }
 
     // ✨ ดึง ID LINE และ ชื่อจริง จากตาราง line_users

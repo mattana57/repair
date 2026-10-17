@@ -1,4 +1,67 @@
 <?php
+
+// แสดงข้อความแจ้งเตือนให้อ่านได้บนมือถือ โดยคงสถานะ HTTP เดิม
+
+// รูปแบบ Flex ใช้สีน้ำเงินเข้ม สีเทา และพื้นขาว ไม่เปลี่ยนข้อมูลหรือคำสั่ง
+function mbsReadableFlexNode($node, $inside_flex = false) {
+    if (!is_array($node)) { return $node; }
+    $type = $node['type'] ?? null;
+    $inside_flex = $inside_flex || $type === 'flex' || $type === 'bubble';
+    if ($inside_flex && $type === 'bubble') {
+        $node['size'] = 'mega';
+    }
+    if ($inside_flex && $type === 'text') {
+        if (!isset($node['size']) || in_array($node['size'], ['xxs', 'xs', 'sm'], true)) {
+            $node['size'] = 'md';
+        }
+        $node['wrap'] = true;
+        $node['color'] = ($node['weight'] ?? '') === 'bold' ? '#1E3A5F' : '#222222';
+    }
+    if ($inside_flex && $type === 'button') {
+        $node['height'] = 'md';
+        if (($node['style'] ?? '') === 'primary') {
+            $node['color'] = '#1E3A5F';
+        }
+    }
+    foreach ($node as $key => $value) {
+        if (is_array($value)) {
+            $node[$key] = mbsReadableFlexNode($value, $inside_flex);
+        }
+    }
+    return $node;
+}
+
+function mbsUpdateRepairNotice($message) {
+    $status = http_response_code();
+    if (!$status || $status < 400) {
+        $status = 400;
+    }
+    http_response_code($status);
+    header('Content-Type: text/html; charset=UTF-8');
+    header('Cache-Control: no-store');
+    $safe_message = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+    $role = strtolower((string) ($_SESSION['role'] ?? ''));
+    $back = $role === 'admin' ? 'dashboard.php?tab=repairs'
+        : ($role === 'executive' ? 'executive_dashboard.php' : 'technician_home.php');
+    echo '<!doctype html><html lang="th"><head><meta charset="utf-8">'
+        . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        . '<title>แจ้งเตือนการทำรายการ</title><style>'
+        . '*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#1e293b;'
+        . 'font-family:Tahoma,Arial,sans-serif;font-size:20px;line-height:1.7;'
+        . 'padding:32px 20px}main{max-width:560px;margin:8vh auto;background:#fff;'
+        . 'padding:28px 24px;border:1px solid #e2e8f0;border-radius:16px}'
+        . 'h1{font-size:25px;line-height:1.5;margin:0 0 16px}'
+        . 'p{margin:0 0 24px;overflow-wrap:anywhere}'
+        . 'a{display:inline-block;font-size:18px;font-weight:bold;padding:12px 20px;'
+        . 'background:#0369a1;color:white;text-decoration:none;border-radius:10px}'
+        . 'small{display:block;margin-top:20px;font-size:16px;color:#64748b}'
+        . '</style></head><body><main><h1>ไม่สามารถทำรายการได้</h1><p>'
+        . $safe_message . '</p><a href="' . $back . '">กลับหน้ารายการ</a>'
+        . '<small>หากบัญชีไม่ถูกต้อง กรุณาออกจากระบบแล้วเข้าสู่ระบบใหม่</small>'
+        . '</main></body></html>';
+    exit;
+}
+
 // เรียกใช้ระบบตรวจสิทธิ์ส่วนกลางแทนการเช็คแบบแยกไฟล์
 require_once 'auth_guard.php';
 require_once __DIR__ . '/activity_log.php';
@@ -28,7 +91,7 @@ $is_tech = isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'techni
 
 if (!$is_admin && !$is_tech) {
     http_response_code(403);
-    exit('ไม่อนุญาตให้แก้ไขใบงานนี้');
+    mbsUpdateRepairNotice('ไม่อนุญาตให้แก้ไขใบงานนี้');
 }
 if (!isset($_SESSION['repair_csrf']) || !is_string($_SESSION['repair_csrf'])) {
     $_SESSION['repair_csrf'] = bin2hex(random_bytes(32));
@@ -37,7 +100,7 @@ $validated_repair_id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT,
     ['options' => ['min_range' => 1]]);
 if ($validated_repair_id === false || $validated_repair_id === null) {
     http_response_code(400);
-    exit('เลขใบงานไม่ถูกต้อง');
+    mbsUpdateRepairNotice('เลขใบงานไม่ถูกต้อง');
 }
 
 
@@ -85,7 +148,7 @@ if (isset($_GET['id'])) {
     $repair = $result->fetch_assoc();
     
     if (!$repair) {
-        die("ไม่พบข้อมูลใบงาน");
+        mbsUpdateRepairNotice("ไม่พบข้อมูลใบงาน");
     }
 
     // เจ้าหน้าที่เปิดได้เฉพาะใบงานที่ผูกกับรหัสของบัญชีตนเอง
@@ -107,7 +170,7 @@ if (isset($_GET['id'])) {
             || $repair_owner_id === false
             || $repair_owner_id !== $owner_tech_id) {
             http_response_code(403);
-            exit('ไม่อนุญาตให้เข้าถึงใบงานนี้');
+            mbsUpdateRepairNotice('ไม่อนุญาตให้เข้าถึงใบงานนี้');
         }
     }
 
@@ -227,14 +290,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $csrf = $_POST['repair_csrf'] ?? null;
     if (!is_string($csrf) || !hash_equals($_SESSION['repair_csrf'], $csrf)) {
         http_response_code(403);
-        exit('คำขอไม่ถูกต้อง กรุณาเปิดใบงานใหม่แล้วลองอีกครั้ง');
+        mbsUpdateRepairNotice('คำขอไม่ถูกต้อง กรุณาเปิดใบงานใหม่แล้วลองอีกครั้ง');
     }
     if (!isset($_POST['save_asset_only'])) {
         $posted_id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT,
             ['options' => ['min_range' => 1]]);
         if ($posted_id === false || $posted_id !== $validated_repair_id) {
             http_response_code(400);
-            exit('เลขใบงานไม่ตรงกับหน้าที่เปิด');
+            mbsUpdateRepairNotice('เลขใบงานไม่ตรงกับหน้าที่เปิด');
         }
     }
 
@@ -245,7 +308,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             || (int) ($repair['technician_id'] ?? 0) < 1
             || (int) $repair['technician_id'] !== $owner_tech_id) {
             http_response_code(403);
-            exit('ไม่อนุญาตให้บันทึกใบงานนี้');
+            mbsUpdateRepairNotice('ไม่อนุญาตให้บันทึกใบงานนี้');
         }
 
         // ฟอร์มเพิ่มอุปกรณ์เดิมไม่มีช่อง id ของใบงาน
@@ -260,7 +323,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($posted_repair_id === false
                 || $posted_repair_id !== (int) $repair['id']) {
                 http_response_code(403);
-                exit('เลขใบงานไม่ตรงกับใบงานที่ได้รับอนุญาต');
+                mbsUpdateRepairNotice('เลขใบงานไม่ตรงกับใบงานที่ได้รับอนุญาต');
             }
         }
     }
@@ -299,7 +362,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!is_string($status) || !in_array($status,
             ['รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว'], true)) {
             http_response_code(400);
-            exit('สถานะใบงานไม่ถูกต้อง');
+            mbsUpdateRepairNotice('สถานะใบงานไม่ถูกต้อง');
         }
         $repair_note = trim($_POST['repair_note']);
         
@@ -322,7 +385,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $technician_name = $res_t->fetch_assoc()['full_name'];
             } else {
                 http_response_code(403);
-                exit('ไม่พบข้อมูลเจ้าหน้าที่ กรุณาเข้าสู่ระบบใหม่');
+                mbsUpdateRepairNotice('ไม่พบข้อมูลเจ้าหน้าที่ กรุณาเข้าสู่ระบบใหม่');
             }
             $chk_t->close();
         } elseif ($is_tech) {
@@ -400,7 +463,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $owner_transaction_started = false;
 
                     http_response_code(403);
-                    exit('ผู้รับผิดชอบใบงานเปลี่ยนแล้ว ไม่อนุญาตให้บันทึก');
+                    mbsUpdateRepairNotice('ผู้รับผิดชอบใบงานเปลี่ยนแล้ว ไม่อนุญาตให้บันทึก');
                 }
             }
 
@@ -485,7 +548,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             error_log('Repair owner check or update failed');
             http_response_code(500);
-            exit('ไม่สามารถยืนยันผลการบันทึกได้ กรุณาเปิดใบงานตรวจสอบก่อนทำรายการซ้ำ');
+            mbsUpdateRepairNotice('ไม่สามารถยืนยันผลการบันทึกได้ กรุณาเปิดใบงานตรวจสอบก่อนทำรายการซ้ำ');
         }
 
         if ($update_saved) {
@@ -615,7 +678,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(mbsReadableFlexNode($postData)));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
                     curl_exec($ch);
                     curl_close($ch);
