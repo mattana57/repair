@@ -1274,7 +1274,8 @@ if (isset($_GET['api_check_hash'])) {
                     });
 
                     if(empty($departments_data)) {
-                        echo "<div class='text-center p-10 bg-white rounded-2xl border border-slate-100 text-slate-500'>ไม่พบข้อมูลเจ้าหน้าที่ในระบบ หรือยังไม่มีเจ้าหน้าที่ที่ผูกบัญชีสำเร็จ</div>";
+
+                    // แสดงข้อความไม่พบรายชื่อผ่าน updateExecTechEmptyState ให้ตรงกับตัวกรอง
                     } else {
                         foreach ($departments_data as $dept_name => $techs):
                             $icon_class = $dept_icons[$dept_name] ?? 'fas fa-users';
@@ -3652,12 +3653,80 @@ if (isset($_GET['api_check_hash'])) {
 
                 group.style.display = showGroup ? '' : 'none';
             });
+
+            updateExecTechEmptyState(searchFilter);
         }
 
         function filterTechCards() {
             let activeBtn = document.querySelector('.tech-filter-btn.bg-indigo-600');
             filterByDept(currentExecDept, activeBtn);
         }
+
+        function updateExecTechEmptyState(searchFilter) {
+            const container = document.getElementById('techCardsContainer');
+            if (!container) return;
+
+            let emptyState = document.getElementById('execTechEmptyState');
+
+            if (!emptyState) {
+                emptyState = document.createElement('div');
+                emptyState.id = 'execTechEmptyState';
+                emptyState.className =
+                    'w-full p-10 mt-6 border-2 border-dashed '
+                    + 'border-indigo-100 bg-indigo-50/30 '
+                    + 'text-center rounded-3xl';
+
+                emptyState.setAttribute('role', 'status');
+
+                emptyState.innerHTML = `
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-5 mx-auto shadow-sm border border-indigo-50">
+                        <i class="fas fa-user-lock text-3xl text-indigo-300" aria-hidden="true"></i>
+                    </div>
+
+                    <h3 class="font-extrabold text-xl mb-2">
+                        <span data-empty-title class="text-rose-500"></span>
+                        <span class="text-emerald-500">(ที่ผูกบัญชีแล้ว)</span>
+                    </h3>
+
+                    <p data-empty-description
+                       class="text-slate-500 text-sm font-medium max-w-lg mx-auto leading-relaxed">
+                    </p>
+
+                    <p class="text-xs text-slate-400 mt-3 leading-relaxed">
+                        ระบบแสดงเฉพาะเจ้าหน้าที่ที่ผูกบัญชี LINE
+                        และได้รับอนุมัติแล้ว<br>
+                        หากต้องการเพิ่มหรือแก้ไขรายชื่อ
+                        กรุณาติดต่อผู้ดูแลระบบ
+                    </p>
+                `;
+
+                container.appendChild(emptyState);
+            }
+
+            const hasVisibleCards = Array.from(
+                container.querySelectorAll('.tech-card-item')
+            ).some(card => card.style.display !== 'none');
+
+            emptyState.style.display = hasVisibleCards ? 'none' : 'block';
+
+            if (hasVisibleCards) return;
+
+            emptyState.querySelector('[data-empty-title]').textContent =
+                searchFilter
+                    ? 'ไม่พบรายชื่อเจ้าหน้าที่ที่ตรงกับคำค้น'
+                    : 'ยังไม่มีรายชื่อเจ้าหน้าที่';
+
+            emptyState.querySelector('[data-empty-description]').textContent =
+                searchFilter
+                    ? 'ลองตรวจสอบชื่อภาษาไทยหรือภาษาอังกฤษ หรือเลือกฝ่ายงานอื่นอีกครั้ง'
+                    : currentExecDept === 'all'
+                        ? 'ขณะนี้ยังไม่มีรายชื่อเจ้าหน้าที่ที่ผูกบัญชีและได้รับอนุมัติสำหรับแสดงในระบบ'
+                        : 'ฝ่ายงานที่เลือกยังไม่มีรายชื่อเจ้าหน้าที่ที่ผูกบัญชีและได้รับอนุมัติสำหรับแสดง';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            filterTechCards();
+        });
 
         // ✨ ระบบซ่อนแถบ Header อัตโนมัติเมื่อใช้นิ้วเลื่อนจอ (เฉพาะมือถือแนวตั้งและแนวนอน) ✨
         const mainHeaderEl = document.querySelector('header.top-header');
