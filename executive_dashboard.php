@@ -239,6 +239,270 @@ if ($u_sync_q) { while($r = $u_sync_q->fetch_assoc()) $all_users_sync[] = $r; }
 
 $full_system_hash = md5(json_encode($reps) . json_encode($all_techs_sync) . json_encode($all_users_sync) . json_encode($line_users_map));
 
+// แบ่งหน้าเฉพาะตารางผู้บริหาร: PHP เป็นผู้กรอง นับ และเลือกครั้งละ 50
+function execPageGet($key, $default = '') {
+    return isset($_GET[$key]) && is_string($_GET[$key]) ? trim($_GET[$key]) : $default;
+}
+
+function execPageEscape($value) {
+    return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function execPageRun($conn, $sql, $values) {
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) throw new RuntimeException('โหลดรายการไม่สำเร็จ');
+    try {
+        if ($values && !$stmt->bind_param(str_repeat('s', count($values)), ...$values)) {
+            throw new RuntimeException('โหลดรายการไม่สำเร็จ');
+        }
+        if (!$stmt->execute()) throw new RuntimeException('โหลดรายการไม่สำเร็จ');
+        $result = $stmt->get_result();
+        if (!$result) throw new RuntimeException('โหลดรายการไม่สำเร็จ');
+        return $result;
+    } finally {
+        $stmt->close();
+    }
+}
+
+function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
+    $prefix = $kind === 'history' ? 'eh_' : 'er_';
+    $where = ['1=1'];
+    $values = [];
+    if ($kind === 'history') {
+        $column = execPageGet('eh_type') === 'technician' ? 'technician_name' : 'reporter_name';
+        $where[] = "TRIM(r.$column) = ?";
+        $values[] = execPageGet('eh_name');
+    }
+    $month = execPageGet($prefix . 'month', date('m'));
+    $year = execPageGet($prefix . 'year', date('Y'));
+    if ($month !== 'all') {
+        if (!ctype_digit($month) || (int)$month < 1 || (int)$month > 12) $month = date('m');
+        $where[] = 'MONTH(r.created_at) = ?';
+        $values[] = (int)$month;
+    }
+    if ($year !== 'all') {
+        if (!ctype_digit($year) || (int)$year < 1000 || (int)$year > 9999) $year = date('Y');
+        $where[] = 'YEAR(r.created_at) = ?';
+        $values[] = (int)$year;
+    }
+    $status = $kind === 'history' ? 'all' : execPageGet('er_status', 'all');
+    if ($status !== 'all') {
+        $where[] = 'r.status = ?';
+        $values[] = $status;
+    }
+    $query = preg_replace('/\s+/u', '', mb_strtolower(execPageGet($prefix . 'q'), 'UTF-8'));
+    if ($query !== '') {
+        // ค้นหาค่าที่แสดงในตาราง รวมชื่อจริงจาก LINE ฝ่ายงาน ชื่ออังกฤษ และตำแหน่ง
+        $columns = ['r.id','r.ticket_no','r.reporter_name','r.phone_number','r.equipment_type',
+            'r.problem_desc','r.technician_name','r.root_cause','r.status',
+            'r.created_at','r.received_at','r.completed_at'];
+        foreach ([['r.reporter_name', $lineMap, ['real_name']],
+                  ['r.technician_name', $techMap, ['th','eng','pos']]] as $mapping) {
+            $case = 'CASE ' . $mapping[0];
+            foreach ($mapping[1] as $key => $item) {
+                $text = '';
+                foreach ($mapping[2] as $field) $text .= (string)($item[$field] ?? '');
+                $case .= ' WHEN ? THEN ?';
+                $values[] = (string)$key;
+                $values[] = $text;
+            }
+            $columns[] = count($mapping[1]) ? $case . " ELSE '' END" : "''";
+        }
+        $case = 'CASE r.technician_name';
+        foreach ($deptMap as $key => $dept) {
+            $case .= ' WHEN ? THEN ?';
+            $values[] = (string)$key;
+            $values[] = (string)$dept;
+        }
+        $columns[] = count($deptMap) ? $case . " ELSE '' END" : "''";
+        $text = "LOWER(CONCAT_WS('', " . implode(', ', $columns) . '))';
+        foreach (["' '", 'CHAR(9)', 'CHAR(10)', 'CHAR(13)', "' '"] as $space) {
+            $text = "REPLACE($text, $space, '')";
+        }
+        $where[] = "$text LIKE ? ESCAPE '!'";
+        $values[] = '%' . strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+    }
+    $filter = implode(' AND ', $where);
+    $count = execPageRun($conn, "SELECT COUNT(*) AS total FROM repairs r WHERE $filter", $values);
+    $total = (int)$count->fetch_assoc()['total'];
+    $count->free();
+    $pages = max(1, (int)ceil($total / 50));
+    $raw = execPageGet($prefix . 'page', '1');
+    $page = ctype_digit($raw) ? max(1, min($pages, (int)$raw)) : 1;
+    $offset = ($page - 1) * 50;
+    // LIMIT/OFFSET ถูกแปลงเป็นจำนวนเต็มและจำกัดขอบเขตแล้วเท่านั้น
+    $result = execPageRun($conn, "SELECT r.* FROM repairs r WHERE $filter ORDER BY r.created_at DESC, r.id DESC LIMIT 50 OFFSET $offset", $values);
+    return ['result' => $result, 'total' => $total, 'page' => $page, 'pages' => $pages, 'offset' => $offset];
+}
+
+function execPageFooter($data, $kind) {
+    $prefix = $kind === 'history' ? 'eh_' : 'er_';
+    // ไม่ส่งต่อคำสั่งอื่น เช่น ลบรูปหรือ API ตรวจ Hash ไปกับลิงก์เลขหน้า
+    $params = ['tab' => execPageGet('tab', 'repairs')];
+    foreach (['er_q','er_month','er_year','er_status','er_page','eh_q','eh_month','eh_year','eh_type','eh_name','eh_page'] as $key) {
+        if (isset($_GET[$key]) && is_string($_GET[$key])) $params[$key] = $_GET[$key];
+    }
+    $first = $data['total'] ? $data['offset'] + 1 : 0;
+    $last = min($data['total'], $data['offset'] + 50);
+    $html = '<div class="exec-page-footer"><span>รายการ ' . number_format($first) . '–' . number_format($last)
+        . ' จาก ' . number_format($data['total']) . ' รายการ <span class="ml-2">หน้า ' . $data['page'] . '/' . $data['pages'] . '</span></span><nav aria-label="เลือกหน้ารายการ">';
+    $link = function ($page, $label, $disabled = false) use ($params, $prefix, $kind, $data) {
+        if ($disabled) return '<span class="exec-page-disabled" aria-disabled="true">' . $label . '</span>';
+        $params[$prefix . 'page'] = (string)$page;
+        return '<a data-exec-kind="' . $kind . '" href="?' . execPageEscape(http_build_query($params))
+            . '"' . ($page === $data['page'] ? ' aria-current="page"' : '') . '>' . $label . '</a>';
+    };
+    $html .= $link($data['page'] - 1, 'ก่อนหน้า', $data['page'] <= 1);
+    $numbers = array_unique(array_merge([1, $data['pages']], range(max(1, $data['page'] - 2), min($data['pages'], $data['page'] + 2))));
+    sort($numbers);
+    $previous = 0;
+    foreach ($numbers as $number) {
+        if ($previous && $number > $previous + 1) $html .= '<span class="px-1">…</span>';
+        $html .= $link($number, (string)$number);
+        $previous = $number;
+    }
+    $html .= $link($data['page'] + 1, 'ถัดไป', $data['page'] >= $data['pages']);
+    return $html . '</nav></div>';
+}
+
+
+function execPageRows($result, $kind, $line_users_map, $tech_info_map, $tech_dept_map) {
+    ob_start();
+    if ($result->num_rows === 0) {
+        echo "<tr><td colspan='12' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>";
+    }
+    while ($row = $result->fetch_assoc()) {
+                                        $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
+                                        
+                                        $ticket_no = formatEmptyOrDash($row['ticket_no']);
+                                        $raw_rep = trim((string)$row['reporter_name']);
+                                        $disp_name = $raw_rep;
+                                        if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['real_name'])) {
+                                            $disp_name = $line_users_map[$raw_rep]['real_name'];
+                                        }
+                                        $reporter_name = formatEmptyOrDash($disp_name);
+                                        $phone_number = formatEmptyOrDash($row['phone_number']);
+                                        $equipment_type = formatEmptyOrDash($row['equipment_type']);
+                                        $problem_desc = formatEmptyOrDash($row['problem_desc']);
+                                        
+                                        $t_pos = ''; $t_eng = ''; $t_th = '';
+                                        if (!empty($row['technician_name']) && $row['technician_name'] !== '-') {
+                                            $t_raw = $row['technician_name'];
+                                            if (isset($tech_info_map[$t_raw])) {
+                                                $t_th = htmlspecialchars($tech_info_map[$t_raw]['th']);
+                                                $t_eng = htmlspecialchars($tech_info_map[$t_raw]['eng']);
+                                                $t_pos = htmlspecialchars($tech_info_map[$t_raw]['pos']);
+                                            } else {
+                                                list($th_name, $en_name) = splitThaiEngName($t_raw, '');
+                                                $t_th = htmlspecialchars($th_name);
+                                                $t_eng = htmlspecialchars($en_name);
+                                                $t_pos = htmlspecialchars(getAutoPosition($th_name));
+                                            }
+                                            $techHtml = "<div class='text-blue-600 font-bold cursor-default'>{$t_th}</div>";
+                                            if (!empty($t_eng)) {
+                                                $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
+                                            }
+                                            $techName = $techHtml;
+                                        } else {
+                                            $techName = "<span class='text-rose-500 font-bold'>-</span>";
+                                        }
+
+                                        $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
+                                        if (empty($row['technician_name']) || $row['technician_name'] === '-') {
+                                            $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
+                                        } else {
+                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>{$dept_str}</div>";
+                                            if (!empty($t_pos)) {
+                                                $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
+                                            }
+                                        }
+
+                                        $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
+                                        $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
+                                        $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
+
+                                        // ✨ บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันทีในจังหวะเดียวกันเป๊ะ 100% ✨
+                                        $raw_rec = (!empty($row['received_at']) && $row['received_at'] != '0000-00-00 00:00:00' && $row['received_at'] != '-') ? $row['received_at'] : (($row['status'] !== 'รอรับเรื่อง') ? date('Y-m-d H:i:s') : '');
+                                        $has_received = !empty($raw_rec);
+                                        $received_date = $has_received ? date('Y-m-d', strtotime($raw_rec)) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $received_time = $has_received ? date('H:i', strtotime($raw_rec)) : '';
+                                        $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
+
+                                        $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
+                                        $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
+                                        $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
+
+                                        $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
+
+                                        $imageIcon = "";
+                                        if(isset($row['image_path']) && !empty($row['image_path'])) {
+                                            $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
+                                        }
+
+
+        if ($kind === 'history') {
+            $techName = str_replace('text-blue-600', 'text-indigo-600', $techName);
+            echo ;
+        } else {
+                                        echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
+                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                <div class='font-medium text-slate-700'>{$created_date}</div>
+                                                {$created_time_html}
+                                            </td>
+                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
+                                            <td class='px-6 py-4 align-top'>
+                                                <div class='text-slate-800 font-bold'>{$reporter_name}</div>
+                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
+                                            </td>
+                                            <td class='px-6 py-4 align-top'>
+                                                <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
+                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='".strip_tags($problem_desc)."'>{$problem_desc}</div>
+                                            </td>
+                                            <td class='px-6 py-4 align-top'>{$deptEng}</td>
+                                            <td class='px-6 py-4 align-top'>{$techName}</td>
+                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                <div class='font-medium text-slate-700'>{$received_date}</div>
+                                                {$received_time_html}
+                                            </td>
+                                            <td class='px-6 py-4 align-top'>{$rootCause}</td>
+                                            <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
+                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                                                <div class='font-medium text-emerald-700'>{$completed_date}</div>
+                                                {$completed_time_html}
+                                            </td>
+                                            <td class='px-6 py-4 align-middle text-center'>
+                                                <div class='flex items-center justify-center'>
+                                                    <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
+                                                </div>
+                                            </td>
+                                        </tr>";
+        }
+    }
+    $result->free();
+    return ob_get_clean();
+}
+
+// Endpoint ภายใน: ใช้ Guard เดิม และส่งเฉพาะแถวกับเลขหน้าที่ PHP คำนวณแล้ว
+if (isset($_GET['exec_page_fragment'])) {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    try {
+        $kind = execPageGet('exec_page_fragment') === 'history' ? 'history' : 'repairs';
+        $pageData = execPageQuery($conn, $kind, $line_users_map, $tech_info_map, $tech_dept_map);
+        echo json_encode([
+            'rows' => execPageRows($pageData['result'], $kind, $line_users_map, $tech_info_map, $tech_dept_map),
+            'footer' => execPageFooter($pageData, $kind),
+            'page' => $pageData['page']
+        ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    } catch (Throwable $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'โหลดรายการไม่สำเร็จ กรุณาลองใหม่']);
+    }
+    exit;
+}
 // ✨ API เช็คอัปเดตแบบคลุมทุกตารางและ Modal 100% ✨
 if (isset($_GET['api_check_hash'])) {
     header('Content-Type: application/json; charset=utf-8');
@@ -441,7 +705,7 @@ if (isset($_GET['api_check_hash'])) {
             max-width: 96vw !important;
         }
 
-        #historyModal .modal-container > div:last-child {
+        #historyModal .modal-container > div:nth-child(2) {
             min-height: 0;
             padding: 12px 16px 16px !important;
         }
@@ -577,6 +841,14 @@ if (isset($_GET['api_check_hash'])) {
                 grid-template-columns: minmax(0, 1fr);
             }
         }
+
+        .exec-page-footer {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;background:#fff}
+        .exec-page-footer nav {display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+        .exec-page-footer a,.exec-page-footer .exec-page-disabled {display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff}
+        .exec-page-footer a:hover {background:#eef2ff;color:#4f46e5}
+        .exec-page-footer a[aria-current="page"] {background:#4f46e5;color:#fff;border-color:#4f46e5}
+        .exec-page-disabled {opacity:.45}
+        #historyModal .exec-page-footer {padding:10px 16px}
     </style>
 </head>
 
@@ -1195,119 +1467,13 @@ if (isset($_GET['api_check_hash'])) {
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
-                                $res = $conn->query($select_query);
-
-                                if($res && $res->num_rows > 0){
-                                    while($row = $res->fetch_assoc()) {
-                                        $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
-                                        
-                                        $ticket_no = formatEmptyOrDash($row['ticket_no']);
-                                        $raw_rep = trim((string)$row['reporter_name']);
-                                        $disp_name = $raw_rep;
-                                        if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['real_name'])) {
-                                            $disp_name = $line_users_map[$raw_rep]['real_name'];
-                                        }
-                                        $reporter_name = formatEmptyOrDash($disp_name);
-                                        $phone_number = formatEmptyOrDash($row['phone_number']);
-                                        $equipment_type = formatEmptyOrDash($row['equipment_type']);
-                                        $problem_desc = formatEmptyOrDash($row['problem_desc']);
-                                        
-                                        $t_pos = ''; $t_eng = ''; $t_th = '';
-                                        if (!empty($row['technician_name']) && $row['technician_name'] !== '-') {
-                                            $t_raw = $row['technician_name'];
-                                            if (isset($tech_info_map[$t_raw])) {
-                                                $t_th = htmlspecialchars($tech_info_map[$t_raw]['th']);
-                                                $t_eng = htmlspecialchars($tech_info_map[$t_raw]['eng']);
-                                                $t_pos = htmlspecialchars($tech_info_map[$t_raw]['pos']);
-                                            } else {
-                                                list($th_name, $en_name) = splitThaiEngName($t_raw, '');
-                                                $t_th = htmlspecialchars($th_name);
-                                                $t_eng = htmlspecialchars($en_name);
-                                                $t_pos = htmlspecialchars(getAutoPosition($th_name));
-                                            }
-                                            $techHtml = "<div class='text-blue-600 font-bold cursor-default'>{$t_th}</div>";
-                                            if (!empty($t_eng)) {
-                                                $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
-                                            }
-                                            $techName = $techHtml;
-                                        } else {
-                                            $techName = "<span class='text-rose-500 font-bold'>-</span>";
-                                        }
-
-                                        $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
-                                        if (empty($row['technician_name']) || $row['technician_name'] === '-') {
-                                            $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
-                                        } else {
-                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>{$dept_str}</div>";
-                                            if (!empty($t_pos)) {
-                                                $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
-                                            }
-                                        }
-
-                                        $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-                                        $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
-                                        $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
-
-                                        // ✨ บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันทีในจังหวะเดียวกันเป๊ะ 100% ✨
-                                        $raw_rec = (!empty($row['received_at']) && $row['received_at'] != '0000-00-00 00:00:00' && $row['received_at'] != '-') ? $row['received_at'] : (($row['status'] !== 'รอรับเรื่อง') ? date('Y-m-d H:i:s') : '');
-                                        $has_received = !empty($raw_rec);
-                                        $received_date = $has_received ? date('Y-m-d', strtotime($raw_rec)) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $received_time = $has_received ? date('H:i', strtotime($raw_rec)) : '';
-                                        $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
-
-                                        $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
-                                        $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
-                                        $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
-
-                                        $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
-
-                                        $imageIcon = "";
-                                        if(isset($row['image_path']) && !empty($row['image_path'])) {
-                                            $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                                        }
-
-                                        echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
-                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-slate-700'>{$created_date}</div>
-                                                {$created_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
-                                            <td class='px-6 py-4 align-top'>
-                                                <div class='text-slate-800 font-bold'>{$reporter_name}</div>
-                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>
-                                                <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
-                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='".strip_tags($problem_desc)."'>{$problem_desc}</div>
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>{$deptEng}</td>
-                                            <td class='px-6 py-4 align-top'>{$techName}</td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-slate-700'>{$received_date}</div>
-                                                {$received_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>{$rootCause}</td>
-                                            <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-emerald-700'>{$completed_date}</div>
-                                                {$completed_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-middle text-center'>
-                                                <div class='flex items-center justify-center'>
-                                                    <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
-                                                </div>
-                                            </td>
-                                        </tr>";
-                                    }
-                                } else { echo "<tr><td colspan='12' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>"; }
+                                $execRepairsPage = execPageQuery($conn, 'repairs', $line_users_map, $tech_info_map, $tech_dept_map);
+                                echo execPageRows($execRepairsPage['result'], 'repairs', $line_users_map, $tech_info_map, $tech_dept_map);
                                 ?>
                             </tbody>
                         </table>
                     </div>
+                    <div id="execRepairsPager" class="shrink-0"><?php echo execPageFooter($execRepairsPage, 'repairs'); ?></div>
                 </div>
             </div>
 
@@ -1690,6 +1856,7 @@ if (isset($_GET['api_check_hash'])) {
                     </table>
                 </div>
             </div>
+            <div id="execHistoryPager" class="shrink-0 bg-white"></div>
         </div>
     </div>
 
@@ -1776,6 +1943,131 @@ if (isset($_GET['api_check_hash'])) {
             'repairs': 'All Repairs List',
             'technician': 'Team Management'
         };
+
+        // JavaScript ส่งคำขอเท่านั้น: PHP/SQL เป็นผู้ค้นหา นับ และแบ่งหน้า
+        const execPaging = {
+            repairs: { page: 1, timer: null, controller: null, version: 0, key: '' },
+            history: { page: 1, timer: null, controller: null, version: 0, key: '' }
+        };
+        function execPageParameters(kind) {
+            const p = new URLSearchParams();
+            const isHistory = kind === 'history';
+            const prefix = isHistory ? 'eh_' : 'er_';
+            const value = (id, fallback = '') => document.getElementById(id)?.value ?? fallback;
+            p.set('tab', new URLSearchParams(location.search).get('tab') || 'repairs');
+            p.set(prefix + 'q', value(isHistory ? 'searchHistoryModalInput' : 'searchInput'));
+            p.set(prefix + 'month', value(isHistory ? 'historyMonth' : 'tableMonth', 'all'));
+            p.set(prefix + 'year', value(isHistory ? 'historyYear' : 'tableYear', 'all'));
+            if (isHistory) {
+                p.set('eh_type', window.currentHistoryType || 'reporter');
+                p.set('eh_name', window.currentHistoryName || '');
+            } else p.set('er_status', value('tableStatus', 'all'));
+            return p;
+        }
+        function execSchedulePage(kind) {
+            const state = execPaging[kind];
+            clearTimeout(state.timer);
+            if (kind === 'history' && !window.currentHistoryName) return;
+            const key = execPageKey(execPageParameters(kind));
+            if (key !== state.key) state.page = 1;
+            // ยกเลิกคำขอเก่าทันที เพื่อไม่ให้ผลคำค้นก่อนหน้าทับผลใหม่
+            state.version++;
+            state.controller?.abort();
+            state.timer = setTimeout(() => execLoadPage(kind, state.page, false), 250);
+        }
+        function execPageKey(params) {
+            const filters = new URLSearchParams(params);
+            filters.delete('tab');
+            return filters.toString();
+        }
+        async function execLoadPage(kind, page, scrollToTop = true) {
+            const state = execPaging[kind];
+            clearTimeout(state.timer);
+            state.controller?.abort();
+            state.controller = new AbortController();
+            const version = ++state.version;
+            const params = execPageParameters(kind);
+            const key = execPageKey(params);
+            const prefix = kind === 'history' ? 'eh_' : 'er_';
+            params.set(prefix + 'page', String(page));
+            params.set('exec_page_fragment', kind);
+            const tbody = document.querySelector(kind === 'history' ? '#historyTableBody' : '#repairsTable tbody');
+            const footer = document.getElementById(kind === 'history' ? 'execHistoryPager' : 'execRepairsPager');
+            if (!tbody || !footer) return;
+            tbody.setAttribute('aria-busy', 'true');
+            try {
+                const response = await fetch('?' + params, {signal: state.controller.signal, cache: 'no-store'});
+                if (response.redirected) { location.assign(response.url); return; }
+                if (!response.ok) throw new Error('page-request');
+                const data = await response.json();
+                if (version !== state.version) return;
+                tbody.innerHTML = data.rows;
+                footer.innerHTML = data.footer;
+                state.page = data.page;
+                state.key = key;
+                const url = new URL(location.href);
+                for (const [name, value] of params) {
+                    if (name !== 'exec_page_fragment') url.searchParams.set(name, value);
+                }
+                url.searchParams.set(prefix + 'page', String(data.page));
+                history.replaceState(null, '', url);
+                if (scrollToTop) {
+                    const scroll = kind === 'history' ? document.querySelector('#historyModal .exec-history-scroll') : document.getElementById('repairsTableContainer');
+                    if (scroll) scroll.scrollTop = 0;
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError' && version === state.version) {
+                    // ไม่ซ่อนความผิดพลาดเป็นตารางว่าง และไม่ล้างแถว/ตัวกรองเดิม
+                    footer.innerHTML = '<div class="exec-page-footer"><span class="text-rose-600" role="alert">โหลดรายการไม่สำเร็จ กรุณาลองใหม่</span><button type="button" class="text-indigo-600 font-bold" data-exec-retry="' + kind + '">ลองใหม่</button></div>';
+                }
+            } finally {
+                if (version === state.version) tbody.removeAttribute('aria-busy');
+            }
+        }
+        document.addEventListener('click', event => {
+            const retry = event.target.closest('[data-exec-retry]');
+            if (retry) { execLoadPage(retry.dataset.execRetry, execPaging[retry.dataset.execRetry].page); return; }
+            const link = event.target.closest('a[data-exec-kind]');
+            if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            const kind = link.dataset.execKind;
+            const page = new URL(link.href).searchParams.get((kind === 'history' ? 'eh_' : 'er_') + 'page');
+            execLoadPage(kind, page);
+        });
+        // คืนค่าก่อน INIT เดิมทำงาน โดยใช้รายการ dropdown เดิม ไม่สร้าง UI ชุดใหม่
+        const execInitialParams = new URLSearchParams(location.search);
+        for (const [id, key, dropdown] of [
+            ['searchInput', 'er_q', null], ['tableMonth', 'er_month', 'table-Month'],
+            ['tableYear', 'er_year', 'table-Year'], ['tableStatus', 'er_status', 'table-Status'],
+            ['historyMonth', 'eh_month', 'history-Month'], ['historyYear', 'eh_year', 'history-Year']
+        ]) {
+            const element = document.getElementById(id);
+            if (!element || !execInitialParams.has(key)) continue;
+            const value = execInitialParams.get(key);
+            const item = dropdown ? Array.from(document.querySelectorAll('#' + dropdown + 'List [data-value]')).find(x => x.dataset.value === value) : null;
+            if (dropdown && !item) continue;
+            element.value = value;
+            if (item) document.getElementById(dropdown + 'Text').textContent = item.dataset.display || item.textContent;
+        }
+        execPaging.repairs.page = Number(execInitialParams.get('er_page')) || 1;
+        execPaging.repairs.key = execPageKey(execPageParameters('repairs'));
+        toggleClearBtn('searchInput', 'clearSearchBtn');
+        if (execInitialParams.has('er_status')) {
+            // ใช้ฟังก์ชันเดิมเพื่อคืนสีของปุ่มสถานะ โดยยกเลิกเฉพาะคำขอซ้ำที่ถูกตั้งไว้
+            selectTableStatusDropdown(document.getElementById('tableStatus').value, document.getElementById('table-StatusText').textContent);
+            clearTimeout(execPaging.repairs.timer);
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!execInitialParams.has('eh_name')) return;
+            // เรียกหลัง INIT เดิม เพื่อให้แท็บและกราฟเริ่มต้นตามเดิมก่อน
+            setTimeout(() => {
+                viewHistory(execInitialParams.get('eh_name'), execInitialParams.get('eh_type') || 'reporter');
+                document.getElementById('searchHistoryModalInput').value = execInitialParams.get('eh_q') || '';
+                toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');
+                execLoadPage('history', execInitialParams.get('eh_page') || 1, false);
+            }, 0);
+        });
+
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
@@ -2074,7 +2366,9 @@ if (isset($_GET['api_check_hash'])) {
             document.getElementById('headerTitle').innerText = pageTitles[id] || 'Executive View';
             
             // ✨ อัปเดต URL เงียบๆ และจำแท็บปัจจุบันไว้เสมอ เวลา Refresh จะได้กลับมาหน้าเดิมเป๊ะๆ ✨
-            history.replaceState(null, '', '?tab=' + id);
+            const tabUrl = new URL(window.location.href);
+            tabUrl.searchParams.set('tab', id);
+            history.replaceState(null, '', tabUrl);
             sessionStorage.setItem('execActiveTabBeforeRefresh', id);
 
             // ✨ รีเซ็ต Scroll กลับไปบนสุดเฉพาะตอนกดเปลี่ยนแท็บใหม่ ✨
@@ -2186,81 +2480,7 @@ if (isset($_GET['api_check_hash'])) {
 
         // ✨ ฟังก์ชันสำหรับค้นหาและกรองตารางหน้า Transactions (Repairs List) ✨
         function filterRepairsTable() {
-            let searchInput = document.getElementById('searchInput');
-            let searchFilter = searchInput ? searchInput.value.toLowerCase().replace(/\s+/g, '') : '';
-            
-            let monthFilter = document.getElementById('tableMonth') ? document.getElementById('tableMonth').value : 'all';
-            let yearFilter = document.getElementById('tableYear') ? document.getElementById('tableYear').value : 'all';
-            let statusFilter = document.getElementById('tableStatus') ? document.getElementById('tableStatus').value : 'all';
-
-            let tbody = document.querySelector('#repairsTable tbody');
-            if(!tbody) return;
-
-            let rows = tbody.querySelectorAll('tr.search-row');
-            let visibleCount = 0; // ✨ เพิ่มตัวแปรนับจำนวนแถวที่แสดงผล
-            
-            rows.forEach(row => {
-                let textMatch = true;
-                let dateMatch = true;
-                let statusMatch = true;
-
-                // 1. กรองช่องค้นหาข้อความ
-                if (searchFilter !== '') {
-                    let text = row.textContent.toLowerCase().replace(/\s+/g, '');
-                    if (!text.includes(searchFilter)) {
-                        textMatch = false;
-                    }
-                }
-
-                // 2. กรองเดือน/ปี
-                if (monthFilter !== 'all' || yearFilter !== 'all') {
-                    let dateText = row.cells[1].textContent.trim();
-                    let dateMatchObj = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
-                    
-                    if (dateMatchObj) {
-                        let rowYear = dateMatchObj[1];
-                        let rowMonth = dateMatchObj[2];
-
-                        if (monthFilter !== 'all' && rowMonth !== monthFilter) dateMatch = false;
-                        if (yearFilter !== 'all' && rowYear !== yearFilter) dateMatch = false;
-                    } else {
-                        dateMatch = false; 
-                    }
-                }
-
-                // 3. กรองสถานะ ('รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว')
-                if (statusFilter !== 'all') {
-                    let statusCell = row.cells[9];
-                    let rowStatus = statusCell ? statusCell.textContent.trim() : '';
-                    if (rowStatus !== statusFilter) {
-                        statusMatch = false;
-                    }
-                }
-
-                // แสดงแถวก็ต่อเมื่อตรงกับเงื่อนไขทั้งหมด
-                if (textMatch && dateMatch && statusMatch) {
-                    row.style.display = '';
-                    visibleCount++; // ✨ นับเพิ่มถ้ามีข้อมูลแสดง
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            // ✨ โลจิกจัดการข้อความเมื่อซ่อนข้อมูลจนหมดตาราง ✨
-            let emptyRow = tbody.querySelector('.empty-filter-row');
-            if (visibleCount === 0 && rows.length > 0) {
-                if (!emptyRow) {
-                    emptyRow = document.createElement('tr');
-                    emptyRow.className = 'empty-filter-row';
-                    // สร้างข้อความพร้อมขยายความสูง 400px
-                    emptyRow.innerHTML = `<td colspan="12" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">ยังไม่เคยรับงานซ่อมในระบบ</td>`;
-                    tbody.appendChild(emptyRow);
-                } else {
-                    emptyRow.style.display = '';
-                }
-            } else if (emptyRow) {
-                emptyRow.style.display = 'none';
-            }
+            execSchedulePage('repairs');
         }
 
         function formatValJS(val) {
@@ -3065,127 +3285,7 @@ if (isset($_GET['api_check_hash'])) {
         function viewHistory(fullName, type) {
             window.currentHistoryName = fullName; // ✨ จำชื่อที่เปิดอยู่
             window.currentHistoryType = type;     // ✨ จำประเภทที่เปิดอยู่
-            const tbody = document.getElementById('historyTableBody');
-            tbody.innerHTML = '';
-
-            const userRepairs = allRepairs.filter(r => {
-                let nameToCompare = (type === 'reporter') ? r.reporter_name : r.technician_name;
-                if (!nameToCompare) return false;
-                nameToCompare = nameToCompare.trim();
-                return nameToCompare === fullName;
-            });
-
-            if(userRepairs.length === 0) {
-                let emptyMsg = type === 'reporter' ? 'ยังไม่มีประวัติการแจ้งซ่อม' : 'ยังไม่เคยรับงานซ่อมในระบบ';
-                tbody.innerHTML = `<tr><td colspan="12" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">${emptyMsg}</td></tr>`;
-            } else {
-                userRepairs.forEach(r => {
-                    let statusClass = 'badge-pending';
-                    if(r.status === 'กำลังดำเนินการ') statusClass = 'badge-progress';
-                    else if(r.status === 'ซ่อมเสร็จแล้ว') statusClass = 'badge-success';
-
-                    let statusText = formatValJS(r.status);
-                    let ticket_no = formatValJS(r.ticket_no);
-
-                    let createdDate = '-';
-                    let createdTime = '';
-                    if(r.created_at && r.created_at != '0000-00-00 00:00:00') {
-                        let parts = r.created_at.split(' ');
-                        createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
-                        createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
-                    } else {
-                        createdDate = "<span class='text-rose-500 font-bold'>-</span>";
-                    }
-                    
-                    let techNameHtml = "<span class='text-rose-500 font-bold'>-</span>";
-                    if (r.technician_name && r.technician_name !== '-') {
-                        let info = techInfoMap[r.technician_name] || { th: r.technician_name, eng: '', pos: '' };
-                        techNameHtml = `<div class='text-indigo-600 font-bold'>${info.th}</div>`;
-                        if(info.eng) techNameHtml += `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${info.eng}</div>`;
-                    }
-                    let techName = techNameHtml;
-
-                    let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-rose-500 font-bold'>-</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
-
-                    // เวลาเข้างานและเสร็จงาน (บังคับขึ้นพร้อมสถานะทันที 100%)
-                    let dt = new Date();
-                    let nowStr = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0') + ' ' + String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0') + ':00';
-                    let raw_rec_js = (r.received_at && r.received_at != '0000-00-00 00:00:00' && r.received_at != '-') ? r.received_at : (r.status !== 'รอรับเรื่อง' ? nowStr : '');
-                    let has_received = (raw_rec_js !== '');
-                    let received_date = has_received ? raw_rec_js.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    let received_time = has_received && raw_rec_js.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${raw_rec_js.split(' ')[1].substring(0, 5)}</div>` : '';
-
-                    let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
-                    let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
-                    let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
-                    
-                    let dName = r.technician_name && techDeptMap[r.technician_name] ? techDeptMap[r.technician_name] : 'General';
-                    let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
-                    if (r.technician_name && r.technician_name !== '-') {
-                        deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
-                        let info = techInfoMap[r.technician_name];
-                        if (info && info.pos) {
-                            deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
-                        }
-                    }
-                    
-                    let rNameRaw = r.reporter_name;
-                    let dispName = rNameRaw;
-                    if (lineUsersMap[rNameRaw] && lineUsersMap[rNameRaw].real_name) {
-                        dispName = lineUsersMap[rNameRaw].real_name;
-                    }
-                    let rName = formatValJS(dispName);
-                    let rPhone = formatValJS(r.phone_number);
-                    
-                    let eqType = formatValJS(r.equipment_type);
-                    let pDesc = formatValJS(r.problem_desc);
-
-                    let imageIcon = "";
-                    if(r.image_path && r.image_path !== '') {
-                        imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                    }
-
-                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors search-row border-b border-slate-100 last:border-0">
-                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${Number(r.id)}</td>
-                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
-                            <div class="font-medium text-slate-700">${createdDate}</div>
-                            ${createdTime}
-                        </td>
-                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${ticket_no}</td>
-                        <td class="px-6 py-4 align-top">
-                            <div class='flex items-center'>
-                                <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas fa-user text-xs text-slate-400'></i></div>
-                                <div>
-                                    <div class="text-slate-800 font-bold">${rName}</div>
-                                    <div class="text-slate-500 text-[11px] font-medium mt-0.5">${rPhone}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 align-top">
-                            <div class="text-slate-800 font-bold">${eqType} ${imageIcon}</div>
-                            <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${pDesc.replace(/<[^>]*>?/gm, '')}">${pDesc}</div>
-                        </td>
-                        <td class="px-6 py-4 align-top">${deptEng}</td>
-                        <td class="px-6 py-4 align-top">${techName}</td>
-                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
-                            <div class='font-medium text-slate-700'>${received_date}</div>
-                            ${received_time}
-                        </td>
-                        <td class="px-6 py-4 align-top">${rootCause}</td>
-                        <td class="px-6 py-4 align-middle text-center"><span class="${statusClass}">${statusText}</span></td>
-                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
-                            <div class='font-medium text-emerald-700'>${completed_date}</div>
-                            ${completed_time}
-                        </td>
-                        <td class="px-6 py-4 align-middle text-center">
-                            <div class='flex items-center justify-center'>
-                                <div onclick='openReviewTab(${r.id})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
-                            </div>
-                        </td>
-                    </tr>`;
-                });
-            }
-            
+            execPaging.history.page = 1;
             let displayTitleName = fullName;
             if (type === 'reporter' && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
                 displayTitleName = lineUsersMap[fullName].real_name;
@@ -3562,61 +3662,9 @@ if (isset($_GET['api_check_hash'])) {
 
         // ✨ ฟังก์ชันค้นหาข้อมูลในตารางประวัติ (History Modal) ✨
         function searchHistoryModalTable() {
-            let input = document.getElementById('searchHistoryModalInput');
-            let filter = input ? input.value.toLowerCase().replace(/\s+/g, '') : '';
-            
-            let monthFilter = document.getElementById('historyMonth') ? document.getElementById('historyMonth').value : 'all';
-            let yearFilter = document.getElementById('historyYear') ? document.getElementById('historyYear').value : 'all';
-
-            let tbody = document.getElementById('historyTableBody');
-            if(!tbody) return;
-            
-            let rows = tbody.querySelectorAll('tr');
-            let visibleCount = 0;
-
-            rows.forEach(row => {
-                // ข้ามแถวที่ใช้บอกว่าไม่มีข้อมูล (ถ้ามี)
-                if(row.classList.contains('empty-filter-row') || row.cells.length === 1) return;
-                
-                let textMatch = true;
-                let dateMatch = true;
-
-                // 1. กรองช่องค้นหาข้อความ
-                if (filter !== '') {
-                    let text = row.textContent.toLowerCase().replace(/\s+/g, '');
-                    if (!text.includes(filter)) {
-                        textMatch = false;
-                    }
-                }
-
-                // 2. กรองเดือน/ปี
-                if (monthFilter !== 'all' || yearFilter !== 'all') {
-                    // ข้อมูลวันที่อยู่ในคอลัมน์แรกสุด
-                    let dateText = row.cells[1].textContent.trim();
-                    let dateMatchObj = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
-                    
-                    if (dateMatchObj) {
-                        let rowYear = dateMatchObj[1];
-                        let rowMonth = dateMatchObj[2];
-
-                        if (monthFilter !== 'all' && rowMonth !== monthFilter) dateMatch = false;
-                        if (yearFilter !== 'all' && rowYear !== yearFilter) dateMatch = false;
-                    } else {
-                        dateMatch = false; 
-                    }
-                }
-
-                // สรุปการแสดงผล
-                if (textMatch && dateMatch) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+            execSchedulePage('history');
         }
 
-        // ✨ ฟังก์ชันสำหรับสลับโหมดเต็มจอของหน้า Transactions (Repairs List) สมูท 100% ✨
         function toggleMaximizeRepairs() {
             const card = document.getElementById('repairsMainCard');
             const icon = document.getElementById('maximizeRepairsIcon');
@@ -3956,7 +4004,6 @@ if (isset($_GET['api_check_hash'])) {
                     // 5. อัปเดตทุกตารางบนหน้าจอ 100% แบบเจาะจง (ไม่กวน UI เดิม)
                     const selectorsToUpdate = [
                         '#dash table tbody',          // Recent Transactions
-                        '#repairsTable tbody',        // All Repairs List (รองรับทั้งโหมดปกติและเต็มจอ 100%)
                         '#techniciansTableBody',      // Technicians (Admin)
                         '#techCardsContainer',        // Tech Cards (Executive)
                         '#assets table tbody',        // Assets (Admin)
@@ -3983,7 +4030,7 @@ if (isset($_GET['api_check_hash'])) {
                         if (typeof renderAllCharts === 'function') renderAllCharts();
                     }
 
-                    if (typeof filterRepairsTable === 'function') filterRepairsTable();
+                    execLoadPage('repairs', execPaging.repairs.page, false);
                     if (typeof filterTechCards === 'function') filterTechCards();
                     if (typeof searchHistoryTable === 'function') searchHistoryTable();
                     if (typeof searchTeamTable === 'function') searchTeamTable();
@@ -3992,7 +4039,7 @@ if (isset($_GET['api_check_hash'])) {
                     const historyModal = document.getElementById('historyModal');
                     if (historyModal && !historyModal.classList.contains('opacity-0')) {
                         if (window.currentHistoryName && window.currentHistoryType) {
-                            viewHistory(window.currentHistoryName, window.currentHistoryType);
+                            execLoadPage('history', execPaging.history.page, false);
                         }
                     }
 
