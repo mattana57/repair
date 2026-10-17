@@ -934,9 +934,9 @@ $current_thai_year = date('Y') + 543;
         }
 
         .tech-dashboard-ui main table thead {
-            border-bottom: 1px solid #e4e9f6;
-            background: #f0f3fc;
-            color: #59668a;
+            border-bottom: 1px solid #fef08a;
+            background: #fef9c3;
+            color: #854d0e;
         }
 
         .tech-dashboard-ui main table th {
