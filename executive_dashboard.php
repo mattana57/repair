@@ -344,24 +344,25 @@ function execPageFooter($data, $kind) {
     }
     $first = $data['total'] ? $data['offset'] + 1 : 0;
     $last = min($data['total'], $data['offset'] + 50);
-    $html = '<div class="exec-page-footer"><span>รายการ ' . number_format($first) . '–' . number_format($last)
-        . ' จาก ' . number_format($data['total']) . ' รายการ <span class="ml-2">หน้า ' . $data['page'] . '/' . $data['pages'] . '</span></span><nav aria-label="เลือกหน้ารายการ">';
+    $html = '<div class="exec-page-footer"><p class="exec-page-summary">แสดงรายการ <strong>' . number_format($first) . '–' . number_format($last)
+        . '</strong> จากทั้งหมด <strong>' . number_format($data['total']) . '</strong> รายการ · หน้า ' . number_format($data['page']) . ' / ' . number_format($data['pages']) . '</p><nav aria-label="แบ่งหน้ารายการ">';
     $link = function ($page, $label, $disabled = false) use ($params, $prefix, $kind, $data) {
+        if ($page === $data['page'] && !$disabled) return '<span class="exec-page-current" aria-current="page">' . $label . '</span>';
         if ($disabled) return '<span class="exec-page-disabled" aria-disabled="true">' . $label . '</span>';
         $params[$prefix . 'page'] = (string)$page;
         return '<a data-exec-kind="' . $kind . '" href="?' . execPageEscape(http_build_query($params))
             . '"' . ($page === $data['page'] ? ' aria-current="page"' : '') . '>' . $label . '</a>';
     };
-    $html .= $link($data['page'] - 1, 'ก่อนหน้า', $data['page'] <= 1);
-    $numbers = array_unique(array_merge([1, $data['pages']], range(max(1, $data['page'] - 2), min($data['pages'], $data['page'] + 2))));
+    $html .= $link($data['page'] - 1, '‹ ก่อนหน้า', $data['page'] <= 1);
+    $numbers = array_unique(array_merge([1, $data['pages']], range(max(1, $data['page'] - 1), min($data['pages'], $data['page'] + 1))));
     sort($numbers);
     $previous = 0;
     foreach ($numbers as $number) {
-        if ($previous && $number > $previous + 1) $html .= '<span class="px-1">…</span>';
-        $html .= $link($number, (string)$number);
+        if ($previous && $number > $previous + 1) $html .= '<span class="exec-page-dots">…</span>';
+        $html .= $link($number, number_format($number));
         $previous = $number;
     }
-    $html .= $link($data['page'] + 1, 'ถัดไป', $data['page'] >= $data['pages']);
+    $html .= $link($data['page'] + 1, 'ถัดไป ›', $data['page'] >= $data['pages']);
     return $html . '</nav></div>';
 }
 
@@ -884,13 +885,16 @@ if (isset($_GET['api_check_hash'])) {
             }
         }
 
-        .exec-page-footer {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;background:#fff}
-        .exec-page-footer nav {display:flex;flex-wrap:wrap;align-items:center;gap:5px}
-        .exec-page-footer a,.exec-page-footer .exec-page-disabled {display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff}
-        .exec-page-footer a:hover {background:#eef2ff;color:#4f46e5}
-        .exec-page-footer a[aria-current="page"] {background:#4f46e5;color:#fff;border-color:#4f46e5}
-        .exec-page-disabled {opacity:.45}
-        #historyModal .exec-page-footer {padding:10px 16px}
+        .exec-page-footer {display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 24px;border-top:1px solid #e2e8f0;background:linear-gradient(110deg,#f8fafc,#eef2ff);flex-shrink:0;font-family:'Sarabun',sans-serif}
+        .exec-page-summary {font-size:13px;color:#64748b}
+        .exec-page-summary strong {color:#4338ca}
+        .exec-page-footer nav {display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+        .exec-page-footer a,.exec-page-footer .exec-page-disabled,.exec-page-footer .exec-page-current {display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 12px;border:1px solid #e2e8f0;border-radius:11px;background:white;color:#475569;font-size:13px;font-weight:700;text-decoration:none}
+        .exec-page-footer a:hover {border-color:#a5b4fc;background:#eef2ff;color:#4338ca}
+        .exec-page-footer a:focus-visible {outline:3px solid #a5b4fc;outline-offset:2px}
+        .exec-page-footer .exec-page-current {background:#4f46e5;color:#fff;border-color:#4f46e5;box-shadow:0 3px 9px #c7d2fe}
+        .exec-page-footer .exec-page-disabled {color:#94a3b8;background:#f1f5f9}
+        .exec-page-dots {color:#94a3b8;padding:0 3px}
     </style>
 </head>
 
