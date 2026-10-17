@@ -15,6 +15,19 @@ $atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชี�
 $atNotice = $_SESSION['admin_trash_notice'] ?? null;
 unset($_SESSION['admin_trash_notice']);
 ?>
+<?php if ($active_tab === 'users' && is_array($atNotice)): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+        icon: <?= json_encode(($atNotice['type'] ?? '') === 'success' ? 'success' : 'error') ?>,
+        title: <?= json_encode(($atNotice['type'] ?? '') === 'success' ? 'ดำเนินการสำเร็จ' : 'ดำเนินการไม่สำเร็จ', JSON_UNESCAPED_UNICODE) ?>,
+        text: <?= json_encode((string)($atNotice['message'] ?? ''), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#4f46e5'
+    });
+});
+</script>
+<?php endif; ?>
 <div id="trash" class="section <?= $active_tab === 'trash' ? '' : 'hidden' ?> space-y-6 no-print">
     <div class="modern-card bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="p-6 border-b border-slate-100 space-y-4">
@@ -90,6 +103,14 @@ unset($_SESSION['admin_trash_notice']);
 function submitTrashAction(action, kind, id, confirmed = false) {
     const form = document.createElement('form');
     form.method = 'post'; form.action = 'dashboard.php?tab=trash';
+    if (action === 'move' && kind === 'reporter') {
+        const current = new URL(window.location.href);
+        const query = new URLSearchParams({tab:'users'});
+        for (const key of ['pg_reporters_q', 'pg_reporters_page']) {
+            if (current.searchParams.has(key)) query.set(key, current.searchParams.get(key));
+        }
+        form.action = 'dashboard.php?' + query.toString();
+    }
     const fields = {trash_action:action, trash_kind:kind, trash_id:String(id), trash_confirm:confirmed?'1':'0', csrf_token:<?= json_encode($_SESSION['csrf_token']) ?>};
     for (const [name,value] of Object.entries(fields)) { const input=document.createElement('input'); input.type='hidden'; input.name=name; input.value=value; form.appendChild(input); }
     document.body.appendChild(form); form.submit();

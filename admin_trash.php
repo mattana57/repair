@@ -32,7 +32,20 @@ function at_positive_id($value) {
 
 function at_redirect($type, $message) {
     $_SESSION['admin_trash_notice'] = ['type' => $type, 'message' => $message];
-    header('Location: dashboard.php?tab=trash', true, 303);
+    $destination = 'dashboard.php?tab=trash';
+    // เฉพาะย้ายประวัติจาก Contacts ให้กลับมารายการเดิม ไม่รับ URL ปลายทางจากผู้ใช้
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST'
+        && ($_POST['trash_action'] ?? null) === 'move'
+        && ($_POST['trash_kind'] ?? null) === 'reporter') {
+        $returnQuery = ['tab' => 'users'];
+        if (isset($_GET['pg_reporters_q']) && is_string($_GET['pg_reporters_q'])) {
+            $returnQuery['pg_reporters_q'] = $_GET['pg_reporters_q'];
+        }
+        $returnPage = at_positive_id($_GET['pg_reporters_page'] ?? null);
+        if ($returnPage !== false) $returnQuery['pg_reporters_page'] = $returnPage;
+        $destination = 'dashboard.php?' . http_build_query($returnQuery, '', '&', PHP_QUERY_RFC3986);
+    }
+    header('Location: ' . $destination, true, 303);
     exit;
 }
 
