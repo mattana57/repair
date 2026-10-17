@@ -1815,7 +1815,7 @@ $current_thai_year = date('Y') + 543;
                 let dName = lineUsersMap[raw_name] ? lineUsersMap[raw_name] : (raw_name !== '' ? raw_name : 'ไม่ระบุ');
                 let dPhone = r.phone_number || '-';
                 
-                let imgIcon = r.image_path ? `<i class="fas fa-image text-slate-300 ml-1" title="มีรูปภาพ"></i>` : '';
+                let imgIcon = r.image_path ? `<i class="fas fa-image ml-1" style="color: #94a3b8;" title="มีรูปภาพแนบ"></i>` : '';
 
                 html += `
                     <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
