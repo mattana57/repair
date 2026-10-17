@@ -124,6 +124,14 @@ function ch_history_page(
         $where = 'r.technician_id = ?';
         $params = [$technicianId];
         $types = 'i';
+    } elseif (isset($_GET['pg_history_line_user_id'])) {
+        $reporterLineId = tp_get('pg_history_line_user_id');
+        if (!is_string($_GET['pg_history_line_user_id']) || $reporterLineId === '' || strlen($reporterLineId) > 200) {
+            throw new RuntimeException('รหัสผู้แจ้งไม่ถูกต้อง');
+        }
+        $where = 'BINARY r.line_user_id = BINARY ?';
+        $params = [$reporterLineId];
+        $types = 's';
     } else {
         $where = 'BINARY TRIM(r.reporter_name) = BINARY ?';
         $params = [$name];
@@ -370,6 +378,14 @@ if (
         ob_start();
         tp_footer($paging);
         $footer = ob_get_clean();
+        // คง ID ในลิงก์แบ่งหน้าที่สร้างจาก helper เดิม โดยไม่แก้ helper ส่วนกลาง
+        if (tp_get('pg_ch_fragment') === 'history' && isset($_GET['pg_history_line_user_id'])) {
+            $footer = str_replace(
+                'href="?',
+                'href="?pg_history_line_user_id=' . rawurlencode(tp_get('pg_history_line_user_id')) . '&amp;',
+                $footer
+            );
+        }
 
         $json = json_encode(
             [

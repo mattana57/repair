@@ -21,7 +21,7 @@ $thGet = static function ($key, $default) {
 
 // โหมดประวัติรายผู้แจ้งเปิดได้ผ่านหน้าเจ้าหน้าที่ที่ผ่าน Guard แล้วเท่านั้น
 $thReporterMode = defined('MBS_TECH_REPORTER_HISTORY') && MBS_TECH_REPORTER_HISTORY;
-$thReporterName = $thReporterMode ? $thGet('thr', '') : '';
+$thReporterLineId = $thReporterMode ? $thGet('th_line_user_id', '') : '';
 
 $thToday = new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
 $thDay = $thGet('hd', $thToday->format('j'));
@@ -79,22 +79,10 @@ if ($thOnHistory) {
     $thParams = [];
 
     if ($thReporterMode) {
-        // จับชื่อผู้แจ้งตรงตัว รวมชื่อ LINE ที่ถูกแมปเป็นชื่อจริงในอันดับ
-        $thReporterKeys = [];
-        if (!isset($line_users_map[$thReporterName]) || (string)$line_users_map[$thReporterName] === $thReporterName) {
-            $thReporterKeys[] = $thReporterName;
-        }
-        foreach ($line_users_map as $rawName => $displayName) {
-            if ((string)$displayName === $thReporterName) $thReporterKeys[] = (string)$rawName;
-        }
-        $thReporterKeys = array_values(array_unique($thReporterKeys));
-        if ($thReporterKeys) {
-            $thWhere .= ' AND BINARY reporter_name IN (' . implode(',', array_fill(0, count($thReporterKeys), '?')) . ')';
-            $thTypes .= str_repeat('s', count($thReporterKeys));
-            $thParams = array_merge($thParams, $thReporterKeys);
-        } else {
-            $thWhere .= ' AND 1=0';
-        }
+        // จำกัดผู้แจ้งด้วย LINE ID และคงเงื่อนไขเจ้าของงานจากหน้าเดิม
+        $thWhere .= ' AND BINARY line_user_id = BINARY ?';
+        $thTypes .= 's';
+        $thParams[] = $thReporterLineId;
     }
 
     if ($thDay !== 'all') {
@@ -247,7 +235,7 @@ $thUrl = static function ($page, array $changes = []) use (
     $thStatus,
     $thSearch,
     $thReporterMode,
-    $thReporterName
+    $thReporterLineId
 ) {
     $query = array_merge(
         [
@@ -263,7 +251,7 @@ $thUrl = static function ($page, array $changes = []) use (
     );
 
     if ($thReporterMode) {
-        $query['thr'] = $thReporterName;
+        $query['th_line_user_id'] = $thReporterLineId;
         $query['th_fragment'] = '1';
     }
 

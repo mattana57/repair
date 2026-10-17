@@ -5089,6 +5089,24 @@ if (isset($_GET['api_check_hash'])) {
             renderTopReporters();
         }
 
+        // ตัวตนผู้แจ้งอ้างอิง LINE ID เท่านั้น ชื่อจากใบงานล่าสุดใช้แสดงผล
+        function addLineReporter(map, repair) {
+            const id = String(repair.line_user_id ?? '').trim();
+            if (!id || id === '-') return;
+            const name = String(repair.reporter_name ?? '').trim() || 'ไม่ระบุชื่อผู้แจ้ง';
+            const stamp = String(repair.created_at || '');
+            const rowId = Number(repair.id) || 0;
+            if (!map.has(id)) map.set(id, {id, name, count:0, stamp, rowId});
+            const item = map.get(id);
+            item.count++;
+            if (stamp > item.stamp || (stamp === item.stamp && rowId >= item.rowId)) {
+                Object.assign(item, {name, stamp, rowId});
+            }
+        }
+        function escapeReporterHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[char]));
+        }
+
         function renderTopReporters() {
             const container = document.getElementById('topReportersList');
             if(!container) return;
@@ -5096,17 +5114,9 @@ if (isset($_GET['api_check_hash'])) {
             let m = document.getElementById('reporterMonth') ? document.getElementById('reporterMonth').value : 'all';
             let y = document.getElementById('reporterYear') ? document.getElementById('reporterYear').value : 'all';
             let filteredRepairs = getFilteredRepairsByMonthYear(m, y);
-            let reporterMap = {};
-            
-            filteredRepairs.forEach(r => {
-                let name = formatValJS(r.reporter_name);
-                if (name.includes('ไม่ระบุ') || name.includes('span')) name = 'ไม่ระบุชื่อผู้แจ้ง';
-                else name = r.reporter_name.trim();
-                if (!reporterMap[name]) reporterMap[name] = 0;
-                reporterMap[name]++;
-            });
-
-            let reporterArr = Object.keys(reporterMap).map(k => ({ name: k, count: reporterMap[k] }));
+            const reporterMap = new Map();
+            filteredRepairs.forEach(r => addLineReporter(reporterMap, r));
+            let reporterArr = Array.from(reporterMap.values());
             reporterArr.sort((a,b) => b.count - a.count);
 
             if (currentTopReportersLimit !== 'all') reporterArr = reporterArr.slice(0, parseInt(currentTopReportersLimit));
@@ -5128,19 +5138,11 @@ if (isset($_GET['api_check_hash'])) {
                                    index === 2 ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>' : 
                                    `<span class="text-sm font-black">#${index + 1}</span>`;
                     
-                    let displayName = rep.name;
-                    let lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>`;
-                    
-                    if (lineUsersMap[rep.name] && lineUsersMap[rep.name].real_name) {
-                        displayName = lineUsersMap[rep.name].real_name;
-                        if (rep.name !== displayName) {
-                            lineIdHtml = `<div class='text-[12px] font-bold text-indigo-600 mt-0.5 flex items-center'><i class='fab fa-line text-[#06C755] text-[14px] mr-1.5'></i> ${rep.name}</div>`;
-                        }
-                    }
-
-                    let safeName = rep.name.replace(/'/g, "\\'");
-                    let clickAction = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? '' : `onclick="viewHistory('${safeName}', 'reporter')" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group" title="คลิกเพื่อดูประวัติการแจ้งซ่อมของ ${displayName}"`;
-                    let disableClickClass = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? `class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 opacity-70"` : '';
+                    const displayName = escapeReporterHtml(rep.name);
+                    const lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>`;
+                    const reporterArgs = escapeReporterHtml(JSON.stringify(rep.name)) + ", 'reporter'" + ", false, false, null, " + escapeReporterHtml(JSON.stringify(rep.id));
+                    let clickAction = !rep.id ? '' : `onclick="viewHistory(${reporterArgs})" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group" title="คลิกเพื่อดูประวัติการแจ้งซ่อมของ ${displayName}"`;
+                    let disableClickClass = !rep.id ? `class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 opacity-70"` : '';
 
                     container.innerHTML += `
                         <div ${clickAction || disableClickClass}>
@@ -5156,7 +5158,7 @@ if (isset($_GET['api_check_hash'])) {
                                     <span class='text-xl font-extrabold text-indigo-600'>${rep.count}</span>
                                     <span class='text-[11px] text-slate-500 font-medium ml-1'>รายการ</span>
                                 </div>
-                                ${rep.name !== 'ไม่ระบุชื่อผู้แจ้ง' ? `<div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div>` : '<div class="ml-4 w-8 h-8"></div>'}
+                                ${rep.id ? `<div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div>` : '<div class="ml-4 w-8 h-8"></div>'}
                             </div>
                         </div>`;
                 });
@@ -6356,7 +6358,8 @@ if (isset($_GET['api_check_hash'])) {
                     urlParams.get('pg_history_type'),
                     false,
                     true,
-                    urlParams.get('pg_history_technician_id')
+                    urlParams.get('pg_history_technician_id'),
+                    urlParams.get('pg_history_line_user_id')
                 );
 
                 sessionStorage.removeItem('modalOpen');
@@ -6371,7 +6374,8 @@ if (isset($_GET['api_check_hash'])) {
                     type,
                     false,
                     false,
-                    sessionStorage.getItem('historyTechnicianId')
+                    sessionStorage.getItem('historyTechnicianId'),
+                    sessionStorage.getItem('historyLineUserId')
                 );
                     
                     setTimeout(() => {
@@ -7302,17 +7306,9 @@ if (isset($_GET['api_check_hash'])) {
 
             let filteredRepairs = getFilteredRepairsByMonthYear(m, y);
 
-            let reporterMap = {};
-            filteredRepairs.forEach(r => {
-                let name = formatValJS(r.reporter_name);
-                if (name.includes('ไม่ระบุ') || name.includes('span')) name = 'ไม่ระบุชื่อผู้แจ้ง';
-                else name = r.reporter_name.trim();
-
-                if (!reporterMap[name]) reporterMap[name] = 0;
-                reporterMap[name]++;
-            });
-
-            let reporterArr = Object.keys(reporterMap).map(k => ({ name: k, count: reporterMap[k] }));
+            const reporterMap = new Map();
+            filteredRepairs.forEach(r => addLineReporter(reporterMap, r));
+            let reporterArr = Array.from(reporterMap.values());
             reporterArr.sort((a,b) => b.count - a.count);
 
             if (currentTopReportersLimit !== 'all') {
@@ -7339,20 +7335,11 @@ if (isset($_GET['api_check_hash'])) {
                                    index === 2 ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>' :
                                    `<span class="text-sm font-black">#${index + 1}</span>`;
 
-                    let displayName = rep.name;
-                    let lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>`;
-                    
-                    if (lineUsersMap[rep.name] && lineUsersMap[rep.name].real_name) {
-                        displayName = lineUsersMap[rep.name].real_name;
-                        if (rep.name !== displayName) {
-                            // ✨ เปลี่ยนไอคอนเป็นสีเขียว LINE และให้ชื่อเป็นสีน้ำเงิน
-                            lineIdHtml = `<div class='text-[12px] font-bold text-indigo-600 mt-0.5 flex items-center'><i class='fab fa-line text-[#06C755] text-[14px] mr-1.5'></i> ${rep.name}</div>`;
-                        }
-                    }
-
-                    let safeName = rep.name.replace(/'/g, "\\'");
-                    let clickAction = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? '' : `onclick="viewHistory('${safeName}', 'reporter')" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group" title="คลิกเพื่อดูประวัติการแจ้งซ่อมของ ${displayName}"`;
-                    let disableClickClass = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? `class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 opacity-70"` : '';
+                    const displayName = escapeReporterHtml(rep.name);
+                    const lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>`;
+                    const reporterArgs = escapeReporterHtml(JSON.stringify(rep.name)) + ", 'reporter'" + ", false, false, null, " + escapeReporterHtml(JSON.stringify(rep.id));
+                    let clickAction = !rep.id ? '' : `onclick="viewHistory(${reporterArgs})" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group" title="คลิกเพื่อดูประวัติการแจ้งซ่อมของ ${displayName}"`;
+                    let disableClickClass = !rep.id ? `class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 opacity-70"` : '';
 
                     container.innerHTML += `
                         <div ${clickAction || disableClickClass}>
@@ -7370,7 +7357,7 @@ if (isset($_GET['api_check_hash'])) {
                                     <span class='text-xl font-extrabold text-indigo-600'>${rep.count}</span>
                                     <span class='text-[11px] text-slate-500 font-medium ml-1'>รายการ</span>
                                 </div>
-                                ${rep.name !== 'ไม่ระบุชื่อผู้แจ้ง' ? `<div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div>` : '<div class="ml-4 w-8 h-8"></div>'}
+                                ${rep.id ? `<div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div>` : '<div class="ml-4 w-8 h-8"></div>'}
                             </div>
                         </div>`;
                 });
@@ -7792,7 +7779,7 @@ if (isset($_GET['api_check_hash'])) {
         let historyFilterTimer = null;
         let historyFiltersRestoring = false;
 
-        async function viewHistory(fullName, type, refresh = false, restore = false, technicianId = null) {
+        async function viewHistory(fullName, type, refresh = false, restore = false, technicianId = null, reporterLineId = null) {
             if (!['reporter', 'technician'].includes(type)) return;
 
             const url = new URL(window.location.href);
@@ -7817,6 +7804,15 @@ if (isset($_GET['api_check_hash'])) {
                 url.searchParams.delete('pg_history_technician_id');
             }
 
+            const historyLineId = type === 'reporter'
+                ? (reporterLineId ?? (refresh ? window.currentHistoryLineUserId : (restore ? url.searchParams.get('pg_history_line_user_id') : null)))
+                : null;
+            if (historyLineId !== null) {
+                if (typeof historyLineId !== 'string' || !historyLineId.trim() || historyLineId.length > 200) return;
+                url.searchParams.set('pg_history_line_user_id', historyLineId);
+            } else {
+                url.searchParams.delete('pg_history_line_user_id');
+            }
             url.searchParams.set('pg_history_name', fullName);
             url.searchParams.set('pg_history_type', type);
 
@@ -7878,6 +7874,9 @@ if (isset($_GET['api_check_hash'])) {
             window.currentHistoryName = fullName;
             window.currentHistoryType = type;
             window.currentHistoryTechnicianId = historyTechId;
+            window.currentHistoryLineUserId = historyLineId;
+            if (historyLineId !== null) sessionStorage.setItem('historyLineUserId', historyLineId);
+            else sessionStorage.removeItem('historyLineUserId');
 
             if (type === 'technician') {
                 sessionStorage.setItem('historyTechnicianId', String(historyTechId));
@@ -8016,8 +8015,8 @@ if (isset($_GET['api_check_hash'])) {
             
             if (refresh) return;
 
-            let displayTitleName = fullName;
-            if (type === 'reporter' && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
+            let displayTitleName = historyLineId !== null ? escapeReporterHtml(fullName) : fullName;
+            if (type === 'reporter' && historyLineId === null && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
                 displayTitleName = lineUsersMap[fullName].real_name;
             }
             

@@ -282,9 +282,19 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
     $where = ['1=1'];
     $values = [];
     if ($kind === 'history') {
-        $column = execPageGet('eh_type') === 'technician' ? 'technician_name' : 'reporter_name';
-        $where[] = "TRIM(r.$column) = ?";
-        $values[] = execPageGet('eh_name');
+        if (execPageGet('eh_type') !== 'technician' && isset($_GET['eh_line_user_id'])) {
+            $lineId = execPageGet('eh_line_user_id');
+            if ($lineId === '' || strlen($lineId) > 200 || !is_string($_GET['eh_line_user_id'])) {
+                $where[] = '1=0';
+            } else {
+                $where[] = 'BINARY r.line_user_id = BINARY ?';
+                $values[] = $lineId;
+            }
+        } else {
+            $column = execPageGet('eh_type') === 'technician' ? 'technician_name' : 'reporter_name';
+            $where[] = "TRIM(r.$column) = ?";
+            $values[] = execPageGet('eh_name');
+        }
     }
     $month = execPageGet($prefix . 'month', date('m'));
     $year = execPageGet($prefix . 'year', date('Y'));
@@ -361,7 +371,7 @@ function execPageFooter($data, $kind) {
     $prefix = $kind === 'history' ? 'eh_' : 'er_';
     // ไม่ส่งต่อคำสั่งอื่น เช่น ลบรูปหรือ API ตรวจ Hash ไปกับลิงก์เลขหน้า
     $params = ['tab' => execPageGet('tab', 'repairs')];
-    foreach (['er_q','er_day','er_month','er_year','er_status','er_page','eh_q','eh_month','eh_year','eh_type','eh_name','eh_page'] as $key) {
+    foreach (['er_q','er_day','er_month','er_year','er_status','er_page','eh_q','eh_month','eh_year','eh_type','eh_name','eh_line_user_id','eh_page'] as $key) {
         if (isset($_GET[$key]) && is_string($_GET[$key])) $params[$key] = $_GET[$key];
     }
     $first = $data['total'] ? $data['offset'] + 1 : 0;
@@ -2055,6 +2065,7 @@ if (isset($_GET['api_check_hash'])) {
             if (isHistory) {
                 p.set('eh_type', window.currentHistoryType || 'reporter');
                 p.set('eh_name', window.currentHistoryName || '');
+                if (window.currentHistoryType === 'reporter' && window.currentHistoryLineUserId !== null && window.currentHistoryLineUserId !== undefined) p.set('eh_line_user_id', window.currentHistoryLineUserId);
             } else {
                 p.set('er_day', value('tableDay', <?php echo json_encode(execRepairsDate('day')); ?>));
                 p.set('er_status', value('tableStatus', 'all'));
@@ -2158,7 +2169,7 @@ if (isset($_GET['api_check_hash'])) {
             if (!execInitialParams.has('eh_name')) return;
             // เรียกหลัง INIT เดิม เพื่อให้แท็บและกราฟเริ่มต้นตามเดิมก่อน
             setTimeout(() => {
-                viewHistory(execInitialParams.get('eh_name'), execInitialParams.get('eh_type') || 'reporter');
+                viewHistory(execInitialParams.get('eh_name'), execInitialParams.get('eh_type') || 'reporter', execInitialParams.get('eh_line_user_id'));
                 document.getElementById('searchHistoryModalInput').value = execInitialParams.get('eh_q') || '';
                 toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');
                 execLoadPage('history', execInitialParams.get('eh_page') || 1, false);
@@ -3379,12 +3390,13 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
-        function viewHistory(fullName, type) {
+        function viewHistory(fullName, type, reporterLineId = null) {
+            window.currentHistoryLineUserId = type === 'reporter' ? reporterLineId : null;
             window.currentHistoryName = fullName; // ✨ จำชื่อที่เปิดอยู่
             window.currentHistoryType = type;     // ✨ จำประเภทที่เปิดอยู่
             execPaging.history.page = 1;
-            let displayTitleName = fullName;
-            if (type === 'reporter' && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
+            let displayTitleName = reporterLineId !== null ? escapeReporterHtml(fullName) : fullName;
+            if (type === 'reporter' && reporterLineId === null && lineUsersMap[fullName] && lineUsersMap[fullName].real_name) {
                 displayTitleName = lineUsersMap[fullName].real_name;
             }
             
@@ -3584,6 +3596,24 @@ if (isset($_GET['api_check_hash'])) {
             renderTopReporters();
         }
 
+        // ตัวตนผู้แจ้งอ้างอิง LINE ID เท่านั้น ชื่อจากใบงานล่าสุดใช้แสดงผล
+        function addLineReporter(map, repair) {
+            const id = String(repair.line_user_id ?? '').trim();
+            if (!id || id === '-') return;
+            const name = String(repair.reporter_name ?? '').trim() || 'ไม่ระบุชื่อผู้แจ้ง';
+            const stamp = String(repair.created_at || '');
+            const rowId = Number(repair.id) || 0;
+            if (!map.has(id)) map.set(id, {id, name, count:0, stamp, rowId});
+            const item = map.get(id);
+            item.count++;
+            if (stamp > item.stamp || (stamp === item.stamp && rowId >= item.rowId)) {
+                Object.assign(item, {name, stamp, rowId});
+            }
+        }
+        function escapeReporterHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[char]));
+        }
+
         function renderTopReporters() {
             const container = document.getElementById('topReportersList');
             if(!container) return;
@@ -3591,17 +3621,9 @@ if (isset($_GET['api_check_hash'])) {
             let m = document.getElementById('reporterMonth') ? document.getElementById('reporterMonth').value : 'all';
             let y = document.getElementById('reporterYear') ? document.getElementById('reporterYear').value : 'all';
             let filteredRepairs = getFilteredRepairsByMonthYear(m, y);
-            let reporterMap = {};
-            
-            filteredRepairs.forEach(r => {
-                let name = formatValJS(r.reporter_name);
-                if (name.includes('ไม่ระบุ') || name.includes('span')) name = 'ไม่ระบุชื่อผู้แจ้ง';
-                else name = r.reporter_name.trim();
-                if (!reporterMap[name]) reporterMap[name] = 0;
-                reporterMap[name]++;
-            });
-
-            let reporterArr = Object.keys(reporterMap).map(k => ({ name: k, count: reporterMap[k] }));
+            const reporterMap = new Map();
+            filteredRepairs.forEach(r => addLineReporter(reporterMap, r));
+            let reporterArr = Array.from(reporterMap.values());
             reporterArr.sort((a,b) => b.count - a.count);
 
             if (currentTopReportersLimit !== 'all') reporterArr = reporterArr.slice(0, parseInt(currentTopReportersLimit));
@@ -3625,20 +3647,12 @@ if (isset($_GET['api_check_hash'])) {
                                    index === 2 ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>' : 
                                    `<span class="text-sm font-black">#${index + 1}</span>`;
                     
-                    let displayName = rep.name;
-                    let lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>`;
-                    
-                    if (lineUsersMap[rep.name] && lineUsersMap[rep.name].real_name) {
-                        displayName = lineUsersMap[rep.name].real_name;
-                        if (rep.name !== displayName) {
-                            lineIdHtml = `<div class='text-[12px] font-bold text-indigo-600 mt-0.5 flex items-center'><i class='fab fa-line text-[#06C755] text-[14px] mr-1.5'></i> ${rep.name}</div>`;
-                        }
-                    }
-
-                    let safeName = rep.name.replace(/'/g, "\\'");
+                    const displayName = escapeReporterHtml(rep.name);
+                    const lineIdHtml = `<div class='text-[11px] text-slate-400 font-medium mt-0.5'>บุคลากรผู้แจ้งซ่อม</div>`;
+                    const reporterArgs = escapeReporterHtml(JSON.stringify(rep.name)) + ", 'reporter'" + ", " + escapeReporterHtml(JSON.stringify(rep.id));
                     // ✨ ลิงก์บังคับให้ไปดูประวัติอย่างเดียว
-                    let clickAction = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? '' : `onclick="viewHistory('${safeName}', 'reporter')" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group" title="คลิกเพื่อดูประวัติการแจ้งซ่อมของ ${displayName}"`;
-                    let disableClickClass = rep.name === 'ไม่ระบุชื่อผู้แจ้ง' ? `class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 opacity-70"` : '';
+                    let clickAction = !rep.id ? '' : `onclick="viewHistory(${reporterArgs})" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group" title="คลิกเพื่อดูประวัติการแจ้งซ่อมของ ${displayName}"`;
+                    let disableClickClass = !rep.id ? `class="p-4 md:p-5 flex items-center justify-between border-b border-slate-50 last:border-0 opacity-70"` : '';
 
                     container.innerHTML += `
                         <div ${clickAction || disableClickClass}>
@@ -3654,7 +3668,7 @@ if (isset($_GET['api_check_hash'])) {
                                     <span class='text-xl font-extrabold text-indigo-600'>${rep.count}</span>
                                     <span class='text-[11px] text-slate-500 font-medium ml-1'>รายการ</span>
                                 </div>
-                                ${rep.name !== 'ไม่ระบุชื่อผู้แจ้ง' ? `<div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div>` : '<div class="ml-4 w-8 h-8"></div>'}
+                                ${rep.id ? `<div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div>` : '<div class="ml-4 w-8 h-8"></div>'}
                             </div>
                         </div>`;
                 });

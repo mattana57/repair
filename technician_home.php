@@ -197,10 +197,10 @@ if (isset($_GET['th_fragment'])
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: no-store');
 
-    if (isset($_GET['thr'])) {
-        if (!is_string($_GET['thr']) || !preg_match('/\A.{1,200}\z/us', trim($_GET['thr']))) {
+    if (isset($_GET['th_line_user_id'])) {
+        if (!is_string($_GET['th_line_user_id']) || !preg_match('/\A.{1,200}\z/us', trim($_GET['th_line_user_id']))) {
             http_response_code(400);
-            exit('ชื่อผู้แจ้งไม่ถูกต้อง');
+            exit('รหัสผู้แจ้งไม่ถูกต้อง');
         }
         define('MBS_TECH_REPORTER_HISTORY', true);
     }
@@ -1757,20 +1757,34 @@ if (isset($_GET['th_fragment'])
             renderTechReporterRanking();
         }
 
+        // ตัวตนผู้แจ้งอ้างอิง LINE ID เท่านั้น ชื่อจากใบงานล่าสุดใช้แสดงผล
+        function addLineReporter(map, repair) {
+            const id = String(repair.line_user_id ?? '').trim();
+            if (!id || id === '-') return;
+            const name = String(repair.reporter_name ?? '').trim() || 'ไม่ระบุชื่อผู้แจ้ง';
+            const stamp = String(repair.created_at || '');
+            const rowId = Number(repair.id) || 0;
+            if (!map.has(id)) map.set(id, {id, name, count:0, stamp, rowId});
+            const item = map.get(id);
+            item.count++;
+            if (stamp > item.stamp || (stamp === item.stamp && rowId >= item.rowId)) {
+                Object.assign(item, {name, stamp, rowId});
+            }
+        }
+        function escapeReporterHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[char]));
+        }
+
         function renderTechReporterRanking(reporterMap = null) {
             if (reporterMap === null) {
-                reporterMap = {};
+                reporterMap = new Map();
                 const rows = getFilteredRepairsByMonthYear(
                     document.getElementById('repMonth').value,
                     document.getElementById('repYear').value
                 );
-                rows.forEach(r => {
-                    const rawName = r.reporter_name || 'ไม่ระบุผู้แจ้ง';
-                    const name = lineUsersMap[rawName] ? lineUsersMap[rawName] : rawName;
-                    reporterMap[name] = (reporterMap[name] || 0) + 1;
-                });
+                rows.forEach(r => addLineReporter(reporterMap, r));
             }
-            let ranked = Object.keys(reporterMap).map(name => ({name, count: reporterMap[name]})).sort((a, b) => b.count - a.count);
+            let ranked = Array.from(reporterMap.values()).sort((a, b) => b.count - a.count);
             if (techReporterLimit !== 'all') ranked = ranked.slice(0, techReporterLimit);
             const container = document.getElementById('topReportersContainer');
             if (!container) return;
@@ -1795,10 +1809,10 @@ if (isset($_GET['th_fragment'])
                     tab: 'history', hd: 'all',
                     hm: document.getElementById('repMonth').value,
                     hy: document.getElementById('repYear').value,
-                    hs: 'all', hq: '', hp: '1', thr: String(r.name), th_fragment: '1'
+                    hs: 'all', hq: '', hp: '1', th_line_user_id: r.id, th_fragment: '1'
                 });
                 const href = escape('technician_home.php?' + query.toString() + '#tab-content-history');
-                return `<a href="${href}" data-tech-reporter="${escape(r.name)}" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group no-underline" title="ดูประวัติการแจ้งซ่อมของ ${escape(r.name)}">
+                return `<a href="${href}" data-tech-reporter="${escape(r.name)}" data-tech-line-id="${escape(r.id)}" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group no-underline" title="ดูประวัติการแจ้งซ่อมของ ${escape(r.name)}">
                     <div class="flex items-center gap-4 min-w-0">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${rankColor} shrink-0 group-hover:scale-110 transition-transform">${rankIcon}</div>
                         <div class="min-w-0">
@@ -1819,7 +1833,7 @@ if (isset($_GET['th_fragment'])
 
         function renderAllCharts() {
             let pending = 0, progress = 0, completed = 0;
-            let eqMap = {}, locMap = {}, reporterMap = {};
+            let eqMap = {}, locMap = {}, reporterMap = new Map();
 
             const periodRows = prefix => new Set(getFilteredRepairsByMonthYear(
                 document.getElementById(prefix + 'Month').value,
@@ -1851,9 +1865,7 @@ if (isset($_GET['th_fragment'])
                 let loc = r.location || 'ไม่ระบุสถานที่';
                 if (locRows.has(r) && loc !== 'ไม่ระบุสถานที่' && loc.trim() !== '') locMap[loc] = (locMap[loc] || 0) + 1;
 
-                let repNameRaw = r.reporter_name || 'ไม่ระบุผู้แจ้ง';
-                let repName = lineUsersMap[repNameRaw] ? lineUsersMap[repNameRaw] : repNameRaw;
-                if (reporterRows.has(r)) reporterMap[repName] = (reporterMap[repName] || 0) + 1;
+                if (reporterRows.has(r)) addLineReporter(reporterMap, r);
             });
 
             // ==========================================
@@ -2395,8 +2407,10 @@ if (isset($_GET['th_fragment'])
         <div id="techReporterModalFooter"></div>
     </dialog>
     <script>
-        const techReporterHistory = {name:'', page:1, timer:null, controller:null, version:0, previousOverflow:''};
-        function openTechReporterHistory(name) {
+        const techReporterHistory = {lineId:'', name:'', page:1, timer:null, controller:null, version:0, previousOverflow:''};
+        function openTechReporterHistory(name, lineId) {
+            if (typeof lineId !== 'string' || !lineId.trim() || lineId.length > 200) return;
+            techReporterHistory.lineId = lineId;
             const modal = document.getElementById('techReporterModal');
             techReporterHistory.name = String(name);
             techReporterHistory.page = 1;
@@ -2442,7 +2456,7 @@ if (isset($_GET['th_fragment'])
             techReporterHistory.controller = controller;
             const version = ++techReporterHistory.version;
             const url = new URL('technician_home.php', window.location.href);
-            url.search = new URLSearchParams({tab:'history', th_fragment:'1', thr:techReporterHistory.name, hd:'all', hm:document.getElementById('techReporterMonth').value, hy:document.getElementById('techReporterYear').value, hs:'all', hq:document.getElementById('techReporterSearch').value.trim(), hp:String(page)}).toString();
+            url.search = new URLSearchParams({tab:'history', th_fragment:'1', th_line_user_id:techReporterHistory.lineId, hd:'all', hm:document.getElementById('techReporterMonth').value, hy:document.getElementById('techReporterYear').value, hs:'all', hq:document.getElementById('techReporterSearch').value.trim(), hp:String(page)}).toString();
             const body = document.getElementById('techReporterTableBody');
             const footer = document.getElementById('techReporterModalFooter');
             body.setAttribute('aria-busy', 'true');
@@ -2472,7 +2486,7 @@ if (isset($_GET['th_fragment'])
         document.addEventListener('click', event => {
             const rank = event.target.closest('a[data-tech-reporter]');
             if (rank && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
-                event.preventDefault(); openTechReporterHistory(rank.dataset.techReporter); return;
+                event.preventDefault(); openTechReporterHistory(rank.dataset.techReporter, rank.dataset.techLineId); return;
             }
             const link = event.target.closest('#techReporterModalFooter .th-pages a');
             if (link && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
