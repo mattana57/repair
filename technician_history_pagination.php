@@ -67,7 +67,8 @@ $thOnHistory = $thGet('tab', '') === 'history';
 // ใช้เงื่อนไขเจ้าของจากหน้าเดิมที่ตรวจสิทธิ์แล้ว
 // ไม่รับรหัสเจ้าหน้าที่จาก GET
 if ($thOnHistory) {
-    $thWhere = '(' . $where . ')';
+    // คิวรอรับเรื่องทุกคนเห็น งานที่รับแล้วใช้เงื่อนไขเจ้าของเดิมเท่านั้น
+    $thWhere = "(TRIM(status) = 'รอรับเรื่อง' OR (" . $where . '))';
     $thTypes = '';
     $thParams = [];
 
@@ -132,7 +133,7 @@ if ($thOnHistory) {
             " AND (LOCATE(LOWER(?), LOWER(CONCAT_WS(' ', "
             . implode(', ', $thColumns)
             . '))) > 0'
-            . ' OR LOCATE(LOWER(?), LOWER(?)) > 0';
+            . ' OR ((' . $where . ') AND LOCATE(LOWER(?), LOWER(?)) > 0)';
 
         $thTypes .= 'sss';
         $thParams[] = $thSearch;
@@ -200,7 +201,7 @@ if ($thOnHistory) {
     $thPage = min($thPage, $thPages);
 
     $thResult = $thRun(
-        'SELECT * FROM repairs WHERE ' . $thWhere
+        'SELECT repairs.*, CASE WHEN (' . $where . ') THEN 1 ELSE 0 END AS th_can_edit FROM repairs WHERE ' . $thWhere
         . ' ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?',
         $thTypes . 'ii',
         array_merge(
@@ -253,7 +254,7 @@ $thDate = static function ($value, $complete = false) use ($thEscape) {
     $color = $complete ? 'text-emerald-700' : 'text-slate-700';
 
     return '<div class="th-date ' . $color . '">'
-        . $thEscape($parts[0])
+        . $thEscape((date('d/m/', strtotime($parts[0])) . ((int)date('Y', strtotime($parts[0])) + 543)))
         . '</div>'
         . (
             !empty($parts[1])
@@ -1126,6 +1127,7 @@ rsort($thYears);
                             </td>
 
                             <td>
+                                <?php if ((int)($r['th_can_edit'] ?? 0) === 1): ?>
                                 <a target="_blank"
                                    href="update_repair.php?id=<?= (int) $r['id'] ?>"
                                    onclick="window.open(this.href, 'mbsTechnicianRepair'); return false;"
@@ -1133,6 +1135,9 @@ rsort($thYears);
                                    title="เปิดใบงาน">
                                     <i class="fas fa-pen-to-square"></i>
                                 </a>
+                                <?php else: ?>
+                                    <span class="text-[11px] text-slate-400 font-medium whitespace-nowrap">รับงานผ่าน LINE</span>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

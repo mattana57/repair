@@ -2137,14 +2137,19 @@ if (isset($_GET['th_fragment'])
         let controller;
         let version = 0;
         let composing = false;
+        let pendingSearch = false;
 
-        async function search(currentVersion) {
-            controller = new AbortController();
+        async function search(currentVersion, refresh = false) {
+            const requestController = new AbortController();
+            controller = requestController;
+            if (!refresh) pendingSearch = false;
 
             const url = new URL(form.action, window.location.href);
             url.search = new URLSearchParams(new FormData(form)).toString();
             url.searchParams.set('tab', 'history');
-            url.searchParams.set('hp', '1');
+            const currentQuery = window.location.search;
+            const currentPage = new URLSearchParams(currentQuery).get('hp') || '1';
+            url.searchParams.set('hp', refresh ? currentPage : '1');
             url.searchParams.set('th_fragment', '1');
             url.hash = '';
 
@@ -2156,7 +2161,7 @@ if (isset($_GET['th_fragment'])
 
             try {
                 const response = await fetch(url.href, {
-                    signal: controller.signal,
+                    signal: requestController.signal,
                     credentials: 'same-origin',
                     cache: 'no-store'
                 });
@@ -2174,8 +2179,8 @@ if (isset($_GET['th_fragment'])
 
                 const html = await response.text();
 
-                // ไม่ให้ผลคำค้นเก่าทับคำค้นที่พิมพ์ใหม่
-                if (currentVersion !== version) return;
+                // ไม่ให้คำขอเก่าทับผลใหม่หรือเปลี่ยนตารางหลังสลับหน้า
+                if (currentVersion !== version || currentQuery !== window.location.search) return;
 
                 const doc = new DOMParser().parseFromString(
                     html,
@@ -2190,13 +2195,20 @@ if (isset($_GET['th_fragment'])
                 }
 
                 // แถวและแถบแบ่งหน้าชุดใหม่สร้างโดย PHP
+                const scroll = document.getElementById('repairsTableContainer');
+                const scrollTop = scroll.scrollTop;
+                const scrollLeft = scroll.scrollLeft;
                 tbody.innerHTML = nextBody.innerHTML;
 
                 document.querySelector('#repairsMainCard .th-pagination')
                     .replaceWith(document.importNode(nextFooter, true));
 
-                // เริ่มดูผลค้นหาจากแถวแรก โดยไม่เลื่อนหน้าเว็บ
-                document.getElementById('repairsTableContainer').scrollTop = 0;
+                // อัปเดตคิวไม่กระโดดกลับแถวแรก ส่วนค้นหาใหม่ทำงานตามเดิม
+                scroll.scrollTop = refresh ? scrollTop : 0;
+                scroll.scrollLeft = scrollLeft;
+                const activePage = nextFooter.querySelector('[aria-current="page"]');
+                const pageNumber = activePage ? activePage.textContent.replace(/,/g, '').trim() : '';
+                if (/^[1-9][0-9]*$/.test(pageNumber)) url.searchParams.set('hp', pageNumber);
 
                 url.searchParams.delete('th_fragment');
                 url.hash = window.location.hash;
@@ -2230,7 +2242,7 @@ if (isset($_GET['th_fragment'])
                     'display:block;color:#e11d48;font-size:12px;margin-top:6px';
 
                 message.textContent =
-                    'ค้นหาไม่สำเร็จ กรุณากด Enter เพื่อลองอีกครั้ง';
+                    refresh ? 'อัปเดตรายการไม่สำเร็จ ระบบจะลองใหม่อัตโนมัติ' : 'ค้นหาไม่สำเร็จ กรุณากด Enter เพื่อลองอีกครั้ง';
 
                 form.appendChild(message);
 
@@ -2238,8 +2250,22 @@ if (isset($_GET['th_fragment'])
                 if (currentVersion === version) {
                     tbody.removeAttribute('aria-busy');
                 }
+                if (controller === requestController) controller = null;
             }
         }
+
+        function refreshHistoryQueue() {
+            if (document.hidden || composing || pendingSearch || controller) return;
+            if (new URLSearchParams(window.location.search).get('tab') !== 'history') return;
+            if (document.querySelector('#repairsMainCard details[open]')) return;
+            search(++version, true);
+        }
+
+        setInterval(refreshHistoryQueue, 5000);
+        window.addEventListener('focus', refreshHistoryQueue);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) refreshHistoryQueue();
+        });
 
         function queue(immediate = false) {
             clearTimeout(timer);
@@ -2247,6 +2273,7 @@ if (isset($_GET['th_fragment'])
             if (controller) controller.abort();
 
             const currentVersion = ++version;
+            pendingSearch = true;
 
             if (composing) return;
 
