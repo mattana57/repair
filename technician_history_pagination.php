@@ -1015,7 +1015,9 @@ rsort($thYears);
 
                             <td class="font-mono text-slate-500">
                                 <?= $thEscape(
-                                    $r['repair_code'] ?? ('MR-' . $r['id'])
+                                    trim((string) ($r['ticket_no'] ?? '')) !== ''
+                                        ? $r['ticket_no']
+                                        : '-'
                                 ) ?>
                             </td>
 

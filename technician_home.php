@@ -1894,7 +1894,7 @@ if (isset($_GET['th_fragment'])
                             <div class="font-medium text-slate-700">${dt[0]}</div>
                             ${dt[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${dt[1].substring(0, 5)}</div>` : ''}
                         </td>
-                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
+                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${r.ticket_no || '-'}</td>
                         <td class="px-6 py-4 align-top">
                             <div class="flex items-center gap-3">
                                 <!-- ✨ ปรับสีไอคอนประจำตัวผู้แจ้งให้เข้มขึ้นเหมือนแอดมิน ✨ -->
@@ -2185,6 +2185,6 @@ if (isset($_GET['th_fragment'])
         });
     })();
     </script>
-    
+
 </body>
 </html>
