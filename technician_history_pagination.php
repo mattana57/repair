@@ -992,9 +992,9 @@ rsort($thYears);
                             <td>
                                 <div class="font-bold text-slate-800">
                                     <?= $thEscape(
-                                        $r['equipment']
-                                        ?? $r['problem']
-                                        ?? 'ไม่ระบุ'
+                                        trim((string) ($r['equipment_type'] ?? '')) !== ''
+                                            ? $r['equipment_type']
+                                            : 'ไม่ระบุ'
                                     ) ?>
 
                                     <?php if (!empty($r['image_path'])): ?>

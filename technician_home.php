@@ -1893,7 +1893,7 @@ $current_thai_year = date('Y') + 543;
                             </div>
                         </td>
                         <td class="px-6 py-4 align-top">
-                            <div class="font-bold text-slate-800">${r.equipment || r.problem || 'ไม่ระบุ'} ${imgIcon}</div>
+                            <div class="font-bold text-slate-800">${r.equipment_type || 'ไม่ระบุ'} ${imgIcon}</div>
                             <div class="text-[11px] text-slate-500 font-medium mt-0.5 max-w-[180px] truncate" title="${r.location || '-'}">${r.location || '-'}</div>
                         </td>
                         <td class="px-6 py-4 align-middle text-center">
