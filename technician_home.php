@@ -519,13 +519,13 @@ $current_thai_year = date('Y') + 543;
             padding: 24px;
             gap: 20px;
             margin-bottom: 20px;
-            border: 1px solid #e0e4f6;
+            border: 1px solid #cfe7fa;
             border-radius: 24px;
             background: linear-gradient(
-                115deg, #fff, #f2efff 72%, #eaf2ff
+                115deg, #fff, #eff8ff 72%, #e0f4ff
             );
-            color: #1e1b4b;
-            box-shadow: 0 6px 24px rgb(79 70 229 / 5%);
+            color: #123a63;
+            box-shadow: 0 6px 24px rgb(14 116 190 / 5%);
         }
 
         .tech-dashboard-ui .tech-welcome > div:first-child {
@@ -536,9 +536,9 @@ $current_thai_year = date('Y') + 543;
         .tech-dashboard-ui .tech-welcome > div:first-child > div:first-child {
             width: 60px;
             height: 60px;
-            border: 1px solid #dcd7fe;
-            background: #e9e5ff;
-            color: #6550da;
+            border: 1px solid #b9defa;
+            background: #e0f2fe;
+            color: #0284c7;
             box-shadow: none;
         }
 
@@ -558,7 +558,7 @@ $current_thai_year = date('Y') + 543;
 
         .tech-dashboard-ui .tech-welcome h2 {
             margin-top: 3px;
-            color: #6253bc;
+            color: #147bb5;
             font-size: 16px;
             line-height: 1.5;
         }
@@ -573,14 +573,14 @@ $current_thai_year = date('Y') + 543;
         .tech-dashboard-ui .tech-welcome > div:last-child {
             max-width: 100%;
             padding: 12px 16px;
-            border: 1px solid #e1ddf5;
+            border: 1px solid #cce5f6;
             background: rgb(255 255 255 / 85%);
-            color: #514590;
+            color: #17658f;
             text-align: left;
         }
 
         .tech-dashboard-ui .tech-welcome > div:last-child > span:first-child {
-            color: #85839c;
+            color: #718da4;
             letter-spacing: 0;
         }
 
