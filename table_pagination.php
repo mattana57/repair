@@ -24,6 +24,30 @@ function tp_get($key, $default = '') {
         : $default;
 }
 
+// วันที่ของ Transactions เท่านั้น: ใช้เวลาไทยเมื่อไม่ได้เลือกวันที่ไว้ใน URL
+function tp_repairs_day() {
+    $today = (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j');
+    $day = tp_get('pg_repairs_day', $today);
+    if ($day === 'all') return 'all';
+    if (ctype_digit($day) && (int)$day >= 1 && (int)$day <= 31) {
+        return (string)(int)$day;
+    }
+    return $today;
+}
+
+// เดือน/ปีของ Transactions: ค่าเริ่มต้นปัจจุบัน และรองรับ all แยกจากกัน
+function tp_repairs_period($part) {
+    $today = new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
+    $default = $today->format($part === 'month' ? 'm' : 'Y');
+    $value = tp_get('pg_repairs_' . $part, $default);
+    if ($value === 'all') return 'all';
+    if ($part === 'month' && ctype_digit($value) && (int)$value >= 1 && (int)$value <= 12) {
+        return str_pad((string)(int)$value, 2, '0', STR_PAD_LEFT);
+    }
+    if ($part === 'year' && preg_match('/^[1-9][0-9]{3}$/D', $value)) return $value;
+    return $default;
+}
+
 function tp_url(array $changes = [], array $remove = []) {
     $query = [];
 
@@ -36,6 +60,7 @@ function tp_url(array $changes = [], array $remove = []) {
                     '/^pg_(repairs|admins|techs|assets|reporters|logs|history)_(page|q|month|year|status|department)$/D',
                     $key
                 )
+                || $key === 'pg_repairs_day'
                 || in_array(
                     $key,
                     ['pg_history_type', 'pg_history_name', 'pg_history_technician_id', 'pg_history_line_user_id', 'pg_full'],
@@ -253,6 +278,18 @@ function tp_repairs(
     $month = tp_get('pg_' . $prefix . '_month');
     $year = tp_get('pg_' . $prefix . '_year');
     $status = tp_get('pg_' . $prefix . '_status');
+
+    // จำกัดเฉพาะ Transactions ของแอดมิน ไม่เปลี่ยนตัวกรองประวัติหรือหน้าอื่น
+    if ($prefix === 'repairs') {
+        $month = tp_repairs_period('month');
+        $year = tp_repairs_period('year');
+        $day = tp_repairs_day();
+        if ($day !== 'all') {
+            $where .= ' AND DAY(r.created_at) = ?';
+            $types .= 'i';
+            $values[] = (int)$day;
+        }
+    }
 
     if (
         ctype_digit($month)
@@ -826,7 +863,7 @@ function tp_repair_rows(
             );
 
             $created_date = $has_created
-                ? date('Y-m-d', strtotime($row['created_at']))
+                ? (date('d/m/', strtotime($row['created_at'])) . ((int)date('Y', strtotime($row['created_at'])) + 543))
                 : "<span class='text-rose-500 font-bold'>-</span>";
 
             $created_time = $has_created
@@ -853,7 +890,7 @@ function tp_repair_rows(
             $has_received = !empty($raw_rec);
 
             $received_date = $has_received
-                ? date('Y-m-d', strtotime($raw_rec))
+                ? (date('d/m/', strtotime($raw_rec)) . ((int)date('Y', strtotime($raw_rec)) + 543))
                 : "<span class='text-rose-500 font-bold'>-</span>";
 
             $received_time = $has_received
@@ -870,7 +907,7 @@ function tp_repair_rows(
             );
 
             $completed_date = $has_completed
-                ? date('Y-m-d', strtotime($row['completed_at']))
+                ? (date('d/m/', strtotime($row['completed_at'])) . ((int)date('Y', strtotime($row['completed_at'])) + 543))
                 : "<span class='text-rose-500 font-bold'>-</span>";
 
             $completed_time = $has_completed
