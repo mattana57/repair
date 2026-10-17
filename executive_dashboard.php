@@ -1205,7 +1205,16 @@ if (isset($_GET['api_check_hash'])) {
                         <div class="flex flex-wrap gap-2.5">
                             <button onclick="filterByDept('all', this)" class="tech-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
                             <?php
-                            foreach(array_keys($grouped_technicians) as $d_name) {
+                            $filter_departments = array_values(array_unique(array_merge(
+                                [
+                                    'ฝ่ายงานบริการเทคโนโลยีดิจิทัล',
+                                    'ฝ่ายงานโสตทัศนูปกรณ์',
+                                    'ฝ่ายงานยานยนต์'
+                                ],
+                                array_keys($grouped_technicians)
+                            )));
+
+                            foreach ($filter_departments as $d_name) {
 
                             // คงการซ่อนปุ่มฝ่ายงานทั่วไปและอื่นๆ แต่อนุญาตให้แสดงแม่บ้าน
                             if ($d_name === 'ฝ่ายงานทั่วไป' || $d_name === 'อื่นๆ') continue;
