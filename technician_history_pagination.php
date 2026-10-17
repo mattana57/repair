@@ -19,17 +19,23 @@ $thGet = static function ($key, $default) {
         : $default;
 };
 
-$thMonth = $thGet('hm', date('m'));
-$thYear = $thGet('hy', date('Y'));
+$thToday = new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
+$thDay = $thGet('hd', $thToday->format('j'));
+if ($thDay !== 'all') {
+    $thDay = ctype_digit($thDay) && (int)$thDay >= 1 && (int)$thDay <= 31
+        ? (string)(int)$thDay : $thToday->format('j');
+}
+$thMonth = $thGet('hm', $thToday->format('m'));
+$thYear = $thGet('hy', $thToday->format('Y'));
 $thStatus = $thGet('hs', 'all');
 $thSearch = $thGet('hq', '');
 
-if (!preg_match('/\A(?:0[1-9]|1[0-2])\z/', $thMonth)) {
-    $thMonth = date('m');
+if ($thMonth !== 'all' && !preg_match('/\A(?:0[1-9]|1[0-2])\z/', $thMonth)) {
+    $thMonth = $thToday->format('m');
 }
 
-if (!preg_match('/\A[1-9][0-9]{3}\z/', $thYear)) {
-    $thYear = date('Y');
+if ($thYear !== 'all' && !preg_match('/\A[1-9][0-9]{3}\z/', $thYear)) {
+    $thYear = $thToday->format('Y');
 }
 
 $thStatuses = [
@@ -64,6 +70,12 @@ if ($thOnHistory) {
     $thWhere = '(' . $where . ')';
     $thTypes = '';
     $thParams = [];
+
+    if ($thDay !== 'all') {
+        $thWhere .= ' AND DAY(created_at) = ?';
+        $thTypes .= 'i';
+        $thParams[] = (int) $thDay;
+    }
 
     if ($thMonth !== 'all') {
         $thWhere .= ' AND MONTH(created_at) = ?';
@@ -203,6 +215,7 @@ if ($thOnHistory) {
 }
 
 $thUrl = static function ($page, array $changes = []) use (
+    $thDay,
     $thMonth,
     $thYear,
     $thStatus,
@@ -211,6 +224,7 @@ $thUrl = static function ($page, array $changes = []) use (
     $query = array_merge(
         [
             'tab' => 'history',
+            'hd' => $thDay,
             'hm' => $thMonth,
             'hy' => $thYear,
             'hs' => $thStatus,
@@ -613,6 +627,13 @@ rsort($thYears);
     color: #4f46e5;
 }
 
+.th-dropdown-menu a.th-all-period,
+.th-dropdown-menu a.th-all-period:hover,
+.th-dropdown-menu a.th-all-period:focus-visible {
+    background: #eef2ff;
+    color: #4f46e5;
+}
+
 .th-status-menu {
     display: flex;
     flex-direction: column;
@@ -841,6 +862,8 @@ rsort($thYears);
                     class="th-search">
 
                     <input type="hidden" name="tab" value="history">
+                    <input type="hidden" name="hd"
+                        value="<?= $thEscape($thDay) ?>">
                     <input type="hidden" name="hm"
                         value="<?= $thEscape($thMonth) ?>">
                     <input type="hidden" name="hy"
@@ -876,14 +899,29 @@ rsort($thYears);
 
                     <details class="th-dropdown" name="th-history-filters">
                         <summary>
+                            <span><?= $thDay === 'all' ? 'ทุกวัน' : 'วันที่ ' . $thEscape($thDay) ?></span>
+                            <i class="fas fa-caret-down" aria-hidden="true"></i>
+                        </summary>
+                        <div class="th-dropdown-menu">
+                            <a class="th-all-period" href="<?= $thEscape($thUrl(1, ['hd' => 'all'])) ?>">ทุกวัน</a>
+                            <?php for ($thDayNumber = 1; $thDayNumber <= 31; $thDayNumber++): ?>
+                                <a href="<?= $thEscape($thUrl(1, ['hd' => (string)$thDayNumber])) ?>"
+                                   class="<?= $thDay === (string)$thDayNumber ? 'is-selected' : '' ?>">วันที่ <?= $thDayNumber ?></a>
+                            <?php endfor; ?>
+                        </div>
+                    </details>
+
+                    <details class="th-dropdown" name="th-history-filters">
+                        <summary>
                             <span>
-                                <?= $thEscape($thai_months[(int) $thMonth]) ?>
+                                <?= $thMonth === 'all' ? 'ทุกเดือน' : $thEscape($thai_months[(int) $thMonth]) ?>
                             </span>
                             <i class="fas fa-caret-down" aria-hidden="true"></i>
                         </summary>
 
                         <div class="th-dropdown-menu">
 
+                            <a class="th-all-period" href="<?= $thEscape($thUrl(1, ['hm' => 'all'])) ?>">ทุกเดือน</a>
                             <?php foreach ($thai_months as $number => $label):
                                 $value = sprintf('%02d', $number);
                             ?>
@@ -901,13 +939,14 @@ rsort($thYears);
                     <details class="th-dropdown">
                         <summary>
                             <span>
-                                <?= (int) $thYear + 543 ?>
+                                <?= $thYear === 'all' ? 'ทุกปี' : (int) $thYear + 543 ?>
                             </span>
                             <i class="fas fa-caret-down" aria-hidden="true"></i>
                         </summary>
 
                         <div class="th-dropdown-menu">
 
+                            <a class="th-all-period" href="<?= $thEscape($thUrl(1, ['hy' => 'all'])) ?>">ทุกปี</a>
                             <?php foreach ($thYears as $year): ?>
                                 <a href="<?= $thEscape(
                                     $thUrl(1, ['hy' => (string) $year])

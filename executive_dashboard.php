@@ -264,6 +264,19 @@ function execPageRun($conn, $sql, $values) {
     }
 }
 
+// ตัวกรองวันที่เฉพาะตารางรายการซ่อมผู้บริหาร
+function execRepairsDate($part) {
+    $today = new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
+    $format = ['day' => 'j', 'month' => 'm', 'year' => 'Y'];
+    $default = $today->format($format[$part]);
+    $value = execPageGet('er_' . $part, $default);
+    if ($value === 'all') return 'all';
+    if ($part === 'day' && ctype_digit($value) && (int)$value >= 1 && (int)$value <= 31) return (string)(int)$value;
+    if ($part === 'month' && ctype_digit($value) && (int)$value >= 1 && (int)$value <= 12) return str_pad((string)(int)$value, 2, '0', STR_PAD_LEFT);
+    if ($part === 'year' && preg_match('/^[1-9][0-9]{3}$/D', $value)) return $value;
+    return $default;
+}
+
 function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
     $prefix = $kind === 'history' ? 'eh_' : 'er_';
     $where = ['1=1'];
@@ -275,6 +288,15 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
     }
     $month = execPageGet($prefix . 'month', date('m'));
     $year = execPageGet($prefix . 'year', date('Y'));
+    if ($kind !== 'history') {
+        $month = execRepairsDate('month');
+        $year = execRepairsDate('year');
+        $day = execRepairsDate('day');
+        if ($day !== 'all') {
+            $where[] = 'DAY(r.created_at) = ?';
+            $values[] = (int)$day;
+        }
+    }
     if ($month !== 'all') {
         if (!ctype_digit($month) || (int)$month < 1 || (int)$month > 12) $month = date('m');
         $where[] = 'MONTH(r.created_at) = ?';
@@ -339,7 +361,7 @@ function execPageFooter($data, $kind) {
     $prefix = $kind === 'history' ? 'eh_' : 'er_';
     // ไม่ส่งต่อคำสั่งอื่น เช่น ลบรูปหรือ API ตรวจ Hash ไปกับลิงก์เลขหน้า
     $params = ['tab' => execPageGet('tab', 'repairs')];
-    foreach (['er_q','er_month','er_year','er_status','er_page','eh_q','eh_month','eh_year','eh_type','eh_name','eh_page'] as $key) {
+    foreach (['er_q','er_day','er_month','er_year','er_status','er_page','eh_q','eh_month','eh_year','eh_type','eh_name','eh_page'] as $key) {
         if (isset($_GET[$key]) && is_string($_GET[$key])) $params[$key] = $_GET[$key];
     }
     $first = $data['total'] ? $data['offset'] + 1 : 0;
@@ -1450,29 +1472,43 @@ if (isset($_GET['api_check_hash'])) {
                             </div>
                             
                             <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
-                            <div class="flex items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 relative z-40">
+                            <div class="flex flex-wrap items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 max-w-full relative z-40">
                                 <!-- ✨ ย่อความกว้าง (w-92px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
+                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-DayContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Day', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Day')">
+                                        <span id="table-DayText" class="truncate"><?php echo execRepairsDate('day') === 'all' ? 'ทุกวัน' : 'วันที่ ' . execPageEscape(execRepairsDate('day')); ?></span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="table-DayList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกวัน" onclick="selectChartDropdown('table-Day', 'all', 'ทุกวัน', filterRepairsTable)">ทุกวัน</div>
+                                        <?php for ($day_number = 1; $day_number <= 31; $day_number++) { echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$day_number}' data-display='วันที่ {$day_number}' onclick=\"selectChartDropdown('table-Day', '{$day_number}', 'วันที่ {$day_number}', filterRepairsTable)\">วันที่ {$day_number}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="tableDay" value="<?php echo execPageEscape(execRepairsDate('day')); ?>">
+                                </div>
+
                                 <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Month')">
-                                        <span id="table-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
+                                        <span id="table-MonthText" class="truncate"><?php echo execRepairsDate('month') === 'all' ? 'ทุกเดือน' : execPageEscape($thai_months[(int)execRepairsDate('month')]); ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('table-Month', 'all', 'ทุกเดือน', filterRepairsTable)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('table-Month', '{$num_pad}', '{$name}', filterRepairsTable)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="tableMonth" value="<?php echo date('m'); ?>">
+                                    <input type="hidden" id="tableMonth" value="<?php echo execPageEscape(execRepairsDate('month')); ?>">
                                 </div>
 
                                 <!-- ✨ ย่อความกว้าง (w-82px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
                                 <div class="relative w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', filterRepairsTable)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
-                                        <span id="table-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
+                                        <span id="table-YearText" class="truncate"><?php echo execRepairsDate('year') === 'all' ? 'ทุกปี' : execPageEscape((int)execRepairsDate('year') + 543); ?></span>
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('table-Year', 'all', 'ทุกปี', filterRepairsTable)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', '{$thai_y}', filterRepairsTable)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="tableYear" value="<?php echo date('Y'); ?>">
+                                    <input type="hidden" id="tableYear" value="<?php echo execPageEscape(execRepairsDate('year')); ?>">
                                 </div>
 
                                 <!-- ✨ ดรอปดาวน์เลือกสถานะ (สีเดียวกับในตารางเป๊ะๆ) ✨ -->
@@ -2007,7 +2043,10 @@ if (isset($_GET['api_check_hash'])) {
             if (isHistory) {
                 p.set('eh_type', window.currentHistoryType || 'reporter');
                 p.set('eh_name', window.currentHistoryName || '');
-            } else p.set('er_status', value('tableStatus', 'all'));
+            } else {
+                p.set('er_day', value('tableDay', <?php echo json_encode(execRepairsDate('day')); ?>));
+                p.set('er_status', value('tableStatus', 'all'));
+            }
             return p;
         }
         function execSchedulePage(kind) {
@@ -2083,7 +2122,7 @@ if (isset($_GET['api_check_hash'])) {
         // คืนค่าก่อน INIT เดิมทำงาน โดยใช้รายการ dropdown เดิม ไม่สร้าง UI ชุดใหม่
         const execInitialParams = new URLSearchParams(location.search);
         for (const [id, key, dropdown] of [
-            ['searchInput', 'er_q', null], ['tableMonth', 'er_month', 'table-Month'],
+            ['searchInput', 'er_q', null], ['tableDay', 'er_day', 'table-Day'], ['tableMonth', 'er_month', 'table-Month'],
             ['tableYear', 'er_year', 'table-Year'], ['tableStatus', 'er_status', 'table-Status'],
             ['historyMonth', 'eh_month', 'history-Month'], ['historyYear', 'eh_year', 'history-Year']
         ]) {
