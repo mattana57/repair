@@ -27,19 +27,46 @@ function ch_case($column, array $map, $fallback, array &$params) {
 }
 
 function ch_contacts_page($conn, array $lineMap) {
-    $grouped = "SELECT MAX(id) AS latest_id, COUNT(*) AS total_repairs FROM repairs
+    // แสดงผู้ลงทะเบียนแม้ไม่มีใบงาน และเก็บรายชื่อจากใบงานเก่าที่ยังไม่มีทะเบียน
+    // เชื่อมเฉพาะรหัส LINE แบบตรงตัว ไม่ใช้ชื่อหรือเบอร์โทรจับคู่
+    $contacts = "SELECT COALESCE(history.id, 0) AS id,
+        CONVERT(lu.line_user_id USING utf8mb4) COLLATE utf8mb4_unicode_ci AS line_user_id,
+        COALESCE(NULLIF(CONVERT(lu.line_display_name USING utf8mb4) COLLATE utf8mb4_unicode_ci, ''), NULLIF(CONVERT(history.line_display_name USING utf8mb4) COLLATE utf8mb4_unicode_ci, ''), '') AS line_display_name,
+        COALESCE(NULLIF(CONVERT(lu.real_name USING utf8mb4) COLLATE utf8mb4_unicode_ci, ''), NULLIF(CONVERT(history.reporter_name USING utf8mb4) COLLATE utf8mb4_unicode_ci, ''), NULLIF(CONVERT(lu.line_display_name USING utf8mb4) COLLATE utf8mb4_unicode_ci, ''), 'ไม่ระบุชื่อผู้แจ้ง') AS reporter_name,
+        COALESCE(NULLIF(CONVERT(lu.phone_number USING utf8mb4) COLLATE utf8mb4_unicode_ci, ''), NULLIF(CONVERT(history.phone_number USING utf8mb4) COLLATE utf8mb4_unicode_ci, ''), '') AS fallback_phone,
+        COALESCE(history.total_repairs, 0) AS total_repairs,
+        COALESCE(history.created_at, lu.created_at) AS created_at
+        FROM line_users lu LEFT JOIN (SELECT latest.id, latest.line_user_id, latest.line_display_name,
+        latest.reporter_name, latest.phone_number, latest.created_at, grouped.total_repairs
+        FROM (SELECT MAX(id) AS latest_id, COUNT(*) AS total_repairs FROM repairs
         WHERE deleted_at IS NULL
         GROUP BY CAST(CASE WHEN line_user_id IS NULL OR TRIM(line_user_id) = ''
-            THEN CONCAT('repair:',id) ELSE CONCAT('line:',line_user_id) END AS BINARY)";
-    $from = ' FROM (' . $grouped . ') grouped JOIN repairs latest ON latest.id = grouped.latest_id';
+            THEN CONCAT('repair:',id) ELSE CONCAT('line:',line_user_id) END AS BINARY)) grouped JOIN repairs latest ON latest.id = grouped.latest_id) history
+          ON TRIM(lu.line_user_id) <> '' AND BINARY history.line_user_id = BINARY lu.line_user_id
+        UNION ALL
+        SELECT history.id,
+        CONVERT(history.line_user_id USING utf8mb4) COLLATE utf8mb4_unicode_ci AS line_user_id,
+        COALESCE(NULLIF(CONVERT(history.line_display_name USING utf8mb4) COLLATE utf8mb4_unicode_ci, ''), '') AS line_display_name,
+        COALESCE(NULLIF(CONVERT(history.reporter_name USING utf8mb4) COLLATE utf8mb4_unicode_ci, ''), NULLIF(CONVERT(history.line_display_name USING utf8mb4) COLLATE utf8mb4_unicode_ci, ''), 'ไม่ระบุชื่อผู้แจ้ง') AS reporter_name,
+        COALESCE(CONVERT(history.phone_number USING utf8mb4) COLLATE utf8mb4_unicode_ci, '') AS fallback_phone,
+        history.total_repairs, history.created_at
+        FROM (SELECT latest.id, latest.line_user_id, latest.line_display_name,
+        latest.reporter_name, latest.phone_number, latest.created_at, grouped.total_repairs
+        FROM (SELECT MAX(id) AS latest_id, COUNT(*) AS total_repairs FROM repairs
+        WHERE deleted_at IS NULL
+        GROUP BY CAST(CASE WHEN line_user_id IS NULL OR TRIM(line_user_id) = ''
+            THEN CONCAT('repair:',id) ELSE CONCAT('line:',line_user_id) END AS BINARY)) grouped JOIN repairs latest ON latest.id = grouped.latest_id) history
+        WHERE NOT EXISTS (SELECT 1 FROM line_users lu
+          WHERE TRIM(lu.line_user_id) <> '' AND BINARY lu.line_user_id = BINARY history.line_user_id)";
+    $from = ' FROM (' . $contacts . ') contacts';
     $where = '1=1'; $params = []; $types = '';
-    $q = preg_replace('/\\s+/u', '', tp_get('pg_reporters_q'));
+    $q = preg_replace('/\s+/u', '', tp_get('pg_reporters_q'));
     if ($q !== '') {
-        $where .= ' AND ' . ch_compact_sql("CONCAT_WS('', latest.line_display_name, latest.reporter_name, latest.phone_number, grouped.total_repairs, 'View')") . " LIKE ? ESCAPE '!'";
+        $where .= ' AND ' . ch_compact_sql("CONCAT_WS('', contacts.line_display_name, contacts.reporter_name, contacts.fallback_phone, contacts.total_repairs, 'View')") . " LIKE ? ESCAPE '!'";
         $params[] = tp_like($q); $types = 's';
     }
     return tp_page($conn,
-        'SELECT latest.*, latest.phone_number AS fallback_phone, grouped.total_repairs' . $from . ' WHERE ' . $where . ' ORDER BY latest.created_at DESC, latest.id DESC',
+        'SELECT contacts.*' . $from . ' WHERE ' . $where . ' ORDER BY contacts.created_at DESC, contacts.id DESC, BINARY contacts.line_user_id ASC',
         'SELECT COUNT(*) AS total' . $from . ' WHERE ' . $where,
         $types, $params, 'reporters', 'users'
     );
@@ -195,14 +222,20 @@ function ch_contacts_rows($reporter_res, $line_users_map) {
 
             $line_id = trim((string)($r['line_display_name'] ?? ''));
             $real_name = $raw_name;
+            $contactLineUserId = (string)($r['line_user_id'] ?? '');
+            $canViewHistory = trim($contactLineUserId) !== '';
+            $canMoveHistory = (int)$r['id'] > 0 && (int)$r['total_repairs'] > 0;
+            $historyButton = $canViewHistory ? 'onclick="viewHistory(%s)"' : 'disabled aria-disabled="true" title="ไม่มีรหัสบัญชี LINE สำหรับเชื่อมประวัติ"';
+            $deleteButton = $canMoveHistory ? 'onclick="confirmDeleteReporter(' . (int)$r['id'] . ')"' : 'disabled aria-disabled="true" title="ยังไม่มีประวัติใบงานให้ย้ายเข้าถังขยะ"';
             $display_phone = trim((string)$r['fallback_phone']);
             if ($line_id === '') $line_id = $raw_name;
             $reporterArgs = htmlspecialchars(
                 json_encode($raw_name, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
                 . ", 'reporter', false, false, null, "
-                . json_encode(trim((string)($r['line_user_id'] ?? '')) !== '' ? (string)$r['line_user_id'] : null, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
+                . json_encode($contactLineUserId, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
                 ENT_QUOTES, 'UTF-8'
             );
+            if ($canViewHistory) $historyButton = sprintf($historyButton, $reporterArgs);
             $main_name_html = formatEmptyOrDash($line_id);
 
             $sub_name_html = ($real_name !== '' && $real_name !== $line_id)
@@ -229,8 +262,8 @@ function ch_contacts_rows($reporter_res, $line_users_map) {
                 </td>
                 <td class='px-6 py-4 align-middle text-right'>
                     <div class='flex items-center justify-end space-x-2'>
-                        <button onclick=\"viewHistory({$reporterArgs})\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                        <button onclick=\"confirmDeleteReporter({$r['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
+                        <button {$historyButton} class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                        <button {$deleteButton} class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                     </div>
                 </td>
             </tr>";
