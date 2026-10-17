@@ -1273,7 +1273,7 @@ $current_thai_year = date('Y') + 543;
             <!-- ========================================== -->
             <!-- ส่วนที่ 1: Dashboard Overview (id="tab-content-dash") -->
             <!-- ========================================== -->
-            <div id="tab-content-dash" class="space-y-8 animate-fade-in">
+            <div id="tab-content-dash" class="<?php echo (isset($_GET['tab']) && $_GET['tab'] === 'history') ? 'hidden ' : ''; ?>space-y-8 animate-fade-in">
                 <!-- กราฟแถวที่ 1 -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="tech-chart-card modern-card p-6 flex flex-col">
@@ -1449,100 +1449,10 @@ $current_thai_year = date('Y') + 543;
             <!-- ========================================== -->
             <!-- ส่วนที่ 2: ประวัติงานเต็มรูปแบบ (id="tab-content-history") -->
             <!-- ========================================== -->
-            <div id="tab-content-history" class="hidden animate-fade-in no-print">
-                <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
-                    <!-- Header ส่วนค้นหา -->
-                    <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col gap-4 bg-white shrink-0 relative z-30">
-                        <div class="flex justify-between items-start w-full">
-                            <div class="shrink-0 flex-1">
-                                <h2 class="text-xl font-extrabold text-slate-800">ประวัติการรับแจ้งซ่อมทั้งหมด</h2>
-                                <p class="text-sm font-medium text-slate-400 mt-0.5">All repair transactions</p>
-                            </div>
-                            <!-- ปุ่ม ขยายเต็มจอ + ปิด -->
-                            <div class="flex items-center gap-2 shrink-0 ml-4">
-                                <button onclick="toggleMaximizeRepairs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
-                                    <i class="fas fa-expand text-sm md:text-base" id="maximizeRepairsIcon"></i>
-                                </button>
-                                <button onclick="if(document.getElementById('repairsMainCard').classList.contains('is-fullscreen')) toggleMaximizeRepairs(); else showTab('dash');" class="text-slate-400 hover:text-rose-500 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-rose-50" title="ปิด">
-                                    <i class="fas fa-times text-sm md:text-base"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- ตัวค้นหาและกรองสถานะ -->
-                        <div class="flex flex-wrap items-center justify-between gap-3 w-full">
-                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] group">
-                                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" id="searchHistoryInput" oninput="renderHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
-                                <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', renderHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
-                            </div>
-
-                            <div class="flex portrait:flex-nowrap flex-wrap items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0">
-                                <!-- ✨ Dropdowns เดือน/ปี เหมือน Admin ✨ -->
-                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Month', renderHistoryTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Month')">
-                                        <span id="table-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
-                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
-                                    </div>
-                                    <div id="table-MonthList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('table-Month', '{$num_pad}', '{$name}', renderHistoryTable)\">{$name}</div>"; } ?>
-                                    </div>
-                                    <input type="hidden" id="tableMonth" value="<?php echo date('m'); ?>">
-                                </div>
-                                <div class="relative w-[110px] portrait:w-[82px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Year', renderHistoryTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Year')">
-                                        <span id="table-YearText" class="truncate"><?php echo $current_thai_year; ?></span>
-                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
-                                    </div>
-                                    <div id="table-YearList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
-                                        <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('table-Year', '{$y}', '{$thai_y}', renderHistoryTable)\">{$thai_y}</div>"; } ?>
-                                    </div>
-                                    <input type="hidden" id="tableYear" value="<?php echo date('Y'); ?>">
-                                </div>
-
-                                <!-- ✨ Dropdown สถานะแบบ Custom เหมือน Admin ✨ -->
-                                <div class="relative w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="table-StatusContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'table-Status', renderHistoryTable)" style="font-family: 'Sarabun', sans-serif;">
-                                    <div id="table-StatusTrigger" class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-3.5 portrait:px-2.5 sm:px-3.5 landscape:px-3.5 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'table-Status')">
-                                        <span id="table-StatusText" class="truncate">ทั้งหมด</span>
-                                        <i id="table-StatusCaret" class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
-                                    </div>
-                                    <div id="table-StatusList" class="chart-dropdown-list absolute z-50 w-[155px] right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col p-2 space-y-1.5" style="font-family: 'Sarabun', sans-serif;">
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 bg-slate-50 hover:bg-slate-100 text-center" data-value="all" data-display="ทั้งหมด" onclick="selectTableStatusDropdown('all', 'ทั้งหมด')">ทั้งหมด</div>
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#fef3c7] text-[#d97706] hover:brightness-95 text-center shadow-2xs" data-value="รอรับเรื่อง" data-display="รอรับเรื่อง" onclick="selectTableStatusDropdown('รอรับเรื่อง', 'รอรับเรื่อง')">รอรับเรื่อง</div>
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#e0e7ff] text-[#4f46e5] hover:brightness-95 text-center shadow-2xs" data-value="กำลังดำเนินการ" data-display="กำลังดำเนินการ" onclick="selectTableStatusDropdown('กำลังดำเนินการ', 'กำลังดำเนินการ')">กำลังดำเนินการ</div>
-                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#d1fae5] text-[#059669] hover:brightness-95 text-center shadow-2xs" data-value="ซ่อมเสร็จแล้ว" data-display="ซ่อมเสร็จแล้ว" onclick="selectTableStatusDropdown('ซ่อมเสร็จแล้ว', 'ซ่อมเสร็จแล้ว')">ซ่อมเสร็จแล้ว</div>
-                                    </div>
-                                    <input type="hidden" id="filterStatus" value="all">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ตารางแบบ History Modal (แสดงครบถ้วนเหมือน Admin) -->
-                    <div class="history-table-scroll w-full pb-4 custom-scrollbar">
-                        <table class="w-full text-left" id="historyTableFull">
-                            <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a] sticky top-0 z-20 shadow-sm">
-                                <tr>
-                                    <th class="px-6 py-4 border-0">Date / Time</th>
-                                    <th class="px-6 py-4 border-0">Ticket No.</th>
-                                    <th class="px-6 py-4 border-0">Reporter</th>
-                                    <th class="px-6 py-4 border-0">Equipment</th>
-                                    <th class="px-6 py-4 border-0">Department</th>
-                                    <th class="px-6 py-4 border-0">Technician</th>
-                                    <th class="px-6 py-4 border-0">Received At</th>
-                                    <th class="px-6 py-4 border-0">Root Cause</th>
-                                    <th class="px-6 py-4 text-center border-0">Status</th>
-                                    <th class="px-6 py-4 border-0">Completed At</th>
-                                    <th class="px-6 py-4 text-center border-0">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-sm divide-y divide-slate-100 bg-white" id="historyTableBody">
-                                <!-- JS จะใส่ข้อมูลตารางใหญ่ที่นี่ -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <?php
+            define('MBS_TECH_HISTORY', true);
+            require __DIR__ . '/technician_history_pagination.php';
+            ?>
 
         </div>
     </main>
@@ -1686,45 +1596,6 @@ $current_thai_year = date('Y') + 543;
             }
         }
 
-        function selectTableStatusDropdown(val, display) {
-            const list = document.getElementById('table-StatusList');
-            const input = document.getElementById('filterStatus');
-            const textEl = document.getElementById('table-StatusText');
-            const trigger = document.getElementById('table-StatusTrigger');
-            const caret = document.getElementById('table-StatusCaret');
-
-            if (input) input.value = val;
-            if (textEl) textEl.innerText = display;
-            if (list) { list.classList.add('hidden'); list.classList.remove('flex'); }
-
-            if (trigger && caret) {
-                // ล้างสีสถานะเดิมออกก่อน
-                trigger.classList.remove(
-                    'bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50',
-                    'bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]',
-                    'bg-[#e0e7ff]', 'text-[#4f46e5]', 'border-[#c7d2fe]',
-                    'bg-[#d1fae5]', 'text-[#059669]', 'border-[#a7f3d0]'
-                );
-                caret.classList.remove('text-slate-400', 'text-[#d97706]', 'text-[#4f46e5]', 'text-[#059669]');
-
-                if (val === 'รอรับเรื่อง') {
-                    trigger.classList.add('bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]');
-                    caret.classList.add('text-[#d97706]');
-                } else if (val === 'กำลังดำเนินการ') {
-                    trigger.classList.add('bg-[#e0e7ff]', 'text-[#4f46e5]', 'border-[#c7d2fe]');
-                    caret.classList.add('text-[#4f46e5]');
-                } else if (val === 'ซ่อมเสร็จแล้ว') {
-                    trigger.classList.add('bg-[#d1fae5]', 'text-[#059669]', 'border-[#a7f3d0]');
-                    caret.classList.add('text-[#059669]');
-                } else {
-                    trigger.classList.add('bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50');
-                    caret.classList.add('text-slate-400');
-                }
-            }
-
-            renderHistoryTable();
-        }
-
         document.addEventListener('click', function(e) {
             document.querySelectorAll('.chart-dropdown-list').forEach(list => {
                 if (!list.parentElement.contains(e.target)) {
@@ -1735,36 +1606,56 @@ $current_thai_year = date('Y') + 543;
         });
 
         // 1. ฟังก์ชันจัดการสลับหน้า (Tabs)
-        function showTab(tabId, statusFilter = 'all', allDates = false) {
-            document.getElementById('tab-content-dash').classList.add('hidden');
-            document.getElementById('tab-content-history').classList.add('hidden');
-            
-            document.getElementById('tab-content-' + tabId).classList.remove('hidden');
+        function showTab(
+            tabId,
+            statusFilter = 'all',
+            allDates = false,
+            initial = false
+        ) {
+            // เปิดประวัติผ่าน PHP ไม่สร้างหรือแบ่งแถวด้วย JavaScript
+            if (tabId === 'history' && !initial) {
+                const url = new URL(
+                    'technician_home.php',
+                    window.location.href
+                );
+
+                url.searchParams.set('tab', 'history');
+                url.searchParams.set('hs', statusFilter);
+
+                if (allDates) {
+                    url.searchParams.set('hm', 'all');
+                    url.searchParams.set('hy', 'all');
+                }
+
+                url.hash = 'tab-content-history';
+                window.location.assign(url.href);
+                return;
+            }
+
+            document.getElementById('tab-content-dash')
+                .classList.add('hidden');
+
+            document.getElementById('tab-content-history')
+                .classList.add('hidden');
+
+            document.getElementById('tab-content-' + tabId)
+                .classList.remove('hidden');
 
             document.querySelectorAll('.capsule-btn').forEach(b => {
-                b.className = "px-6 py-2 bg-white text-slate-600 text-sm font-bold rounded-full shadow-sm border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition-colors cursor-pointer capsule-btn";
+                b.className =
+                    "px-6 py-2 bg-white text-slate-600 text-sm font-bold "
+                    + "rounded-full shadow-sm border border-slate-200 "
+                    + "hover:bg-indigo-50 hover:text-indigo-600 "
+                    + "hover:border-indigo-300 transition-colors "
+                    + "cursor-pointer capsule-btn";
             });
-            document.getElementById('capsule-' + tabId).className = "px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-full border border-indigo-600 shadow-md shadow-indigo-200 transition-colors cursor-pointer capsule-btn";
 
-            if (tabId === 'history') {
-                const disp = (statusFilter === 'all') ? 'ทั้งหมด' : statusFilter;
-                selectTableStatusDropdown(statusFilter, disp);
-                // ตั้งค่าเดือนปีเป็น 'all' หรือ 'ปัจจุบัน' 
-                selectChartDropdown(
-                    'table-Month',
-                    allDates ? 'all' : '<?php echo date('m'); ?>',
-                    allDates ? 'ทุกเดือน' : '<?php echo $current_month_name; ?>',
-                    null
-                );
+            document.getElementById('capsule-' + tabId).className =
+                "px-6 py-2 bg-indigo-600 text-white text-sm font-bold "
+                + "rounded-full border border-indigo-600 shadow-md "
+                + "shadow-indigo-200 transition-colors cursor-pointer capsule-btn";
 
-                selectChartDropdown(
-                    'table-Year',
-                    allDates ? 'all' : '<?php echo date('Y'); ?>',
-                    allDates ? 'ทุกปี' : '<?php echo $current_thai_year; ?>',
-                    null
-                );
-                renderHistoryTable();
-            } else if (tabId === 'dash') {
+            if (tabId === 'dash') {
                 renderDashTable();
             }
         }
@@ -2014,121 +1905,14 @@ $current_thai_year = date('Y') + 543;
         }
 
         // 4. ฟังก์ชันวาดตารางใหญ่ (หน้า History) แบบ Filter ได้
-        function renderHistoryTable() {
-            const tbody = document.getElementById('historyTableBody');
-            if (!tbody) return;
-
-            const searchVal = document.getElementById('searchHistoryInput').value.toLowerCase().trim();
-            const statusVal = document.getElementById('filterStatus').value;
-
-            const monthVal = document.getElementById('tableMonth').value;
-            const yearVal = document.getElementById('tableYear').value;
-
-            let filtered = getFilteredRepairsByMonthYear(monthVal, yearVal).filter(r => {
-                let st = (r.status || 'รอดำเนินการ').trim();
-                let isStatusMatch = (statusVal === 'all') ? true : (st === statusVal);
-                
-                let textToSearch = Object.values(r).join(' ').toLowerCase();
-                let isTextMatch = (searchVal === '') ? true : textToSearch.includes(searchVal);
-
-                return isStatusMatch && isTextMatch;
-            });
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="11" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">ไม่พบข้อมูลใบงานที่ตรงกับเงื่อนไข</td></tr>`;
-                return;
-            }
-
-            let html = '';
-            filtered.forEach(r => {
-                let st = (r.status || 'รอดำเนินการ').trim();
-                let bClass = (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') ? 'badge-success' :
-                            (st === 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-pending';
-                
-                let dt = (r.created_at && r.created_at !== '0000-00-00 00:00:00') ? r.created_at.split(' ') : ['-', ''];
-                
-                // บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันที
-                let dtNow = new Date();
-                let nowStr = dtNow.getFullYear() + '-' + String(dtNow.getMonth()+1).padStart(2,'0') + '-' + String(dtNow.getDate()).padStart(2,'0') + ' ' + String(dtNow.getHours()).padStart(2,'0') + ':' + String(dtNow.getMinutes()).padStart(2,'0') + ':00';
-                let raw_rec_js = (r.received_at && r.received_at != '0000-00-00 00:00:00' && r.received_at != '-') ? r.received_at : (st !== 'รอรับเรื่อง' ? nowStr : '');
-                let has_received = (raw_rec_js !== '');
-                let rec = has_received ? raw_rec_js.split(' ') : ['-', ''];
-                
-                let com = (r.completed_at && r.completed_at !== '0000-00-00 00:00:00') ? r.completed_at.split(' ') : ['-', ''];
-                
-                // ดึงชื่อและเบอร์โทรแบบเต็มพิกัดเหมือนแอดมิน
-                let raw_name = r.reporter_name || '';
-                let dName = lineUsersMap[raw_name] ? lineUsersMap[raw_name] : (raw_name !== '' ? raw_name : 'ไม่ระบุ');
-                let dPhone = r.phone_number || '-';
-
-                // ข้อมูลช่างและแผนก
-                let tNameHtml = "<span class='text-rose-500 font-bold'>-</span>";
-                let deptEng = "<span class='text-rose-500 font-bold'>-</span>";
-                if (r.technician_name && r.technician_name !== '-') {
-                    let info = techInfoMap[r.technician_name] || { th: r.technician_name, eng: '', pos: '' };
-                    tNameHtml = `<div class='text-indigo-600 font-bold'>${info.th}</div>`;
-                    if(info.eng) tNameHtml += `<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>${info.eng}</div>`;
-                    
-                    let dName = techDeptMap[r.technician_name] || 'General';
-                    deptEng = `<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>${dName}</div>`;
-                    if (info.pos) deptEng += `<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>${info.pos}</div>`;
-                }
-
-                let imgIcon = r.image_path ? `<i class="fas fa-image text-slate-400 ml-1" title="มีรูปภาพแนบ"></i>` : '';
-                let cause = (!r.root_cause || r.root_cause === '-') ? `<span class='text-rose-500 font-bold'>-</span>` : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
-
-                // ✨ แก้ลิงก์ปุ่ม Action ให้ไปหน้า update_repair.php เหมือนแอดมิน ✨
-                let actionBtn = `<a target="_blank" href="update_repair.php?id=${r.id}" onclick="window.open(this.href, 'mbsTechnicianRepair'); return false;" class="w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-sm" title="Edit"><i class="fas fa-pen-to-square"></i></a>`;
-
-                html += `
-                    <tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
-                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
-                            <div class="font-medium text-slate-700">${dt[0]}</div>
-                            ${dt[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${dt[1].substring(0, 5)}</div>` : ''}
-                        </td>
-                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${r.repair_code || 'MR-'+r.id}</td>
-                        <td class="px-6 py-4 align-top">
-                            <div class='flex items-center gap-3'>
-                                <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0'><i class='fas fa-user text-xs'></i></div>
-                                <div>
-                                    <div class="text-slate-800 font-bold">${dName}</div>
-                                    <div class="text-slate-500 text-[11px] font-medium mt-0.5">${dPhone}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 align-top">
-                            <div class="text-slate-800 font-bold">${r.equipment || r.problem || 'ไม่ระบุ'} ${imgIcon}</div>
-                            <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="${r.problem_desc || '-'}">${r.problem_desc || '-'}</div>
-                        </td>
-                        <td class="px-6 py-4 align-top">${deptEng}</td>
-                        <td class="px-6 py-4 align-top">${tNameHtml}</td>
-                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
-                            <div class='font-medium text-slate-700'>${rec[0]}</div>
-                            ${rec[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${rec[1].substring(0, 5)}</div>` : ''}
-                        </td>
-                        <td class="px-6 py-4 align-top">${cause}</td>
-                        <td class="px-6 py-4 align-middle text-center"><span class="${bClass}">${st}</span></td>
-                        <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
-                            <div class='font-medium text-emerald-700'>${com[0]}</div>
-                            ${com[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${com[1].substring(0, 5)}</div>` : ''}
-                        </td>
-                        <td class="px-6 py-4 align-middle text-center">
-                            <div class='flex items-center justify-center'>
-                                ${actionBtn}
-                            </div>
-                        </td>
-                    </tr>`;
-            });
-            tbody.innerHTML = html;
-        }
-
+        
         // เริ่มวาดข้อมูลตอนโหลดเสร็จ
         document.addEventListener('DOMContentLoaded', () => {
             renderAllCharts();
             renderDashTable();
 
             if (new URLSearchParams(window.location.search).get('tab') === 'history') {
-                showTab('history');
+                showTab('history', 'all', false, true);
             }
         });
 
