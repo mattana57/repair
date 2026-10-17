@@ -122,7 +122,7 @@ function mbsReadableFlexNode($node, $inside_flex = false) {
     $type = $node['type'] ?? null;
     $inside_flex = $inside_flex || $type === 'flex' || $type === 'bubble';
     if ($inside_flex && $type === 'bubble') {
-        $node['size'] = 'mega';
+        $node['size'] = $node['size'] ?? 'mega';
     }
     if ($inside_flex && $type === 'text') {
         if (!isset($node['size']) || in_array($node['size'], ['xxs', 'xs'], true)) {
@@ -149,30 +149,34 @@ function mbsReadableFlexNode($node, $inside_flex = false) {
 // ก่อนรับงานแสดงคำขอเต็ม หลังรับงานแสดงสรุปเพื่อลดพื้นที่ในกลุ่ม
 function mbsServiceJobCard($ticket, $location, $category, $detail, $reporter, $phone,
     $stage, $actions, $staff = '', $department = '', $has_image = false, $compact = false) {
-    $items = [
-        ['type' => 'text', 'text' => $ticket . ' · ' . $stage, 'weight' => 'bold', 'size' => 'md', 'wrap' => true],
-        ['type' => 'text', 'text' => 'สถานที่: ' . $location . '  |  เรื่อง: ' . $category, 'weight' => 'bold', 'size' => 'md', 'wrap' => true]
-    ];
-    if (!$compact) {
-        $items[] = ['type' => 'separator', 'margin' => 'sm'];
-        $items[] = ['type' => 'text', 'text' => trim((string) $detail) !== '' ? (string) $detail : 'ไม่ระบุรายละเอียดเพิ่มเติม', 'size' => 'md', 'margin' => 'sm', 'wrap' => true];
-        $items[] = ['type' => 'text', 'text' => 'ผู้แจ้ง: ' . $reporter . ' · โทร ' . $phone, 'size' => 'sm', 'wrap' => true];
-    }
-    if ($staff !== '') {
-        $items[] = ['type' => 'text', 'text' => 'จนท.: ' . $staff, 'size' => 'sm', 'wrap' => true];
-    }
-    if (!$compact && $department !== '') {
-        $items[] = ['type' => 'text', 'text' => $department, 'size' => 'sm', 'wrap' => true];
-    }
-    if (!$compact && $has_image) {
-        $items[] = ['type' => 'text', 'text' => 'มีรูปแนบในใบงาน', 'size' => 'sm', 'wrap' => true];
+    if ($compact) {
+        $items = [
+            ['type' => 'text', 'text' => '✅ รับงานเรียบร้อย', 'weight' => 'bold', 'size' => 'sm', 'wrap' => true],
+            ['type' => 'text', 'text' => 'จนท. ' . $staff, 'weight' => 'bold', 'size' => 'md', 'wrap' => true],
+            ['type' => 'separator', 'margin' => 'sm'],
+            ['type' => 'text', 'text' => 'ใบงาน: ' . $ticket, 'weight' => 'bold', 'size' => 'sm', 'wrap' => true],
+            ['type' => 'text', 'text' => 'สถานที่: ' . $location . ' · เรื่อง: ' . $category, 'size' => 'md', 'wrap' => true]
+        ];
+    } else {
+        $items = [
+            ['type' => 'text', 'text' => '🔔 คำขอรับบริการใหม่', 'weight' => 'bold', 'size' => 'sm', 'wrap' => true],
+            ['type' => 'text', 'text' => $ticket, 'weight' => 'bold', 'size' => 'lg', 'wrap' => true],
+            ['type' => 'separator', 'margin' => 'sm'],
+            ['type' => 'text', 'text' => 'เรื่อง: ' . $category, 'size' => 'sm', 'wrap' => true],
+            ['type' => 'text', 'text' => 'สถานที่: ' . $location, 'size' => 'md', 'wrap' => true],
+            ['type' => 'text', 'text' => 'ผู้แจ้ง: ' . $reporter . ' · โทร ' . $phone, 'size' => 'sm', 'wrap' => true],
+            ['type' => 'text', 'text' => 'รายละเอียด: ' . (trim((string) $detail) !== '' ? (string) $detail : 'ไม่ระบุรายละเอียดเพิ่มเติม'), 'size' => 'md', 'margin' => 'sm', 'wrap' => true]
+        ];
+        if ($has_image) {
+            $items[] = ['type' => 'text', 'text' => 'มีรูปแนบในใบงาน', 'size' => 'sm', 'wrap' => true];
+        }
     }
     return mbsReadableFlexNode([
         'type' => 'flex', 'altText' => $stage . ' ' . $ticket,
         'contents' => [
-            'type' => 'bubble', 'size' => 'mega',
-            'body' => ['type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm', 'paddingAll' => '14px', 'backgroundColor' => '#F5F7FA', 'contents' => $items],
-            'footer' => ['type' => 'box', 'layout' => $compact ? 'horizontal' : 'vertical', 'spacing' => 'sm', 'paddingAll' => '12px', 'paddingTop' => '8px', 'contents' => $actions]
+            'type' => 'bubble', 'size' => 'kilo',
+            'body' => ['type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm', 'paddingAll' => '14px', 'backgroundColor' => '#FFFFFF', 'contents' => $items],
+            'footer' => ['type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm', 'paddingAll' => '12px', 'paddingTop' => '8px', 'contents' => $actions]
         ]
     ]);
 }
@@ -583,10 +587,10 @@ if (!is_null($events['events'])) {
                                 $job['problem_desc'] ?? '', $disp_name, $job['phone_number'],
                                 'รับงานแล้ว',
                                 [
-                                    ['type' => 'button', 'style' => 'primary', 'height' => 'md',
-                                        'action' => ['type' => 'uri', 'label' => 'จัดการงาน', 'uri' => $job_url]],
-                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'md',
-                                        'action' => ['type' => 'postback', 'label' => 'ปิดงาน', 'data' => "action=close&ticket=$ticket_no"]]
+                                    ['type' => 'button', 'style' => 'primary', 'height' => 'sm',
+                                        'action' => ['type' => 'postback', 'label' => 'แจ้งปิดงาน', 'data' => "action=close&ticket=$ticket_no"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm',
+                                        'action' => ['type' => 'uri', 'label' => 'จัดการ / เพิ่มหมายเหตุ', 'uri' => $job_url]]
                                 ], $tech_name, $tech_dept, !empty($job['image_path']), true
                             );
 
