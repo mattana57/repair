@@ -4303,7 +4303,7 @@ if (isset($_GET['api_check_hash'])) {
                 <?php if (in_array($login_detail, ['', 'success', 'failed'], true)): ?>
                 <div id="login-history-table" class="modern-card overflow-hidden flex flex-col" style="scroll-margin-top: 12px;">
                     <div class="p-6 border-b border-slate-100 bg-white">
-                        <h2 class="text-xl font-extrabold text-slate-800"><?php echo $login_detail === 'failed' ? 'ประวัติการเข้าสู่ระบบที่ไม่สำเร็จ' : 'ประวัติการเข้าสู่ระบบ (Login History)'; ?></h2>
+                        <h2 class="text-xl font-extrabold text-slate-800"><?php echo $login_detail === 'failed' ? 'ประวัติการเข้าสู่ระบบที่ไม่สำเร็จ' : 'Login History'; ?></h2>
                         <p class="text-sm font-medium text-slate-400 mt-0.5">ตรวจสอบการเข้าใช้งานระบบของเจ้าหน้าที่และผู้บริหาร</p>
                     </div>
                     <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
