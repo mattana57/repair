@@ -1679,6 +1679,15 @@ if (isset($_GET['th_fragment'])
             }
         }
 
+        function thaiRepairTableDate(value) {
+            const match = /^(\d{4})-(\d{2})-(\d{2})(?:[ T]|$)/.exec(String(value || ''));
+            if (!match) return '-';
+            const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
+            const check = new Date(Date.UTC(year, month - 1, day));
+            if (year < 1000 || check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 || check.getUTCDate() !== day) return '-';
+            return match[3] + '/' + match[2] + '/' + String(year + 543);
+        }
+
         function getFilteredRepairsByMonthYear(m, y) {
             if (m === 'all' && y === 'all') return repairsData;
             return repairsData.filter(r => {
@@ -1898,7 +1907,7 @@ if (isset($_GET['th_fragment'])
                     <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
                         <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${Number(r.id)}</td>
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
-                            <div class="font-medium text-slate-700">${dt[0]}</div>
+                            <div class="font-medium text-slate-700">${thaiRepairTableDate(dt[0])}</div>
                             ${dt[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${dt[1].substring(0, 5)}</div>` : ''}
                         </td>
                         <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${r.ticket_no || '-'}</td>

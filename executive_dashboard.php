@@ -441,19 +441,19 @@ function execPageRows($result, $kind, $line_users_map, $tech_info_map, $tech_dep
         }
 
         $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-        $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+        $created_date = $has_created ? (date('d/m/', strtotime($row['created_at'])) . ((int)date('Y', strtotime($row['created_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
         $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
         $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
 
         // ✨ บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันทีในจังหวะเดียวกันเป๊ะ 100% ✨
         $raw_rec = (!empty($row['received_at']) && $row['received_at'] != '0000-00-00 00:00:00' && $row['received_at'] != '-') ? $row['received_at'] : (($row['status'] !== 'รอรับเรื่อง') ? date('Y-m-d H:i:s') : '');
         $has_received = !empty($raw_rec);
-        $received_date = $has_received ? date('Y-m-d', strtotime($raw_rec)) : "<span class='text-rose-500 font-bold'>-</span>";
+        $received_date = $has_received ? (date('d/m/', strtotime($raw_rec)) . ((int)date('Y', strtotime($raw_rec)) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
         $received_time = $has_received ? date('H:i', strtotime($raw_rec)) : '';
         $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
 
         $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
-        $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+        $completed_date = $has_completed ? (date('d/m/', strtotime($row['completed_at'])) . ((int)date('Y', strtotime($row['completed_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
         $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
         $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
 
@@ -1390,7 +1390,7 @@ if (isset($_GET['api_check_hash'])) {
                                             
                                             $equipment_type = formatEmptyOrDash($rd['equipment_type']);
                                             $has_created = (!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00');
-                                            $date_fmt = $has_created ? date("Y-m-d", strtotime($rd['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                            $date_fmt = $has_created ? (date('d/m/', strtotime($rd['created_at'])) . ((int)date('Y', strtotime($rd['created_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
                                             $time_fmt = $has_created ? date("H:i", strtotime($rd['created_at'])) : '';
                                             $time_html = $time_fmt ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$time_fmt}</div>" : "";
                                             

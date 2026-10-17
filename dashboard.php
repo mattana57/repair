@@ -586,7 +586,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
                 }
 
                 $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-                $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                $created_date = $has_created ? (date('d/m/', strtotime($row['created_at'])) . ((int)date('Y', strtotime($row['created_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
                 $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
                 $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
 
@@ -595,12 +595,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
                     : (($row['status'] !== 'รอรับเรื่อง') ? date('Y-m-d H:i:s') : '');
 
                 $has_received = !empty($raw_rec);
-                $received_date = $has_received ? date('Y-m-d', strtotime($raw_rec)) : "<span class='text-rose-500 font-bold'>-</span>";
+                $received_date = $has_received ? (date('d/m/', strtotime($raw_rec)) . ((int)date('Y', strtotime($raw_rec)) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
                 $received_time = $has_received ? date('H:i', strtotime($raw_rec)) : '';
                 $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
 
                 $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
-                $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                $completed_date = $has_completed ? (date('d/m/', strtotime($row['completed_at'])) . ((int)date('Y', strtotime($row['completed_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
                 $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
                 $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
 
@@ -3128,7 +3128,7 @@ if (isset($_GET['api_check_hash'])) {
                                             $equipment_type = formatEmptyOrDash($rd['equipment_type']);
                                             
                                             $has_created = (!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00');
-                                            $date_fmt = $has_created ? date("Y-m-d", strtotime($rd['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                            $date_fmt = $has_created ? (date('d/m/', strtotime($rd['created_at'])) . ((int)date('Y', strtotime($rd['created_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
                                             $time_fmt = $has_created ? date("H:i", strtotime($rd['created_at'])) : '';
                                             $time_html = $time_fmt ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$time_fmt}</div>" : "";
                                             
@@ -3351,19 +3351,19 @@ if (isset($_GET['api_check_hash'])) {
                                         }
 
                                         $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-                                        $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $created_date = $has_created ? (date('d/m/', strtotime($row['created_at'])) . ((int)date('Y', strtotime($row['created_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
                                         $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
 
                                         // ✨ บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันทีในจังหวะเดียวกันเป๊ะ 100% ✨
                                         $raw_rec = (!empty($row['received_at']) && $row['received_at'] != '0000-00-00 00:00:00' && $row['received_at'] != '-') ? $row['received_at'] : (($row['status'] !== 'รอรับเรื่อง') ? date('Y-m-d H:i:s') : '');
                                         $has_received = !empty($raw_rec);
-                                        $received_date = $has_received ? date('Y-m-d', strtotime($raw_rec)) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $received_date = $has_received ? (date('d/m/', strtotime($raw_rec)) . ((int)date('Y', strtotime($raw_rec)) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $received_time = $has_received ? date('H:i', strtotime($raw_rec)) : '';
                                         $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
 
                                         $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
-                                        $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+                                        $completed_date = $has_completed ? (date('d/m/', strtotime($row['completed_at'])) . ((int)date('Y', strtotime($row['completed_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
                                         $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
                                         $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
 
@@ -4571,7 +4571,7 @@ if (isset($_GET['api_check_hash'])) {
                                         if (strtolower($log['role']) === 'technician') $roleBadge = 'bg-sky-100 text-sky-700';
 
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors'>
-                                            <td class='px-6 py-4 align-middle text-slate-700 font-medium'>" . date("d/m/Y H:i:s", strtotime($log['login_time'])) . "</td>
+                                            <td class='px-6 py-4 align-middle text-slate-700 font-medium'>" . (date('d/m/', strtotime($log['login_time'])) . ((int)date('Y', strtotime($log['login_time'])) + 543)) . "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>" . date("H:i:s", strtotime($log['login_time'])) . "</div>" . "</td>
                                             <td class='px-6 py-4 align-middle font-bold text-slate-800'>" . htmlspecialchars($log['username']) . "</td>
                                             <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleBadge}'>" . htmlspecialchars($log['role'] ?? 'N/A') . "</span></td>
                                             <td class='px-6 py-4 align-middle text-center text-slate-500 font-mono'>" . htmlspecialchars($log['ip_address']) . "</td>
@@ -6486,6 +6486,15 @@ if (isset($_GET['api_check_hash'])) {
 
         function safeString(val) { return val ? String(val) : ''; }
 
+        function thaiRepairTableDate(value) {
+            const match = /^(\d{4})-(\d{2})-(\d{2})(?:[ T]|$)/.exec(String(value || ''));
+            if (!match) return '-';
+            const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
+            const check = new Date(Date.UTC(year, month - 1, day));
+            if (year < 1000 || check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 || check.getUTCDate() !== day) return '-';
+            return match[3] + '/' + match[2] + '/' + String(year + 543);
+        }
+
         function getFilteredRepairsByMonthYear(m, y) {
             if (m === 'all' && y === 'all') return allRepairs;
             return allRepairs.filter(r => {
@@ -7907,7 +7916,7 @@ if (isset($_GET['api_check_hash'])) {
                     let createdTime = '';
                     if(r.created_at && r.created_at != '0000-00-00 00:00:00') {
                         let parts = r.created_at.split(' ');
-                        createdDate = parts[0] || "<span class='text-rose-500 font-bold'>-</span>";
+                        createdDate = thaiRepairTableDate(parts[0]);
                         createdTime = parts[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${parts[1].substring(0, 5)}</div>` : '';
                     } else {
                         createdDate = "<span class='text-rose-500 font-bold'>-</span>";
@@ -7938,11 +7947,11 @@ if (isset($_GET['api_check_hash'])) {
                     let nowStr = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0') + ' ' + String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0') + ':00';
                     let raw_rec_js = (r.received_at && r.received_at != '0000-00-00 00:00:00' && r.received_at != '-') ? r.received_at : (r.status !== 'รอรับเรื่อง' ? nowStr : '');
                     let has_received = (raw_rec_js !== '');
-                    let received_date = has_received ? raw_rec_js.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
+                    let received_date = has_received ? thaiRepairTableDate(raw_rec_js) : "<span class='text-rose-500 font-bold'>-</span>";
                     let received_time = has_received && raw_rec_js.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${raw_rec_js.split(' ')[1].substring(0, 5)}</div>` : '';
 
                     let has_completed = (r.completed_at && r.completed_at != '0000-00-00 00:00:00');
-                    let completed_date = has_completed ? r.completed_at.split(' ')[0] : "<span class='text-rose-500 font-bold'>-</span>";
+                    let completed_date = has_completed ? thaiRepairTableDate(r.completed_at) : "<span class='text-rose-500 font-bold'>-</span>";
                     let completed_time = has_completed && r.completed_at.split(' ')[1] ? `<div class='text-[11px] text-blue-600 font-bold mt-0.5'>${r.completed_at.split(' ')[1].substring(0, 5)}</div>` : '';
 
                     // ผู้แจ้งซ่อม
