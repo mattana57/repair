@@ -166,13 +166,13 @@ if ($thOnHistory) {
     }
 }
 
-$thUrl = static function ($page) use (
+$thUrl = static function ($page, array $changes = []) use (
     $thMonth,
     $thYear,
     $thStatus,
     $thSearch
 ) {
-    return 'technician_home.php?' . http_build_query(
+    $query = array_merge(
         [
             'tab' => 'history',
             'hm' => $thMonth,
@@ -181,6 +181,11 @@ $thUrl = static function ($page) use (
             'hq' => $thSearch,
             'hp' => $page,
         ],
+        $changes
+    );
+
+    return 'technician_home.php?' . http_build_query(
+        $query,
         '',
         '&',
         PHP_QUERY_RFC3986
@@ -392,6 +397,333 @@ rsort($thYears);
         white-space: normal !important;
     }
 }
+/* ช่องค้นหาและตัวกรอง: ขนาดตามฝั่งแอดมิน */
+.th-filter-row {
+    position: relative;
+    z-index: 40;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.th-search {
+    position: relative;
+    flex: 1;
+    min-width: 120px;
+}
+
+.th-search input {
+    width: 100%;
+    height: 42px;
+    padding: 10px 95px 10px 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    color: #334155;
+    font: 500 14px 'Sarabun', sans-serif;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+    outline: none;
+}
+
+.th-search input:focus {
+    border-color: #a5b4fc;
+    box-shadow: 0 0 0 2px #e0e7ff;
+}
+
+.th-search input::placeholder {
+    color: #94a3b8;
+}
+
+.th-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.th-search-clear {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 100%;
+    padding: 0 14px;
+    border-left: 1px solid #e2e8f0;
+    border-radius: 0 12px 12px 0;
+    color: #94a3b8;
+    font: 500 13px 'Sarabun', sans-serif;
+}
+
+.th-search-clear:hover {
+    background: #fff1f2;
+    color: #f43f5e;
+}
+
+.th-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.th-dropdown {
+    position: relative;
+    width: 110px;
+    font-family: 'Sarabun', sans-serif;
+}
+
+.th-status-dropdown {
+    width: 140px;
+}
+
+.th-dropdown summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 42px;
+    padding: 10px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 700;
+    list-style: none;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+}
+
+.th-dropdown summary::-webkit-details-marker {
+    display: none;
+}
+
+.th-dropdown summary > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.th-dropdown summary > i {
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.th-dropdown[open] summary,
+.th-dropdown summary:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 1px;
+}
+
+.th-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    z-index: 50;
+    width: 100%;
+    max-height: 192px;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow:
+        0 20px 25px -5px rgb(0 0 0 / 10%),
+        0 8px 10px -6px rgb(0 0 0 / 10%);
+}
+
+.th-dropdown:not([open]) > .th-dropdown-menu {
+    display: none;
+}
+
+.th-dropdown-menu a {
+    display: block;
+    padding: 6px 10px;
+    margin-bottom: 2px;
+    border-radius: 12px;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.th-dropdown-menu a:hover,
+.th-dropdown-menu a:focus-visible,
+.th-dropdown-menu a.is-selected {
+    background: #f1f5f9;
+    color: #4f46e5;
+}
+
+.th-status-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 155px;
+}
+
+.th-status-menu a {
+    margin: 0;
+    padding: 6px 10px;
+    border-radius: 999px;
+    text-align: center;
+}
+
+.th-status-menu a:hover {
+    filter: brightness(.97);
+}
+
+/* หัวตาราง: สีและตัวพิมพ์แบบแอดมิน */
+.tech-dashboard-ui #repairsMainCard #historyTableFull thead {
+    background: #fef9c3;
+    color: #854d0e;
+    border-bottom: 1px solid #fef08a;
+}
+
+.tech-dashboard-ui #repairsMainCard #historyTableFull th {
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+/* แถบแบ่งหน้า: ใช้ค่ารูปแบบเดียวกับฝั่งแอดมิน */
+.th-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 18px 24px;
+    border-top: 1px solid #e2e8f0;
+    background: linear-gradient(110deg, #f8fafc, #eef2ff);
+    flex-shrink: 0;
+    font-family: 'Sarabun', sans-serif;
+}
+
+.th-summary {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.th-summary strong {
+    color: #4338ca;
+    font-weight: 700;
+}
+
+.th-pages {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.th-pages a,
+.th-pages span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+    background: white;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.th-pages a:hover {
+    border-color: #a5b4fc;
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.th-pages a:focus-visible {
+    outline: 3px solid #a5b4fc;
+    outline-offset: 2px;
+}
+
+.th-pages [aria-current="page"] {
+    background: #4f46e5;
+    color: #fff;
+    border-color: #4f46e5;
+    box-shadow: 0 3px 9px #c7d2fe;
+}
+
+.th-pages [aria-disabled="true"] {
+    opacity: 1;
+    color: #94a3b8;
+    background: #f1f5f9;
+}
+
+.th-pages .th-dots {
+    min-width: 0;
+    padding: 0 3px;
+    border: 0;
+    background: transparent;
+    color: #94a3b8;
+}
+
+@media (min-width: 1280px) {
+    .th-search {
+        flex: none;
+        width: 380px;
+    }
+}
+
+@media (min-width: 1536px) {
+    .th-search {
+        width: 440px;
+    }
+}
+
+@media (max-width: 640px) {
+    .th-search {
+        flex: 1 1 100%;
+    }
+
+    .th-filter-group {
+        width: 100%;
+    }
+
+    .th-dropdown {
+        flex: 1;
+        min-width: 0;
+        width: auto;
+    }
+
+    .th-dropdown summary {
+        padding: 8px 10px;
+        font-size: 12px;
+        height: 38px;
+    }
+
+    .th-pagination {
+        padding: 14px;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .th-summary {
+        text-align: center;
+        width: 100%;
+    }
+
+    .th-pages {
+        justify-content: center;
+    }
+}
 </style>
 
 <div id="tab-content-history"
@@ -430,72 +762,131 @@ rsort($thYears);
                 </div>
             </div>
 
-            <form method="get"
-                  action="technician_home.php#tab-content-history"
-                  class="th-filters">
+            <?php
+            $thStatusColors = [
+                'all' => 'background:#f8fafc;color:#334155;',
+                'รอรับเรื่อง' => 'background:#fef3c7;color:#d97706;',
+                'กำลังดำเนินการ' => 'background:#e0e7ff;color:#4f46e5;',
+                'ซ่อมเสร็จแล้ว' => 'background:#d1fae5;color:#059669;',
+            ];
+            ?>
 
-                <input type="hidden" name="tab" value="history">
+            <div class="th-filter-row">
 
-                <input type="search"
-                       name="hq"
-                       value="<?= $thEscape($thSearch) ?>"
-                       maxlength="200"
-                       placeholder="ค้นหาในตาราง..."
-                       aria-label="ค้นหาในประวัติงาน">
+                <form method="get"
+                    action="technician_home.php#tab-content-history"
+                    class="th-search">
 
-                <select name="hm" aria-label="เดือน">
-                    <option value="all"
-                        <?= $thMonth === 'all' ? 'selected' : '' ?>>
-                        ทุกเดือน
-                    </option>
+                    <input type="hidden" name="tab" value="history">
+                    <input type="hidden" name="hm"
+                        value="<?= $thEscape($thMonth) ?>">
+                    <input type="hidden" name="hy"
+                        value="<?= $thEscape($thYear) ?>">
+                    <input type="hidden" name="hs"
+                        value="<?= $thEscape($thStatus) ?>">
 
-                    <?php foreach ($thai_months as $number => $label):
-                        $value = sprintf('%02d', $number);
-                    ?>
-                        <option value="<?= $value ?>"
-                            <?= $thMonth === $value ? 'selected' : '' ?>>
-                            <?= $thEscape($label) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                    <i class="fas fa-search th-search-icon"
+                    aria-hidden="true"></i>
 
-                <select name="hy" aria-label="ปี">
-                    <option value="all"
-                        <?= $thYear === 'all' ? 'selected' : '' ?>>
-                        ทุกปี
-                    </option>
+                    <input type="text"
+                        name="hq"
+                        value="<?= $thEscape($thSearch) ?>"
+                        maxlength="200"
+                        placeholder="ค้นหาข้อมูลในตาราง..."
+                        aria-label="ค้นหาข้อมูลในตาราง กด Enter เพื่อค้นหา">
 
-                    <?php foreach ($thYears as $year): ?>
-                        <option value="<?= (int) $year ?>"
-                            <?= $thYear === (string) $year ? 'selected' : '' ?>>
-                            <?= (int) $year + 543 ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                    <?php if ($thSearch !== ''): ?>
+                        <a class="th-search-clear"
+                        href="<?= $thEscape($thUrl(1, ['hq' => ''])) ?>"
+                        aria-label="ล้างคำค้น">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                            ล้างค่า
+                        </a>
+                    <?php endif; ?>
+                </form>
 
-                <select name="hs" aria-label="สถานะ">
-                    <?php foreach ($thStatuses as $value => $label): ?>
-                        <option value="<?= $thEscape($value) ?>"
-                            <?= $thStatus === $value ? 'selected' : '' ?>>
-                            <?= $thEscape($label) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                <div class="th-filter-group">
 
-                <button type="submit">ค้นหา / กรอง</button>
+                    <details class="th-dropdown">
+                        <summary>
+                            <span>
+                                <?= $thMonth === 'all'
+                                    ? 'ทุกเดือน'
+                                    : $thEscape($thai_months[(int) $thMonth]) ?>
+                            </span>
+                            <i class="fas fa-caret-down" aria-hidden="true"></i>
+                        </summary>
 
-                <a class="th-clear"
-                   href="<?= $thEscape(
-                       'technician_home.php?' . http_build_query([
-                           'tab' => 'history',
-                           'hm' => $thMonth,
-                           'hy' => $thYear,
-                           'hs' => $thStatus,
-                       ]) . '#tab-content-history'
-                   ) ?>">
-                    ล้างคำค้น
-                </a>
-            </form>
+                        <div class="th-dropdown-menu">
+                            <a href="<?= $thEscape($thUrl(1, ['hm' => 'all'])) ?>"
+                            class="<?= $thMonth === 'all' ? 'is-selected' : '' ?>">
+                                ทุกเดือน
+                            </a>
+
+                            <?php foreach ($thai_months as $number => $label):
+                                $value = sprintf('%02d', $number);
+                            ?>
+                                <a href="<?= $thEscape(
+                                    $thUrl(1, ['hm' => $value])
+                                ) ?>"
+                                class="<?= $thMonth === $value
+                                    ? 'is-selected' : '' ?>">
+                                    <?= $thEscape($label) ?>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
+
+                    <details class="th-dropdown">
+                        <summary>
+                            <span>
+                                <?= $thYear === 'all'
+                                    ? 'ทุกปี'
+                                    : (int) $thYear + 543 ?>
+                            </span>
+                            <i class="fas fa-caret-down" aria-hidden="true"></i>
+                        </summary>
+
+                        <div class="th-dropdown-menu">
+                            <a href="<?= $thEscape($thUrl(1, ['hy' => 'all'])) ?>"
+                            class="<?= $thYear === 'all' ? 'is-selected' : '' ?>">
+                                ทุกปี
+                            </a>
+
+                            <?php foreach ($thYears as $year): ?>
+                                <a href="<?= $thEscape(
+                                    $thUrl(1, ['hy' => (string) $year])
+                                ) ?>"
+                                class="<?= $thYear === (string) $year
+                                    ? 'is-selected' : '' ?>">
+                                    <?= (int) $year + 543 ?>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
+
+                    <details class="th-dropdown th-status-dropdown">
+                        <summary style="<?= $thStatus === 'all'
+                            ? ''
+                            : $thStatusColors[$thStatus] ?>">
+                            <span><?= $thEscape($thStatuses[$thStatus]) ?></span>
+                            <i class="fas fa-caret-down" aria-hidden="true"></i>
+                        </summary>
+
+                        <div class="th-dropdown-menu th-status-menu">
+                            <?php foreach ($thStatuses as $value => $label): ?>
+                                <a href="<?= $thEscape(
+                                    $thUrl(1, ['hs' => $value])
+                                ) ?>"
+                                style="<?= $thStatusColors[$value] ?>">
+                                    <?= $thEscape($label) ?>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
+
+                </div>
+            </div>
         </div>
 
         <div class="history-table-scroll w-full custom-scrollbar"
@@ -650,13 +1041,18 @@ rsort($thYears);
         </div>
 
         <div class="th-pagination">
-            <div>
+            <p class="th-summary">
                 แสดงรายการ
-                <?= $thTotal ? number_format(($thPage - 1) * 50 + 1) : '0' ?>
-                –<?= number_format(min($thPage * 50, $thTotal)) ?>
-                จากทั้งหมด <?= number_format($thTotal) ?> รายการ
-                · หน้า <?= $thPage ?> / <?= $thPages ?>
-            </div>
+                <strong><?= $thTotal
+                    ? number_format(($thPage - 1) * 50 + 1)
+                    : '0' ?>–<?= number_format(
+                        min($thPage * 50, $thTotal)
+                    ) ?></strong>
+                จากทั้งหมด
+                <strong><?= number_format($thTotal) ?></strong>
+                รายการ · หน้า <?= number_format($thPage) ?>
+                / <?= number_format($thPages) ?>
+            </p>
 
             <nav class="th-pages" aria-label="แบ่งหน้าประวัติงาน">
                 <?php if ($thPage > 1): ?>
@@ -669,11 +1065,12 @@ rsort($thYears);
 
                 <?php
                 $thNumbers = array_unique(array_merge(
-                    [1, $thPages],
+                    [1],
                     range(
-                        max(1, $thPage - 2),
-                        min($thPages, $thPage + 2)
-                    )
+                        max(1, $thPage - 1),
+                        min($thPages, $thPage + 1)
+                    ),
+                    [$thPages]
                 ));
 
                 sort($thNumbers);
@@ -681,15 +1078,18 @@ rsort($thYears);
 
                 foreach ($thNumbers as $number):
                     if ($thPrevious && $number > $thPrevious + 1) {
-                        echo '<span>…</span>';
+                        echo '<span class="th-dots">…</span>';
                     }
+
                     $thPrevious = $number;
                 ?>
                     <?php if ($number === $thPage): ?>
-                        <span aria-current="page"><?= $number ?></span>
+                        <span aria-current="page">
+                            <?= number_format($number) ?>
+                        </span>
                     <?php else: ?>
                         <a href="<?= $thEscape($thUrl($number)) ?>">
-                            <?= $number ?>
+                            <?= number_format($number) ?>
                         </a>
                     <?php endif; ?>
                 <?php endforeach; ?>
@@ -703,5 +1103,3 @@ rsort($thYears);
                 <?php endif; ?>
             </nav>
         </div>
-    </div>
-</div>
