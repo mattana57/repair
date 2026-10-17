@@ -434,8 +434,152 @@ if (isset($_GET['api_check_hash'])) {
 
         .swal2-container { z-index: 99999 !important; }
         @media print { aside, header, .no-print { display: none !important; } }
+
+        /* ประวัติผู้แจ้งและเจ้าหน้าที่ — เฉพาะฝั่งผู้บริหาร */
+        #historyModal .modal-container:not(.max-w-full) {
+            width: min(1600px, 96vw) !important;
+            max-width: 96vw !important;
+        }
+
+        #historyModal .modal-container > div:last-child {
+            min-height: 0;
+            padding: 12px 16px 16px !important;
+        }
+
+        #historyModal .exec-history-scroll {
+            min-width: 0;
+            min-height: 0;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+        }
+
+        #historyModal .exec-history-table {
+            width: 100% !important;
+            min-width: 0 !important;
+            table-layout: fixed;
+            white-space: normal !important;
+        }
+
+        #historyModal .exec-history-table th {
+            padding: 14px 4px !important;
+            font-size: 9.5px !important;
+            letter-spacing: 0 !important;
+            white-space: nowrap !important;
+        }
+
+        #historyModal .exec-history-table td {
+            padding: 14px 4px !important;
+            font-size: 11.5px !important;
+            line-height: 1.7;
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+            vertical-align: top;
+        }
+
+        #historyModal .exec-history-table td > div {
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+
+        #historyModal .exec-history-table td .truncate {
+            max-width: 100% !important;
+            overflow: visible !important;
+            white-space: normal !important;
+            text-overflow: clip;
+        }
+
+        #historyModal .exec-history-table td:nth-child(4) .w-8.h-8 {
+            display: none;
+        }
+
+        #historyModal .exec-history-table td:nth-child(4) .flex > div:last-child {
+            min-width: 0;
+        }
+
+        #historyModal .exec-history-table td:nth-child(10) span {
+            max-width: 100%;
+            padding: 4px 7px;
+            font-size: 10px;
+            white-space: normal;
+        }
+
+        /* รวมความกว้างทั้ง 12 คอลัมน์เป็น 100% */
+        #historyModal .exec-history-table th:nth-child(1)  { width: 3%; }
+        #historyModal .exec-history-table th:nth-child(2)  { width: 7%; }
+        #historyModal .exec-history-table th:nth-child(3)  { width: 6%; }
+        #historyModal .exec-history-table th:nth-child(4)  { width: 13%; }
+        #historyModal .exec-history-table th:nth-child(5)  { width: 9%; }
+        #historyModal .exec-history-table th:nth-child(6)  { width: 13%; }
+        #historyModal .exec-history-table th:nth-child(7)  { width: 13%; }
+        #historyModal .exec-history-table th:nth-child(8)  { width: 7%; }
+        #historyModal .exec-history-table th:nth-child(9)  { width: 9%; }
+        #historyModal .exec-history-table th:nth-child(10) { width: 9%; }
+        #historyModal .exec-history-table th:nth-child(11) { width: 7%; }
+        #historyModal .exec-history-table th:nth-child(12) { width: 4%; }
+
+        /* จอแคบแสดงข้อมูลต่อใบงาน เพื่อให้อ่านได้โดยไม่เลื่อนซ้ายขวา */
+        @media (max-width: 1199px) {
+            #historyModal .exec-history-table,
+            #historyModal .exec-history-table tbody {
+                display: block;
+            }
+
+            #historyModal .exec-history-table thead {
+                display: none;
+            }
+
+            #historyModal .exec-history-table tbody tr {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            #historyModal .exec-history-table td {
+                display: block;
+                min-width: 0;
+                width: auto !important;
+                padding: 10px 12px !important;
+            }
+
+            #historyModal .exec-history-table td::before {
+                display: block;
+                margin-bottom: 4px;
+                color: #64748b;
+                font-size: 10px;
+                font-weight: 700;
+            }
+
+            #historyModal .exec-history-table td:nth-child(1)::before  { content: "ID"; }
+            #historyModal .exec-history-table td:nth-child(2)::before  { content: "วันที่ / เวลาแจ้ง"; }
+            #historyModal .exec-history-table td:nth-child(3)::before  { content: "เลขที่ใบงาน"; }
+            #historyModal .exec-history-table td:nth-child(4)::before  { content: "ผู้แจ้ง"; }
+            #historyModal .exec-history-table td:nth-child(5)::before  { content: "อุปกรณ์ / รายละเอียด"; }
+            #historyModal .exec-history-table td:nth-child(6)::before  { content: "ฝ่ายงาน / ตำแหน่ง"; }
+            #historyModal .exec-history-table td:nth-child(7)::before  { content: "เจ้าหน้าที่"; }
+            #historyModal .exec-history-table td:nth-child(8)::before  { content: "วันที่ / เวลารับงาน"; }
+            #historyModal .exec-history-table td:nth-child(9)::before  { content: "สาเหตุ / หมายเหตุ"; }
+            #historyModal .exec-history-table td:nth-child(10)::before { content: "สถานะ"; }
+            #historyModal .exec-history-table td:nth-child(11)::before { content: "วันที่ / เวลาปิดงาน"; }
+            #historyModal .exec-history-table td:nth-child(12)::before { content: "ดูใบงาน"; }
+
+            #historyModal .exec-history-table td[colspan] {
+                grid-column: 1 / -1;
+            }
+
+            #historyModal .exec-history-table td[colspan]::before {
+                content: none;
+            }
+        }
+
+        @media (max-width: 479px) {
+            #historyModal .exec-history-table tbody tr {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
     </style>
 </head>
+
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden xl:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
@@ -1523,8 +1667,8 @@ if (isset($_GET['api_check_hash'])) {
             
             <!-- ✨ เพิ่ม xl:pt-3 เพื่อดึงขอบล่างของตารางขึ้นมาให้ชิด Header มากขึ้นเฉพาะบนหน้าจอคอมพิวเตอร์/โน้ตบุ๊ค ✨ -->
             <div class="p-0 md:p-6 xl:pt-3 overflow-hidden flex-1 bg-[#f8fafc]">
-                <div class="w-full h-full overflow-x-auto md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
-                    <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
+                <div class="exec-history-scroll w-full h-full md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
+                    <table class="exec-history-table w-full text-left">
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
                                 <th class="px-6 py-4">ID</th>
