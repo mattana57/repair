@@ -818,23 +818,24 @@ if (isset($_GET['th_fragment'])
         }
 
         /* ให้ชื่อผู้แจ้งตัดบรรทัดได้ภายในช่อง */
-        .tech-dashboard-ui #historyTableFull td:nth-child(3) > .flex > div:last-child {
+        .tech-dashboard-ui #historyTableFull td:nth-child(4) > .flex > div:last-child {
             flex: 1;
             min-width: 0;
         }
 
         /* สัดส่วนคอลัมน์รวม 100% */
-        .tech-dashboard-ui #historyTableFull th:nth-child(1)  { width: 9%; }
-        .tech-dashboard-ui #historyTableFull th:nth-child(2)  { width: 7%; }
-        .tech-dashboard-ui #historyTableFull th:nth-child(3)  { width: 13%; }
-        .tech-dashboard-ui #historyTableFull th:nth-child(4)  { width: 11%; }
-        .tech-dashboard-ui #historyTableFull th:nth-child(5)  { width: 12%; }
-        .tech-dashboard-ui #historyTableFull th:nth-child(6)  { width: 11%; }
-        .tech-dashboard-ui #historyTableFull th:nth-child(7)  { width: 9%; }
-        .tech-dashboard-ui #historyTableFull th:nth-child(8)  { width: 9%; }
-        .tech-dashboard-ui #historyTableFull th:nth-child(9)  { width: 8%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(1) { width: 4%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(2) { width: 8%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(3) { width: 6%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(4) { width: 12%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(5) { width: 11%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(6) { width: 13%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(7) { width: 11%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(8) { width: 8%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(9) { width: 7%; }
         .tech-dashboard-ui #historyTableFull th:nth-child(10) { width: 8%; }
-        .tech-dashboard-ui #historyTableFull th:nth-child(11) { width: 3%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(11) { width: 8%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(12) { width: 4%; }
 
         .tech-dashboard-ui #historyTableFull td:last-child,
         .tech-dashboard-ui #historyTableFull th:last-child {
@@ -882,46 +883,50 @@ if (isset($_GET['th_fragment'])
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(1)::before {
-                content: "วันที่ / เวลาแจ้ง";
+                content: "ID";
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(2)::before {
-                content: "เลขที่ใบงาน";
+                content: "วันที่ / เวลาแจ้ง";
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(3)::before {
-                content: "ผู้แจ้ง";
+                content: "เลขที่ใบงาน";
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(4)::before {
-                content: "อุปกรณ์ / รายละเอียด";
+                content: "ผู้แจ้ง";
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(5)::before {
-                content: "ฝ่ายงาน / ตำแหน่ง";
+                content: "อุปกรณ์ / รายละเอียด";
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(6)::before {
-                content: "เจ้าหน้าที่";
+                content: "ฝ่ายงาน / ตำแหน่ง";
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(7)::before {
-                content: "วันที่ / เวลารับงาน";
+                content: "เจ้าหน้าที่";
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(8)::before {
-                content: "สาเหตุ / หมายเหตุ";
+                content: "วันที่ / เวลารับงาน";
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(9)::before {
-                content: "สถานะ";
+                content: "สาเหตุ / หมายเหตุ";
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(10)::before {
-                content: "วันที่ / เวลาซ่อมเสร็จ";
+                content: "สถานะ";
             }
 
             .tech-dashboard-ui #historyTableFull td:nth-child(11)::before {
+                content: "วันที่ / เวลาซ่อมเสร็จ";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(12)::before {
                 content: "จัดการใบงาน";
             }
 
@@ -1444,6 +1449,7 @@ if (isset($_GET['th_fragment'])
                         <table class="w-full text-left whitespace-nowrap">
                             <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
                                 <tr>
+                                    <th class="px-6 py-4">ID</th>
                                     <th class="px-6 py-4">Date / Time</th>
                                     <th class="px-6 py-4">Ticket No.</th>
                                     <th class="px-6 py-4">Reporter</th>
@@ -1869,7 +1875,7 @@ if (isset($_GET['th_fragment'])
             
             let recentRepairs = repairsData.slice(0, 5);
             if (recentRepairs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-slate-400"><i class="fas fa-folder-open text-4xl mb-3 text-slate-200 block"></i>ยังไม่มีประวัติการรับงานในระบบ</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-slate-400"><i class="fas fa-folder-open text-4xl mb-3 text-slate-200 block"></i>ยังไม่มีประวัติการรับงานในระบบ</td></tr>`;
                 return;
             }
 
@@ -1890,6 +1896,7 @@ if (isset($_GET['th_fragment'])
 
                 html += `
                     <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
+                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${Number(r.id)}</td>
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${dt[0]}</div>
                             ${dt[1] ? `<div class="text-[11px] text-blue-600 font-bold mt-0.5">${dt[1].substring(0, 5)}</div>` : ''}

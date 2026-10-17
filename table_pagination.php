@@ -900,6 +900,7 @@ function tp_repair_rows(
             }
 
             echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+                <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
                 <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                     <div class='font-medium text-slate-700'>{$created_date}</div>
                     {$created_time_html}
@@ -944,7 +945,7 @@ function tp_repair_rows(
         }
     } else {
         echo "<tr>
-            <td colspan='11'
+            <td colspan='12'
                 class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>
                 ยังไม่เคยรับงานซ่อมในระบบ
             </td>
@@ -1090,6 +1091,7 @@ function tp_history_modal(
                             <?php
                             foreach (
                                 [
+                                    'ID',
                                     'Date / Time',
                                     'Ticket No.',
                                     'Reporter',

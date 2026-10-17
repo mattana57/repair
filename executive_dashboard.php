@@ -419,14 +419,14 @@ if (isset($_GET['api_check_hash'])) {
                 white-space: nowrap !important;
             }
             /* 3. บีบความกว้างช่องรายละเอียดอุปกรณ์ (ช่อง 4) และสาเหตุ (ช่อง 8) เล็กน้อยเพื่อดึงช่อง ACTION เข้ามาในจอ */
-            #repairsTable td:nth-child(4) {
+            #repairsTable td:nth-child(5) {
                 white-space: normal !important;
                 max-width: 115px !important;
             }
-            #repairsTable td:nth-child(4) > div.truncate {
+            #repairsTable td:nth-child(5) > div.truncate {
                 max-width: 110px !important;
             }
-            #repairsTable td:nth-child(8) {
+            #repairsTable td:nth-child(9) {
                 white-space: normal !important;
                 max-width: 90px !important;
             }
@@ -878,6 +878,7 @@ if (isset($_GET['api_check_hash'])) {
                             <table class="w-full text-left whitespace-nowrap">
                                 <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
                                     <tr>
+                                        <th class="px-6 py-4">ID</th>
                                         <th class="px-6 py-4">Date / Time</th>
                                         <th class="px-6 py-4">Ticket No.</th>
                                         <th class="px-6 py-4">Reporter</th>
@@ -915,6 +916,7 @@ if (isset($_GET['api_check_hash'])) {
                                             }
                                             
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                                <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$rd['id'] . "</td>
                                                 <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                     <div class='font-medium text-slate-700'>{$date_fmt}</div>
                                                     {$time_html}
@@ -939,7 +941,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>No transactions found</td></tr>"; }
+                                    } else { echo "<tr><td colspan='7' class='px-6 py-8 text-center text-slate-400'>No transactions found</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
@@ -1033,6 +1035,7 @@ if (isset($_GET['api_check_hash'])) {
                         <table class="w-full text-left whitespace-nowrap lg:whitespace-normal lg:min-w-0" id="repairsTable">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
+                                    <th class="px-6 py-4">ID</th>
                                     <th class="px-6 py-4">Date / Time</th>
                                     <th class="px-6 py-4">Ticket No.</th>
                                     <th class="px-6 py-4">Reporter</th>
@@ -1123,6 +1126,7 @@ if (isset($_GET['api_check_hash'])) {
                                         }
 
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
                                             <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-slate-700'>{$created_date}</div>
                                                 {$created_time_html}
@@ -1155,7 +1159,7 @@ if (isset($_GET['api_check_hash'])) {
                                             </td>
                                         </tr>";
                                     }
-                                } else { echo "<tr><td colspan='11' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>"; }
+                                } else { echo "<tr><td colspan='12' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>"; }
                                 ?>
                             </tbody>
                         </table>
@@ -1511,6 +1515,7 @@ if (isset($_GET['api_check_hash'])) {
                     <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
+                                <th class="px-6 py-4">ID</th>
                                 <th class="px-6 py-4">Date / Time</th>
                                 <th class="px-6 py-4">Ticket No.</th>
                                 <th class="px-6 py-4">Reporter</th>
@@ -2053,7 +2058,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 // 2. กรองเดือน/ปี
                 if (monthFilter !== 'all' || yearFilter !== 'all') {
-                    let dateText = row.cells[0].textContent.trim();
+                    let dateText = row.cells[1].textContent.trim();
                     let dateMatchObj = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
                     
                     if (dateMatchObj) {
@@ -2069,7 +2074,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 // 3. กรองสถานะ ('รอรับเรื่อง', 'กำลังดำเนินการ', 'ซ่อมเสร็จแล้ว')
                 if (statusFilter !== 'all') {
-                    let statusCell = row.cells[8];
+                    let statusCell = row.cells[9];
                     let rowStatus = statusCell ? statusCell.textContent.trim() : '';
                     if (rowStatus !== statusFilter) {
                         statusMatch = false;
@@ -2092,7 +2097,7 @@ if (isset($_GET['api_check_hash'])) {
                     emptyRow = document.createElement('tr');
                     emptyRow.className = 'empty-filter-row';
                     // สร้างข้อความพร้อมขยายความสูง 400px
-                    emptyRow.innerHTML = `<td colspan="11" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">ยังไม่เคยรับงานซ่อมในระบบ</td>`;
+                    emptyRow.innerHTML = `<td colspan="12" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">ยังไม่เคยรับงานซ่อมในระบบ</td>`;
                     tbody.appendChild(emptyRow);
                 } else {
                     emptyRow.style.display = '';
@@ -2916,7 +2921,7 @@ if (isset($_GET['api_check_hash'])) {
 
             if(userRepairs.length === 0) {
                 let emptyMsg = type === 'reporter' ? 'ยังไม่มีประวัติการแจ้งซ่อม' : 'ยังไม่เคยรับงานซ่อมในระบบ';
-                tbody.innerHTML = `<tr><td colspan="11" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">${emptyMsg}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">${emptyMsg}</td></tr>`;
             } else {
                 userRepairs.forEach(r => {
                     let statusClass = 'badge-pending';
@@ -2985,6 +2990,7 @@ if (isset($_GET['api_check_hash'])) {
                     }
 
                     tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors search-row border-b border-slate-100 last:border-0">
+                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${Number(r.id)}</td>
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
                             ${createdTime}
@@ -3430,7 +3436,7 @@ if (isset($_GET['api_check_hash'])) {
                 // 2. กรองเดือน/ปี
                 if (monthFilter !== 'all' || yearFilter !== 'all') {
                     // ข้อมูลวันที่อยู่ในคอลัมน์แรกสุด
-                    let dateText = row.cells[0].textContent.trim();
+                    let dateText = row.cells[1].textContent.trim();
                     let dateMatchObj = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
                     
                     if (dateMatchObj) {

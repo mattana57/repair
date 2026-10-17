@@ -294,36 +294,39 @@ rsort($thYears);
 
 /* รวมความกว้างทั้งหมด 100% */
 .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(1) {
-    width: 8%;
+    width: 4%;
 }
 .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(2) {
-    width: 6%;
+    width: 8%;
 }
 .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(3) {
-    width: 12%;
+    width: 6%;
 }
 .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(4) {
-    width: 11%;
+    width: 12%;
 }
 .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(5) {
-    width: 16%;
-}
-.tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(6) {
     width: 11%;
 }
+.tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(6) {
+    width: 13%;
+}
 .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(7) {
-    width: 8%;
+    width: 11%;
 }
 .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(8) {
     width: 8%;
 }
 .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(9) {
-    width: 8%;
+    width: 7%;
 }
 .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(10) {
     width: 8%;
 }
 .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(11) {
+    width: 8%;
+}
+.tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(12) {
     width: 4%;
 }
 
@@ -954,6 +957,7 @@ rsort($thYears);
                 <thead class="sticky top-0 z-20">
                     <tr>
                         <?php foreach ([
+                            'ID',
                             'Date / Time',
                             'Ticket No.',
                             'Reporter',
@@ -976,7 +980,7 @@ rsort($thYears);
 
                     <?php if (!$thRows): ?>
                         <tr>
-                            <td colspan="11"
+                            <td colspan="12"
                                 class="text-center text-slate-400">
                                 ไม่พบข้อมูลใบงานที่ตรงกับเงื่อนไข
                             </td>
@@ -1009,6 +1013,9 @@ rsort($thYears);
                             );
                     ?>
                         <tr class="hover:bg-slate-50/50">
+                            <td class="font-mono font-semibold text-slate-600">
+                                <?= (int) $r['id'] ?>
+                            </td>
                             <td>
                                 <?= $thDate($r['created_at'] ?? '') ?>
                             </td>

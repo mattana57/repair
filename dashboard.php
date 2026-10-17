@@ -615,6 +615,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
                 }
 
                 echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+                    <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
                     <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                         <div class='font-medium text-slate-700'>{$created_date}</div>
                         {$created_time_html}
@@ -648,7 +649,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
                 </tr>";
             }
         } else {
-            echo "<tr><td colspan='11' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>";
+            echo "<tr><td colspan='12' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>";
         }
 
         echo '</tbody></table>';
@@ -2481,17 +2482,17 @@ if (isset($_GET['api_check_hash'])) {
                 white-space: nowrap !important;
             }
             /* 3. บีบความกว้างช่องรายละเอียดอุปกรณ์ (ช่อง 4) และสาเหตุ (ช่อง 8) เล็กน้อยเพื่อดึงช่อง ACTION เข้ามาในจอ */
-            #repairsTable td:nth-child(4),
-            #historyModal table td:nth-child(4) {
+                        #repairsTable td:nth-child(5),
+            #historyModal table td:nth-child(5) {
                 white-space: normal !important;
                 max-width: 115px !important;
             }
-            #repairsTable td:nth-child(4) > div.truncate,
-            #historyModal table td:nth-child(4) > div.truncate {
+            #repairsTable td:nth-child(5) > div.truncate,
+            #historyModal table td:nth-child(5) > div.truncate {
                 max-width: 110px !important;
             }
-            #repairsTable td:nth-child(8),
-            #historyModal table td:nth-child(8) {
+            #repairsTable td:nth-child(9),
+            #historyModal table td:nth-child(9) {
                 white-space: normal !important;
                 max-width: 90px !important;
             }
@@ -2522,14 +2523,14 @@ if (isset($_GET['api_check_hash'])) {
                 padding-right: 8px !important;
             }
             /* ซ่อนวงกลมไอคอนคนในช่อง Reporter เฉพาะตอนก่อนกดเต็มจอ เพื่อให้เหมือนตาราง Repairs List และไม่ดันคอลัมน์ขวาตกขอบ */
-            #historyModal .modal-container:not(.max-w-full) table td:nth-child(3) .w-8.h-8 {
+            #historyModal .modal-container:not(.max-w-full) table td:nth-child(4) .w-8.h-8 {
                 display: none !important;
             }
-            #historyModal .modal-container:not(.max-w-full) table td:nth-child(4),
-            #historyModal .modal-container:not(.max-w-full) table td:nth-child(4) > div.truncate {
+            #historyModal .modal-container:not(.max-w-full) table td:nth-child(5),
+            #historyModal .modal-container:not(.max-w-full) table td:nth-child(5) > div.truncate {
                 max-width: 100px !important;
             }
-            #historyModal .modal-container:not(.max-w-full) table td:nth-child(8) {
+            #historyModal .modal-container:not(.max-w-full) table td:nth-child(9) {
                 max-width: 80px !important;
             }
 
@@ -3086,6 +3087,7 @@ if (isset($_GET['api_check_hash'])) {
                             <table class="w-full text-left whitespace-nowrap">
                                 <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a]">
                                     <tr>
+                                        <th class="px-6 py-4">ID</th>
                                         <th class="px-6 py-4">Date / Time</th>
                                         <th class="px-6 py-4">Ticket No.</th>
                                         <th class="px-6 py-4">Reporter</th>
@@ -3124,6 +3126,7 @@ if (isset($_GET['api_check_hash'])) {
                                             }
                                             
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                                <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$rd['id'] . "</td>
                                                 <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                     <div class='font-medium text-slate-700'>{$date_fmt}</div>
                                                     {$time_html}
@@ -3143,7 +3146,7 @@ if (isset($_GET['api_check_hash'])) {
                                             </tr>";
                                         }
                                     } else {
-                                        echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No transactions found</td></tr>";
+                                        echo "<tr><td colspan='6' class='px-6 py-8 text-center text-slate-400'>No transactions found</td></tr>";
                                     }
                                     ?>
                                 </tbody>
@@ -3236,6 +3239,7 @@ if (isset($_GET['api_check_hash'])) {
                         <table class="w-full text-left whitespace-nowrap lg:whitespace-normal lg:min-w-0" id="repairsTable">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
+                                    <th class="px-6 py-4">ID</th>
                                     <th class="px-6 py-4">Date / Time</th>
                                     <th class="px-6 py-4">Ticket No.</th>
                                     <th class="px-6 py-4">Reporter</th>
@@ -3345,6 +3349,7 @@ if (isset($_GET['api_check_hash'])) {
                                         }
 
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
                                             <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-slate-700'>{$created_date}</div>
                                                 {$created_time_html}
@@ -3377,7 +3382,7 @@ if (isset($_GET['api_check_hash'])) {
                                             </td>
                                         </tr>";
                                     }
-                                } else { echo "<tr><td colspan='11' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>"; }
+                                } else { echo "<tr><td colspan='12' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>"; }
                                 ?>
                             </tbody>
                         </table>
@@ -4912,6 +4917,7 @@ if (isset($_GET['api_check_hash'])) {
                     <table class="w-full text-left whitespace-nowrap min-w-[1200px]">
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
+                                <th class="px-6 py-4">ID</th>
                                 <th class="px-6 py-4">Date / Time</th>
                                 <th class="px-6 py-4">Ticket No.</th>
                                 <th class="px-6 py-4">Reporter</th>
@@ -7845,7 +7851,7 @@ if (isset($_GET['api_check_hash'])) {
 
             if(userRepairs.length === 0) {
                 let emptyMsg = type === 'reporter' ? 'ยังไม่มีประวัติการแจ้งซ่อม' : 'ยังไม่เคยรับงานซ่อมในระบบ';
-                tbody.innerHTML = `<tr><td colspan="11" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">${emptyMsg}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" class="px-6 h-[400px] text-center align-middle text-slate-400 font-medium">${emptyMsg}</td></tr>`;
             } else {
                 userRepairs.forEach(r => {
                     let statusClass = 'badge-pending';
@@ -7918,6 +7924,7 @@ if (isset($_GET['api_check_hash'])) {
                     }
 
                     tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
+                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${Number(r.id)}</td>
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
                             ${createdTime}
