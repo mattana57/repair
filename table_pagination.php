@@ -24,6 +24,17 @@ function tp_get($key, $default = '') {
         : $default;
 }
 
+// วันที่ของ Transactions เท่านั้น: ใช้เวลาไทยเมื่อไม่ได้เลือกวันที่ไว้ใน URL
+function tp_repairs_day() {
+    $today = (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j');
+    $day = tp_get('pg_repairs_day', $today);
+    if ($day === 'all') return 'all';
+    if (ctype_digit($day) && (int)$day >= 1 && (int)$day <= 31) {
+        return (string)(int)$day;
+    }
+    return $today;
+}
+
 function tp_url(array $changes = [], array $remove = []) {
     $query = [];
 
@@ -36,7 +47,9 @@ function tp_url(array $changes = [], array $remove = []) {
                     '/^pg_(repairs|admins|techs|assets|reporters|logs|history)_(page|q|month|year|status|department)$/D',
                     $key
                 )
+                || $key === 'pg_repairs_day'
                 || in_array(
+
                     $key,
                     ['pg_history_type', 'pg_history_name', 'pg_history_technician_id', 'pg_full'],
                     true
@@ -253,6 +266,20 @@ function tp_repairs(
     $month = tp_get('pg_' . $prefix . '_month');
     $year = tp_get('pg_' . $prefix . '_year');
     $status = tp_get('pg_' . $prefix . '_status');
+
+    // จำกัดเฉพาะ Transactions ของแอดมิน ไม่เปลี่ยนตัวกรองประวัติหรือหน้าอื่น
+    if ($prefix === 'repairs') {
+        $day = tp_repairs_day();
+        if ($day !== 'all') {
+            $today = new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
+            if ($month === '') $month = $today->format('m');
+            if ($year === '') $year = $today->format('Y');
+            $where .= ' AND DAY(r.created_at) = ?';
+            $types .= 'i';
+            $values[] = (int)$day;
+        }
+    }
+
 
     if (
         ctype_digit($month)
