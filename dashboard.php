@@ -4203,10 +4203,12 @@ if (isset($_GET['api_check_hash'])) {
 
                 <?php
                 $login_detail = tp_get('pg_logs_status', '');
+                // ลิงก์เดิม all ของปุ่มนี้ให้เปิดเฉพาะรายการไม่สำเร็จเช่นกัน
+                if ($login_detail === 'all') $login_detail = 'failed';
 
                 if (!in_array(
                     $login_detail,
-                    ['', 'success', 'all', 'technician', 'admin', 'executive'],
+                    ['', 'success', 'failed', 'technician', 'admin', 'executive'],
                     true
                 )) {
                     $login_detail = '';
@@ -4265,13 +4267,13 @@ if (isset($_GET['api_check_hash'])) {
                         href="<?= tp_text(tp_url(
                             [
                                 'tab' => 'login_logs',
-                                'pg_logs_status' => 'all',
+                                'pg_logs_status' => 'failed',
                             ],
                             ['pg_logs_page', 'pg_logs_q']
                         )) ?>"
                         class="font-bold text-indigo-600 hover:underline"
                     >
-                        ดูประวัติทั้งหมด รวมรายการไม่สำเร็จ
+                        ดูเฉพาะรายการเข้าสู่ระบบไม่สำเร็จ
                     </a>
                 </div>
 
@@ -4298,10 +4300,10 @@ if (isset($_GET['api_check_hash'])) {
                     ?>
                 <?php endif; ?>
 
-                <?php if (in_array($login_detail, ['', 'success', 'all'], true)): ?>
+                <?php if (in_array($login_detail, ['', 'success', 'failed'], true)): ?>
                 <div id="login-history-table" class="modern-card overflow-hidden flex flex-col" style="scroll-margin-top: 12px;">
                     <div class="p-6 border-b border-slate-100 bg-white">
-                        <h2 class="text-xl font-extrabold text-slate-800">ประวัติการเข้าสู่ระบบ (Login History)</h2>
+                        <h2 class="text-xl font-extrabold text-slate-800"><?php echo $login_detail === 'failed' ? 'ประวัติการเข้าสู่ระบบที่ไม่สำเร็จ' : 'ประวัติการเข้าสู่ระบบ (Login History)'; ?></h2>
                         <p class="text-sm font-medium text-slate-400 mt-0.5">ตรวจสอบการเข้าใช้งานระบบของเจ้าหน้าที่และผู้บริหาร</p>
                     </div>
                     <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
@@ -4317,13 +4319,15 @@ if (isset($_GET['api_check_hash'])) {
                             </thead>
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
-                                $login_filter = tp_get('pg_logs_status', '');
+                                $login_filter = $login_detail;
 
                                 $login_where = '';
                                 $login_types = '';
                                 $login_values = [];
 
-                                if ($login_filter === 'success') {
+                                if ($login_filter === 'failed') {
+                                    $login_where = " WHERE COALESCE(status, '') <> 'สำเร็จ'";
+                                } elseif ($login_filter === 'success') {
                                     $login_where =
                                         " WHERE status = 'สำเร็จ'
                                           AND LOWER(role) IN (
@@ -4374,7 +4378,7 @@ if (isset($_GET['api_check_hash'])) {
                                         </tr>";
                                     }
                                 } else {
-                                    echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>ยังไม่มีประวัติการเข้าสู่ระบบ</td></tr>";
+                                    echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>" . ($login_filter === 'failed' ? 'ไม่พบรายการเข้าสู่ระบบที่ไม่สำเร็จ' : 'ยังไม่มีประวัติการเข้าสู่ระบบ') . "</td></tr>";
                                 }
                                 ?>
                             </tbody>
