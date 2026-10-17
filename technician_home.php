@@ -1307,9 +1307,10 @@ if (isset($_GET['th_fragment'])
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="equip-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('equip-Month', 'all', 'ทุกเดือน', renderAllCharts)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('equip-Month', '{$num_pad}', '{$name}', renderAllCharts)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="equipMonth" value="all">
+                                    <input type="hidden" id="equipMonth" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'); ?>">
                                 </div>
                                 <div class="relative w-[90px] sm:w-[100px] md:w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="equip-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'equip-Year', renderAllCharts)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm" onclick="toggleChartDropdown(event, 'equip-Year')">
@@ -1317,9 +1318,10 @@ if (isset($_GET['th_fragment'])
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="equip-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('equip-Year', 'all', 'ทุกปี', renderAllCharts)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('equip-Year', '{$y}', '{$thai_y}', renderAllCharts)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="equipYear" value="all">
+                                    <input type="hidden" id="equipYear" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y'); ?>">
                                 </div>
                             </div>
                         </div>
@@ -1341,9 +1343,10 @@ if (isset($_GET['th_fragment'])
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="status-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('status-Month', 'all', 'ทุกเดือน', renderAllCharts)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('status-Month', '{$num_pad}', '{$name}', renderAllCharts)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="statusMonth" value="all">
+                                    <input type="hidden" id="statusMonth" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'); ?>">
                                 </div>
                                 <div class="relative w-[90px] sm:w-[100px] md:w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="status-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'status-Year', renderAllCharts)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm" onclick="toggleChartDropdown(event, 'status-Year')">
@@ -1351,9 +1354,10 @@ if (isset($_GET['th_fragment'])
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="status-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('status-Year', 'all', 'ทุกปี', renderAllCharts)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('status-Year', '{$y}', '{$thai_y}', renderAllCharts)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="statusYear" value="all">
+                                    <input type="hidden" id="statusYear" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y'); ?>">
                                 </div>
                             </div>
                         </div>
@@ -1378,9 +1382,10 @@ if (isset($_GET['th_fragment'])
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="loc-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('loc-Month', 'all', 'ทุกเดือน', renderAllCharts)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('loc-Month', '{$num_pad}', '{$name}', renderAllCharts)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="locMonth" value="all">
+                                    <input type="hidden" id="locMonth" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'); ?>">
                                 </div>
                                 <div class="relative w-[90px] sm:w-[100px] md:w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="loc-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'loc-Year', renderAllCharts)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm" onclick="toggleChartDropdown(event, 'loc-Year')">
@@ -1388,9 +1393,10 @@ if (isset($_GET['th_fragment'])
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="loc-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('loc-Year', 'all', 'ทุกปี', renderAllCharts)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('loc-Year', '{$y}', '{$thai_y}', renderAllCharts)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="locYear" value="all">
+                                    <input type="hidden" id="locYear" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y'); ?>">
                                 </div>
                             </div>
                         </div>
@@ -1412,9 +1418,10 @@ if (isset($_GET['th_fragment'])
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="rep-MonthList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกเดือน" onclick="selectChartDropdown('rep-Month', 'all', 'ทุกเดือน', renderAllCharts)">ทุกเดือน</div>
                                         <?php foreach($thai_months as $num => $name) { $num_pad = str_pad($num, 2, '0', STR_PAD_LEFT); echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$num_pad}' data-display='{$name}' onclick=\"selectChartDropdown('rep-Month', '{$num_pad}', '{$name}', renderAllCharts)\">{$name}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="repMonth" value="all">
+                                    <input type="hidden" id="repMonth" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'); ?>">
                                 </div>
                                 <div class="relative w-[90px] sm:w-[100px] md:w-24 outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="rep-YearContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'rep-Year', renderAllCharts)" style="font-family: 'Sarabun', sans-serif;">
                                     <div class="flex items-center justify-between w-full bg-slate-50 border border-slate-200 text-[13px] text-slate-700 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-100 shadow-sm" onclick="toggleChartDropdown(event, 'rep-Year')">
@@ -1422,9 +1429,10 @@ if (isset($_GET['th_fragment'])
                                         <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
                                     </div>
                                     <div id="rep-YearList" class="chart-dropdown-list absolute z-50 w-32 right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                        <div class="chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกปี" onclick="selectChartDropdown('rep-Year', 'all', 'ทุกปี', renderAllCharts)">ทุกปี</div>
                                         <?php foreach($available_years as $y) { $thai_y = $y + 543; echo "<div class='chart-dropdown-item px-4 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$y}' data-display='{$thai_y}' onclick=\"selectChartDropdown('rep-Year', '{$y}', '{$thai_y}', renderAllCharts)\">{$thai_y}</div>"; } ?>
                                     </div>
-                                    <input type="hidden" id="repYear" value="all">
+                                    <input type="hidden" id="repYear" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y'); ?>">
                                 </div>
                             </div>
                         </div>
@@ -1710,11 +1718,22 @@ if (isset($_GET['th_fragment'])
             let pending = 0, progress = 0, completed = 0;
             let eqMap = {}, locMap = {}, reporterMap = {};
 
+            const periodRows = prefix => new Set(getFilteredRepairsByMonthYear(
+                document.getElementById(prefix + 'Month').value,
+                document.getElementById(prefix + 'Year').value
+            ));
+            const equipRows = periodRows('equip');
+            const statusRows = periodRows('status');
+            const locRows = periodRows('loc');
+            const reporterRows = periodRows('rep');
+
             repairsData.forEach(r => {
                 let st = (r.status || '').trim();
-                if (st === 'รอรับเรื่อง' || st === 'รอดำเนินการ') pending++;
-                else if (st === 'กำลังดำเนินการ') progress++;
-                else if (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') completed++;
+                if (statusRows.has(r)) {
+                    if (st === 'รอรับเรื่อง' || st === 'รอดำเนินการ') pending++;
+                    else if (st === 'กำลังดำเนินการ') progress++;
+                    else if (st === 'ซ่อมเสร็จแล้ว' || st === 'เสร็จสิ้น') completed++;
+                }
 
                 // ✨ ดึงข้อมูลอุปกรณ์ให้ลึกขึ้น ถ้าไม่มีให้ดึงปัญหามาแสดงแทน เพื่อไม่ให้กลายเป็น "ไม่ระบุ" กระจุกเดียว
                 let eq1 = (r.equipment && r.equipment.trim() !== '' && r.equipment !== '-' && r.equipment !== 'ไม่ระบุ') ? r.equipment : null;
@@ -1724,14 +1743,14 @@ if (isset($_GET['th_fragment'])
                 
                 let eq = eq1 || eq2 || p1 || p2 || 'ไม่ระบุ';
                 if (eq.length > 20) eq = eq.substring(0, 20) + '...';
-                eqMap[eq] = (eqMap[eq] || 0) + 1;
+                if (equipRows.has(r)) eqMap[eq] = (eqMap[eq] || 0) + 1;
 
                 let loc = r.location || 'ไม่ระบุสถานที่';
-                if (loc !== 'ไม่ระบุสถานที่' && loc.trim() !== '') locMap[loc] = (locMap[loc] || 0) + 1;
+                if (locRows.has(r) && loc !== 'ไม่ระบุสถานที่' && loc.trim() !== '') locMap[loc] = (locMap[loc] || 0) + 1;
 
                 let repNameRaw = r.reporter_name || 'ไม่ระบุผู้แจ้ง';
                 let repName = lineUsersMap[repNameRaw] ? lineUsersMap[repNameRaw] : repNameRaw;
-                reporterMap[repName] = (reporterMap[repName] || 0) + 1;
+                if (reporterRows.has(r)) reporterMap[repName] = (reporterMap[repName] || 0) + 1;
             });
 
             // ==========================================
