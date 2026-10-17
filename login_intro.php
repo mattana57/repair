@@ -115,7 +115,7 @@ session_write_close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="refresh"
-          content="2;url=<?= $intro_destination_html ?>">
+          content="3;url=<?= $intro_destination_html ?>">
 
     <title>MBS Repair</title>
 
@@ -131,213 +131,360 @@ session_write_close();
         }
 
         body {
-            background: #f8fbff;
+            background: #071426;
             font-family: Arial, Helvetica, sans-serif;
         }
 
-        .brand-intro {
-            min-height: 100vh;
-            min-height: 100svh;
+        .intro {
+            position: relative;
+            isolation: isolate;
             display: grid;
             place-items: center;
+            min-height: 100vh;
+            min-height: 100svh;
             overflow: hidden;
-            padding: 24px;
+            padding: 30px 20px;
             background:
                 radial-gradient(
-                    ellipse at 50% 45%,
-                    #ffffff 0%,
-                    #f8fbff 55%,
-                    #eef5fc 100%
+                    ellipse at 50% 43%,
+                    #153f65 0%,
+                    #0b233d 34%,
+                    #071426 72%
                 );
         }
 
-        .brand-lockup {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 19px;
-            animation: brand-exit 220ms 1280ms ease-in both;
-        }
-
-        .brand-symbol {
-            position: relative;
-            flex: 0 0 auto;
-            display: grid;
-            place-items: center;
-            width: 78px;
-            height: 78px;
-            overflow: hidden;
-            border: 1px solid #ffffff80;
-            border-radius: 23px;
-            background: linear-gradient(
-                145deg,
-                #29b8ee 0%,
-                #168cda 45%,
-                #2563c6 100%
-            );
-            box-shadow:
-                inset 0 1px 1px #ffffff66,
-                inset 0 -2px 4px #154a9c33,
-                0 12px 28px #187ac526;
-            animation: symbol-enter 650ms cubic-bezier(.2,.75,.25,1) both;
-        }
-
-        .brand-symbol::after {
+        /* พื้นหลังเส้นตารางจาง */
+        .intro::before {
             content: "";
             position: absolute;
-            inset: -50%;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#82d9ff08 1px, transparent 1px),
+                linear-gradient(90deg, #82d9ff08 1px, transparent 1px);
+            background-size: 72px 72px;
+            mask-image: radial-gradient(
+                ellipse at center,
+                black,
+                transparent 72%
+            );
+        }
+
+        /* แสงแนวนอนด้านหลังโลโก้ */
+        .horizon {
+            position: absolute;
+            top: 44%;
+            left: 50%;
+            width: min(1100px, 130vw);
+            height: 1px;
             pointer-events: none;
             background: linear-gradient(
+                90deg,
+                transparent,
+                #36bfff33,
+                #9ceaffb3,
+                #36bfff33,
+                transparent
+            );
+            box-shadow: 0 0 26px 4px #35baff24;
+            transform: translateX(-50%);
+            animation: horizon-in 1100ms 150ms ease-out both;
+        }
+
+        .composition {
+            position: relative;
+            width: min(100%, 640px);
+            text-align: center;
+            animation: composition-out 280ms 2220ms ease-in both;
+        }
+
+        .emblem {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: clamp(240px, 35vw, 340px);
+            aspect-ratio: 1;
+            margin: 0 auto 22px;
+        }
+
+        .aura {
+            position: absolute;
+            inset: 10%;
+            border-radius: 50%;
+            background: radial-gradient(
+                circle,
+                #2fb8ff38,
+                #248dfb0d 55%,
+                transparent 72%
+            );
+            filter: blur(12px);
+            animation: aura-in 1600ms ease-out both;
+        }
+
+        .orbit {
+            position: absolute;
+            inset: 5%;
+            border: 1px solid #74d8ff24;
+            border-radius: 50%;
+            animation: orbit-in 1000ms ease-out both;
+        }
+
+        .orbit::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border: 2px solid transparent;
+            border-top-color: #70ddff;
+            border-right-color: #42acff30;
+            border-radius: inherit;
+            transform: rotate(-45deg);
+            animation: orbit-turn 2300ms
+                cubic-bezier(.2,.65,.25,1) both;
+        }
+
+        .orbit::after {
+            content: "";
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            top: 14%;
+            right: 14%;
+            border-radius: 50%;
+            background: #c4f3ff;
+            box-shadow:
+                0 0 12px #69d8ff,
+                0 0 24px #3cbbff;
+            animation: point-in 800ms 350ms both;
+        }
+
+        .orbit-inner {
+            position: absolute;
+            inset: 13%;
+            border: 1px dashed #83d9ff24;
+            border-radius: 50%;
+            animation: inner-turn 2500ms ease-out both;
+        }
+
+        .logo {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 46%;
+            aspect-ratio: 1;
+            overflow: hidden;
+            border: 1px solid #b3ebff80;
+            border-radius: 29%;
+            background: linear-gradient(
+                145deg,
+                #49d6ff 0%,
+                #159de6 38%,
+                #2462cd 100%
+            );
+            box-shadow:
+                inset 0 2px 2px #ffffff70,
+                inset 0 -6px 14px #13409d55,
+                0 18px 50px #00000040,
+                0 0 45px #25adff24;
+            animation: logo-in 900ms
+                cubic-bezier(.16,.8,.24,1) both;
+        }
+
+        .logo::after {
+            content: "";
+            position: absolute;
+            inset: -70%;
+            background: linear-gradient(
                 110deg,
-                transparent 38%,
-                #ffffff00 42%,
-                #ffffff55 50%,
-                #ffffff00 58%,
-                transparent 62%
+                transparent 42%,
+                #ffffff70 50%,
+                transparent 58%
             );
             transform: translateX(-100%);
-            animation: symbol-light 650ms 480ms ease-in-out both;
+            animation: shine 850ms 850ms ease-in-out both;
         }
 
-        .brand-symbol svg {
-            width: 39px;
-            height: 39px;
+        .logo svg {
+            width: 50%;
+            height: 50%;
             overflow: visible;
+            filter: drop-shadow(0 3px 2px #15548b30);
         }
 
-        .brand-symbol path {
+        .logo path {
             stroke-dasharray: 100;
             stroke-dashoffset: 100;
-            animation: draw-symbol 650ms 130ms ease-out forwards;
+            animation: draw 850ms 250ms ease-out forwards;
         }
 
-        .brand-wordmark {
+        .wordmark {
+            display: inline-block;
             margin: 0;
-            color: #193351;
-            font-size: clamp(29px, 7vw, 43px);
+            color: #f4fbff;
+            font-size: clamp(38px, 7vw, 66px);
             font-weight: 700;
             line-height: 1.15;
-            letter-spacing: -1.8px;
-            white-space: nowrap;
-            animation: wordmark-enter 650ms 180ms
-                cubic-bezier(.2,.75,.25,1) both;
+            letter-spacing: -2px;
+            animation: wordmark-in 850ms 500ms
+                cubic-bezier(.16,.8,.24,1) both;
         }
 
-        .brand-wordmark span {
-            color: #168acb;
+        .wordmark span {
+            color: #67d6ff;
             font-weight: 400;
-            letter-spacing: -1.5px;
         }
 
-        @keyframes symbol-enter {
+        .accent {
+            width: 64px;
+            height: 2px;
+            margin: 25px auto 0;
+            border-radius: 5px;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                #70deff,
+                transparent
+            );
+            box-shadow: 0 0 16px #44caff66;
+            animation: accent-in 700ms 850ms both;
+        }
+
+        @keyframes horizon-in {
             from {
                 opacity: 0;
-                transform: translateY(10px) scale(.92);
+                transform: translateX(-50%) scaleX(.15);
             }
             to {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: translateX(-50%) scaleX(1);
             }
         }
 
-        @keyframes draw-symbol {
-            to {
-                stroke-dashoffset: 0;
-            }
+        @keyframes aura-in {
+            from { opacity: 0; transform: scale(.5); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        @keyframes wordmark-enter {
+        @keyframes orbit-in {
+            from { opacity: 0; transform: scale(.7); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes orbit-turn {
+            from { transform: rotate(-160deg); }
+            to { transform: rotate(90deg); }
+        }
+
+        @keyframes inner-turn {
+            from { opacity: 0; transform: rotate(60deg) scale(.85); }
+            to { opacity: 1; transform: rotate(-25deg) scale(1); }
+        }
+
+        @keyframes point-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes logo-in {
             from {
                 opacity: 0;
-                transform: translateX(-12px);
-                filter: blur(5px);
+                transform: translateY(20px) scale(.8) rotate(-8deg);
             }
             to {
                 opacity: 1;
-                transform: translateX(0);
+                transform: translateY(0) scale(1) rotate(0);
+            }
+        }
+
+        @keyframes draw {
+            to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes shine {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(100%); }
+        }
+
+        @keyframes wordmark-in {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+                filter: blur(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
                 filter: blur(0);
             }
         }
 
-        @keyframes symbol-light {
-            from {
-                transform: translateX(-100%);
-            }
-            to {
-                transform: translateX(100%);
-            }
+        @keyframes accent-in {
+            from { opacity: 0; transform: scaleX(.1); }
+            to { opacity: 1; transform: scaleX(1); }
         }
 
-        @keyframes brand-exit {
+        @keyframes composition-out {
             to {
                 opacity: 0;
-                transform: translateY(-3px);
+                transform: scale(1.035);
+                filter: blur(3px);
             }
         }
 
-        @media (max-width: 380px) {
-            .brand-lockup {
-                gap: 13px;
-            }
-
-            .brand-symbol {
-                width: 62px;
-                height: 62px;
-                border-radius: 19px;
-            }
-
-            .brand-symbol svg {
-                width: 32px;
-                height: 32px;
-            }
+        @media (max-height: 500px) and (orientation: landscape) {
+            .intro { padding: 16px; }
+            .emblem { width: 200px; margin-bottom: 8px; }
+            .wordmark { font-size: 36px; }
+            .accent { margin-top: 14px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .brand-lockup,
-            .brand-symbol,
-            .brand-symbol::after,
-            .brand-symbol path,
-            .brand-wordmark {
-                animation: none;
+            *,
+            *::before,
+            *::after {
+                animation: none !important;
             }
 
-            .brand-symbol path {
-                stroke-dashoffset: 0;
-            }
-
-            .brand-symbol::after {
-                display: none;
-            }
+            .logo path { stroke-dashoffset: 0; }
+            .logo::after { display: none; }
         }
     </style>
 </head>
 
 <body>
-    <main class="brand-intro" aria-label="MBS Repair">
-        <div class="brand-lockup">
+    <main class="intro" aria-label="MBS Repair">
+        <div class="horizon" aria-hidden="true"></div>
 
-            <div class="brand-symbol" aria-hidden="true">
-                <svg viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="#ffffff"
-                     stroke-width="1.6"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
+        <div class="composition">
+            <div class="emblem" aria-hidden="true">
+                <div class="aura"></div>
+                <div class="orbit"></div>
+                <div class="orbit-inner"></div>
 
-                    <path
-                        pathLength="100"
-                        d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6
-                           1.6a1 1 0 0 0 1.4 0l3.2-3.2a6
-                           6 0 0 1-7.9 7.9l-7.3 7.3a2.1
-                           2.1 0 0 1-3-3L10 11a6 6 0 0
-                           1 7.9-7.9z"/>
-                </svg>
+                <div class="logo">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="#ffffff"
+                         stroke-width="1.6"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <path
+                            pathLength="100"
+                            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6
+                               1.6a1 1 0 0 0 1.4 0l3.2-3.2a6
+                               6 0 0 1-7.9 7.9l-7.3 7.3a2.1
+                               2.1 0 0 1-3-3L10 11a6 6 0 0
+                               1 7.9-7.9z"/>
+                    </svg>
+                </div>
             </div>
 
-            <p class="brand-wordmark" aria-hidden="true">
+            <p class="wordmark" aria-hidden="true">
                 MBS<span>Repair</span>
             </p>
 
+            <div class="accent" aria-hidden="true"></div>
         </div>
     </main>
 
@@ -351,7 +498,7 @@ session_write_close();
 
             const go = () => window.location.replace(destination);
 
-            window.setTimeout(go, reducedMotion ? 100 : 1500);
+            window.setTimeout(go, reducedMotion ? 100 : 2500);
 
             window.addEventListener('pageshow', event => {
                 if (event.persisted) go();
