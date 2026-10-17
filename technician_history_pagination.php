@@ -735,9 +735,18 @@ rsort($thYears);
         justify-content: center;
     }
 }
+
 /* ช่องว่างอยู่ให้ซ่อนปุ่ม พอพิมพ์ให้แสดงทันที */
 .th-search:has(input[name="hq"]:placeholder-shown) .th-search-clear {
     display: none;
+}
+
+.th-search-clear {
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
+    background: transparent;
+    cursor: pointer;
 }
 </style>
 
@@ -810,12 +819,17 @@ rsort($thYears);
                         placeholder="ค้นหาข้อมูลในตาราง..."
                         aria-label="ค้นหาข้อมูลในตาราง กด Enter เพื่อค้นหา">
 
-                    <a class="th-search-clear"
-                        href="<?= $thEscape($thUrl(1, ['hq' => ''])) ?>"
-                        aria-label="ล้างคำค้น">
-                        <i class="fas fa-times" aria-hidden="true"></i>
-                        ล้างค่า
-                    </a>
+                    <button type="button"
+                        class="th-search-clear"
+                        aria-label="ล้างคำค้น"
+                        onclick="
+                            const input = this.form.elements.namedItem('hq');
+                            input.value = '';
+                            input.focus({ preventScroll: true });
+                        ">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                    ล้างค่า
+                </button>
                 </form>
 
                 <div class="th-filter-group">
