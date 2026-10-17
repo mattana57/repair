@@ -1405,8 +1405,8 @@ if (isset($_GET['th_fragment'])
                         </div>
                     </div>
 
-                    <div class="modern-card p-6 flex flex-col">
-                        <div class="flex justify-between items-start sm:items-center gap-2 mb-4 w-full flex-col sm:flex-row flex-wrap">
+                    <div class="modern-card overflow-hidden flex flex-col h-full">
+                        <div class="p-4 md:p-5 border-b border-slate-100 flex justify-between items-start sm:items-center shrink-0 gap-2 w-full flex-col sm:flex-row flex-wrap">
                             <div class="flex-1 min-w-0 pr-2">
                                 <h3 class="font-extrabold text-slate-800 text-lg truncate">สถิติผู้ที่แจ้งซ่อมบ่อยที่สุด</h3>
                                 <p class="text-sm font-medium text-slate-400 mt-0.5 truncate">รายชื่อผู้ใช้งานที่คุณให้บริการบ่อย</p>
@@ -1436,8 +1436,24 @@ if (isset($_GET['th_fragment'])
                                 </div>
                             </div>
                         </div>
-                        <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar max-h-[280px]" id="topReportersContainer">
-                            <!-- Javascript จะวาดรายชื่อตรงนี้ -->
+                        <div class="px-4 md:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row flex-wrap sm:justify-between items-start sm:items-center shrink-0 z-10 shadow-sm gap-3">
+                            <div class="flex flex-wrap items-center justify-between sm:justify-start w-full sm:w-auto gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mr-1">จัดอันดับ:</span>
+                                    <div class="flex flex-wrap items-center gap-1.5" id="techReportersFilterContainer">
+                                        <button id="btnTechReporterTop3" onclick="setTechReporterLimit(3)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 3</button>
+                                        <button id="btnTechReporterTop5" onclick="setTechReporterLimit(5)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 5</button>
+                                        <button id="btnTechReporterTop10" onclick="setTechReporterLimit(10)" class="px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 shadow-sm">Top 10</button>
+                                        <button id="btnTechReporterTopAll_mobile" onclick="setTechReporterLimit('all')" class="sm:hidden px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700">ทั้งหมด</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="btnTechReporterTopAll" onclick="setTechReporterLimit('all')" class="hidden sm:block px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-full transition-colors bg-indigo-600 text-white shadow-sm border border-indigo-600 hover:bg-indigo-700 mt-1 sm:mt-0">ทั้งหมด</button>
+                        </div>
+                        <div class="p-0 overflow-y-auto flex-1 bg-white custom-scrollbar max-h-[380px]">
+                            <div class="divide-y divide-slate-100" id="topReportersContainer">
+                                <!-- Javascript จะวาดรายชื่อตรงนี้ -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1714,6 +1730,86 @@ if (isset($_GET['th_fragment'])
         }
 
         // 2. ฟังก์ชันวาดกราฟ
+        let techReporterLimit = 'all';
+
+        function setTechReporterLimit(limit) {
+            if (![3, 5, 10, 'all'].includes(limit)) return;
+            techReporterLimit = limit;
+            for (const [id, value] of [
+                ['btnTechReporterTop3', 3], ['btnTechReporterTop5', 5],
+                ['btnTechReporterTop10', 10], ['btnTechReporterTopAll', 'all'],
+                ['btnTechReporterTopAll_mobile', 'all']
+            ]) {
+                const button = document.getElementById(id);
+                if (!button) continue;
+                const active = value === limit;
+                for (const name of ['bg-indigo-600', 'text-white', 'border-indigo-600', 'hover:bg-indigo-700']) button.classList.toggle(name, active);
+                for (const name of ['bg-white', 'text-slate-600', 'border-slate-200', 'hover:bg-slate-50']) button.classList.toggle(name, !active);
+                button.setAttribute('aria-pressed', String(active));
+            }
+            renderTechReporterRanking();
+        }
+
+        function renderTechReporterRanking(reporterMap = null) {
+            if (reporterMap === null) {
+                reporterMap = {};
+                const rows = getFilteredRepairsByMonthYear(
+                    document.getElementById('repMonth').value,
+                    document.getElementById('repYear').value
+                );
+                rows.forEach(r => {
+                    const rawName = r.reporter_name || 'ไม่ระบุผู้แจ้ง';
+                    const name = lineUsersMap[rawName] ? lineUsersMap[rawName] : rawName;
+                    reporterMap[name] = (reporterMap[name] || 0) + 1;
+                });
+            }
+            let ranked = Object.keys(reporterMap).map(name => ({name, count: reporterMap[name]})).sort((a, b) => b.count - a.count);
+            if (techReporterLimit !== 'all') ranked = ranked.slice(0, techReporterLimit);
+            const container = document.getElementById('topReportersContainer');
+            if (!container) return;
+            if (!ranked.length) {
+                container.innerHTML = `<div class="p-10 flex flex-col items-center justify-center text-center min-h-[250px]">
+                    <i class="fas fa-user-tag text-4xl mb-3 text-slate-200"></i>
+                    <p class="text-slate-400 font-medium text-sm mt-2">ยังไม่มีผู้แจ้งซ่อม</p>
+                </div>`;
+                return;
+            }
+            const escape = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[char]));
+            container.innerHTML = ranked.map((r, index) => {
+                const rankColor = index === 0 ? 'text-[#eab308] bg-[#fefce8] border-[#fde047]' :
+                    index === 1 ? 'text-[#94a3b8] bg-[#f8fafc] border-[#e2e8f0]' :
+                    index === 2 ? 'text-[#d97706] bg-[#fffbeb] border-[#fde68a]' :
+                    'text-indigo-500 bg-indigo-50 border-indigo-100';
+                const rankIcon = index === 0 ? '<i class="fas fa-trophy text-lg drop-shadow-sm"></i>' :
+                    index < 3 ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>' :
+                    `<span class="text-sm font-black">#${index + 1}</span>`;
+                // ใช้หน้าประวัติและการค้นหาเดิม ซึ่งยังตรวจสิทธิ์เจ้าของงานฝั่ง PHP
+                const query = new URLSearchParams({
+                    tab: 'history', hd: 'all',
+                    hm: document.getElementById('repMonth').value,
+                    hy: document.getElementById('repYear').value,
+                    hs: 'all', hq: String(r.name), hp: '1'
+                });
+                const href = escape('technician_home.php?' + query.toString() + '#tab-content-history');
+                return `<a href="${href}" class="p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group no-underline" title="ค้นหาประวัติงานของ ${escape(r.name)}">
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${rankColor} shrink-0 group-hover:scale-110 transition-transform">${rankIcon}</div>
+                        <div class="min-w-0">
+                            <div class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors break-words">${escape(r.name)}</div>
+                            <div class="text-[11px] text-slate-400 font-medium mt-0.5">บุคลากรผู้แจ้งซ่อม</div>
+                        </div>
+                    </div>
+                    <div class="text-right flex items-center shrink-0 ml-3">
+                        <div class="flex flex-col items-end">
+                            <span class="text-xl font-extrabold text-indigo-600">${r.count}</span>
+                            <span class="text-[11px] text-slate-500 font-medium ml-1">รายการ</span>
+                        </div>
+                        <div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div>
+                    </div>
+                </a>`;
+            }).join('');
+        }
+
         function renderAllCharts() {
             let pending = 0, progress = 0, completed = 0;
             let eqMap = {}, locMap = {}, reporterMap = {};
@@ -1855,45 +1951,8 @@ if (isset($_GET['th_fragment'])
             });
 
             // ==========================================
-            // Top Reporters List (การ์ดเหรียญรางวัล)
-            let repSorted = Object.keys(reporterMap).map(k => ({name: k, count: reporterMap[k]})).sort((a,b) => b.count - a.count).slice(0, 5);
-            const repContainer = document.getElementById('topReportersContainer');
-            if (repSorted.length === 0) {
-                repContainer.innerHTML = `<div class='py-10 flex flex-col items-center justify-center text-center'>
-                    <div class='w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-3'><i class='fas fa-user-tag text-2xl text-slate-300'></i></div>
-                    <p class='text-slate-400 font-bold text-sm'>ยังไม่มีผู้แจ้งซ่อม</p>
-                </div>`;
-            } else {
-                let html = '<ul class="divide-y divide-slate-100">';
-                repSorted.forEach((r, index) => {
-                    let rankIcon = index === 0 ? '<i class="fas fa-trophy text-lg text-amber-500 drop-shadow-sm"></i>' :
-                                   index === 1 ? '<i class="fas fa-medal text-lg text-slate-400 drop-shadow-sm"></i>' :
-                                   index === 2 ? '<i class="fas fa-medal text-lg text-amber-600 drop-shadow-sm"></i>' :
-                                   `<span class="text-sm font-black text-indigo-500">#${index + 1}</span>`;
-                    let rankBg = index === 0 ? 'bg-[#fefce8] border-[#fde047]' : 
-                                 index === 1 ? 'bg-[#f8fafc] border-[#e2e8f0]' : 
-                                 index === 2 ? 'bg-[#fffbeb] border-[#fde68a]' : 'bg-indigo-50 border-indigo-100';
-                    
-                    html += `
-                        <li class="py-3 flex justify-between items-center hover:bg-slate-50/50 p-2 rounded-xl transition-colors cursor-default">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center border shadow-sm shrink-0 ${rankBg}">${rankIcon}</div>
-                                <div>
-                                    <p class="font-bold text-slate-800 text-sm">${r.name}</p>
-                                    <p class="text-[11px] text-slate-400 font-medium mt-0.5">บุคลากรผู้แจ้งซ่อม</p>
-                                </div>
-                            </div>
-                            <div class="text-right flex items-center gap-3">
-                                <div>
-                                    <p class="font-extrabold text-indigo-600 text-xl leading-none">${r.count}</p>
-                                    <p class="text-[10px] text-slate-400 font-medium mt-1">รายการ</p>
-                                </div>
-                            </div>
-                        </li>`;
-                });
-                html += '</ul>';
-                repContainer.innerHTML = html;
-            }
+            // จัดอันดับเฉพาะรายชื่อในช่วงเดือน/ปีที่เลือก
+            renderTechReporterRanking(reporterMap);
         }
 
         // 3. ฟังก์ชันวาดตารางย่อ (หน้า Dash) ดึงแค่ 5 อันล่าสุด
