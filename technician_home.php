@@ -762,8 +762,175 @@ $current_thai_year = date('Y') + 543;
             min-width: 720px !important;
         }
 
-        .tech-dashboard-ui #repairsMainCard table {
-            min-width: 1120px !important;
+        /* ตารางประวัติงาน: เลื่อนขึ้น–ลงและแสดงข้อมูลครบ */
+        .tech-dashboard-ui #repairsMainCard .history-table-scroll {
+            width: 100%;
+            min-width: 0;
+            min-height: 0;
+            max-height: 70vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .tech-dashboard-ui #repairsMainCard #historyTableFull {
+            width: 100% !important;
+            min-width: 0 !important;
+            table-layout: fixed !important;
+            white-space: normal !important;
+        }
+
+        .tech-dashboard-ui #historyTableFull th,
+        .tech-dashboard-ui #historyTableFull td {
+            padding: 14px 8px !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+            word-break: normal !important;
+            letter-spacing: 0 !important;
+        }
+
+        .tech-dashboard-ui #historyTableFull td > *,
+        .tech-dashboard-ui #historyTableFull td div,
+        .tech-dashboard-ui #historyTableFull td span {
+            min-width: 0;
+            max-width: 100%;
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+        }
+
+        /* แสดงรายละเอียดเต็ม ไม่ตัดข้อความด้วยจุดไข่ปลา */
+        .tech-dashboard-ui #historyTableFull .truncate {
+            overflow: visible;
+            text-overflow: clip;
+            white-space: normal !important;
+        }
+
+        /* ให้ชื่อผู้แจ้งตัดบรรทัดได้ภายในช่อง */
+        .tech-dashboard-ui #historyTableFull td:nth-child(3) > .flex > div:last-child {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* สัดส่วนคอลัมน์รวม 100% */
+        .tech-dashboard-ui #historyTableFull th:nth-child(1)  { width: 9%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(2)  { width: 7%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(3)  { width: 13%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(4)  { width: 11%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(5)  { width: 12%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(6)  { width: 11%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(7)  { width: 9%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(8)  { width: 9%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(9)  { width: 8%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(10) { width: 8%; }
+        .tech-dashboard-ui #historyTableFull th:nth-child(11) { width: 3%; }
+
+        .tech-dashboard-ui #historyTableFull td:last-child,
+        .tech-dashboard-ui #historyTableFull th:last-child {
+            padding-left: 3px !important;
+            padding-right: 3px !important;
+        }
+
+        .tech-dashboard-ui #historyTableFull td:last-child a {
+            max-width: 100%;
+        }
+
+        /* จอเล็ก: แสดงข้อมูลครบโดยเรียงลงแทนการบีบ 11 คอลัมน์ */
+        @media (max-width: 1199px) {
+            .tech-dashboard-ui #historyTableFull,
+            .tech-dashboard-ui #historyTableFull tbody {
+                display: block;
+            }
+
+            .tech-dashboard-ui #historyTableFull thead {
+                display: none;
+            }
+
+            .tech-dashboard-ui #historyTableFull tbody tr {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0 18px;
+                padding: 12px 16px;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .tech-dashboard-ui #historyTableFull tbody td {
+                display: block;
+                width: auto !important;
+                min-width: 0;
+                padding: 12px 0 !important;
+                text-align: left;
+            }
+
+            .tech-dashboard-ui #historyTableFull tbody td::before {
+                display: block;
+                margin-bottom: 6px;
+                color: #64748b;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(1)::before {
+                content: "วันที่ / เวลาแจ้ง";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(2)::before {
+                content: "เลขที่ใบงาน";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(3)::before {
+                content: "ผู้แจ้ง";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(4)::before {
+                content: "อุปกรณ์ / รายละเอียด";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(5)::before {
+                content: "ฝ่ายงาน / ตำแหน่ง";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(6)::before {
+                content: "เจ้าหน้าที่";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(7)::before {
+                content: "วันที่ / เวลารับงาน";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(8)::before {
+                content: "สาเหตุ / หมายเหตุ";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(9)::before {
+                content: "สถานะ";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(10)::before {
+                content: "วันที่ / เวลาซ่อมเสร็จ";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:nth-child(11)::before {
+                content: "จัดการใบงาน";
+            }
+
+            .tech-dashboard-ui #historyTableFull td:last-child > .flex {
+                justify-content: flex-start;
+            }
+
+            /* แถวแจ้งว่าไม่พบข้อมูล */
+            .tech-dashboard-ui #historyTableFull td[colspan] {
+                grid-column: 1 / -1;
+                text-align: center;
+            }
+
+            .tech-dashboard-ui #historyTableFull td[colspan]::before {
+                content: none;
+            }
+        }
+
+        @media (max-width: 479px) {
+            .tech-dashboard-ui #historyTableFull tbody tr {
+                grid-template-columns: minmax(0, 1fr);
+            }
         }
 
         .tech-dashboard-ui main table thead {
@@ -1352,8 +1519,8 @@ $current_thai_year = date('Y') + 543;
                     </div>
 
                     <!-- ตารางแบบ History Modal (แสดงครบถ้วนเหมือน Admin) -->
-                    <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
-                        <table class="w-full text-left whitespace-nowrap min-w-[1100px]" id="historyTableFull">
+                    <div class="history-table-scroll w-full pb-4 custom-scrollbar">
+                        <table class="w-full text-left" id="historyTableFull">
                             <thead class="bg-[#fef9c3] text-[#854d0e] text-xs uppercase tracking-widest font-bold border-b border-[#fef08a] sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-4 border-0">Date / Time</th>
