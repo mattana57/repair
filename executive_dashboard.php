@@ -372,113 +372,155 @@ function execPageRows($result, $kind, $line_users_map, $tech_info_map, $tech_dep
         echo "<tr><td colspan='12' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>";
     }
     while ($row = $result->fetch_assoc()) {
-                                        $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
-                                        
-                                        $ticket_no = formatEmptyOrDash($row['ticket_no']);
-                                        $raw_rep = trim((string)$row['reporter_name']);
-                                        $disp_name = $raw_rep;
-                                        if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['real_name'])) {
-                                            $disp_name = $line_users_map[$raw_rep]['real_name'];
-                                        }
-                                        $reporter_name = formatEmptyOrDash($disp_name);
-                                        $phone_number = formatEmptyOrDash($row['phone_number']);
-                                        $equipment_type = formatEmptyOrDash($row['equipment_type']);
-                                        $problem_desc = formatEmptyOrDash($row['problem_desc']);
-                                        
-                                        $t_pos = ''; $t_eng = ''; $t_th = '';
-                                        if (!empty($row['technician_name']) && $row['technician_name'] !== '-') {
-                                            $t_raw = $row['technician_name'];
-                                            if (isset($tech_info_map[$t_raw])) {
-                                                $t_th = htmlspecialchars($tech_info_map[$t_raw]['th']);
-                                                $t_eng = htmlspecialchars($tech_info_map[$t_raw]['eng']);
-                                                $t_pos = htmlspecialchars($tech_info_map[$t_raw]['pos']);
-                                            } else {
-                                                list($th_name, $en_name) = splitThaiEngName($t_raw, '');
-                                                $t_th = htmlspecialchars($th_name);
-                                                $t_eng = htmlspecialchars($en_name);
-                                                $t_pos = htmlspecialchars(getAutoPosition($th_name));
-                                            }
-                                            $techHtml = "<div class='text-blue-600 font-bold cursor-default'>{$t_th}</div>";
-                                            if (!empty($t_eng)) {
-                                                $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
-                                            }
-                                            $techName = $techHtml;
-                                        } else {
-                                            $techName = "<span class='text-rose-500 font-bold'>-</span>";
-                                        }
+        $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
+        
+        $ticket_no = formatEmptyOrDash($row['ticket_no']);
+        $raw_rep = trim((string)$row['reporter_name']);
+        $disp_name = $raw_rep;
+        if (isset($line_users_map[$raw_rep]) && !empty($line_users_map[$raw_rep]['real_name'])) {
+            $disp_name = $line_users_map[$raw_rep]['real_name'];
+        }
+        $reporter_name = formatEmptyOrDash($disp_name);
+        $phone_number = formatEmptyOrDash($row['phone_number']);
+        $equipment_type = formatEmptyOrDash($row['equipment_type']);
+        $problem_desc = formatEmptyOrDash($row['problem_desc']);
+        
+        $t_pos = ''; $t_eng = ''; $t_th = '';
+        if (!empty($row['technician_name']) && $row['technician_name'] !== '-') {
+            $t_raw = $row['technician_name'];
+            if (isset($tech_info_map[$t_raw])) {
+                $t_th = htmlspecialchars($tech_info_map[$t_raw]['th']);
+                $t_eng = htmlspecialchars($tech_info_map[$t_raw]['eng']);
+                $t_pos = htmlspecialchars($tech_info_map[$t_raw]['pos']);
+            } else {
+                list($th_name, $en_name) = splitThaiEngName($t_raw, '');
+                $t_th = htmlspecialchars($th_name);
+                $t_eng = htmlspecialchars($en_name);
+                $t_pos = htmlspecialchars(getAutoPosition($th_name));
+            }
+            $techHtml = "<div class='text-blue-600 font-bold cursor-default'>{$t_th}</div>";
+            if (!empty($t_eng)) {
+                $techHtml .= "<div class='text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5'>{$t_eng}</div>";
+            }
+            $techName = $techHtml;
+        } else {
+            $techName = "<span class='text-rose-500 font-bold'>-</span>";
+        }
 
-                                        $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
-                                        if (empty($row['technician_name']) || $row['technician_name'] === '-') {
-                                            $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
-                                        } else {
-                                            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>{$dept_str}</div>";
-                                            if (!empty($t_pos)) {
-                                                $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
-                                            }
-                                        }
+        $dept_str = isset($tech_dept_map[$row['technician_name']]) ? $tech_dept_map[$row['technician_name']] : 'General';
+        if (empty($row['technician_name']) || $row['technician_name'] === '-') {
+            $deptEng = "<span class='text-rose-500 font-bold'>-</span>";
+        } else {
+            $deptEng = "<div class='px-2.5 py-1 inline-block bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-bold tracking-wider mb-1 shadow-sm'>{$dept_str}</div>";
+            if (!empty($t_pos)) {
+                $deptEng .= "<div class='text-slate-500 font-bold text-[11px] ml-2.5 mt-0.5'>{$t_pos}</div>";
+            }
+        }
 
-                                        $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-                                        $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
-                                        $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
+        $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
+        $created_date = $has_created ? date('Y-m-d', strtotime($row['created_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+        $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
+        $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
 
-                                        // ✨ บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันทีในจังหวะเดียวกันเป๊ะ 100% ✨
-                                        $raw_rec = (!empty($row['received_at']) && $row['received_at'] != '0000-00-00 00:00:00' && $row['received_at'] != '-') ? $row['received_at'] : (($row['status'] !== 'รอรับเรื่อง') ? date('Y-m-d H:i:s') : '');
-                                        $has_received = !empty($raw_rec);
-                                        $received_date = $has_received ? date('Y-m-d', strtotime($raw_rec)) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $received_time = $has_received ? date('H:i', strtotime($raw_rec)) : '';
-                                        $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
+        // ✨ บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันทีในจังหวะเดียวกันเป๊ะ 100% ✨
+        $raw_rec = (!empty($row['received_at']) && $row['received_at'] != '0000-00-00 00:00:00' && $row['received_at'] != '-') ? $row['received_at'] : (($row['status'] !== 'รอรับเรื่อง') ? date('Y-m-d H:i:s') : '');
+        $has_received = !empty($raw_rec);
+        $received_date = $has_received ? date('Y-m-d', strtotime($raw_rec)) : "<span class='text-rose-500 font-bold'>-</span>";
+        $received_time = $has_received ? date('H:i', strtotime($raw_rec)) : '';
+        $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
 
-                                        $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
-                                        $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
-                                        $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
-                                        $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
+        $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
+        $completed_date = $has_completed ? date('Y-m-d', strtotime($row['completed_at'])) : "<span class='text-rose-500 font-bold'>-</span>";
+        $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
+        $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
 
-                                        $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
+        $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
 
-                                        $imageIcon = "";
-                                        if(isset($row['image_path']) && !empty($row['image_path'])) {
-                                            $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                                        }
+        $imageIcon = "";
+        if(isset($row['image_path']) && !empty($row['image_path'])) {
+            $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
+        }
 
 
         if ($kind === 'history') {
             $techName = str_replace('text-blue-600', 'text-indigo-600', $techName);
-            echo ;
+            $historyId = (int)$row['id'];
+            $historyStatus = formatEmptyOrDash($row['status']);
+            $historyDescTitle = strip_tags($problem_desc);
+            echo <<<HTML
+                <tr class="hover:bg-slate-50/50 transition-colors search-row border-b border-slate-100 last:border-0">
+                    <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">{$historyId}</td>
+                    <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
+                        <div class="font-medium text-slate-700">{$created_date}</div>
+                        {$created_time_html}
+                    </td>
+                    <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">{$ticket_no}</td>
+                    <td class="px-6 py-4 align-top">
+                        <div class='flex items-center'>
+                            <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas fa-user text-xs text-slate-400'></i></div>
+                            <div>
+                                <div class="text-slate-800 font-bold">{$reporter_name}</div>
+                                <div class="text-slate-500 text-[11px] font-medium mt-0.5">{$phone_number}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 align-top">
+                        <div class="text-slate-800 font-bold">{$equipment_type} {$imageIcon}</div>
+                        <div class="text-slate-500 text-[11px] font-medium mt-0.5 max-w-[180px] truncate" title="{$historyDescTitle}">{$problem_desc}</div>
+                    </td>
+                    <td class="px-6 py-4 align-top">{$deptEng}</td>
+                    <td class="px-6 py-4 align-top">{$techName}</td>
+                    <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
+                        <div class='font-medium text-slate-700'>{$received_date}</div>
+                        {$received_time_html}
+                    </td>
+                    <td class="px-6 py-4 align-top">{$rootCause}</td>
+                    <td class="px-6 py-4 align-middle text-center"><span class="{$stClass}">{$historyStatus}</span></td>
+                    <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
+                        <div class='font-medium text-emerald-700'>{$completed_date}</div>
+                        {$completed_time_html}
+                    </td>
+                    <td class="px-6 py-4 align-middle text-center">
+                        <div class='flex items-center justify-center'>
+                            <div onclick='openReviewTab({$historyId})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
+                        </div>
+                    </td>
+                </tr>
+        HTML;
         } else {
-                                        echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
-                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-slate-700'>{$created_date}</div>
-                                                {$created_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
-                                            <td class='px-6 py-4 align-top'>
-                                                <div class='text-slate-800 font-bold'>{$reporter_name}</div>
-                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>
-                                                <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
-                                                <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='".strip_tags($problem_desc)."'>{$problem_desc}</div>
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>{$deptEng}</td>
-                                            <td class='px-6 py-4 align-top'>{$techName}</td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-slate-700'>{$received_date}</div>
-                                                {$received_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-top'>{$rootCause}</td>
-                                            <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
-                                            <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
-                                                <div class='font-medium text-emerald-700'>{$completed_date}</div>
-                                                {$completed_time_html}
-                                            </td>
-                                            <td class='px-6 py-4 align-middle text-center'>
-                                                <div class='flex items-center justify-center'>
-                                                    <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
-                                                </div>
-                                            </td>
-                                        </tr>";
+            echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+                <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
+                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                    <div class='font-medium text-slate-700'>{$created_date}</div>
+                    {$created_time_html}
+                </td>
+                <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
+                <td class='px-6 py-4 align-top'>
+                    <div class='text-slate-800 font-bold'>{$reporter_name}</div>
+                    <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
+                </td>
+                <td class='px-6 py-4 align-top'>
+                    <div class='text-slate-800 font-bold'>{$equipment_type} {$imageIcon}</div>
+                    <div class='text-slate-500 text-[11px] font-medium mt-0.5 max-w-[150px] truncate' title='".strip_tags($problem_desc)."'>{$problem_desc}</div>
+                </td>
+                <td class='px-6 py-4 align-top'>{$deptEng}</td>
+                <td class='px-6 py-4 align-top'>{$techName}</td>
+                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                    <div class='font-medium text-slate-700'>{$received_date}</div>
+                    {$received_time_html}
+                </td>
+                <td class='px-6 py-4 align-top'>{$rootCause}</td>
+                <td class='px-6 py-4 align-middle text-center'><span class='{$stClass}'>{$row['status']}</span></td>
+                <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
+                    <div class='font-medium text-emerald-700'>{$completed_date}</div>
+                    {$completed_time_html}
+                </td>
+                <td class='px-6 py-4 align-middle text-center'>
+                    <div class='flex items-center justify-center'>
+                        <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
+                    </div>
+                </td>
+            </tr>";
         }
     }
     $result->free();
