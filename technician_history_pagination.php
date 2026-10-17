@@ -107,13 +107,46 @@ if ($thOnHistory) {
             $thColumns[] = 'CAST(`' . $columnName . '` AS CHAR)';
         }
 
-        $thWhere .=
-            " AND LOCATE(LOWER(?), LOWER(CONCAT_WS(' ', "
-            . implode(', ', $thColumns)
-            . '))) > 0';
+        // ข้อมูลเจ้าหน้าที่ที่นำมาแสดงจากตาราง technicians
+        $thStaffInfo = $tech_info_map[$full_name] ?? [];
 
-        $thTypes .= 's';
+        $thStaffText = implode(' ', [
+            (string) $full_name,
+            (string) ($thStaffInfo['eng'] ?? ''),
+            (string) ($thStaffInfo['pos'] ?? ''),
+            (string) ($tech_dept_map[$full_name] ?? ''),
+        ]);
+
+        // ค้นหาฟิลด์ใบงานทั้งหมด พร้อมข้อมูลเจ้าหน้าที่ที่แสดงในตาราง
+        $thWhere .=
+            " AND (LOCATE(LOWER(?), LOWER(CONCAT_WS(' ', "
+            . implode(', ', $thColumns)
+            . '))) > 0'
+            . ' OR LOCATE(LOWER(?), LOWER(?)) > 0';
+
+        $thTypes .= 'sss';
         $thParams[] = $thSearch;
+        $thParams[] = $thSearch;
+        $thParams[] = $thStaffText;
+
+        // ค้นหาชื่อจริงผู้แจ้งที่แสดงจาก line_users ได้ด้วย
+        if (!empty($line_users_map)) {
+            $thWhere .=
+                ' OR EXISTS (
+                    SELECT 1
+                    FROM line_users AS th_reporter
+                    WHERE th_reporter.line_display_name = repairs.reporter_name
+                    AND LOCATE(
+                        LOWER(?),
+                        LOWER(COALESCE(th_reporter.real_name, \'\'))
+                    ) > 0
+                )';
+
+            $thTypes .= 's';
+            $thParams[] = $thSearch;
+        }
+
+        $thWhere .= ')';
     }
 
     $thRun = static function ($sql, $types, $params) use ($conn) {

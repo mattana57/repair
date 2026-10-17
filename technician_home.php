@@ -188,6 +188,19 @@ if($years_query && $years_query->num_rows > 0) {
 $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 $current_month_name = $thai_months[date('n')];
 $current_thai_year = date('Y') + 543;
+
+// ส่งเฉพาะส่วนประวัติงานให้ช่องค้นหา
+// มาถึงจุดนี้ได้หลังผ่าน Guard และตรวจเจ้าหน้าที่ตามเดิมแล้ว
+if (isset($_GET['th_fragment'])
+    && is_string($_GET['th_fragment'])
+    && $_GET['th_fragment'] === '1') {
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: no-store');
+
+    define('MBS_TECH_HISTORY', true);
+    require __DIR__ . '/technician_history_pagination.php';
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -2018,5 +2031,160 @@ $current_thai_year = date('Y') + 543;
             }
         })();
     </script>
+
+    <script>
+    (() => {
+        const form = document.querySelector('#repairsMainCard .th-search');
+        if (!form) return;
+
+        const input = form.elements.namedItem('hq');
+
+        let timer;
+        let controller;
+        let version = 0;
+        let composing = false;
+
+        async function search(currentVersion) {
+            controller = new AbortController();
+
+            const url = new URL(form.action, window.location.href);
+            url.search = new URLSearchParams(new FormData(form)).toString();
+            url.searchParams.set('tab', 'history');
+            url.searchParams.set('hp', '1');
+            url.searchParams.set('th_fragment', '1');
+            url.hash = '';
+
+            const tbody = document.getElementById('historyTableBody');
+            tbody.setAttribute('aria-busy', 'true');
+
+            const oldError = form.querySelector('.th-search-error');
+            if (oldError) oldError.remove();
+
+            try {
+                const response = await fetch(url.href, {
+                    signal: controller.signal,
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                });
+
+                if (currentVersion !== version) return;
+
+                if (response.redirected) {
+                    window.location.assign(response.url);
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Search failed');
+                }
+
+                const html = await response.text();
+
+                // ไม่ให้ผลคำค้นเก่าทับคำค้นที่พิมพ์ใหม่
+                if (currentVersion !== version) return;
+
+                const doc = new DOMParser().parseFromString(
+                    html,
+                    'text/html'
+                );
+
+                const nextBody = doc.getElementById('historyTableBody');
+                const nextFooter = doc.querySelector('.th-pagination');
+
+                if (!nextBody || !nextFooter) {
+                    throw new Error('Invalid response');
+                }
+
+                // แถวและแถบแบ่งหน้าชุดใหม่สร้างโดย PHP
+                tbody.innerHTML = nextBody.innerHTML;
+
+                document.querySelector('#repairsMainCard .th-pagination')
+                    .replaceWith(document.importNode(nextFooter, true));
+
+                // เริ่มดูผลค้นหาจากแถวแรก โดยไม่เลื่อนหน้าเว็บ
+                document.getElementById('repairsTableContainer').scrollTop = 0;
+
+                url.searchParams.delete('th_fragment');
+                url.hash = window.location.hash;
+
+                window.history.replaceState(
+                    window.history.state,
+                    '',
+                    url.href
+                );
+
+                // ให้ตัวกรองเก็บคำค้นล่าสุดไว้
+                document.querySelectorAll(
+                    '#repairsMainCard .th-filter-group a'
+                ).forEach(link => {
+                    const target = new URL(link.href);
+                    target.searchParams.set('hq', input.value.trim());
+                    target.searchParams.set('hp', '1');
+                    link.href = target.href;
+                });
+
+            } catch (error) {
+                if (error.name === 'AbortError'
+                    || currentVersion !== version) {
+                    return;
+                }
+
+                const message = document.createElement('span');
+                message.className = 'th-search-error';
+                message.setAttribute('role', 'alert');
+                message.style.cssText =
+                    'display:block;color:#e11d48;font-size:12px;margin-top:6px';
+
+                message.textContent =
+                    'ค้นหาไม่สำเร็จ กรุณากด Enter เพื่อลองอีกครั้ง';
+
+                form.appendChild(message);
+
+            } finally {
+                if (currentVersion === version) {
+                    tbody.removeAttribute('aria-busy');
+                }
+            }
+        }
+
+        function queue(immediate = false) {
+            clearTimeout(timer);
+
+            if (controller) controller.abort();
+
+            const currentVersion = ++version;
+
+            if (composing) return;
+
+            if (immediate) {
+                search(currentVersion);
+            } else {
+                timer = setTimeout(
+                    () => search(currentVersion),
+                    350
+                );
+            }
+        }
+
+        input.addEventListener('compositionstart', () => {
+            composing = true;
+            queue();
+        });
+
+        input.addEventListener('compositionend', () => {
+            composing = false;
+            queue();
+        });
+
+        input.addEventListener('input', () => queue());
+
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+
+            if (!composing) queue(true);
+        });
+    })();
+    </script>
+    
 </body>
 </html>
