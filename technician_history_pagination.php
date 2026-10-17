@@ -859,6 +859,7 @@ rsort($thYears);
                             const input = this.form.elements.namedItem('hq');
                             input.value = '';
                             input.focus({ preventScroll: true });
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
                         ">
                     <i class="fas fa-times" aria-hidden="true"></i>
                     ล้างค่า
