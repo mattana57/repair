@@ -306,7 +306,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'ตรวจสอบบัญชีและเข้าสู่ระบบสำเร็จ'
             );
 
-            header("Location: " . $redirect);
+            $_SESSION['login_intro'] = [
+                'user_id' => (int) $user['id'],
+                'auth_version' => (int) $user['auth_version'],
+                'role' => $role_lower,
+                'destination' => $redirect,
+                'issued_at' => time(),
+            ];
+
+            header('Location: login_intro.php', true, 303);
             exit();
             
         } else {
