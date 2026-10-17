@@ -13,7 +13,7 @@ $conn->set_charset("utf8mb4");
 
 // ✨ 2. อัปเดตข้อมูล Session ก่อนเช็คสิทธิ์ เพื่อป้องกันการจำค่าสิทธิ์ผิดเพี้ยนเวลา Refresh ✨
 $uid_chk = intval($_SESSION['user_id']);
-$user_chk_q = $conn->query("SELECT role, full_name, english_name, username FROM users WHERE id = $uid_chk");
+$user_chk_q = $conn->query("SELECT role, full_name, english_name, username FROM users WHERE id = $uid_chk AND deleted_at IS NULL");
 if ($user_chk_q && $user_chk_q->num_rows > 0) {
     $u_data = $user_chk_q->fetch_assoc();
     if (!is_string($u_data['role']) || $u_data['role'] !== $_SESSION['role']) {
@@ -41,6 +41,9 @@ if ($current_role === 'executive') {
     header("Location: login.php?error=unauthorized_role");
     exit();
 }
+
+define('MBS_ADMIN_TRASH', true);
+require_once __DIR__ . '/admin_trash.php';
 
 // ข้อ 1: แอดมินเชื่อมบัญชีเว็บเดิมกับข้อมูลช่างเดิม
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
@@ -148,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
 
         $admin_statement = $run_link_statement(
             "SELECT role, is_active, auth_version
-             FROM users WHERE id = ? FOR UPDATE",
+             FROM users WHERE id = ? AND deleted_at IS NULL FOR UPDATE",
             'i',
             [$admin_link_id]
         );
@@ -207,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
 
         $account_statement = $run_link_statement(
             "SELECT id, username, password, role, technician_id
-             FROM users WHERE id = ? FOR UPDATE",
+             FROM users WHERE id = ? AND deleted_at IS NULL FOR UPDATE",
             'i',
             [$link_user_id]
         );
@@ -676,7 +679,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
 // จัดการโครงสร้างฐานข้อมูลผ่าน phpMyAdmin เท่านั้น
 // คงคำสั่งจัดการข้อมูลเดิมไว้
 
-$res_fix = $conn->query("SELECT id FROM technicians WHERE approval_status IN ('รออนุมัติ', 'รอผูกบัญชี') AND (secret_code IS NULL OR secret_code = '')");
+$res_fix = $conn->query("SELECT id FROM technicians WHERE deleted_at IS NULL AND approval_status IN ('รออนุมัติ', 'รอผูกบัญชี') AND (secret_code IS NULL OR secret_code = '')");
 if ($res_fix && $res_fix->num_rows > 0) {
     while($rf = $res_fix->fetch_assoc()) {
         $code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
@@ -689,7 +692,7 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
     $conn->query("INSERT INTO users (username, full_name, phone, department, role) 
                   SELECT CONCAT('U', REPLACE(phone_number, '-', '')), reporter_name, phone_number, 'บุคลากรทั่วไป', 'User' 
                   FROM repairs 
-                  WHERE reporter_name IS NOT NULL AND reporter_name != '' AND reporter_name NOT IN (SELECT full_name FROM users WHERE full_name IS NOT NULL) 
+                  WHERE deleted_at IS NULL AND reporter_name IS NOT NULL AND reporter_name != '' AND reporter_name NOT IN (SELECT full_name FROM users WHERE full_name IS NOT NULL) 
                   GROUP BY reporter_name, phone_number");
 }
 
@@ -703,9 +706,9 @@ if($check_repairs_list && $check_repairs_list->num_rows > 0) {
     // ✨ สแตมป์เวลารับงาน (received_at) อัตโนมัติแบบเรียลไทม์ทันทีที่ช่างกดรับงานผ่าน LINE ✨
     date_default_timezone_set('Asia/Bangkok');
     $now_realtime = date('Y-m-d H:i:s');
-    $conn->query("UPDATE repairs SET received_at = IF(completed_at IS NOT NULL AND completed_at != '0000-00-00 00:00:00', completed_at, '$now_realtime') WHERE status != 'รอรับเรื่อง' AND (received_at IS NULL OR received_at = '0000-00-00 00:00:00' OR received_at = '' OR received_at = '-')");
+    $conn->query("UPDATE repairs SET received_at = IF(completed_at IS NOT NULL AND completed_at != '0000-00-00 00:00:00', completed_at, '$now_realtime') WHERE deleted_at IS NULL AND status != 'รอรับเรื่อง' AND (received_at IS NULL OR received_at = '0000-00-00 00:00:00' OR received_at = '' OR received_at = '-')");
 
-    $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
+    $select_query = "SELECT * FROM repairs WHERE deleted_at IS NULL ORDER BY created_at DESC";
     $rep_res = $conn->query($select_query);
     $reps = [];
     if($rep_res) {
@@ -772,7 +775,7 @@ $default_positions = ['นักวิชาการคอมพิวเตอ
 $all_positions = array_values(array_unique(array_merge($default_positions, $db_positions)));
 $available_positions_json = json_encode($all_positions, JSON_UNESCAPED_UNICODE);
 
-$years_query = $conn->query("SELECT DISTINCT YEAR(created_at) as y FROM repairs WHERE created_at IS NOT NULL ORDER BY y DESC");
+$years_query = $conn->query("SELECT DISTINCT YEAR(created_at) as y FROM repairs WHERE deleted_at IS NULL AND created_at IS NOT NULL ORDER BY y DESC");
 $available_years = [];
 if($years_query && $years_query->num_rows > 0) {
     while($y_row = $years_query->fetch_assoc()) {
@@ -956,13 +959,6 @@ if (isset($_GET['delete_profile_picture'])
     }
 }
 
-if (isset($_GET['delete_asset'])) {
-    if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
-    $del_id = intval($_GET['delete_asset']);
-    $conn->query("DELETE FROM assets WHERE id = $del_id");
-    echo "<script>$js_redirect</script>";
-}
-
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
     $asset_id = $_POST['asset_id'];
@@ -975,150 +971,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_asset'])) {
         $stmt = $conn->prepare("INSERT INTO assets (asset_code, asset_name, category, status) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssss", $asset_code, $asset_name, $category, $status);
     } else {
-        $stmt = $conn->prepare("UPDATE assets SET asset_code=?, asset_name=?, category=?, status=? WHERE id=?");
+        $stmt = $conn->prepare("UPDATE assets SET asset_code=?, asset_name=?, category=?, status=? WHERE id=? AND deleted_at IS NULL");
         $stmt->bind_param("ssssi", $asset_code, $asset_name, $category, $status, $asset_id);
     }
     $stmt->execute();
     echo "<script>$js_redirect</script>";
-}
-
-if (isset($_GET['delete_tech'])) {
-    $archive_started = false;
-    $archive_commit_attempted = false;
-    $archive_ok = false;
-    $archive_message = 'ไม่สามารถลบช่างได้ กรุณาลองใหม่';
-
-    try {
-        $archive_token = $_GET['csrf_token'] ?? null;
-        if (!is_string($archive_token)
-            || !is_string($_SESSION['csrf_token'] ?? null)
-            || !hash_equals($_SESSION['csrf_token'], $archive_token)) {
-            throw new RuntimeException('Invalid archive token');
-        }
-
-        $archive_id = authGuardPositiveInt($_GET['delete_tech']);
-        if ($archive_id === false) {
-            throw new RuntimeException('Invalid technician ID');
-        }
-
-        // ตรวจความพร้อมเท่านั้น ไม่สร้างหรือแก้โครงสร้างฐานข้อมูล
-        $archive_engines = $conn->query(
-            "SELECT TABLE_NAME, ENGINE FROM information_schema.TABLES
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME IN ('users', 'technicians')"
-        );
-        if (!$archive_engines || $archive_engines->num_rows !== 2) {
-            throw new RuntimeException('Archive table check failed');
-        }
-        while ($archive_engine = $archive_engines->fetch_assoc()) {
-            if (strtoupper((string) $archive_engine['ENGINE']) !== 'INNODB') {
-                throw new RuntimeException('Archive requires InnoDB');
-            }
-        }
-        $archive_engines->free();
-
-        if (!$conn->begin_transaction()) {
-            throw new RuntimeException('Archive transaction failed');
-        }
-        $archive_started = true;
-
-        $archive_admin = authGuardLoadAccount(
-            $conn, (int) $_SESSION['user_id'], true
-        );
-        if (!authGuardSessionMatches($archive_admin, $_SESSION, time())
-            || strtolower((string) $archive_admin['role']) !== 'admin') {
-            throw new RuntimeException('Archive permission changed');
-        }
-
-        $archive_tech = authGuardReadRow(authGuardStatement(
-            $conn,
-            'SELECT id, deleted_at FROM technicians WHERE id = ? FOR UPDATE',
-            'i', [$archive_id]
-        ));
-        if ($archive_tech === null) {
-            throw new RuntimeException('Technician not found');
-        }
-
-        $archive_accounts = authGuardStatement(
-            $conn,
-            'SELECT id, role, auth_version FROM users
-             WHERE technician_id = ? FOR UPDATE',
-            'i', [$archive_id]
-        );
-        try {
-            $archive_result = $archive_accounts->get_result();
-            if (!$archive_result) {
-                throw new RuntimeException('Linked account check failed');
-            }
-            while ($archive_account = $archive_result->fetch_assoc()) {
-                if (strtolower((string) $archive_account['role']) !== 'technician'
-                    || filter_var($archive_account['auth_version'], FILTER_VALIDATE_INT,
-                        ['options' => ['min_range' => 1, 'max_range' => 2147483646]]) === false) {
-                    throw new RuntimeException('Invalid linked account');
-                }
-            }
-            $archive_result->free();
-        } finally {
-            $archive_accounts->close();
-        }
-
-        // ปิดบัญชีเว็บและทำให้ Session เดิมใช้ต่อไม่ได้
-        $archive_disable = authGuardStatement(
-            $conn,
-            "UPDATE users SET is_active = 0, auth_version = auth_version + 1
-             WHERE technician_id = ? AND LOWER(role) = 'technician'",
-            'i', [$archive_id]
-        );
-        $archive_disable->close();
-
-        // เก็บข้อมูลเดิมทั้งหมด ใช้เวลาลบเป็นเงื่อนไขซ่อนจาก Dashboard
-        $archive_hide = authGuardStatement(
-            $conn,
-            'UPDATE technicians SET deleted_at = COALESCE(deleted_at, NOW())
-             WHERE id = ?',
-            'i', [$archive_id]
-        );
-        $archive_hide->close();
-
-        $archive_commit_attempted = true;
-        if (!$conn->commit()) {
-            throw new RuntimeException('Archive commit failed');
-        }
-        $archive_started = false;
-
-        mbsActivityLog(
-            $conn,
-            'ARCHIVE_TECHNICIAN',
-            'technician',
-            (int) $archive_id,
-            'นำเจ้าหน้าที่ออกจาก Dashboard และปิดบัญชีเว็บ'
-        );
-
-        $archive_ok = true;
-        $archive_message = 'ลบออกจาก Dashboard และปิดบัญชีเว็บแล้ว ข้อมูลเดิมยังเก็บอยู่ในฐานข้อมูล';
-    } catch (Throwable $e) {
-        $archive_rollback_ok = !$archive_started;
-        if ($archive_started) {
-            try { $archive_rollback_ok = $conn->rollback(); }
-            catch (Throwable $rollback_error) { $archive_rollback_ok = false; }
-        }
-        error_log('Technician archive failed');
-        if (!$archive_rollback_ok || $archive_commit_attempted) {
-            $archive_message = 'ไม่สามารถยืนยันผลการลบได้ กรุณาตรวจรายการและสถานะบัญชีก่อนลองซ้ำ';
-        }
-    }
-
-    $archive_icon = $archive_ok ? 'success' : 'error';
-    $archive_title = $archive_ok ? 'ลบสำเร็จ' : 'ลบไม่สำเร็จ';
-    $archive_message_json = json_encode(
-        $archive_message,
-        JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-    );
-    echo "<script>document.addEventListener('DOMContentLoaded', function() {
-        Swal.fire({ icon: '$archive_icon', title: '$archive_title',
-            text: $archive_message_json, confirmButtonColor: '#4f46e5'
-        }).then(() => { $js_redirect });
-    });</script>";
 }
 
 if (isset($_GET['unlink_tech'])) {
@@ -1126,13 +983,6 @@ if (isset($_GET['unlink_tech'])) {
     $unlink_id = intval($_GET['unlink_tech']);
     $new_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
     $conn->query("UPDATE technicians SET line_user_id = NULL, approval_status = 'รอผูกบัญชี', secret_code = '$new_code' WHERE id = $unlink_id");
-    echo "<script>$js_redirect</script>";
-}
-
-if (isset($_GET['delete_user'])) {
-    if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) die("Invalid Token");
-    $del_id = intval($_GET['delete_user']);
-    $conn->query("DELETE FROM users WHERE id = $del_id");
     echo "<script>$js_redirect</script>";
 }
 
@@ -2085,7 +1935,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 $description = "สร้างบัญชีผู้ดูแลระบบ (Username: $username)";
             } else {
                 $fresh_admin_stmt = $account_query(
-                    'SELECT role, technician_id, is_active, email, avatar_url FROM users WHERE id = ? FOR UPDATE',
+                    'SELECT role, technician_id, is_active, email, avatar_url FROM users WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
                     'i', [$user_id]
                 );
                 try {
@@ -2212,16 +2062,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
     }
 }
 
-if (isset($_GET['delete_reporter'])) {
-    $del_name = $_GET['delete_reporter'];
-    $stmt = $conn->prepare("DELETE FROM repairs WHERE reporter_name = ?");
-    $stmt->bind_param("s", $del_name);
-    $stmt->execute();
-    echo "<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'ลบประวัติสำเร็จ!', showConfirmButton: false, timer: 1500 }).then(() => { $js_redirect }); });</script>";
-}
-
 $tech_options = [];
-$tech_list_res = $conn->query("SELECT DISTINCT full_name FROM technicians WHERE approval_status = 'อนุมัติแล้ว' AND full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
+$tech_list_res = $conn->query("SELECT DISTINCT full_name FROM technicians WHERE deleted_at IS NULL AND approval_status = 'อนุมัติแล้ว' AND full_name IS NOT NULL AND full_name != '' ORDER BY full_name ASC");
 if($tech_list_res){
     while($t = $tech_list_res->fetch_assoc()){
         $tech_options[] = $t['full_name'];
@@ -2250,7 +2092,7 @@ $t_sync_q = $conn->query("SELECT id, full_name, english_name, department, positi
 if ($t_sync_q) { while($r = $t_sync_q->fetch_assoc()) $all_techs_sync[] = $r; }
 
 $all_users_sync = [];
-$u_sync_q = $conn->query("SELECT id, username, full_name, english_name, position, phone, email, department, role, avatar_url FROM users ORDER BY id ASC");
+$u_sync_q = $conn->query("SELECT id, username, full_name, english_name, position, phone, email, department, role, avatar_url FROM users WHERE deleted_at IS NULL ORDER BY id ASC");
 if ($u_sync_q) { while($r = $u_sync_q->fetch_assoc()) $all_users_sync[] = $r; }
 
 $full_system_hash = md5(json_encode($reps) . json_encode($all_techs_sync) . json_encode($all_users_sync) . json_encode($line_users_map));
@@ -2612,7 +2454,8 @@ if (isset($_GET['api_check_hash'])) {
             'assets' => 'Assets Database',
             'users' => 'Reporter History',
             'reports' => 'Official Report',
-            'login_logs' => 'Login History'
+            'login_logs' => 'Login History',
+            'trash' => 'ถังขยะ'
         ];
         $currentTitle = isset($pageTitlesArr[$active_tab]) ? $pageTitlesArr[$active_tab] : 'Dashboard Overview';
         ?>
@@ -2628,6 +2471,7 @@ if (isset($_GET['api_check_hash'])) {
             <button onclick="show('users')" class="nav-btn <?php echo $active_tab === 'users' ? 'active-btn' : ''; ?>" id="btn-users"><i class="fas fa-address-book"></i> Contacts</button>
             <button onclick="show('reports')" class="nav-btn <?php echo $active_tab === 'reports' ? 'active-btn' : ''; ?>" id="btn-reports"><i class="fas fa-file-export"></i> Reports</button>
             <button onclick="show('login_logs')" class="nav-btn <?php echo $active_tab === 'login_logs' ? 'active-btn' : ''; ?>" id="btn-login_logs"><i class="fas fa-history"></i> Login History</button>
+            <button onclick="show('trash')" class="nav-btn <?php echo $active_tab === 'trash' ? 'active-btn' : ''; ?>" id="btn-trash"><i class="fas fa-trash-alt"></i> Trash</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
                                 <a href="verify_email_page.php" class="nav-btn">
@@ -2774,13 +2618,13 @@ if (isset($_GET['api_check_hash'])) {
                 <!-- ✨ ปรับ Grid เป็น 2 คอลัมน์ (grid-cols-2) ในมือถือ และเพิ่มความห่างให้สมดุล (gap-3) ✨ -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                     <?php 
-                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
+                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs WHERE deleted_at IS NULL");
                         $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
-                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE status='รอรับเรื่อง'");
+                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE deleted_at IS NULL AND status='รอรับเรื่อง'");
                         $cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
-                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE status='กำลังดำเนินการ'");
+                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE deleted_at IS NULL AND status='กำลังดำเนินการ'");
                         $cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
-                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
+                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE deleted_at IS NULL AND status='ซ่อมเสร็จแล้ว'");
                         $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
                     ?>
                     
@@ -3109,7 +2953,7 @@ if (isset($_GET['api_check_hash'])) {
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100">
                                     <?php
-                                    $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
+                                    $recent_dash = $conn->query("SELECT * FROM repairs WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 5");
                                     if($recent_dash && $recent_dash->num_rows > 0){
                                         while($rd = $recent_dash->fetch_assoc()) {
                                             $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
@@ -3450,7 +3294,7 @@ if (isset($_GET['api_check_hash'])) {
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                     <?php
-                                    $admin_res = $conn->query("SELECT * FROM users WHERE LOWER(role) IN ('admin', 'executive') ORDER BY id DESC");
+                                    $admin_res = $conn->query("SELECT * FROM users WHERE deleted_at IS NULL AND LOWER(role) IN ('admin', 'executive') ORDER BY id DESC");
                                     if($admin_res && $admin_res->num_rows > 0){
                                         while($u = $admin_res->fetch_assoc()) {
                                             $r_lower = strtolower($u['role']);
@@ -3555,7 +3399,7 @@ if (isset($_GET['api_check_hash'])) {
                         $accounts_result = $conn->query(
                             "SELECT id, username, full_name, role, is_active
                              FROM users
-                             WHERE technician_id IS NULL
+                             WHERE deleted_at IS NULL AND technician_id IS NULL
                                AND LOWER(role) IN ('user', 'technician')
                                AND TRIM(username) <> ''
                                AND password IS NOT NULL
@@ -3834,7 +3678,7 @@ if (isset($_GET['api_check_hash'])) {
                                         $tech_id_for_count = (int)$t['id'];
 
                                         if ($tech_id_for_count > 0) {
-                                            $job_res = $conn->query("SELECT COUNT(id) as c FROM repairs WHERE technician_id = {$tech_id_for_count}");
+                                            $job_res = $conn->query("SELECT COUNT(id) as c FROM repairs WHERE deleted_at IS NULL AND technician_id = {$tech_id_for_count}");
 
                                             if ($job_res) {
                                                 $total_jobs = (int)$job_res->fetch_assoc()['c'];
@@ -4149,8 +3993,8 @@ if (isset($_GET['api_check_hash'])) {
                                 <?php
                                 $assets_paging = tp_page(
                                 $conn,
-                                'SELECT * FROM assets ORDER BY created_at DESC, id DESC',
-                                'SELECT COUNT(*) AS total FROM assets',
+                                'SELECT * FROM assets WHERE deleted_at IS NULL ORDER BY created_at DESC, id DESC',
+                                'SELECT COUNT(*) AS total FROM assets WHERE deleted_at IS NULL',
                                 '',
                                 [],
                                 'assets',
@@ -4218,62 +4062,7 @@ if (isset($_GET['api_check_hash'])) {
                             <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                 <?php
                                 $reporters_paging = ch_contacts_page($conn, $line_users_map);
-                                $reporter_res = $reporters_paging['result'];
-                                
-                                if($reporter_res && $reporter_res->num_rows > 0){
-                                    while($r = $reporter_res->fetch_assoc()) {
-                                        $raw_name = trim((string)$r['reporter_name']);
-                                        
-                                        $line_id = $raw_name;
-                                        $real_name = "";
-                                        $display_phone = trim((string)$r['fallback_phone']);
-                                        
-                                        if (isset($line_users_map[$raw_name])) {
-                                            if (!empty($line_users_map[$raw_name]['line_display_name'])) {
-                                                $line_id = $line_users_map[$raw_name]['line_display_name']; 
-                                            }
-                                            if (!empty($line_users_map[$raw_name]['real_name'])) {
-                                                $real_name = $line_users_map[$raw_name]['real_name']; 
-                                            }
-                                            if (!empty($line_users_map[$raw_name]['phone_number'])) {
-                                                $display_phone = $line_users_map[$raw_name]['phone_number']; 
-                                            }
-                                        }
-                                        
-                                        $main_name_html = formatEmptyOrDash($line_id);
-                                        // ✨ เปลี่ยนสี text-slate-400 เป็น text-slate-500 ให้เข้มขึ้น ✨
-                                        $sub_name_html = ($real_name !== '' && $real_name !== $line_id) ? "<div class='text-slate-500 font-medium mt-0.5'>" . htmlspecialchars($real_name) . "</div>" : "";
-                                        
-                                        $js_view_name = htmlspecialchars($raw_name, ENT_QUOTES); 
-                                        $js_edit_line_id = htmlspecialchars($line_id, ENT_QUOTES);
-                                        $js_edit_real_name = htmlspecialchars($real_name !== '' ? $real_name : $line_id, ENT_QUOTES);
-                                        $js_old_phone = htmlspecialchars($display_phone, ENT_QUOTES);
-                                        
-                                        $rep_phone_html = formatEmptyOrDash($display_phone);
-                                        
-                                        echo "<tr class='hover:bg-slate-50/50 transition-colors user-row'>
-                                            <td class='px-6 py-4 align-top'>
-                                                <div class='flex items-center'>
-                                                    <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 shrink-0'><i class='fas fa-user text-xs'></i></div>
-                                                    <div>
-                                                        <div class='text-slate-800 font-bold'>{$main_name_html}</div>
-                                                        {$sub_name_html}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>{$rep_phone_html}</td>
-                                            <td class='px-6 py-4 align-middle text-center'>
-                                                <span class='px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600'>{$r['total_repairs']}</span>
-                                            </td>
-                                            <td class='px-6 py-4 align-middle text-right'>
-                                                <div class='flex items-center justify-end space-x-2'>
-                                                    <button onclick=\"viewHistory('{$js_view_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                    <button onclick=\"confirmDeleteReporter('{$js_view_name}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
-                                                </div>
-                                            </td>
-                                        </tr>";
-                                    }
-                                } else { echo "<tr><td colspan='4' class='px-6 py-12 text-center text-slate-400'>No history found</td></tr>"; }
+                                ch_contacts_rows($reporters_paging['result'], $line_users_map);
                                 ?>
                             </tbody>
                         </table>
@@ -4591,6 +4380,7 @@ if (isset($_GET['api_check_hash'])) {
                 <?php endif; ?>
             </div>
 
+            <?php require __DIR__ . '/admin_trash_panel.php'; ?>
         </div>
     </main>
 
@@ -4673,7 +4463,7 @@ if (isset($_GET['api_check_hash'])) {
                             <?php 
                             // สร้างตัวแปรดึงหมวดหมู่ (เหมือนใน update_repair)
                             $dash_categories = ['IT Support', 'ไฟฟ้า/แอร์', 'อาคารสถานที่'];
-                            $d_cat_res = $conn->query("SELECT DISTINCT category FROM assets WHERE category IS NOT NULL AND category != ''");
+                            $d_cat_res = $conn->query("SELECT DISTINCT category FROM assets WHERE deleted_at IS NULL AND category IS NOT NULL AND category != ''");
                             if($d_cat_res && $d_cat_res->num_rows > 0){
                                 while($dc = $d_cat_res->fetch_assoc()){
                                     if(!in_array($dc['category'], $dash_categories) && $dc['category'] !== 'อื่นๆ') {
@@ -5166,6 +4956,7 @@ if (isset($_GET['api_check_hash'])) {
         }
         
         const pageTitles = {
+            'trash': 'ถังขยะ',
             'dash': 'Dashboard Overview',
             'repairs': 'All Repairs List',
             'technicians': 'Team Management',
@@ -8321,35 +8112,15 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         function confirmDelete(type, id) {
-            const isTechnician = type === 'tech';
-            Swal.fire({
-                title: isTechnician ? 'ลบช่างออกจาก Dashboard?' : 'ยืนยันการลบข้อมูล?',
-                text: isTechnician
-                    ? 'จะซ่อนช่างและปิดบัญชีเว็บ โดยเก็บข้อมูลเดิมและประวัติใบงานไว้ในฐานข้อมูล'
-                    : 'เมื่อลบแล้วจะไม่สามารถกู้คืนได้!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                confirmButtonText: 'ยืนยัน ลบข้อมูล',
-                cancelButtonText: 'ยกเลิก'
-            }).then((r) => {
-                if(r.isConfirmed) {
-                    let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
-                    let csrf = '&csrf_token=<?php echo $_SESSION['csrf_token']; ?>';
-                    if(type === 'tech') window.location.href = '?delete_tech=' + id + '&tab=' + t + csrf;
-                    else if(type === 'user') window.location.href = '?delete_user=' + id + '&tab=' + t + csrf;
-                    else if(type === 'asset') window.location.href = '?delete_asset=' + id + '&tab=' + t + csrf;
-                }
+            if (!['asset','user','tech'].includes(type)) return;
+            Swal.fire({title:'ย้ายข้อมูลเข้าถังขยะ?', text:type === 'tech' || type === 'user' ? 'ข้อมูลยังคงอยู่และกู้คืนได้ บัญชีเว็บที่เกี่ยวข้องจะถูกปิดใช้งาน' : 'ข้อมูลยังคงอยู่ในฐานข้อมูล และสามารถกู้คืนจากเมนู Trash ได้', icon:'warning', showCancelButton:true, confirmButtonText:'ย้ายเข้าถังขยะ', cancelButtonText:'ยกเลิก', confirmButtonColor:'#4f46e5'}).then(result=>{
+                if (result.isConfirmed) submitTrashAction('move', type, id);
             });
         }
-
-        function confirmDeleteReporter(name) { 
-            Swal.fire({ title: 'ยืนยันลบผู้แจ้ง?', text: "ประวัติการแจ้งซ่อมทั้งหมดของบุคคลนี้จะถูกเคลียร์ชื่อออก!", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ยืนยัน ลบข้อมูล', cancelButtonText: 'ยกเลิก' }).then((r) => { 
-                if(r.isConfirmed) {
-                    let t = sessionStorage.getItem('activeTabBeforeRefresh') || new URLSearchParams(window.location.search).get('tab') || 'dash';
-                    window.location.href = '?delete_reporter=' + encodeURIComponent(name) + '&tab=' + t;
-                }
-            }); 
+        function confirmDeleteReporter(repairId) {
+            Swal.fire({title:'ย้ายประวัติผู้แจ้งเข้าถังขยะ?', text:'ย้ายใบงานของบัญชี LINE เดียวกันเข้าถังขยะ โดยไม่จับคู่จากชื่อ หากไม่มี LINE ID จะย้ายเฉพาะใบงานที่เลือก และยังสามารถกู้คืนได้', icon:'warning', showCancelButton:true, confirmButtonText:'ย้ายเข้าถังขยะ', cancelButtonText:'ยกเลิก', confirmButtonColor:'#4f46e5'}).then(result=>{
+                if (result.isConfirmed) submitTrashAction('move', 'reporter', repairId);
+            });
         }
 
         let currentSelectedName = 'รวมทุกฝ่ายงาน (ทั้งหมด)';

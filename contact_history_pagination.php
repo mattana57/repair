@@ -27,70 +27,21 @@ function ch_case($column, array $map, $fallback, array &$params) {
 }
 
 function ch_contacts_page($conn, array $lineMap) {
-    $params = [];
-    $having = '';
-    $q = preg_replace('/\s+/u', '', tp_get('pg_reporters_q'));
-
+    $grouped = "SELECT MAX(id) AS latest_id, COUNT(*) AS total_repairs FROM repairs
+        WHERE deleted_at IS NULL
+        GROUP BY CAST(CASE WHEN line_user_id IS NULL OR TRIM(line_user_id) = ''
+            THEN CONCAT('repair:',id) ELSE CONCAT('line:',line_user_id) END AS BINARY)";
+    $from = ' FROM (' . $grouped . ') grouped JOIN repairs latest ON latest.id = grouped.latest_id';
+    $where = '1=1'; $params = []; $types = '';
+    $q = preg_replace('/\\s+/u', '', tp_get('pg_reporters_q'));
     if ($q !== '') {
-        $names = [];
-        $phones = [];
-
-        foreach ($lineMap as $raw => $info) {
-            $line = !empty($info['line_display_name'])
-                ? $info['line_display_name']
-                : $raw;
-
-            $real = !empty($info['real_name'])
-                && $info['real_name'] !== $line
-                ? $info['real_name']
-                : '';
-
-            $names[$raw] = $line . $real;
-
-            if (!empty($info['phone_number'])) {
-                $phones[$raw] = $info['phone_number'];
-            }
-        }
-
-        $name = ch_case(
-            'reporter_name',
-            $names,
-            'reporter_name',
-            $params
-        );
-
-        $phone = ch_case(
-            'reporter_name',
-            $phones,
-            "COALESCE(MAX(phone_number), '-')",
-            $params
-        );
-
-        $having = " HAVING "
-            . ch_compact_sql("CONCAT($name, $phone, COUNT(id), 'View')")
-            . " LIKE ? ESCAPE '!'";
-
-        $params[] = tp_like($q);
+        $where .= ' AND ' . ch_compact_sql("CONCAT_WS('', latest.line_display_name, latest.reporter_name, latest.phone_number, grouped.total_repairs, 'View')") . " LIKE ? ESCAPE '!'";
+        $params[] = tp_like($q); $types = 's';
     }
-
-    $group = " FROM repairs
-        WHERE reporter_name IS NOT NULL AND reporter_name != ''
-        GROUP BY reporter_name" . $having;
-
-    return tp_page(
-        $conn,
-        'SELECT reporter_name,
-            MAX(phone_number) AS fallback_phone,
-            COUNT(id) AS total_repairs'
-            . $group
-            . ' ORDER BY MAX(created_at) DESC, reporter_name ASC',
-        'SELECT COUNT(*) AS total FROM (
-            SELECT reporter_name' . $group . '
-        ) ch_reporters',
-        str_repeat('s', count($params)),
-        $params,
-        'reporters',
-        'users'
+    return tp_page($conn,
+        'SELECT latest.*, latest.phone_number AS fallback_phone, grouped.total_repairs' . $from . ' WHERE ' . $where . ' ORDER BY latest.created_at DESC, latest.id DESC',
+        'SELECT COUNT(*) AS total' . $from . ' WHERE ' . $where,
+        $types, $params, 'reporters', 'users'
     );
 }
 
@@ -137,6 +88,8 @@ function ch_history_page(
         $params = [$name];
         $types = 's';
     }
+
+    $where = '(' . $where . ') AND r.deleted_at IS NULL';
 
     $q = preg_replace('/\s+/u', '', tp_get('pg_history_q'));
 
@@ -240,24 +193,16 @@ function ch_contacts_rows($reporter_res, $line_users_map) {
         while ($r = $reporter_res->fetch_assoc()) {
             $raw_name = trim((string)$r['reporter_name']);
 
-            $line_id = $raw_name;
-            $real_name = "";
+            $line_id = trim((string)($r['line_display_name'] ?? ''));
+            $real_name = $raw_name;
             $display_phone = trim((string)$r['fallback_phone']);
-
-            if (isset($line_users_map[$raw_name])) {
-                if (!empty($line_users_map[$raw_name]['line_display_name'])) {
-                    $line_id = $line_users_map[$raw_name]['line_display_name'];
-                }
-
-                if (!empty($line_users_map[$raw_name]['real_name'])) {
-                    $real_name = $line_users_map[$raw_name]['real_name'];
-                }
-
-                if (!empty($line_users_map[$raw_name]['phone_number'])) {
-                    $display_phone = $line_users_map[$raw_name]['phone_number'];
-                }
-            }
-
+            if ($line_id === '') $line_id = $raw_name;
+            $reporterArgs = htmlspecialchars(
+                json_encode($raw_name, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
+                . ", 'reporter', false, false, null, "
+                . json_encode(trim((string)($r['line_user_id'] ?? '')) !== '' ? (string)$r['line_user_id'] : null, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
+                ENT_QUOTES, 'UTF-8'
+            );
             $main_name_html = formatEmptyOrDash($line_id);
 
             $sub_name_html = ($real_name !== '' && $real_name !== $line_id)
@@ -284,8 +229,8 @@ function ch_contacts_rows($reporter_res, $line_users_map) {
                 </td>
                 <td class='px-6 py-4 align-middle text-right'>
                     <div class='flex items-center justify-end space-x-2'>
-                        <button onclick=\"viewHistory('{$js_view_name}', 'reporter')\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                        <button onclick=\"confirmDeleteReporter('{$js_view_name}')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
+                        <button onclick=\"viewHistory({$reporterArgs})\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
+                        <button onclick=\"confirmDeleteReporter({$r['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                     </div>
                 </td>
             </tr>";

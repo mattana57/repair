@@ -1,0 +1,220 @@
+<?php
+// เรียกจาก dashboard.php หลังผ่าน Guard และตรวจบทบาทผู้ดูแลแล้วเท่านั้น
+if (!defined('MBS_ADMIN_TRASH')) {
+    http_response_code(403);
+    exit('ไม่อนุญาตให้เปิดไฟล์นี้โดยตรง');
+}
+
+function at_stmt($conn, $sql, $types = '', array $values = []) {
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) throw new RuntimeException('ไม่สามารถเตรียมคำสั่งได้');
+    if ($types !== '' && !$stmt->bind_param($types, ...$values)) {
+        $stmt->close();
+        throw new RuntimeException('ข้อมูลคำขอไม่ถูกต้อง');
+    }
+    if (!$stmt->execute()) {
+        $stmt->close();
+        throw new RuntimeException('ไม่สามารถบันทึกรายการได้');
+    }
+    return $stmt;
+}
+
+function at_row($conn, $sql, $types = '', array $values = []) {
+    $stmt = at_stmt($conn, $sql, $types, $values);
+    try { return $stmt->get_result()->fetch_assoc(); }
+    finally { $stmt->close(); }
+}
+
+function at_positive_id($value) {
+    if (!is_string($value) || !preg_match('/^[1-9][0-9]*$/D', $value)) return false;
+    return filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+}
+
+function at_redirect($type, $message) {
+    $_SESSION['admin_trash_notice'] = ['type' => $type, 'message' => $message];
+    header('Location: dashboard.php?tab=trash', true, 303);
+    exit;
+}
+
+function at_check_admin($conn) {
+    $admin = authGuardLoadAccount($conn, (int)$_SESSION['user_id'], true);
+    if (!authGuardSessionMatches($admin, $_SESSION, time())
+        || strtolower((string)$admin['role']) !== 'admin') {
+        throw new RuntimeException('สิทธิ์ผู้ดูแลเปลี่ยนไป กรุณาเข้าสู่ระบบใหม่');
+    }
+    $row = at_row($conn, 'SELECT deleted_at FROM users WHERE id = ? FOR UPDATE', 'i', [(int)$_SESSION['user_id']]);
+    if (!$row || $row['deleted_at'] !== null) throw new RuntimeException('บัญชีผู้ดูแลไม่พร้อมใช้งาน');
+}
+
+// กันการลบแบบ CASCADE และการอ้างอิงค้าง โดยไม่แก้รหัสหรือข้อมูลในตารางอื่น
+function at_check_references($conn, $table, $id) {
+    $stmt = at_stmt($conn, 'SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_COLUMN_NAME
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE REFERENCED_TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME = ?', 's', [$table]);
+    $refs = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    foreach ($refs as $ref) {
+        foreach ($ref as $identifier) {
+            if (!preg_match('/^[A-Za-z0-9_]+$/D', $identifier)) {
+                throw new RuntimeException('ไม่สามารถตรวจความสัมพันธ์ของข้อมูลได้');
+            }
+        }
+        $target = at_row($conn, 'SELECT `' . $ref['REFERENCED_COLUMN_NAME'] . '` AS value FROM `' . $table . '` WHERE id = ?', 'i', [$id]);
+        $related = at_row($conn, 'SELECT 1 AS found FROM `' . $ref['TABLE_NAME'] . '` WHERE `' . $ref['COLUMN_NAME'] . '` = ? LIMIT 1', 's', [(string)$target['value']]);
+        if ($related) throw new RuntimeException('ยังลบถาวรไม่ได้ เนื่องจากมีข้อมูลอื่นอ้างอิงรายการนี้อยู่');
+    }
+    if ($table === 'technicians') {
+        foreach (['repairs', 'users'] as $dependent) {
+            if (at_row($conn, "SELECT id FROM $dependent WHERE technician_id = ? LIMIT 1", 'i', [$id])) {
+                throw new RuntimeException('ยังลบเจ้าหน้าที่ถาวรไม่ได้ เนื่องจากมีใบงานหรือบัญชีที่ผูกกับรหัสนี้อยู่');
+            }
+        }
+    }
+    if ($table === 'users') {
+        // Dashboard เดิมสร้างบัญชีผู้แจ้งจากใบงานอัตโนมัติ ป้องกันลบแล้วถูกสร้างซ้ำทันที
+        $user = at_row($conn, 'SELECT full_name FROM users WHERE id = ?', 'i', [$id]);
+        if ($user && trim((string)$user['full_name']) !== ''
+            && at_row($conn, 'SELECT id FROM repairs WHERE BINARY reporter_name = BINARY ? LIMIT 1', 's', [(string)$user['full_name']])) {
+            throw new RuntimeException('ยังลบบัญชีถาวรไม่ได้ เนื่องจากยังมีใบงานที่ระบบเดิมใช้สร้างบัญชีผู้แจ้งอัตโนมัติ กรุณาจัดการใบงานที่เกี่ยวข้องก่อน');
+        }
+    }
+}
+
+function at_handle_request($conn) {
+    // ปิดช่องทาง DELETE ผ่าน GET เก่า ไม่แปลงคำขอเก่าเป็นการลบถาวร
+    foreach (['delete_asset', 'delete_user', 'delete_tech', 'delete_reporter'] as $legacy) {
+        if (isset($_GET[$legacy])) {
+            at_redirect('error', 'กรุณาใช้ปุ่มย้ายเข้าถังขยะจากหน้ารายการ');
+        }
+    }
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['trash_action'])) {
+        // ห้ามใช้ฟอร์มเก่าบันทึกรายการที่ถูกย้ายเข้าถังขยะแล้ว
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $table = null; $target = false;
+            if (isset($_POST['save_asset'])) { $table = 'assets'; $target = at_positive_id($_POST['asset_id'] ?? null); }
+            elseif (isset($_POST['save_user'])) {
+                $table = ($_POST['role'] ?? null) === 'Technician' ? 'technicians' : 'users';
+                $target = at_positive_id($_POST['user_id'] ?? null);
+            }
+            if ($table !== null && $target !== false) {
+                $archived = at_row($conn, "SELECT deleted_at FROM $table WHERE id = ?", 'i', [$target]);
+                if ($archived && $archived['deleted_at'] !== null) at_redirect('error', 'รายการนี้อยู่ในถังขยะ กรุณากู้คืนข้อมูลก่อนแก้ไข');
+                if ($table === 'technicians' && at_row($conn, 'SELECT id FROM users WHERE technician_id = ? AND deleted_at IS NOT NULL LIMIT 1', 'i', [$target])) {
+                    at_redirect('error', 'บัญชีเว็บที่ผูกเจ้าหน้าที่อยู่ในถังขยะ กรุณากู้คืนบัญชีก่อนแก้ไข');
+                }
+            }
+        }
+        return;
+    }
+    $started = false;
+    try {
+        $token = $_POST['csrf_token'] ?? null;
+        if (!is_string($token) || !is_string($_SESSION['csrf_token'] ?? null)
+            || !hash_equals($_SESSION['csrf_token'], $token)) {
+            throw new RuntimeException('คำขอหมดอายุ กรุณารีเฟรชหน้าแล้วลองใหม่');
+        }
+        $action = $_POST['trash_action'];
+        $kind = $_POST['trash_kind'] ?? null;
+        $tables = ['asset' => 'assets', 'user' => 'users', 'tech' => 'technicians', 'repair' => 'repairs', 'reporter' => 'repairs'];
+        if (!is_string($action) || !in_array($action, ['move', 'restore', 'purge'], true)
+            || !is_string($kind) || !isset($tables[$kind])) {
+            throw new RuntimeException('ประเภทคำขอไม่ถูกต้อง');
+        }
+        $id = at_positive_id($_POST['trash_id'] ?? null);
+        if ($id === false) throw new RuntimeException('รหัสรายการไม่ถูกต้อง');
+        if ($kind === 'reporter' && $action !== 'move') throw new RuntimeException('คำขอไม่ถูกต้อง');
+        if ($action === 'purge' && ($_POST['trash_confirm'] ?? null) !== '1') {
+            throw new RuntimeException('กรุณายืนยันการลบถาวรก่อน');
+        }
+        // การทำงานหลายตารางต้องรองรับ rollback; ไม่เปลี่ยน Engine อัตโนมัติ
+        $engines = at_stmt($conn, "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('users','technicians','repairs','assets')");
+        $result = $engines->get_result();
+        if ($result->num_rows !== 4) throw new RuntimeException('ตารางข้อมูลไม่ครบ');
+        while ($engine = $result->fetch_assoc()) {
+            if (strtoupper((string)$engine['ENGINE']) !== 'INNODB') throw new RuntimeException('ตารางต้องรองรับธุรกรรมก่อนใช้งานถังขยะ');
+        }
+        $engines->close();
+        if (!$conn->begin_transaction()) throw new RuntimeException('เริ่มบันทึกข้อมูลไม่ได้');
+        $started = true;
+        at_check_admin($conn);
+        $table = $tables[$kind];
+        $row = at_row($conn, "SELECT * FROM $table WHERE id = ? FOR UPDATE", 'i', [$id]);
+        if (!$row) throw new RuntimeException('ไม่พบรายการนี้');
+        if (($action === 'move') !== ($row['deleted_at'] === null)) {
+            throw new RuntimeException('สถานะรายการเปลี่ยนแล้ว กรุณาตรวจรายการอีกครั้ง');
+        }
+        if ($table === 'users' && $id === (int)$_SESSION['user_id']) {
+            throw new RuntimeException('ไม่สามารถย้ายหรือลบบัญชีที่กำลังใช้งานอยู่ได้');
+        }
+        if ($action === 'move') {
+            if ($table === 'users') {
+                at_stmt($conn, 'UPDATE users SET deleted_at = NOW(), is_active = 0, auth_version = auth_version + 1 WHERE id = ? AND deleted_at IS NULL', 'i', [$id])->close();
+            } elseif ($kind === 'tech') {
+                $linked = at_stmt($conn, 'SELECT id, role FROM users WHERE technician_id = ? FOR UPDATE', 'i', [$id]);
+                $linkedRows = $linked->get_result()->fetch_all(MYSQLI_ASSOC); $linked->close();
+                foreach ($linkedRows as $linkedRow) {
+                    if (strtolower((string)$linkedRow['role']) !== 'technician') {
+                        throw new RuntimeException('บัญชีที่ผูกเจ้าหน้าที่มีประเภทไม่ถูกต้อง กรุณาตรวจสอบก่อน');
+                    }
+                }
+                at_stmt($conn, "UPDATE users SET is_active = 0, auth_version = auth_version + 1 WHERE technician_id = ? AND LOWER(role) = 'technician'", 'i', [$id])->close();
+                at_stmt($conn, 'UPDATE technicians SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL', 'i', [$id])->close();
+            } elseif ($kind === 'reporter' && trim((string)($row['line_user_id'] ?? '')) !== '') {
+                at_stmt($conn, 'UPDATE repairs SET deleted_at = NOW(), updated_at = updated_at WHERE BINARY line_user_id = BINARY ? AND deleted_at IS NULL', 's', [(string)$row['line_user_id']])->close();
+            } else {
+                // รายการเก่าที่ไม่มี LINE ID ย้ายเฉพาะเลขใบงาน ไม่จับคู่ด้วยชื่อ
+                $keepUpdatedAt = $table === 'repairs' ? ', updated_at = updated_at' : '';
+                at_stmt($conn, "UPDATE $table SET deleted_at = NOW()$keepUpdatedAt WHERE id = ? AND deleted_at IS NULL", 'i', [$id])->close();
+            }
+        } elseif ($action === 'restore') {
+            $keepUpdatedAt = $table === 'repairs' ? ', updated_at = updated_at' : '';
+            at_stmt($conn, "UPDATE $table SET deleted_at = NULL$keepUpdatedAt WHERE id = ? AND deleted_at IS NOT NULL", 'i', [$id])->close();
+            // ไม่เปิดบัญชีหรือเปลี่ยนการผูก LINE อัตโนมัติ
+        } else {
+            at_check_references($conn, $table, $id);
+            at_stmt($conn, "DELETE FROM $table WHERE id = ? AND deleted_at IS NOT NULL", 'i', [$id])->close();
+        }
+        if (!$conn->commit()) throw new RuntimeException('ไม่สามารถยืนยันการบันทึกได้ กรุณาตรวจรายการก่อนลองซ้ำ');
+        $started = false;
+        try {
+            if (function_exists('mbsActivityLog')) mbsActivityLog($conn, 'TRASH_' . strtoupper($action), $table, $id, 'จัดการรายการผ่านถังขยะ');
+        } catch (Throwable $logError) { error_log('Trash activity log failed'); }
+        $message = ['move' => 'ย้ายข้อมูลเข้าถังขยะแล้ว', 'restore' => 'กู้คืนข้อมูลแล้ว', 'purge' => 'ลบข้อมูลถาวรแล้ว'][$action];
+        if ($action === 'restore' && in_array($kind, ['user', 'tech'], true)) {
+            $message .= ' บัญชีเว็บยังคงปิดใช้งาน กรุณาตรวจสอบก่อนเปิดใช้งานจากหน้าจัดการบัญชี';
+        }
+        at_redirect('success', $message);
+    } catch (Throwable $error) {
+        if ($started) { try { $conn->rollback(); } catch (Throwable $ignored) {} }
+        $safe = $error instanceof RuntimeException && !($error instanceof mysqli_sql_exception)
+            ? $error->getMessage() : 'ไม่สามารถบันทึกรายการได้ อาจมีข้อมูลอื่นอ้างอิงอยู่ กรุณาตรวจสอบก่อนลองใหม่';
+        at_redirect('error', $safe);
+    }
+}
+
+at_handle_request($conn);
+
+function at_page($conn) {
+    $union = "SELECT 'asset' AS kind, id, CONVERT(asset_name USING utf8mb4) COLLATE utf8mb4_unicode_ci AS label, CONVERT(asset_code USING utf8mb4) COLLATE utf8mb4_unicode_ci AS detail, deleted_at FROM assets WHERE deleted_at IS NOT NULL
+        UNION ALL SELECT 'user', id, COALESCE(NULLIF(full_name,''),username), username, deleted_at FROM users WHERE deleted_at IS NOT NULL
+        UNION ALL SELECT 'tech', id, full_name, department, deleted_at FROM technicians WHERE deleted_at IS NOT NULL
+        UNION ALL SELECT 'repair', id, ticket_no, reporter_name, deleted_at FROM repairs WHERE deleted_at IS NOT NULL";
+    $q = isset($_GET['trash_q']) && is_string($_GET['trash_q']) ? trim($_GET['trash_q']) : '';
+    $q = mb_substr($q, 0, 200, 'UTF-8');
+    $kind = isset($_GET['trash_type']) && is_string($_GET['trash_type']) ? $_GET['trash_type'] : 'all';
+    $where = '1=1'; $values = []; $types = '';
+    if (in_array($kind, ['asset','user','tech','repair'], true)) { $where .= ' AND kind = ?'; $values[] = $kind; $types .= 's'; }
+    else { $kind = 'all'; }
+    if ($q !== '') {
+        $where .= " AND CONCAT_WS(' ',label,detail,id) LIKE ? ESCAPE '!'";
+        $values[] = '%' . strtr($q, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%'; $types .= 's';
+    }
+    $total = (int)at_row($conn, "SELECT COUNT(*) AS total FROM ($union) trash_rows WHERE $where", $types, $values)['total'];
+    $pages = max(1, (int)ceil($total / 50));
+    $rawPage = at_positive_id($_GET['trash_page'] ?? '1');
+    $page = max(1, min($pages, $rawPage === false ? 1 : $rawPage));
+    $offset = ($page - 1) * 50;
+    $stmt = at_stmt($conn, "SELECT * FROM ($union) trash_rows WHERE $where ORDER BY deleted_at DESC, kind ASC, id DESC LIMIT 50 OFFSET $offset", $types, $values);
+    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
+    return compact('rows','page','pages','total','offset','q','kind');
+}
