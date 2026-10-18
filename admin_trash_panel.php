@@ -42,15 +42,15 @@ document.addEventListener('DOMContentLoaded', function () {
             <?php endif; ?>
             <form id="trashFilterForm" action="dashboard.php" method="get" class="flex flex-wrap gap-3 items-center">
                 <input type="hidden" name="tab" value="trash">
-                <div class="relative flex-1 min-w-[180px]">
+                <div class="relative mr-auto flex-1 min-w-[180px] xl:flex-none xl:w-[380px] 2xl:w-[440px]">
                     <label class="sr-only" for="trashSearchInput">ค้นหาข้อมูลในถังขยะ</label>
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true"></i>
-                    <input type="text" id="trashSearchInput" name="trash_q" value="<?= $atEscape($atData['q']) ?>" maxlength="200" placeholder="ค้นหาข้อมูลในถังขยะ..." oninput="scheduleTrashSearch(event)" class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[105px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
+                    <input type="text" id="trashSearchInput" name="trash_q" value="<?= $atEscape($atData['q']) ?>" maxlength="200" placeholder="ค้นหาข้อมูลในถังขยะ..." oninput="scheduleTrashSearch(event)" class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[105px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
                     <button type="button" id="clearTrashSearchBtn" onclick="clearTrashSearch()" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-rose-500 bg-rose-50 border-l border-slate-200 <?= $atData['q'] === '' ? 'hidden' : 'flex' ?> items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm" aria-hidden="true"></i>ล้างค่า</button>
                 </div>
                 <label><span class="sr-only">ประเภทข้อมูล</span><select name="trash_type" onchange="submitTrashFilters()" class="border border-slate-200 bg-white rounded-xl px-4 py-2.5 text-sm"><option value="all">ทุกประเภท</option><?php foreach ($atLabels as $key => $label): ?><option value="<?= $key ?>" <?= $atData['kind'] === $key ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label>
-                <a href="dashboard.php?tab=trash" class="text-slate-500 text-sm font-semibold px-3 py-2">ล้างตัวกรอง</a>
             </form>
+            <p id="trashSearchError" class="hidden text-sm text-rose-600" role="alert"></p>
         </div>
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left min-w-[760px] text-sm">
@@ -105,31 +105,82 @@ document.addEventListener('DOMContentLoaded', function () {
 </div>
 <script>
 let trashSearchTimer = null;
-function submitTrashFilters() {
+let trashSearchController = null;
+let trashSearchVersion = 0;
+let trashSearchComposing = false;
+const trashSearchForm = document.getElementById('trashFilterForm');
+function cancelTrashSearch() {
     clearTimeout(trashSearchTimer);
-    document.getElementById('trashFilterForm').requestSubmit();
+    trashSearchVersion++;
+    if (trashSearchController) trashSearchController.abort();
+    document.querySelector('#trash tbody')?.removeAttribute('aria-busy');
 }
 function scheduleTrashSearch(event) {
-    clearTimeout(trashSearchTimer);
+    cancelTrashSearch();
     const input = document.getElementById('trashSearchInput');
-    if (event && event.isComposing) return;
     const button = document.getElementById('clearTrashSearchBtn');
     button.classList.toggle('hidden', input.value === '');
     button.classList.toggle('flex', input.value !== '');
-    if (input.value === (new URL(window.location.href).searchParams.get('trash_q') || '')) return;
-    trashSearchTimer = setTimeout(submitTrashFilters, 500);
+    if (trashSearchComposing || (event && event.isComposing)) return;
+    trashSearchTimer = setTimeout(submitTrashFilters, 350);
 }
 function clearTrashSearch() {
     document.getElementById('trashSearchInput').value = '';
+    document.getElementById('clearTrashSearchBtn').classList.add('hidden');
+    document.getElementById('clearTrashSearchBtn').classList.remove('flex');
     submitTrashFilters();
 }
-document.getElementById('trashFilterForm').addEventListener('submit', function () {
-    clearTimeout(trashSearchTimer);
+async function submitTrashFilters() {
+    cancelTrashSearch();
+    if (trashSearchComposing) return;
+    const version = trashSearchVersion;
+    const controller = new AbortController();
+    trashSearchController = controller;
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', 'trash');
+    url.searchParams.set('trash_q', document.getElementById('trashSearchInput').value);
+    url.searchParams.set('trash_type', trashSearchForm.elements.trash_type.value);
+    url.searchParams.delete('trash_page');
+    const body = document.querySelector('#trash tbody');
+    const footer = document.querySelector('#trash .tp-footer');
+    const errorText = document.getElementById('trashSearchError');
+    errorText.classList.add('hidden');
+    body.setAttribute('aria-busy', 'true');
+    try {
+        const response = await fetch(url.href, {signal:controller.signal, credentials:'same-origin', cache:'no-store'});
+        if (version !== trashSearchVersion) return;
+        if (response.redirected) {window.location.assign(response.url); return;}
+        if (!response.ok) throw new Error('request');
+        const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+        if (version !== trashSearchVersion || document.getElementById('trash').classList.contains('hidden')) return;
+        const nextBody = doc.querySelector('#trash tbody');
+        const nextFooter = doc.querySelector('#trash .tp-footer');
+        if (!nextBody || !nextFooter || !footer) throw new Error('response');
+        body.replaceChildren(...Array.from(nextBody.childNodes, node => document.importNode(node, true)));
+        footer.replaceChildren(...Array.from(nextFooter.childNodes, node => document.importNode(node, true)));
+        // Keep the original input, selection and focus. PHP still searches and paginates.
+        window.history.replaceState(window.history.state, '', url.href);
+    } catch (error) {
+        if (error.name !== 'AbortError' && version === trashSearchVersion) {
+            errorText.textContent = 'ค้นหาไม่สำเร็จ กรุณากด Enter หรือเลือกประเภทเพื่อลองใหม่';
+            errorText.classList.remove('hidden');
+        }
+    } finally {
+        if (version === trashSearchVersion) body.removeAttribute('aria-busy');
+    }
+}
+trashSearchForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+    if (!trashSearchComposing) submitTrashFilters();
 });
 document.getElementById('trashSearchInput').addEventListener('compositionstart', function () {
-    clearTimeout(trashSearchTimer);
+    trashSearchComposing = true;
+    cancelTrashSearch();
 });
-document.getElementById('trashSearchInput').addEventListener('compositionend', scheduleTrashSearch);
+document.getElementById('trashSearchInput').addEventListener('compositionend', function () {
+    trashSearchComposing = false;
+    scheduleTrashSearch();
+});
 function submitTrashAction(action, kind, id, confirmed = false) {
     const form = document.createElement('form');
     form.method = 'post'; form.action = 'dashboard.php?tab=trash';

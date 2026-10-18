@@ -2600,6 +2600,14 @@ if (isset($_GET['api_check_hash'])) {
             border: 1px solid var(--ui-border);
         }
     </style>
+
+<style id="mbs-admin-table-search-alignment">
+.mbs-table-search {margin-right:auto!important;}
+.mbs-contacts-header {flex-direction:column!important;align-items:stretch!important;}
+.mbs-contacts-header .mbs-table-search {align-self:flex-start;}
+.mbs-team-table-header {flex-direction:column!important;align-items:stretch!important;}
+.mbs-team-table-controls {width:100%!important;}
+</style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
@@ -3213,7 +3221,7 @@ if (isset($_GET['api_check_hash'])) {
                             
                             <!-- ✨ ช่องค้นหา: ขยายความยาวในจอคอมและไอแพดแนวนอน (lg:w-[580px] xl:w-[680px] 2xl:w-[850px]) เพื่อดันซ้ายให้ตรงกับคอลัมน์ Reporter เป๊ะๆ ✨ -->
                             <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
-                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
+                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group mbs-table-search">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchInput" oninput="filterRepairsTable(event); toggleClearBtn('searchInput', 'clearSearchBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                                 <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
@@ -3536,14 +3544,14 @@ if (isset($_GET['api_check_hash'])) {
                 </div>
 
                 <div class="mt-24 space-y-6">
-                    <div class="flex flex-col lg:flex-row justify-between items-start gap-4">
+                    <div class="flex flex-col lg:flex-row justify-between items-start gap-4 mbs-team-table-header">
                         <div class="pt-1.5">
                             <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center leading-none">Technicians</h3>
                             <p class="text-sm font-medium text-slate-500 mt-1.5">Manage technicians</p>
                         </div>
-                        <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto">
+                        <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto mbs-team-table-controls">
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
-                            <div class="relative w-full sm:w-64 md:w-72 lg:w-80 xl:w-[400px] mb-2 sm:mb-0 group">
+                            <div class="relative w-full sm:w-64 md:w-72 lg:w-80 xl:w-[400px] mb-2 sm:mb-0 group mbs-table-search">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="search-tech-table" oninput="searchTeamTable(); toggleClearBtn('search-tech-table', 'clearTechTableBtn');" placeholder="ค้นหาชื่อเจ้าหน้าที่ทั้งหมด..." class="w-full bg-white border border-slate-200 text-sm rounded-full pl-9 pr-[90px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                                 <button type="button" id="clearTechTableBtn" onclick="clearSearchInput('search-tech-table', searchTeamTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
@@ -4209,13 +4217,13 @@ if (isset($_GET['api_check_hash'])) {
 
             <div id="users" class="section <?php echo $active_tab === 'users' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col">
-                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
+                    <div class="mbs-contacts-header p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800">Reporter History</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Database of personnel who reported issues</p>
                         </div>
                         <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
-                        <div class="w-full md:w-[320px] relative group">
+                        <div class="w-full md:w-[320px] relative group mbs-table-search">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchHistoryInput" value="<?php echo tp_text(tp_get('pg_reporters_q')); ?>" oninput="searchHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
                             <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', searchHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
@@ -4520,7 +4528,7 @@ if (isset($_GET['api_check_hash'])) {
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
-                            <div class="relative mr-auto flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
+                            <div class="relative mr-auto flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group mbs-table-search">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="loginLogSearch" name="pg_logs_q" value="<?= tp_text(tp_get('pg_logs_q')); ?>" oninput="filterLoginLogs(event); toggleClearBtn('loginLogSearch', 'clearLoginLogSearch');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                                 <button type="button" id="clearLoginLogSearch" onclick="clearLoginLogsSearch()" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 <?= tp_get('pg_logs_q') === '' ? 'hidden' : 'flex' ?> items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
@@ -4984,7 +4992,7 @@ if (isset($_GET['api_check_hash'])) {
                     
                     <!-- ✨ ช่องค้นหา: หดความยาวในจอคอม/โน้ตบุ๊คลงมา (xl:w-[450px] 2xl:w-[500px]) ตามฝั่งผู้บริหาร เพื่อให้พอดีกับคอลัมน์ Reporter แน่นอน 100% ✨ -->
                     <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า (History Modal) ✨ -->
-                    <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px] group">
+                    <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px] group mbs-table-search">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                         <input type="text" id="searchHistoryModalInput" oninput="searchHistoryModalTable(); toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                         <button type="button" id="clearHistoryModalBtn" onclick="clearSearchInput('searchHistoryModalInput', searchHistoryModalTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>

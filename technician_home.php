@@ -1885,7 +1885,7 @@ if (isset($_GET['th_fragment'])
             if (window.eqChartInstance) window.eqChartInstance.destroy(); 
 
             let gradient = eqCtx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
+            gradient.addColorStop(0, 'rgba(37, 99, 235, 0.16)'); gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)'); 
             
             window.eqChartInstance = new Chart(eqCtx, {
                 type: 'line',
@@ -1894,8 +1894,8 @@ if (isset($_GET['th_fragment'])
                     datasets: [{
                         label: 'จำนวน (ครั้ง)',
                         data: eqSorted.length ? eqSorted.map(e => e.count) : [0],
-                        borderColor: '#8b5cf6', backgroundColor: gradient, borderWidth: 3,
-                        pointBackgroundColor: '#ffffff', pointBorderColor: '#8b5cf6', pointBorderWidth: 2, pointRadius: 4,
+                        borderColor: '#3b82f6', backgroundColor: gradient, borderWidth: 3,
+                        pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6', pointBorderWidth: 2, pointRadius: 4,
                         fill: true, tension: 0.4
                     }]
                 },
@@ -1956,7 +1956,7 @@ if (isset($_GET['th_fragment'])
                     datasets: [{
                         label: 'แจ้งซ่อม (ครั้ง)',
                         data: locSorted.length ? locSorted.map(e => e.count) : [0],
-                        backgroundColor: '#f43f5e', borderRadius: 6
+                        backgroundColor: '#3b82f6', borderRadius: 6
                     }]
                 },
                 options: {
@@ -2331,7 +2331,7 @@ if (isset($_GET['th_fragment'])
 
 
     <style>
-        #techReporterModal {position:fixed;inset:0;margin:auto;padding:0;border:0;width:95vw;max-width:95vw;height:85vh;max-height:850px;border-radius:24px;overflow:hidden;background:#fff;color:#334155;box-shadow:0 25px 60px #0f172a40}
+        #techReporterModal {position:fixed;inset:0;margin:auto;padding:0;border:0;width:95vw;max-width:95vw;height:85vh;max-height:850px;border-radius:24px;overflow:hidden;background:#fff;color:#334155;box-shadow:0 25px 60px #0f172a40;transition:width .28s ease,height .28s ease,max-width .28s ease,max-height .28s ease,border-radius .28s ease}
         #techReporterModal[open] {display:flex;flex-direction:column}
         #techReporterModal::backdrop {background:rgba(15,23,42,.4);backdrop-filter:blur(4px)}
         #techReporterModal.tech-reporter-expanded {width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0}
@@ -2341,6 +2341,7 @@ if (isset($_GET['th_fragment'])
         #techReporterTable td {padding:16px 12px;font-size:12px;line-height:1.6;vertical-align:top}
         #techReporterModalFooter {flex-shrink:0}
         #techReporterModalFooter .th-pagination {margin:0}
+        @media(prefers-reduced-motion:reduce) {#techReporterModal {transition:none}}
         @media(max-width:640px) {#techReporterModal {width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0}}
     </style>
     <dialog id="techReporterModal" aria-labelledby="techReporterModalTitle">
@@ -2353,12 +2354,25 @@ if (isset($_GET['th_fragment'])
                 </div>
             </div>
             <div class="flex flex-wrap items-center justify-end gap-3 w-full">
-                <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px]">
+                <div class="relative mr-auto flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px]">
                     <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                     <input type="text" id="techReporterSearch" maxlength="200" oninput="queueTechReporterHistory()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium shadow-sm">
                     <button type="button" id="techReporterSearchClear" onclick="document.getElementById('techReporterSearch').value=''; queueTechReporterHistory();" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 border-l border-slate-200 hidden items-center justify-center rounded-r-xl"><i class="fas fa-times mr-1.5"></i>ล้างค่า</button>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <div class="relative w-[110px] portrait:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="techReporter-DayContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'techReporter-Day', queueTechReporterHistory)" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-3 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'techReporter-Day')">
+                                    <span id="techReporter-DayText" class="truncate"><?php echo 'วันที่ ' . (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j'); ?></span>
+                                    <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                </div>
+                                <div id="techReporter-DayList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกวัน" onclick="selectChartDropdown('techReporter-Day', 'all', 'ทุกวัน', queueTechReporterHistory)">ทุกวัน</div>
+                                    <?php for ($reporterDay = 1; $reporterDay <= 31; $reporterDay++): ?>
+                                    <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600" data-value="<?= $reporterDay ?>" data-display="วันที่ <?= $reporterDay ?>" onclick="selectChartDropdown('techReporter-Day', '<?= $reporterDay ?>', 'วันที่ <?= $reporterDay ?>', queueTechReporterHistory)">วันที่ <?= $reporterDay ?></div>
+                                    <?php endfor; ?>
+                                </div>
+                                <input type="hidden" id="techReporterDay" value="<?php echo (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j'); ?>">
+                            </div>
                             <div class="relative w-[110px] portrait:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="techReporter-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'techReporter-Month', queueTechReporterHistory)" style="font-family: 'Sarabun', sans-serif;">
                                 <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-3 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'techReporter-Month')">
                                     <span id="techReporter-MonthText" class="truncate"><?php echo $current_month_name; ?></span>
@@ -2421,6 +2435,8 @@ if (isset($_GET['th_fragment'])
             document.getElementById('techReporterSearch').value = '';
             document.getElementById('techReporterSearchClear').classList.add('hidden');
             document.getElementById('techReporterSearchClear').classList.remove('flex');
+            const reporterDay = new Intl.DateTimeFormat('en-US', {timeZone:'Asia/Bangkok', day:'numeric'}).format(new Date());
+            selectChartDropdown('techReporter-Day', reporterDay, 'วันที่ ' + reporterDay, null);
             for (const part of ['Month', 'Year']) {
                 const value = document.getElementById('rep' + part).value;
                 const list = document.getElementById('techReporter-' + part + 'List');
@@ -2459,7 +2475,7 @@ if (isset($_GET['th_fragment'])
             techReporterHistory.controller = controller;
             const version = ++techReporterHistory.version;
             const url = new URL('technician_home.php', window.location.href);
-            url.search = new URLSearchParams({tab:'history', th_fragment:'1', th_line_user_id:techReporterHistory.lineId, hd:'all', hm:document.getElementById('techReporterMonth').value, hy:document.getElementById('techReporterYear').value, hs:'all', hq:document.getElementById('techReporterSearch').value.trim(), hp:String(page)}).toString();
+            url.search = new URLSearchParams({tab:'history', th_fragment:'1', th_line_user_id:techReporterHistory.lineId, hd:document.getElementById('techReporterDay').value, hm:document.getElementById('techReporterMonth').value, hy:document.getElementById('techReporterYear').value, hs:'all', hq:document.getElementById('techReporterSearch').value.trim(), hp:String(page)}).toString();
             const body = document.getElementById('techReporterTableBody');
             const footer = document.getElementById('techReporterModalFooter');
             body.setAttribute('aria-busy', 'true');
