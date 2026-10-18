@@ -15,7 +15,7 @@ $atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชี�
 $atNotice = $_SESSION['admin_trash_notice'] ?? null;
 unset($_SESSION['admin_trash_notice']);
 ?>
-<?php if ($active_tab === 'users' && is_array($atNotice)): ?>
+<?php if (in_array($active_tab, ['users', 'team_cards'], true) && is_array($atNotice)): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     Swal.fire({
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="p-6 border-b border-slate-100 space-y-4">
             <h2 class="text-xl font-extrabold text-slate-800"><i class="fas fa-trash-alt text-indigo-500 mr-2" aria-hidden="true"></i>ถังขยะ</h2>
             <p class="text-sm text-slate-500">รายการที่ย้ายเข้าถังขยะยังเก็บอยู่ในฐานข้อมูล สามารถกู้คืนข้อมูลหรือลบถาวรได้</p>
-            <p class="text-xs text-slate-500">การกู้คืนบัญชีหรือเจ้าหน้าที่จะไม่เปิดบัญชีเว็บอัตโนมัติ กรุณาตรวจสอบสถานะบัญชีก่อนเปิดใช้งาน</p>
+            <p class="text-xs text-slate-500">การกู้คืนเจ้าหน้าที่จะเปิดใช้งานบัญชีเว็บที่ผูกอยู่โดยอัตโนมัติ ส่วนการกู้คืนบัญชีผู้ใช้โดยตรงยังต้องตรวจสอบสถานะก่อนเปิดใช้งาน</p>
             <?php if (is_array($atNotice)): ?>
             <div role="status" class="p-4 rounded-xl text-sm font-semibold <?= ($atNotice['type'] ?? '') === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' ?>"><?= $atEscape($atNotice['message'] ?? '') ?></div>
             <?php endif; ?>
@@ -192,6 +192,9 @@ function submitTrashAction(action, kind, id, confirmed = false) {
             if (current.searchParams.has(key)) query.set(key, current.searchParams.get(key));
         }
         form.action = 'dashboard.php?' + query.toString();
+    } else if (action === 'move' && kind === 'tech'
+        && new URL(window.location.href).searchParams.get('tab') === 'team_cards') {
+        form.action = 'dashboard.php?tab=team_cards';
     }
     const fields = {trash_action:action, trash_kind:kind, trash_id:String(id), trash_confirm:confirmed?'1':'0', csrf_token:<?= json_encode($_SESSION['csrf_token']) ?>};
     for (const [name,value] of Object.entries(fields)) { const input=document.createElement('input'); input.type='hidden'; input.name=name; input.value=value; form.appendChild(input); }
@@ -202,11 +205,16 @@ function confirmTrashForm(event, form) {
     if (form.dataset.busy === '1') return false;
     const purge = form.elements.trash_action.value === 'purge';
     const purgeTechnician = purge && form.elements.trash_kind.value === 'tech';
+    const restoreText = form.elements.trash_kind.value === 'tech'
+        ? 'ข้อมูลเจ้าหน้าที่จะกลับไปอยู่ในหน้ารายการเดิม และเปิดใช้งานบัญชีเว็บที่ผูกกับเจ้าหน้าที่โดยอัตโนมัติ โดยไม่กู้คืนบัญชีที่อยู่ในถังขยะแยกไว้'
+        : form.elements.trash_kind.value === 'user'
+            ? 'ข้อมูลจะกลับไปอยู่ในหน้ารายการเดิม บัญชีเว็บจะไม่เปิดใช้งานอัตโนมัติ'
+            : 'ข้อมูลจะกลับไปอยู่ในหน้ารายการเดิม';
     const purgeText = purgeTechnician
         ? 'จะลบข้อมูลเจ้าหน้าที่และบัญชีเว็บที่ผูกกับรหัสเจ้าหน้าที่นี้ทั้งหมดอย่างถาวร กู้คืนไม่ได้ ระบบจะดำเนินการเฉพาะเมื่อไม่มีใบงานอ้างอิง บัญชีถูกระงับแล้ว และไม่มีข้อมูลอื่นอ้างอิง ต้องการลบทั้งสองส่วนหรือไม่?'
         : 'เมื่อลบถาวรแล้วจะไม่สามารถกู้คืนข้อมูลได้ ต้องการดำเนินการต่อหรือไม่?';
     form.dataset.busy = '1';
-    Swal.fire({title:purge?'ยืนยันการลบถาวร?':'กู้คืนข้อมูลนี้?', text:purge?purgeText:'ข้อมูลจะกลับไปอยู่ในหน้ารายการเดิม บัญชีเว็บจะไม่เปิดใช้งานอัตโนมัติ', icon:purge?'warning':'question', showCancelButton:true, confirmButtonText:purge?'ลบถาวร':'กู้คืนข้อมูล', cancelButtonText:'ยกเลิก', confirmButtonColor:purge?'#e11d48':'#4f46e5'}).then(result=>{
+    Swal.fire({title:purge?'ยืนยันการลบถาวร?':'กู้คืนข้อมูลนี้?', text:purge?purgeText:restoreText, icon:purge?'warning':'question', showCancelButton:true, confirmButtonText:purge?'ลบถาวร':'กู้คืนข้อมูล', cancelButtonText:'ยกเลิก', confirmButtonColor:purge?'#e11d48':'#4f46e5'}).then(result=>{
         if (result.isConfirmed) {
             form.elements.trash_confirm.value=purge?'1':'0';
             form.elements.trash_confirm_linked_account.value=purgeTechnician?'1':'0';

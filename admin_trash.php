@@ -44,6 +44,11 @@ function at_redirect($type, $message) {
         $returnPage = at_positive_id($_GET['pg_reporters_page'] ?? null);
         if ($returnPage !== false) $returnQuery['pg_reporters_page'] = $returnPage;
         $destination = 'dashboard.php?' . http_build_query($returnQuery, '', '&', PHP_QUERY_RFC3986);
+    } elseif (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST'
+        && ($_POST['trash_action'] ?? null) === 'move'
+        && ($_POST['trash_kind'] ?? null) === 'tech'
+        && ($_GET['tab'] ?? null) === 'team_cards') {
+        $destination = 'dashboard.php?tab=team_cards';
     }
     header('Location: ' . $destination, true, 303);
     exit;
@@ -167,6 +172,7 @@ function at_handle_request($conn) {
     }
     $started = false;
     $purgedLinkedAccounts = [];
+    $restoredTechAccountCount = 0;
     try {
         $token = $_POST['csrf_token'] ?? null;
         if (!is_string($token) || !is_string($_SESSION['csrf_token'] ?? null)
@@ -231,9 +237,24 @@ function at_handle_request($conn) {
                 at_stmt($conn, "UPDATE $table SET deleted_at = NOW()$keepUpdatedAt WHERE id = ? AND deleted_at IS NULL", 'i', [$id])->close();
             }
         } elseif ($action === 'restore') {
-            $keepUpdatedAt = $table === 'repairs' ? ', updated_at = updated_at' : '';
-            at_stmt($conn, "UPDATE $table SET deleted_at = NULL$keepUpdatedAt WHERE id = ? AND deleted_at IS NOT NULL", 'i', [$id])->close();
-            // ไม่เปิดบัญชีหรือเปลี่ยนการผูก LINE อัตโนมัติ
+            if ($kind === 'tech') {
+                // ผูกบัญชีด้วย technician_id เท่านั้น คงรหัสและการผูก LINE เดิม
+                $linked = at_stmt($conn, 'SELECT id, role, deleted_at FROM users WHERE technician_id = ? FOR UPDATE', 'i', [$id]);
+                $linkedRows = $linked->get_result()->fetch_all(MYSQLI_ASSOC); $linked->close();
+                foreach ($linkedRows as $linkedRow) {
+                    if (strtolower((string)$linkedRow['role']) !== 'technician') {
+                        throw new RuntimeException('บัญชีที่ผูกเจ้าหน้าที่มีประเภทไม่ถูกต้อง กรุณาตรวจสอบก่อน');
+                    }
+                }
+                at_stmt($conn, 'UPDATE technicians SET deleted_at = NULL WHERE id = ? AND deleted_at IS NOT NULL', 'i', [$id])->close();
+                // ไม่กู้คืนบัญชีที่ถูกย้ายเข้าถังขยะแยกไว้ และไม่สร้างบัญชีหรือผูก LINE ใหม่
+                $activate = at_stmt($conn, "UPDATE users SET is_active = 1, auth_version = auth_version + 1 WHERE technician_id = ? AND LOWER(role) = 'technician' AND deleted_at IS NULL", 'i', [$id]);
+                $restoredTechAccountCount = $activate->affected_rows;
+                $activate->close();
+            } else {
+                $keepUpdatedAt = $table === 'repairs' ? ', updated_at = updated_at' : '';
+                at_stmt($conn, "UPDATE $table SET deleted_at = NULL$keepUpdatedAt WHERE id = ? AND deleted_at IS NOT NULL", 'i', [$id])->close();
+            }
         } elseif ($kind === 'tech') {
             $purgedLinkedAccounts = at_purge_technician_with_accounts($conn, $id);
         } else {
@@ -252,7 +273,11 @@ function at_handle_request($conn) {
         if ($action === 'purge' && $kind === 'tech') {
             $message = 'ลบข้อมูลเจ้าหน้าที่ถาวรแล้ว พร้อมบัญชีเว็บที่ผูกอยู่ ' . count($purgedLinkedAccounts) . ' บัญชี';
         }
-        if ($action === 'restore' && in_array($kind, ['user', 'tech'], true)) {
+        if ($action === 'restore' && $kind === 'tech') {
+            $message .= $restoredTechAccountCount > 0
+                ? ' เปิดใช้งานบัญชีเว็บที่ผูกกับเจ้าหน้าที่แล้ว ' . $restoredTechAccountCount . ' บัญชี'
+                : ' ไม่พบบัญชีเว็บที่พร้อมเปิดใช้งานซึ่งผูกกับเจ้าหน้าที่นี้';
+        } elseif ($action === 'restore' && $kind === 'user') {
             $message .= ' บัญชีเว็บยังคงปิดใช้งาน กรุณาตรวจสอบก่อนเปิดใช้งานจากหน้าจัดการบัญชี';
         }
         at_redirect('success', $message);

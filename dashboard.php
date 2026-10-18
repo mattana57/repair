@@ -4047,6 +4047,11 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-history mr-1.5 text-sky-400 group-hover/btn:text-white transition-colors"></i> 
                                         ดูประวัติงาน
                                     </button>
+                                    <button type="button" onclick="confirmDelete('tech', <?php echo (int)$tech['technician_id']; ?>)"
+                                            class="mt-2 w-full text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 hover:bg-rose-500 hover:text-white hover:border-rose-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center"
+                                            aria-label="ย้ายเจ้าหน้าที่เข้าถังขยะ">
+                                        <i class="fas fa-trash-alt mr-1.5" aria-hidden="true"></i> ลบเจ้าหน้าที่
+                                    </button>
                                 </div>
                             </div>
 
