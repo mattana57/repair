@@ -185,6 +185,65 @@ function mbsServiceJobCard($ticket, $location, $category, $detail, $reporter, $p
     ]);
 }
 
+
+// เลขแสดงผลยาว 19 ตัว รองรับ ticket_no VARCHAR(20)
+function mbsNewTicketNumber() {
+    return 'MR-' . strtoupper(bin2hex(random_bytes(8)));
+}
+
+// ตรวจเลขก่อนบันทึก และลองใหม่เมื่อ UNIQUE ปฏิเสธเลขชนกัน
+function mbsInsertRepair($conn, $stmt, &$ticket_no) {
+    $lock = $conn->query("SELECT GET_LOCK('repair_ticket_number_v1', 5) AS acquired");
+    $row = $lock ? $lock->fetch_assoc() : null;
+    if (!$row || (int)$row['acquired'] !== 1) { return false; }
+    try {
+        $check = $conn->prepare('SELECT id FROM repairs WHERE ticket_no = ? LIMIT 1');
+        if (!$check) { return false; }
+        $check->bind_param('s', $ticket_no);
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $check->execute();
+            if ($check->get_result()->fetch_assoc()) {
+                $ticket_no = mbsNewTicketNumber();
+                continue;
+            }
+            try {
+                if ($stmt->execute()) { return true; }
+                if ((int)$stmt->errno !== 1062) { return false; }
+            } catch (mysqli_sql_exception $e) {
+                if ((int)$e->getCode() !== 1062) {
+                    error_log('LINE repair insert failed; code=' . (int)$e->getCode());
+                    return false;
+                }
+            }
+            $ticket_no = mbsNewTicketNumber();
+        }
+        return false;
+    } finally {
+        $conn->query("SELECT RELEASE_LOCK('repair_ticket_number_v1')");
+    }
+}
+
+// ปุ่มใหม่ระบุ id; ปุ่มเก่าใช้ได้เฉพาะเลขที่ไม่กำกวม
+function mbsResolveRepair($conn, $data) {
+    if (array_key_exists('id', $data)) {
+        $id = is_scalar($data['id']) ? filter_var($data['id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) : false;
+        if ($id === false) { return null; }
+        $stmt = $conn->prepare('SELECT id, ticket_no, line_user_id, status FROM repairs WHERE id = ?');
+        $stmt->bind_param('i', $id);
+    } else {
+        $ticket = $data['ticket'] ?? null;
+        // เลขนี้เคยซ้ำ: ห้ามปุ่มเก่าแม้ภายหลังเปลี่ยนเลขหนึ่งรายการแล้ว
+        if (!is_string($ticket) || $ticket === '' || $ticket === 'MR-5208') { return null; }
+        $stmt = $conn->prepare('SELECT id, ticket_no, line_user_id, status FROM repairs WHERE ticket_no = ? LIMIT 2');
+        $stmt->bind_param('s', $ticket);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $job = $result->num_rows === 1 ? $result->fetch_assoc() : null;
+    $stmt->close();
+    return $job;
+}
+
 $content = file_get_contents('php://input');
 $events = json_decode($content, true);
 
@@ -393,8 +452,8 @@ if (!is_null($events['events'])) {
                     if ($recent_job && mb_strlen($text, 'UTF-8') <= 255 && !preg_match('/(ห้อง|อาคาร|ตึก|ชั้น)/', $text)) {
                         $current_rev = (string)$recent_job['review_comment'];
                         $new_rev = trim($current_rev . " " . $text);
-                        $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE id = ?");
-                        $stmt_upd->bind_param("si", $new_rev, $recent_job['id']);
+                        $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE id = ? AND line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว'");
+                        $stmt_upd->bind_param("sis", $new_rev, $recent_job['id'], $userId);
                         $stmt_upd->execute();
                         
                         $text_clean_rev = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
@@ -437,7 +496,7 @@ if (!is_null($events['events'])) {
 
             if ($category !== "ไม่ระบุปัญหา" || $location !== "ไม่ระบุสถานที่") {
                 
-                $ticket_no = "MR-" . rand(1000, 9999);
+                $ticket_no = mbsNewTicketNumber();
                 $status = "รอรับเรื่อง"; 
                 $image_path = null; 
                 
@@ -458,7 +517,8 @@ if (!is_null($events['events'])) {
                 $stmt = $conn->prepare("INSERT INTO repairs (ticket_no, equipment_type, location, problem_desc, status, reporter_name, line_display_name, phone_number, line_user_id, line_message_id, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param("sssssssssss", $ticket_no, $category, $location, $problem, $status, $user_reg['real_name'], $line_name, $user_reg['phone_number'], $userId, $message_id, $image_path);
                 
-                if($stmt->execute()) {
+                if(mbsInsertRepair($conn, $stmt, $ticket_no)) {
+                    $repair_id = (int)$stmt->insert_id;
                     $replyText = "✅ รับคำขอเรียบร้อยแล้วค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n📌 เรื่องที่แจ้ง: $category\n📍 สถานที่: $location\n📝 ข้อความจากผู้แจ้ง: $problem\n\nระบบจะแจ้งเมื่อเจ้าหน้าที่รับงานค่ะ";
                     if ($image_path) {
                         $replyText .= "\n📸 (ระบบได้รับและแนบรูปภาพของคุณเข้าไปในใบงานเรียบร้อยแล้วค่ะ)";
@@ -472,7 +532,7 @@ if (!is_null($events['events'])) {
                         $short_reporter_name, $user_reg['phone_number'], 'คำขอใหม่ · รอรับงาน',
                         [[
                             'type' => 'button', 'style' => 'primary', 'height' => 'md',
-                            'action' => ['type' => 'postback', 'label' => 'รับงาน', 'data' => "action=accept&ticket=$ticket_no"]
+                            'action' => ['type' => 'postback', 'label' => 'รับงาน', 'data' => "action=accept&id=$repair_id"]
                         ]], '', '', !empty($image_path)
                     );
                     send_push($line_group_id, $pushMsg, $channelAccessToken);
@@ -510,8 +570,8 @@ if (!is_null($events['events'])) {
                         $current_rev = (string)$recent_job['review_comment'];
                         $new_rev = trim($current_rev . " " . $text);
                         
-                        $stmt_update_review = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE id = ?");
-                        $stmt_update_review->bind_param("si", $new_rev, $recent_job['id']);
+                        $stmt_update_review = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE id = ? AND line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว'");
+                        $stmt_update_review->bind_param("sis", $new_rev, $recent_job['id'], $userId);
                         $stmt_update_review->execute();
                         
                         $text_clean_rev = mb_strtolower(str_replace([' ', "\n", 'ค่ะ', 'ครับ', 'จ้า', 'นะ', 'พี่'], '', $text), 'UTF-8');
@@ -549,18 +609,26 @@ if (!is_null($events['events'])) {
         elseif ($event['type'] == 'postback') {
             parse_str($event['postback']['data'], $postbackData);
 
-            if (isset($postbackData['action']) && isset($postbackData['ticket'])) {
-                $ticket_no = $postbackData['ticket'];
+            if (isset($postbackData['action']) && (isset($postbackData['id']) || isset($postbackData['ticket']))) {
+                $resolved_job = mbsResolveRepair($conn, $postbackData);
+                if (!$resolved_job) {
+                    send_reply($replyToken, ['type' => 'text', 'text' => 'ไม่สามารถระบุใบงานจากปุ่มนี้ได้ค่ะ กรุณาใช้การ์ดใบงานล่าสุดที่ระบบส่งใหม่ หรือติดต่อผู้ดูแลให้ส่งการ์ดใหม่ค่ะ'], $channelAccessToken);
+                    continue;
+                }
+                $repair_id = (int)$resolved_job['id'];
+                $ticket_no = $resolved_job['ticket_no'];
+                if (in_array($postbackData['action'], ['rate', 'add_tag'], true)
+                    && ($resolved_job['line_user_id'] !== $userId || $resolved_job['status'] !== 'ซ่อมเสร็จแล้ว')) {
+                    send_reply($replyToken, ['type' => 'text', 'text' => 'เฉพาะผู้แจ้งของใบงานที่ดำเนินการเสร็จแล้วเท่านั้นที่ประเมินได้ค่ะ'], $channelAccessToken);
+                    continue;
+                }
 
                 if ($postbackData['action'] == 'accept') {
-                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_id, technician_name, equipment_type, location, problem_desc, image_path, reporter_name, phone_number, line_display_name FROM repairs WHERE ticket_no = ?");
-                    $stmt_check->bind_param("s", $ticket_no);
+                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_id, technician_name, equipment_type, location, problem_desc, image_path, reporter_name, phone_number, line_display_name FROM repairs WHERE id = ?");
+                    $stmt_check->bind_param("i", $repair_id);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
 
-                    if ($job) {
-                        if ($job['status'] == 'รอรับเรื่อง' && empty($job['technician_id'])) {
-                            
                             $stmt_tech = $conn->prepare("SELECT * FROM technicians WHERE line_user_id = ? AND approval_status = 'อนุมัติแล้ว'");
                             $stmt_tech->bind_param("s", $userId);
                             $stmt_tech->execute();
@@ -575,9 +643,12 @@ if (!is_null($events['events'])) {
                                 continue;
                             }
 
+                    if ($job) {
+                        if ($job['status'] == 'รอรับเรื่อง' && empty($job['technician_id'])) {
+                            
                             $tech_id = (int) $tech_result['id'];
-                            $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_id = ?, technician_name = ?, received_at = COALESCE(received_at, CURRENT_TIMESTAMP) WHERE ticket_no = ? AND status = 'รอรับเรื่อง' AND (technician_id IS NULL OR technician_id = 0)");
-                            $stmt->bind_param("iss", $tech_id, $tech_name, $ticket_no);
+                            $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_id = ?, technician_name = ?, received_at = COALESCE(received_at, CURRENT_TIMESTAMP) WHERE id = ? AND status = 'รอรับเรื่อง' AND (technician_id IS NULL OR technician_id = 0)");
+                            $stmt->bind_param("isi", $tech_id, $tech_name, $repair_id);
                             if (!$stmt->execute() || $stmt->affected_rows !== 1) {
                                 send_reply($replyToken, ['type' => 'text', 'text' => "ไม่สามารถรับงานได้ ใบงานอาจมีผู้รับแล้ว กรุณาตรวจสอบอีกครั้งค่ะ"], $channelAccessToken);
                                 continue;
@@ -592,7 +663,7 @@ if (!is_null($events['events'])) {
                                 'รับงานแล้ว',
                                 [
                                     ['type' => 'button', 'style' => 'primary', 'height' => 'sm',
-                                        'action' => ['type' => 'postback', 'label' => 'แจ้งปิดงาน', 'data' => "action=close&ticket=$ticket_no"]],
+                                        'action' => ['type' => 'postback', 'label' => 'แจ้งปิดงาน', 'data' => "action=close&id=$repair_id"]],
                                     ['type' => 'button', 'style' => 'secondary', 'height' => 'sm',
                                         'action' => ['type' => 'uri', 'label' => 'จัดการ / เพิ่มหมายเหตุ', 'uri' => $job_url]]
                                 ], $tech_name, $tech_dept, !empty($job['image_path']), true
@@ -616,14 +687,18 @@ if (!is_null($events['events'])) {
                             }
 
                         } else {
+                            if ($job['status'] === 'รอรับเรื่อง') {
+                                send_reply($replyToken, ['type' => 'text', 'text' => 'ใบงานยังรอรับเรื่อง แต่มีรหัสผู้รับผิดชอบอยู่แล้ว กรุณาให้ผู้ดูแลตรวจสอบข้อมูลค่ะ'], $channelAccessToken);
+                                continue;
+                            }
                             $taken_by = !empty($job['technician_name']) ? $job['technician_name'] : "เจ้าหน้าที่ท่านอื่น";
                             send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ ใบงาน $ticket_no ถูกรับไปแล้วโดยเจ้าหน้าที่ $taken_by"], $channelAccessToken);
                         }
                     }
                 }
                 elseif (in_array($postbackData['action'], ['close', 'confirm_close'], true)) {
-                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_id, technician_name, reporter_name FROM repairs WHERE ticket_no = ?");
-                    $stmt_check->bind_param("s", $ticket_no);
+                    $stmt_check = $conn->prepare("SELECT id, status, line_user_id, technician_id, technician_name, reporter_name FROM repairs WHERE id = ?");
+                    $stmt_check->bind_param("i", $repair_id);
                     $stmt_check->execute();
                     $job = $stmt_check->get_result()->fetch_assoc();
 
@@ -641,8 +716,8 @@ if (!is_null($events['events'])) {
                                 if ((int) ($job['technician_id'] ?? 0) > 0 && (int) $tech_result['id'] === (int) $job['technician_id']) {
                                     
                                     $clicker_id = (int) $tech_result['id'];
-                                    $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว', completed_at = CURRENT_TIMESTAMP WHERE ticket_no = ? AND technician_id = ? AND status IN ('กำลังดำเนินการ', 'ช่างรับเรื่องแจ้งซ่อมแล้ว')");
-                                    $stmt->bind_param("si", $ticket_no, $clicker_id);
+                                    $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว', completed_at = CURRENT_TIMESTAMP WHERE id = ? AND technician_id = ? AND status IN ('กำลังดำเนินการ', 'ช่างรับเรื่องแจ้งซ่อมแล้ว')");
+                                    $stmt->bind_param("ii", $repair_id, $clicker_id);
                                     if (!$stmt->execute() || $stmt->affected_rows !== 1) {
                                         send_reply($replyToken, ['type' => 'text', 'text' => "ไม่สามารถปิดงานได้ สิทธิ์หรือสถานะใบงานเปลี่ยนแล้วค่ะ"], $channelAccessToken);
                                         continue;
@@ -669,27 +744,27 @@ if (!is_null($events['events'])) {
                                                     [
                                                         'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm',
                                                         'contents' => [
-                                                            ['type' => 'button', 'style' => 'primary', 'color' => '#fbbf24', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '5 ดาว', 'data' => "action=rate&score=5&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '4 ดาว', 'data' => "action=rate&score=4&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '3 ดาว', 'data' => "action=rate&score=3&ticket=$ticket_no"]]
+                                                            ['type' => 'button', 'style' => 'primary', 'color' => '#fbbf24', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '5 ดาว', 'data' => "action=rate&score=5&id=$repair_id"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '4 ดาว', 'data' => "action=rate&score=4&id=$repair_id"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '3 ดาว', 'data' => "action=rate&score=3&id=$repair_id"]]
                                                         ]
                                                     ],
                                                     [
                                                         'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
                                                         'contents' => [
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '2 ดาว', 'data' => "action=rate&score=2&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '1 ดาว', 'data' => "action=rate&score=1&ticket=$ticket_no"]],
-                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '0 ดาว', 'data' => "action=rate&score=0&ticket=$ticket_no"]]
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '2 ดาว', 'data' => "action=rate&score=2&id=$repair_id"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '1 ดาว', 'data' => "action=rate&score=1&id=$repair_id"]],
+                                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '0 ดาว', 'data' => "action=rate&score=0&id=$repair_id"]]
                                                         ]
                                                     ],
                                                     ['type' => 'separator', 'margin' => 'sm'],
                                                     ['type' => 'text', 'text' => '2️⃣ เลือกรีวิว (กดได้หลายข้อ)', 'size' => 'xs', 'color' => '#aaaaaa', 'margin' => 'sm'],
-                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ดำเนินการเร็ว', 'data' => "action=add_tag&tag=ดำเนินการรวดเร็วทันใจ&ticket=$ticket_no"]],
-                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🎯 แก้ปัญหาตรงจุด', 'data' => "action=add_tag&tag=แก้ไขปัญหาได้อย่างตรงจุด&ticket=$ticket_no"]],
-                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '💡 ให้คำแนะนำดี', 'data' => "action=add_tag&tag=อธิบายและให้คำแนะนำชัดเจน&ticket=$ticket_no"]],
-                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพเรียบร้อย', 'data' => "action=add_tag&tag=สุภาพเรียบร้อย บริการเต็มใจ&ticket=$ticket_no"]],
-                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ เก็บงานเรียบร้อย', 'data' => "action=add_tag&tag=ซ่อมแซมและเก็บงานเรียบร้อย&ticket=$ticket_no"]],
-                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🙏 ช่วยเหลือดีเยี่ยม', 'data' => "action=add_tag&tag=ช่วยอำนวยความสะดวกได้ดีเยี่ยม&ticket=$ticket_no"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ดำเนินการเร็ว', 'data' => "action=add_tag&tag=ดำเนินการรวดเร็วทันใจ&id=$repair_id"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🎯 แก้ปัญหาตรงจุด', 'data' => "action=add_tag&tag=แก้ไขปัญหาได้อย่างตรงจุด&id=$repair_id"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '💡 ให้คำแนะนำดี', 'data' => "action=add_tag&tag=อธิบายและให้คำแนะนำชัดเจน&id=$repair_id"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพเรียบร้อย', 'data' => "action=add_tag&tag=สุภาพเรียบร้อย บริการเต็มใจ&id=$repair_id"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ เก็บงานเรียบร้อย', 'data' => "action=add_tag&tag=ซ่อมแซมและเก็บงานเรียบร้อย&id=$repair_id"]],
+                                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🙏 ช่วยเหลือดีเยี่ยม', 'data' => "action=add_tag&tag=ช่วยอำนวยความสะดวกได้ดีเยี่ยม&id=$repair_id"]],
                                                     ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวเพิ่มเติมส่งมาในแชทได้เลยค่ะ', 'size' => 'xxs', 'color' => '#bbbbbb', 'margin' => 'sm', 'wrap' => true]
                                                 ]
                                             ]
@@ -711,9 +786,11 @@ if (!is_null($events['events'])) {
                     }
                 }
                 elseif ($postbackData['action'] == 'rate') {
-                    $score = $postbackData['score'];
-                    $stmt = $conn->prepare("UPDATE repairs SET rating = ? WHERE ticket_no = ?");
-                    $stmt->bind_param("is", $score, $ticket_no);
+                    $score = isset($postbackData['score']) && is_scalar($postbackData['score'])
+                        ? filter_var($postbackData['score'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 5]]) : false;
+                    if ($score === false) { continue; }
+                    $stmt = $conn->prepare("UPDATE repairs SET rating = ? WHERE id = ? AND line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว'");
+                    $stmt->bind_param("iis", $score, $repair_id, $userId);
                     
                     if($stmt->execute()){
                         $thankYouMsg = [
@@ -724,18 +801,19 @@ if (!is_null($events['events'])) {
                     }
                 }
                 elseif ($postbackData['action'] == 'add_tag') {
-                    $tag = $postbackData['tag'];
+                    $tag = $postbackData['tag'] ?? '';
+                    if (!in_array($tag, ['ดำเนินการรวดเร็วทันใจ', 'แก้ไขปัญหาได้อย่างตรงจุด', 'อธิบายและให้คำแนะนำชัดเจน', 'สุภาพเรียบร้อย บริการเต็มใจ', 'ซ่อมแซมและเก็บงานเรียบร้อย', 'ช่วยอำนวยความสะดวกได้ดีเยี่ยม'], true)) { continue; }
                     
-                    $stmt_check = $conn->prepare("SELECT review_comment FROM repairs WHERE ticket_no = ?");
-                    $stmt_check->bind_param("s", $ticket_no);
+                    $stmt_check = $conn->prepare("SELECT review_comment FROM repairs WHERE id = ?");
+                    $stmt_check->bind_param("i", $repair_id);
                     $stmt_check->execute();
                     $job_rev = $stmt_check->get_result()->fetch_assoc();
                     $current_rev = $job_rev ? (string)$job_rev['review_comment'] : "";
 
                     if (mb_strpos($current_rev, $tag) === false) {
                         $new_rev = trim($current_rev . " [" . $tag . "]");
-                        $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE ticket_no = ?");
-                        $stmt_upd->bind_param("ss", $new_rev, $ticket_no);
+                        $stmt_upd = $conn->prepare("UPDATE repairs SET review_comment = ? WHERE id = ? AND line_user_id = ? AND status = 'ซ่อมเสร็จแล้ว'");
+                        $stmt_upd->bind_param("sis", $new_rev, $repair_id, $userId);
                         
                         if($stmt_upd->execute()){
                             send_reply($replyToken, ['type' => 'text', 'text' => "✅ เพิ่มรีวิวให้ใบงาน $ticket_no: $tag"], $channelAccessToken);
