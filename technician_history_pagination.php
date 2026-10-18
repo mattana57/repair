@@ -1099,10 +1099,7 @@ rsort($thYears);
                                             : 'ไม่ระบุ'
                                     ) ?>
 
-                                    <?php if (!empty($r['image_path'])): ?>
-                                        <i class="fas fa-image text-slate-400 ml-1"
-                                           title="มีรูปภาพแนบ"></i>
-                                    <?php endif; ?>
+                                    <?= dm_icons($conn, $r) ?>
                                 </div>
 
                                 <div class="text-slate-500 text-[11px]">

@@ -34,10 +34,10 @@ if(isset($_GET['file'])){
 }
 $rows=rmQuery($conn,"SELECT id,media_type,state,failure_code FROM repair_attachments WHERE repair_id=? AND state<>'expired' ORDER BY id",'i',$id)->get_result();
 function rmEscape($s){return htmlspecialchars((string)$s,ENT_QUOTES,'UTF-8');}
-?><!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ไฟล์แนบใบงาน</title><link rel="stylesheet" href="repair-detail-ui.css?v=20261019-1"></head><body class="attachment-page"><main><header class="attachment-header"><p class="attachment-eyebrow">เอกสารประกอบการแจ้งซ่อม</p><h1>ไฟล์แนบใบงาน<br><span class="attachment-ticket"><?php echo rmEscape($job['ticket_no']);?></span></h1><p class="attachment-caption">รูปไม่เกิน 10 รูป · วิดีโอไม่เกิน 2 คลิปต่อใบงาน</p></header><div class="attachment-grid">
+?><!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ไฟล์แนบใบงาน</title><link rel="stylesheet" href="repair-detail-ui.css?v=20261019-2"></head><body class="attachment-page"><main><p class="attachment-back"><a href="javascript:history.back()">กลับหน้าก่อนหน้า</a></p><header class="attachment-header"><p class="attachment-eyebrow">เอกสารประกอบการแจ้งซ่อม</p><h1>ไฟล์แนบใบงาน<br><span class="attachment-ticket"><?php echo rmEscape($job['ticket_no']);?></span></h1><p class="attachment-caption">รูปไม่เกิน 10 รูป · วิดีโอไม่เกิน 2 คลิปต่อใบงาน</p></header><div class="attachment-grid">
 <?php while($file=$rows->fetch_assoc()):$url='repair_attachments.php?id='.(int)$id.'&amp;file='.(int)$file['id'];?><article class="attachment-card">
 <?php if($file['state']==='ready'):if($file['media_type']==='image'):?><a href="<?php echo $url;?>" target="_blank" rel="noopener"><img loading="lazy" src="<?php echo $url;?>" alt="รูปประกอบใบงาน"></a><?php else:?><video controls preload="metadata" playsinline src="<?php echo $url;?>"></video><?php endif;?>
 <p><a href="<?php echo $url;?>" target="_blank" rel="noopener">เปิด<?php echo $file['media_type']==='image'?'รูป':'วิดีโอ';?>เต็ม</a></p>
 <?php elseif($file['state']==='failed'):?><p>รับไฟล์นี้ไม่สำเร็จ<?php echo $file['failure_code']==='too_large'?' เนื่องจากเกินขนาดที่กำหนด':'';?>ค่ะ</p>
 <?php else:?><p>กำลังรับ<?php echo $file['media_type']==='image'?'รูป':'วิดีโอ';?>ค่ะ กรุณาเปิดหน้านี้ใหม่ภายหลัง</p><?php endif;?></article><?php endwhile;?>
-</div><p class="attachment-back"><a href="javascript:history.back()">กลับหน้าก่อนหน้า</a></p></main></body></html>
+</div></main></body></html>

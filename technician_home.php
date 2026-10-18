@@ -48,6 +48,9 @@ if ($tech_data['approval_status'] !== 'อนุมัติแล้ว') {
     exit();
 }
 
+define('MBS_DASHBOARD_MEDIA', true);
+require_once __DIR__ . '/dashboard_media_icons.php';
+
 define('MBS_DASHBOARD_ACTIVITY', true);
 require_once __DIR__ . '/dashboard_activity.php';
 
@@ -160,7 +163,7 @@ $repairs = [];
 $res_repairs = $conn->query("SELECT * FROM repairs WHERE $where ORDER BY created_at DESC");
 if ($res_repairs) {
     while ($row = $res_repairs->fetch_assoc()) {
-        $repairs[] = $row;
+        $repairs[] = dm_enrich($conn, $row);
     }
 }
 
@@ -1081,6 +1084,7 @@ if (isset($_GET['th_fragment'])
         }
     </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
+<script src="dashboard_media_icons.js?v=20261019-1"></script>
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -2026,7 +2030,7 @@ if (isset($_GET['th_fragment'])
                 let dName = lineUsersMap[raw_name] ? lineUsersMap[raw_name] : (raw_name !== '' ? raw_name : 'ไม่ระบุ');
                 let dPhone = r.phone_number || '-';
                 
-                let imgIcon = r.image_path ? `<i class="fas fa-image ml-1" style="color: #94a3b8;" title="มีรูปภาพแนบ"></i>` : '';
+                let imgIcon = dashboardMediaIcons(r);
 
                 html += `
                     <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
