@@ -1056,6 +1056,100 @@ if (isset($_GET['th_fragment'])
             }
         }
     </style>
+
+    <style id="mbs-blue-dashboard-theme">
+        :root {
+            --ui-primary: #2563eb;
+            --ui-primary-hover: #1d4ed8;
+            --ui-primary-soft: #eff6ff;
+            --ui-surface: #ffffff;
+            --ui-background: #f8fafc;
+            --ui-text: #0f172a;
+            --ui-border: #e2e8f0;
+        }
+        body, body.tech-dashboard-ui { background-color: var(--ui-background); }
+        .modern-card {
+            background-color: var(--ui-surface);
+            box-shadow: 0 3px 16px -5px rgba(15, 23, 42, .07);
+        }
+        /* แถบบนทุกแท็บ: ขาว/กรมท่า แทนสีไล่ระดับ โดยคงขนาดและตำแหน่งเดิม */
+        header.top-header,
+        .tech-dashboard-ui .tech-topbar {
+            background: var(--ui-surface) !important;
+            color: var(--ui-text) !important;
+            border-bottom: 1px solid var(--ui-border) !important;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, .03) !important;
+        }
+        header.top-header #headerTitle {
+            color: var(--ui-text) !important;
+            filter: none !important;
+            text-shadow: none !important;
+        }
+        header.top-header > div:first-child > button {
+            color: #334155 !important;
+        }
+        header.top-header > div:first-child > button:hover {
+            background: #f1f5f9 !important;
+        }
+        #sidebar {
+            background: #0f172a !important;
+            box-shadow: 2px 0 12px rgba(15, 23, 42, .08) !important;
+        }
+        #sidebar .sidebar-logo-box h1 span,
+        #sidebar .sidebar-logo-box p { color: #93c5fd !important; }
+        #sidebar .sidebar-logo-box [class*="bg-gradient"] {
+            background: var(--ui-primary) !important;
+            box-shadow: none !important;
+        }
+        #sidebar .nav-btn.active-btn {
+            background: var(--ui-primary) !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 10px rgba(37, 99, 235, .18) !important;
+        }
+        #sidebar .nav-btn.active-btn i { color: #ffffff !important; }
+        #sidebar .nav-btn:hover i { color: #bfdbfe !important; }
+        /* ใช้สีน้ำเงินร่วมกันกับปุ่ม/ตัวเลือกเดิม ไม่เปลี่ยนชื่อคลาสที่ JS ใช้ */
+        .bg-indigo-500, .bg-indigo-600, .bg-violet-600,
+        .tech-dashboard-ui .tech-tabs .capsule-btn.bg-indigo-600 {
+            background-color: var(--ui-primary) !important;
+        }
+        .bg-indigo-700 { background-color: var(--ui-primary-hover) !important; }
+        .text-indigo-500, .text-indigo-600, .text-violet-600, .text-fuchsia-600, .text-purple-600 {
+            color: var(--ui-primary) !important;
+        }
+        .text-indigo-700 { color: var(--ui-primary-hover) !important; }
+        .bg-indigo-50, .bg-violet-50, .bg-fuchsia-50, .bg-purple-50 { background-color: var(--ui-primary-soft) !important; }
+        .bg-indigo-100 { background-color: #dbeafe !important; }
+        .border-indigo-100, .border-indigo-200 { border-color: #dbeafe !important; }
+        .hover\:bg-indigo-700:hover, .hover\:bg-indigo-600:hover {
+            background-color: var(--ui-primary-hover) !important;
+        }
+        .tp-link.tp-current {
+            background: var(--ui-primary) !important;
+            border-color: var(--ui-primary) !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 8px rgba(37, 99, 235, .18) !important;
+        }
+        /* ลดพื้นที่เส้นสีในการ์ดสรุป แต่คงสีไอคอน/ป้ายสถานะเดิม */
+        .modern-card.border-b-4 {
+            border-bottom-width: 1px !important;
+            border-bottom-color: var(--ui-border) !important;
+        }
+        .tech-dashboard-ui .tech-stats-grid > .modern-card {
+            border-left-width: 1px !important;
+            border-left-color: var(--ui-border) !important;
+        }
+        .tech-dashboard-ui .tech-welcome {
+            background: var(--ui-surface) !important;
+            border-color: var(--ui-border) !important;
+            box-shadow: 0 3px 16px -5px rgba(15, 23, 42, .07) !important;
+        }
+        .tech-dashboard-ui .tech-topbar .tech-mobile-menu > summary {
+            color: #334155;
+            background: #f1f5f9;
+            border: 1px solid var(--ui-border);
+        }
+    </style>
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1885,7 +1979,7 @@ if (isset($_GET['th_fragment'])
             if (window.eqChartInstance) window.eqChartInstance.destroy(); 
 
             let gradient = eqCtx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); gradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)'); 
+            gradient.addColorStop(0, 'rgba(37, 99, 235, 0.16)'); gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)'); 
             
             window.eqChartInstance = new Chart(eqCtx, {
                 type: 'line',
@@ -1894,7 +1988,7 @@ if (isset($_GET['th_fragment'])
                     datasets: [{
                         label: 'จำนวน (ครั้ง)',
                         data: eqSorted.length ? eqSorted.map(e => e.count) : [0],
-                        borderColor: '#8b5cf6', backgroundColor: gradient, borderWidth: 3,
+                        borderColor: '#3b82f6', backgroundColor: gradient, borderWidth: 3,
                         pointBackgroundColor: '#ffffff', pointBorderColor: '#8b5cf6', pointBorderWidth: 2, pointRadius: 4,
                         fill: true, tension: 0.4
                     }]
@@ -1956,7 +2050,7 @@ if (isset($_GET['th_fragment'])
                     datasets: [{
                         label: 'แจ้งซ่อม (ครั้ง)',
                         data: locSorted.length ? locSorted.map(e => e.count) : [0],
-                        backgroundColor: '#f43f5e', borderRadius: 6
+                        backgroundColor: '#3b82f6', borderRadius: 6
                     }]
                 },
                 options: {
