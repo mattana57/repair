@@ -2614,6 +2614,7 @@ if (isset($_GET['api_check_hash'])) {
 #techniciansTableBody .mbs-team-contact > .flex {margin-top:2px;line-height:16px;}
 #techniciansTableBody .mbs-team-contact > .flex > .rounded-full {width:16px;height:16px;}
 </style>
+    <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 

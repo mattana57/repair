@@ -1050,6 +1050,7 @@ if (isset($_GET['api_check_hash'])) {
             border: 1px solid var(--ui-border);
         }
     </style>
+    <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 </head>
 
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">

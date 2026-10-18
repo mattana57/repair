@@ -1080,6 +1080,7 @@ if (isset($_GET['th_fragment'])
             }
         }
     </style>
+    <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 

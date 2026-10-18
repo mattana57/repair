@@ -1,0 +1,37 @@
+/* ข้อความตารางว่างร่วมกันทั้ง Admin / Executive / Technician
+   ใช้เฉพาะ tbody ที่มีแถวเดียวและมีช่อง colspan จัดกึ่งกลางเพียงช่องเดียว
+   ไม่ตรงกับแถวข้อมูล แถวคั่นฝ่ายงาน หรือข้อความแจ้งข้อผิดพลาด role=alert
+   :is ใช้ ID ของตารางจริงเพื่อให้ทับรูปแบบ responsive เดิมได้เฉพาะตารางว่าง */
+:is(body, #repairsMainCard) :is(table, #historyTableFull):has(> tbody > tr:only-child > td[colspan].text-center:only-child:not([role="alert"])) {
+    display: table !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+}
+:is(body, #repairsMainCard) :is(table, #historyTableFull):has(> tbody > tr:only-child > td[colspan].text-center:only-child:not([role="alert"])) > thead {
+    height: 1px; /* คงความสูงขั้นต่ำตามเนื้อหาหัวตาราง ให้แถวว่างรับพื้นที่ที่เหลือ */
+}
+:is(body, #repairsMainCard) :is(table, #historyTableFull):has(> tbody > tr:only-child > td[colspan].text-center:only-child:not([role="alert"])) > tbody {
+    display: table-row-group !important;
+}
+:is(body, #repairsMainCard) :is(table, #historyTableFull):has(> tbody > tr:only-child > td[colspan].text-center:only-child:not([role="alert"])) > tbody > tr {
+    display: table-row !important;
+}
+:is(body, #repairsMainCard) :is(table, #historyTableFull):has(> tbody > tr:only-child > td[colspan].text-center:only-child:not([role="alert"])) > tbody > tr > td[colspan].text-center:only-child:not([role="alert"]) {
+    display: table-cell !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    height: 280px !important;
+    padding: 40px 20px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    font-size: clamp(18px, 1.2vw, 20px) !important;
+    font-weight: 500 !important;
+    line-height: 1.7 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+}
+:is(body, #repairsMainCard) :is(table, #historyTableFull):has(> tbody > tr:only-child > td[colspan].text-center:only-child:not([role="alert"])) > tbody > tr > td[colspan].text-center:only-child:not([role="alert"])::before {
+    display: none !important;
+    content: none !important;
+}
