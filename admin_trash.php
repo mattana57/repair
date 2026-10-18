@@ -102,6 +102,27 @@ function at_check_references($conn, $table, $id) {
     }
 }
 
+// ลบบัญชีผู้ดูแล/ผู้บริหารพร้อมคำขอ OTP ของบัญชีนี้ ภายในธุรกรรมเดิมเท่านั้น
+function at_purge_management_account($conn, $id) {
+    $account = at_row($conn, 'SELECT id, role, is_active, deleted_at FROM users WHERE id = ? FOR UPDATE', 'i', [$id]);
+    if (!$account || $account['deleted_at'] === null || (int)$account['is_active'] !== 0
+        || !in_array(strtolower((string)$account['role']), ['admin', 'executive'], true)
+        || $id === (int)$_SESSION['user_id']) {
+        throw new RuntimeException('บัญชีไม่พร้อมสำหรับการลบถาวร กรุณาตรวจสอบสถานะอีกครั้ง');
+    }
+    $engine = at_row($conn, "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'auth_requests'");
+    if (!$engine || strtoupper((string)$engine['ENGINE']) !== 'INNODB') {
+        throw new RuntimeException('ตารางคำขอ OTP ต้องรองรับธุรกรรมก่อนลบบัญชีถาวร');
+    }
+    // ใช้ user_id ตามความสัมพันธ์จริง ไม่จับคู่ด้วยชื่อหรืออีเมล
+    at_stmt($conn, 'DELETE FROM auth_requests WHERE user_id = ?', 'i', [$id])->close();
+    // ยังป้องกันการลบเมื่อมีข้อมูลอ้างอิงประเภทอื่น ไม่ปล่อยให้ CASCADE ลบส่วนอื่น
+    at_check_foreign_references($conn, 'users', $id);
+    $delete = at_stmt($conn, "DELETE FROM users WHERE id = ? AND deleted_at IS NOT NULL AND is_active = 0 AND LOWER(role) IN ('admin', 'executive')", 'i', [$id]);
+    $affected = $delete->affected_rows; $delete->close();
+    if ($affected !== 1) throw new RuntimeException('สถานะบัญชีเปลี่ยนแล้ว กรุณาตรวจสอบก่อนลองใหม่');
+}
+
 // เรียกภายในธุรกรรมและหลังล็อกแถวเจ้าหน้าที่ที่อยู่ในถังขยะแล้วเท่านั้น
 function at_purge_technician_with_accounts($conn, $id) {
     if (at_row($conn, 'SELECT id FROM repairs WHERE technician_id = ? LIMIT 1 FOR UPDATE', 'i', [$id])) {
@@ -257,6 +278,8 @@ function at_handle_request($conn) {
             }
         } elseif ($kind === 'tech') {
             $purgedLinkedAccounts = at_purge_technician_with_accounts($conn, $id);
+        } elseif ($table === 'users' && in_array(strtolower((string)$row['role']), ['admin', 'executive'], true)) {
+            at_purge_management_account($conn, $id);
         } else {
             at_check_references($conn, $table, $id);
             at_stmt($conn, "DELETE FROM $table WHERE id = ? AND deleted_at IS NOT NULL", 'i', [$id])->close();
@@ -291,26 +314,54 @@ function at_handle_request($conn) {
 
 at_handle_request($conn);
 
+function at_period_filters() {
+    $now = new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
+    $read = static function ($key, $min, $max, $fallback) {
+        $raw = $_GET[$key] ?? $fallback;
+        if ($raw === 'all') return 'all';
+        if (!is_string($raw) || !preg_match('/^[0-9]{1,4}$/D', $raw)
+            || (int)$raw < $min || (int)$raw > $max) return $fallback;
+        return (string)(int)$raw;
+    };
+    $day = $read('trash_day', 1, 31, $now->format('j'));
+    $month = $read('trash_month', 1, 12, $now->format('n'));
+    $year = $read('trash_year', 1000, 9999, $now->format('Y'));
+    return compact('day', 'month', 'year');
+}
+
 function at_page($conn) {
-    $union = "SELECT 'asset' AS kind, id, CONVERT(asset_name USING utf8mb4) COLLATE utf8mb4_unicode_ci AS label, CONVERT(asset_code USING utf8mb4) COLLATE utf8mb4_unicode_ci AS detail, deleted_at FROM assets WHERE deleted_at IS NOT NULL
-        UNION ALL SELECT 'user', id, COALESCE(NULLIF(full_name,''),username), username, deleted_at FROM users WHERE deleted_at IS NOT NULL
-        UNION ALL SELECT 'tech', id, full_name, department, deleted_at FROM technicians WHERE deleted_at IS NOT NULL
-        UNION ALL SELECT 'repair', id, ticket_no, reporter_name, deleted_at FROM repairs WHERE deleted_at IS NOT NULL";
-    // ใน Dashboard ปัจจุบัน ใบงานถูกย้ายเข้าถังขยะจาก Contacts ผ่าน reporter เท่านั้น
-    // แยกหมวดตามหน้าต้นทางออกจาก kind ที่ใช้กู้คืน/ลบตารางจริง ห้ามเปลี่ยน repair เป็น user ใน POST
-    $union = "SELECT original.*, CASE WHEN kind = 'repair' THEN 'user' ELSE kind END AS category FROM ($union) original";
+    $union = "SELECT 'asset' AS kind, id, CONVERT(asset_name USING utf8mb4) COLLATE utf8mb4_unicode_ci AS label, CONVERT(asset_code USING utf8mb4) COLLATE utf8mb4_unicode_ci AS detail, deleted_at, 'asset' AS category FROM assets WHERE deleted_at IS NOT NULL
+        UNION ALL SELECT 'user', id, COALESCE(NULLIF(full_name,''),username), username, deleted_at, CASE LOWER(role) WHEN 'admin' THEN 'admin' WHEN 'executive' THEN 'executive' ELSE 'user' END FROM users WHERE deleted_at IS NOT NULL
+        UNION ALL SELECT 'tech', id, full_name, department, deleted_at, 'tech' FROM technicians WHERE deleted_at IS NOT NULL
+        UNION ALL SELECT 'repair', id, ticket_no, reporter_name, deleted_at, 'user' FROM repairs WHERE deleted_at IS NOT NULL";
+    // category ใช้แสดง/กรองเท่านั้น kind ยังคงอ้างอิงตารางจริงสำหรับ POST
     $q = isset($_GET['trash_q']) && is_string($_GET['trash_q']) ? trim($_GET['trash_q']) : '';
     $q = mb_substr($q, 0, 200, 'UTF-8');
     $kind = isset($_GET['trash_type']) && is_string($_GET['trash_type']) ? $_GET['trash_type'] : 'all';
-    // รองรับลิงก์เก่าของรายการที่เคยแสดงเป็นใบงานจาก Contacts
     if ($kind === 'repair') $kind = 'user';
     $where = '1=1'; $values = []; $types = '';
-    if (in_array($kind, ['asset','user','tech'], true)) { $where .= ' AND category = ?'; $values[] = $kind; $types .= 's'; }
+    if (in_array($kind, ['asset','user','tech','admin','executive'], true)) { $where .= ' AND category = ?'; $values[] = $kind; $types .= 's'; }
     else { $kind = 'all'; }
+    $period = at_period_filters();
+    $day = $period['day']; $month = $period['month']; $year = $period['year'];
+    foreach (['day'=>'DAY', 'month'=>'MONTH', 'year'=>'YEAR'] as $key => $sqlFunction) {
+        if ($period[$key] !== 'all') {
+            $where .= " AND $sqlFunction(deleted_at) = ?";
+            $values[] = (int)$period[$key]; $types .= 'i';
+        }
+    }
     if ($q !== '') {
         $where .= " AND CONCAT_WS(' ',label,detail,id) LIKE ? ESCAPE '!'";
         $values[] = '%' . strtr($q, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%'; $types .= 's';
     }
+    $years = [(int)(new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')];
+    if ($year !== 'all') $years[] = (int)$year;
+    $yearStmt = at_stmt($conn, "SELECT DISTINCT YEAR(deleted_at) AS y FROM ($union) trash_years WHERE YEAR(deleted_at) BETWEEN 1000 AND 9999");
+    $yearResult = $yearStmt->get_result();
+    while ($yearRow = $yearResult->fetch_assoc()) {
+        $years[] = (int)$yearRow['y'];
+    }
+    $yearStmt->close(); $years = array_values(array_unique($years)); rsort($years, SORT_NUMERIC);
     $total = (int)at_row($conn, "SELECT COUNT(*) AS total FROM ($union) trash_rows WHERE $where", $types, $values)['total'];
     $pages = max(1, (int)ceil($total / 50));
     $rawPage = at_positive_id($_GET['trash_page'] ?? '1');
@@ -318,5 +369,5 @@ function at_page($conn) {
     $offset = ($page - 1) * 50;
     $stmt = at_stmt($conn, "SELECT * FROM ($union) trash_rows WHERE $where ORDER BY deleted_at DESC, kind ASC, id DESC LIMIT 50 OFFSET $offset", $types, $values);
     $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
-    return compact('rows','page','pages','total','offset','q','kind');
+    return compact('rows','page','pages','total','offset','q','kind','day','month','year','years');
 }

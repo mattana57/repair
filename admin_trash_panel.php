@@ -2,7 +2,7 @@
 if (!defined('MBS_ADMIN_TRASH')) { http_response_code(403); exit('ไม่อนุญาตให้เปิดไฟล์นี้โดยตรง'); }
 $atEscape = static function ($value) { return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); };
 $atError = false;
-$atData = ['rows'=>[], 'page'=>1, 'pages'=>1, 'total'=>0, 'offset'=>0, 'q'=>'', 'kind'=>'all'];
+$atData = array_merge(['rows'=>[], 'page'=>1, 'pages'=>1, 'total'=>0, 'offset'=>0, 'q'=>'', 'kind'=>'all', 'years'=>[(int)(new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')]], at_period_filters());
 if ($active_tab === 'trash') {
     try {
         $atData = at_page($conn);
@@ -11,7 +11,7 @@ if ($active_tab === 'trash') {
         error_log('Admin Trash load failed: ' . $trashError->getMessage());
     }
 }
-$atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชีผู้ใช้', 'tech' => 'เจ้าหน้าที่'];
+$atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชีผู้ใช้', 'tech' => 'เจ้าหน้าที่', 'admin' => 'บัญชีแอดมิน', 'executive' => 'บัญชีผู้บริหาร'];
 $atNotice = $_SESSION['admin_trash_notice'] ?? null;
 unset($_SESSION['admin_trash_notice']);
 ?>
@@ -48,7 +48,34 @@ document.addEventListener('DOMContentLoaded', function () {
                     <input type="text" id="trashSearchInput" name="trash_q" value="<?= $atEscape($atData['q']) ?>" maxlength="200" placeholder="ค้นหาข้อมูลในถังขยะ..." oninput="scheduleTrashSearch(event)" class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[105px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
                     <button type="button" id="clearTrashSearchBtn" onclick="clearTrashSearch()" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-rose-500 bg-rose-50 border-l border-slate-200 <?= $atData['q'] === '' ? 'hidden' : 'flex' ?> items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm" aria-hidden="true"></i>ล้างค่า</button>
                 </div>
+                <div class="flex flex-wrap items-center gap-2 shrink-0 max-w-full relative z-40">
+                <?php
+                $atMonths = [1=>'มกราคม', 2=>'กุมภาพันธ์', 3=>'มีนาคม', 4=>'เมษายน', 5=>'พฤษภาคม', 6=>'มิถุนายน', 7=>'กรกฎาคม', 8=>'สิงหาคม', 9=>'กันยายน', 10=>'ตุลาคม', 11=>'พฤศจิกายน', 12=>'ธันวาคม'];
+                $atDayOptions = ['all'=>'ทุกวัน'];
+                for ($atDayNumber=1; $atDayNumber<=31; $atDayNumber++) $atDayOptions[(string)$atDayNumber] = 'วันที่ ' . $atDayNumber;
+                $atMonthOptions = ['all'=>'ทุกเดือน'] + $atMonths;
+                $atYearOptions = ['all'=>'ทุกปี'];
+                foreach ($atData['years'] as $atYearNumber) $atYearOptions[(string)$atYearNumber] = (string)($atYearNumber + 543);
+                foreach (['Day'=>['day', $atDayOptions, 'วัน'], 'Month'=>['month', $atMonthOptions, 'เดือน'], 'Year'=>['year', $atYearOptions, 'ปี']] as $atPart=>$atFilter):
+                    $atKey=$atFilter[0]; $atOptions=$atFilter[1]; $atPrefix='trash-' . $atPart; $atSelected=$atData[$atKey];
+                ?>
+                    <div class="relative w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="<?= $atPrefix ?>Container" tabindex="0" role="group" aria-label="<?= $atFilter[2] ?>ที่ย้ายเข้าถังขยะ" onkeydown="handleChartKeydown(event, '<?= $atPrefix ?>', submitTrashFilters)">
+                        <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm text-slate-700 rounded-xl px-4 py-2.5 h-[42px] font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, '<?= $atPrefix ?>')">
+                            <span id="<?= $atPrefix ?>Text" class="truncate"><?= $atEscape($atOptions[$atSelected]) ?></span><i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]" aria-hidden="true"></i>
+                        </div>
+                        <div id="<?= $atPrefix ?>List" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar">
+                        <?php foreach ($atOptions as $atValue=>$atDisplay):
+                            $atOptionClass = (string)$atValue === 'all' || (string)$atValue === $atSelected ? 'bg-indigo-50 text-indigo-600' : 'text-slate-700 hover:bg-slate-100 hover:text-indigo-600';
+                            $atClick = 'selectChartDropdown(' . json_encode($atPrefix) . ', ' . json_encode((string)$atValue) . ', ' . json_encode($atDisplay, JSON_UNESCAPED_UNICODE) . ', submitTrashFilters)';
+                        ?>
+                            <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all <?= $atOptionClass ?>" data-value="<?= $atEscape($atValue) ?>" data-display="<?= $atEscape($atDisplay) ?>" onclick="<?= $atEscape($atClick) ?>"><?= $atEscape($atDisplay) ?></div>
+                        <?php endforeach; ?>
+                        </div>
+                        <input type="hidden" id="<?= str_replace('-', '', $atPrefix) ?>" name="trash_<?= $atKey ?>" value="<?= $atEscape($atSelected) ?>">
+                    </div>
+                <?php endforeach; ?>
                 <label><span class="sr-only">ประเภทข้อมูล</span><select name="trash_type" onchange="submitTrashFilters()" class="border border-slate-200 bg-white rounded-xl px-4 py-2.5 text-sm"><option value="all">ทุกประเภท</option><?php foreach ($atLabels as $key => $label): ?><option value="<?= $key ?>" <?= $atData['kind'] === $key ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label>
+                </div>
             </form>
             <p id="trashSearchError" class="hidden text-sm text-rose-600" role="alert"></p>
         </div>
@@ -66,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td class="px-6 py-4 whitespace-nowrap"><?php if ($atDate): ?><?= $atDate->format('d/m/') . ((int)$atDate->format('Y') + 543) ?><div class="text-xs text-blue-600 font-bold mt-1"><?= $atDate->format('H:i') ?></div><?php else: ?>-<?php endif; ?></td>
                         <td class="px-6 py-4 w-[220px]"><div class="flex justify-center gap-2">
                             <?php foreach (['restore' => 'กู้คืนข้อมูล', 'purge' => 'ลบถาวร'] as $atAction => $atLabel): ?>
-                            <form method="post" action="dashboard.php?tab=trash" onsubmit="return confirmTrashForm(event, this)">
+                            <form method="post" action="dashboard.php?tab=trash" data-management="<?= in_array($atItem['category'], ['admin', 'executive'], true) ? '1' : '0' ?>" onsubmit="return confirmTrashForm(event, this)">
                                 <input type="hidden" name="csrf_token" value="<?= $atEscape($_SESSION['csrf_token']) ?>">
                                 <input type="hidden" name="trash_action" value="<?= $atAction ?>">
                                 <input type="hidden" name="trash_kind" value="<?= $atItem['kind'] ?>">
@@ -91,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
             $atLink = static function ($page, $label) use ($atData, $atEscape) {
                 if ($page < 1 || $page > $atData['pages']) return '<span class="tp-disabled" aria-disabled="true">' . $label . '</span>';
                 if ($page === $atData['page']) return '<span aria-current="page" class="tp-link tp-current">' . $label . '</span>';
-                $url = 'dashboard.php?' . http_build_query(['tab'=>'trash','trash_q'=>$atData['q'],'trash_type'=>$atData['kind'],'trash_page'=>$page]);
+                $url = 'dashboard.php?' . http_build_query(['tab'=>'trash','trash_q'=>$atData['q'],'trash_type'=>$atData['kind'],'trash_day'=>$atData['day'],'trash_month'=>$atData['month'],'trash_year'=>$atData['year'],'trash_page'=>$page]);
                 return '<a class="tp-link" href="' . $atEscape($url) . '">' . $label . '</a>';
             };
             echo $atLink($atData['page'] - 1, '‹ ก่อนหน้า');
@@ -141,6 +168,7 @@ async function submitTrashFilters() {
     url.searchParams.set('tab', 'trash');
     url.searchParams.set('trash_q', document.getElementById('trashSearchInput').value);
     url.searchParams.set('trash_type', trashSearchForm.elements.trash_type.value);
+    for (const key of ['trash_day', 'trash_month', 'trash_year']) url.searchParams.set(key, trashSearchForm.elements[key].value);
     url.searchParams.delete('trash_page');
     const body = document.querySelector('#trash tbody');
     const footer = document.querySelector('#trash .tp-footer');
@@ -163,7 +191,7 @@ async function submitTrashFilters() {
         window.history.replaceState(window.history.state, '', url.href);
     } catch (error) {
         if (error.name !== 'AbortError' && version === trashSearchVersion) {
-            errorText.textContent = 'ค้นหาไม่สำเร็จ กรุณากด Enter หรือเลือกประเภทเพื่อลองใหม่';
+            errorText.textContent = 'ค้นหาไม่สำเร็จ กรุณากด Enter หรือเลือกตัวกรองเพื่อลองใหม่';
             errorText.classList.remove('hidden');
         }
     } finally {
@@ -205,6 +233,7 @@ function confirmTrashForm(event, form) {
     if (form.dataset.busy === '1') return false;
     const purge = form.elements.trash_action.value === 'purge';
     const purgeTechnician = purge && form.elements.trash_kind.value === 'tech';
+    const purgeManagement = purge && form.dataset.management === '1';
     const restoreText = form.elements.trash_kind.value === 'tech'
         ? 'ข้อมูลเจ้าหน้าที่จะกลับไปอยู่ในหน้ารายการเดิม และเปิดใช้งานบัญชีเว็บที่ผูกกับเจ้าหน้าที่โดยอัตโนมัติ โดยไม่กู้คืนบัญชีที่อยู่ในถังขยะแยกไว้'
         : form.elements.trash_kind.value === 'user'
@@ -212,7 +241,9 @@ function confirmTrashForm(event, form) {
             : 'ข้อมูลจะกลับไปอยู่ในหน้ารายการเดิม';
     const purgeText = purgeTechnician
         ? 'จะลบข้อมูลเจ้าหน้าที่และบัญชีเว็บที่ผูกกับรหัสเจ้าหน้าที่นี้ทั้งหมดอย่างถาวร กู้คืนไม่ได้ ระบบจะดำเนินการเฉพาะเมื่อไม่มีใบงานอ้างอิง บัญชีถูกระงับแล้ว และไม่มีข้อมูลอื่นอ้างอิง ต้องการลบทั้งสองส่วนหรือไม่?'
-        : 'เมื่อลบถาวรแล้วจะไม่สามารถกู้คืนข้อมูลได้ ต้องการดำเนินการต่อหรือไม่?';
+        : purgeManagement
+            ? 'จะลบบัญชีนี้พร้อมคำขอยืนยันอีเมลและรีเซ็ตรหัสผ่านของบัญชีนี้ออกจากฐานข้อมูลอย่างถาวร และไม่สามารถกู้คืนได้ ต้องการดำเนินการต่อหรือไม่?'
+            : 'เมื่อลบถาวรแล้วจะไม่สามารถกู้คืนข้อมูลได้ ต้องการดำเนินการต่อหรือไม่?';
     form.dataset.busy = '1';
     Swal.fire({title:purge?'ยืนยันการลบถาวร?':'กู้คืนข้อมูลนี้?', text:purge?purgeText:restoreText, icon:purge?'warning':'question', showCancelButton:true, confirmButtonText:purge?'ลบถาวร':'กู้คืนข้อมูล', cancelButtonText:'ยกเลิก', confirmButtonColor:purge?'#e11d48':'#4f46e5'}).then(result=>{
         if (result.isConfirmed) {
