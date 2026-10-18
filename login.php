@@ -76,7 +76,7 @@ try {
                     <div class="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-500 text-white rounded-2xl flex items-center justify-center text-3xl mb-5 shadow-[0_10px_20px_rgb(139,92,246,0.3)]">
                         <i class="fas fa-fingerprint"></i>
                     </div>
-                    <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">เข้าสู่ระบบเจ้าหน้าที่</h2>
+                    <h2 class="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">เข้าสู่ระบบ</h2>
                     <p class="text-slate-500 text-xs mt-2 text-center font-medium">คณะการบัญชีและการจัดการ (MBS)</p>
                 </div>
 
