@@ -3887,8 +3887,14 @@ if (isset($_GET['api_check_hash'])) {
                                             $t_email_html = "<div class='flex items-center text-rose-400 mt-1.5'><div class='w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
                                         }
 
+                                        // ใช้เกณฑ์เดียวกับป้ายผูกบัญชีแล้วด้านขวา ไม่เปลี่ยนสถานะ LINE
+                                        $new_staff_notice = ($t['approval_status'] !== 'อนุมัติแล้ว')
+                                            ? "<div class='text-xs font-bold text-blue-600 mb-2'>เจ้าหน้าที่ใหม่</div>"
+                                            : '';
+
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                             <td class='px-6 py-4 align-top'>
+                                                {$new_staff_notice}
                                                 <div class='flex items-center'>
                                                     <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
                                                     <div>
