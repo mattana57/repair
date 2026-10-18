@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <input type="hidden" name="trash_kind" value="<?= $atItem['kind'] ?>">
                                 <input type="hidden" name="trash_id" value="<?= (int)$atItem['id'] ?>">
                                 <input type="hidden" name="trash_confirm" value="0">
+                                <input type="hidden" name="trash_confirm_linked_account" value="0">
                                 <button type="submit" class="px-3 py-2 rounded-xl text-xs font-bold border <?= $atAction === 'restore' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-rose-50 border-rose-100 text-rose-600' ?>"><?= $atLabel ?></button>
                             </form>
                             <?php endforeach; ?>
@@ -200,9 +201,17 @@ function confirmTrashForm(event, form) {
     event.preventDefault();
     if (form.dataset.busy === '1') return false;
     const purge = form.elements.trash_action.value === 'purge';
+    const purgeTechnician = purge && form.elements.trash_kind.value === 'tech';
+    const purgeText = purgeTechnician
+        ? 'จะลบข้อมูลเจ้าหน้าที่และบัญชีเว็บที่ผูกกับรหัสเจ้าหน้าที่นี้ทั้งหมดอย่างถาวร กู้คืนไม่ได้ ระบบจะดำเนินการเฉพาะเมื่อไม่มีใบงานอ้างอิง บัญชีถูกระงับแล้ว และไม่มีข้อมูลอื่นอ้างอิง ต้องการลบทั้งสองส่วนหรือไม่?'
+        : 'เมื่อลบถาวรแล้วจะไม่สามารถกู้คืนข้อมูลได้ ต้องการดำเนินการต่อหรือไม่?';
     form.dataset.busy = '1';
-    Swal.fire({title:purge?'ยืนยันการลบถาวร?':'กู้คืนข้อมูลนี้?', text:purge?'เมื่อลบถาวรแล้วจะไม่สามารถกู้คืนข้อมูลได้ ต้องการดำเนินการต่อหรือไม่?':'ข้อมูลจะกลับไปอยู่ในหน้ารายการเดิม บัญชีเว็บจะไม่เปิดใช้งานอัตโนมัติ', icon:purge?'warning':'question', showCancelButton:true, confirmButtonText:purge?'ลบถาวร':'กู้คืนข้อมูล', cancelButtonText:'ยกเลิก', confirmButtonColor:purge?'#e11d48':'#4f46e5'}).then(result=>{
-        if (result.isConfirmed) { form.elements.trash_confirm.value=purge?'1':'0'; form.submit(); }
+    Swal.fire({title:purge?'ยืนยันการลบถาวร?':'กู้คืนข้อมูลนี้?', text:purge?purgeText:'ข้อมูลจะกลับไปอยู่ในหน้ารายการเดิม บัญชีเว็บจะไม่เปิดใช้งานอัตโนมัติ', icon:purge?'warning':'question', showCancelButton:true, confirmButtonText:purge?'ลบถาวร':'กู้คืนข้อมูล', cancelButtonText:'ยกเลิก', confirmButtonColor:purge?'#e11d48':'#4f46e5'}).then(result=>{
+        if (result.isConfirmed) {
+            form.elements.trash_confirm.value=purge?'1':'0';
+            form.elements.trash_confirm_linked_account.value=purgeTechnician?'1':'0';
+            form.submit();
+        }
         else delete form.dataset.busy;
     });
     return false;

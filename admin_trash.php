@@ -60,7 +60,7 @@ function at_check_admin($conn) {
 }
 
 // กันการลบแบบ CASCADE และการอ้างอิงค้าง โดยไม่แก้รหัสหรือข้อมูลในตารางอื่น
-function at_check_references($conn, $table, $id) {
+function at_check_foreign_references($conn, $table, $id) {
     $stmt = at_stmt($conn, 'SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_COLUMN_NAME
         FROM information_schema.KEY_COLUMN_USAGE
         WHERE REFERENCED_TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME = ?', 's', [$table]);
@@ -76,6 +76,10 @@ function at_check_references($conn, $table, $id) {
         $related = at_row($conn, 'SELECT 1 AS found FROM `' . $ref['TABLE_NAME'] . '` WHERE `' . $ref['COLUMN_NAME'] . '` = ? LIMIT 1', 's', [(string)$target['value']]);
         if ($related) throw new RuntimeException('ยังลบถาวรไม่ได้ เนื่องจากมีข้อมูลอื่นอ้างอิงรายการนี้อยู่');
     }
+}
+
+function at_check_references($conn, $table, $id) {
+    at_check_foreign_references($conn, $table, $id);
     if ($table === 'technicians') {
         foreach (['repairs', 'users'] as $dependent) {
             if (at_row($conn, "SELECT id FROM $dependent WHERE technician_id = ? LIMIT 1", 'i', [$id])) {
@@ -91,6 +95,48 @@ function at_check_references($conn, $table, $id) {
             throw new RuntimeException('ยังลบบัญชีถาวรไม่ได้ เนื่องจากยังมีใบงานที่ระบบเดิมใช้สร้างบัญชีผู้แจ้งอัตโนมัติ กรุณาจัดการใบงานที่เกี่ยวข้องก่อน');
         }
     }
+}
+
+// เรียกภายในธุรกรรมและหลังล็อกแถวเจ้าหน้าที่ที่อยู่ในถังขยะแล้วเท่านั้น
+function at_purge_technician_with_accounts($conn, $id) {
+    if (at_row($conn, 'SELECT id FROM repairs WHERE technician_id = ? LIMIT 1 FOR UPDATE', 'i', [$id])) {
+        throw new RuntimeException('ยังลบเจ้าหน้าที่ถาวรไม่ได้ เนื่องจากมีใบงานอ้างอิงอยู่ รวมใบงานในถังขยะ');
+    }
+    $stmt = at_stmt($conn, 'SELECT id, role, is_active FROM users WHERE technician_id = ? FOR UPDATE', 'i', [$id]);
+    $accounts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    $deletedAccounts = [];
+    // ตรวจทุกบัญชีก่อนลบ ไม่จับคู่ด้วยชื่อ ไม่เปลี่ยน technician_id
+    foreach ($accounts as $account) {
+        $accountId = (int)$account['id'];
+        if ($accountId === (int)$_SESSION['user_id'] || strtolower((string)$account['role']) !== 'technician') {
+            throw new RuntimeException('บัญชีที่ผูกเจ้าหน้าที่มีประเภทไม่ถูกต้อง ไม่สามารถลบทั้งชุดได้');
+        }
+        if ((int)$account['is_active'] !== 0) {
+            throw new RuntimeException('บัญชีเว็บที่ผูกอยู่ยังเปิดใช้งาน กรุณาระงับบัญชีก่อนลบถาวร');
+        }
+        // ใช้ความสัมพันธ์ฐานข้อมูลจริง ไม่ใช้ชื่อผู้แจ้งไปจับคู่บัญชีเจ้าหน้าที่
+        try { at_check_foreign_references($conn, 'users', $accountId); }
+        catch (RuntimeException $referenceError) {
+            throw new RuntimeException('บัญชีเว็บที่ผูกอยู่ยังมีข้อมูลอ้างอิง จึงยังลบเจ้าหน้าที่พร้อมบัญชีไม่ได้');
+        }
+    }
+    foreach ($accounts as $account) {
+        $accountId = (int)$account['id'];
+        $delete = at_stmt($conn, "DELETE FROM users WHERE id = ? AND technician_id = ? AND LOWER(role) = 'technician' AND is_active = 0", 'ii', [$accountId, $id]);
+        $affected = $delete->affected_rows;
+        $delete->close();
+        if ($affected !== 1) throw new RuntimeException('สถานะบัญชีเปลี่ยนแล้ว กรุณาตรวจสอบก่อนลองใหม่');
+        $deletedAccounts[] = $accountId;
+    }
+    // users ถูกลบในธุรกรรมนี้แล้ว จึงตรวจความสัมพันธ์ที่เหลือของเจ้าหน้าที่
+    // หากยังติดข้อมูลอื่น จะ rollback บัญชีทุกบัญชีกลับด้วย
+    at_check_references($conn, 'technicians', $id);
+    $delete = at_stmt($conn, 'DELETE FROM technicians WHERE id = ? AND deleted_at IS NOT NULL', 'i', [$id]);
+    $affected = $delete->affected_rows;
+    $delete->close();
+    if ($affected !== 1) throw new RuntimeException('สถานะเจ้าหน้าที่เปลี่ยนแล้ว กรุณาตรวจสอบก่อนลองใหม่');
+    return $deletedAccounts;
 }
 
 function at_handle_request($conn) {
@@ -120,6 +166,7 @@ function at_handle_request($conn) {
         return;
     }
     $started = false;
+    $purgedLinkedAccounts = [];
     try {
         $token = $_POST['csrf_token'] ?? null;
         if (!is_string($token) || !is_string($_SESSION['csrf_token'] ?? null)
@@ -138,6 +185,10 @@ function at_handle_request($conn) {
         if ($kind === 'reporter' && $action !== 'move') throw new RuntimeException('คำขอไม่ถูกต้อง');
         if ($action === 'purge' && ($_POST['trash_confirm'] ?? null) !== '1') {
             throw new RuntimeException('กรุณายืนยันการลบถาวรก่อน');
+        }
+        if ($action === 'purge' && $kind === 'tech'
+            && ($_POST['trash_confirm_linked_account'] ?? null) !== '1') {
+            throw new RuntimeException('กรุณายืนยันว่าจะลบเจ้าหน้าที่พร้อมบัญชีเว็บที่ผูกอยู่ด้วย');
         }
         // การทำงานหลายตารางต้องรองรับ rollback; ไม่เปลี่ยน Engine อัตโนมัติ
         $engines = at_stmt($conn, "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('users','technicians','repairs','assets')");
@@ -183,6 +234,8 @@ function at_handle_request($conn) {
             $keepUpdatedAt = $table === 'repairs' ? ', updated_at = updated_at' : '';
             at_stmt($conn, "UPDATE $table SET deleted_at = NULL$keepUpdatedAt WHERE id = ? AND deleted_at IS NOT NULL", 'i', [$id])->close();
             // ไม่เปิดบัญชีหรือเปลี่ยนการผูก LINE อัตโนมัติ
+        } elseif ($kind === 'tech') {
+            $purgedLinkedAccounts = at_purge_technician_with_accounts($conn, $id);
         } else {
             at_check_references($conn, $table, $id);
             at_stmt($conn, "DELETE FROM $table WHERE id = ? AND deleted_at IS NOT NULL", 'i', [$id])->close();
@@ -191,8 +244,14 @@ function at_handle_request($conn) {
         $started = false;
         try {
             if (function_exists('mbsActivityLog')) mbsActivityLog($conn, 'TRASH_' . strtoupper($action), $table, $id, 'จัดการรายการผ่านถังขยะ');
+            foreach ($purgedLinkedAccounts as $purgedAccountId) {
+                if (function_exists('mbsActivityLog')) mbsActivityLog($conn, 'TRASH_PURGE', 'users', $purgedAccountId, 'ลบบัญชีเว็บพร้อมเจ้าหน้าที่รหัส ' . $id);
+            }
         } catch (Throwable $logError) { error_log('Trash activity log failed'); }
         $message = ['move' => 'ย้ายข้อมูลเข้าถังขยะแล้ว', 'restore' => 'กู้คืนข้อมูลแล้ว', 'purge' => 'ลบข้อมูลถาวรแล้ว'][$action];
+        if ($action === 'purge' && $kind === 'tech') {
+            $message = 'ลบข้อมูลเจ้าหน้าที่ถาวรแล้ว พร้อมบัญชีเว็บที่ผูกอยู่ ' . count($purgedLinkedAccounts) . ' บัญชี';
+        }
         if ($action === 'restore' && in_array($kind, ['user', 'tech'], true)) {
             $message .= ' บัญชีเว็บยังคงปิดใช้งาน กรุณาตรวจสอบก่อนเปิดใช้งานจากหน้าจัดการบัญชี';
         }
