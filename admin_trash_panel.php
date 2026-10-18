@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="p-6 border-b border-slate-100 space-y-4">
             <h2 class="text-xl font-extrabold text-slate-800"><i class="fas fa-trash-alt text-indigo-500 mr-2" aria-hidden="true"></i>ถังขยะ</h2>
             <p class="text-sm text-slate-500">รายการที่ย้ายเข้าถังขยะยังเก็บอยู่ในฐานข้อมูล สามารถกู้คืนข้อมูลหรือลบถาวรได้</p>
-            <p class="text-xs text-slate-500">การกู้คืนเจ้าหน้าที่จะเปิดใช้งานบัญชีเว็บที่ผูกอยู่โดยอัตโนมัติ ส่วนการกู้คืนบัญชีผู้ใช้โดยตรงยังต้องตรวจสอบสถานะก่อนเปิดใช้งาน</p>
             <?php if (is_array($atNotice)): ?>
             <div role="status" class="p-4 rounded-xl text-sm font-semibold <?= ($atNotice['type'] ?? '') === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' ?>"><?= $atEscape($atNotice['message'] ?? '') ?></div>
             <?php endif; ?>
