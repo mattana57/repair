@@ -19,7 +19,7 @@ if (!$ALLOW_REGISTRATION) {
 
 $error = '';
 $success = '';
-$form_values = ['full_name' => '', 'phone' => '', 'email' => '', 'username' => ''];
+$form_values = ['full_name' => '', 'phone' => '', 'email' => '', 'username' => '', 'position' => '', 'department' => ''];
 
 require_once __DIR__ . '/password_policy.php';
 $registration_password_policy = passwordPolicyConfig();
@@ -30,7 +30,7 @@ if (!is_string($_SESSION['csrf_token'] ?? null) || $_SESSION['csrf_token'] === '
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $received_csrf = $_POST['csrf_token'] ?? null;
-    $fields = ['full_name', 'phone', 'email', 'username', 'password', 'confirm_password'];
+    $fields = ['full_name', 'phone', 'email', 'username', 'password', 'confirm_password', 'position', 'department'];
     $input = [];
     $valid_types = true;
     foreach ($fields as $field) {
@@ -55,14 +55,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $phone = $form_values['phone'];
         $email = $form_values['email'];
         $username = $form_values['username'];
+        $position = $form_values['position'];
+        $department = $form_values['department'];
         // รักษารหัสผ่านตามที่กรอก ไม่ trim และไม่ใส่กลับลง HTML
         $password = $input['password'];
         $confirmation = $input['confirm_password'];
         $rules = passwordPolicyRules($password);
 
         if ($full_name === '' || $phone === '' || $email === '' || $username === ''
-            || $password === '' || $confirmation === '') {
-            $error = 'กรุณากรอกข้อมูลให้ครบทั้ง 6 ช่อง';
+            || $position === '' || $department === '' || $password === '' || $confirmation === '') {
+            $error = 'กรุณากรอกข้อมูลให้ครบทั้ง 8 ช่อง';
+        } elseif (mb_strlen($full_name, 'UTF-8') > 255 || mb_strlen($username, 'UTF-8') > 50
+            || mb_strlen($phone, 'UTF-8') > 20 || mb_strlen($position, 'UTF-8') > 255
+            || mb_strlen($department, 'UTF-8') > 255
+            || preg_match('/[\x00-\x1F\x7F]/u', $full_name . $username . $phone . $position . $department)) {
+            $error = 'ข้อมูลยาวเกินกำหนดหรือมีอักขระควบคุม กรุณาตรวจสอบข้อมูลที่กรอก';
         } elseif (strlen($email) > 255 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = 'กรุณากรอกอีเมลที่มีรูปแบบถูกต้อง';
         } elseif (in_array(false, $rules, true)) {
@@ -72,6 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $stmt_check = null;
             $stmt_insert = null;
+            $stmt_tech = null;
+            $registration_started = false;
             try {
                 $stmt_check = $conn->prepare('SELECT id FROM users WHERE username = ?');
                 if (!$stmt_check || !$stmt_check->bind_param('s', $username)
@@ -94,36 +103,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!is_string($hashed_password)) {
                         throw new RuntimeException('Registration hash failed');
                     }
-                    // คงการสมัครเป็น User; ห้ามรับสิทธิ์/รหัสช่างจาก POST
-                    $role = 'User';
+                    // สิทธิ์และรหัสเจ้าหน้าที่กำหนดโดยเซิร์ฟเวอร์ ไม่รับจากฟอร์ม
+                    $role = 'Technician';
                     $is_active = 1;
                     $auth_version = 1;
-                    $tech_id = null;
-                    // อีเมลที่กรอกยังไม่ยืนยัน และไม่เปลี่ยนอีเมลใน technicians
+                    if (!$conn->begin_transaction()) {
+                        throw new RuntimeException('Registration transaction failed');
+                    }
+                    $registration_started = true;
+                    // สร้างบัญชีไว้ก่อน ต้องผูก LINE จึงเข้า Dashboard ได้ ไม่จับคู่ช่างเดิมด้วยชื่อ
+                    $stmt_tech = $conn->prepare(
+                        "INSERT INTO technicians (full_name, phone, email, position, department,
+                            approval_status, admin_new_notice)
+                         VALUES (?, ?, ?, ?, ?, 'รอผูกบัญชี', 1)"
+                    );
+                    if (!$stmt_tech || !$stmt_tech->bind_param('sssss',
+                        $full_name, $phone, $email, $position, $department)
+                        || !$stmt_tech->execute() || $stmt_tech->affected_rows !== 1) {
+                        throw new RuntimeException('Technician registration failed');
+                    }
+                    $tech_id = (int)$conn->insert_id;
+                    if ($tech_id < 1) throw new RuntimeException('Technician identity missing');
+                    $stmt_tech->close();
+                    $stmt_tech = null;
+                    // อีเมลยังไม่ยืนยัน ใช้ขั้นตอนยืนยันอีเมลเดิมภายหลัง
                     $stmt_insert = $conn->prepare(
                         'INSERT INTO users (username, password, full_name, phone, email,
-                            role, is_active, auth_version, technician_id,
+                            role, is_active, auth_version, technician_id, position, department,
                             verified_email, email_verified_at)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)'
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)'
                     );
-                    if (!$stmt_insert || !$stmt_insert->bind_param('ssssssiii',
+                    if (!$stmt_insert || !$stmt_insert->bind_param('ssssssiiiss',
                         $username, $hashed_password, $full_name, $phone, $email,
-                        $role, $is_active, $auth_version, $tech_id)) {
+                        $role, $is_active, $auth_version, $tech_id, $position, $department)) {
                         throw new RuntimeException('Registration insert failed');
                     }
-                    if (!$stmt_insert->execute()) {
-                        if ((int) $stmt_insert->errno === 1062) {
-                            $error = 'ข้อมูลบัญชีซ้ำกับที่มีอยู่ กรุณาตรวจชื่อผู้ใช้งาน';
-                        } else {
-                            throw new RuntimeException('Registration insert failed');
-                        }
-                    } elseif ($stmt_insert->affected_rows !== 1) {
-                        throw new RuntimeException('Registration insert failed');
-                    } else {
-                        $success = "สมัครสมาชิกสำเร็จ! บัญชีของคุณคือ 'ผู้ใช้งานทั่วไป' กรุณาแจ้งแอดมินเพื่อยืนยันตัวตนและผูกสิทธิ์ช่าง อีเมลที่กรอกยังไม่ได้รับการยืนยัน";
+                    if (!$stmt_insert->execute() || $stmt_insert->affected_rows !== 1) {
+                        $duplicate = (int)$stmt_insert->errno === 1062;
+                        throw new RuntimeException('Account registration failed', $duplicate ? 1062 : 0);
                     }
+                    if (!$conn->commit()) throw new RuntimeException('Registration commit failed');
+                    $registration_started = false;
+                    $success = 'สมัครสมาชิกเจ้าหน้าที่สำเร็จ! ข้อมูลแสดงในหน้า Team ของแอดมินแล้ว กรุณาผูกบัญชี LINE ก่อนเข้าสู่ Dashboard เจ้าหน้าที่ อีเมลที่กรอกยังไม่ได้รับการยืนยัน';
                 }
             } catch (Throwable $e) {
+                if ($registration_started) {
+                    try { $conn->rollback(); } catch (Throwable $rollbackError) { error_log('Registration rollback failed'); }
+                }
                 if ((int) $e->getCode() === 1062) {
                     $error = 'ข้อมูลบัญชีซ้ำกับที่มีอยู่ กรุณาตรวจชื่อผู้ใช้งาน';
                 } else {
@@ -131,6 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = 'ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่ภายหลัง';
                 }
             } finally {
+                if ($stmt_tech) { $stmt_tech->close(); }
                 if ($stmt_check) { $stmt_check->close(); }
                 if ($stmt_insert) { $stmt_insert->close(); }
             }
@@ -176,13 +203,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="space-y-4 min-w-0">
                         <div>
                             <label for="full_name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ชื่อ–นามสกุล <span class="text-rose-500">*</span></label>
-                            <input type="text" name="full_name" id="full_name" required autocomplete="name"
+                            <input type="text" name="full_name" id="full_name" required maxlength="255" autocomplete="name"
                                 value="<?php echo htmlspecialchars($form_values['full_name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
                         </div>
                         <div>
                             <label for="phone" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">เบอร์โทรศัพท์ <span class="text-rose-500">*</span></label>
-                            <input type="tel" name="phone" id="phone" required autocomplete="tel"
+                            <input type="tel" name="phone" id="phone" required maxlength="20" autocomplete="tel"
                                 value="<?php echo htmlspecialchars($form_values['phone'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
                         </div>
@@ -194,12 +221,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
                             <p class="text-xs text-slate-500 mt-1.5">การกรอกอีเมลยังไม่ถือเป็นการยืนยันอีเมล</p>
                         </div>
+                        <div>
+                            <label for="position" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ตำแหน่งงาน <span class="text-rose-500">*</span></label>
+                            <input type="text" name="position" id="position" required maxlength="255" 
+                                value="<?php echo htmlspecialchars($form_values['position'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                        </div>
+                        <div>
+                            <label for="department" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ฝ่ายงาน <span class="text-rose-500">*</span></label>
+                            <input type="text" name="department" id="department" required maxlength="255" list="registrationDepartments"
+                                value="<?php echo htmlspecialchars($form_values['department'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                        </div>
+                        <datalist id="registrationDepartments">
+                            <option value="ฝ่ายงานบริการเทคโนโลยีดิจิทัล"></option>
+                            <option value="ฝ่ายงานโสตทัศนูปกรณ์"></option>
+                            <option value="ฝ่ายงานยานยนต์"></option>
+                            <option value="แม่บ้าน"></option>
+                        </datalist>
                     </div>
                     <!-- ฝั่งขวา: Username รหัสผ่าน และยืนยันรหัสผ่าน -->
                     <div class="space-y-4 min-w-0">
                         <div>
                             <label for="username" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ชื่อผู้ใช้งาน <span class="text-rose-500">*</span></label>
-                            <input type="text" name="username" id="username" required autocomplete="username"
+                            <input type="text" name="username" id="username" required maxlength="50" autocomplete="username"
                                 value="<?php echo htmlspecialchars($form_values['username'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
                         </div>
@@ -297,7 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 message.classList.toggle('text-rose-600', confirmInput.value !== '' && !matched);
                 message.classList.toggle('text-slate-500', confirmInput.value === '');
             }
-            ['full_name', 'phone', 'email', 'username'].forEach(id => {
+            ['full_name', 'phone', 'email', 'username', 'position', 'department'].forEach(id => {
                 const input = document.getElementById(id);
                 input.addEventListener('input', () => {
                     input.setCustomValidity(input.value !== '' && input.value.trim() === ''
@@ -308,7 +353,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             confirmInput.addEventListener('input', updateRegistrationValidation);
             registrationForm.addEventListener('submit', event => {
                 updateRegistrationValidation();
-                ['full_name', 'phone', 'email', 'username'].forEach(id => {
+                ['full_name', 'phone', 'email', 'username', 'position', 'department'].forEach(id => {
                     const input = document.getElementById(id);
                     input.setCustomValidity(input.value.trim() === '' ? 'กรุณากรอกข้อมูลช่องนี้' : '');
                 });

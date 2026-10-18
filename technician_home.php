@@ -22,7 +22,7 @@ require_once 'db_connect.php';
 
 // ✨ 4. ใช้การตรวจบัญชีล่าสุด: ตรวจว่าบัญชีเชื่อมกับช่างที่มีอยู่จริงในระบบหรือไม่
 // (ป้องกันกรณีตาราง users ยังอยู่ แต่ชื่อช่างในตาราง technicians ถูกแอดมินลบทิ้งไปแล้ว)
-$stmt_tech = $conn->prepare("SELECT id, approval_status, full_name, english_name, avatar_url FROM technicians WHERE id = ?");
+$stmt_tech = $conn->prepare("SELECT id, approval_status, full_name, english_name, avatar_url FROM technicians WHERE id = ? AND deleted_at IS NULL");
 $stmt_tech->bind_param("i", $tech_id_session);
 $stmt_tech->execute();
 $res_tech = $stmt_tech->get_result();
@@ -40,6 +40,7 @@ $tech_data = $res_tech->fetch_assoc();
 $stmt_tech->close();
 
 // ✨ 5. ตรวจสอบสถานะการเชื่อมต่อไลน์ (เผื่อแอดมินกด "ยกเลิกผูกบัญชี")
+// เจ้าหน้าที่ทุกบัญชีต้องผูก LINE สำเร็จก่อนเข้า Dashboard
 if ($tech_data['approval_status'] !== 'อนุมัติแล้ว') {
     session_unset();
     session_destroy();
