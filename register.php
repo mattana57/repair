@@ -325,6 +325,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
                 <p class="text-xs text-slate-500">ช่องที่มี * ต้องกรอกทุกช่อง</p>
+                <div class="text-center">
+                    <a href="register_management.php" class="text-sm text-rose-600 hover:text-rose-700 font-bold transition-colors">สมัครบัญชีผู้ดูแลระบบ / ผู้บริหาร</a>
+                </div>
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md mt-6">ยืนยันการสมัครสมาชิก</button>
             </form>
             <div class="text-center mt-6">
