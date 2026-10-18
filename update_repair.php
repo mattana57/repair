@@ -810,6 +810,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <div>
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-2">ภาพประกอบ</p>
+                            <?php require_once __DIR__ . '/repair_media.php'; rmPanel($conn, (int)$repair['id']); ?>
                             <?php 
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 

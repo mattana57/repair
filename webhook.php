@@ -1,6 +1,7 @@
 <?php
 require 'db_connect.php';
 require 'env.php';
+require_once __DIR__ . '/repair_media.php';
 
 $line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
 
@@ -218,7 +219,7 @@ function mbsServiceJobCard($ticket, $location, $category, $detail, $reporter, $p
             ['type' => 'text', 'text' => 'รายละเอียด: ' . (trim((string) $detail) !== '' ? (string) $detail : 'ไม่ระบุรายละเอียดเพิ่มเติม'), 'size' => 'md', 'margin' => 'sm', 'wrap' => true]
         ];
         if ($has_image) {
-            $items[] = ['type' => 'text', 'text' => 'มีรูปแนบในใบงาน', 'size' => 'sm', 'wrap' => true];
+            $items[] = ['type' => 'text', 'text' => 'มีไฟล์แนบในใบงาน', 'size' => 'sm', 'wrap' => true];
         }
     }
     return mbsReadableFlexNode([
@@ -316,65 +317,35 @@ if (!is_null($events['events'])) {
             }
         }
 
-        if ($event['type'] == 'message' && $event['message']['type'] == 'image') {
-            
-            $stmt_chk_user = $conn->prepare("SELECT id FROM line_users WHERE line_user_id = ?");
-            $stmt_chk_user->bind_param("s", $userId);
-            $stmt_chk_user->execute();
-            if ($stmt_chk_user->get_result()->num_rows === 0) {
-                send_reply($replyToken, ['type' => 'text', 'text' => "กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรค่ะ
-ใช้ชื่อเล่น ชื่อทั่วไป หรือชื่อเต็มได้ตามสะดวก
-
-ตัวอย่าง: แพรว 0812345678"], $channelAccessToken);
-                continue;
-            }
-
-            $message_id = $event['message']['id'];
-            $image_url = "https://api-data.line.me/v2/bot/message/$message_id/content";
-            
-            $ch = curl_init($image_url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ' . $channelAccessToken]);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            $image_data = curl_exec($ch);
-            curl_close($ch);
-            
-            if ($image_data) {
-                if (!is_dir('uploads')) {
-                    mkdir('uploads', 0777, true);
+        if ($event['type'] == 'message' && in_array($event['message']['type'], ['image','video'], true)) {
+            try {
+                $registered=rmQuery($conn,'SELECT id FROM line_users WHERE line_user_id=?','s',$userId)->get_result()->fetch_assoc();
+                if(!$registered){
+                    send_reply($replyToken,['type'=>'text','text'=>'กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรก่อนค่ะ ใช้ชื่อเล่นได้ เช่น แพรว 0812345678'],$channelAccessToken);
+                    continue;
                 }
-                
-                $stmt_check = $conn->prepare("SELECT id, ticket_no, created_at, status, image_path FROM repairs WHERE line_user_id = ? ORDER BY id DESC LIMIT 1");
-                $stmt_check->bind_param("s", $userId);
-                $stmt_check->execute();
-                $latest_job = $stmt_check->get_result()->fetch_assoc();
-                
-                $attached = false;
-                if ($latest_job && $latest_job['status'] !== 'ซ่อมเสร็จแล้ว' && empty($latest_job['image_path'])) {
-                    if ((time() - strtotime($latest_job['created_at'])) <= 300) {
-                        $new_img_name = $latest_job['ticket_no'] . "_" . time() . ".jpg";
-                        file_put_contents("uploads/" . $new_img_name, $image_data);
-                        
-                        $chk_img_col = $conn->query("SHOW COLUMNS FROM repairs LIKE 'image_path'");
-                        if($chk_img_col && $chk_img_col->num_rows == 0) {
-                            $conn->query("ALTER TABLE repairs ADD COLUMN image_path VARCHAR(255) NULL");
-                        }
-                        
-                        $stmt_upd = $conn->prepare("UPDATE repairs SET image_path = ? WHERE id = ?");
-                        $stmt_upd->bind_param("si", $new_img_name, $latest_job['id']);
-                        $stmt_upd->execute();
-                        
-                        $replyText = "📸 แนบรูปภาพเข้ากับใบงาน {$latest_job['ticket_no']} เรียบร้อยแล้วค่ะ";
-                        send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
-                        $attached = true;
-                    }
+                if(($event['message']['contentProvider']['type'] ?? 'line') !== 'line'){
+                    send_reply($replyToken,['type'=>'text','text'=>'กรุณาส่งรูปหรือวิดีโอจากเครื่องผ่าน LINE โดยตรงค่ะ'],$channelAccessToken);continue;
                 }
-                
-                if (!$attached) {
-                    file_put_contents("uploads/temp_{$userId}.jpg", $image_data);
-                    $replyText = "📸 รับรูปภาพเรียบร้อยค่ะ\nกรุณาพิมพ์ข้อความแจ้งรายละเอียดปัญหาและสถานที่ (เช่น 'แอร์ไม่เย็น ห้อง 502') เพื่อให้ระบบบันทึกเข้าระบบแจ้งซ่อมได้เลยค่ะ";
-                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                $kind=$event['message']['type'];
+                $sent=isset($event['timestamp'])?(int)floor($event['timestamp']/1000):time();
+                $registeredMedia=rmRegister($conn,$userId,(string)$event['message']['id'],$kind,$sent);
+                if(!empty($registeredMedia['duplicate'])){continue;}
+                if(isset($registeredMedia['error'])){send_reply($replyToken,['type'=>'text','text'=>$registeredMedia['error']],$channelAccessToken);continue;}
+                $mediaState=rmDownload($conn,$registeredMedia['row'],$channelAccessToken);
+                if($mediaState==='too_large'){
+                    $notice=$kind==='image'?'รูปนี้เกิน 10 MB ค่ะ กรุณาลดขนาดแล้วส่งใหม่ ไฟล์ก่อนหน้ายังอยู่ครบ':'วิดีโอนี้เกิน 50 MB ค่ะ กรุณาลดขนาดแล้วส่งใหม่ ไฟล์ก่อนหน้ายังอยู่ครบ';
+                } elseif($mediaState==='failed') {
+                    $notice='รับไฟล์นี้ไม่สำเร็จค่ะ กรุณาส่งเป็นรูปภาพหรือวิดีโออีกครั้ง ไฟล์ก่อนหน้ายังอยู่ครบ';
+                } else {
+                    $label=$kind==='image'?'รูป':'วิดีโอ';
+                    $notice=!empty($registeredMedia['ticket'])?'รับ'.$label.'สำหรับใบงาน '.$registeredMedia['ticket'].' แล้วค่ะ':'รับ'.$label.'แล้วค่ะ ส่งรายละเอียดและสถานที่เพื่อแจ้งงานได้เลย';
+                    if($mediaState==='queued'){$notice.=' กำลังรอรับไฟล์ให้ครบค่ะ';}
                 }
+                send_reply($replyToken,['type'=>'text','text'=>$notice],$channelAccessToken);
+            } catch(Throwable $e) {
+                error_log('LINE media intake failed');
+                send_reply($replyToken,['type'=>'text','text'=>'ยังรับไฟล์ไม่ได้ค่ะ กรุณาแจ้งผู้ดูแลตรวจการตั้งค่าไฟล์แนบ แล้วส่งไฟล์ใหม่'],$channelAccessToken);
             }
             continue;
         }
@@ -565,9 +536,13 @@ if (!is_null($events['events'])) {
                 
                 if(mbsInsertRepair($conn, $stmt, $ticket_no)) {
                     $repair_id = (int)$stmt->insert_id;
+                    $media_count=0;
+                    try {$media_count=rmClaimPending($conn,$userId,$repair_id);}
+                    catch(Throwable $e){error_log('LINE pending media claim failed');}
+
                     $replyText = "✅ รับคำขอเรียบร้อยแล้วค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n📌 เรื่องที่แจ้ง: $category\n📍 สถานที่: $location\n📝 ข้อความจากผู้แจ้ง: $problem\n\nระบบจะแจ้งเมื่อเจ้าหน้าที่รับงานค่ะ";
-                    if ($image_path) {
-                        $replyText .= "\n📸 (ระบบได้รับและแนบรูปภาพของคุณเข้าไปในใบงานเรียบร้อยแล้วค่ะ)";
+                    if ($image_path || $media_count > 0) {
+                        $replyText .= "\n📎 มีไฟล์แนบสำหรับใบงานนี้ค่ะ";
                     }
                     send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
@@ -579,7 +554,7 @@ if (!is_null($events['events'])) {
                         [[
                             'type' => 'button', 'style' => 'primary', 'height' => 'md',
                             'action' => ['type' => 'postback', 'label' => 'รับงาน', 'data' => "action=accept&id=$repair_id"]
-                        ]], '', '', !empty($image_path)
+                        ]], '', '', (!empty($image_path) || $media_count > 0)
                     );
                     send_push($line_group_id, $pushMsg, $channelAccessToken);
                 } else {

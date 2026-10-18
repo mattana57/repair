@@ -288,6 +288,7 @@ if (isset($_GET['id'])) {
 
                         <div>
                             <p class="<?php echo $img_label_class; ?>">ภาพประกอบปัญหา</p>
+                            <?php require_once __DIR__ . '/repair_media.php'; rmPanel($conn, (int)$repair['id']); ?>
                             <?php 
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 
