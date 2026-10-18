@@ -273,14 +273,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p id="grantCountdown" class="text-sm font-bold mb-5" style="color: #dc2626;" hidden></p>
                 <div class="mb-4">
                     <label for="new_password" class="block text-sm font-bold text-slate-700 mb-2">รหัสผ่านใหม่</label>
-                    <input type="password" id="new_password" required autocomplete="new-password"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <div class="relative">
+                        <input type="password" id="new_password" required autocomplete="new-password"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-12 py-3 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <button type="button" onclick="toggleResetPasswordVisibility('new_password', this)"
+                            class="absolute right-2 top-0 h-full w-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                            aria-controls="new_password" aria-pressed="false" aria-label="แสดงรหัสผ่านใหม่" title="แสดงรหัสผ่านใหม่">
+                            <i class="fas fa-eye-slash" aria-hidden="true"></i>
+                        </button>
+                    </div>
                     <p class="text-xs text-slate-500 mt-2"><?php echo htmlspecialchars(passwordPolicyHint(), ENT_QUOTES, 'UTF-8'); ?></p>
                 </div>
                 <div class="mb-5">
                     <label for="confirm_password" class="block text-sm font-bold text-slate-700 mb-2">ยืนยันรหัสผ่านใหม่</label>
-                    <input type="password" id="confirm_password" required autocomplete="new-password"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <div class="relative">
+                        <input type="password" id="confirm_password" required autocomplete="new-password"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-12 py-3 text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <button type="button" onclick="toggleResetPasswordVisibility('confirm_password', this)"
+                            class="absolute right-2 top-0 h-full w-10 flex items-center justify-center rounded-lg text-slate-500 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                            aria-controls="confirm_password" aria-pressed="false" aria-label="แสดงยืนยันรหัสผ่านใหม่" title="แสดงยืนยันรหัสผ่านใหม่">
+                            <i class="fas fa-eye-slash" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" id="btnSavePassword" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md">บันทึกรหัสผ่านใหม่</button>
                 <a href="forgot_password.php" class="block mt-4 text-center text-sm font-bold text-indigo-600">ขอ OTP ใหม่</a>
@@ -616,6 +630,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'error'
                 );
             });
+        }
+    </script>
+    <script>
+        // รูปตาแสดงสถานะปัจจุบัน: ตาเปิด = เห็นรหัส, ตาปิด = ซ่อนรหัส
+        function toggleResetPasswordVisibility(inputId, button) {
+            if (!['new_password', 'confirm_password'].includes(inputId)) return;
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const visible = input.type === 'password';
+            input.type = visible ? 'text' : 'password';
+            const icon = button.querySelector('i');
+            icon.classList.toggle('fa-eye', visible);
+            icon.classList.toggle('fa-eye-slash', !visible);
+            const fieldLabel = inputId === 'new_password' ? 'รหัสผ่านใหม่' : 'ยืนยันรหัสผ่านใหม่';
+            const actionLabel = (visible ? 'ซ่อน' : 'แสดง') + fieldLabel;
+            button.setAttribute('aria-pressed', String(visible));
+            button.setAttribute('aria-label', actionLabel);
+            button.title = actionLabel;
         }
     </script>
 </body>
