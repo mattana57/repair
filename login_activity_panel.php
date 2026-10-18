@@ -52,6 +52,8 @@ try {
     if ($lh_period['year'] !== 'all') $lh_years[] = (int)$lh_period['year'];
     $lh_years = array_unique($lh_years); rsort($lh_years);
 
+    list($lh_where,$lh_types,$lh_values)=lb_activity_filters();
+
     $lh_groups =
         "SELECT user_id, role,
                 SUM(action_code = 'LOGIN') AS login_count,
@@ -135,12 +137,15 @@ try {
 <?php require __DIR__ . '/account_activity_filters.php'; ?>
 <div id="accountActivityResults">
 <?php if ($lh_user === 0): ?>
-<div class="modern-card overflow-hidden">
+<div id="account-summary-table" data-lb-root="activityperson" data-lb-ready="<?= at_has_log_archive($conn,'user_activity_logs')?'1':'0' ?>" class="modern-card overflow-hidden">
     <div class="p-6 border-b border-slate-100">
+        <div class="flex items-center justify-between gap-3">
         <h3 class="text-lg font-extrabold text-slate-800">
             <i class="fas fa-users text-indigo-500 mr-2"></i>
             สรุปการใช้งานรายบัญชี
         </h3>
+        <span id="lb-count-activityperson" class="ab-count hidden !mt-0" role="status" aria-live="polite">เลือกแล้ว 0 รายการ</span>
+        </div>
         <p class="mt-1 text-sm text-slate-500">
             นับจากประวัติกิจกรรมใหม่ตั้งแต่เปิดใช้ส่วนนี้
             รวมการเปิดหน้า กดปุ่ม ค้นหา เปลี่ยนตัวกรอง ส่งคำขอ และรายการสำเร็จที่ระบบบันทึกไว้
@@ -151,6 +156,7 @@ try {
         <table class="w-full text-left text-sm whitespace-nowrap">
             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e]">
                 <tr>
+                    <th data-lb-cell class="hidden p-4 w-12 text-center"><input class="ab-check" type="checkbox" data-lb-page="activityperson" aria-label="เลือกบัญชีในหน้านี้"></th>
                     <th style="color:#854d0e" class="p-4">บัญชีผู้ใช้</th>
                     <th style="color:#854d0e" class="p-4">บทบาทขณะทำรายการ</th>
                     <th style="color:#854d0e" class="p-4 text-center">เข้าสู่ระบบสำเร็จ</th>
@@ -162,7 +168,7 @@ try {
             <tbody class="divide-y divide-slate-100">
                 <?php if ($lh_people_result->num_rows === 0): ?>
                     <tr>
-                        <td colspan="6" class="p-8 text-center text-slate-400">
+                        <td colspan="6" data-lb-empty="6" class="p-8 text-center text-slate-400">
                             ยังไม่มีประวัติกิจกรรมใหม่ของกลุ่มนี้
                         </td>
                     </tr>
@@ -170,6 +176,7 @@ try {
 
                 <?php while ($lh_person = $lh_people_result->fetch_assoc()): ?>
                     <tr class="hover:bg-slate-50">
+                        <td data-lb-cell class="hidden p-4 text-center"><input type="checkbox" class="ab-check" data-lb-row="activityperson" data-id="<?= (int)$lh_person['user_id'].':'.tp_text($lh_person['role']) ?>" data-user-id="<?= (int)$lh_person['user_id'] ?>" data-role="<?= tp_text($lh_person['role']) ?>" data-upto-id="<?= (int)$lh_person['latest_id'] ?>" aria-label="เลือกประวัติของบัญชีนี้"></td>
                         <td class="p-4">
                             <p class="font-bold text-slate-800">
                                 <?= tp_text(
@@ -222,7 +229,7 @@ try {
 <?php endif; ?>
 
 <?php if ($lh_user > 0): ?>
-<div class="modern-card overflow-hidden">
+<div id="account-event-table" data-lb-root="activityevent" data-lb-ready="<?= at_has_log_archive($conn,'user_activity_logs')?'1':'0' ?>" class="modern-card overflow-hidden">
     <div class="p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
         <div>
             <h3 class="text-lg font-extrabold text-slate-800">
@@ -236,6 +243,8 @@ try {
         </div>
 
         <?php if ($lh_user > 0): ?>
+            <div class="text-right">
+            <p id="lb-count-activityevent" class="ab-count hidden !mt-0 mb-2" role="status" aria-live="polite">เลือกแล้ว 0 รายการ</p>
             <a
                 href="<?= tp_text(mbsActivityUrl([
                     'pg_logs_q' => null,
@@ -245,6 +254,7 @@ try {
             >
                 ดูทุกบัญชีในกลุ่มนี้
             </a>
+            </div>
         <?php endif; ?>
     </div>
 
@@ -252,6 +262,7 @@ try {
         <table class="w-full text-left text-sm min-w-[650px]">
             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e]">
                 <tr>
+                    <th data-lb-cell class="hidden p-4 w-12 text-center"><input type="checkbox" class="ab-check" data-lb-page="activityevent" aria-label="เลือกกิจกรรมในหน้านี้"></th>
                     <th style="color:#854d0e" class="p-4 whitespace-nowrap">วัน / เวลา</th>
                     <th style="color:#854d0e" class="p-4">ผู้ทำรายการ</th>
                     <th style="color:#854d0e" class="p-4">กิจกรรม</th>
@@ -261,7 +272,7 @@ try {
             <tbody class="divide-y divide-slate-100">
                 <?php if ($lh_events->num_rows === 0): ?>
                     <tr>
-                        <td colspan="4" class="p-8 text-center text-slate-400">
+                        <td colspan="4" data-lb-empty="4" class="p-8 text-center text-slate-400">
                             ยังไม่มีกิจกรรมที่บันทึกตามเงื่อนไขนี้
                         </td>
                     </tr>
@@ -269,6 +280,7 @@ try {
 
                 <?php while ($lh_event = $lh_events->fetch_assoc()): ?>
                     <tr class="hover:bg-slate-50">
+                        <td data-lb-cell class="hidden p-4 text-center"><input type="checkbox" class="ab-check" data-lb-row="activityevent" data-id="<?= (int)$lh_event['id'] ?>" aria-label="เลือกกิจกรรม"></td>
                         <td class="p-4 whitespace-nowrap text-slate-500">
                             <div><?= tp_text((date('d/m/', strtotime($lh_event['created_at'])) . ((int)date('Y', strtotime($lh_event['created_at'])) + 543))) ?></div>
                             <div class="text-[11px] text-blue-600 font-bold mt-0.5"><?= tp_text(date('H:i', strtotime($lh_event['created_at']))) ?></div>

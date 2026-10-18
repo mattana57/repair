@@ -11,6 +11,7 @@ $lh_year_options = ['all'=>'ทุกปี'];foreach($lh_years as $lh_y)$lh_yea
         <input type="hidden" name="tab" value="login_logs">
         <input type="hidden" name="pg_logs_status" value="<?= tp_text($lh_role) ?>">
         <?php if($lh_user>0): ?><input type="hidden" name="pg_logs_q" value="<?= (int)$lh_user ?>"><?php endif; ?>
+        <?php lb_edit_menu($lh_user>0?'activityevent':'activityperson'); ?>
         <div class="relative mr-auto flex-1 min-w-[180px] xl:flex-none xl:w-[440px]">
             <label for="accountActivitySearch" class="sr-only">ค้นหาข้อมูลการใช้งานรายบัญชี</label>
             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" aria-hidden="true"></i>

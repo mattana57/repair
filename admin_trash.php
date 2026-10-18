@@ -25,6 +25,20 @@ function at_row($conn, $sql, $types = '', array $values = []) {
     finally { $stmt->close(); }
 }
 
+function at_has_log_archive($conn, $table) {
+    static $cache=[];
+    if (!in_array($table,['login_logs','user_activity_logs'],true)) return false;
+    $key=spl_object_hash($conn).':'.$table;
+    if (array_key_exists($key,$cache)) return $cache[$key];
+    try {$result=$conn->query("SHOW COLUMNS FROM `$table` LIKE 'deleted_at'");$ok=$result&&$result->num_rows===1;if($result)$result->free();return $cache[$key]=$ok;}
+    catch(Throwable $error){return $cache[$key]=false;}
+}
+function at_log_engine($conn,$table) {
+    if (!in_array($table,['login_logs','user_activity_logs'],true)) return;
+    $row=at_row($conn,'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?','s',[$table]);
+    if (!$row||strtoupper((string)$row['ENGINE'])!=='INNODB') throw new RuntimeException('ตารางประวัติต้องรองรับ Transaction');
+}
+
 function at_positive_id($value) {
     if (!is_string($value) || !preg_match('/^[1-9][0-9]*$/D', $value)) return false;
     return filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
@@ -202,7 +216,7 @@ function at_handle_request($conn) {
         }
         $action = $_POST['trash_action'];
         $kind = $_POST['trash_kind'] ?? null;
-        $tables = ['asset' => 'assets', 'user' => 'users', 'tech' => 'technicians', 'repair' => 'repairs', 'reporter' => 'repairs'];
+        $tables = ['asset' => 'assets', 'user' => 'users', 'tech' => 'technicians', 'repair' => 'repairs', 'reporter' => 'repairs', 'loginlog'=>'login_logs', 'activitylog'=>'user_activity_logs'];
         if (!is_string($action) || !in_array($action, ['move', 'restore', 'purge'], true)
             || !is_string($kind) || !isset($tables[$kind])) {
             throw new RuntimeException('ประเภทคำขอไม่ถูกต้อง');
@@ -229,6 +243,7 @@ function at_handle_request($conn) {
         $started = true;
         at_check_admin($conn);
         $table = $tables[$kind];
+        at_log_engine($conn,$table);
         $row = at_row($conn, "SELECT * FROM $table WHERE id = ? FOR UPDATE", 'i', [$id]);
         if (!$row) throw new RuntimeException('ไม่พบรายการนี้');
         if (($action === 'move') !== ($row['deleted_at'] === null)) {
@@ -342,7 +357,7 @@ function at_handle_bulk_request($conn) {
         at_check_admin($conn);
         if ($selectOnly) {
             // Capture a fixed selection. New arrivals after this response are not selected.
-            extract(at_trash_query(), EXTR_SKIP);
+            extract(at_trash_query($conn), EXTR_SKIP);
             $stmt = at_stmt($conn, "SELECT kind, id, deleted_at, category FROM ($union) trash_rows WHERE $where ORDER BY kind ASC, id ASC", $types, $values);
             $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
             foreach ($items as &$item) $item['id'] = (string)$item['id'];
@@ -360,7 +375,7 @@ function at_handle_bulk_request($conn) {
         if (!is_array($items) || !$items || array_keys($items) !== range(0, count($items)-1)) {
             throw new RuntimeException('กรุณาเลือกรายการก่อนลบ');
         }
-        $tables = ['asset'=>'assets', 'user'=>'users', 'tech'=>'technicians', 'repair'=>'repairs'];
+        $tables = ['asset'=>'assets', 'user'=>'users', 'tech'=>'technicians', 'repair'=>'repairs', 'loginlog'=>'login_logs', 'activitylog'=>'user_activity_logs'];
         $seen = [];
         foreach ($items as &$item) {
             if (!is_array($item) || !is_string($item['kind'] ?? null) || !isset($tables[$item['kind']])) {
@@ -380,13 +395,14 @@ function at_handle_bulk_request($conn) {
         }
         unset($item);
         // Delete selected work orders/accounts first to respect dependencies on technicians.
-        $order = ['repair'=>0, 'user'=>1, 'asset'=>2, 'tech'=>3];
+        $order = ['loginlog'=>0, 'activitylog'=>0, 'repair'=>1, 'user'=>2, 'asset'=>3, 'tech'=>4];
         usort($items, static function ($a, $b) use ($order) {
             $rank = $order[$a['kind']] <=> $order[$b['kind']];
             return $rank !== 0 ? $rank : $a['id'] <=> $b['id'];
         });
         foreach ($items as $item) {
             $kind = $item['kind']; $id = $item['id']; $table = $tables[$kind];
+            at_log_engine($conn,$table);
             $row = at_row($conn, "SELECT * FROM $table WHERE id = ? FOR UPDATE", 'i', [$id]);
             if (!$row || $row['deleted_at'] === null || (string)$row['deleted_at'] !== $item['deleted_at']) {
                 throw new RuntimeException('สถานะรายการรหัส ' . $id . ' เปลี่ยนแล้ว กรุณารีเฟรชและเลือกใหม่');
@@ -448,18 +464,21 @@ function at_period_filters() {
     return compact('day', 'month', 'year');
 }
 
-function at_trash_query() {
+function at_trash_query($conn = null) {
+    if ($conn === null) $conn = $GLOBALS['conn'];
     $union = "SELECT 'asset' AS kind, id, CONVERT(asset_name USING utf8mb4) COLLATE utf8mb4_unicode_ci AS label, CONVERT(asset_code USING utf8mb4) COLLATE utf8mb4_unicode_ci AS detail, deleted_at, 'asset' AS category FROM assets WHERE deleted_at IS NOT NULL
         UNION ALL SELECT 'user', id, COALESCE(NULLIF(full_name,''),username), username, deleted_at, CASE LOWER(role) WHEN 'admin' THEN 'admin' WHEN 'executive' THEN 'executive' ELSE 'user' END FROM users WHERE deleted_at IS NOT NULL
         UNION ALL SELECT 'tech', id, full_name, department, deleted_at, 'tech' FROM technicians WHERE deleted_at IS NOT NULL
         UNION ALL SELECT 'repair', id, ticket_no, reporter_name, deleted_at, 'user' FROM repairs WHERE deleted_at IS NOT NULL";
+    if (at_has_log_archive($conn,'login_logs')) $union .= " UNION ALL SELECT 'loginlog',id,username,CONCAT_WS(' · ',role,status,DATE_FORMAT(login_time,'%d/%m/%Y %H:%i')),deleted_at,'loginlog' FROM login_logs WHERE deleted_at IS NOT NULL";
+    if (at_has_log_archive($conn,'user_activity_logs')) $union .= " UNION ALL SELECT 'activitylog',id,COALESCE(NULLIF(full_name,''),username),CONCAT_WS(' · ',role,summary),deleted_at,'activitylog' FROM user_activity_logs WHERE deleted_at IS NOT NULL";
     // category ใช้แสดง/กรองเท่านั้น kind ยังคงอ้างอิงตารางจริงสำหรับ POST
     $q = isset($_GET['trash_q']) && is_string($_GET['trash_q']) ? trim($_GET['trash_q']) : '';
     $q = mb_substr($q, 0, 200, 'UTF-8');
     $kind = isset($_GET['trash_type']) && is_string($_GET['trash_type']) ? $_GET['trash_type'] : 'all';
     if ($kind === 'repair') $kind = 'user';
     $where = '1=1'; $values = []; $types = '';
-    if (in_array($kind, ['asset','user','tech','admin','executive'], true)) { $where .= ' AND category = ?'; $values[] = $kind; $types .= 's'; }
+    if (in_array($kind, ['asset','user','tech','admin','executive','loginlog','activitylog'], true)) { $where .= ' AND category = ?'; $values[] = $kind; $types .= 's'; }
     else { $kind = 'all'; }
     $period = at_period_filters();
     $day = $period['day']; $month = $period['month']; $year = $period['year'];
@@ -477,7 +496,7 @@ function at_trash_query() {
 }
 
 function at_page($conn) {
-    extract(at_trash_query(), EXTR_SKIP);
+    extract(at_trash_query($conn), EXTR_SKIP);
     $years = [(int)(new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')];
     if ($year !== 'all') $years[] = (int)$year;
     $yearStmt = at_stmt($conn, "SELECT DISTINCT YEAR(deleted_at) AS y FROM ($union) trash_years WHERE YEAR(deleted_at) BETWEEN 1000 AND 9999");

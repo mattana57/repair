@@ -11,11 +11,11 @@ if ($active_tab === 'trash') {
         error_log('Admin Trash load failed: ' . $trashError->getMessage());
     }
 }
-$atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชีผู้ใช้', 'tech' => 'เจ้าหน้าที่', 'admin' => 'บัญชีแอดมิน', 'executive' => 'บัญชีผู้บริหาร'];
+$atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชีผู้ใช้', 'tech' => 'เจ้าหน้าที่', 'admin' => 'บัญชีแอดมิน', 'executive' => 'บัญชีผู้บริหาร', 'loginlog'=>'ประวัติการเข้าสู่ระบบ', 'activitylog'=>'ประวัติกิจกรรม'];
 $atNotice = $_SESSION['admin_trash_notice'] ?? null;
 unset($_SESSION['admin_trash_notice']);
 ?>
-<?php if (in_array($active_tab, ['users', 'team_cards', 'assets'], true) && is_array($atNotice)): ?>
+<?php if (in_array($active_tab, ['users', 'team_cards', 'assets', 'login_logs'], true) && is_array($atNotice)): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     Swal.fire({
@@ -360,7 +360,7 @@ async function selectAllTrashItems() {
         if (!response.ok || !Array.isArray(result.items) || result.count !== result.items.length) throw new Error(result.error || 'เลือกรายการไม่สำเร็จ');
         const selected = new Map();
         for (const item of result.items) {
-            if (!['asset','user','tech','repair'].includes(item.kind) || !/^[1-9][0-9]*$/.test(String(item.id)) || typeof item.deleted_at !== 'string') throw new Error('ข้อมูลรายการไม่ถูกต้อง กรุณาลองใหม่');
+            if (!['asset','user','tech','repair','loginlog','activitylog'].includes(item.kind) || !/^[1-9][0-9]*$/.test(String(item.id)) || typeof item.deleted_at !== 'string') throw new Error('ข้อมูลรายการไม่ถูกต้อง กรุณาลองใหม่');
             item.id = String(item.id); selected.set(trashRowKey(item), item);
         }
         trashBulkSelected = selected;

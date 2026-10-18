@@ -447,6 +447,7 @@ function formatPhoneHtml($phone_str) {
 define('MBS_ADMIN_TABLE_BULK', true);
 require_once __DIR__ . '/contact_history_pagination.php';
 require_once __DIR__ . '/admin_table_bulk.php';
+require_once __DIR__ . '/admin_log_bulk.php';
 
 // ส่งเฉพาะรายการ Transactions และปุ่มแบ่งหน้า หลังตรวจสิทธิ์แล้ว
 if ($_SERVER['REQUEST_METHOD'] === 'GET'
@@ -2651,11 +2652,11 @@ if (isset($_GET['api_check_hash'])) {
 .ab-edit-wrap{position:relative;flex-shrink:0;}
 .ab-edit-button{color:#e11d48;font-size:14px;font-weight:700;padding:8px 10px;border-radius:12px;background:transparent;white-space:nowrap;}
 .ab-edit-button:hover{background:#fff1f2;}
-.ab-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:90;width:200px;padding:12px;background:#292c35;border:1px solid #3d4454;border-radius:18px;box-shadow:0 12px 30px #0f172a30;}
-.ab-menu button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 8px;text-align:left;color:#fff;font-size:14px;font-weight:700;border-radius:10px;}
-.ab-menu button i{width:18px;color:#cbd5e1;}
-.ab-menu button:hover{background:#ffffff12;}
-.ab-menu button[data-ab-action="delete"],.ab-menu button[data-ab-action="delete"] i{color:#fb7185;}
+.ab-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:90;width:200px;padding:12px;background:#ffffff;border:1px solid #dbeafe;border-radius:18px;box-shadow:0 12px 30px #0f172a30;}
+.ab-menu button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 8px;text-align:left;color:#334155;font-size:14px;font-weight:700;border-radius:10px;}
+.ab-menu button i{width:18px;color:#64748b;}
+.ab-menu button:hover{background:#eff6ff;color:#1d4ed8;}
+.ab-menu button[data-ab-action="delete"],.ab-menu button[data-ab-action="delete"] i,.ab-menu button[data-lb-action="delete"],.ab-menu button[data-lb-action="delete"] i{color:#e11d48;}
 .ab-menu button:disabled{opacity:.45;cursor:not-allowed;}
 .ab-count{color:#2563eb;font-size:13px;font-weight:700;text-align:right;min-height:20px;margin-top:8px;}
 .ab-check{width:16px;height:16px;accent-color:#2563eb;cursor:pointer;}
@@ -4329,6 +4330,7 @@ if (isset($_GET['api_check_hash'])) {
                         COALESCE(SUM(LOWER(role) = 'executive'), 0) AS executive
                      FROM login_logs
                      WHERE status = 'สำเร็จ'
+                       AND " . lb_active($conn,'login_logs') . "
                        AND LOWER(role) IN ('admin', 'executive', 'technician')
                        AND login_time >= ? AND login_time < ?",
                     'ss', $login_daily_values
@@ -4339,7 +4341,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 $activity_summary = ['admin' => 0, 'executive' => 0, 'technician' => 0];
                 try {
-                    $activity_counts = tp_query($conn, "SELECT role, COUNT(*) AS total FROM user_activity_logs WHERE role IN ('admin','executive','technician') AND created_at >= ? AND created_at < ? GROUP BY role", 'ss', $login_daily_values);
+                    $activity_counts = tp_query($conn, "SELECT role, COUNT(*) AS total FROM user_activity_logs WHERE " . lb_active($conn,'user_activity_logs') . " AND role IN ('admin','executive','technician') AND created_at >= ? AND created_at < ? GROUP BY role", 'ss', $login_daily_values);
                     while ($activity_count = $activity_counts->fetch_assoc()) $activity_summary[$activity_count['role']] = (int)$activity_count['total'];
                     $activity_counts->free();
                 } catch (Throwable $activityError) { error_log('Activity summary load failed'); }
@@ -4452,7 +4454,7 @@ if (isset($_GET['api_check_hash'])) {
                 </div>
 
                 <?php else: ?>
-                    <div>
+                    <div class="flex items-center justify-between gap-3">
                         <a
                             href="?tab=login_logs"
                             class="inline-flex items-center gap-2 rounded-xl border border-indigo-100 bg-white px-4 py-2.5 text-sm font-bold text-indigo-600 shadow-sm hover:bg-indigo-50"
@@ -4460,6 +4462,7 @@ if (isset($_GET['api_check_hash'])) {
                             <i class="fas fa-arrow-left" aria-hidden="true"></i>
                             กลับหน้าสรุปการเข้าสู่ระบบ
                         </a>
+                        <?php if ($login_detail === 'failed') lb_edit_menu('loginlog'); ?>
                     </div>
 
                     <?php
@@ -4499,7 +4502,7 @@ if (isset($_GET['api_check_hash'])) {
                     #login-history-table.login-logs-fullscreen {position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:10000;margin:0;border-radius:0;background:white;}
                     #login-history-table.login-logs-fullscreen .login-logs-scroll {flex:1;min-height:0;overflow:auto;}
                 </style>
-                <div id="login-history-table" class="modern-card overflow-hidden flex flex-col bg-white" style="scroll-margin-top: 12px;">
+                <div id="login-history-table" data-lb-root="loginlog" data-lb-ready="<?= at_has_log_archive($conn,'login_logs') ? '1' : '0' ?>" class="modern-card overflow-hidden flex flex-col bg-white" style="scroll-margin-top: 12px;">
                     <form id="loginLogsFilterForm" method="get" action="dashboard.php" onsubmit="clearTimeout(loginLogsFilterTimer)" class="p-4 md:p-6 border-b border-slate-100 flex flex-col gap-4 bg-white shrink-0 relative z-30">
                         <input type="hidden" name="tab" value="login_logs">
                         <?php if ($login_detail !== ''): ?><input type="hidden" name="pg_logs_status" value="<?= tp_text($login_detail); ?>"><?php endif; ?>
@@ -4511,6 +4514,7 @@ if (isset($_GET['api_check_hash'])) {
                                 <p class="text-sm font-medium text-slate-400 mt-0.5">ตรวจสอบการเข้าใช้งานระบบของเจ้าหน้าที่และผู้บริหาร</p>
                             </div>
                             <div class="flex items-center gap-2 shrink-0 ml-4">
+                                <span id="lb-count-loginlog" class="ab-count hidden !mt-0" role="status" aria-live="polite">เลือกแล้ว 0 รายการ</span>
                                 <button type="button" onclick="toggleMaximizeLoginLogs()" class="text-slate-400 hover:text-indigo-600 transition-colors bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm shrink-0 hover:bg-indigo-50" title="สลับเต็มจอ">
                                     <i class="fas fa-expand text-sm md:text-base" id="maximizeLoginLogsIcon"></i>
                                 </button>
@@ -4520,6 +4524,7 @@ if (isset($_GET['api_check_hash'])) {
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
+                            <?php if ($login_detail !== 'failed') lb_edit_menu('loginlog'); ?>
                             <div class="relative mr-auto flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group mbs-table-search">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="loginLogSearch" name="pg_logs_q" value="<?= tp_text(tp_get('pg_logs_q')); ?>" oninput="filterLoginLogs(event); toggleClearBtn('loginLogSearch', 'clearLoginLogSearch');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
@@ -4580,6 +4585,7 @@ if (isset($_GET['api_check_hash'])) {
                         <table class="w-full text-left whitespace-nowrap min-w-[700px]">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
+                                    <th data-lb-cell class="hidden px-4 py-4 w-12 text-center"><input class="ab-check" type="checkbox" data-lb-page="loginlog" aria-label="เลือกประวัติในหน้านี้"></th>
                                     <th class="px-6 py-4">วัน/เวลา</th>
                                     <th class="px-6 py-4">ชื่อผู้ใช้</th>
                                     <th class="px-6 py-4 text-center">สิทธิ์</th>
@@ -4591,48 +4597,7 @@ if (isset($_GET['api_check_hash'])) {
                                 <?php
                                 $login_filter = $login_detail;
 
-                                $login_where = '';
-                                $login_types = '';
-                                $login_values = [];
-
-                                if ($login_filter === 'failed') {
-                                    $login_where = " WHERE COALESCE(status, '') <> 'สำเร็จ'";
-                                } elseif ($login_filter === 'success') {
-                                    $login_where =
-                                        " WHERE status = 'สำเร็จ'
-                                          AND LOWER(role) IN (
-                                              'admin', 'executive', 'technician'
-                                          )";
-                                } elseif (in_array(
-                                    $login_filter,
-                                    ['admin', 'executive', 'technician'],
-                                    true
-                                )) {
-                                    $login_where =
-                                        " WHERE status = 'สำเร็จ'
-                                          AND LOWER(role) = ?";
-                                    $login_types = 's';
-                                    $login_values = [$login_filter];
-                                }
-
-                                // ตัวกรองของ Login History เท่านั้น ใช้เงื่อนไขเดียวกันกับ SELECT และ COUNT
-                                $login_extra = [];
-                                foreach (['day' => $login_day, 'month' => $login_month, 'year' => $login_year] as $part => $value) {
-                                    if ($value !== 'all') {
-                                        $login_extra[] = strtoupper($part) . '(login_time) = ?';
-                                        $login_types .= 'i'; $login_values[] = (int)$value;
-                                    }
-                                }
-                                if ($login_role !== 'all') {
-                                    $login_extra[] = 'LOWER(role) = ?';
-                                    $login_types .= 's'; $login_values[] = $login_role;
-                                }
-                                $login_search = tp_get('pg_logs_q');
-                                if ($login_search !== '') {
-                                    $login_extra[] = "CONCAT_WS(' ', username, role, ip_address, status, login_time, CONCAT(DATE_FORMAT(login_time, '%d/%m/'), YEAR(login_time) + 543)) LIKE ? ESCAPE '!'";
-                                    $login_types .= 's'; $login_values[] = tp_like($login_search);
-                                }
-                                if ($login_extra) $login_where .= ($login_where === '' ? ' WHERE ' : ' AND ') . implode(' AND ', $login_extra);
+                                list($login_where,$login_types,$login_values)=lb_login_filters();
 
                                 $logs_paging = tp_page(
                                     $conn,
@@ -4659,6 +4624,7 @@ if (isset($_GET['api_check_hash'])) {
                                         if (strtolower($log['role']) === 'technician') $roleBadge = 'bg-sky-100 text-sky-700';
 
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                            <td data-lb-cell class='hidden px-4 py-4 text-center'><input class='ab-check' type='checkbox' data-lb-row='loginlog' data-id='".(int)$log['id']."' aria-label='เลือกประวัติเข้าสู่ระบบ'></td>
                                             <td class='px-6 py-4 align-middle text-slate-700 font-medium'>" . (date('d/m/', strtotime($log['login_time'])) . ((int)date('Y', strtotime($log['login_time'])) + 543)) . "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>" . date("H:i", strtotime($log['login_time'])) . "</div>" . "</td>
                                             <td class='px-6 py-4 align-middle font-bold text-slate-800'>" . htmlspecialchars($log['username']) . "</td>
                                             <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleBadge}'>" . htmlspecialchars($log['role'] ?? 'N/A') . "</span></td>
@@ -4667,7 +4633,7 @@ if (isset($_GET['api_check_hash'])) {
                                         </tr>";
                                     }
                                 } else {
-                                    echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>" . ($login_filter === 'failed' ? 'ไม่พบรายการเข้าสู่ระบบที่ไม่สำเร็จ' : 'ยังไม่มีประวัติการเข้าสู่ระบบ') . "</td></tr>";
+                                    echo "<tr><td colspan='5' data-lb-empty='5' class='px-6 py-12 text-center text-slate-400'>" . ($login_filter === 'failed' ? 'ไม่พบรายการเข้าสู่ระบบที่ไม่สำเร็จ' : 'ยังไม่มีประวัติการเข้าสู่ระบบ') . "</td></tr>";
                                 }
                                 ?>
                             </tbody>
@@ -9114,6 +9080,7 @@ if (isset($_GET['api_check_hash'])) {
 })();
 </script>
 <div id="ab-settings" hidden data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></div>
-<script src="admin_table_bulk.js"></script>
+<script src="admin_table_bulk.js?v=20261019-2"></script>
+<script src="admin_log_bulk.js?v=20261019-1"></script>
 </body>
 </html>
