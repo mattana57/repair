@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left min-w-[760px] text-sm">
-                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs font-bold"><tr><th class="px-6 py-4">ประเภทข้อมูล</th><th class="px-6 py-4">รายการ</th><th class="px-6 py-4">รายละเอียด</th><th class="px-6 py-4">วันที่ย้ายเข้าถังขยะ</th><th class="px-6 py-4 text-right">จัดการ</th></tr></thead>
+                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs font-bold"><tr><th class="px-6 py-4">ประเภทข้อมูล</th><th class="px-6 py-4">รายการ</th><th class="px-6 py-4">รายละเอียด</th><th class="px-6 py-4">วันที่ย้ายเข้าถังขยะ</th><th class="px-6 py-4">จัดการ</th></tr></thead>
                 <tbody class="divide-y divide-slate-100">
                 <?php foreach ($atData['rows'] as $atItem):
                     $atDate = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $atItem['deleted_at'], new DateTimeZone('Asia/Bangkok'));
