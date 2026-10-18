@@ -18,6 +18,48 @@ if($chk_col && $chk_col->num_rows == 0) {
     $conn->query("ALTER TABLE repairs ADD COLUMN line_display_name VARCHAR(255) NULL AFTER reporter_name");
 }
 
+
+// แปลงเฉพาะข้อความสถานที่ ไม่แก้ข้อความรายละเอียดของผู้แจ้ง
+function mbsThaiLocationNumber($word) {
+    $digits = ['ศูนย์'=>'0','หนึ่ง'=>'1','เอ็ด'=>'1','สอง'=>'2','ยี่'=>'2','สาม'=>'3','สี่'=>'4','ห้า'=>'5','หก'=>'6','เจ็ด'=>'7','แปด'=>'8','เก้า'=>'9'];
+    preg_match_all('/ศูนย์|หนึ่ง|เอ็ด|สอง|ยี่|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า|สิบ|ร้อย|พัน/u', $word, $m);
+    if (!$m[0]) { return ''; }
+    if (!preg_match('/สิบ|ร้อย|พัน/u', $word)) {
+        $out = ''; foreach ($m[0] as $token) { $out .= $digits[$token]; }
+        return $out;
+    }
+    $total = 0; $digit = 0;
+    foreach ($m[0] as $token) {
+        if (isset($digits[$token])) { $digit = (int)$digits[$token]; }
+        else {
+            $unit = ['สิบ'=>10,'ร้อย'=>100,'พัน'=>1000][$token];
+            $total += ($digit ?: 1) * $unit; $digit = 0;
+        }
+    }
+    return (string)($total + $digit);
+}
+
+function mbsNormalizeLocationText($text) {
+    $text = strtr($text, ['๐'=>'0','๑'=>'1','๒'=>'2','๓'=>'3','๔'=>'4','๕'=>'5','๖'=>'6','๗'=>'7','๘'=>'8','๙'=>'9']);
+    $number = '(?:ศูนย์|หนึ่ง|เอ็ด|สอง|ยี่|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า|สิบ|ร้อย|พัน)';
+    return preg_replace_callback('/(ชั้น\s*(?:ที่\s*)?|ห้อง\s*(?:(?:หมายเลข|เลขที่|เรียน|แลป|แล็บ|แลบ|lab)\s*)?)(' . $number . '(?:\s*' . $number . ')*)/iu', function($m) {
+        return $m[1] . mbsThaiLocationNumber($m[2]);
+    }, $text);
+}
+
+function mbsNamedRoomAndFloor($text) {
+    $parts = [];
+    if (preg_match('/ห้อง(?:พักอาจารย์|น้ำ(?:\s*(?:สำหรับ\s*)?(?:อาจารย์|บุคลากร|เจ้าหน้าที่|ผู้พิการ|ชาย|หญิง))?|ประชุม|สำนักงาน|ธุรการ|คอมพิวเตอร์|สมุด|พยาบาล|เก็บของ|พักเจ้าหน้าที่|พักครู|ครัว|อาหาร|ปฏิบัติการ)/u', $text, $m)) {
+        $parts[] = trim($m[0]);
+    }
+    if (preg_match('/ชั้น\s*(?:ที่\s*)?([0-9]{1,3})(?![0-9])/u', $text, $m)) {
+        $parts[] = 'ชั้น ' . $m[1];
+    } elseif (preg_match('/ชั้น\s*(ใต้ดิน|ล่าง|บน|ดาดฟ้า)/u', $text, $m)) {
+        $parts[] = 'ชั้น' . $m[1];
+    }
+    return implode(' ', $parts);
+}
+
 function extract_repair_info($text) {
     $category = "ไม่ระบุปัญหา";
     $location = "ไม่ระบุสถานที่";
@@ -72,23 +114,27 @@ function extract_repair_info($text) {
         }
     }
 
+    $location_text = mbsNormalizeLocationText($text);
     // รูปแบบอาคารและห้อง เช่น SBB603, SBB-401, Acc.Biz 204
-    if (preg_match('/(?<![a-z0-9])(?:(sbb)|(acc[.\s-]*biz))[\s-]*([0-9]{3,4})(?![a-z0-9])/iu', $text, $matches)) {
+    if (preg_match('/(?<![a-z0-9])(?:(sbb)|(acc[.\s-]*biz))[\s-]*([0-9]{3,4})(?![a-z0-9])/iu', $location_text, $matches)) {
         $building = !empty($matches[1]) ? 'SBB' : 'Acc.Biz';
         $location = $building . ' ' . $matches[3];
     }
     // ห้องที่ระบุชัดเจน เก็บเฉพาะเลข เช่น ห้อง701 หรือ ห้องแลป 302
-    elseif (preg_match('/ห้อง\s*(?:เรียน|แลป|แล็บ|แลบ|lab)?\s*([0-9]{3,4})(?![0-9])/iu', $text, $matches)) {
+    elseif (preg_match('/ห้อง\s*(?:เรียน|แลป|แล็บ|แลบ|lab)?\s*([0-9]{3,4})(?![0-9])/iu', $location_text, $matches)) {
         $location = $matches[1];
     }
     // เลขห้องนำหน้าคำขอ เช่น 507 ขอความช่วยเหลือจอไม่ติด
     // ไม่ใช้เลขทั่วไป เช่น 11 โมง, 2 ตัว หรือ print_44 เป็นห้อง
-    elseif (preg_match('/^\s*([0-9]{3,4})\s*(?=ขอความช่วยเหลือ|ขอให้ช่วย|รบกวน|ช่วยดู|แจ้ง)/u', $text, $matches)) {
+    elseif (preg_match('/^\s*([0-9]{3,4})\s*(?=ขอความช่วยเหลือ|ขอให้ช่วย|รบกวน|ช่วยดู|แจ้ง)/u', $location_text, $matches)) {
         $location = $matches[1];
+    }
+    elseif (($named_location = mbsNamedRoomAndFloor($location_text)) !== '') {
+        $location = $named_location;
     }
     else {
         // คงรูปแบบสถานที่เดิมที่ไม่ใช่เลขห้อง เช่น ตึก ชั้น และบริเวณคณะ
-        preg_match('/(หน้า|หลัง|ข้าง|ใน|นอก|บริเวณ)?\s*(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+|ชั้น\s*[0-9]+|ลานจอดรถ|โรงรถ|ทางเข้า|ทางออก|หน้าคณะ|หลังคณะ|ข้างคณะ|ในคณะ)/iu', $text, $matches);
+        preg_match('/(หน้า|หลัง|ข้าง|ใน|นอก|บริเวณ)?\s*(ห้อง\s*[a-zA-Z0-9]+|ตึก\s*[a-zA-Z0-9ก-๙]+|อาคาร\s*[a-zA-Z0-9ก-๙]+|ชั้น\s*[0-9]+|ลานจอดรถ|โรงรถ|ทางเข้า|ทางออก|หน้าคณะ|หลังคณะ|ข้างคณะ|ในคณะ)/iu', $location_text, $matches);
         if (!empty($matches[0])) {
             $location = trim($matches[0]);
         }
