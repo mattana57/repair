@@ -2185,17 +2185,18 @@ if (isset($_GET['th_fragment'])
         let composing = false;
         let pendingSearch = false;
 
-        async function search(currentVersion, refresh = false) {
+        async function search(currentVersion, refresh = false, navigationUrl = null) {
             const requestController = new AbortController();
             controller = requestController;
             if (!refresh) pendingSearch = false;
 
-            const url = new URL(form.action, window.location.href);
-            url.search = new URLSearchParams(new FormData(form)).toString();
+            const url = new URL(navigationUrl || form.action, window.location.href);
+            if (!navigationUrl) url.search = new URLSearchParams(new FormData(form)).toString();
             url.searchParams.set('tab', 'history');
+            url.searchParams.set('hq', input.value.trim());
             const currentQuery = window.location.search;
             const currentPage = new URLSearchParams(currentQuery).get('hp') || '1';
-            url.searchParams.set('hp', refresh ? currentPage : '1');
+            if (!navigationUrl) url.searchParams.set('hp', refresh ? currentPage : '1');
             url.searchParams.set('th_fragment', '1');
             url.hash = '';
 
@@ -2240,14 +2241,33 @@ if (isset($_GET['th_fragment'])
                     throw new Error('Invalid response');
                 }
 
-                // แถวและแถบแบ่งหน้าชุดใหม่สร้างโดย PHP
+                const nextForm = doc.querySelector('#repairsMainCard .th-search');
+                const nextFilters = doc.querySelector('#repairsMainCard .th-filter-group');
+                if (navigationUrl && (!nextForm || !nextFilters)) throw new Error('Invalid filters');
+
+                // PHP สร้างผลลัพธ์ตามเดิม เก็บ card/ฟอร์มค้นหา/สถานะเต็มจอเดิมไว้
                 const scroll = document.getElementById('repairsTableContainer');
                 const scrollTop = scroll.scrollTop;
                 const scrollLeft = scroll.scrollLeft;
-                tbody.innerHTML = nextBody.innerHTML;
+                if (tbody.innerHTML !== nextBody.innerHTML) tbody.innerHTML = nextBody.innerHTML;
 
-                document.querySelector('#repairsMainCard .th-pagination')
-                    .replaceWith(document.importNode(nextFooter, true));
+                const footer = document.querySelector('#repairsMainCard .th-pagination');
+                if (footer.innerHTML !== nextFooter.innerHTML) {
+                    footer.replaceWith(document.importNode(nextFooter, true));
+                }
+                if (navigationUrl) {
+                    // เปลี่ยนเฉพาะชุดตัวกรอง ไม่แตะกรอบเต็มจอหรือช่องค้นหาที่กำลังพิมพ์
+                    document.querySelector('#repairsMainCard .th-filter-group')
+                        .replaceWith(document.importNode(nextFilters, true));
+                    for (const key of ['hd', 'hm', 'hy', 'hs']) {
+                        const selected = nextForm.elements.namedItem(key);
+                        const current = form.elements.namedItem(key);
+                        if (selected && current) {
+                            current.value = selected.value;
+                            url.searchParams.set(key, selected.value);
+                        }
+                    }
+                }
 
                 // อัปเดตคิวไม่กระโดดกลับแถวแรก ส่วนค้นหาใหม่ทำงานตามเดิม
                 scroll.scrollTop = refresh ? scrollTop : 0;
@@ -2332,6 +2352,23 @@ if (isset($_GET['th_fragment'])
                 );
             }
         }
+
+        // ดักเฉพาะลิงก์ตัวกรองและเลขหน้าของตารางนี้ คงพฤติกรรมเปิดแท็บใหม่ตามปกติ
+        document.getElementById('repairsMainCard').addEventListener('click', event => {
+            const link = event.target.closest('.th-filter-group a, .th-pages a');
+            if (!link || event.defaultPrevented || event.button !== 0
+                || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey
+                || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+            const target = new URL(link.href, window.location.href);
+            if (target.origin !== window.location.origin || target.pathname !== window.location.pathname) return;
+            event.preventDefault();
+            if (composing) return;
+            clearTimeout(timer);
+            controller?.abort();
+            pendingSearch = true;
+            document.querySelectorAll('#repairsMainCard details[open]').forEach(detail => detail.open = false);
+            search(++version, false, target.href);
+        });
 
         input.addEventListener('compositionstart', () => {
             composing = true;
