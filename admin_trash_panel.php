@@ -15,7 +15,7 @@ $atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชี�
 $atNotice = $_SESSION['admin_trash_notice'] ?? null;
 unset($_SESSION['admin_trash_notice']);
 ?>
-<?php if (in_array($active_tab, ['users', 'team_cards'], true) && is_array($atNotice)): ?>
+<?php if (in_array($active_tab, ['users', 'team_cards', 'assets'], true) && is_array($atNotice)): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     Swal.fire({
@@ -42,8 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <button type="button" id="trashDeleteSelectedButton" onclick="deleteSelectedTrashItems()" disabled class="px-4 py-2 rounded-xl text-sm font-bold bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed">ลบ</button>
                 <span id="trashSelectedCount" class="ml-auto px-2 text-xs font-semibold text-slate-500" role="status" aria-live="polite">ยังไม่ได้เลือกรายการ</span>
             </div>
-            <p class="text-sm text-slate-500">รายการที่ย้ายเข้าถังขยะยังเก็บอยู่ในฐานข้อมูล สามารถกู้คืนข้อมูลหรือลบถาวรได้</p>
-            <p class="text-xs text-slate-500">การกู้คืนเจ้าหน้าที่จะเปิดใช้งานบัญชีเว็บที่ผูกอยู่โดยอัตโนมัติ ส่วนการกู้คืนบัญชีผู้ใช้โดยตรงยังต้องตรวจสอบสถานะก่อนเปิดใช้งาน</p>
+            <p class="text-sm text-slate-500">รายการในถังขยะยังไม่ถูกลบจริง ข้อมูลยังอยู่ในฐานข้อมูลและสามารถกู้คืนได้ หากกดลบถาวร ข้อมูลจะถูกลบออกจากฐานข้อมูลและหน้าแดชบอร์ด และไม่สามารถกู้คืนได้</p>
             <?php if (is_array($atNotice)): ?>
             <div role="status" class="p-4 rounded-xl text-sm font-semibold <?= ($atNotice['type'] ?? '') === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' ?>"><?= $atEscape($atNotice['message'] ?? '') ?></div>
             <?php endif; ?>

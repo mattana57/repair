@@ -30,6 +30,28 @@ try {
         $lh_values[] = $lh_role;
     }
 
+    $lh_now = new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
+    $lh_q = mb_substr(tp_get('lh_q', ''), 0, 200, 'UTF-8');
+    $lh_period = [];
+    foreach (['day'=>[1,31,'j'], 'month'=>[1,12,'n'], 'year'=>[1000,9999,'Y']] as $key=>$rule) {
+        $value = tp_get('lh_' . $key, $lh_now->format($rule[2]));
+        $lh_period[$key] = $value === 'all' ? 'all' : (ctype_digit($value) && (int)$value >= $rule[0] && (int)$value <= $rule[1] ? (string)(int)$value : 'all');
+        if ($lh_period[$key] !== 'all') {
+            $lh_where .= ' AND ' . strtoupper($key) . '(created_at) = ?';
+            $lh_types .= 'i'; $lh_values[] = (int)$lh_period[$key];
+        }
+    }
+    if ($lh_q !== '') {
+        $lh_where .= " AND CONCAT_WS(' ', username, full_name, role, summary, action_code, created_at) LIKE ? ESCAPE '!'";
+        $lh_types .= 's'; $lh_values[] = tp_like($lh_q);
+    }
+    $lh_years = [(int)$lh_now->format('Y')];
+    $lh_year_result = tp_query($conn, 'SELECT DISTINCT YEAR(created_at) AS year FROM user_activity_logs WHERE created_at IS NOT NULL');
+    while ($lh_year_row = $lh_year_result->fetch_assoc()) if ((int)$lh_year_row['year'] >= 1000 && (int)$lh_year_row['year'] <= 9999) $lh_years[] = (int)$lh_year_row['year'];
+    $lh_year_result->free();
+    if ($lh_period['year'] !== 'all') $lh_years[] = (int)$lh_period['year'];
+    $lh_years = array_unique($lh_years); rsort($lh_years);
+
     $lh_groups =
         "SELECT user_id, role,
                 SUM(action_code = 'LOGIN') AS login_count,
@@ -110,6 +132,8 @@ try {
     $lh_actions = mbsActivityLabels();
 ?>
 
+<?php require __DIR__ . '/account_activity_filters.php'; ?>
+<div id="accountActivityResults">
 <?php if ($lh_user === 0): ?>
 <div class="modern-card overflow-hidden">
     <div class="p-6 border-b border-slate-100">
@@ -286,6 +310,7 @@ try {
 </div>
 <?php endif; ?>
 
+</div>
 <?php
     $lh_people_result->free();
     $lh_events->free();

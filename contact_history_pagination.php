@@ -26,7 +26,7 @@ function ch_case($column, array $map, $fallback, array &$params) {
     return $map ? $sql . " ELSE $fallback END" : $fallback;
 }
 
-function ch_contacts_page($conn, array $lineMap) {
+function ch_contacts_page($conn, array $lineMap, $all = false) {
     // แสดงผู้ลงทะเบียนแม้ไม่มีใบงาน และเก็บรายชื่อจากใบงานเก่าที่ยังไม่มีทะเบียน
     // เชื่อมเฉพาะรหัส LINE แบบตรงตัว ไม่ใช้ชื่อหรือเบอร์โทรจับคู่
     $contacts = "SELECT COALESCE(history.id, 0) AS id,
@@ -70,6 +70,7 @@ function ch_contacts_page($conn, array $lineMap) {
         $where .= ' AND ' . ch_compact_sql("CONCAT_WS('', contacts.line_display_name, contacts.reporter_name, contacts.fallback_phone, contacts.total_repairs, 'View')") . " LIKE ? ESCAPE '!'";
         $params[] = tp_like($q); $types = 's';
     }
+    if ($all) return tp_query($conn, 'SELECT contacts.*' . $from . ' WHERE ' . $where . ' ORDER BY contacts.created_at DESC, contacts.id DESC, BINARY contacts.line_user_id ASC', $types, $params);
     return tp_page($conn,
         'SELECT contacts.*' . $from . ' WHERE ' . $where . ' ORDER BY contacts.created_at DESC, contacts.id DESC, BINARY contacts.line_user_id ASC',
         'SELECT COUNT(*) AS total' . $from . ' WHERE ' . $where,
@@ -256,7 +257,15 @@ function ch_contacts_rows($reporter_res, $line_users_map) {
             $js_view_name = htmlspecialchars($raw_name, ENT_QUOTES);
             $rep_phone_html = formatEmptyOrDash($display_phone);
 
-            echo "<tr class='hover:bg-slate-50/50 transition-colors user-row'>
+            $selectionCell = '';
+            if (defined('MBS_ADMIN_TABLE_BULK')) {
+                $selectionLine = htmlspecialchars($contactLineUserId, ENT_QUOTES, 'UTF-8');
+                $selectionEnabled = $canMoveHistory ? '1' : '0';
+                $selectionDisabled = $canMoveHistory ? '' : ' disabled title="ยังไม่มีประวัติใบงานให้ย้ายเข้าถังขยะ"';
+                $selectionId = (int)$r['id'];
+                $selectionCell = "<td data-ab-cell class='hidden px-4 py-4 text-center'><input type='checkbox' class='ab-check' data-ab-row='reporter' data-id='{$selectionId}' data-line-id='{$selectionLine}' data-eligible='{$selectionEnabled}'{$selectionDisabled} aria-label='เลือกประวัติผู้แจ้ง'></td>";
+            }
+            echo "<tr class='hover:bg-slate-50/50 transition-colors user-row'>{$selectionCell}
                 <td class='px-6 py-4 align-top'>
                     <div class='flex items-center'>
                         <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 mr-3 shrink-0'><i class='fas fa-user text-xs'></i></div>
@@ -279,7 +288,7 @@ function ch_contacts_rows($reporter_res, $line_users_map) {
             </tr>";
         }
     } else {
-        echo "<tr><td colspan='4' class='px-6 py-12 text-center text-slate-400'>No history found</td></tr>";
+        echo "<tr><td colspan='4' data-ab-empty='4' class='px-6 py-12 text-center text-slate-400'>No history found</td></tr>";
     }
 }
 

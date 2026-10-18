@@ -441,7 +441,9 @@ function formatPhoneHtml($phone_str) {
     return $html;
 }
 
+define('MBS_ADMIN_TABLE_BULK', true);
 require_once __DIR__ . '/contact_history_pagination.php';
+require_once __DIR__ . '/admin_table_bulk.php';
 
 // ส่งเฉพาะรายการ Transactions และปุ่มแบ่งหน้า หลังตรวจสิทธิ์แล้ว
 if ($_SERVER['REQUEST_METHOD'] === 'GET'
@@ -2638,50 +2640,27 @@ if (isset($_GET['api_check_hash'])) {
 #techniciansTableBody .mbs-team-name > .flex {align-items:flex-start;}
 #techniciansTableBody .mbs-team-name, #techniciansTableBody .mbs-team-dept, #techniciansTableBody .mbs-team-contact {line-height:20px;}
 #techniciansTableBody .mbs-team-dept > div + div, #techniciansTableBody .mbs-team-name .text-slate-400 {line-height:16px;}
-#techniciansTableBody .mbs-unlinked-staff .mbs-team-dept, #techniciansTableBody .mbs-unlinked-staff .mbs-team-contact {padding-top:46px;}
+#techniciansTableBody .mbs-unlinked-staff .mbs-team-dept, #techniciansTableBody .mbs-unlinked-staff .mbs-team-contact {padding-top:50px;}
 #techniciansTableBody .mbs-team-contact > .flex {margin-top:2px;line-height:16px;}
 #techniciansTableBody .mbs-team-contact > .flex > .rounded-full {width:16px;height:16px;}
 </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
-    <style id="mbs-light-sidebar">
-        /* Light sidebar: scoped to the existing navigation only. */
-        #sidebar {
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
-            border-right: 1px solid #dbe7f3 !important;
-            box-shadow: 2px 0 14px rgba(15, 23, 42, 0.04) !important;
-        }
-        #sidebar .sidebar-logo-box {
-            background: #ffffff !important;
-            border-bottom-color: #e2e8f0 !important;
-        }
-        #sidebar .sidebar-logo-box h1 { color: #0f172a !important; }
-        #sidebar .sidebar-logo-box h1 span { color: #2563eb !important; }
-        #sidebar .sidebar-logo-box p { color: #64748b !important; }
-        #sidebar .border-slate-50,
-        #sidebar .border-slate-100 { border-color: #e2e8f0 !important; }
-        #sidebar nav > p { color: #64748b !important; }
-        #sidebar .nav-btn { color: #475569 !important; }
-        #sidebar .nav-btn:not(.active-btn) { background: transparent !important; }
-        #sidebar .nav-btn i { color: #64748b !important; }
-        #sidebar .nav-btn:hover {
-            background: #eff6ff !important;
-            color: #1d4ed8 !important;
-        }
-        #sidebar .nav-btn:hover i { color: #2563eb !important; }
-        #sidebar .nav-btn.active-btn {
-            background: #2563eb !important;
-            color: #ffffff !important;
-            box-shadow: 0 3px 10px rgba(37, 99, 235, 0.16) !important;
-        }
-        #sidebar .nav-btn.active-btn i { color: #ffffff !important; }
-        #sidebar a.nav-btn.group { color: #475569 !important; }
-        #sidebar a.nav-btn.group:hover {
-            background: #fff1f2 !important;
-            color: #be123c !important;
-        }
-        #sidebar a.nav-btn.group:hover i { color: #be123c !important; }
-    </style>
 
+
+<style id="admin-bulk-ui">
+.ab-edit-wrap{position:relative;flex-shrink:0;}
+.ab-edit-button{color:#e11d48;font-size:14px;font-weight:700;padding:8px 10px;border-radius:12px;background:transparent;white-space:nowrap;}
+.ab-edit-button:hover{background:#fff1f2;}
+.ab-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:90;width:200px;padding:12px;background:#292c35;border:1px solid #3d4454;border-radius:18px;box-shadow:0 12px 30px #0f172a30;}
+.ab-menu button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 8px;text-align:left;color:#fff;font-size:14px;font-weight:700;border-radius:10px;}
+.ab-menu button i{width:18px;color:#cbd5e1;}
+.ab-menu button:hover{background:#ffffff12;}
+.ab-menu button[data-ab-action="delete"],.ab-menu button[data-ab-action="delete"] i{color:#fb7185;}
+.ab-menu button:disabled{opacity:.45;cursor:not-allowed;}
+.ab-count{color:#2563eb;font-size:13px;font-weight:700;text-align:right;min-height:20px;margin-top:8px;}
+.ab-check{width:16px;height:16px;accent-color:#2563eb;cursor:pointer;}
+.ab-check:disabled{cursor:not-allowed;opacity:.4;}
+</style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
@@ -3871,7 +3850,7 @@ if (isset($_GET['api_check_hash'])) {
 
                                         // ใช้เกณฑ์เดียวกับป้ายผูกบัญชีแล้วด้านขวา ไม่เปลี่ยนสถานะ LINE
                                         $new_staff_notice = ($t['approval_status'] !== 'อนุมัติแล้ว')
-                                            ? "<div class='text-xs font-bold text-orange-600 mb-2' style='display:table;border:1px solid #fdba74;background:#fff7ed;border-radius:7px;padding:2px 8px;line-height:16px'>เจ้าหน้าที่ใหม่</div>"
+                                            ? "<div class='text-xs font-bold text-orange-600 mb-2' style='display:table;border:1px solid #fdba74;background:#fff7ed;border-radius:12px;padding:4px 10px;line-height:16px'>เจ้าหน้าที่ใหม่</div>"
                                             : '';
 
                                         $staff_notice_class = $new_staff_notice !== '' ? ' mbs-unlinked-staff' : '';
@@ -4150,12 +4129,19 @@ if (isset($_GET['api_check_hash'])) {
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Manage all registered equipments</p>
                         </div>
                         <!-- ✨ ลบ w-full เปลี่ยนเป็น w-auto เพื่อให้ปุ่มสั้นลง และเพิ่ม self-end เพื่อดันชิดขวาในมือถือ (พร้อมล็อก md:self-auto ไม่ให้กระทบ iPad/คอม) ✨ -->
-                        <button onclick="openAddAssetModal()" class="self-end md:self-auto w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Asset</button>
+                        <div class="self-end md:self-auto">
+                            <div class="flex items-center justify-end gap-3">
+                                <?php ab_edit_menu('asset'); ?>
+                                <button onclick="openAddAssetModal()" class="w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Asset</button>
+                            </div>
+                            <p id="ab-count-asset" class="ab-count hidden" role="status" aria-live="polite">เลือกแล้ว 0 รายการ</p>
+                        </div>
                     </div>
                     <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
                         <table class="w-full text-left whitespace-nowrap min-w-[600px]">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
+                                    <th data-ab-cell class="hidden px-4 py-4 w-12 text-center"><input type="checkbox" class="ab-check" data-ab-page="asset" aria-label="เลือกครุภัณฑ์ทั้งหมดในหน้านี้"></th>
                                     <th class="px-6 py-4">Code</th>
                                     <th class="px-6 py-4">Name</th>
                                     <th class="px-6 py-4">Category</th>
@@ -4187,6 +4173,7 @@ if (isset($_GET['api_check_hash'])) {
                                         $js_id = $a['id']; $js_code = htmlspecialchars($a['asset_code'], ENT_QUOTES); $js_name = htmlspecialchars($a['asset_name'], ENT_QUOTES); $js_cat = htmlspecialchars($a['category'], ENT_QUOTES); $js_status = htmlspecialchars($a['status'], ENT_QUOTES);
 
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors'>
+                                            <td data-ab-cell class='hidden px-4 py-4 text-center'><input type='checkbox' class='ab-check' data-ab-row='asset' data-id='{$a['id']}' data-eligible='1' aria-label='เลือกครุภัณฑ์'></td>
                                             <td class='px-6 py-4 align-top font-mono font-semibold text-slate-500'>{$a_code}</td>
                                             <td class='px-6 py-4 align-top text-slate-800 font-bold'>{$a_name}</td>
                                             <td class='px-6 py-4 align-top text-slate-500 font-medium'>{$a_cat}</td>
@@ -4199,7 +4186,7 @@ if (isset($_GET['api_check_hash'])) {
                                             </td>
                                         </tr>";
                                     }
-                                } else { echo "<tr><td colspan='5' class='px-6 py-12 text-center text-slate-400'>No assets found</td></tr>"; }
+                                } else { echo "<tr><td colspan='5' data-ab-empty='5' class='px-6 py-12 text-center text-slate-400'>No assets found</td></tr>"; }
                                 ?>
                             </tbody>
                         </table>
@@ -4217,16 +4204,23 @@ if (isset($_GET['api_check_hash'])) {
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Database of personnel who reported issues</p>
                         </div>
                         <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
-                        <div class="w-full md:w-[320px] relative group">
+                        <div class="w-full md:w-auto">
+                          <div class="flex items-center gap-3">
+                            <?php ab_edit_menu('reporter'); ?>
+                            <div class="w-full md:w-[320px] relative group">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchHistoryInput" value="<?php echo tp_text(tp_get('pg_reporters_q')); ?>" oninput="searchHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
                             <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', searchHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                            </div>
+                          </div>
+                          <p id="ab-count-reporter" class="ab-count hidden" role="status" aria-live="polite">เลือกแล้ว 0 รายการ</p>
                         </div>
                     </div>
                     <div class="overflow-x-auto w-full pb-4 custom-scrollbar table-wrapper-fix">
                         <table class="w-full text-left whitespace-nowrap min-w-[700px]" id="usersTable">
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
+                                    <th data-ab-cell class="hidden px-4 py-4 w-12 text-center"><input type="checkbox" class="ab-check" data-ab-page="reporter" aria-label="เลือกประวัติผู้แจ้งทั้งหมดในหน้านี้"></th>
                                     <th class="px-6 py-4">Name</th>
                                     <th class="px-6 py-4">Contact</th>
                                     <th class="px-6 py-4 text-center">Reports</th>
@@ -6553,6 +6547,7 @@ if (isset($_GET['api_check_hash'])) {
             const url = new URL(window.location.href);
 
             if (q === (url.searchParams.get('pg_reporters_q') || '')) return;
+            if (window.abClearReporterSelection) window.abClearReporterSelection();
 
             clearTimeout(contactsTimer);
             if (contactsController) contactsController.abort();
@@ -8905,7 +8900,7 @@ if (isset($_GET['api_check_hash'])) {
         let autoRefreshInProgress = false;
 
         async function autoRefreshAllData() {
-            if (autoRefreshInProgress || repairsFilterPending || contactsPending) return;
+            if (autoRefreshInProgress || repairsFilterPending || contactsPending || (window.abTablesBusy && window.abTablesBusy())) return;
 
             autoRefreshInProgress = true;
 
@@ -9129,5 +9124,7 @@ if (isset($_GET['api_check_hash'])) {
     });
 })();
 </script>
+<div id="ab-settings" hidden data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></div>
+<script src="admin_table_bulk.js"></script>
 </body>
 </html>

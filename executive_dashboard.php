@@ -1051,44 +1051,6 @@ if (isset($_GET['api_check_hash'])) {
         }
     </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
-    <style id="mbs-light-sidebar">
-        /* Light sidebar: scoped to the existing navigation only. */
-        #sidebar {
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
-            border-right: 1px solid #dbe7f3 !important;
-            box-shadow: 2px 0 14px rgba(15, 23, 42, 0.04) !important;
-        }
-        #sidebar .sidebar-logo-box {
-            background: #ffffff !important;
-            border-bottom-color: #e2e8f0 !important;
-        }
-        #sidebar .sidebar-logo-box h1 { color: #0f172a !important; }
-        #sidebar .sidebar-logo-box h1 span { color: #2563eb !important; }
-        #sidebar .sidebar-logo-box p { color: #64748b !important; }
-        #sidebar .border-slate-50,
-        #sidebar .border-slate-100 { border-color: #e2e8f0 !important; }
-        #sidebar nav > p { color: #64748b !important; }
-        #sidebar .nav-btn { color: #475569 !important; }
-        #sidebar .nav-btn:not(.active-btn) { background: transparent !important; }
-        #sidebar .nav-btn i { color: #64748b !important; }
-        #sidebar .nav-btn:hover {
-            background: #eff6ff !important;
-            color: #1d4ed8 !important;
-        }
-        #sidebar .nav-btn:hover i { color: #2563eb !important; }
-        #sidebar .nav-btn.active-btn {
-            background: #2563eb !important;
-            color: #ffffff !important;
-            box-shadow: 0 3px 10px rgba(37, 99, 235, 0.16) !important;
-        }
-        #sidebar .nav-btn.active-btn i { color: #ffffff !important; }
-        #sidebar a.nav-btn.group { color: #475569 !important; }
-        #sidebar a.nav-btn.group:hover {
-            background: #fff1f2 !important;
-            color: #be123c !important;
-        }
-        #sidebar a.nav-btn.group:hover i { color: #be123c !important; }
-    </style>
 
 </head>
 

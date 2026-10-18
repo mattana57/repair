@@ -106,6 +106,7 @@ function mbsActivityUrl(array $changes = [])
         'pg_logs_page',
         'lh_people_page',
         'lh_activity_page',
+        'lh_q', 'lh_day', 'lh_month', 'lh_year',
     ] as $key) {
         if (isset($_GET[$key]) && is_string($_GET[$key])) {
             $query[$key] = $_GET[$key];
