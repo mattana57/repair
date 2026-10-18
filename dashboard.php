@@ -2603,10 +2603,16 @@ if (isset($_GET['api_check_hash'])) {
 
 <style id="mbs-admin-table-search-alignment">
 .mbs-table-search {margin-right:auto!important;}
-.mbs-contacts-header {flex-direction:column!important;align-items:stretch!important;}
-.mbs-contacts-header .mbs-table-search {align-self:flex-start;}
 .mbs-team-table-header {flex-direction:column!important;align-items:stretch!important;}
-.mbs-team-table-controls {width:100%!important;}
+.mbs-team-table-controls {width:100%!important;flex-direction:row!important;align-items:center!important;}
+.mbs-team-table-controls > .mbs-table-search {flex:1 1 240px!important;width:auto!important;min-width:180px;}
+.mbs-team-table-controls > .flex.flex-wrap {flex-shrink:0;}
+#techniciansTableBody .mbs-team-name > .flex {align-items:flex-start;}
+#techniciansTableBody .mbs-team-name, #techniciansTableBody .mbs-team-dept, #techniciansTableBody .mbs-team-contact {line-height:20px;}
+#techniciansTableBody .mbs-team-dept > div + div, #techniciansTableBody .mbs-team-name .text-slate-400 {line-height:16px;}
+#techniciansTableBody .mbs-unlinked-staff .mbs-team-dept, #techniciansTableBody .mbs-unlinked-staff .mbs-team-contact {padding-top:40px;}
+#techniciansTableBody .mbs-team-contact > .flex {margin-top:2px;line-height:16px;}
+#techniciansTableBody .mbs-team-contact > .flex > .rounded-full {width:16px;height:16px;}
 </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -3469,12 +3475,13 @@ if (isset($_GET['api_check_hash'])) {
                         </div>
                         <nav class="flex items-center gap-2.5 ml-auto" aria-label="เลือกประเภทบัญชี">
                             <?php foreach (['admin' => 'Admin', 'executive' => 'Executive'] as $management_key => $management_label): ?>
-                            <a href="dashboard.php?<?= tp_text(http_build_query(['tab' => 'technicians', 'team_account_role' => $management_key])) ?>#managementAccounts"
+                            <a data-management-role="<?= $management_key ?>" href="dashboard.php?<?= tp_text(http_build_query(['tab' => 'technicians', 'team_account_role' => $management_key])) ?>"
                                <?= $management_role === $management_key ? 'aria-current="page"' : '' ?>
                                class="px-4 py-2 rounded-full text-sm font-bold border transition-colors <?= $management_role === $management_key ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 shadow-sm' ?>"><?= $management_label ?></a>
                             <?php endforeach; ?>
                         </nav>
                     </div>
+                    <p id="managementRoleError" class="hidden text-sm text-rose-600 mb-3" role="alert"></p>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto lg:overflow-x-hidden w-full pb-4 custom-scrollbar table-wrapper-fix">
                             <table class="w-full text-left whitespace-nowrap lg:min-w-0">
@@ -3487,7 +3494,7 @@ if (isset($_GET['api_check_hash'])) {
                                         <th class="px-6 py-4 text-center">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-sm divide-y divide-slate-100 bg-white">
+                                <tbody id="managementAccountsBody" class="text-sm divide-y divide-slate-100 bg-white">
                                     <?php
                                     $admin_res = tp_query($conn,
                                         "SELECT * FROM users WHERE deleted_at IS NULL AND LOWER(role) = ? ORDER BY id DESC",
@@ -3906,11 +3913,12 @@ if (isset($_GET['api_check_hash'])) {
 
                                         // ใช้เกณฑ์เดียวกับป้ายผูกบัญชีแล้วด้านขวา ไม่เปลี่ยนสถานะ LINE
                                         $new_staff_notice = ($t['approval_status'] !== 'อนุมัติแล้ว')
-                                            ? "<div class='text-xs font-bold text-blue-600 mb-2'>เจ้าหน้าที่ใหม่</div>"
+                                            ? "<div class='text-xs font-bold text-orange-600 mb-2' style='line-height:16px'>เจ้าหน้าที่ใหม่</div>"
                                             : '';
 
-                                        echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
-                                            <td class='px-6 py-4 align-top'>
+                                        $staff_notice_class = $new_staff_notice !== '' ? ' mbs-unlinked-staff' : '';
+                                        echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row{$staff_notice_class}' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
+                                            <td class='px-6 py-4 align-top mbs-team-name'>
                                                 {$new_staff_notice}
                                                 <div class='flex items-center'>
                                                     <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
@@ -3920,12 +3928,12 @@ if (isset($_GET['api_check_hash'])) {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class='px-6 py-4 align-top'>
+                                            <td class='px-6 py-4 align-top mbs-team-dept'>
                                                 <div class='text-slate-700 font-bold'>{$dept}</div>
                                                 {$pos_html}
                                             </td>
-                                            <td class='px-6 py-4 align-top text-slate-500 font-medium'>
-                                                ".formatPhoneHtml($t['phone'])."
+                                            <td class='px-6 py-4 align-top text-slate-500 font-medium mbs-team-contact'>
+                                                <div>".formatPhoneHtml($t['phone'])."</div>
                                                 {$t_email_html}
                                             </td>
                                             <td class='px-6 py-4 align-middle text-center'>{$statusBadge}</td>
@@ -4240,13 +4248,13 @@ if (isset($_GET['api_check_hash'])) {
 
             <div id="users" class="section <?php echo $active_tab === 'users' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <div class="modern-card overflow-hidden flex flex-col">
-                    <div class="mbs-contacts-header p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
+                    <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
                             <h2 class="text-xl font-extrabold text-slate-800">Reporter History</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Database of personnel who reported issues</p>
                         </div>
                         <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
-                        <div class="w-full md:w-[320px] relative group mbs-table-search">
+                        <div class="w-full md:w-[320px] relative group">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchHistoryInput" value="<?php echo tp_text(tp_get('pg_reporters_q')); ?>" oninput="searchHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
                             <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', searchHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
@@ -9048,5 +9056,71 @@ if (isset($_GET['api_check_hash'])) {
         window.addEventListener('focus', autoRefreshAllData);
     </script>
 <?php mbsDashboardActivityScript(); ?>
+
+<script>
+(function () {
+    const panel = document.getElementById('managementAccounts');
+    const nav = panel?.querySelector('nav');
+    if (!nav) return;
+    let controller = null;
+    let version = 0;
+    nav.addEventListener('click', async function (event) {
+        const link = event.target.closest('a[data-management-role]');
+        if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
+        event.preventDefault();
+        if (controller) controller.abort();
+        const currentVersion = ++version;
+        controller = new AbortController();
+        const url = new URL(link.href);
+        url.hash = '';
+        const body = document.getElementById('managementAccountsBody');
+        const errorText = document.getElementById('managementRoleError');
+        body.setAttribute('aria-busy', 'true');
+        errorText.classList.add('hidden');
+        try {
+            const response = await fetch(url.href, {signal:controller.signal, credentials:'same-origin', cache:'no-store'});
+            if (currentVersion !== version) return;
+            if (response.redirected) {window.location.assign(response.url); return;}
+            if (!response.ok) throw new Error('request');
+            const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+            if (currentVersion !== version || document.getElementById('technicians').classList.contains('hidden')) return;
+            const nextBody = doc.getElementById('managementAccountsBody');
+            const nextNav = doc.querySelector('#managementAccounts nav');
+            if (!nextBody || !nextNav) throw new Error('response');
+            const scroll = document.getElementById('mainScrollContainer');
+            const top = scroll.scrollTop;
+            const left = scroll.scrollLeft;
+            const oldAnchor = scroll.style.overflowAnchor;
+            const oldBehavior = scroll.style.scrollBehavior;
+            scroll.style.overflowAnchor = 'none';
+            scroll.style.scrollBehavior = 'auto';
+            body.replaceChildren(...Array.from(nextBody.childNodes, node => document.importNode(node, true)));
+            nav.querySelectorAll('a[data-management-role]').forEach(button => {
+                const next = Array.from(nextNav.querySelectorAll('a[data-management-role]')).find(item => item.dataset.managementRole === button.dataset.managementRole);
+                if (!next) return;
+                button.className = next.className;
+                if (next.hasAttribute('aria-current')) button.setAttribute('aria-current', 'page');
+                else button.removeAttribute('aria-current');
+            });
+            scroll.scrollTop = top;
+            scroll.scrollLeft = left;
+            window.history.replaceState(window.history.state, '', url.href);
+            requestAnimationFrame(() => {
+                scroll.scrollTop = top;
+                scroll.scrollLeft = left;
+                scroll.style.overflowAnchor = oldAnchor;
+                scroll.style.scrollBehavior = oldBehavior;
+            });
+        } catch (error) {
+            if (error.name !== 'AbortError' && currentVersion === version) {
+                errorText.textContent = 'โหลดบัญชีไม่สำเร็จ กรุณากดปุ่มเพื่อลองใหม่';
+                errorText.classList.remove('hidden');
+            }
+        } finally {
+            if (currentVersion === version) body.removeAttribute('aria-busy');
+        }
+    });
+})();
+</script>
 </body>
 </html>
