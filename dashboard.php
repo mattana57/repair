@@ -2627,7 +2627,7 @@ if (isset($_GET['api_check_hash'])) {
             'users' => 'Reporter History',
             'reports' => 'Official Report',
             'login_logs' => 'Login History',
-            'trash' => 'ถังขยะ'
+            'trash' => 'Trash'
         ];
         $currentTitle = isset($pageTitlesArr[$active_tab]) ? $pageTitlesArr[$active_tab] : 'Dashboard Overview';
         ?>
