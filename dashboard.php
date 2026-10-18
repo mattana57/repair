@@ -2431,6 +2431,72 @@ if (isset($_GET['api_check_hash'])) {
             }
         }
 
+
+        /* ตกแต่งเฉพาะดรอปดาวที่ระบุ: คง select/option/name/value/events เดิมทั้งหมด */
+        @supports (appearance: base-select) {
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"]),
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"])::picker(select) {
+                appearance: base-select;
+            }
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"]) {
+                display: inline-flex;
+                align-items: center;
+                justify-content: space-between;
+                column-gap: 12px;
+                background-image: none !important;
+            }
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"])::picker(select) {
+                box-sizing: border-box;
+                margin-block: 5px;
+                padding: 8px;
+                border: 1px solid #f1f5f9;
+                border-radius: 16px;
+                background: #ffffff;
+                color: #334155;
+                font-family: 'Sarabun', sans-serif;
+                font-size: 13px;
+                line-height: 1.5;
+                font-weight: 700;
+                box-shadow: 0 12px 22px -8px rgba(15, 23, 42, .22);
+                max-block-size: 240px;
+                max-inline-size: calc(100vw - 24px);
+                overflow-y: auto;
+                overscroll-behavior: contain;
+            }
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"])::picker-icon {
+                color: #94a3b8;
+                font-size: 10px;
+            }
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"]) option {
+                display: flex;
+                align-items: center;
+                min-block-size: 32px;
+                margin: 0 0 4px;
+                padding: 6px 12px;
+                border: 0;
+                border-radius: 12px;
+                background: #ffffff;
+                color: #334155;
+                font: inherit;
+                cursor: pointer;
+                white-space: normal;
+                overflow-wrap: anywhere;
+            }
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"]) option:last-child { margin-block-end: 0; }
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"]) option:hover,
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"]) option:focus,
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"]) option:checked {
+                border-radius: 12px;
+                background: #eef2ff;
+                color: #4f46e5;
+                outline: none;
+            }
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"]) option:disabled {
+                color: #94a3b8;
+                cursor: default;
+            }
+            :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"]) option::checkmark { display: none; }
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -4413,8 +4479,8 @@ if (isset($_GET['api_check_hash'])) {
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-4">วัน/เวลา</th>
-                                    <th class="px-6 py-4">ชื่อผู้ใช้</th>
-                                    <th class="px-6 py-4 text-center">สิทธิ์</th>
+                                    <th class="px-6 py-4">ชื่อผู้ใช้ (Username)</th>
+                                    <th class="px-6 py-4 text-center">สิทธิ์ (Role)</th>
                                     <th class="px-6 py-4 text-center">IP Address</th>
                                     <th class="px-6 py-4 text-center">สถานะ</th>
                                 </tr>

@@ -79,19 +79,19 @@ document.addEventListener('DOMContentLoaded', function () {
             </table>
         </div>
         <?php if (!$atError): ?>
-        <div class="flex flex-wrap gap-3 justify-between items-center px-6 py-4 border-t border-slate-100 text-sm text-slate-500">
-            <p>แสดงรายการ <?= $atData['total'] ? number_format($atData['offset'] + 1) : '0' ?>–<?= number_format(min($atData['offset'] + 50, $atData['total'])) ?> จากทั้งหมด <?= number_format($atData['total']) ?> รายการ · หน้า <?= $atData['page'] ?> / <?= $atData['pages'] ?></p>
-            <nav class="flex flex-wrap gap-2" aria-label="แบ่งหน้าถังขยะ">
+        <div class="tp-footer">
+            <p class="tp-summary">แสดงรายการ <strong><?= $atData['total'] ? number_format($atData['offset'] + 1) : '0' ?>–<?= number_format(min($atData['offset'] + 50, $atData['total'])) ?></strong> จากทั้งหมด <strong><?= number_format($atData['total']) ?></strong> รายการ · หน้า <?= number_format($atData['page']) ?> / <?= number_format($atData['pages']) ?></p>
+            <nav class="tp-nav" aria-label="แบ่งหน้าถังขยะ">
             <?php
             $atLink = static function ($page, $label) use ($atData, $atEscape) {
-                if ($page < 1 || $page > $atData['pages']) return '<span class="px-3 py-2 text-slate-300">' . $label . '</span>';
-                if ($page === $atData['page']) return '<span aria-current="page" class="px-3 py-2 rounded-xl bg-indigo-600 text-white font-bold">' . $label . '</span>';
+                if ($page < 1 || $page > $atData['pages']) return '<span class="tp-disabled" aria-disabled="true">' . $label . '</span>';
+                if ($page === $atData['page']) return '<span aria-current="page" class="tp-link tp-current">' . $label . '</span>';
                 $url = 'dashboard.php?' . http_build_query(['tab'=>'trash','trash_q'=>$atData['q'],'trash_type'=>$atData['kind'],'trash_page'=>$page]);
-                return '<a class="px-3 py-2 border border-slate-200 rounded-xl hover:bg-indigo-50" href="' . $atEscape($url) . '">' . $label . '</a>';
+                return '<a class="tp-link" href="' . $atEscape($url) . '">' . $label . '</a>';
             };
             echo $atLink($atData['page'] - 1, '‹ ก่อนหน้า');
             $atNumbers = array_unique(array_merge([1], range(max(1,$atData['page']-1), min($atData['pages'],$atData['page']+1)), [$atData['pages']])); sort($atNumbers); $atPrevious = 0;
-            foreach ($atNumbers as $atNumber) { if ($atNumber > $atPrevious + 1) echo '<span class="px-1 py-2">…</span>'; echo $atLink($atNumber, (string)$atNumber); $atPrevious = $atNumber; }
+            foreach ($atNumbers as $atNumber) { if ($atNumber > $atPrevious + 1) echo '<span class="tp-dots">…</span>'; echo $atLink($atNumber, (string)$atNumber); $atPrevious = $atNumber; }
             echo $atLink($atData['page'] + 1, 'ถัดไป ›');
             ?>
             </nav>
