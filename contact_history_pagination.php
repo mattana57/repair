@@ -43,6 +43,11 @@ function ch_contacts_page($conn, array $lineMap) {
         GROUP BY CAST(CASE WHEN line_user_id IS NULL OR TRIM(line_user_id) = ''
             THEN CONCAT('repair:',id) ELSE CONCAT('line:',line_user_id) END AS BINARY)) grouped JOIN repairs latest ON latest.id = grouped.latest_id) history
           ON TRIM(lu.line_user_id) <> '' AND BINARY history.line_user_id = BINARY lu.line_user_id
+        WHERE COALESCE(history.total_repairs, 0) > 0
+           OR NOT EXISTS (SELECT 1 FROM repairs archived
+               WHERE archived.deleted_at IS NOT NULL
+                 AND TRIM(lu.line_user_id) <> ''
+                 AND BINARY archived.line_user_id = BINARY lu.line_user_id)
         UNION ALL
         SELECT history.id,
         CONVERT(history.line_user_id USING utf8mb4) COLLATE utf8mb4_unicode_ci AS line_user_id,

@@ -40,11 +40,15 @@ document.addEventListener('DOMContentLoaded', function () {
             <?php if ($atError): ?>
             <div role="alert" class="p-4 rounded-xl bg-rose-50 text-rose-700 text-sm font-semibold">โหลดถังขยะไม่สำเร็จ กรุณาตรวจสอบบันทึกข้อผิดพลาดของ PHP แล้วลองใหม่ ข้อความนี้ไม่ได้หมายความว่าข้อมูลถูกลบ</div>
             <?php endif; ?>
-            <form action="dashboard.php" method="get" class="flex flex-wrap gap-3 items-center">
+            <form id="trashFilterForm" action="dashboard.php" method="get" class="flex flex-wrap gap-3 items-center">
                 <input type="hidden" name="tab" value="trash">
-                <label class="flex-1 min-w-[180px]"><span class="sr-only">ค้นหาข้อมูลในถังขยะ</span><input type="search" name="trash_q" value="<?= $atEscape($atData['q']) ?>" maxlength="200" placeholder="ค้นหาข้อมูลในถังขยะ..." class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm"></label>
-                <label><span class="sr-only">ประเภทข้อมูล</span><select name="trash_type" onchange="this.form.requestSubmit()" class="border border-slate-200 bg-white rounded-xl px-4 py-2.5 text-sm"><option value="all">ทุกประเภท</option><?php foreach ($atLabels as $key => $label): ?><option value="<?= $key ?>" <?= $atData['kind'] === $key ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label>
-                <button class="bg-indigo-600 text-white rounded-xl px-5 py-2.5 text-sm font-bold" type="submit">ค้นหา</button>
+                <div class="relative flex-1 min-w-[180px]">
+                    <label class="sr-only" for="trashSearchInput">ค้นหาข้อมูลในถังขยะ</label>
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true"></i>
+                    <input type="text" id="trashSearchInput" name="trash_q" value="<?= $atEscape($atData['q']) ?>" maxlength="200" placeholder="ค้นหาข้อมูลในถังขยะ..." oninput="scheduleTrashSearch(event)" class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[105px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
+                    <button type="button" id="clearTrashSearchBtn" onclick="clearTrashSearch()" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-rose-500 bg-rose-50 border-l border-slate-200 <?= $atData['q'] === '' ? 'hidden' : 'flex' ?> items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm" aria-hidden="true"></i>ล้างค่า</button>
+                </div>
+                <label><span class="sr-only">ประเภทข้อมูล</span><select name="trash_type" onchange="submitTrashFilters()" class="border border-slate-200 bg-white rounded-xl px-4 py-2.5 text-sm"><option value="all">ทุกประเภท</option><?php foreach ($atLabels as $key => $label): ?><option value="<?= $key ?>" <?= $atData['kind'] === $key ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label>
                 <a href="dashboard.php?tab=trash" class="text-slate-500 text-sm font-semibold px-3 py-2">ล้างตัวกรอง</a>
             </form>
         </div>
@@ -100,6 +104,32 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 <script>
+let trashSearchTimer = null;
+function submitTrashFilters() {
+    clearTimeout(trashSearchTimer);
+    document.getElementById('trashFilterForm').requestSubmit();
+}
+function scheduleTrashSearch(event) {
+    clearTimeout(trashSearchTimer);
+    const input = document.getElementById('trashSearchInput');
+    if (event && event.isComposing) return;
+    const button = document.getElementById('clearTrashSearchBtn');
+    button.classList.toggle('hidden', input.value === '');
+    button.classList.toggle('flex', input.value !== '');
+    if (input.value === (new URL(window.location.href).searchParams.get('trash_q') || '')) return;
+    trashSearchTimer = setTimeout(submitTrashFilters, 500);
+}
+function clearTrashSearch() {
+    document.getElementById('trashSearchInput').value = '';
+    submitTrashFilters();
+}
+document.getElementById('trashFilterForm').addEventListener('submit', function () {
+    clearTimeout(trashSearchTimer);
+});
+document.getElementById('trashSearchInput').addEventListener('compositionstart', function () {
+    clearTimeout(trashSearchTimer);
+});
+document.getElementById('trashSearchInput').addEventListener('compositionend', scheduleTrashSearch);
 function submitTrashAction(action, kind, id, confirmed = false) {
     const form = document.createElement('form');
     form.method = 'post'; form.action = 'dashboard.php?tab=trash';
