@@ -19,7 +19,10 @@ if (!$ALLOW_REGISTRATION) {
 
 $error = '';
 $success = '';
-$form_values = ['full_name' => '', 'phone' => '', 'email' => '', 'username' => '', 'position' => '', 'department' => ''];
+$form_values = ['full_name' => '', 'phone' => '', 'email' => '', 'username' => '', 'position' => '', 'department' => '', 'position_custom' => '', 'department_custom' => ''];
+
+$registration_positions = ['นักวิชาการคอมพิวเตอร์', 'นักวิชาการโสตทัศนศึกษา', 'เจ้าหน้าที่บริหารงานทั่วไป', 'พนักงานขับรถยนต์'];
+$registration_departments = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานยานยนต์', 'ฝ่ายงานโสตทัศนูปกรณ์'];
 
 require_once __DIR__ . '/password_policy.php';
 $registration_password_policy = passwordPolicyConfig();
@@ -42,6 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    foreach (['position_custom', 'department_custom'] as $field) {
+        $value = $_POST[$field] ?? '';
+        if (!is_string($value)) $valid_types = false;
+        else $input[$field] = $value;
+    }
+
     if (!is_string($received_csrf)
         || !hash_equals($_SESSION['csrf_token'], $received_csrf)) {
         $error = 'คำขอไม่ถูกต้อง กรุณารีเฟรชหน้าแล้วลองใหม่';
@@ -55,8 +64,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $phone = $form_values['phone'];
         $email = $form_values['email'];
         $username = $form_values['username'];
-        $position = $form_values['position'];
-        $department = $form_values['department'];
+        $position = $form_values['position'] === 'อื่นๆ'
+            ? $form_values['position_custom']
+            : (in_array($form_values['position'], $registration_positions, true) ? $form_values['position'] : '');
+        $department = $form_values['department'] === 'อื่นๆ'
+            ? $form_values['department_custom']
+            : (in_array($form_values['department'], $registration_departments, true) ? $form_values['department'] : '');
         // รักษารหัสผ่านตามที่กรอก ไม่ trim และไม่ใส่กลับลง HTML
         $password = $input['password'];
         $confirmation = $input['confirm_password'];
@@ -176,6 +189,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>body { font-family: 'Kanit', sans-serif; }</style>
+
+    <style>
+        @supports (appearance: base-select) {
+            .registration-select, .registration-select::picker(select) {appearance:base-select;}
+            .registration-select::picker(select) {background:white;border:1px solid #e2e8f0;border-radius:16px;padding:6px;box-shadow:0 12px 28px #0f172a1a;max-height:260px;overflow-y:auto;}
+            .registration-select option {border-radius:12px;padding:9px 12px;margin:2px 0;color:#334155;font-weight:500;}
+            .registration-select option:hover, .registration-select option:focus {background:#f1f5f9;}
+            .registration-select option:checked {background:#eef2ff;color:#4f46e5;}
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-6 sm:py-10">
     <div class="w-full max-w-4xl bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100">
@@ -223,22 +246,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <div>
                             <label for="position" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ตำแหน่งงาน <span class="text-rose-500">*</span></label>
-                            <input type="text" name="position" id="position" required maxlength="255" 
-                                value="<?php echo htmlspecialchars($form_values['position'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                            <select name="position" id="position" required onchange="toggleRegistrationOther('position')"
+                                class="registration-select w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                                <option value="">-- เลือกตำแหน่งงาน --</option>
+                                <?php foreach ($registration_positions as $registration_option): ?>
+                                <option value="<?= htmlspecialchars($registration_option, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" <?= $form_values['position'] === $registration_option ? 'selected' : '' ?>><?= htmlspecialchars($registration_option, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></option>
+                                <?php endforeach; ?>
+                                <option value="อื่นๆ" <?= $form_values['position'] === 'อื่นๆ' ? 'selected' : '' ?>>อื่นๆ (พิมพ์เอง)</option>
+                            </select>
+                            <div id="positionCustomField" class="mt-2 <?= $form_values['position'] === 'อื่นๆ' ? '' : 'hidden' ?>">
+                                <label for="position_custom" class="sr-only">ระบุตำแหน่งงานอื่นๆ</label>
+                                <input type="text" name="position_custom" id="position_custom" maxlength="255" placeholder="กรุณาระบุตำแหน่งงาน"
+                                    <?= $form_values['position'] === 'อื่นๆ' ? 'required' : 'disabled' ?>
+                                    value="<?= htmlspecialchars($form_values['position_custom'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                            </div>
                         </div>
                         <div>
                             <label for="department" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ฝ่ายงาน <span class="text-rose-500">*</span></label>
-                            <input type="text" name="department" id="department" required maxlength="255" list="registrationDepartments"
-                                value="<?php echo htmlspecialchars($form_values['department'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>"
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                            <select name="department" id="department" required onchange="toggleRegistrationOther('department')"
+                                class="registration-select w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                                <option value="">-- เลือกฝ่ายงาน --</option>
+                                <?php foreach ($registration_departments as $registration_option): ?>
+                                <option value="<?= htmlspecialchars($registration_option, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>" <?= $form_values['department'] === $registration_option ? 'selected' : '' ?>><?= htmlspecialchars($registration_option, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></option>
+                                <?php endforeach; ?>
+                                <option value="อื่นๆ" <?= $form_values['department'] === 'อื่นๆ' ? 'selected' : '' ?>>อื่นๆ (พิมพ์เอง)</option>
+                            </select>
+                            <div id="departmentCustomField" class="mt-2 <?= $form_values['department'] === 'อื่นๆ' ? '' : 'hidden' ?>">
+                                <label for="department_custom" class="sr-only">ระบุฝ่ายงานอื่นๆ</label>
+                                <input type="text" name="department_custom" id="department_custom" maxlength="255" placeholder="กรุณาระบุฝ่ายงาน"
+                                    <?= $form_values['department'] === 'อื่นๆ' ? 'required' : 'disabled' ?>
+                                    value="<?= htmlspecialchars($form_values['department_custom'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-100 outline-none">
+                            </div>
                         </div>
-                        <datalist id="registrationDepartments">
-                            <option value="ฝ่ายงานบริการเทคโนโลยีดิจิทัล"></option>
-                            <option value="ฝ่ายงานโสตทัศนูปกรณ์"></option>
-                            <option value="ฝ่ายงานยานยนต์"></option>
-                            <option value="แม่บ้าน"></option>
-                        </datalist>
                     </div>
                     <!-- ฝั่งขวา: Username รหัสผ่าน และยืนยันรหัสผ่าน -->
                     <div class="space-y-4 min-w-0">
@@ -313,6 +354,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return PasswordPolicy.rules(password, registrationPolicy);
         }
 
+        function toggleRegistrationOther(key) {
+            const select = document.getElementById(key);
+            const input = document.getElementById(key + '_custom');
+            const field = document.getElementById(key + 'CustomField');
+            if (!select || !input || !field) return;
+            const custom = select.value === 'อื่นๆ';
+            field.classList.toggle('hidden', !custom);
+            input.disabled = !custom;
+            input.required = custom;
+            input.setCustomValidity(custom && input.value !== '' && input.value.trim() === ''
+                ? 'กรุณากรอกข้อมูลที่ไม่เป็นช่องว่างทั้งหมด' : '');
+        }
+        ['position', 'department'].forEach(key => {
+            const input = document.getElementById(key + '_custom');
+            if (!input) return;
+            input.addEventListener('input', () => toggleRegistrationOther(key));
+            toggleRegistrationOther(key);
+        });
+
         const registrationForm = document.getElementById('registrationForm');
         if (registrationForm) {
             const passwordInput = document.getElementById('password');
@@ -353,6 +413,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             confirmInput.addEventListener('input', updateRegistrationValidation);
             registrationForm.addEventListener('submit', event => {
                 updateRegistrationValidation();
+                toggleRegistrationOther('position');
+                toggleRegistrationOther('department');
                 ['full_name', 'phone', 'email', 'username', 'position', 'department'].forEach(id => {
                     const input = document.getElementById(id);
                     input.setCustomValidity(input.value.trim() === '' ? 'กรุณากรอกข้อมูลช่องนี้' : '');
