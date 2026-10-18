@@ -3457,9 +3457,24 @@ if (isset($_GET['api_check_hash'])) {
                     </div>
                 </div>
 
-                <div>
-                    <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Administrators</h3>
-                    <p class="text-sm font-medium text-slate-500 mt-1 mb-5">Manage administrators</p>
+                <div id="managementAccounts">
+                    <?php
+                    $management_role = tp_get('team_account_role', 'admin');
+                    if (!in_array($management_role, ['admin', 'executive'], true)) $management_role = 'admin';
+                    ?>
+                    <div class="flex flex-wrap justify-between items-end gap-4 mb-6">
+                        <div>
+                            <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center">Administrators</h3>
+                            <p class="text-sm font-medium text-slate-500 mt-1">Manage administrators</p>
+                        </div>
+                        <nav class="flex items-center gap-2.5 ml-auto" aria-label="เลือกประเภทบัญชี">
+                            <?php foreach (['admin' => 'Admin', 'executive' => 'Executive'] as $management_key => $management_label): ?>
+                            <a href="dashboard.php?<?= tp_text(http_build_query(['tab' => 'technicians', 'team_account_role' => $management_key])) ?>#managementAccounts"
+                               <?= $management_role === $management_key ? 'aria-current="page"' : '' ?>
+                               class="px-4 py-2 rounded-full text-sm font-bold border transition-colors <?= $management_role === $management_key ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 shadow-sm' ?>"><?= $management_label ?></a>
+                            <?php endforeach; ?>
+                        </nav>
+                    </div>
                     <div class="modern-card overflow-hidden">
                         <div class="overflow-x-auto lg:overflow-x-hidden w-full pb-4 custom-scrollbar table-wrapper-fix">
                             <table class="w-full text-left whitespace-nowrap lg:min-w-0">
@@ -3474,7 +3489,9 @@ if (isset($_GET['api_check_hash'])) {
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100 bg-white">
                                     <?php
-                                    $admin_res = $conn->query("SELECT * FROM users WHERE deleted_at IS NULL AND LOWER(role) IN ('admin', 'executive') ORDER BY id DESC");
+                                    $admin_res = tp_query($conn,
+                                        "SELECT * FROM users WHERE deleted_at IS NULL AND LOWER(role) = ? ORDER BY id DESC",
+                                        's', [$management_role]);
                                     if($admin_res && $admin_res->num_rows > 0){
                                         while($u = $admin_res->fetch_assoc()) {
                                             $r_lower = strtolower($u['role']);
@@ -3535,7 +3552,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 </td>
                                             </tr>";
                                         }
-                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>No admins found</td></tr>"; }
+                                    } else { echo "<tr><td colspan='5' class='px-6 py-8 text-center text-slate-400'>ไม่พบบัญชี " . ($management_role === 'executive' ? 'Executive' : 'Admin') . "</td></tr>"; }
                                     ?>
                                 </tbody>
                             </table>
