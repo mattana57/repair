@@ -42,6 +42,9 @@ if ($current_role === 'executive') {
     exit();
 }
 
+define('MBS_DASHBOARD_MEDIA', true);
+require_once __DIR__ . '/dashboard_media_icons.php';
+
 define('MBS_DASHBOARD_ACTIVITY', true);
 require_once __DIR__ . '/dashboard_activity.php';
 
@@ -616,11 +619,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
                     ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>"
                     : "<span class='text-rose-500 font-bold'>-</span>";
 
-                $imageIcon = "";
-
-                if(isset($row['image_path']) && !empty($row['image_path'])) {
-                    $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                }
+                $imageIcon = dm_icons($conn, $row);
 
                 echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
                     <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
@@ -717,7 +716,7 @@ if($check_repairs_list && $check_repairs_list->num_rows > 0) {
     $rep_res = $conn->query($select_query);
     $reps = [];
     if($rep_res) {
-        while($r = $rep_res->fetch_assoc()){ $reps[] = $r; }
+        while($r = $rep_res->fetch_assoc()){ $reps[] = dm_enrich($conn, $r); }
         $encoded = json_encode($reps, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
         if ($encoded !== false) {
             $all_repairs_json = $encoded;
@@ -2158,6 +2157,7 @@ if (isset($_GET['api_check_hash'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBS Repair Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="dashboard_media_icons.js?v=20261019-1"></script>
     <script src="password_policy.js"></script>
     <script>
         const sharedPasswordPolicy = <?php echo json_encode(passwordPolicyConfig(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
@@ -3209,10 +3209,7 @@ if (isset($_GET['api_check_hash'])) {
                                             $time_fmt = $has_created ? date("H:i", strtotime($rd['created_at'])) : '';
                                             $time_html = $time_fmt ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$time_fmt}</div>" : "";
                                             
-                                            $imageIcon = "";
-                                            if(isset($rd['image_path']) && !empty($rd['image_path'])) {
-                                                $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                                            }
+                                            $imageIcon = dm_icons($conn, $rd);
                                             
                                             echo "<tr class='hover:bg-slate-50/50 transition-colors'>
                                                 <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$rd['id'] . "</td>
@@ -3446,10 +3443,7 @@ if (isset($_GET['api_check_hash'])) {
 
                                         $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
 
-                                        $imageIcon = "";
-                                        if(isset($row['image_path']) && !empty($row['image_path'])) {
-                                            $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                                        }
+                                        $imageIcon = dm_icons($conn, $row);
 
                                         echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
                                             <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
@@ -5333,9 +5327,7 @@ if (isset($_GET['api_check_hash'])) {
                     let tName = rev.technician_name && rev.technician_name !== '-' ? rev.technician_name : 'ไม่ระบุเจ้าหน้าที่';
                     let techInfoHtml = `<div class="text-[10px] text-indigo-500 font-bold mt-1.5 inline-block bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100"><i class="fas fa-tools mr-1 opacity-70"></i>เจ้าหน้าที่: ${tName}</div>`;
 
-                    let imageIcon = (rev.image_path && String(rev.image_path).trim() !== '' && String(rev.image_path).trim() !== '-') 
-                        ? "<i class='fas fa-image text-slate-400 ml-1.5' title='มีรูปภาพแนบ'></i>" 
-                        : "";
+                    let imageIcon = dashboardMediaIcons(rev);
 
                     container.innerHTML += `<div onclick="openReviewTab(${rev.id})" class='p-5 hover:bg-slate-50 transition-colors group border-b border-slate-50 last:border-0 cursor-pointer relative'>
                             <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
@@ -8084,10 +8076,7 @@ if (isset($_GET['api_check_hash'])) {
                     let pDesc = formatValJS(r.problem_desc);
                     let rootCause = !r.root_cause || r.root_cause === '-' ? "<span class='text-rose-500 font-bold'>-</span>" : `<span class='text-slate-700 font-medium'>${r.root_cause}</span>`;
 
-                    let imageIcon = "";
-                    if(r.image_path && r.image_path !== '') {
-                        imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-                    }
+                    let imageIcon = dashboardMediaIcons(r);
 
                     tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
                         <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${Number(r.id)}</td>

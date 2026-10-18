@@ -172,6 +172,7 @@ if (isset($_GET['id'])) {
         .modern-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
         .bg-pattern { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
     </style>
+    <link rel="stylesheet" href="repair-detail-ui.css?v=20261019-1">
 </head>
 <body class="p-6 md:p-10 selection:bg-sky-200 relative">
 
@@ -287,8 +288,10 @@ if (isset($_GET['id'])) {
                         </div>
 
                         <div>
-                            <p class="<?php echo $img_label_class; ?>">ภาพประกอบปัญหา</p>
+                            <p class="<?php echo $img_label_class; ?>">ไฟล์แนบประกอบใบงาน</p>
+                            <div class="repair-media-summary">
                             <?php require_once __DIR__ . '/repair_media.php'; rmPanel($conn, (int)$repair['id']); ?>
+                            </div>
                             <?php 
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 
@@ -300,10 +303,6 @@ if (isset($_GET['id'])) {
                                     </div>
                                 </a>
                             <?php else: ?>
-                                <div class="w-full h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
-                                    <i class="fas fa-image text-xl mb-1 opacity-50"></i>
-                                    <span class="text-[11px] font-medium">ไม่มีรูปภาพแนบมาด้วย</span>
-                                </div>
                             <?php endif; ?>
                         </div>
 

@@ -368,7 +368,7 @@ if (
             );
 
             while ($row = $paging['result']->fetch_assoc()) {
-                $rows[] = $row;
+                $rows[] = function_exists('dm_enrich') ? dm_enrich($conn, $row) : $row;
             }
         }
 

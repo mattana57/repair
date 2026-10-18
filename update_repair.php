@@ -717,6 +717,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
+    <link rel="stylesheet" href="repair-detail-ui.css?v=20261019-1">
 </head>
 <body class="p-4 md:p-10 selection:bg-sky-200">
 
@@ -809,8 +810,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
 
                         <div>
-                            <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-2">ภาพประกอบ</p>
+                            <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-2">ไฟล์แนบประกอบใบงาน</p>
+                            <div class="repair-media-summary">
                             <?php require_once __DIR__ . '/repair_media.php'; rmPanel($conn, (int)$repair['id']); ?>
+                            </div>
                             <?php 
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                                 if($image_file): 
@@ -822,10 +825,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     </div>
                                 </a>
                             <?php else: ?>
-                                <div class="w-full h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
-                                    <i class="fas fa-image text-xl mb-1 opacity-50"></i>
-                                    <span class="text-[11px] font-medium">ไม่มีรูปภาพแนบมาด้วย</span>
-                                </div>
                             <?php endif; ?>
                         </div>
 
