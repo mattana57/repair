@@ -11,7 +11,7 @@ if ($active_tab === 'trash') {
         error_log('Admin Trash load failed: ' . $trashError->getMessage());
     }
 }
-$atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชีผู้ใช้', 'tech' => 'เจ้าหน้าที่', 'repair' => 'ใบงานแจ้งซ่อม'];
+$atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชีผู้ใช้', 'tech' => 'เจ้าหน้าที่'];
 $atNotice = $_SESSION['admin_trash_notice'] ?? null;
 unset($_SESSION['admin_trash_notice']);
 ?>
@@ -43,24 +43,24 @@ document.addEventListener('DOMContentLoaded', function () {
             <form action="dashboard.php" method="get" class="flex flex-wrap gap-3 items-center">
                 <input type="hidden" name="tab" value="trash">
                 <label class="flex-1 min-w-[180px]"><span class="sr-only">ค้นหาข้อมูลในถังขยะ</span><input type="search" name="trash_q" value="<?= $atEscape($atData['q']) ?>" maxlength="200" placeholder="ค้นหาข้อมูลในถังขยะ..." class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm"></label>
-                <label><span class="sr-only">ประเภทข้อมูล</span><select name="trash_type" class="border border-slate-200 bg-white rounded-xl px-4 py-2.5 text-sm"><option value="all">ทุกประเภท</option><?php foreach ($atLabels as $key => $label): ?><option value="<?= $key ?>" <?= $atData['kind'] === $key ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label>
+                <label><span class="sr-only">ประเภทข้อมูล</span><select name="trash_type" onchange="this.form.requestSubmit()" class="border border-slate-200 bg-white rounded-xl px-4 py-2.5 text-sm"><option value="all">ทุกประเภท</option><?php foreach ($atLabels as $key => $label): ?><option value="<?= $key ?>" <?= $atData['kind'] === $key ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label>
                 <button class="bg-indigo-600 text-white rounded-xl px-5 py-2.5 text-sm font-bold" type="submit">ค้นหา</button>
                 <a href="dashboard.php?tab=trash" class="text-slate-500 text-sm font-semibold px-3 py-2">ล้างตัวกรอง</a>
             </form>
         </div>
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left min-w-[760px] text-sm">
-                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs font-bold"><tr><th class="px-6 py-4">ประเภทข้อมูล</th><th class="px-6 py-4">รายการ</th><th class="px-6 py-4">รายละเอียด</th><th class="px-6 py-4">วันที่ย้ายเข้าถังขยะ</th><th class="px-6 py-4 text-right">จัดการ</th></tr></thead>
+                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs font-bold"><tr><th class="px-6 py-4">ประเภทข้อมูล</th><th class="px-6 py-4">รายการ</th><th class="px-6 py-4">รายละเอียด</th><th class="px-6 py-4">วันที่ย้ายเข้าถังขยะ</th><th class="px-6 py-4 text-center w-[220px]">จัดการ</th></tr></thead>
                 <tbody class="divide-y divide-slate-100">
                 <?php foreach ($atData['rows'] as $atItem):
                     $atDate = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $atItem['deleted_at'], new DateTimeZone('Asia/Bangkok'));
                 ?>
                     <tr class="hover:bg-slate-50/50">
-                        <td class="px-6 py-4 font-semibold"><?= $atLabels[$atItem['kind']] ?></td>
+                        <td class="px-6 py-4 font-semibold"><?= $atLabels[$atItem['category']] ?></td>
                         <td class="px-6 py-4"><div class="font-bold text-slate-800 break-words"><?= $atEscape($atItem['label'] ?: '-') ?></div><div class="text-xs text-slate-400 mt-1">รหัส <?= (int)$atItem['id'] ?></div></td>
                         <td class="px-6 py-4 text-slate-500 break-words"><?= $atEscape($atItem['detail'] ?: '-') ?></td>
                         <td class="px-6 py-4 whitespace-nowrap"><?php if ($atDate): ?><?= $atDate->format('d/m/') . ((int)$atDate->format('Y') + 543) ?><div class="text-xs text-blue-600 font-bold mt-1"><?= $atDate->format('H:i') ?></div><?php else: ?>-<?php endif; ?></td>
-                        <td class="px-6 py-4"><div class="flex justify-end gap-2">
+                        <td class="px-6 py-4 w-[220px]"><div class="flex justify-center gap-2">
                             <?php foreach (['restore' => 'กู้คืนข้อมูล', 'purge' => 'ลบถาวร'] as $atAction => $atLabel): ?>
                             <form method="post" action="dashboard.php?tab=trash" onsubmit="return confirmTrashForm(event, this)">
                                 <input type="hidden" name="csrf_token" value="<?= $atEscape($_SESSION['csrf_token']) ?>">

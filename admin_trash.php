@@ -212,11 +212,16 @@ function at_page($conn) {
         UNION ALL SELECT 'user', id, COALESCE(NULLIF(full_name,''),username), username, deleted_at FROM users WHERE deleted_at IS NOT NULL
         UNION ALL SELECT 'tech', id, full_name, department, deleted_at FROM technicians WHERE deleted_at IS NOT NULL
         UNION ALL SELECT 'repair', id, ticket_no, reporter_name, deleted_at FROM repairs WHERE deleted_at IS NOT NULL";
+    // ใน Dashboard ปัจจุบัน ใบงานถูกย้ายเข้าถังขยะจาก Contacts ผ่าน reporter เท่านั้น
+    // แยกหมวดตามหน้าต้นทางออกจาก kind ที่ใช้กู้คืน/ลบตารางจริง ห้ามเปลี่ยน repair เป็น user ใน POST
+    $union = "SELECT original.*, CASE WHEN kind = 'repair' THEN 'user' ELSE kind END AS category FROM ($union) original";
     $q = isset($_GET['trash_q']) && is_string($_GET['trash_q']) ? trim($_GET['trash_q']) : '';
     $q = mb_substr($q, 0, 200, 'UTF-8');
     $kind = isset($_GET['trash_type']) && is_string($_GET['trash_type']) ? $_GET['trash_type'] : 'all';
+    // รองรับลิงก์เก่าของรายการที่เคยแสดงเป็นใบงานจาก Contacts
+    if ($kind === 'repair') $kind = 'user';
     $where = '1=1'; $values = []; $types = '';
-    if (in_array($kind, ['asset','user','tech','repair'], true)) { $where .= ' AND kind = ?'; $values[] = $kind; $types .= 's'; }
+    if (in_array($kind, ['asset','user','tech'], true)) { $where .= ' AND category = ?'; $values[] = $kind; $types .= 's'; }
     else { $kind = 'all'; }
     if ($q !== '') {
         $where .= " AND CONCAT_WS(' ',label,detail,id) LIKE ? ESCAPE '!'";

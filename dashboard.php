@@ -2497,6 +2497,14 @@ if (isset($_GET['api_check_hash'])) {
             }
             :is(#existing_account_id, #existing_technician_id, #techAdmin_is_active, #techAdmin_department_select, #trash select[name="trash_type"]) option::checkmark { display: none; }
         }
+
+        /* ขนาดหัวตารางเฉพาะ Trash และ Login History ตามที่ระบุ */
+        #trash table thead th,
+        #login-history-table table thead th {
+            font-size: 14px;
+            line-height: 20px;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -4418,7 +4426,7 @@ if (isset($_GET['api_check_hash'])) {
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
-                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
+                            <div class="relative mr-auto flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="loginLogSearch" name="pg_logs_q" value="<?= tp_text(tp_get('pg_logs_q')); ?>" oninput="filterLoginLogs(event); toggleClearBtn('loginLogSearch', 'clearLoginLogSearch');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                                 <button type="button" id="clearLoginLogSearch" onclick="clearLoginLogsSearch()" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 <?= tp_get('pg_logs_q') === '' ? 'hidden' : 'flex' ?> items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
