@@ -5272,7 +5272,7 @@ if (isset($_GET['api_check_hash'])) {
         }
         
         const pageTitles = {
-            'trash': 'ถังขยะ',
+            'trash': 'Trash',
             'dash': 'Dashboard Overview',
             'repairs': 'All Repairs List',
             'technicians': 'Team Management',
