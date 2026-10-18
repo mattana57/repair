@@ -312,6 +312,125 @@ function at_handle_request($conn) {
     }
 }
 
+// Bulk requests use the same guards and deletion rules as single-item Trash actions.
+function at_handle_bulk_request($conn) {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST'
+        || !in_array($_POST['trash_action'] ?? null, ['bulk_select', 'bulk_purge'], true)) return;
+    $selectOnly = $_POST['trash_action'] === 'bulk_select';
+    $started = false;
+    $audit = [];
+    try {
+        $token = $_POST['csrf_token'] ?? null;
+        if (!is_string($token) || !is_string($_SESSION['csrf_token'] ?? null)
+            || !hash_equals($_SESSION['csrf_token'], $token)) {
+            throw new RuntimeException('คำขอหมดอายุ กรุณารีเฟรชหน้าแล้วลองใหม่');
+        }
+        if (!$selectOnly && ($_POST['trash_confirm'] ?? null) !== '1') {
+            throw new RuntimeException('กรุณายืนยันการลบถาวรก่อน');
+        }
+        if (!$selectOnly) {
+            $engines = at_stmt($conn, "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('users','technicians','repairs','assets')");
+            $result = $engines->get_result();
+            if ($result->num_rows !== 4) throw new RuntimeException('ตารางข้อมูลไม่ครบ');
+            while ($engine = $result->fetch_assoc()) {
+                if (strtoupper((string)$engine['ENGINE']) !== 'INNODB') throw new RuntimeException('ตารางต้องรองรับธุรกรรมก่อนใช้งานถังขยะ');
+            }
+            $engines->close();
+        }
+        if (!$conn->begin_transaction()) throw new RuntimeException('เริ่มบันทึกข้อมูลไม่ได้');
+        $started = true;
+        at_check_admin($conn);
+        if ($selectOnly) {
+            // Capture a fixed selection. New arrivals after this response are not selected.
+            extract(at_trash_query(), EXTR_SKIP);
+            $stmt = at_stmt($conn, "SELECT kind, id, deleted_at, category FROM ($union) trash_rows WHERE $where ORDER BY kind ASC, id ASC", $types, $values);
+            $items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC); $stmt->close();
+            foreach ($items as &$item) $item['id'] = (string)$item['id'];
+            unset($item);
+            if (!$conn->commit()) throw new RuntimeException('ไม่สามารถอ่านรายการได้');
+            $started = false;
+            header('Content-Type: application/json; charset=UTF-8');
+            header('Cache-Control: no-store');
+            echo json_encode(['items'=>$items, 'count'=>count($items)], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+            exit;
+        }
+        $rawItems = $_POST['trash_items'] ?? null;
+        if (!is_string($rawItems)) throw new RuntimeException('รายการที่เลือกไม่ถูกต้อง');
+        $items = json_decode($rawItems, true, 16, JSON_THROW_ON_ERROR);
+        if (!is_array($items) || !$items || array_keys($items) !== range(0, count($items)-1)) {
+            throw new RuntimeException('กรุณาเลือกรายการก่อนลบ');
+        }
+        $tables = ['asset'=>'assets', 'user'=>'users', 'tech'=>'technicians', 'repair'=>'repairs'];
+        $seen = [];
+        foreach ($items as &$item) {
+            if (!is_array($item) || !is_string($item['kind'] ?? null) || !isset($tables[$item['kind']])) {
+                throw new RuntimeException('ประเภทข้อมูลที่เลือกไม่ถูกต้อง');
+            }
+            $id = at_positive_id($item['id'] ?? null);
+            $deletedAt = $item['deleted_at'] ?? null;
+            if ($id === false || !is_string($deletedAt) || !preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/D', $deletedAt)) {
+                throw new RuntimeException('ข้อมูลรายการที่เลือกไม่ถูกต้อง กรุณาเลือกใหม่');
+            }
+            if ($item['kind'] === 'tech' && ($_POST['trash_confirm_linked_account'] ?? null) !== '1') {
+                throw new RuntimeException('กรุณายืนยันการลบเจ้าหน้าที่พร้อมบัญชีเว็บที่ผูกอยู่');
+            }
+            $key = $item['kind'] . ':' . $id;
+            if (isset($seen[$key])) throw new RuntimeException('รายการที่เลือกซ้ำ กรุณาเลือกใหม่');
+            $seen[$key] = true; $item['id'] = $id;
+        }
+        unset($item);
+        // Delete selected work orders/accounts first to respect dependencies on technicians.
+        $order = ['repair'=>0, 'user'=>1, 'asset'=>2, 'tech'=>3];
+        usort($items, static function ($a, $b) use ($order) {
+            $rank = $order[$a['kind']] <=> $order[$b['kind']];
+            return $rank !== 0 ? $rank : $a['id'] <=> $b['id'];
+        });
+        foreach ($items as $item) {
+            $kind = $item['kind']; $id = $item['id']; $table = $tables[$kind];
+            $row = at_row($conn, "SELECT * FROM $table WHERE id = ? FOR UPDATE", 'i', [$id]);
+            if (!$row || $row['deleted_at'] === null || (string)$row['deleted_at'] !== $item['deleted_at']) {
+                throw new RuntimeException('สถานะรายการรหัส ' . $id . ' เปลี่ยนแล้ว กรุณารีเฟรชและเลือกใหม่');
+            }
+            if ($table === 'users' && $id === (int)$_SESSION['user_id']) {
+                throw new RuntimeException('ไม่สามารถลบบัญชีที่กำลังใช้งานอยู่ได้');
+            }
+            if ($kind === 'tech') {
+                $linkedAccounts = at_purge_technician_with_accounts($conn, $id);
+                foreach ($linkedAccounts as $accountId) $audit[] = ['users', $accountId];
+            } elseif ($table === 'users' && in_array(strtolower((string)$row['role']), ['admin', 'executive'], true)) {
+                at_purge_management_account($conn, $id);
+            } else {
+                at_check_references($conn, $table, $id);
+                $delete = at_stmt($conn, "DELETE FROM $table WHERE id = ? AND deleted_at IS NOT NULL", 'i', [$id]);
+                $affected = $delete->affected_rows; $delete->close();
+                if ($affected !== 1) throw new RuntimeException('สถานะรายการเปลี่ยนแล้ว กรุณาเลือกใหม่');
+            }
+            $audit[] = [$table, $id];
+        }
+        if (!$conn->commit()) throw new RuntimeException('ไม่สามารถยืนยันการลบได้ กรุณาตรวจรายการก่อนลองใหม่');
+        $started = false;
+        try {
+            foreach ($audit as $entry) {
+                if (function_exists('mbsActivityLog')) mbsActivityLog($conn, 'TRASH_PURGE', $entry[0], $entry[1], 'ลบถาวรจากรายการที่เลือกในถังขยะ');
+            }
+        } catch (Throwable $logError) { error_log('Bulk Trash activity log failed'); }
+        at_redirect('success', 'ลบรายการที่เลือกถาวรแล้ว ' . count($items) . ' รายการ');
+    } catch (Throwable $error) {
+        if ($started) { try { $conn->rollback(); } catch (Throwable $ignored) {} }
+        $message = $error instanceof RuntimeException && !($error instanceof mysqli_sql_exception)
+            ? $error->getMessage() : 'ไม่สามารถดำเนินการกับรายการที่เลือกได้ กรุณาตรวจสอบแล้วลองใหม่';
+        if ($selectOnly) {
+            http_response_code(400);
+            header('Content-Type: application/json; charset=UTF-8');
+            header('Cache-Control: no-store');
+            echo json_encode(['error'=>$message], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        at_redirect('error', $message);
+    }
+}
+
+at_handle_bulk_request($conn);
 at_handle_request($conn);
 
 function at_period_filters() {
@@ -329,7 +448,7 @@ function at_period_filters() {
     return compact('day', 'month', 'year');
 }
 
-function at_page($conn) {
+function at_trash_query() {
     $union = "SELECT 'asset' AS kind, id, CONVERT(asset_name USING utf8mb4) COLLATE utf8mb4_unicode_ci AS label, CONVERT(asset_code USING utf8mb4) COLLATE utf8mb4_unicode_ci AS detail, deleted_at, 'asset' AS category FROM assets WHERE deleted_at IS NOT NULL
         UNION ALL SELECT 'user', id, COALESCE(NULLIF(full_name,''),username), username, deleted_at, CASE LOWER(role) WHEN 'admin' THEN 'admin' WHEN 'executive' THEN 'executive' ELSE 'user' END FROM users WHERE deleted_at IS NOT NULL
         UNION ALL SELECT 'tech', id, full_name, department, deleted_at, 'tech' FROM technicians WHERE deleted_at IS NOT NULL
@@ -354,6 +473,11 @@ function at_page($conn) {
         $where .= " AND CONCAT_WS(' ',label,detail,id) LIKE ? ESCAPE '!'";
         $values[] = '%' . strtr($q, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%'; $types .= 's';
     }
+    return compact('union','where','values','types','q','kind','day','month','year');
+}
+
+function at_page($conn) {
+    extract(at_trash_query(), EXTR_SKIP);
     $years = [(int)(new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')];
     if ($year !== 'all') $years[] = (int)$year;
     $yearStmt = at_stmt($conn, "SELECT DISTINCT YEAR(deleted_at) AS y FROM ($union) trash_years WHERE YEAR(deleted_at) BETWEEN 1000 AND 9999");

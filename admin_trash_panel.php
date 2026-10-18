@@ -31,8 +31,19 @@ document.addEventListener('DOMContentLoaded', function () {
 <div id="trash" class="section <?= $active_tab === 'trash' ? '' : 'hidden' ?> space-y-6 no-print">
     <div class="modern-card bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="p-6 border-b border-slate-100 space-y-4">
-            <h2 class="text-xl font-extrabold text-slate-800"><i class="fas fa-trash-alt text-indigo-500 mr-2" aria-hidden="true"></i>ถังขยะ</h2>
+            <div class="flex items-center justify-between gap-4">
+                <h2 class="text-xl font-extrabold text-slate-800"><i class="fas fa-trash-alt text-indigo-500 mr-2" aria-hidden="true"></i>ถังขยะ</h2>
+                <button type="button" id="trashEditButton" onclick="toggleTrashEdit()" aria-expanded="false" aria-controls="trashBulkToolbar" class="text-sm font-bold text-blue-600 hover:text-blue-700 px-3 py-2 rounded-xl hover:bg-blue-50 transition-colors">แก้ไข</button>
+            </div>
+            <div id="trashBulkToolbar" class="hidden flex-wrap items-center gap-2 p-2 rounded-2xl bg-slate-50 border border-slate-200" aria-label="จัดการรายการที่เลือก">
+                <button type="button" id="trashChooseButton" onclick="selectTrashItems()" class="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-blue-50">เลือก</button>
+                <button type="button" id="trashChooseAllButton" onclick="selectAllTrashItems()" class="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-blue-50 disabled:opacity-50">เลือกทั้งหมด</button>
+                <button type="button" onclick="deselectTrashItems()" class="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-blue-50">ไม่เลือก</button>
+                <button type="button" id="trashDeleteSelectedButton" onclick="deleteSelectedTrashItems()" disabled class="px-4 py-2 rounded-xl text-sm font-bold bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed">ลบ</button>
+                <span id="trashSelectedCount" class="ml-auto px-2 text-xs font-semibold text-slate-500" role="status" aria-live="polite">ยังไม่ได้เลือกรายการ</span>
+            </div>
             <p class="text-sm text-slate-500">รายการที่ย้ายเข้าถังขยะยังเก็บอยู่ในฐานข้อมูล สามารถกู้คืนข้อมูลหรือลบถาวรได้</p>
+            <p class="text-xs text-slate-500">การกู้คืนเจ้าหน้าที่จะเปิดใช้งานบัญชีเว็บที่ผูกอยู่โดยอัตโนมัติ ส่วนการกู้คืนบัญชีผู้ใช้โดยตรงยังต้องตรวจสอบสถานะก่อนเปิดใช้งาน</p>
             <?php if (is_array($atNotice)): ?>
             <div role="status" class="p-4 rounded-xl text-sm font-semibold <?= ($atNotice['type'] ?? '') === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' ?>"><?= $atEscape($atNotice['message'] ?? '') ?></div>
             <?php endif; ?>
@@ -80,12 +91,13 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left min-w-[760px] text-sm">
-                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs font-bold"><tr><th class="px-6 py-4">ประเภทข้อมูล</th><th class="px-6 py-4">รายการ</th><th class="px-6 py-4">รายละเอียด</th><th class="px-6 py-4">วันที่ย้ายเข้าถังขยะ</th><th class="px-6 py-4 text-center w-[220px]">จัดการ</th></tr></thead>
+                <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs font-bold"><tr><th class="trash-select-column hidden px-4 py-4 w-12 text-center"><input type="checkbox" id="trashSelectPage" onchange="selectTrashPage(this.checked)" aria-label="เลือกทั้งหมดในหน้านี้" title="เลือกทั้งหมดในหน้านี้" class="w-4 h-4 accent-blue-600 cursor-pointer"></th><th class="px-6 py-4">ประเภทข้อมูล</th><th class="px-6 py-4">รายการ</th><th class="px-6 py-4">รายละเอียด</th><th class="px-6 py-4">วันที่ย้ายเข้าถังขยะ</th><th class="px-6 py-4 text-center w-[220px]">จัดการ</th></tr></thead>
                 <tbody class="divide-y divide-slate-100">
                 <?php foreach ($atData['rows'] as $atItem):
                     $atDate = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $atItem['deleted_at'], new DateTimeZone('Asia/Bangkok'));
                 ?>
                     <tr class="hover:bg-slate-50/50">
+                        <td class="trash-select-column hidden px-4 py-4 text-center"><input type="checkbox" class="trash-row-select w-4 h-4 accent-blue-600 cursor-pointer" data-kind="<?= $atEscape($atItem['kind']) ?>" data-id="<?= (int)$atItem['id'] ?>" data-deleted-at="<?= $atEscape($atItem['deleted_at']) ?>" data-category="<?= $atEscape($atItem['category']) ?>" aria-label="เลือก <?= $atEscape($atItem['label'] ?: 'รายการรหัส ' . $atItem['id']) ?>" onchange="toggleTrashItem(this)"></td>
                         <td class="px-6 py-4 font-semibold"><?= $atLabels[$atItem['category']] ?></td>
                         <td class="px-6 py-4"><div class="font-bold text-slate-800 break-words"><?= $atEscape($atItem['label'] ?: '-') ?></div><div class="text-xs text-slate-400 mt-1">รหัส <?= (int)$atItem['id'] ?></div></td>
                         <td class="px-6 py-4 text-slate-500 break-words"><?= $atEscape($atItem['detail'] ?: '-') ?></td>
@@ -105,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div></td>
                     </tr>
                 <?php endforeach; ?>
-                <?php if (!$atError && !$atData['rows']): ?><tr><td colspan="5" class="px-6 py-12 text-center text-slate-400">ไม่พบข้อมูลในถังขยะ</td></tr><?php endif; ?>
+                <?php if (!$atError && !$atData['rows']): ?><tr><td colspan="5" data-trash-empty class="px-6 py-12 text-center text-slate-400">ไม่พบข้อมูลในถังขยะ</td></tr><?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -143,6 +155,7 @@ function cancelTrashSearch() {
     document.querySelector('#trash tbody')?.removeAttribute('aria-busy');
 }
 function scheduleTrashSearch(event) {
+    clearTrashBulkSelection();
     cancelTrashSearch();
     const input = document.getElementById('trashSearchInput');
     const button = document.getElementById('clearTrashSearchBtn');
@@ -158,6 +171,7 @@ function clearTrashSearch() {
     submitTrashFilters();
 }
 async function submitTrashFilters() {
+    clearTrashBulkSelection();
     cancelTrashSearch();
     if (trashSearchComposing) return;
     const version = trashSearchVersion;
@@ -188,11 +202,14 @@ async function submitTrashFilters() {
         footer.replaceChildren(...Array.from(nextFooter.childNodes, node => document.importNode(node, true)));
         // Keep the original input, selection and focus. PHP still searches and paginates.
         window.history.replaceState(window.history.state, '', url.href);
+        refreshTrashSelectionUI();
+        return true;
     } catch (error) {
         if (error.name !== 'AbortError' && version === trashSearchVersion) {
             errorText.textContent = 'ค้นหาไม่สำเร็จ กรุณากด Enter หรือเลือกตัวกรองเพื่อลองใหม่';
             errorText.classList.remove('hidden');
         }
+        return false;
     } finally {
         if (version === trashSearchVersion) body.removeAttribute('aria-busy');
     }
@@ -203,6 +220,7 @@ trashSearchForm.addEventListener('submit', function (event) {
 });
 document.getElementById('trashSearchInput').addEventListener('compositionstart', function () {
     trashSearchComposing = true;
+    clearTrashBulkSelection();
     cancelTrashSearch();
 });
 document.getElementById('trashSearchInput').addEventListener('compositionend', function () {
@@ -254,4 +272,122 @@ function confirmTrashForm(event, form) {
     });
     return false;
 }
+
+let trashEditOpen = false;
+let trashSelectionVisible = false;
+let trashBulkSelected = new Map();
+let trashBulkVersion = 0;
+let trashBulkController = null;
+let trashBulkBusy = false;
+let trashBulkDeleting = false;
+function trashRowKey(item) { return item.kind + ':' + String(item.id); }
+function trashCheckboxItem(box) {
+    return {kind:box.dataset.kind, id:box.dataset.id, deleted_at:box.dataset.deletedAt, category:box.dataset.category};
+}
+function clearTrashBulkSelection() {
+    trashBulkVersion++;
+    if (trashBulkController) trashBulkController.abort();
+    trashBulkController = null; trashBulkBusy = false;
+    trashBulkSelected.clear();
+    refreshTrashSelectionUI();
+}
+function refreshTrashSelectionUI() {
+    const toolbar = document.getElementById('trashBulkToolbar');
+    toolbar.classList.toggle('hidden', !trashEditOpen);
+    toolbar.classList.toggle('flex', trashEditOpen);
+    document.getElementById('trashEditButton').setAttribute('aria-expanded', String(trashEditOpen));
+    const visible = trashEditOpen && trashSelectionVisible;
+    document.querySelectorAll('#trash .trash-select-column').forEach(cell=>cell.classList.toggle('hidden', !visible));
+    const boxes = Array.from(document.querySelectorAll('#trash .trash-row-select'));
+    boxes.forEach(box=>{ box.checked = trashBulkSelected.has(trashRowKey(trashCheckboxItem(box))); });
+    const page = document.getElementById('trashSelectPage');
+    const checked = boxes.filter(box=>box.checked).length;
+    page.checked = boxes.length > 0 && checked === boxes.length;
+    page.indeterminate = checked > 0 && checked < boxes.length;
+    page.disabled = !boxes.length || trashBulkBusy || trashBulkDeleting;
+    boxes.forEach(box=>{box.disabled = trashBulkBusy || trashBulkDeleting;});
+    document.querySelectorAll('#trash [data-trash-empty]').forEach(cell=>{cell.colSpan = visible ? 6 : 5;});
+    document.getElementById('trashSelectedCount').textContent = trashBulkBusy ? 'กำลังเลือกรายการ…'
+        : trashBulkSelected.size ? 'เลือกแล้ว ' + trashBulkSelected.size.toLocaleString('th-TH') + ' รายการ' : 'ยังไม่ได้เลือกรายการ';
+    document.getElementById('trashChooseAllButton').disabled = trashBulkBusy || trashBulkDeleting;
+    document.getElementById('trashDeleteSelectedButton').disabled = !trashBulkSelected.size || trashBulkBusy || trashBulkDeleting;
+    document.getElementById('trashChooseButton').classList.toggle('text-blue-600', visible);
+    document.getElementById('trashChooseButton').classList.toggle('bg-blue-50', visible);
+}
+function toggleTrashEdit() {
+    trashEditOpen = !trashEditOpen;
+    trashSelectionVisible = trashEditOpen;
+    if (!trashEditOpen) clearTrashBulkSelection();
+    refreshTrashSelectionUI();
+}
+function selectTrashItems() {
+    trashEditOpen = true; trashSelectionVisible = true;
+    refreshTrashSelectionUI();
+}
+function deselectTrashItems() {
+    trashSelectionVisible = false;
+    clearTrashBulkSelection();
+}
+function toggleTrashItem(box) {
+    if (trashBulkBusy || trashBulkDeleting) return;
+    const item = trashCheckboxItem(box); const key = trashRowKey(item);
+    if (box.checked) trashBulkSelected.set(key, item); else trashBulkSelected.delete(key);
+    trashBulkVersion++; refreshTrashSelectionUI();
+}
+function selectTrashPage(checked) {
+    if (trashBulkBusy || trashBulkDeleting) return;
+    document.querySelectorAll('#trash .trash-row-select').forEach(box=>{
+        const item = trashCheckboxItem(box); const key = trashRowKey(item);
+        if (checked) trashBulkSelected.set(key, item); else trashBulkSelected.delete(key);
+    });
+    trashBulkVersion++; refreshTrashSelectionUI();
+}
+async function selectAllTrashItems() {
+    if (trashBulkBusy || trashBulkDeleting) return;
+    selectTrashItems();
+    const beforeFilterVersion = trashBulkVersion;
+    if (await submitTrashFilters() !== true || trashBulkVersion !== beforeFilterVersion + 1 || !trashEditOpen || !trashSelectionVisible) return;
+    const version = trashBulkVersion;
+    const controller = new AbortController();
+    trashBulkController = controller; trashBulkBusy = true; refreshTrashSelectionUI();
+    try {
+        const data = new FormData();
+        data.set('csrf_token', <?= json_encode($_SESSION['csrf_token']) ?>);
+        data.set('trash_action', 'bulk_select');
+        const response = await fetch(window.location.href, {method:'POST', body:data, signal:controller.signal, credentials:'same-origin', cache:'no-store'});
+        if (response.redirected) {window.location.assign(response.url); return;}
+        const result = await response.json();
+        if (version !== trashBulkVersion) return;
+        if (!response.ok || !Array.isArray(result.items) || result.count !== result.items.length) throw new Error(result.error || 'เลือกรายการไม่สำเร็จ');
+        const selected = new Map();
+        for (const item of result.items) {
+            if (!['asset','user','tech','repair'].includes(item.kind) || !/^[1-9][0-9]*$/.test(String(item.id)) || typeof item.deleted_at !== 'string') throw new Error('ข้อมูลรายการไม่ถูกต้อง กรุณาลองใหม่');
+            item.id = String(item.id); selected.set(trashRowKey(item), item);
+        }
+        trashBulkSelected = selected;
+    } catch (error) {
+        if (error.name !== 'AbortError' && version === trashBulkVersion) Swal.fire({icon:'error',title:'เลือกทั้งหมดไม่สำเร็จ',text:error.message,confirmButtonText:'ตกลง'});
+    } finally {
+        if (version === trashBulkVersion) {trashBulkBusy = false; trashBulkController = null; refreshTrashSelectionUI();}
+    }
+}
+async function deleteSelectedTrashItems() {
+    if (!trashBulkSelected.size || trashBulkBusy || trashBulkDeleting) return;
+    const items = Array.from(trashBulkSelected.values()); const version = trashBulkVersion;
+    let text = 'จะลบรายการที่เลือก ' + items.length.toLocaleString('th-TH') + ' รายการออกจากฐานข้อมูลอย่างถาวร และไม่สามารถกู้คืนได้';
+    if (items.some(item=>item.kind === 'tech')) text += ' รวมบัญชีเว็บที่ผูกกับเจ้าหน้าที่ที่เลือก ตามเงื่อนไขการลบเดิม';
+    if (items.some(item=>['admin','executive'].includes(item.category))) text += ' รวมคำขอยืนยันอีเมลและรีเซ็ตรหัสผ่านของบัญชีแอดมิน/ผู้บริหารที่เลือก';
+    trashBulkDeleting = true; refreshTrashSelectionUI();
+    let submitted = false;
+    try {
+        const result = await Swal.fire({title:'ยืนยันลบรายการที่เลือก?',text,icon:'warning',showCancelButton:true,confirmButtonText:'ลบถาวร',cancelButtonText:'ยกเลิก',confirmButtonColor:'#e11d48'});
+        if (!result.isConfirmed || version !== trashBulkVersion) return;
+        cancelTrashSearch();
+        const form = document.createElement('form'); form.method = 'post'; form.action = window.location.href;
+        const fields = {trash_action:'bulk_purge',trash_items:JSON.stringify(items),trash_confirm:'1',trash_confirm_linked_account:items.some(item=>item.kind === 'tech')?'1':'0',csrf_token:<?= json_encode($_SESSION['csrf_token']) ?>};
+        for (const [name,value] of Object.entries(fields)) {const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input);}
+        document.body.appendChild(form); form.submit(); submitted = true;
+    } finally {if (!submitted) {trashBulkDeleting = false; refreshTrashSelectionUI();}}
+}
+refreshTrashSelectionUI();
 </script>
