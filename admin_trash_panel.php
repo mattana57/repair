@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span id="trashSelectedCount" class="ml-auto px-2 text-xs font-semibold text-slate-500" role="status" aria-live="polite">ยังไม่ได้เลือกรายการ</span>
             </div>
             <p class="text-sm text-slate-500">รายการที่ย้ายเข้าถังขยะยังเก็บอยู่ในฐานข้อมูล สามารถกู้คืนข้อมูลหรือลบถาวรได้</p>
+            <p class="text-xs text-slate-500">การกู้คืนเจ้าหน้าที่จะเปิดใช้งานบัญชีเว็บที่ผูกอยู่โดยอัตโนมัติ ส่วนการกู้คืนบัญชีผู้ใช้โดยตรงยังต้องตรวจสอบสถานะก่อนเปิดใช้งาน</p>
             <?php if (is_array($atNotice)): ?>
             <div role="status" class="p-4 rounded-xl text-sm font-semibold <?= ($atNotice['type'] ?? '') === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' ?>"><?= $atEscape($atNotice['message'] ?? '') ?></div>
             <?php endif; ?>
@@ -98,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <tr class="hover:bg-slate-50/50">
                         <td class="trash-select-column hidden px-4 py-4 text-center"><input type="checkbox" class="trash-row-select w-4 h-4 accent-blue-600 cursor-pointer" data-kind="<?= $atEscape($atItem['kind']) ?>" data-id="<?= (int)$atItem['id'] ?>" data-deleted-at="<?= $atEscape($atItem['deleted_at']) ?>" data-category="<?= $atEscape($atItem['category']) ?>" aria-label="เลือก <?= $atEscape($atItem['label'] ?: 'รายการรหัส ' . $atItem['id']) ?>" onchange="toggleTrashItem(this)"></td>
                         <td class="px-6 py-4 font-semibold"><?= $atLabels[$atItem['category']] ?></td>
-                        <td class="px-6 py-4"><div class="font-bold text-slate-800 break-words"><?= $atEscape($atItem['label'] ?: '-') ?></div><div class="text-xs text-slate-400 mt-1">รหัส <?= (int)$atItem['id'] ?></div></td>
+                        <td class="px-6 py-4"><div class="font-bold text-slate-800 break-words"><?= $atEscape($atItem['label'] ?: '-') ?></div></td>
                         <td class="px-6 py-4 text-slate-500 break-words"><?= $atEscape($atItem['detail'] ?: '-') ?></td>
                         <td class="px-6 py-4 whitespace-nowrap"><?php if ($atDate): ?><?= $atDate->format('d/m/') . ((int)$atDate->format('Y') + 543) ?><div class="text-xs text-blue-600 font-bold mt-1"><?= $atDate->format('H:i') ?></div><?php else: ?>-<?php endif; ?></td>
                         <td class="px-6 py-4 w-[220px]"><div class="flex justify-center gap-2">

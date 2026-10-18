@@ -156,7 +156,6 @@ try {
                             </p>
                             <p class="text-xs text-slate-400 mt-1">
                                 <?= tp_text($lh_person['username']) ?>
-                                · บัญชี #<?= (int) $lh_person['user_id'] ?>
                             </p>
                         </td>
                         <td class="p-4">
@@ -205,7 +204,6 @@ try {
             <h3 class="text-lg font-extrabold text-slate-800">
                 <i class="fas fa-list-alt text-violet-500 mr-2"></i>
                 กิจกรรมที่บันทึก
-                <?= $lh_user > 0 ? '— บัญชี #' . $lh_user : '' ?>
             </h3>
             <p class="mt-1 text-sm text-slate-500">
                 <?= number_format($lh_event_total) ?> รายการ

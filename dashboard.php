@@ -1328,13 +1328,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         $old_avatar_to_delete = null;
         $tech_transaction_started = false;
         $tech_commit_attempted = false;
+        $tech_save_step = 'BEGIN';
         try {
             if (!$conn->begin_transaction()) {
                 throw new RuntimeException('ไม่สามารถเริ่มการบันทึกข้อมูลช่างและบัญชีได้');
             }
             $tech_transaction_started = true;
+            $tech_save_step = 'AVATAR';
             $avatar_url = $account_upload('avatar');
 
+            $tech_save_step = 'LINK_CHECK';
             $tech_id = $user_id;
             $existing_user = null;
 
@@ -1403,6 +1406,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 $usr_q->close();
             }
 
+            $tech_save_step = 'ACCOUNT_INPUT';
             if ($existing_user && $web_username === '') {
                 throw new Exception(
                     'บัญชีเว็บที่มีอยู่แล้ว ไม่อนุญาตให้เว้นว่าง Username'
@@ -1425,6 +1429,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 );
             }
 
+            $tech_save_step = 'TECH_PROFILE';
             // 1. จัดการข้อมูลตาราง technicians
             if ($user_id === 0) {
                 $secret_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
@@ -1501,6 +1506,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 $stmt = $account_query($tech_update_sql, $tech_update_types, $tech_update_values);
                 $stmt->close();
 
+                $tech_save_step = 'EMAIL';
                 if ($old_email !== $email && $existing_user) {
                     $linked_user_id = (int) $existing_user['id'];
 
@@ -1555,6 +1561,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
 
             // 2. จัดการข้อมูลตาราง users สำหรับช่าง
             // ✨ การส่ง Username ว่างต้องไม่ทำให้คำสั่งระงับบัญชีถูกข้าม (ย้ายเงื่อนไขออกจากการเช็ค !empty อย่างเดียว)
+            $tech_save_step = 'WEB_ACCOUNT';
             if ($existing_user || $web_username !== '') {
                 
                                 // ตรวจบัญชีเดิมก่อนสร้างบัญชีให้ช่าง
@@ -1759,6 +1766,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 }
             }
 
+            $tech_save_step = 'COMMIT';
             $tech_commit_attempted = true;
             if (!$conn->commit()) {
                 throw new RuntimeException('ไม่สามารถยืนยันการบันทึกข้อมูลช่างและบัญชีได้');
@@ -1797,9 +1805,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 $account_remove_unused_avatar($avatar_url);
             }
 
-            error_log('Technician account save failed');
+            // เก็บเฉพาะขั้นตอนและรหัสข้อผิดพลาด ไม่บันทึกข้อมูลฟอร์ม/SQL/รหัสผ่าน
+            error_log('Technician account save failed: step=' . $tech_save_step
+                . '; exception=' . get_class($e) . '; code=' . (int)$e->getCode());
 
-            $message = 'ไม่สามารถบันทึกข้อมูลช่างและบัญชีได้';
+            $message = 'ไม่สามารถบันทึกข้อมูลช่างและบัญชีได้'
+                . ' (ขั้นตอน ' . $tech_save_step . ', รหัส ' . (int)$e->getCode() . ')';
+            $safe_account_messages = [
+                'กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่ของช่าง',
+                'กรุณาระบุ Username เมื่อต้องการสร้างบัญชีเว็บ',
+                'บัญชีเว็บที่มีอยู่แล้ว ไม่อนุญาตให้เว้นว่าง Username',
+                'Username นี้ถูกใช้งานแล้ว',
+                'Username นี้ถูกใช้งานแล้ว กรุณาเลือกชื่อผู้ใช้งานอื่น',
+                'ช่างคนนี้มีบัญชีที่เชื่อมอยู่แล้ว',
+                'ไม่พบข้อมูลช่างที่ต้องการแก้ไข',
+                'พบหลายบัญชีเชื่อมกับช่างคนเดียวกัน กรุณาตรวจสอบข้อมูลก่อน',
+                'บัญชีที่เชื่อมไม่ใช่บัญชี Technician ของช่างคนนี้',
+                'ข้อมูลรูปไม่ถูกต้อง', 'ชนิดไฟล์รูปไม่ถูกต้อง',
+                'อัปโหลดรูปไม่สำเร็จ', 'ไม่สามารถเตรียมโฟลเดอร์รูปได้',
+                'ไม่สามารถบันทึกไฟล์รูปได้',
+            ];
+            if (in_array($e->getMessage(), $safe_account_messages, true)) {
+                $message = $e->getMessage();
+            }
             if (!$rollback_ok || $tech_commit_attempted) {
                 $message = 'ไม่สามารถยืนยันผลการบันทึกได้ กรุณาตรวจสอบข้อมูลก่อนทำรายการซ้ำ';
             } elseif ((int) $e->getCode() === 1062
@@ -2610,11 +2638,50 @@ if (isset($_GET['api_check_hash'])) {
 #techniciansTableBody .mbs-team-name > .flex {align-items:flex-start;}
 #techniciansTableBody .mbs-team-name, #techniciansTableBody .mbs-team-dept, #techniciansTableBody .mbs-team-contact {line-height:20px;}
 #techniciansTableBody .mbs-team-dept > div + div, #techniciansTableBody .mbs-team-name .text-slate-400 {line-height:16px;}
-#techniciansTableBody .mbs-unlinked-staff .mbs-team-dept, #techniciansTableBody .mbs-unlinked-staff .mbs-team-contact {padding-top:40px;}
+#techniciansTableBody .mbs-unlinked-staff .mbs-team-dept, #techniciansTableBody .mbs-unlinked-staff .mbs-team-contact {padding-top:46px;}
 #techniciansTableBody .mbs-team-contact > .flex {margin-top:2px;line-height:16px;}
 #techniciansTableBody .mbs-team-contact > .flex > .rounded-full {width:16px;height:16px;}
 </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
+    <style id="mbs-light-sidebar">
+        /* Light sidebar: scoped to the existing navigation only. */
+        #sidebar {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+            border-right: 1px solid #dbe7f3 !important;
+            box-shadow: 2px 0 14px rgba(15, 23, 42, 0.04) !important;
+        }
+        #sidebar .sidebar-logo-box {
+            background: #ffffff !important;
+            border-bottom-color: #e2e8f0 !important;
+        }
+        #sidebar .sidebar-logo-box h1 { color: #0f172a !important; }
+        #sidebar .sidebar-logo-box h1 span { color: #2563eb !important; }
+        #sidebar .sidebar-logo-box p { color: #64748b !important; }
+        #sidebar .border-slate-50,
+        #sidebar .border-slate-100 { border-color: #e2e8f0 !important; }
+        #sidebar nav > p { color: #64748b !important; }
+        #sidebar .nav-btn { color: #475569 !important; }
+        #sidebar .nav-btn:not(.active-btn) { background: transparent !important; }
+        #sidebar .nav-btn i { color: #64748b !important; }
+        #sidebar .nav-btn:hover {
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
+        }
+        #sidebar .nav-btn:hover i { color: #2563eb !important; }
+        #sidebar .nav-btn.active-btn {
+            background: #2563eb !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 10px rgba(37, 99, 235, 0.16) !important;
+        }
+        #sidebar .nav-btn.active-btn i { color: #ffffff !important; }
+        #sidebar a.nav-btn.group { color: #475569 !important; }
+        #sidebar a.nav-btn.group:hover {
+            background: #fff1f2 !important;
+            color: #be123c !important;
+        }
+        #sidebar a.nav-btn.group:hover i { color: #be123c !important; }
+    </style>
+
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
@@ -3804,7 +3871,7 @@ if (isset($_GET['api_check_hash'])) {
 
                                         // ใช้เกณฑ์เดียวกับป้ายผูกบัญชีแล้วด้านขวา ไม่เปลี่ยนสถานะ LINE
                                         $new_staff_notice = ($t['approval_status'] !== 'อนุมัติแล้ว')
-                                            ? "<div class='text-xs font-bold text-orange-600 mb-2' style='line-height:16px'>เจ้าหน้าที่ใหม่</div>"
+                                            ? "<div class='text-xs font-bold text-orange-600 mb-2' style='display:table;border:1px solid #fdba74;background:#fff7ed;border-radius:7px;padding:2px 8px;line-height:16px'>เจ้าหน้าที่ใหม่</div>"
                                             : '';
 
                                         $staff_notice_class = $new_staff_notice !== '' ? ' mbs-unlinked-staff' : '';
@@ -4257,6 +4324,14 @@ if (isset($_GET['api_check_hash'])) {
             <!-- ✨ ส่วนแสดงประวัติการเข้าสู่ระบบ ✨ -->
             <div id="login_logs" class="section <?php echo $active_tab === 'login_logs' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <?php
+                // นับเฉพาะวันปัจจุบันตามเวลาไทย ไม่ลบประวัติย้อนหลัง
+                $login_daily_now = new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok'));
+                $login_daily_start = $login_daily_now->setTime(0, 0);
+                $login_daily_end = $login_daily_start->modify('+1 day');
+                $login_daily_values = [
+                    $login_daily_start->format('Y-m-d H:i:s'),
+                    $login_daily_end->format('Y-m-d H:i:s'),
+                ];
                 $login_summary_result = tp_query(
                     $conn,
                     "SELECT
@@ -4266,7 +4341,9 @@ if (isset($_GET['api_check_hash'])) {
                         COALESCE(SUM(LOWER(role) = 'executive'), 0) AS executive
                      FROM login_logs
                      WHERE status = 'สำเร็จ'
-                       AND LOWER(role) IN ('admin', 'executive', 'technician')"
+                       AND LOWER(role) IN ('admin', 'executive', 'technician')
+                       AND login_time >= ? AND login_time < ?",
+                    'ss', $login_daily_values
                 );
 
                 $login_summary = $login_summary_result->fetch_assoc();
@@ -4274,7 +4351,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 $activity_summary = ['admin' => 0, 'executive' => 0, 'technician' => 0];
                 try {
-                    $activity_counts = tp_query($conn, "SELECT role, COUNT(*) AS total FROM user_activity_logs WHERE role IN ('admin','executive','technician') GROUP BY role");
+                    $activity_counts = tp_query($conn, "SELECT role, COUNT(*) AS total FROM user_activity_logs WHERE role IN ('admin','executive','technician') AND created_at >= ? AND created_at < ? GROUP BY role", 'ss', $login_daily_values);
                     while ($activity_count = $activity_counts->fetch_assoc()) $activity_summary[$activity_count['role']] = (int)$activity_count['total'];
                     $activity_counts->free();
                 } catch (Throwable $activityError) { error_log('Activity summary load failed'); }
@@ -4330,7 +4407,7 @@ if (isset($_GET['api_check_hash'])) {
                 ?>
 
                 <?php if ($login_detail === ''): ?>
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div id="login-daily-cards" data-day="<?= $login_daily_start->format('Y-m-d') ?>" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                     <?php foreach ($login_cards as $login_card): ?>
                         <a
                             href="<?= $login_card['filter'] === 'success'
@@ -4347,7 +4424,7 @@ if (isset($_GET['api_check_hash'])) {
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <p class="text-sm font-bold text-slate-500">
-                                        <?= tp_text($login_card['title']) ?><?php if ($login_card['filter'] !== 'success'): ?><span class="block text-xs font-medium mt-1">กิจกรรมการใช้งาน</span><?php endif; ?>
+                                        <?= tp_text($login_card['title']) ?><span class="block text-xs font-medium mt-1"><?= $login_card['filter'] === 'success' ? 'วันนี้' : 'กิจกรรมการใช้งานวันนี้' ?></span>
                                     </p>
                                     <p class="mt-3 text-3xl font-extrabold text-slate-800">
                                         <?= number_format($login_card['count']) ?>
@@ -7583,7 +7660,7 @@ if (isset($_GET['api_check_hash'])) {
                     isValid = false;
                     if (!firstErrorEl) firstErrorEl = userEl;
                 }
-                if (uid === '' && !pwdEl.value.trim()) {
+                if (pwdEl.required && !pwdEl.value.trim()) {
                     setFieldError(pwdEl, 'กรุณากำหนดรหัสผ่าน (Password)');
                     isValid = false;
                     if (!firstErrorEl) firstErrorEl = pwdEl;
@@ -7807,10 +7884,11 @@ if (isset($_GET['api_check_hash'])) {
                 eyeIcon.classList.add('fa-eye-slash');
             }
 
-            if (id === '') {
+            const needsWebAccount = id === '' || (!isManagement && (!u || u.trim() === '' || u.trim() === '-'));
+            if (needsWebAccount) {
                 pwdInput.required = true;
                 passwordReqStar.style.display = 'inline';
-                pwdHint.innerText = '';
+                pwdHint.innerText = id === '' ? '' : '(ต้องกำหนดรหัสผ่านสำหรับบัญชีเว็บใหม่)';
             } else {
                 pwdInput.required = false;
                 passwordReqStar.style.display = 'none';
@@ -8948,6 +9026,39 @@ if (isset($_GET['api_check_hash'])) {
                 autoRefreshInProgress = false;
             }
         }
+        // ข้ามเที่ยงคืนอัปเดตเฉพาะการ์ดเดิม โดยไม่รีหน้าและไม่แตะตัวกรอง
+        let refreshingLoginDay = false;
+        async function refreshLoginDailyCards() {
+            const cards = document.getElementById('login-daily-cards');
+            if (!cards || refreshingLoginDay) return;
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit'
+            }).formatToParts(new Date());
+            const part = type => parts.find(item => item.type === type).value;
+            const today = part('year') + '-' + part('month') + '-' + part('day');
+            if (cards.dataset.day === today) return;
+            refreshingLoginDay = true;
+            try {
+                const url = new URL(window.location.href);
+                url.searchParams.set('tab', 'login_logs');
+                url.searchParams.delete('pg_logs_status');
+                url.searchParams.set('_', Date.now());
+                const response = await fetch(url.href, {credentials:'same-origin', cache:'no-store'});
+                if (!response.ok) return;
+                const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
+                const next = doc.getElementById('login-daily-cards');
+                if (next && next.dataset.day === today && cards.isConnected) {
+                    cards.innerHTML = next.innerHTML;
+                    cards.dataset.day = next.dataset.day;
+                }
+            } catch (_) {
+                // ลองใหม่ในรอบถัดไปโดยไม่เปลี่ยนข้อมูลที่แสดงอยู่
+            } finally {
+                refreshingLoginDay = false;
+            }
+        }
+        setInterval(refreshLoginDailyCards, 30000);
+        window.addEventListener('focus', refreshLoginDailyCards);
         setInterval(autoRefreshAllData, 1000);
         window.addEventListener('focus', autoRefreshAllData);
     </script>
