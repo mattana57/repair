@@ -4581,8 +4581,8 @@ if (isset($_GET['api_check_hash'])) {
                             <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="px-6 py-4">วัน/เวลา</th>
-                                    <th class="px-6 py-4">ชื่อผู้ใช้ (Username)</th>
-                                    <th class="px-6 py-4 text-center">สิทธิ์ (Role)</th>
+                                    <th class="px-6 py-4">ชื่อผู้ใช้</th>
+                                    <th class="px-6 py-4 text-center">สิทธิ์</th>
                                     <th class="px-6 py-4 text-center">IP Address</th>
                                     <th class="px-6 py-4 text-center">สถานะ</th>
                                 </tr>
