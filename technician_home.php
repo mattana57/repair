@@ -81,6 +81,43 @@ $tech_profile_english = (string) ($tech_data['english_name'] ?? '');
 // ใช้ตัวตนที่ Guard ตรวจแล้ว ไม่เปลี่ยนรหัสช่างของคำขอนี้จากการอ่านซ้ำ
 $tech_id = (int) $tech_id_session;
 
+// สรุปเฉพาะคิวรอร่วมกันและงานตามรหัสเจ้าหน้าที่ ไม่รับรหัสจาก GET และไม่จับคู่ชื่อ
+function techSummaryCounts($conn, $techId) {
+    $stmt = $conn->prepare("SELECT COUNT(*) AS total,
+        COALESCE(SUM(status = 'รอรับเรื่อง'), 0) AS pending,
+        COALESCE(SUM(status = 'กำลังดำเนินการ'), 0) AS in_progress,
+        COALESCE(SUM(status = 'ซ่อมเสร็จแล้ว'), 0) AS completed
+        FROM repairs WHERE deleted_at IS NULL
+        AND (status = 'รอรับเรื่อง' OR technician_id = ?)");
+    if (!$stmt) throw new RuntimeException('โหลดสรุปสถานะใบงานไม่สำเร็จ');
+    try {
+        if (!$stmt->bind_param('i', $techId) || !$stmt->execute()) {
+            throw new RuntimeException('โหลดสรุปสถานะใบงานไม่สำเร็จ');
+        }
+        $result = $stmt->get_result();
+        if (!$result) throw new RuntimeException('โหลดสรุปสถานะใบงานไม่สำเร็จ');
+        $counts = array_map('intval', $result->fetch_assoc());
+        $result->free();
+        return $counts;
+    } finally {
+        $stmt->close();
+    }
+}
+// ผ่าน Guard/ตรวจผูก LINE แล้ว อ่านเฉพาะยอด ไม่แก้ไขข้อมูลใบงาน
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET'
+    && isset($_GET['tech_summary_fragment']) && $_GET['tech_summary_fragment'] === '1') {
+    header('Content-Type: application/json; charset=UTF-8');
+    header('Cache-Control: no-store');
+    try {
+        echo json_encode(['summary_counts' => techSummaryCounts($conn, $tech_id)], JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $error) {
+        http_response_code(503);
+        echo json_encode(['error' => 'โหลดสรุปสถานะใบงานไม่สำเร็จ'], JSON_UNESCAPED_UNICODE);
+    }
+    exit;
+}
+
+
 // 3. ดึง LINE ID ของช่าง (เก็บไว้เผื่อมีเรียกใช้ส่วนอื่น)
 $line_id = '';
 if (!empty($tech_id)) {
@@ -115,22 +152,8 @@ if (trim($legacy_staff_name) !== '') {
     )";
 }
 
-// 4. ดึงสถิติภาพรวม 4 สถานะ
-$stats = ['total' => 0, 'pending' => 0, 'in_progress' => 0, 'completed' => 0];
-$res_stats = $conn->query("SELECT status, COUNT(*) as count FROM repairs WHERE $where GROUP BY status");
-if ($res_stats) {
-    while ($row = $res_stats->fetch_assoc()) {
-        $stats['total'] += $row['count'];
-        $db_status = trim($row['status']);
-        if ($db_status === 'รอดำเนินการ' || $db_status === 'รอรับเรื่อง') {
-            $stats['pending'] += $row['count'];
-        } elseif ($db_status === 'กำลังดำเนินการ') {
-            $stats['in_progress'] += $row['count'];
-        } elseif ($db_status === 'เสร็จสิ้น' || $db_status === 'ซ่อมเสร็จแล้ว') {
-            $stats['completed'] += $row['count'];
-        }
-    }
-}
+// 4. การ์ดใช้ยอดเดียวกับ endpoint ไม่รวมถังขยะและไม่อิงตัวกรองตาราง
+$stats = techSummaryCounts($conn, $tech_id);
 
 // 5. ดึงประวัติรายการแจ้งซ่อมทั้งหมด
 $repairs = [];
@@ -1246,7 +1269,7 @@ if (isset($_GET['th_fragment'])
                 <div class="modern-card p-6 border-b-4 border-b-violet-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'all', true)">
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <div class="text-4xl font-extrabold text-slate-800 mb-1"><?= $stats['total'] ?></div>
+                            <div class="text-4xl font-extrabold text-slate-800 mb-1" id="techCount-total"><?= $stats['total'] ?></div>
                             <div class="text-sm text-slate-500 font-bold">งานที่รับผิดชอบทั้งหมด</div>
                         </div>
                         <div class="w-12 h-12 rounded-2xl bg-violet-50 border border-violet-100 shadow-inner flex items-center justify-center text-violet-600 text-xl group-hover:bg-violet-600 group-hover:text-white transition-colors duration-300">
@@ -1257,7 +1280,7 @@ if (isset($_GET['th_fragment'])
                 <div class="modern-card p-6 border-b-4 border-b-amber-400 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'รอรับเรื่อง', true)">
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <div class="text-4xl font-extrabold text-slate-800 mb-1"><?= $stats['pending'] ?></div>
+                            <div class="text-4xl font-extrabold text-slate-800 mb-1" id="techCount-pending"><?= $stats['pending'] ?></div>
                             <div class="text-sm text-slate-500 font-bold">รอรับเรื่อง</div>
                         </div>
                         <div class="w-12 h-12 rounded-2xl bg-[#fef3c7]/70 border border-amber-200/70 shadow-inner flex items-center justify-center text-[#d97706] text-xl group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300">
@@ -1268,7 +1291,7 @@ if (isset($_GET['th_fragment'])
                 <div class="modern-card p-6 border-b-4 border-b-indigo-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'กำลังดำเนินการ', true)">
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <div class="text-4xl font-extrabold text-slate-800 mb-1"><?= $stats['in_progress'] ?></div>
+                            <div class="text-4xl font-extrabold text-slate-800 mb-1" id="techCount-in_progress"><?= $stats['in_progress'] ?></div>
                             <div class="text-sm text-slate-500 font-bold">กำลังดำเนินการ</div>
                         </div>
                         <div class="w-12 h-12 rounded-2xl bg-[#e0e7ff]/70 border border-indigo-200/70 shadow-inner flex items-center justify-center text-[#4f46e5] text-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
@@ -1279,7 +1302,7 @@ if (isset($_GET['th_fragment'])
                 <div class="modern-card p-6 border-b-4 border-b-emerald-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group" onclick="showTab('history', 'ซ่อมเสร็จแล้ว', true)">
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <div class="text-4xl font-extrabold text-slate-800 mb-1"><?= $stats['completed'] ?></div>
+                            <div class="text-4xl font-extrabold text-slate-800 mb-1" id="techCount-completed"><?= $stats['completed'] ?></div>
                             <div class="text-sm text-slate-500 font-bold">ซ่อมเสร็จแล้ว</div>
                         </div>
                         <div class="w-12 h-12 rounded-2xl bg-[#d1fae5]/70 border border-emerald-200/70 shadow-inner flex items-center justify-center text-[#059669] text-xl group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
@@ -2354,7 +2377,7 @@ if (isset($_GET['th_fragment'])
                     <button type="button" onclick="closeTechReporterHistory()" class="text-slate-400 hover:text-rose-500 bg-white border border-slate-200 rounded-xl w-9 h-9 md:w-[42px] md:h-[42px] flex items-center justify-center shadow-sm" title="ปิด"><i class="fas fa-times"></i></button>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center justify-end gap-3 w-full">
+            <div class="flex flex-wrap items-center justify-between gap-3 w-full">
                 <div class="relative mr-auto flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px]">
                     <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                     <input type="text" id="techReporterSearch" maxlength="200" oninput="queueTechReporterHistory()" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-medium shadow-sm">
@@ -2399,8 +2422,8 @@ if (isset($_GET['th_fragment'])
                 </div>
             </div>
         </div>
-        <div class="p-0 md:p-4 overflow-hidden flex-1 min-h-0 bg-slate-50">
-            <div class="tech-reporter-scroll h-full md:rounded-2xl border border-slate-200 custom-scrollbar">
+        <div class="p-0 overflow-hidden flex-1 min-h-0 bg-white">
+            <div class="tech-reporter-scroll h-full custom-scrollbar">
                 <table id="techReporterTable">
                     <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
@@ -2528,6 +2551,44 @@ if (isset($_GET['th_fragment'])
         });
     </script>
 
+
+    <script>
+        // อ่านเฉพาะยอดจาก PHP ไม่รีหน้า ไม่เปลี่ยนตัวกรองหรือตารางที่กำลังใช้งาน
+        function applyTechnicianSummary(counts) {
+            const keys = ['total', 'pending', 'in_progress', 'completed'];
+            if (!counts || !keys.every(key => Number.isSafeInteger(counts[key]) && counts[key] >= 0)) return;
+            keys.forEach(key => {
+                const el = document.getElementById('techCount-' + key);
+                if (el) el.textContent = String(counts[key]);
+            });
+        }
+        let technicianSummaryBusy = false;
+        async function refreshTechnicianSummary() {
+            if (document.hidden || technicianSummaryBusy) return;
+            technicianSummaryBusy = true;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+            try {
+                const url = new URL('technician_home.php', window.location.href);
+                url.search = new URLSearchParams({tech_summary_fragment:'1'}).toString();
+                const response = await fetch(url.href, {signal:controller.signal, credentials:'same-origin', cache:'no-store'});
+                if (response.redirected) { window.location.assign(response.url); return; }
+                if (!response.ok) throw new Error('summary-request');
+                const data = await response.json();
+                applyTechnicianSummary(data.summary_counts);
+            } catch (error) {
+                // คงยอดเดิมเมื่อเครือข่ายขัดข้อง แล้วตรวจใหม่ตามรอบถัดไป
+            } finally {
+                clearTimeout(timeout);
+                technicianSummaryBusy = false;
+            }
+        }
+        setInterval(refreshTechnicianSummary, 1000);
+        window.addEventListener('focus', refreshTechnicianSummary);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) refreshTechnicianSummary();
+        });
+    </script>
 <?php mbsDashboardActivityScript(); ?>
 </body>
 </html>

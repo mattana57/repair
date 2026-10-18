@@ -477,7 +477,7 @@ rsort($thYears);
     z-index: 40;
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     gap: 12px;
     width: 100%;
