@@ -303,6 +303,13 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
     }
     $month = execPageGet($prefix . 'month', date('m'));
     $year = execPageGet($prefix . 'year', date('Y'));
+    if ($kind === 'history') {
+        $day = execPageGet('eh_day', 'all');
+        if (ctype_digit($day) && (int)$day >= 1 && (int)$day <= 31) {
+            $where[] = 'DAY(r.created_at) = ?';
+            $values[] = (int)$day;
+        }
+    }
     if ($kind !== 'history') {
         $month = execRepairsDate('month');
         $year = execRepairsDate('year');
@@ -376,7 +383,7 @@ function execPageFooter($data, $kind) {
     $prefix = $kind === 'history' ? 'eh_' : 'er_';
     // ไม่ส่งต่อคำสั่งอื่น เช่น ลบรูปหรือ API ตรวจ Hash ไปกับลิงก์เลขหน้า
     $params = ['tab' => execPageGet('tab', 'repairs')];
-    foreach (['er_q','er_day','er_month','er_year','er_status','er_page','eh_q','eh_month','eh_year','eh_type','eh_name','eh_line_user_id','eh_page'] as $key) {
+    foreach (['er_q','er_day','er_month','er_year','er_status','er_page','eh_q','eh_day','eh_month','eh_year','eh_type','eh_name','eh_line_user_id','eh_page'] as $key) {
         if (isset($_GET[$key]) && is_string($_GET[$key])) $params[$key] = $_GET[$key];
     }
     $first = $data['total'] ? $data['offset'] + 1 : 0;
@@ -583,11 +590,27 @@ if (isset($_GET['exec_page_fragment'])) {
     }
     exit;
 }
+// การ์ดทั้งสี่ใช้ข้อมูลชุดเดียวกัน ไม่รวมใบงานในถังขยะ ไม่อิงตัวกรองตาราง
+function execSummaryCounts($conn) {
+    $result = $conn->query("SELECT COUNT(*) AS total,
+        COALESCE(SUM(status = 'รอรับเรื่อง'), 0) AS waiting,
+        COALESCE(SUM(status = 'กำลังดำเนินการ'), 0) AS progress,
+        COALESCE(SUM(status = 'ซ่อมเสร็จแล้ว'), 0) AS completed
+        FROM repairs WHERE deleted_at IS NULL");
+    if (!$result) throw new RuntimeException('โหลดสรุปสถานะใบงานไม่สำเร็จ');
+    $row = $result->fetch_assoc();
+    $result->free();
+    return array_map('intval', $row);
+}
+$exec_summary_counts = execSummaryCounts($conn);
+
 // ✨ API เช็คอัปเดตแบบคลุมทุกตารางและ Modal 100% ✨
 if (isset($_GET['api_check_hash'])) {
     header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
     echo json_encode([
         'hash' => $full_system_hash,
+        'summary_counts' => $exec_summary_counts,
         'all_repairs' => $reps,
         'tech_dept_map' => $tech_dept_map,
         'tech_info_map' => $tech_info_map,
@@ -787,7 +810,7 @@ if (isset($_GET['api_check_hash'])) {
 
         #historyModal .modal-container > div:nth-child(2) {
             min-height: 0;
-            padding: 12px 16px 16px !important;
+            padding: 0 !important;
         }
 
         #historyModal .exec-history-scroll {
@@ -1155,15 +1178,11 @@ if (isset($_GET['api_check_hash'])) {
 
                 <!-- ✨ ปรับ Grid เป็น 2 คอลัมน์ (grid-cols-2) ในมือถือ และเพิ่มความห่างให้สมดุล (gap-3) ✨ -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-                    <?php 
-                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs");
-                        $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
-                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE status='รอรับเรื่อง'");
-                        $cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
-                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE status='กำลังดำเนินการ'");
-                        $cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
-                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE status='ซ่อมเสร็จแล้ว'");
-                        $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
+                    <?php
+                        $cTotal = $exec_summary_counts['total'];
+                        $cPend = $exec_summary_counts['waiting'];
+                        $cProg = $exec_summary_counts['progress'];
+                        $cComp = $exec_summary_counts['completed'];
                     ?>
                     
                     <!-- ✨ การ์ดสรุป 4 สถานะ (คุมโทนพื้นหลังสีขาวคลีนเข้ากับธีมหลัก + มีมิติที่ป้ายสถานะและขอบการ์ด) ✨ -->
@@ -1174,7 +1193,7 @@ if (isset($_GET['api_check_hash'])) {
                             <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-violet-50 text-violet-600 border border-violet-200/80 shadow-2xs">TOTAL</span>
                         </div>
                         <div>
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800" id="execCountTotal"><?php echo $cTotal; ?></h3>
                             <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Total Repairs</p>
                         </div>
                     </div>
@@ -1186,7 +1205,7 @@ if (isset($_GET['api_check_hash'])) {
                             <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#fef3c7] text-[#d97706] border border-amber-300/60 shadow-2xs">WAITING</span>
                         </div>
                         <div>
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800" id="execCountWaiting"><?php echo $cPend; ?></h3>
                             <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Pending</p>
                         </div>
                     </div>
@@ -1198,7 +1217,7 @@ if (isset($_GET['api_check_hash'])) {
                             <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#e0e7ff] text-[#4f46e5] border border-indigo-300/60 shadow-2xs">ACTIVE</span>
                         </div>
                         <div>
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800" id="execCountProgress"><?php echo $cProg; ?></h3>
                             <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">In Progress</p>
                         </div>
                     </div>
@@ -1210,7 +1229,7 @@ if (isset($_GET['api_check_hash'])) {
                             <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#d1fae5] text-[#059669] border border-emerald-300/60 shadow-2xs">DONE</span>
                         </div>
                         <div>
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800" id="execCountCompleted"><?php echo $cComp; ?></h3>
                             <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Completed</p>
                         </div>
                     </div>
@@ -1582,7 +1601,7 @@ if (isset($_GET['api_check_hash'])) {
 
                         <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง -->
                         <!-- ✨ ใช้ portrait:justify-start เพื่อบังคับดรอปดาวน์เดือน/ปีชิดซ้ายในมือถือแนวตั้ง และ md:portrait:justify-end เพื่อคงชิดขวาใน iPad แนวตั้ง ✨ -->
-                        <div class="flex flex-wrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
+                        <div class="flex flex-wrap items-center justify-between gap-3 w-full">
                             
                             <!-- ✨ ช่องค้นหา: หดความยาวในจอคอม/โน้ตบุ๊ค (xl:w-[450px] 2xl:w-[500px]) ให้กลับมาเท่าฝั่งแอดมิน เพื่อตรงกับคอลัมน์ Reporter พอดีเป๊ะ ไม่ทะลุออกไป ✨ -->
                             <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
@@ -1994,7 +2013,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 <!-- 🌟 บรรทัดล่าง: ค้นหา + ตัวกรอง + ปุ่ม Contacts (ชิดขวาเสมอ) -->
                 <!-- ✨ ใช้ portrait:justify-start เพื่อบังคับดรอปดาวน์เดือน/ปีชิดซ้ายในมือถือแนวตั้ง และ md:portrait:justify-end เพื่อคงชิดขวาใน iPad แนวตั้ง ✨ -->
-                <div class="flex flex-wrap landscape:flex-nowrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
+                <div class="flex flex-wrap items-center justify-between gap-3 w-full">
                     
                     <!-- ✨ ช่องค้นหา: หดความยาวในจอคอม/โน้ตบุ๊คลงมา (xl:w-[450px] 2xl:w-[500px]) ตามฝั่งผู้บริหาร เพื่อให้พอดีกับคอลัมน์ Reporter แน่นอน 100% ✨ -->
                     <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[450px] 2xl:w-[500px] group">
@@ -2007,6 +2026,17 @@ if (isset($_GET['api_check_hash'])) {
                     <div class="flex portrait:flex-nowrap flex-wrap items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0">
                         <!-- ตัวกรอง (ถ้ามี) -->
                         <div id="historyModalFilterGroup" class="hidden items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0">
+                                <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-DayContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Day', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-4 portrait:px-2.5 sm:px-4 landscape:px-4 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Day')">
+                                        <span id="history-DayText" class="truncate">ทุกวัน</span>
+                                        <i class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="history-DayList" class="chart-dropdown-list absolute z-50 w-full right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col py-2 max-h-48 overflow-y-auto custom-scrollbar" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all bg-indigo-50 text-indigo-600 hover:text-indigo-600" data-value="all" data-display="ทุกวัน" onclick="selectChartDropdown('history-Day', 'all', 'ทุกวัน', searchHistoryModalTable)">ทุกวัน</div>
+                                        <?php for ($day_number = 1; $day_number <= 31; $day_number++) { echo "<div class='chart-dropdown-item px-3 py-1.5 mx-2 mb-0.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 hover:bg-slate-100 hover:text-indigo-600' data-value='{$day_number}' data-display='วันที่ {$day_number}' onclick=\"selectChartDropdown('history-Day', '{$day_number}', 'วันที่ {$day_number}', searchHistoryModalTable)\">วันที่ {$day_number}</div>"; } ?>
+                                    </div>
+                                    <input type="hidden" id="historyDay" value="all">
+                                </div>
                             
                             <div class="relative w-[110px] portrait:w-[100px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-MonthContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Month', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
                                 <div class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs text-slate-700 rounded-xl px-4 portrait:px-3 py-2.5 portrait:py-2 h-[42px] portrait:h-[38px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Month')">
@@ -2035,8 +2065,8 @@ if (isset($_GET['api_check_hash'])) {
             </div>
             
             <!-- ✨ เพิ่ม xl:pt-3 เพื่อดึงขอบล่างของตารางขึ้นมาให้ชิด Header มากขึ้นเฉพาะบนหน้าจอคอมพิวเตอร์/โน้ตบุ๊ค ✨ -->
-            <div class="p-0 md:p-6 xl:pt-3 overflow-hidden flex-1 bg-[#f8fafc]">
-                <div class="exec-history-scroll w-full h-full md:rounded-2xl md:border border-slate-200 shadow-sm relative custom-scrollbar bg-white">
+            <div class="p-0 overflow-hidden flex-1 min-h-0 bg-white">
+                <div class="exec-history-scroll w-full h-full relative custom-scrollbar bg-white">
                     <table class="exec-history-table w-full text-left">
                         <thead class="bg-[#fef9c3] border-b border-[#fef08a] text-[#854d0e] text-xs uppercase tracking-widest font-bold sticky top-0 z-20 shadow-sm">
                             <tr>
@@ -2162,6 +2192,7 @@ if (isset($_GET['api_check_hash'])) {
             p.set(prefix + 'month', value(isHistory ? 'historyMonth' : 'tableMonth', 'all'));
             p.set(prefix + 'year', value(isHistory ? 'historyYear' : 'tableYear', 'all'));
             if (isHistory) {
+                p.set('eh_day', value('historyDay', 'all'));
                 p.set('eh_type', window.currentHistoryType || 'reporter');
                 p.set('eh_name', window.currentHistoryName || '');
                 if (window.currentHistoryType === 'reporter' && window.currentHistoryLineUserId !== null && window.currentHistoryLineUserId !== undefined) p.set('eh_line_user_id', window.currentHistoryLineUserId);
@@ -2246,7 +2277,7 @@ if (isset($_GET['api_check_hash'])) {
         for (const [id, key, dropdown] of [
             ['searchInput', 'er_q', null], ['tableDay', 'er_day', 'table-Day'], ['tableMonth', 'er_month', 'table-Month'],
             ['tableYear', 'er_year', 'table-Year'], ['tableStatus', 'er_status', 'table-Status'],
-            ['historyMonth', 'eh_month', 'history-Month'], ['historyYear', 'eh_year', 'history-Year']
+            ['historyDay', 'eh_day', 'history-Day'], ['historyMonth', 'eh_month', 'history-Month'], ['historyYear', 'eh_year', 'history-Year']
         ]) {
             const element = document.getElementById(id);
             if (!element || !execInitialParams.has(key)) continue;
@@ -3553,9 +3584,7 @@ if (isset($_GET['api_check_hash'])) {
                     modalContainer.classList.remove('w-full', 'h-full', 'max-w-full', 'max-h-full', 'rounded-none');
                     if (header) { header.classList.add('rounded-t-3xl'); header.classList.remove('rounded-none'); }
                     
-                    // รีเซ็ตตัวกรองเวลากลับมาจอเล็ก (ถ้าต้องการ)
-                    selectChartDropdown('history-Month', '<?php echo date('m'); ?>', '<?php echo $current_month_name; ?>', searchHistoryModalTable);
-                    selectChartDropdown('history-Year', '<?php echo date('Y'); ?>', '<?php echo $current_thai_year; ?>', searchHistoryModalTable);
+                    // สลับขนาดอย่างเดียว คงคำค้น วัน เดือน ปี และเลขหน้าเดิม
                     
                     if (icon) { icon.classList.add('fa-expand'); icon.classList.remove('fa-compress'); }
                 }
@@ -4178,38 +4207,46 @@ if (isset($_GET['api_check_hash'])) {
         
         // ✨ ระบบ Auto-Refresh ดึงข้อมูลและอัปเดตทุกตารางบนหน้าจอแบบเรียลไทม์ ✨
         let globalDataHash = '<?php echo $full_system_hash; ?>';
+        let executiveRefreshBusy = false;
+        function applyExecutiveSummary(counts) {
+            const fields = {total: 'execCountTotal', waiting: 'execCountWaiting', progress: 'execCountProgress', completed: 'execCountCompleted'};
+            if (!counts || !Object.keys(fields).every(key => Number.isSafeInteger(counts[key]) && counts[key] >= 0)) return;
+            const oldTotal = Number(document.getElementById('execCountTotal')?.textContent);
+            Object.entries(fields).forEach(([key, id]) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = String(counts[key]);
+            });
+            if (Number.isFinite(oldTotal) && counts.total > oldTotal) {
+                Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'มีการแจ้งซ่อม/อัปเดตข้อมูลใหม่!', showConfirmButton: false, timer: 3500, timerProgressBar: true });
+            }
+        }
+
 
         async function autoRefreshAllData() {
+            if (executiveRefreshBusy) return;
+            executiveRefreshBusy = true;
             try {
                 // 1. เช็ค Hash จาก API เบาๆ ก่อนว่ามีอะไรเปลี่ยนไหม
-                const apiRes = await fetch('?api_check_hash=1&_=' + Date.now());
+                const apiRes = await fetch('?api_check_hash=1&_=' + Date.now(), {cache: 'no-store'});
+                if (apiRes.redirected) { location.assign(apiRes.url); return; }
                 if (!apiRes.ok) return;
                 const apiData = await apiRes.json();
+                if (typeof apiData.hash !== 'string') return;
+                applyExecutiveSummary(apiData.summary_counts);
 
                 if (apiData.hash !== globalDataHash) {
-                    globalDataHash = apiData.hash;
 
                     // 2. ถ้ามีอัปเดต โหลดหน้า HTML ปัจจุบันมาแบบซ่อนๆ
                     const tab = new URLSearchParams(window.location.search).get('tab') || 'dash';
                     const htmlRes = await fetch(window.location.href.split('?')[0] + '?tab=' + tab + '&_=' + Date.now());
+                    if (htmlRes.redirected) { location.assign(htmlRes.url); return; }
+                    if (!htmlRes.ok) throw new Error('refresh-request');
                     const htmlText = await htmlRes.text();
                     
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlText, 'text/html');
 
-                    // 3. แจ้งเตือนถ้ายอดงานรวมเพิ่มขึ้น
-                    const newTotalStr = doc.querySelector('#dash .grid-cols-2 h3')?.innerText || '0';
-                    const oldTotalStr = document.querySelector('#dash .grid-cols-2 h3')?.innerText || '0';
-                    if (parseInt(newTotalStr) > parseInt(oldTotalStr)) {
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'มีการแจ้งซ่อม/อัปเดตข้อมูลใหม่!', showConfirmButton: false, timer: 3500, timerProgressBar: true });
-                    }
-
-                    // 4. อัปเดตตัวเลขการ์ดสรุปทั้ง 4 ใบ
-                    const newCards = doc.querySelectorAll('#dash .grid-cols-2 h3');
-                    const oldCards = document.querySelectorAll('#dash .grid-cols-2 h3');
-                    oldCards.forEach((el, index) => {
-                        if (newCards[index]) el.innerHTML = newCards[index].innerHTML;
-                    });
+                    // การ์ดทั้งสี่อัปเดตแล้วจาก summary_counts ของ PHP
 
                     // 5. อัปเดตทุกตารางบนหน้าจอ 100% แบบเจาะจง (ไม่กวน UI เดิม)
                     const selectorsToUpdate = [
@@ -4259,8 +4296,13 @@ if (isset($_GET['api_check_hash'])) {
                             changeModalTech(window.currentModalTech);
                         }
                     }
+                    globalDataHash = apiData.hash;
                 }
-            } catch (err) {}
+            } catch (err) {
+                // คงข้อมูลเดิมเมื่อเครือข่ายผิดพลาด แล้วตรวจใหม่ตามรอบเดิม
+            } finally {
+                executiveRefreshBusy = false;
+            }
         }
         setInterval(autoRefreshAllData, 1000);
         window.addEventListener('focus', autoRefreshAllData);
