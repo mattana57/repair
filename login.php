@@ -50,6 +50,7 @@ try {
     <style>
         body { font-family: 'Kanit', sans-serif; }
     </style>
+<link rel="stylesheet" href="login-blue-theme.css?v=20261018-blue">
 </head>
 <!-- 🌟 ขยายพื้นหลังสีม่วง 60/30/10 ให้เต็มหน้าจอตรงนี้ -->
 <body class="min-h-screen bg-gradient-to-br from-violet-600 from-[60%] via-purple-800 via-[90%] to-indigo-500 flex items-center justify-center p-4 sm:p-6 md:p-10 selection:bg-purple-500 selection:text-white">

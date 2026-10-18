@@ -1,0 +1,29 @@
+/* Login page: retain the existing layout and gradient stops, change colors only. */
+body {
+    background-color: #2563eb !important;
+    background-image: linear-gradient(135deg, #2563eb 60%, #1e40af 90%, #38bdf8 100%) !important;
+}
+::selection { background: #0ea5e9; color: #fff; }
+body .bg-gradient-to-r.from-indigo-600.to-purple-600 {
+    background-image: linear-gradient(to right, #2563eb, #0369a1) !important;
+}
+body .bg-gradient-to-br.from-indigo-600.to-purple-500 {
+    background-image: linear-gradient(135deg, #2563eb, #0284c7) !important;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, .30) !important;
+}
+body .text-violet-200 { color: #dbeafe !important; }
+body input[name="username"]:focus,
+body input[name="password"]:focus {
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .10), 0 8px 25px rgba(37, 99, 235, .15) !important;
+}
+body .peer:focus ~ .peer-focus\:text-purple-600,
+body .hover\:text-purple-600:hover { color: #2563eb !important; }
+body button[type="submit"] {
+    background-image: linear-gradient(to right, #2563eb, #0369a1) !important;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, .25) !important;
+}
+body button[type="submit"]:hover {
+    box-shadow: 0 15px 25px rgba(37, 99, 235, .40) !important;
+}
+body a.text-indigo-600 { color: #2563eb !important; }
+body a.text-indigo-600:hover { color: #1d4ed8 !important; }
