@@ -448,6 +448,7 @@ define('MBS_ADMIN_TABLE_BULK', true);
 require_once __DIR__ . '/contact_history_pagination.php';
 require_once __DIR__ . '/admin_table_bulk.php';
 require_once __DIR__ . '/admin_log_bulk.php';
+require_once __DIR__ . '/admin_team_bulk.php';
 
 // ส่งเฉพาะรายการ Transactions และปุ่มแบ่งหน้า หลังตรวจสิทธิ์แล้ว
 if ($_SERVER['REQUEST_METHOD'] === 'GET'
@@ -2662,8 +2663,9 @@ if (isset($_GET['api_check_hash'])) {
 .ab-check{width:16px;height:16px;accent-color:#2563eb;cursor:pointer;}
 .ab-check:disabled{cursor:not-allowed;opacity:.4;}
 </style>
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
-    <link rel="stylesheet" href="project_footer.css?v=20261019-1">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-4">
+    <link rel="stylesheet" href="project_footer.css?v=20261019-2">
+    <link rel="stylesheet" href="admin_team_bulk.css?v=20261019-1">
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
@@ -2847,7 +2849,8 @@ if (isset($_GET['api_check_hash'])) {
         </header>
 
         <!-- แสดงข้อมูลหลักได้ทันที แม้ส่วนเสริมหรือ JavaScript โหลดไม่สำเร็จ -->
-        <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div id="mainScrollContainer" class="flex-1 overflow-y-auto mbs-footer-scroll">
+            <div class="mbs-footer-page-content p-4 sm:p-6 lg:p-8">
             
             <div id="dash" class="section <?php echo $active_tab === 'dash' ? '' : 'hidden'; ?> space-y-6 animate-fade-in no-print">
 
@@ -3494,6 +3497,7 @@ if (isset($_GET['api_check_hash'])) {
             <!-- ✨ สิ้นสุดส่วนหน้า Transactions ✨ -->
 
             <div id="technicians" class="section <?php echo $active_tab === 'technicians' ? '' : 'hidden'; ?> space-y-6 no-print">
+                <?php tb_notice(); ?>
                 <!-- ✨ เพิ่ม landscape:flex-row และ landscape:items-center เพื่อให้บรรทัดนี้จัดเรียงแบบแนวนอนเฉพาะในมือถือแนวนอน ✨ -->
                 <div class="flex flex-col landscape:flex-row md:flex-row justify-between items-start landscape:items-center md:items-center gap-4 mb-2">
                     <div>
@@ -3613,9 +3617,15 @@ if (isset($_GET['api_check_hash'])) {
 
                 <div class="mt-24 space-y-6">
                     <div class="flex flex-col lg:flex-row justify-between items-start gap-4 mbs-team-table-header">
-                        <div class="pt-1.5">
-                            <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center leading-none">Technicians</h3>
-                            <p class="text-sm font-medium text-slate-500 mt-1.5">Manage technicians</p>
+                        <div class="w-full">
+                            <div class="tb-team-heading">
+                                <h3 class="text-lg md:text-xl font-extrabold text-slate-800 flex items-center leading-none">Technicians</h3>
+                                <?php tb_edit_menu(); ?>
+                            </div>
+                            <div class="tb-team-subheading">
+                                <p class="text-sm font-medium text-slate-500">Manage technicians</p>
+                                <span id="tb-count" hidden aria-live="polite">เลือกแล้ว 0 รายการ</span>
+                            </div>
                         </div>
                         <div class="flex flex-col sm:flex-row flex-wrap gap-2.5 items-center w-full lg:w-auto mbs-team-table-controls">
                             <!-- ช่องค้นหา แบบแยกการทำงานสำหรับหน้า Team -->
@@ -3851,7 +3861,7 @@ if (isset($_GET['api_check_hash'])) {
                                             : '';
 
                                         $staff_notice_class = $new_staff_notice !== '' ? ' mbs-unlinked-staff' : '';
-                                        echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row{$staff_notice_class}' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
+                                        echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row{$staff_notice_class}' data-tb-tech-id='{$t['id']}' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                             <td class='px-6 py-4 align-top mbs-team-name'>
                                                 {$new_staff_notice}
                                                 <div class='flex items-center'>
@@ -4650,6 +4660,7 @@ if (isset($_GET['api_check_hash'])) {
             </div>
 
             <?php require __DIR__ . '/admin_trash_panel.php'; ?>
+            </div>
             <?php include __DIR__ . '/project_footer.php'; ?>
         </div>
     </main>
@@ -8860,7 +8871,7 @@ if (isset($_GET['api_check_hash'])) {
         let autoRefreshInProgress = false;
 
         async function autoRefreshAllData() {
-            if (autoRefreshInProgress || repairsFilterPending || contactsPending || (window.abTablesBusy && window.abTablesBusy())) return;
+            if (autoRefreshInProgress || repairsFilterPending || contactsPending || (window.abTablesBusy && window.abTablesBusy()) || (window.tbTeamBusy && window.tbTeamBusy())) return;
 
             autoRefreshInProgress = true;
 
@@ -9087,7 +9098,9 @@ if (isset($_GET['api_check_hash'])) {
 <div id="ab-settings" hidden data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></div>
 <script src="admin_table_bulk.js?v=20261019-3"></script>
 <script src="admin_log_bulk.js?v=20261019-2"></script>
-<script src="repairs_calendar.js?v=20261019-3"></script>
+<script src="repairs_calendar.js?v=20261019-4"></script>
 <script src="dashboard_calendars.js?v=20261019-1"></script>
+<span id="tb-settings" hidden data-user="<?= (int)$_SESSION['user_id'] ?>" data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></span>
+<script src="admin_team_bulk.js?v=20261019-1"></script>
 </body>
 </html>

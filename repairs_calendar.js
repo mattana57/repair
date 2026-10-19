@@ -41,7 +41,7 @@
             </section>
             <section id="rc-period" class="rc-pane" role="tabpanel" aria-labelledby="rc-tab-period" hidden>
                 <label class="rc-year-label" for="rc-period-year">เลือกปี <span>พ.ศ.</span></label><select id="rc-period-year"></select>
-                <p class="rc-month-label">เลือกเดือน</p><div class="rc-months"><button type="button" data-rc-month="all" class="rc-all-months">ทุกเดือน</button>${months.map((month,index)=>'<button type="button" data-rc-month="'+monthValue(index+1)+'">'+month+'</button>').join('')}</div>
+                <p class="rc-month-label">เลือกเดือน</p><div class="rc-months">${months.map((month,index)=>'<button type="button" data-rc-month="'+monthValue(index+1)+'">'+month+'</button>').join('')}</div>
                 <p class="rc-help">โหมดนี้แสดงทุกวันในเดือนหรือปีที่เลือก</p>
             </section>
             <footer class="rc-footer"><p id="rc-selection" aria-live="polite"></p><div><button type="button" data-rc="close" class="rc-cancel">ยกเลิก</button><button type="button" data-rc="apply" class="rc-apply">ใช้ตัวกรอง</button></div></footer>`;
@@ -76,7 +76,9 @@
                 get('.rc-days').replaceChildren(...nodes);
             } else {
                 fillYears(get('#rc-period-year'),period.year,true);
-                for(const button of dialog.querySelectorAll('[data-rc-month]')) button.setAttribute('aria-pressed',String(button.dataset.rcMonth===period.month));
+                if(period.year==='all')period.month='all';
+                for(const button of dialog.querySelectorAll('[data-rc-month]')) {button.setAttribute('aria-pressed',String(button.dataset.rcMonth===period.month));button.disabled=period.year==='all';}
+                get('.rc-help').textContent=period.year==='all'?'ทุกปีแสดงทุกเดือนและทุกปี เลือกปีเจาะจงหากต้องการเลือกเดือน':'แสดงทั้งปีที่เลือก หรือเลือกเดือนเพื่อดูเฉพาะเดือนนั้น';
             }
             const value=mode==='date'?selectedDate:{day:'all',...period};
             get('#rc-selection').textContent=value?describe(value):'เลือกวันที่จากปฏิทิน';get('[data-rc="apply"]').disabled=!value;
@@ -96,7 +98,7 @@
         function moveMonth(delta) {const date=new Date(viewYear,viewMonth-1+delta,1);if(date.getFullYear()<1000||date.getFullYear()>9999)return;viewYear=date.getFullYear();viewMonth=date.getMonth()+1;render();position();}
         dialog.addEventListener('click',event=>{
             const tab=event.target.closest('[data-rc-mode]');if(tab){mode=tab.dataset.rcMode;render();position();get('#rc-tab-'+mode).focus();return;}
-            const month=event.target.closest('[data-rc-month]');if(month){period.month=month.dataset.rcMonth;render();get('[data-rc-month="'+period.month+'"]').focus();return;}
+            const month=event.target.closest('[data-rc-month]');if(month&&!month.disabled){period.month=month.dataset.rcMonth;render();get('[data-rc-month="'+period.month+'"]').focus();return;}
             const day=event.target.closest('[data-rc-day]');if(day){selectedDate={day:day.dataset.rcDay,month:monthValue(viewMonth),year:String(viewYear)};render();get('[data-rc-day="'+selectedDate.day+'"]').focus();return;}
             const action=event.target.closest('[data-rc]')?.dataset.rc;
             if(action==='close')dialog.close();
@@ -113,7 +115,7 @@
         dialog.addEventListener('change',event=>{
             if(event.target===get('#rc-view-month'))viewMonth=Number(event.target.value);
             if(event.target===get('#rc-view-year'))viewYear=Number(event.target.value);
-            if(event.target===get('#rc-period-year'))period.year=event.target.value;
+            if(event.target===get('#rc-period-year')){period.year=event.target.value;period.month='all';}
             render();position();
         });
         dialog.addEventListener('keydown',event=>{

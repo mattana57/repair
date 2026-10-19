@@ -1053,8 +1053,8 @@ if (isset($_GET['api_check_hash'])) {
     </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
-    <link rel="stylesheet" href="project_footer.css?v=20261019-1">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-4">
+    <link rel="stylesheet" href="project_footer.css?v=20261019-2">
 </head>
 
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -1178,7 +1178,8 @@ if (isset($_GET['api_check_hash'])) {
             </div>
         </header>
 
-        <div id="mainScrollContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div id="mainScrollContainer" class="flex-1 overflow-y-auto mbs-footer-scroll">
+            <div class="mbs-footer-page-content p-4 sm:p-6 lg:p-8">
             <div id="dash" class="section <?php echo $active_tab === 'dash' ? '' : 'hidden'; ?> space-y-6 animate-fade-in no-print">
 
                 <!-- ✨ ปรับ Grid เป็น 2 คอลัมน์ (grid-cols-2) ในมือถือ และเพิ่มความห่างให้สมดุล (gap-3) ✨ -->
@@ -1939,6 +1940,7 @@ if (isset($_GET['api_check_hash'])) {
                 </div>
             </div>
 
+            </div>
             <?php include __DIR__ . '/project_footer.php'; ?>
         </div>
     </main>
@@ -4309,7 +4311,7 @@ if (isset($_GET['api_check_hash'])) {
         window.addEventListener('focus', autoRefreshAllData);
     </script>
 <?php mbsDashboardActivityScript(); ?>
-<script src="repairs_calendar.js?v=20261019-3"></script>
+<script src="repairs_calendar.js?v=20261019-4"></script>
 <script src="dashboard_calendars.js?v=20261019-1"></script>
 </body>
 </html>

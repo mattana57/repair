@@ -253,7 +253,7 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
         .month-dropdown-item.kb-active-item, .year-dropdown-item.kb-active-item { background-color: #eef2ff !important; color: #4f46e5 !important; }
         .dark .month-dropdown-item.kb-active-item, .dark .year-dropdown-item.kb-active-item { background-color: #475569 !important; color: #a5b4fc !important; }
     </style>
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-4">
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
 
@@ -960,7 +960,7 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
             });
         }
     </script>
-<script src="repairs_calendar.js?v=20261019-3"></script>
+<script src="repairs_calendar.js?v=20261019-4"></script>
 <script src="dashboard_calendars.js?v=20261019-1"></script>
 </body>
 </html>

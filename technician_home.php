@@ -1137,8 +1137,9 @@ if (isset($_GET['th_fragment'])
         }
     }
     </style>
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
-    <link rel="stylesheet" href="project_footer.css?v=20261019-1">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-4">
+    <link rel="stylesheet" href="project_footer.css?v=20261019-2">
+    <link rel="stylesheet" href="technician_layout.css?v=20261019-1">
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1276,7 +1277,7 @@ if (isset($_GET['th_fragment'])
         </div>
     </div>
 
-    <main class="flex-1 overflow-y-auto w-full relative">
+    <main class="flex-1 overflow-y-auto w-full relative mbs-tech-footer-main">
         <div class="tech-page-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
             <?php
@@ -1590,8 +1591,8 @@ if (isset($_GET['th_fragment'])
             require __DIR__ . '/technician_history_pagination.php';
             ?>
 
-            <?php include __DIR__ . '/project_footer.php'; ?>
         </div>
+        <?php include __DIR__ . '/project_footer.php'; ?>
     </main>
 
     <!-- Javascript สำหรับวาดกราฟและตาราง -->
@@ -2755,7 +2756,7 @@ if (isset($_GET['th_fragment'])
         });
     </script>
 <?php mbsDashboardActivityScript(); ?>
-<script src="repairs_calendar.js?v=20261019-3"></script>
+<script src="repairs_calendar.js?v=20261019-4"></script>
 <script src="dashboard_calendars.js?v=20261019-1"></script>
 </body>
 </html>

@@ -1,0 +1,4 @@
+/* ตัวกรองต้องอยู่ใต้แถบเมนู ทั้งคอมพิวเตอร์ แท็บเล็ต และมือถือ */
+.tech-dashboard-ui #repairsMainCard .th-filter-row { position:relative; z-index:30; }
+.tech-dashboard-ui .tech-topbar { z-index:100; }
+.tech-dashboard-ui .tech-topbar:has(.tech-mobile-menu[open]) { z-index:12000; }

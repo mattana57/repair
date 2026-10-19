@@ -2,12 +2,12 @@
 .mbs-project-footer {
     box-sizing: border-box;
     width: 100%;
-    margin: 32px 0 0;
+    margin: 0;
     padding: 30px 28px 18px;
     overflow-wrap: anywhere;
-    border: 1px solid #163755;
+    border: 0;
     border-top: 3px solid #5ba7c6;
-    border-radius: 18px;
+    border-radius: 0;
     background: #0b2340;
     color: #c8d8e8;
     font-family: 'Sarabun', sans-serif;
@@ -29,9 +29,15 @@
     .mbs-project-footer .mbs-project-footer__about { grid-column: 1 / -1; }
 }
 @media (max-width: 540px) {
-    .mbs-project-footer { margin-top: 24px; padding: 24px 20px 16px; border-radius: 14px; }
+    .mbs-project-footer { margin-top: 0; padding: 24px 20px 16px; border-radius: 0; }
     .mbs-project-footer .mbs-project-footer__grid { grid-template-columns: minmax(0,1fr); gap: 20px; }
     .mbs-project-footer .mbs-project-footer__title { font-size: 17px; }
     .mbs-project-footer .mbs-project-footer__bottom { flex-direction: column; margin-top: 20px; }
 }
 @media print { .mbs-project-footer { display: none !important; } }
+
+/* ส่วนท้ายเต็มขอบพื้นที่เนื้อหา ไม่วางไว้ในกรอบที่มี padding */
+.mbs-footer-scroll { display:flex; flex-direction:column; }
+.mbs-footer-page-content { flex:1 0 auto; min-width:0; }
+.tech-dashboard-ui .mbs-tech-footer-main { display:flex; flex-direction:column; }
+.tech-dashboard-ui .mbs-tech-footer-main > .tech-page-shell { flex:1 0 auto; width:100%; }

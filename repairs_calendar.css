@@ -48,3 +48,6 @@
 .rc-dialog.rc-chart .rc-days button:hover{background:#fef3c7;color:#92400e}
 .rc-dialog.rc-chart :is(button,select):focus-visible,.rc-trigger.rc-chart:focus-visible{outline-color:#fbbf24}
 @media print{.rc-trigger,.rc-dialog{display:none!important}}
+
+.rc-dialog .rc-months button:disabled{opacity:.45;cursor:not-allowed}
+.rc-dialog .rc-months button:disabled:hover{background:white;color:#64748b}
