@@ -1054,6 +1054,7 @@ if (isset($_GET['api_check_hash'])) {
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 
 <link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
+    <link rel="stylesheet" href="project_footer.css?v=20261019-1">
 </head>
 
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -1938,6 +1939,7 @@ if (isset($_GET['api_check_hash'])) {
                 </div>
             </div>
 
+            <?php include __DIR__ . '/project_footer.php'; ?>
         </div>
     </main>
 

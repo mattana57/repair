@@ -1138,6 +1138,7 @@ if (isset($_GET['th_fragment'])
     }
     </style>
 <link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
+    <link rel="stylesheet" href="project_footer.css?v=20261019-1">
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1589,6 +1590,7 @@ if (isset($_GET['th_fragment'])
             require __DIR__ . '/technician_history_pagination.php';
             ?>
 
+            <?php include __DIR__ . '/project_footer.php'; ?>
         </div>
     </main>
 

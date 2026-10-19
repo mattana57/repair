@@ -2663,6 +2663,7 @@ if (isset($_GET['api_check_hash'])) {
 .ab-check:disabled{cursor:not-allowed;opacity:.4;}
 </style>
 <link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
+    <link rel="stylesheet" href="project_footer.css?v=20261019-1">
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
@@ -4649,6 +4650,7 @@ if (isset($_GET['api_check_hash'])) {
             </div>
 
             <?php require __DIR__ . '/admin_trash_panel.php'; ?>
+            <?php include __DIR__ . '/project_footer.php'; ?>
         </div>
     </main>
 
