@@ -1114,6 +1114,29 @@ if (isset($_GET['th_fragment'])
         }
     }
     </style>
+
+    <style>
+    /* โดนัทเฉพาะ iPad แนวนอน: พื้นที่กราฟเท่ากับกราฟด้านซ้าย */
+    @media (min-width:768px) and (min-height:500px) and (any-pointer:coarse) and (orientation:landscape) {
+        .tech-dashboard-ui .tech-status-chart-frame {
+            height:240px;
+            min-height:240px;
+            max-height:240px;
+        }
+    }
+    /* เมนูรูปไปด้านซ้ายบน iPad/คอม และมือถือแนวนอน */
+    @media (min-width:768px), (orientation:landscape) {
+        .tech-dashboard-ui .tech-avatar-action-menu {
+            top:0;
+            left:auto;
+            right:calc(100% + 28px);
+        }
+        .tech-dashboard-ui .tech-mobile-popover:has(.tech-avatar-actions[open]) {
+            overflow:visible;
+            max-height:none;
+        }
+    }
+    </style>
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
