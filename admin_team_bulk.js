@@ -57,7 +57,15 @@
     async function remove(){
         if(state.busy||!state.selected.size)return;
         const version=state.version,items=Array.from(state.selected.values());state.menu=false;refresh();
-        const answer=await Swal.fire({title:'ย้ายรายการที่เลือกเข้าถังขยะ?',text:'เลือกแล้ว '+items.length.toLocaleString('th-TH')+' รายการ รวมรายการที่เลือกไว้ในแท็บ Admin / Executive และตารางเจ้าหน้าที่ บัญชีที่เกี่ยวข้องจะถูกระงับ ข้อมูลยังกู้คืนได้จาก Trash',icon:'warning',showCancelButton:true,confirmButtonText:'ย้ายเข้าถังขยะ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#2563eb'});
+        const groups=[
+            {label:'แอดมิน',count:items.filter(row=>row.kind==='user'&&row.role==='admin').length},
+            {label:'ผู้บริหาร',count:items.filter(row=>row.kind==='user'&&row.role==='executive').length},
+            {label:'เจ้าหน้าที่',count:items.filter(row=>row.kind==='tech').length}
+        ].filter(group=>group.count>0);
+        const summary=groups.map(group=>group.label+' '+group.count.toLocaleString('th-TH')+' รายการ').join(' และ ');
+        const title='ย้าย'+(summary||'รายการที่เลือก')+'ไปยัง Trash?';
+        const text='รายการที่เลือกจะถูกย้ายไปยังเมนู Trash และสามารถกู้คืนข้อมูลได้ บัญชีที่ลบหรือบัญชีเว็บที่ผูกกับเจ้าหน้าที่ที่ลบจะถูกระงับระหว่างอยู่ใน Trash';
+        const answer=await Swal.fire({title,text,icon:'warning',showCancelButton:true,confirmButtonText:'ย้ายเข้าถังขยะ',cancelButtonText:'ยกเลิก',confirmButtonColor:'#2563eb'});
         if(!answer.isConfirmed||version!==state.version)return;
         state.busy=true;refresh();
         const url=new URL(location.href);url.searchParams.set('tab','technicians');url.hash='';
