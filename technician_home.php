@@ -1167,6 +1167,29 @@ if (isset($_GET['th_fragment'])
         @media(min-width:640px) { #avatarPreviewConfirmModal > div:last-child { max-height:none; max-width:none; } }
     </style>
 <link rel="stylesheet" href="self_profile.css?v=20261020-1">
+    <style id="tech-header-avatar-ui">
+        .tech-header-avatar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, .9);
+            border-radius: 50%;
+            background: #eef2ff;
+            color: #4f46e5;
+            pointer-events: none;
+            user-select: none;
+        }
+        .tech-header-avatar > img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+    </style>
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1183,6 +1206,13 @@ if (isset($_GET['th_fragment'])
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
+                    <span class="tech-header-avatar">
+                        <?php if ($tech_profile_image !== ''): ?>
+                            <img src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>" alt="รูปโปรไฟล์เจ้าหน้าที่" draggable="false">
+                        <?php else: ?>
+                            <i class="fas fa-user" role="img" aria-label="รูปโปรไฟล์เจ้าหน้าที่"></i>
+                        <?php endif; ?>
+                    </span>
                     <details class="tech-mobile-menu">
                         <summary class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center"
                                  aria-label="เมนูเจ้าหน้าที่">
