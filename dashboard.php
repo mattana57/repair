@@ -2,6 +2,7 @@
 // เรียกใช้ระบบตรวจสิทธิ์ส่วนกลาง (ตรวจสอบ Session, อายุการใช้งาน, และสถานะบัญชี)
 require_once 'auth_guard.php';
 require_once __DIR__ . '/password_policy.php';
+require_once __DIR__ . '/account_registration_service.php';
 require_once __DIR__ . '/activity_log.php';
 
 // สร้าง CSRF Token สำหรับป้องกันการแนบสคริปต์สวมรอยส่งคำสั่ง (CSRF Protection)
@@ -1132,23 +1133,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
 
     $is_active = (int) $raw_is_active;
 
-    $account_username = $read_account_text('username');
+    // Username อ่านจากรายการเดิมเท่านั้น ไม่เชื่อค่าที่แอดมินส่งมา
+    try {
+        $account_username = arAdminUsername($conn, $role, $user_id);
+    } catch (Throwable $e) {
+        $reject_account_form('ไม่สามารถตรวจชื่อผู้ใช้เดิมได้');
+    }
     $account_password = $read_account_text('password', false);
     // แอดมินไม่รับหรือตั้งรหัสผ่านเข้าเว็บให้ผู้อื่นอีกต่อไป
     if ($account_password !== '') {
         $reject_account_form('เจ้าของบัญชีต้องตั้งรหัสผ่านผ่าน OTP ด้วยตนเอง');
-    }
-
-    if ($role === 'Technician'
-        && ($account_username === '' || $account_username === '-')) {
-        $reject_account_form('กรุณาระบุชื่อผู้ใช้งาน (Username)');
-    }
-
-
-    // รองรับชื่อผู้ใช้ภาษาไทย แต่ไม่รับช่องว่างหรืออักขระควบคุม
-    if ($account_username !== ''
-        && preg_match('/[\s\p{Z}\p{C}]/u', $account_username)) {
-        $reject_account_form('Username ต้องไม่มีช่องว่างหรืออักขระควบคุม');
     }
 
         // เว้นว่างตอนแก้ไขได้เพื่อคงรหัสเดิม; ถ้าตั้งรหัสต้องผ่านกติกาส่วนกลาง
@@ -1285,7 +1279,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         );
     }
 
-    $check_account_length('users', 'username', $account_username);
+    $check_account_length('users', 'username', (string)$account_username);
     $check_account_length('users', 'full_name', $full_name);
 
     // คงการบันทึกช่องที่ไม่ระบุเป็น NULL
@@ -1367,7 +1361,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
 
                 // ตรวจบัญชีที่เชื่อมทั้งหมดก่อนแก้ข้อมูลบัญชี
                 $usr_q = $conn->prepare(
-                    "SELECT id, role, technician_id
+                    "SELECT id, role, technician_id, username, registration_pending
                      FROM users
                      WHERE technician_id = ?
                      FOR UPDATE"
@@ -1409,24 +1403,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             }
 
             $tech_save_step = 'ACCOUNT_INPUT';
-            if ($existing_user && $web_username === '') {
-                throw new Exception(
-                    'บัญชีเว็บที่มีอยู่แล้ว ไม่อนุญาตให้เว้นว่าง Username'
-                );
+            // ล็อกค่า Username จากบัญชีที่เชื่อมจริง ภายใน Transaction
+            $web_username = $existing_user ? $existing_user['username'] : null;
+            if ($existing_user && $web_username === null && (int)$existing_user['registration_pending'] !== 1) {
+                throw new Exception('ข้อมูลบัญชีเดิมไม่สมบูรณ์ กรุณาตรวจสอบก่อน');
             }
-
-            if (!$existing_user && $web_username !== '') {
-                // ไม่มีรหัสผ่านที่แอดมินหรือผู้ใช้รู้จนกว่าจะยืนยัน OTP และตั้งเอง
-                $web_password = bin2hex(random_bytes(32));
-            }
-
-            if (!$existing_user
-                && $web_username === ''
-                && $web_password !== '') {
-                throw new Exception(
-                    'กรุณาระบุ Username เมื่อต้องการสร้างบัญชีเว็บ'
-                );
-            }
+            if (!$existing_user) $web_password = bin2hex(random_bytes(32));
 
             $tech_save_step = 'TECH_PROFILE';
             // 1. จัดการข้อมูลตาราง technicians
@@ -1561,7 +1543,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             // 2. จัดการข้อมูลตาราง users สำหรับช่าง
             // ✨ การส่ง Username ว่างต้องไม่ทำให้คำสั่งระงับบัญชีถูกข้าม (ย้ายเงื่อนไขออกจากการเช็ค !empty อย่างเดียว)
             $tech_save_step = 'WEB_ACCOUNT';
-            if ($existing_user || $web_username !== '') {
+            if (true) { // สร้างบัญชีรอลงทะเบียนให้รายการที่ยังไม่มีบัญชีเว็บ
                 
                                 // ตรวจบัญชีเดิมก่อนสร้างบัญชีให้ช่าง
                 $current_account_id = $existing_user
@@ -1743,9 +1725,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                         $u_ins->close();
                     }
 
+                    arMarkAdminDraft($conn, $new_usr_id, (int)$_SESSION['user_id']);
+
                     // เมื่อได้ ID บัญชีแล้ว จึงบันทึกประวัติ
                     $admin_id = $_SESSION['user_id'];
-                    $log_desc = "สร้างบัญชีใหม่ให้ช่าง (Username: $web_username)";
+                    $log_desc = "เพิ่มข้อมูลเจ้าหน้าที่โดยแอดมิน — รอเจ้าของบัญชีลงทะเบียน";
                     $stmt_log = $conn->prepare("INSERT INTO admin_action_logs (admin_id, action_type, target_user_id, description) VALUES (?, 'CREATE_USER', ?, ?)");
 
                     if (!$stmt_log) {
@@ -1849,12 +1833,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         $username = $account_username;
         $password = $account_password;
         $existing_adm = null;
-
-        if ($username === '') {
-            $reject_account_form('กรุณาระบุ Username');
-        }
-
-
 
                 try {
         if ($user_id > 0) {
@@ -1960,9 +1938,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                         throw new RuntimeException('ยืนยันบัญชีใหม่ไม่ได้');
                     }
                 } finally { $stmt->close(); }
+                arMarkAdminDraft($conn, $saved_admin_id, (int)$_SESSION['user_id']);
                 $action = 'CREATE_USER';
-                $description = "สร้างบัญชีผู้ดูแลระบบ (Username: $username)";
+                $description = "เพิ่มข้อมูลบัญชี $role โดยแอดมิน — รอเจ้าของบัญชีลงทะเบียน";
             } else {
+                $locked_username = arRow($conn, 'SELECT username FROM users WHERE id=? FOR UPDATE', 'i', [$user_id]);
+                if (!$locked_username) throw new RuntimeException('ไม่พบบัญชีเดิม');
+                $username = $locked_username['username'];
                 $fresh_admin_stmt = $account_query(
                     'SELECT role, technician_id, is_active, email, avatar_url FROM users WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
                     'i', [$user_id]
@@ -2152,6 +2134,7 @@ if (isset($_GET['api_check_hash'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBS Repair Dashboard</title>
+    <link rel="stylesheet" href="account_registration.css?v=20261019-1">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="dashboard_media_icons.js?v=20261019-2"></script>
     <script src="password_policy.js"></script>
@@ -2717,7 +2700,8 @@ if (isset($_GET['api_check_hash'])) {
             <button onclick="show('trash')" class="nav-btn <?php echo $active_tab === 'trash' ? 'active-btn' : ''; ?>" id="btn-trash"><i class="fas fa-trash-alt"></i> Trash</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
-                                <a href="verify_email_page.php" class="nav-btn">
+                                <a href="account_profile.php" class="nav-btn"><i class="fas fa-user-edit"></i> ข้อมูลบัญชีของฉัน</a>
+                <a href="verify_email_page.php" class="nav-btn">
                     <i class="fas fa-envelope"></i> ยืนยันอีเมล
                 </a>
                 <a href="logout.php" class="nav-btn group text-slate-500 hover:!bg-rose-50 hover:!text-rose-600">
@@ -3565,7 +3549,7 @@ if (isset($_GET['api_check_hash'])) {
                                             $js_ename = htmlspecialchars($en_name, ENT_QUOTES);
 
                                             $js_uid = $u['id']; 
-                                            $js_uname = htmlspecialchars($u['username'], ENT_QUOTES); 
+                                            $js_uname = htmlspecialchars((string)$u['username'], ENT_QUOTES); 
                                             $js_phone = htmlspecialchars($u['phone'] ?? '', ENT_QUOTES); 
                                             $js_email = htmlspecialchars($u['email'] ?? '', ENT_QUOTES);
                                             $js_dept = htmlspecialchars($u['department'] ?? '', ENT_QUOTES); 
@@ -3578,6 +3562,9 @@ if (isset($_GET['api_check_hash'])) {
                                             $js_avatar_param = $has_real_avatar ? (htmlspecialchars($u['avatar_url'], ENT_QUOTES) . "?v=" . filemtime($u['avatar_url'])) : '';
 
                                             $u_username = formatEmptyOrDash($u['username']);
+                                            $draft_class = !empty($u['registration_pending']) ? ' ar-draft-row' : '';
+                                            $draft_badge = !empty($u['registration_pending']) ? arDraftBadge($u['role']) : '';
+                                            $admin_edit_args = arModalArgs([$u['role'], (string)$u['id'], (string)$u['username'], $th_name, $en_name, '', (string)($u['phone'] ?? ''), (string)($u['department'] ?? ''), html_entity_decode($js_avatar_param, ENT_QUOTES, 'UTF-8'), (string)($u['email'] ?? ''), (string)$u['is_active']]);
                                             $th_name_html = (!empty($th_name) && $th_name !== '-') ? htmlspecialchars($th_name) : "<span class='text-rose-500 font-bold'>-</span>";
                                             $en_name_html = (!empty($en_name) && $en_name !== '-') ? "<div class='text-slate-400 font-medium text-[11px] mt-0.5'>".htmlspecialchars($en_name)."</div>" : "";
 
@@ -3588,8 +3575,8 @@ if (isset($_GET['api_check_hash'])) {
                                                 $u_email_html = "<div class='flex items-center text-rose-400 mt-1.5'><div class='w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
                                             }
 
-                                            echo "<tr class='hover:bg-slate-50/50 transition-colors' data-admin-row-uid='{$u['id']}'>
-                                                <td class='px-6 py-4 align-top font-bold text-slate-700'>{$u_username}</td>
+                                            echo "<tr class='hover:bg-slate-50/50 transition-colors{$draft_class}' data-admin-row-uid='{$u['id']}'>
+                                                <td class='px-6 py-4 align-top font-bold text-slate-700'>{$draft_badge}{$u_username}</td>
                                                 <td class='px-6 py-4 align-top'>
                                                     <div class='flex items-center'>
                                                         <img id='admin-avatar-{$u['id']}' data-admin-username='".htmlspecialchars($u['username'], ENT_QUOTES)."' src='{$admin_img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($u['username'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='admin-live-avatar w-12 h-12 rounded-full object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
@@ -3606,7 +3593,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold {$roleClass}'>{$roleDisplay}</span></td>
                                                 <td class='px-6 py-4 align-middle text-center'>
                                                     <div class='flex items-center justify-center space-x-2'>
-                                                        <button id='btn-edit-admin-{$u['id']}' onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_uname', '$js_fname', '$js_ename', '', '$js_phone', '$js_dept', '{$js_avatar_param}', '$js_email', '$js_is_active')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                        <button id='btn-edit-admin-{$u['id']}' onclick=\"openTechAdminModal({$admin_edit_args})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                         <button onclick=\"confirmDelete('user', {$u['id']})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center'><i class='fas fa-trash-alt'></i></button>
                                                     </div>
                                                 </td>
@@ -3737,7 +3724,7 @@ if (isset($_GET['api_check_hash'])) {
                             $techs_by_dept = [];
                             // โหลดบัญชีด้วย users.technician_id
                             $tech_res = $conn->query("
-                                SELECT t.*, u.username AS web_username, u.is_active AS web_is_active 
+                                SELECT t.*, u.username AS web_username, u.is_active AS web_is_active, u.registration_pending AS web_registration_pending 
                                 FROM technicians t 
                                 LEFT JOIN users u ON t.id = u.technician_id 
                                 WHERE t.deleted_at IS NULL
@@ -3866,8 +3853,12 @@ if (isset($_GET['api_check_hash'])) {
                                             : '';
 
                                         $staff_notice_class = $new_staff_notice !== '' ? ' mbs-unlinked-staff' : '';
+                                        $staff_draft_badge = !empty($t['web_registration_pending']) ? arDraftBadge('technician') : '';
+                                        if (!empty($t['web_registration_pending'])) $staff_notice_class .= ' ar-draft-row';
+                                        $tech_edit_args = arModalArgs(['Technician', (string)$t['id'], (string)($t['web_username'] ?? ''), $th_name, $en_name, $pos, (string)($t['phone'] ?? ''), (string)($t['department'] ?? ''), html_entity_decode($img_src, ENT_QUOTES, 'UTF-8'), (string)($t['email'] ?? ''), (string)$js_web_active]);
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row{$staff_notice_class}' data-tb-tech-id='{$t['id']}' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                             <td class='px-6 py-4 align-top mbs-team-name'>
+                                                {$staff_draft_badge}
                                                 {$new_staff_notice}
                                                 <div class='flex items-center'>
                                                     <img src='{$img_src}' onerror=\"this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=".urlencode($t['full_name'])."&backgroundColor=e2e8f0'\" onclick=\"openImageModal(this.src)\" class='w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm mr-4 shrink-0 cursor-pointer hover:scale-105 transition-all hover:ring-2 hover:ring-indigo-400' alt='avatar' title='คลิกเพื่อดูรูปขยาย'>
@@ -3891,7 +3882,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 <div class='flex items-center justify-end space-x-2'>
                                                     {$unlinkBtn}
                                                     <button onclick=\"viewHistory('{$js_raw_fname}', 'technician', false, false, {$js_uid})\" class='bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm'><i class='fas fa-eye md:mr-1'></i> <span class='hidden md:inline'>View</span></button>
-                                                    <button onclick=\"openTechAdminModal('{$js_role}', '$js_uid', '$js_web_uname', '$js_fname', '$js_ename', '$js_pos', '$js_phone', '$js_dept', '{$img_src}', '$js_email', '$js_web_active')\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
+                                                    <button onclick=\"openTechAdminModal({$tech_edit_args})\" class='w-8 h-8 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex items-center justify-center'><i class='fas fa-edit'></i></button>
                                                     <button onclick=\"confirmDelete('tech', {$t['id']})\" class='w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:text-white hover:bg-rose-500 transition-all flex items-center justify-center shadow-xs'><i class='fas fa-trash-alt'></i></button>
                                                 </div>
                                             </td>
@@ -4860,15 +4851,15 @@ if (isset($_GET['api_check_hash'])) {
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username <span class="text-rose-500" id="usernameReqStar">*</span></label>
-                            <input type="text" name="username" id="techAdmin_username" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุชื่อผู้ใช้งาน (Username)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="ระบุชื่อผู้ใช้งาน (Username)">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username <span class="normal-case tracking-normal font-medium">(ไม่อนุญาตให้แก้ไข)</span> <span class="text-rose-500" id="usernameReqStar" style="display:none">*</span></label>
+                            <input type="text" name="username" id="techAdmin_username" readonly aria-readonly="true" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="รอเจ้าของบัญชีลงทะเบียน" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="รอเจ้าของบัญชีลงทะเบียน">
                             <p id="err_techAdmin_username" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุชื่อผู้ใช้งาน (Username)</span></p>
                         </div>
                         <div hidden>
                             <input type="hidden" id="techAdmin_password" value="" disabled>
                             <span id="passwordReqStar" hidden></span><span id="pwdHint" hidden></span>
                         </div>
-                        <p class="text-xs text-slate-500 md:col-span-2">บัญชีที่สร้างใหม่: แจ้งชื่อผู้ใช้ให้เจ้าของบัญชีไปที่หน้า “ลืมรหัสผ่าน” เพื่อรับ OTP ทางอีเมลและตั้งรหัสผ่านครั้งแรกด้วยตนเอง</p>
+                        <p class="text-xs text-slate-500 md:col-span-2">รายการที่เพิ่มโดยแอดมิน: ให้เจ้าของลงทะเบียนด้วยข้อมูลที่เตรียมไว้ แล้วรับ OTP ทางอีเมลเพื่อยืนยันและตั้งชื่อผู้ใช้ของตนเอง</p>
                     </div>
 
                     <div id="adminLevelDiv" class="hidden">
@@ -7627,7 +7618,7 @@ if (isset($_GET['api_check_hash'])) {
             {
                 const userEl = document.getElementById('techAdmin_username');
                 const pwdEl = document.getElementById('techAdmin_password');
-                if (!userEl.value.trim() || userEl.value.trim() === '-') {
+                if (userEl.required && (!userEl.value.trim() || userEl.value.trim() === '-')) {
                     setFieldError(userEl, 'กรุณาระบุชื่อผู้ใช้งาน (Username)');
                     isValid = false;
                     if (!firstErrorEl) firstErrorEl = userEl;
@@ -7753,8 +7744,8 @@ if (isset($_GET['api_check_hash'])) {
                 
                 loginCredsDiv.classList.remove('hidden'); 
                 if(accountStatusDiv) accountStatusDiv.classList.remove('hidden');
-                document.getElementById('techAdmin_username').required = true;
-                if(document.getElementById('usernameReqStar')) document.getElementById('usernameReqStar').style.display = 'inline';
+                document.getElementById('techAdmin_username').required = false;
+                if(document.getElementById('usernameReqStar')) document.getElementById('usernameReqStar').style.display = 'none';
                 
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 if(avatarLabelWrapper) avatarLabelWrapper.classList.remove('hidden');
@@ -7770,10 +7761,10 @@ if (isset($_GET['api_check_hash'])) {
                 // เปิดการแสดง Login Creds ให้ช่าง
                 loginCredsDiv.classList.remove('hidden'); 
                 if(accountStatusDiv) accountStatusDiv.classList.remove('hidden');
-                    document.getElementById('techAdmin_username').required = true;
+                    document.getElementById('techAdmin_username').required = false;
                 document.getElementById('techAdmin_password').required = false;
                 if (document.getElementById('usernameReqStar')) {
-                    document.getElementById('usernameReqStar').style.display = 'inline';
+                    document.getElementById('usernameReqStar').style.display = 'none';
                 }
                 if(avatarDiv) avatarDiv.classList.remove('hidden');
                 if(avatarPreviewWrapper) {
@@ -7816,7 +7807,11 @@ if (isset($_GET['api_check_hash'])) {
             let cleanEmail = (em && em.trim() !== '-' && em.trim() !== 'ไม่ระบุ') ? em : '';
 
             document.getElementById('techAdmin_id').value = id;
-            document.getElementById('techAdmin_username').value = u; 
+            const usernameInput = document.getElementById('techAdmin_username');
+            usernameInput.value = u || '';
+            usernameInput.readOnly = true;
+            usernameInput.required = Boolean(u);
+            document.getElementById('usernameReqStar').style.display = u ? 'inline' : 'none'; 
             if(document.getElementById('techAdmin_is_active')) document.getElementById('techAdmin_is_active').value = isActive;
             document.getElementById('techAdmin_fullname').value = cleanFullName;
             document.getElementById('techAdmin_englishname').value = cleanEngName;

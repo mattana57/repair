@@ -1094,7 +1094,8 @@ if (isset($_GET['api_check_hash'])) {
             <a href="executive_report.php" target="_blank" class="nav-btn"><i class="fas fa-file-alt"></i> Summary Reports</a>
 
             <div class="mt-auto pt-4 border-t border-slate-50">
-                                <a href="verify_email_page.php" class="nav-btn">
+                                <a href="account_profile.php" class="nav-btn"><i class="fas fa-user-edit"></i> ข้อมูลบัญชีของฉัน</a>
+                <a href="verify_email_page.php" class="nav-btn">
                     <i class="fas fa-envelope"></i> ยืนยันอีเมล
                 </a>
                 <a href="logout.php" class="nav-btn group text-slate-500 hover:!bg-rose-50 hover:!text-rose-600">

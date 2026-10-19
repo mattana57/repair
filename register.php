@@ -25,6 +25,7 @@ $registration_positions = ['นักวิชาการคอมพิวเ�
 $registration_departments = ['ฝ่ายงานบริการเทคโนโลยีดิจิทัล', 'ฝ่ายงานยานยนต์', 'ฝ่ายงานโสตทัศนูปกรณ์'];
 
 require_once __DIR__ . '/password_policy.php';
+require_once __DIR__ . '/account_registration_service.php';
 $registration_password_policy = passwordPolicyConfig();
 
 if (!is_string($_SESSION['csrf_token'] ?? null) || $_SESSION['csrf_token'] === '') {
@@ -89,6 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'รหัสผ่านต้องผ่านเงื่อนไขที่แสดงใต้ช่องรหัสผ่านทุกข้อ';
         } elseif ($password !== $confirmation) {
             $error = 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน';
+        } elseif (arGateRegistration($conn, 'Technician', array_merge($form_values, ['position'=>$position, 'department'=>$department]), $password, $error)) {
+            // รายการที่แอดมินเตรียมไว้ต้องยืนยัน OTP ก่อนเชื่อม ไม่สร้างรายการซ้ำ
         } else {
             $stmt_check = null;
             $stmt_insert = null;
@@ -110,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_check = null;
 
                 if ($exists) {
-                    $error = 'ชื่อผู้ใช้งาน (Username) นี้มีผู้ใช้แล้ว กรุณาตั้งใหม่';
+                    $error = 'ชื่อผู้ใช้นี้มีผู้ใช้งานแล้ว กรุณากรอกชื่อผู้ใช้ใหม่แล้วลองอีกครั้ง';
                 } else {
                     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                     if (!is_string($hashed_password)) {
@@ -164,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     try { $conn->rollback(); } catch (Throwable $rollbackError) { error_log('Registration rollback failed'); }
                 }
                 if ((int) $e->getCode() === 1062) {
-                    $error = 'ข้อมูลบัญชีซ้ำกับที่มีอยู่ กรุณาตรวจชื่อผู้ใช้งาน';
+                    $error = 'ชื่อผู้ใช้นี้มีผู้ใช้งานแล้ว กรุณากรอกชื่อผู้ใช้ใหม่แล้วลองอีกครั้ง';
                 } else {
                     error_log('Registration failed');
                     $error = 'ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่ภายหลัง';
@@ -219,6 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <a href="login.php" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center px-4 py-3 rounded-xl font-bold transition-all mt-4">กลับไปหน้าเข้าสู่ระบบ</a>
         <?php else: ?>
+            <p class="text-sm text-slate-600 mb-5">มีบัญชีแล้วและต้องการเปลี่ยนข้อมูลหรือชื่อผู้ใช้? <a class="font-bold text-blue-600 underline" href="account_profile.php">เข้าสู่ระบบแล้วแก้ไขบัญชีเดิม</a></p>
             <form id="registrationForm" action="" method="POST" class="space-y-6">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-start">
