@@ -1,0 +1,127 @@
+(() => {
+    'use strict';
+    const init = () => {
+        const controls = ['Day','Month','Year'].map(part => document.getElementById('table-' + part + 'Container'));
+        const fields = Object.fromEntries(['day','month','year'].map(key => [key, document.getElementById('table' + key[0].toUpperCase() + key.slice(1))]));
+        if (controls.some(node => !node) || Object.values(fields).some(node => !node) || typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) return;
+        const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+        const weekdays = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+        const todayParts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone:'Asia/Bangkok', year:'numeric', month:'numeric', day:'numeric'}).formatToParts(new Date()).map(p => [p.type,p.value]));
+        const today = {year:Number(todayParts.year), month:Number(todayParts.month), day:Number(todayParts.day)};
+        const availableYears = new Set(Array.from(document.querySelectorAll('#table-YearList [data-value]'), node => Number(node.dataset.value)).filter(n => Number.isInteger(n) && n >= 1000 && n <= 9999));
+        for (let year = Math.max(1000, today.year - 100); year <= Math.min(9999, today.year + 20); year++) availableYears.add(year);
+        let mode = 'date', viewYear = today.year, viewMonth = today.month, selectedDate = null, period = {month:'all', year:'all'};
+        const read = () => Object.fromEntries(Object.entries(fields).map(([key,node]) => [key,node.value]));
+        const monthValue = month => String(month).padStart(2,'0');
+        const validDate = value => /^\d{4}$/.test(value.year) && /^\d{1,2}$/.test(value.month) && /^\d{1,2}$/.test(value.day) && Number(value.day)>=1 && Number(value.month)>=1 && Number(value.month)<=12 && Number(value.day)<=new Date(Number(value.year),Number(value.month),0).getDate();
+        const describe = value => {
+            const parts = [];
+            if (value.day !== 'all') parts.push('วันที่ ' + Number(value.day));
+            parts.push(value.month === 'all' ? 'ทุกเดือน' : months[Number(value.month)-1]);
+            parts.push(value.year === 'all' ? 'ทุกปี' : String(Number(value.year)+543));
+            return parts.join(' · ');
+        };
+        const trigger = document.createElement('button');
+        trigger.type = 'button'; trigger.className = 'rc-trigger'; trigger.id = 'repairsCalendarTrigger';
+        trigger.setAttribute('aria-haspopup','dialog'); trigger.setAttribute('aria-controls','repairsCalendarDialog'); trigger.setAttribute('aria-expanded','false');
+        trigger.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 11h18"/></svg><span></span><span aria-hidden="true">⌄</span>';
+        const dialog = document.createElement('dialog'); dialog.id = 'repairsCalendarDialog'; dialog.className = 'rc-dialog'; dialog.setAttribute('aria-labelledby','rc-title');
+        dialog.innerHTML = `
+            <header class="rc-header"><div><p>ตัวกรองวันที่แจ้งซ่อม</p><h3 id="rc-title">เลือกช่วงเวลาที่ต้องการดู</h3></div><button type="button" data-rc="close" class="rc-close" aria-label="ปิดปฏิทิน">×</button></header>
+            <div class="rc-tabs" role="tablist" aria-label="รูปแบบการเลือกช่วงเวลา">
+                <button type="button" id="rc-tab-date" role="tab" aria-controls="rc-date" data-rc-mode="date">เลือกวันที่</button>
+                <button type="button" id="rc-tab-period" role="tab" aria-controls="rc-period" data-rc-mode="period">เลือกเดือน/ปี</button>
+            </div>
+            <section id="rc-date" class="rc-pane" role="tabpanel" aria-labelledby="rc-tab-date">
+                <div class="rc-nav"><button type="button" data-rc="prev" aria-label="เดือนก่อนหน้า">‹</button><label class="rc-sr" for="rc-view-month">เดือนในปฏิทิน</label><select id="rc-view-month"></select><label class="rc-sr" for="rc-view-year">ปีในปฏิทิน พ.ศ.</label><select id="rc-view-year"></select><button type="button" data-rc="next" aria-label="เดือนถัดไป">›</button></div>
+                <div class="rc-weekdays" aria-hidden="true">${weekdays.map(day=>'<span>'+day+'</span>').join('')}</div>
+                <div class="rc-days" role="group" aria-label="วันในปฏิทิน"></div>
+                <button type="button" data-rc="today" class="rc-today">เลือกวันนี้</button>
+            </section>
+            <section id="rc-period" class="rc-pane" role="tabpanel" aria-labelledby="rc-tab-period" hidden>
+                <label class="rc-year-label" for="rc-period-year">เลือกปี <span>พ.ศ.</span></label><select id="rc-period-year"></select>
+                <p class="rc-month-label">เลือกเดือน</p><div class="rc-months"><button type="button" data-rc-month="all" class="rc-all-months">ทุกเดือน</button>${months.map((month,index)=>'<button type="button" data-rc-month="'+monthValue(index+1)+'">'+month+'</button>').join('')}</div>
+                <p class="rc-help">โหมดนี้แสดงทุกวันในเดือนหรือปีที่เลือก</p>
+            </section>
+            <footer class="rc-footer"><p id="rc-selection" aria-live="polite"></p><div><button type="button" data-rc="close" class="rc-cancel">ยกเลิก</button><button type="button" data-rc="apply" class="rc-apply">ใช้ตัวกรอง</button></div></footer>`;
+        const get = selector => dialog.querySelector(selector);
+        get('#rc-view-month').replaceChildren(...months.map((month,index)=>{const option=document.createElement('option');option.value=index+1;option.textContent=month;return option;}));
+        function fillYears(select, value, all) {
+            const years = new Set(availableYears); if (value !== 'all') years.add(Number(value)); years.add(viewYear);
+            const options = Array.from(years).sort((a,b)=>b-a).map(year=>{const option=document.createElement('option');option.value=year;option.textContent=year+543;return option;});
+            if (all) {const option=document.createElement('option');option.value='all';option.textContent='ทุกปี';options.unshift(option);}
+            select.replaceChildren(...options);select.value=value;
+        }
+        function render() {
+            for (const tab of dialog.querySelectorAll('[data-rc-mode]')) {const active=tab.dataset.rcMode===mode;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;}
+            get('#rc-date').hidden=mode!=='date';get('#rc-period').hidden=mode!=='period';
+            if (mode === 'date') {
+                get('#rc-view-month').value=viewMonth;fillYears(get('#rc-view-year'),String(viewYear),false);
+                const first=new Date(viewYear,viewMonth-1,1).getDay(), count=new Date(viewYear,viewMonth,0).getDate(),nodes=[];
+                for(let i=0;i<first;i++){const empty=document.createElement('span');empty.className='rc-empty';empty.setAttribute('aria-hidden','true');nodes.push(empty);}
+                for(let day=1;day<=count;day++){
+                    const button=document.createElement('button');button.type='button';button.dataset.rcDay=day;button.textContent=day;
+                    const chosen=selectedDate&&Number(selectedDate.year)===viewYear&&Number(selectedDate.month)===viewMonth&&Number(selectedDate.day)===day;
+                    button.setAttribute('aria-pressed',String(Boolean(chosen)));button.setAttribute('aria-label',day+' '+months[viewMonth-1]+' '+(viewYear+543));
+                    if(today.year===viewYear&&today.month===viewMonth&&today.day===day)button.setAttribute('aria-current','date');
+                    nodes.push(button);
+                }
+                get('.rc-days').replaceChildren(...nodes);
+            } else {
+                fillYears(get('#rc-period-year'),period.year,true);
+                for(const button of dialog.querySelectorAll('[data-rc-month]')) button.setAttribute('aria-pressed',String(button.dataset.rcMonth===period.month));
+            }
+            const value=mode==='date'?selectedDate:{day:'all',...period};
+            get('#rc-selection').textContent=value?describe(value):'เลือกวันที่จากปฏิทิน';get('[data-rc="apply"]').disabled=!value;
+        }
+        function position() {
+            if(!dialog.open)return;
+            const rect=trigger.getBoundingClientRect(),width=dialog.getBoundingClientRect().width,height=dialog.getBoundingClientRect().height;
+            dialog.style.left=Math.max(12,Math.min(rect.right-width,window.innerWidth-width-12))+'px';
+            dialog.style.top=Math.max(12,Math.min(rect.bottom+8,window.innerHeight-height-12))+'px';
+        }
+        function sync() {const label=describe(read());trigger.querySelector('span').textContent=label;trigger.setAttribute('aria-label','ตัวกรองวันที่แจ้งซ่อม: '+label);}
+        function open() {
+            const value=read();selectedDate=validDate(value)?{...value}:null;period={month:value.month,year:value.year};
+            mode=value.day==='all'?'period':'date';viewYear=value.year==='all'?today.year:Number(value.year);viewMonth=value.month==='all'?today.month:Number(value.month);
+            render();dialog.showModal();trigger.setAttribute('aria-expanded','true');position();
+        }
+        function moveMonth(delta) {const date=new Date(viewYear,viewMonth-1+delta,1);if(date.getFullYear()<1000||date.getFullYear()>9999)return;viewYear=date.getFullYear();viewMonth=date.getMonth()+1;render();position();}
+        dialog.addEventListener('click',event=>{
+            const tab=event.target.closest('[data-rc-mode]');if(tab){mode=tab.dataset.rcMode;render();position();get('#rc-tab-'+mode).focus();return;}
+            const month=event.target.closest('[data-rc-month]');if(month){period.month=month.dataset.rcMonth;render();get('[data-rc-month="'+period.month+'"]').focus();return;}
+            const day=event.target.closest('[data-rc-day]');if(day){selectedDate={day:day.dataset.rcDay,month:monthValue(viewMonth),year:String(viewYear)};render();get('[data-rc-day="'+selectedDate.day+'"]').focus();return;}
+            const action=event.target.closest('[data-rc]')?.dataset.rc;
+            if(action==='close')dialog.close();
+            if(action==='prev'||action==='next')moveMonth(action==='prev'?-1:1);
+            if(action==='today'){viewYear=today.year;viewMonth=today.month;selectedDate={day:String(today.day),month:monthValue(today.month),year:String(today.year)};render();}
+            if(action==='apply'){
+                const value=mode==='date'?selectedDate:{day:'all',...period};if(!value)return;
+                for(const [key,valuePart] of Object.entries(value))fields[key].value=valuePart;
+                // ใช้เส้นทางกรอง/โหลดตารางและ PHP แบ่งหน้าเดิม ไม่กรองแถวด้วย JavaScript
+                sync();dialog.close();window.filterRepairsTable();
+            }
+            if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}
+        });
+        dialog.addEventListener('change',event=>{
+            if(event.target.id==='rc-view-month')viewMonth=Number(event.target.value);
+            if(event.target.id==='rc-view-year')viewYear=Number(event.target.value);
+            if(event.target.id==='rc-period-year')period.year=event.target.value;
+            render();position();
+        });
+        dialog.addEventListener('keydown',event=>{
+            const tab=event.target.closest('[data-rc-mode]');
+            if(tab&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();mode=mode==='date'?'period':'date';render();position();get('#rc-tab-'+mode).focus();return;}
+            const button=event.target.closest('[data-rc-day]');if(!button)return;
+            const day=Number(button.dataset.rcDay),date=new Date(viewYear,viewMonth-1,day),offset={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7,Home:-date.getDay(),End:6-date.getDay()}[event.key];
+            if(offset===undefined)return;event.preventDefault();date.setDate(day+offset);viewYear=date.getFullYear();viewMonth=date.getMonth()+1;render();get('[data-rc-day="'+date.getDate()+'"]').focus();
+        });
+        dialog.addEventListener('close',()=>trigger.setAttribute('aria-expanded','false'));
+        trigger.addEventListener('click',open);window.addEventListener('resize',position);
+        document.body.appendChild(dialog);controls[0].before(trigger);controls.forEach(node=>node.classList.add('rc-legacy-hidden'));
+        const original=window.filterRepairsTable;
+        if(typeof original==='function')window.filterRepairsTable=function(...args){sync();return original.apply(this,args);};
+        document.addEventListener('DOMContentLoaded',sync,{once:true});window.addEventListener('popstate',()=>queueMicrotask(sync));sync();
+    };
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
