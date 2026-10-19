@@ -42,7 +42,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 <button type="button" id="trashDeleteSelectedButton" onclick="deleteSelectedTrashItems()" disabled class="px-4 py-2 rounded-xl text-sm font-bold bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed">ลบ</button>
                 <span id="trashSelectedCount" class="ml-auto px-2 text-xs font-semibold text-slate-500" role="status" aria-live="polite">ยังไม่ได้เลือกรายการ</span>
             </div>
-            <p class="text-sm text-slate-500">รายการในถังขยะยังไม่ถูกลบจริง ข้อมูลยังอยู่ในฐานข้อมูลและสามารถกู้คืนได้ หากกดลบถาวร ข้อมูลจะถูกลบออกจากฐานข้อมูลและหน้าแดชบอร์ด และไม่สามารถกู้คืนได้</p>
+            <p class="text-sm text-slate-500">รายการในถังขยะยังไม่ถูกลบจริง ข้อมูลยังอยู่ในฐานข้อมูลและสามารถกู้คืนได้</p>
+            <p class="text-sm text-slate-500">หากกดลบถาวร ข้อมูลจะถูกลบออกจากฐานข้อมูลและหน้าแดชบอร์ด และไม่สามารถกู้คืนได้</p>
             <?php if (is_array($atNotice)): ?>
             <div role="status" class="p-4 rounded-xl text-sm font-semibold <?= ($atNotice['type'] ?? '') === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' ?>"><?= $atEscape($atNotice['message'] ?? '') ?></div>
             <?php endif; ?>
