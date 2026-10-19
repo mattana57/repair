@@ -3845,7 +3845,7 @@ if (isset($_GET['api_check_hash'])) {
 
                                         // ใช้เกณฑ์เดียวกับป้ายผูกบัญชีแล้วด้านขวา ไม่เปลี่ยนสถานะ LINE
                                         $new_staff_notice = ($t['approval_status'] !== 'อนุมัติแล้ว')
-                                            ? "<div class='text-xs font-bold text-orange-600 mb-2' style='display:table;border:1px solid #fdba74;background:#fff7ed;border-radius:12px;padding:4px 10px;line-height:16px'>เจ้าหน้าที่ใหม่</div>"
+                                            ? "<div class='text-xs font-bold text-orange-600 mb-2' style='display:inline-flex;align-items:center;box-sizing:border-box;border:1px solid #fdba74;background:#fff7ed;border-radius:10px;overflow:hidden;padding:4px 10px;line-height:16px'>เจ้าหน้าที่ใหม่</div>"
                                             : '';
 
                                         $staff_notice_class = $new_staff_notice !== '' ? ' mbs-unlinked-staff' : '';
@@ -4201,12 +4201,12 @@ if (isset($_GET['api_check_hash'])) {
                         <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
                         <div class="w-full md:w-auto">
                           <div class="flex items-center gap-3">
-                            <?php ab_edit_menu('reporter'); ?>
                             <div class="w-full md:w-[320px] relative group">
                             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="searchHistoryInput" value="<?php echo tp_text(tp_get('pg_reporters_q')); ?>" oninput="searchHistoryTable(); toggleClearBtn('searchHistoryInput', 'clearHistoryBtn');" placeholder="ค้นหาชื่อผู้แจ้ง..." class="w-full bg-slate-50 border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium h-[42px]">
                             <button type="button" id="clearHistoryBtn" onclick="clearSearchInput('searchHistoryInput', searchHistoryTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
+                            <?php ab_edit_menu('reporter'); ?>
                           </div>
                           <p id="ab-count-reporter" class="ab-count hidden" role="status" aria-live="polite">เลือกแล้ว 0 รายการ</p>
                         </div>
@@ -4524,11 +4524,13 @@ if (isset($_GET['api_check_hash'])) {
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center justify-end portrait:justify-start md:portrait:justify-end gap-3 w-full">
-                            <?php if ($login_detail !== 'failed') lb_edit_menu('loginlog'); ?>
-                            <div class="relative mr-auto flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group mbs-table-search">
+                            <div class="flex items-center gap-3 mr-auto flex-1 min-w-0 xl:flex-none">
+                            <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[380px] 2xl:w-[440px] group mbs-table-search">
                                 <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="loginLogSearch" name="pg_logs_q" value="<?= tp_text(tp_get('pg_logs_q')); ?>" oninput="filterLoginLogs(event); toggleClearBtn('loginLogSearch', 'clearLoginLogSearch');" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
                                 <button type="button" id="clearLoginLogSearch" onclick="clearLoginLogsSearch()" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 <?= tp_get('pg_logs_q') === '' ? 'hidden' : 'flex' ?> items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
+                            </div>
+                            <?php if ($login_detail !== 'failed') lb_edit_menu('loginlog'); ?>
                             </div>
                             <div class="flex flex-wrap items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 max-w-full relative z-40">
                                 <div class="relative w-[110px] portrait:w-[92px] sm:w-[110px] landscape:w-[110px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="login-DayContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'login-Day', filterLoginLogs)" style="font-family: 'Sarabun', sans-serif;">
@@ -9080,7 +9082,7 @@ if (isset($_GET['api_check_hash'])) {
 })();
 </script>
 <div id="ab-settings" hidden data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></div>
-<script src="admin_table_bulk.js?v=20261019-2"></script>
-<script src="admin_log_bulk.js?v=20261019-1"></script>
+<script src="admin_table_bulk.js?v=20261019-3"></script>
+<script src="admin_log_bulk.js?v=20261019-2"></script>
 </body>
 </html>

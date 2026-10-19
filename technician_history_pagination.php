@@ -829,6 +829,32 @@ rsort($thYears);
     background: transparent;
     cursor: pointer;
 }
+
+/* มือถือ/iPad: คงตารางและเลื่อนแนวนอนภายในกรอบ */
+@media (max-width: 767px), (any-pointer: coarse) {
+    .tech-dashboard-ui #repairsMainCard .history-table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .tech-dashboard-ui #repairsMainCard #historyTableFull {
+        display: table;
+        min-width: 1280px !important;
+    }
+    .tech-dashboard-ui #repairsMainCard #historyTableFull thead {display: table-header-group;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull tbody {display: table-row-group;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull tbody tr {
+        display: table-row;
+        padding: 0;
+    }
+    .tech-dashboard-ui #repairsMainCard #historyTableFull tbody td {
+        display: table-cell;
+        width: auto !important;
+        padding: 14px 6px !important;
+    }
+    .tech-dashboard-ui #repairsMainCard #historyTableFull tbody td:first-child {padding-left: 10px !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull tbody td::before {display: none;content: none;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull .th-status {white-space: nowrap !important;}
+}
 </style>
 
 <div id="tab-content-history"

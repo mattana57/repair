@@ -1085,6 +1085,17 @@ if (isset($_GET['th_fragment'])
     </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 <script src="dashboard_media_icons.js?v=20261019-1"></script>
+
+    <style>
+    /* เปิดเมนูเหนือเนื้อหาทุกหน้า เฉพาะมือถือ/iPad */
+    @media (max-width: 767px), (any-pointer: coarse) {
+        .tech-dashboard-ui .tech-topbar:has(.tech-mobile-menu[open]) {z-index: 12000;}
+        .tech-dashboard-ui .tech-mobile-popover {
+            max-height: calc(100dvh - 96px);
+            overflow-y: auto;
+        }
+    }
+    </style>
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1768,6 +1779,31 @@ if (isset($_GET['th_fragment'])
             });
         }
 
+        // ใช้เงื่อนไขเดียวกับรูปแบบตารางบนมือถือ/iPad ทั้งสองแนว
+        function techCompactViewport() {
+            return window.matchMedia('(max-width: 767px), (any-pointer: coarse)').matches;
+        }
+        function techLocationAxisWidth(chart) {
+            return Math.min(160, Math.max(90, chart.width * 0.38));
+        }
+        function techLocationTick(value) {
+            const label = String(this.getLabelForValue(value));
+            if (!techCompactViewport()) return label;
+            const width = techLocationAxisWidth(this.chart) - 16;
+            const chars = typeof Intl.Segmenter === 'function'
+                ? Array.from(new Intl.Segmenter('th', {granularity:'grapheme'}).segment(label), part => part.segment)
+                : (label.match(/[^\u0E31\u0E34-\u0E3A\u0E47-\u0E4E][\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]*/gu) || [label]);
+            const lines = []; let line = '';
+            this.ctx.save(); this.ctx.font = "bold 12px 'Plus Jakarta Sans', 'Kanit', sans-serif";
+            for (const char of chars) {
+                if (line && this.ctx.measureText(line + char).width > width) {lines.push(line); line = '';}
+                line += char;
+            }
+            if (line) lines.push(line);
+            this.ctx.restore();
+            return lines.length ? lines : label;
+        }
+
         // 2. ฟังก์ชันวาดกราฟ
         let techReporterLimit = 'all';
 
@@ -1996,7 +2032,16 @@ if (isset($_GET['th_fragment'])
                     },
                     scales: {
                         x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f8fafc' }, border: {display: false} },
-                        y: { grid: { display: false }, border: {display: false}, ticks: { font: { weight: 'bold' } } }
+                        y: {
+                            afterFit: scale => {if (techCompactViewport()) scale.width = techLocationAxisWidth(scale.chart);},
+                            grid: { display: false }, border: {display: false},
+                            ticks: {
+                                font: { weight: 'bold' },
+                                crossAlign: () => techCompactViewport() ? 'far' : 'near',
+                                autoSkip: false,
+                                callback: techLocationTick
+                            }
+                        }
                     }
                 }
             });
@@ -2155,7 +2200,7 @@ if (isset($_GET['th_fragment'])
     <script>
         (() => {
             const portraitMobile = window.matchMedia(
-                '(max-width: 639px), (max-width: 1366px) and (hover: none) and (pointer: coarse)'
+                '(max-width: 639px), (max-width: 1366px) and (any-pointer: coarse)'
             );
 
             function closeProfileOutsidePortrait() {

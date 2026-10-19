@@ -11,12 +11,14 @@ $lh_year_options = ['all'=>'ทุกปี'];foreach($lh_years as $lh_y)$lh_yea
         <input type="hidden" name="tab" value="login_logs">
         <input type="hidden" name="pg_logs_status" value="<?= tp_text($lh_role) ?>">
         <?php if($lh_user>0): ?><input type="hidden" name="pg_logs_q" value="<?= (int)$lh_user ?>"><?php endif; ?>
-        <?php lb_edit_menu($lh_user>0?'activityevent':'activityperson'); ?>
-        <div class="relative mr-auto flex-1 min-w-[180px] xl:flex-none xl:w-[440px]">
+        <div class="flex items-center gap-3 mr-auto flex-1 min-w-0 xl:flex-none">
+        <div class="relative flex-1 min-w-[120px] xl:flex-none xl:w-[440px]">
             <label for="accountActivitySearch" class="sr-only">ค้นหาข้อมูลการใช้งานรายบัญชี</label>
             <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" aria-hidden="true"></i>
             <input type="text" data-activity-search id="accountActivitySearch" name="lh_q" value="<?= tp_text($lh_q) ?>" maxlength="200" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
             <button id="accountActivityClear" type="button" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 <?= $lh_q===''?'hidden':'' ?> items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm" aria-hidden="true"></i>ล้างค่า</button>
+        </div>
+        <?php lb_edit_menu($lh_user>0?'activityevent':'activityperson'); ?>
         </div>
         <div class="flex flex-wrap items-center gap-2 shrink-0 max-w-full relative z-40">
         <?php foreach(['Day'=>['day',$lh_days,'วัน'],'Month'=>['month',['all'=>'ทุกเดือน']+$lh_months,'เดือน'],'Year'=>['year',$lh_year_options,'ปี']] as $lh_part=>$lh_spec):

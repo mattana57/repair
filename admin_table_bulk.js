@@ -54,7 +54,7 @@
     }
     document.addEventListener('click', event=>{
         const edit=event.target.closest('[data-ab-edit]');
-        if(edit){const kind=edit.dataset.abEdit,s=state[kind];if(s.visible){s.menu=false;clear(kind,true);}else{s.visible=true;s.menu=true;refresh(kind);}return;}
+        if(edit){const kind=edit.dataset.abEdit,s=state[kind];s.menu=!s.menu;s.visible=true;for(const other of Object.keys(state))if(other!==kind){state[other].menu=false;refresh(other);}refresh(kind);return;}
         const action=event.target.closest('[data-ab-action]');
         if(action){const kind=action.dataset.abKind,s=state[kind];if(s.busy)return;
             if(action.dataset.abAction==='choose'){s.visible=true;s.menu=true;refresh(kind);}
@@ -63,9 +63,9 @@
             if(action.dataset.abAction==='delete')remove(kind);
             return;
         }
-        // เมนูคงอยู่ระหว่างโหมดแก้ไข กดแก้ไขซ้ำหรือไม่เลือกเพื่อปิดทั้งโหมด
+        for(const kind of Object.keys(state)){const menu=document.getElementById('ab-menu-'+kind);if(state[kind].menu&&!menu.contains(event.target)){state[kind].menu=false;menu.classList.add('hidden');document.querySelector('[data-ab-edit="'+kind+'"]').setAttribute('aria-expanded','false');}}
     });
-    document.addEventListener('keydown',event=>{if(event.key==='Escape')for(const kind of Object.keys(state)){state[kind].menu=false;clear(kind,true);}});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')for(const kind of Object.keys(state)){state[kind].menu=false;refresh(kind);}});
     document.addEventListener('change',event=>{
         const box=event.target.closest('[data-ab-row]');
         if(box){const kind=box.dataset.abRow,s=state[kind];if(box.disabled)return;s.version++;if(box.checked)s.selected.set(box.dataset.id,item(box));else s.selected.delete(box.dataset.id);refresh(kind);}

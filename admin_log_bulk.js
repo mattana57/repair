@@ -1,7 +1,7 @@
 (() => {
     const settings=document.getElementById('ab-settings');if(!settings)return;
     const ids={loginlog:'login-history-table',activityperson:'account-summary-table',activityevent:'account-event-table'};
-    const state=Object.fromEntries(Object.keys(ids).map(kind=>[kind,{active:false,busy:false,version:0,selected:new Map()}]));
+    const state=Object.fromEntries(Object.keys(ids).map(kind=>[kind,{active:false,menu:false,busy:false,version:0,selected:new Map()}]));
     const root=kind=>document.getElementById(ids[kind]);
     const boxes=kind=>Array.from(root(kind)?.querySelectorAll('[data-lb-row]')||[]);
     const rowItem=box=>box.dataset.lbRow==='activityperson'?{id:box.dataset.id,user_id:box.dataset.userId,role:box.dataset.role,upto_id:box.dataset.uptoId}:{id:box.dataset.id};
@@ -12,12 +12,12 @@
         const page=r.querySelector('[data-lb-page]'),n=rowBoxes.filter(box=>box.checked).length;
         if(page){page.checked=rowBoxes.length>0&&n===rowBoxes.length;page.indeterminate=n>0&&n<rowBoxes.length;page.disabled=s.busy||!rowBoxes.length;}
         r.querySelectorAll('[data-lb-empty]').forEach(cell=>{cell.colSpan=Number(cell.dataset.lbEmpty)+(s.active?1:0);});
-        const menu=document.getElementById('lb-menu-'+kind);menu?.classList.toggle('hidden',!s.active);
-        document.querySelector('[data-lb-edit="'+kind+'"]').setAttribute('aria-expanded',String(s.active));
+        const menu=document.getElementById('lb-menu-'+kind);menu?.classList.toggle('hidden',!s.menu);
+        document.querySelector('[data-lb-edit="'+kind+'"]').setAttribute('aria-expanded',String(s.menu));
         document.querySelectorAll('[data-lb-kind="'+kind+'"]').forEach(button=>{button.disabled=s.busy||(button.dataset.lbAction==='delete'&&!s.selected.size);});
         const count=document.getElementById('lb-count-'+kind);if(count){count.textContent=s.busy?'กำลังเลือกรายการ…':'เลือกแล้ว '+s.selected.size.toLocaleString('th-TH')+' รายการ';count.classList.toggle('hidden',!s.active);}
     }
-    function clear(kind,close=false){const s=state[kind];s.version++;s.controller?.abort();s.busy=false;s.selected.clear();if(close)s.active=false;refresh(kind);}
+    function clear(kind,close=false){const s=state[kind];s.version++;s.controller?.abort();s.busy=false;s.selected.clear();if(close){s.active=false;s.menu=false;}refresh(kind);}
     function context(kind){const url=new URL(location.href);const form=document.getElementById(kind==='loginlog'?'loginLogsFilterForm':'accountActivityFilters');if(form)for(const [key,value] of new FormData(form))url.searchParams.set(key,value);url.searchParams.delete('_');return url;}
     async function all(kind){const s=state[kind];if(s.busy)return;const version=++s.version,controller=new AbortController();s.controller=controller;s.busy=true;refresh(kind);
         try{const response=await fetch(context(kind).href,{method:'POST',body:new URLSearchParams({log_bulk_action:'select_all',log_bulk_kind:kind,csrf_token:settings.dataset.token}),signal:controller.signal,credentials:'same-origin',cache:'no-store'});const data=await response.json();if(version!==s.version)return;if(!response.ok||!Array.isArray(data.items))throw new Error(data.error||'เลือกประวัติไม่สำเร็จ');s.selected=new Map(data.items.map(item=>[String(item.id),item]));}
@@ -32,13 +32,15 @@
     }
     document.addEventListener('click',event=>{
         const edit=event.target.closest('[data-lb-edit]');if(edit){const kind=edit.dataset.lbEdit,s=state[kind];if(!s||!root(kind))return;
-            if(s.active){clear(kind,true);return;}if(root(kind).dataset.lbReady!=='1'){Swal.fire({icon:'info',text:'กรุณารันไฟล์ 01_log_trash_columns.sql ใน phpMyAdmin ก่อนใช้งานแก้ไขประวัติ'});return;}s.active=true;refresh(kind);return;}
+            for(const other of Object.keys(state))if(other!==kind){state[other].menu=false;refresh(other);}
+            if(s.active){s.menu=!s.menu;refresh(kind);return;}if(root(kind).dataset.lbReady!=='1'){Swal.fire({icon:'info',text:'กรุณารันไฟล์ 01_log_trash_columns.sql ใน phpMyAdmin ก่อนใช้งานแก้ไขประวัติ'});return;}s.active=true;s.menu=true;refresh(kind);return;}
         const action=event.target.closest('[data-lb-action]');if(action){const kind=action.dataset.lbKind,s=state[kind];if(!s||s.busy)return;
-            if(action.dataset.lbAction==='none')clear(kind,true);if(action.dataset.lbAction==='choose'){s.active=true;refresh(kind);}if(action.dataset.lbAction==='all')all(kind);if(action.dataset.lbAction==='delete')remove(kind);}
+            if(action.dataset.lbAction==='none')clear(kind,true);if(action.dataset.lbAction==='choose'){s.active=true;s.menu=true;refresh(kind);}if(action.dataset.lbAction==='all')all(kind);if(action.dataset.lbAction==='delete')remove(kind);return;}
+        for(const kind of Object.keys(state)){const menu=document.getElementById('lb-menu-'+kind);if(state[kind].menu&&!menu?.contains(event.target)){state[kind].menu=false;menu.classList.add('hidden');document.querySelector('[data-lb-edit="'+kind+'"]').setAttribute('aria-expanded','false');}}
     });
     document.addEventListener('change',event=>{const box=event.target.closest('[data-lb-row]');if(box){const kind=box.dataset.lbRow,s=state[kind];if(s.busy)return;s.version++;if(box.checked)s.selected.set(box.dataset.id,rowItem(box));else s.selected.delete(box.dataset.id);refresh(kind);}
         const page=event.target.closest('[data-lb-page]');if(page){const kind=page.dataset.lbPage,s=state[kind];if(s.busy)return;s.version++;boxes(kind).forEach(box=>{if(page.checked)s.selected.set(box.dataset.id,rowItem(box));else s.selected.delete(box.dataset.id);});refresh(kind);}});
-    document.addEventListener('keydown',event=>{if(event.key==='Escape')for(const kind of Object.keys(state))clear(kind,true);});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')for(const kind of Object.keys(state)){state[kind].menu=false;refresh(kind);}});
     // Drop selections immediately when filter values change, including while a search is loading.
     document.addEventListener('input',event=>{if(event.target.matches('#loginLogSearch,[data-activity-search]'))for(const kind of Object.keys(state))clear(kind);});
     for(const name of ['submitAccountActivityFilters','filterLoginLogs'])if(typeof window[name]==='function'){const original=window[name];window[name]=function(...args){for(const kind of Object.keys(state))clear(kind);return original.apply(this,args);};}
