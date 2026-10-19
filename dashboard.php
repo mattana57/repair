@@ -2654,6 +2654,39 @@ if (isset($_GET['api_check_hash'])) {
             display: none !important;
         }
     </style>
+    <style id="admin-mobile-portrait-layout">
+        /* เฉพาะมือถือแนวตั้ง: ปุ่มฝ่ายงาน 2 แถว และการ์ด Login History 2 x 2 */
+        @media (max-width: 639px) and (orientation: portrait) {
+            .admin-department-filters {
+                display: grid !important;
+                grid-template-columns: max-content minmax(0, 1fr);
+                width: 100%;
+                min-width: 0;
+            }
+            .admin-department-filters > button {
+                min-width: 0;
+                white-space: normal;
+            }
+            #login-daily-cards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            #login-daily-cards > a {
+                min-width: 0;
+                padding: 12px;
+            }
+            #login-daily-cards > a > .flex:first-child {
+                gap: 8px;
+            }
+            #login-daily-cards > a > .flex:first-child > div {
+                min-width: 0;
+                overflow-wrap: anywhere;
+            }
+            #login-daily-cards > a > .flex:first-child > span {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    </style>
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
@@ -3626,7 +3659,7 @@ if (isset($_GET['api_check_hash'])) {
                                 <button type="button" id="clearTechTableBtn" onclick="clearSearchInput('search-tech-table', searchTeamTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
                             
-                            <div class="flex flex-wrap gap-2.5">
+                            <div class="flex flex-wrap gap-2.5 admin-department-filters">
                                 <button onclick="filterDeptTable('all')" id="btn-filter-all" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
                                 <button onclick="filterDeptTable('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
                                 <button onclick="filterDeptTable('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
@@ -3927,7 +3960,7 @@ if (isset($_GET['api_check_hash'])) {
                             <button type="button" id="clearTechCardBtn" onclick="clearSearchInput('search-tech-card', searchTechCards)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-full"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                         </div>
 
-                        <div class="flex flex-wrap gap-2.5">
+                        <div class="flex flex-wrap gap-2.5 admin-department-filters">
                             <button onclick="filterDeptCard('all')" id="btn-filter-all-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-indigo-600 text-white border border-indigo-600 shadow-md shadow-indigo-200 cursor-pointer">ทั้งหมด</button>
                             <button onclick="filterDeptCard('ฝ่ายงานบริการเทคโนโลยีดิจิทัล')" id="btn-filter-digital-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">บริการเทคโนโลยีดิจิทัล</button>
                             <button onclick="filterDeptCard('ฝ่ายงานโสตทัศนูปกรณ์')" id="btn-filter-av-2" class="dept-filter-btn px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 bg-white text-slate-600 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 shadow-sm cursor-pointer">โสตทัศนูปกรณ์</button>
