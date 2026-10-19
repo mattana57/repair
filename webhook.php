@@ -291,6 +291,25 @@ function mbsResolveRepair($conn, $data) {
     return $job;
 }
 
+// อ่านสถานะเว็บทุกครั้งที่เจ้าหน้าที่ทำรายการผ่าน LINE ไม่จำสถานะไว้ใน Session
+function mbsLineStaffAllowed($account) {
+    return is_array($account)
+        && (int)($account['web_account_id'] ?? 0) > 0
+        && strtolower((string)($account['web_role'] ?? '')) === 'technician'
+        && (int)($account['web_is_active'] ?? 0) === 1
+        && empty($account['web_deleted_at'])
+        && ($account['approval_status'] ?? '') === 'อนุมัติแล้ว';
+}
+function mbsLineStaffAccount($conn, $line_user_id) {
+    $stmt=$conn->prepare("SELECT t.*, u.id AS web_account_id, u.role AS web_role, u.is_active AS web_is_active, u.deleted_at AS web_deleted_at FROM technicians t LEFT JOIN users u ON u.technician_id=t.id WHERE t.line_user_id=? AND t.deleted_at IS NULL");
+    if (!$stmt) { throw new RuntimeException('Cannot check LINE staff account'); }
+    $stmt->bind_param('s',$line_user_id);
+    if (!$stmt->execute()) { throw new RuntimeException('Cannot read LINE staff account'); }
+    $res=$stmt->get_result();
+    $row=$res->num_rows===1 ? $res->fetch_assoc() : null;
+    $stmt->close();return $row;
+}
+
 $content = file_get_contents('php://input');
 $events = json_decode($content, true);
 
@@ -344,7 +363,7 @@ if (!is_null($events['events'])) {
                 }
                 send_reply($replyToken,['type'=>'text','text'=>$notice],$channelAccessToken);
             } catch(Throwable $e) {
-                error_log('LINE media intake failed');
+                error_log('LINE media intake failed: '.get_class($e).' code='.(int)$e->getCode().' '.$e->getMessage());
                 send_reply($replyToken,['type'=>'text','text'=>'ยังรับไฟล์ไม่ได้ค่ะ กรุณาแจ้งผู้ดูแลตรวจการตั้งค่าไฟล์แนบ แล้วส่งไฟล์ใหม่'],$channelAccessToken);
             }
             continue;
@@ -357,7 +376,7 @@ if (!is_null($events['events'])) {
             if (mb_strpos($text, 'ผูกบัญชี') === 0) {
                 $code = trim(str_replace('ผูกบัญชี', '', $text));
                 if (preg_match('/^[0-9]{4}$/', $code)) {
-                    $stmt_check = $conn->prepare("SELECT id, full_name, department FROM technicians WHERE secret_code = ? AND approval_status = 'รอผูกบัญชี'");
+                    $stmt_check = $conn->prepare("SELECT id, full_name, department FROM technicians WHERE secret_code = ? AND approval_status = 'รอผูกบัญชี' AND deleted_at IS NULL AND EXISTS (SELECT 1 FROM users u WHERE u.technician_id=technicians.id AND LOWER(u.role)='technician' AND u.is_active=1 AND u.deleted_at IS NULL)");
                     $stmt_check->bind_param("s", $code);
                     $stmt_check->execute();
                     $res = $stmt_check->get_result()->fetch_assoc();
@@ -367,14 +386,16 @@ if (!is_null($events['events'])) {
                         $tech_name = $res['full_name'];
                         $tech_dept = !empty($res['department']) ? $res['department'] : 'ฝ่ายงานทั่วไป';
 
-                        $stmt_update = $conn->prepare("UPDATE technicians SET line_user_id = ?, approval_status = 'อนุมัติแล้ว', secret_code = NULL WHERE id = ?");
-                        $stmt_update->bind_param("si", $userId, $tech_id);
+                        $stmt_update = $conn->prepare("UPDATE technicians SET line_user_id = ?, approval_status = 'อนุมัติแล้ว', secret_code = NULL WHERE id = ? AND secret_code = ? AND approval_status = 'รอผูกบัญชี' AND deleted_at IS NULL AND (line_user_id IS NULL OR line_user_id='') AND EXISTS (SELECT 1 FROM users u WHERE u.technician_id=technicians.id AND LOWER(u.role)='technician' AND u.is_active=1 AND u.deleted_at IS NULL)");
+                        $stmt_update->bind_param("sis", $userId, $tech_id, $code);
                         
-                        if ($stmt_update->execute()) {
+                        if ($stmt_update->execute() && $stmt_update->affected_rows === 1) {
                             send_reply($replyToken, ['type' => 'text', 'text' => "✅ ยืนยันตัวตนสำเร็จ\n\nยินดีต้อนรับ เจ้าหน้าที่ $tech_name\n($tech_dept)\n\nคุณสามารถเริ่มรับงานซ่อมได้เลยค่ะ 🛠️"], $channelAccessToken);
+                        } else {
+                            send_reply($replyToken,['type'=>'text','text'=>'ยังผูกบัญชีไม่ได้ค่ะ รหัสหรือสถานะบัญชีอาจเปลี่ยน กรุณาติดต่อผู้ดูแล'],$channelAccessToken);
                         }
                     } else {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รหัสลับไม่ถูกต้อง หรือรหัสนี้ถูกใช้งานไปแล้วค่ะ"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รหัสไม่ถูกต้อง ถูกใช้แล้ว หรือบัญชียังไม่เปิดใช้งานค่ะ กรุณาติดต่อผู้ดูแล"], $channelAccessToken);
                     }
                 } else {
                     send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รูปแบบไม่ถูกต้อง\nกรุณาพิมพ์: ผูกบัญชี [รหัส 4 หลัก]"], $channelAccessToken);
@@ -538,7 +559,7 @@ if (!is_null($events['events'])) {
                     $repair_id = (int)$stmt->insert_id;
                     $media_count=0;
                     try {$media_count=rmClaimPending($conn,$userId,$repair_id);}
-                    catch(Throwable $e){error_log('LINE pending media claim failed');}
+                    catch(Throwable $e){error_log('LINE pending media claim failed: '.get_class($e).' code='.(int)$e->getCode().' '.$e->getMessage());}
 
                     $replyText = "✅ รับคำขอเรียบร้อยแล้วค่ะ\n\n📌 เลขที่ใบงาน: $ticket_no\n📌 เรื่องที่แจ้ง: $category\n📍 สถานที่: $location\n📝 ข้อความจากผู้แจ้ง: $problem\n\nระบบจะแจ้งเมื่อเจ้าหน้าที่รับงานค่ะ";
                     if ($image_path || $media_count > 0) {
@@ -631,6 +652,23 @@ if (!is_null($events['events'])) {
             parse_str($event['postback']['data'], $postbackData);
 
             if (isset($postbackData['action']) && (isset($postbackData['id']) || isset($postbackData['ticket']))) {
+                if (in_array($postbackData['action'], ['accept','close','confirm_close'], true)) {
+                    try { $line_staff=mbsLineStaffAccount($conn,$userId); }
+                    catch (Throwable $e) {
+                        error_log('LINE staff account status check failed');
+                        send_reply($replyToken,['type'=>'text','text'=>'ยังตรวจสอบสถานะบัญชีไม่ได้ค่ะ กรุณาลองอีกครั้ง'],$channelAccessToken);
+                        continue;
+                    }
+                    if (!$line_staff) {
+                        send_reply($replyToken,['type'=>'text','text'=>"ยังไม่ได้ผูกบัญชีเจ้าหน้าที่ค่ะ กรุณาใช้รหัส 4 หลักที่ได้รับจากผู้ดูแลเพื่อผูกบัญชีก่อน"],$channelAccessToken);
+                        continue;
+                    }
+                    if (!mbsLineStaffAllowed($line_staff)) {
+                        send_reply($replyToken,['type'=>'text','text'=>'บัญชีเจ้าหน้าที่ถูกระงับหรือยังไม่พร้อมใช้งานค่ะ กรุณาติดต่อผู้ดูแล ระบบยังไม่อนุญาตให้รับหรือปิดงาน'],$channelAccessToken);
+                        continue;
+                    }
+                }
+
                 $resolved_job = mbsResolveRepair($conn, $postbackData);
                 if (!$resolved_job) {
                     send_reply($replyToken, ['type' => 'text', 'text' => 'ไม่สามารถระบุใบงานจากปุ่มนี้ได้ค่ะ กรุณาใช้การ์ดใบงานล่าสุดที่ระบบส่งใหม่ หรือติดต่อผู้ดูแลให้ส่งการ์ดใหม่ค่ะ'], $channelAccessToken);
@@ -668,8 +706,8 @@ if (!is_null($events['events'])) {
                         if ($job['status'] == 'รอรับเรื่อง' && empty($job['technician_id'])) {
                             
                             $tech_id = (int) $tech_result['id'];
-                            $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_id = ?, technician_name = ?, received_at = COALESCE(received_at, CURRENT_TIMESTAMP) WHERE id = ? AND status = 'รอรับเรื่อง' AND (technician_id IS NULL OR technician_id = 0)");
-                            $stmt->bind_param("isi", $tech_id, $tech_name, $repair_id);
+                            $stmt = $conn->prepare("UPDATE repairs SET status = 'กำลังดำเนินการ', technician_id = ?, technician_name = ?, received_at = COALESCE(received_at, CURRENT_TIMESTAMP) WHERE id = ? AND status = 'รอรับเรื่อง' AND (technician_id IS NULL OR technician_id = 0) AND EXISTS (SELECT 1 FROM technicians t JOIN users u ON u.technician_id=t.id WHERE t.id=? AND t.line_user_id=? AND t.deleted_at IS NULL AND t.approval_status='อนุมัติแล้ว' AND LOWER(u.role)='technician' AND u.is_active=1 AND u.deleted_at IS NULL)");
+                            $stmt->bind_param("isiis", $tech_id, $tech_name, $repair_id, $tech_id, $userId);
                             if (!$stmt->execute() || $stmt->affected_rows !== 1) {
                                 send_reply($replyToken, ['type' => 'text', 'text' => "ไม่สามารถรับงานได้ ใบงานอาจมีผู้รับแล้ว กรุณาตรวจสอบอีกครั้งค่ะ"], $channelAccessToken);
                                 continue;
@@ -737,8 +775,8 @@ if (!is_null($events['events'])) {
                                 if ((int) ($job['technician_id'] ?? 0) > 0 && (int) $tech_result['id'] === (int) $job['technician_id']) {
                                     
                                     $clicker_id = (int) $tech_result['id'];
-                                    $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว', completed_at = CURRENT_TIMESTAMP WHERE id = ? AND technician_id = ? AND status IN ('กำลังดำเนินการ', 'ช่างรับเรื่องแจ้งซ่อมแล้ว')");
-                                    $stmt->bind_param("ii", $repair_id, $clicker_id);
+                                    $stmt = $conn->prepare("UPDATE repairs SET status = 'ซ่อมเสร็จแล้ว', completed_at = CURRENT_TIMESTAMP WHERE id = ? AND technician_id = ? AND status IN ('กำลังดำเนินการ', 'ช่างรับเรื่องแจ้งซ่อมแล้ว') AND EXISTS (SELECT 1 FROM technicians t JOIN users u ON u.technician_id=t.id WHERE t.id=repairs.technician_id AND t.line_user_id=? AND t.deleted_at IS NULL AND t.approval_status='อนุมัติแล้ว' AND LOWER(u.role)='technician' AND u.is_active=1 AND u.deleted_at IS NULL)");
+                                    $stmt->bind_param("iis", $repair_id, $clicker_id, $userId);
                                     if (!$stmt->execute() || $stmt->affected_rows !== 1) {
                                         send_reply($replyToken, ['type' => 'text', 'text' => "ไม่สามารถปิดงานได้ สิทธิ์หรือสถานะใบงานเปลี่ยนแล้วค่ะ"], $channelAccessToken);
                                         continue;
