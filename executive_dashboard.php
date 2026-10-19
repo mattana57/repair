@@ -2869,11 +2869,11 @@ if (isset($_GET['api_check_hash'])) {
                     datasets: [{ 
                         label: 'จำนวน (ครั้ง)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
-                        borderColor: '#3b82f6', 
+                        borderColor: '#2563eb', 
                         backgroundColor: gradient, 
                         borderWidth: 3, 
                         pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#8b5cf6',
+                        pointBorderColor: '#2563eb',
                         pointBorderWidth: 2,
                         pointRadius: 4,
                         fill: true,
@@ -2995,7 +2995,7 @@ if (isset($_GET['api_check_hash'])) {
                     datasets: [{ 
                         label: 'แจ้งซ่อม (ครั้ง)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
-                        backgroundColor: '#3b82f6', 
+                        backgroundColor: '#0284c7', 
                         borderRadius: 6
                     }]
                 },
@@ -3109,7 +3109,7 @@ if (isset($_GET['api_check_hash'])) {
                     datasets: [{ 
                         label: 'รับผิดชอบ (งาน)', 
                         data: sorted.length ? sorted.map(e => e.count) : [0], 
-                        backgroundColor: '#3b82f6', 
+                        backgroundColor: '#1e40af', 
                         borderRadius: 6
                     }]
                 },

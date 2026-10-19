@@ -2021,8 +2021,8 @@ if (isset($_GET['th_fragment'])
                     datasets: [{
                         label: 'จำนวน (ครั้ง)',
                         data: eqSorted.length ? eqSorted.map(e => e.count) : [0],
-                        borderColor: '#3b82f6', backgroundColor: gradient, borderWidth: 3,
-                        pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6', pointBorderWidth: 2, pointRadius: 4,
+                        borderColor: '#2563eb', backgroundColor: gradient, borderWidth: 3,
+                        pointBackgroundColor: '#ffffff', pointBorderColor: '#2563eb', pointBorderWidth: 2, pointRadius: 4,
                         fill: true, tension: 0.4
                     }]
                 },
@@ -2083,7 +2083,7 @@ if (isset($_GET['th_fragment'])
                     datasets: [{
                         label: 'แจ้งซ่อม (ครั้ง)',
                         data: locSorted.length ? locSorted.map(e => e.count) : [0],
-                        backgroundColor: '#3b82f6', borderRadius: 6
+                        backgroundColor: '#0284c7', borderRadius: 6
                     }]
                 },
                 options: {
