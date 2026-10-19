@@ -1084,7 +1084,7 @@ if (isset($_GET['th_fragment'])
         }
     </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
-<script src="dashboard_media_icons.js?v=20261019-1"></script>
+<script src="dashboard_media_icons.js?v=20261019-2"></script>
 
     <style>
     /* เปิดเมนูเหนือเนื้อหาทุกหน้า เฉพาะมือถือ/iPad */
@@ -1137,6 +1137,7 @@ if (isset($_GET['th_fragment'])
         }
     }
     </style>
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1895,7 +1896,7 @@ if (isset($_GET['th_fragment'])
                 const rows = getFilteredRepairsByMonthYear(
                     document.getElementById('repMonth').value,
                     document.getElementById('repYear').value
-                );
+                ).filter(r => dashboardCalendarMatches(r, 'rep'));
                 rows.forEach(r => addLineReporter(reporterMap, r));
             }
             let ranked = Array.from(reporterMap.values()).sort((a, b) => b.count - a.count);
@@ -1952,7 +1953,7 @@ if (isset($_GET['th_fragment'])
             const periodRows = prefix => new Set(getFilteredRepairsByMonthYear(
                 document.getElementById(prefix + 'Month').value,
                 document.getElementById(prefix + 'Year').value
-            ));
+            ).filter(r => dashboardCalendarMatches(r, prefix)));
             const equipRows = periodRows('equip');
             const statusRows = periodRows('status');
             const locRows = periodRows('loc');
@@ -2621,8 +2622,8 @@ if (isset($_GET['th_fragment'])
             document.getElementById('techReporterSearch').value = '';
             document.getElementById('techReporterSearchClear').classList.add('hidden');
             document.getElementById('techReporterSearchClear').classList.remove('flex');
-            const reporterDay = new Intl.DateTimeFormat('en-US', {timeZone:'Asia/Bangkok', day:'numeric'}).format(new Date());
-            selectChartDropdown('techReporter-Day', reporterDay, 'วันที่ ' + reporterDay, null);
+            const reporterDay = document.getElementById('repDay')?.value || 'all';
+            selectChartDropdown('techReporter-Day', reporterDay, reporterDay === 'all' ? 'ทุกวัน' : 'วันที่ ' + reporterDay, null);
             for (const part of ['Month', 'Year']) {
                 const value = document.getElementById('rep' + part).value;
                 const list = document.getElementById('techReporter-' + part + 'List');
@@ -2752,5 +2753,7 @@ if (isset($_GET['th_fragment'])
         });
     </script>
 <?php mbsDashboardActivityScript(); ?>
+<script src="repairs_calendar.js?v=20261019-3"></script>
+<script src="dashboard_calendars.js?v=20261019-1"></script>
 </body>
 </html>

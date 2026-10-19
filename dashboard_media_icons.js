@@ -9,5 +9,5 @@ function dashboardMediaIcons(row) {
         else image = true;
     }
     return (image ? '<i class="fas fa-image text-slate-400 ml-1" title="มีรูปภาพแนบ" role="img" aria-label="มีรูปภาพแนบ"></i>' : '')
-        + (video ? '<i class="fas fa-video text-blue-500 ml-1" title="มีวิดีโอแนบ" role="img" aria-label="มีวิดีโอแนบ"></i>' : '');
+        + (video ? '<i class="fas fa-video text-slate-400 ml-1" title="มีวิดีโอแนบ" role="img" aria-label="มีวิดีโอแนบ"></i>' : '');
 }

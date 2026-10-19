@@ -2158,7 +2158,7 @@ if (isset($_GET['api_check_hash'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBS Repair Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="dashboard_media_icons.js?v=20261019-1"></script>
+    <script src="dashboard_media_icons.js?v=20261019-2"></script>
     <script src="password_policy.js"></script>
     <script>
         const sharedPasswordPolicy = <?php echo json_encode(passwordPolicyConfig(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
@@ -2662,7 +2662,7 @@ if (isset($_GET['api_check_hash'])) {
 .ab-check{width:16px;height:16px;accent-color:#2563eb;cursor:pointer;}
 .ab-check:disabled{cursor:not-allowed;opacity:.4;}
 </style>
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-2">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
@@ -5188,7 +5188,7 @@ if (isset($_GET['api_check_hash'])) {
             container.innerHTML = '';
             let m = document.getElementById('reporterMonth') ? document.getElementById('reporterMonth').value : 'all';
             let y = document.getElementById('reporterYear') ? document.getElementById('reporterYear').value : 'all';
-            let filteredRepairs = getFilteredRepairsByMonthYear(m, y);
+            let filteredRepairs = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'reporter'));
             const reporterMap = new Map();
             filteredRepairs.forEach(r => addLineReporter(reporterMap, r));
             let reporterArr = Array.from(reporterMap.values());
@@ -6609,7 +6609,7 @@ if (isset($_GET['api_check_hash'])) {
         function renderEquipChart() {
             let m = document.getElementById('equipMonth').value;
             let y = document.getElementById('equipYear').value;
-            let data = getFilteredRepairsByMonthYear(m, y);
+            let data = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'equip'));
 
             let map = {};
             data.forEach(r => {
@@ -6702,7 +6702,7 @@ if (isset($_GET['api_check_hash'])) {
         function renderStatusChart() {
             let m = document.getElementById('statusMonth').value;
             let y = document.getElementById('statusYear').value;
-            let data = getFilteredRepairsByMonthYear(m, y);
+            let data = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'status'));
 
             let pending = 0, progress = 0, completed = 0;
             data.forEach(r => {
@@ -6741,7 +6741,7 @@ if (isset($_GET['api_check_hash'])) {
         function renderLocChart() {
             let m = document.getElementById('locMonth').value;
             let y = document.getElementById('locYear').value;
-            let data = getFilteredRepairsByMonthYear(m, y);
+            let data = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'loc'));
 
             let map = {};
             data.forEach(r => {
@@ -6836,7 +6836,7 @@ if (isset($_GET['api_check_hash'])) {
         function renderTechChart() {
             let m = document.getElementById('techMonth').value;
             let y = document.getElementById('techYear').value;
-            let data = getFilteredRepairsByMonthYear(m, y);
+            let data = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'tech'));
 
             let map = {};
             data.forEach(r => {
@@ -6953,7 +6953,7 @@ if (isset($_GET['api_check_hash'])) {
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
-            let data = getFilteredRepairsByMonthYear(m, y);
+            let data = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'rating'));
 
             let deptMap = {}; 
             let techMap = {}; 
@@ -7253,7 +7253,7 @@ if (isset($_GET['api_check_hash'])) {
         function openTechReviewsModal(deptName, month, year) {
             document.getElementById('techReviewsModalDept').innerText = deptName;
             
-            let data = getFilteredRepairsByMonthYear(month, year);
+            let data = getFilteredRepairsByMonthYear(month, year).filter(r => dashboardCalendarMatches(r, 'rating'));
             
             let allTechsInDept = Object.keys(techDeptMap).filter(tName => {
                 let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
@@ -9085,6 +9085,7 @@ if (isset($_GET['api_check_hash'])) {
 <div id="ab-settings" hidden data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></div>
 <script src="admin_table_bulk.js?v=20261019-3"></script>
 <script src="admin_log_bulk.js?v=20261019-2"></script>
-<script src="repairs_calendar.js?v=20261019-2"></script>
+<script src="repairs_calendar.js?v=20261019-3"></script>
+<script src="dashboard_calendars.js?v=20261019-1"></script>
 </body>
 </html>

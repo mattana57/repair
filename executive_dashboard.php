@@ -627,7 +627,7 @@ if (isset($_GET['api_check_hash'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Executive Dashboard | MBS Repair</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="dashboard_media_icons.js?v=20261019-1"></script>
+    <script src="dashboard_media_icons.js?v=20261019-2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1053,6 +1053,7 @@ if (isset($_GET['api_check_hash'])) {
     </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
 </head>
 
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -2811,7 +2812,7 @@ if (isset($_GET['api_check_hash'])) {
         function renderEquipChart() {
             let m = document.getElementById('equipMonth').value;
             let y = document.getElementById('equipYear').value;
-            let data = getFilteredRepairsByMonthYear(m, y);
+            let data = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'equip'));
 
             let map = {};
             data.forEach(r => {
@@ -2904,7 +2905,7 @@ if (isset($_GET['api_check_hash'])) {
         function renderStatusChart() {
             let m = document.getElementById('statusMonth').value;
             let y = document.getElementById('statusYear').value;
-            let data = getFilteredRepairsByMonthYear(m, y);
+            let data = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'status'));
 
             let pending = 0, progress = 0, completed = 0;
             data.forEach(r => {
@@ -2944,7 +2945,7 @@ if (isset($_GET['api_check_hash'])) {
         function renderLocChart() {
             let m = document.getElementById('locMonth').value;
             let y = document.getElementById('locYear').value;
-            let data = getFilteredRepairsByMonthYear(m, y);
+            let data = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'loc'));
 
             let map = {};
             data.forEach(r => {
@@ -3031,7 +3032,7 @@ if (isset($_GET['api_check_hash'])) {
         function renderTechChart() {
             let m = document.getElementById('techMonth').value;
             let y = document.getElementById('techYear').value;
-            let data = getFilteredRepairsByMonthYear(m, y);
+            let data = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'tech'));
 
             let map = {};
             data.forEach(r => {
@@ -3147,7 +3148,7 @@ if (isset($_GET['api_check_hash'])) {
         function renderRatingChart() {
             let m = document.getElementById('ratingMonth').value;
             let y = document.getElementById('ratingYear').value;
-            let data = getFilteredRepairsByMonthYear(m, y);
+            let data = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'rating'));
 
             let deptMap = {}; 
             let techMap = {}; 
@@ -3405,7 +3406,7 @@ if (isset($_GET['api_check_hash'])) {
         function openTechReviewsModal(deptName, month, year) {
             document.getElementById('techReviewsModalDept').innerText = deptName;
 
-            let data = getFilteredRepairsByMonthYear(month, year);
+            let data = getFilteredRepairsByMonthYear(month, year).filter(r => dashboardCalendarMatches(r, 'rating'));
 
             let allTechsInDept = Object.keys(techDeptMap).filter(tName => {
                 let dName = techDeptMap[tName] ? techDeptMap[tName] : 'ไม่มีสังกัด';
@@ -3746,7 +3747,7 @@ if (isset($_GET['api_check_hash'])) {
             container.innerHTML = '';
             let m = document.getElementById('reporterMonth') ? document.getElementById('reporterMonth').value : 'all';
             let y = document.getElementById('reporterYear') ? document.getElementById('reporterYear').value : 'all';
-            let filteredRepairs = getFilteredRepairsByMonthYear(m, y);
+            let filteredRepairs = getFilteredRepairsByMonthYear(m, y).filter(r => dashboardCalendarMatches(r, 'reporter'));
             const reporterMap = new Map();
             filteredRepairs.forEach(r => addLineReporter(reporterMap, r));
             let reporterArr = Array.from(reporterMap.values());
@@ -4306,5 +4307,7 @@ if (isset($_GET['api_check_hash'])) {
         window.addEventListener('focus', autoRefreshAllData);
     </script>
 <?php mbsDashboardActivityScript(); ?>
+<script src="repairs_calendar.js?v=20261019-3"></script>
+<script src="dashboard_calendars.js?v=20261019-1"></script>
 </body>
 </html>

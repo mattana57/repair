@@ -26,17 +26,25 @@ header("Expires: 0");
 // พิมพ์ BOM (Byte Order Mark) เพื่อให้ Excel อ่านภาษาไทย (UTF-8) ได้ถูกต้องเป๊ะๆ
 echo "\xEF\xBB\xBF";
 
+// ตัวกรองปฏิทินจากหน้ารายงาน: 0/all คือไม่จำกัด และทุกค่าต้องเป็นตัวเลขที่ตรวจแล้ว
+$calendar_where = '';
+foreach (['day'=>['DAY',1,31], 'month'=>['MONTH',1,12], 'year'=>['YEAR',1000,9999]] as $calendar_key=>$calendar_rule) {
+    $calendar_value = $_GET[$calendar_key] ?? '0';
+    if (is_string($calendar_value) && ctype_digit($calendar_value) && (int)$calendar_value >= $calendar_rule[1] && (int)$calendar_value <= $calendar_rule[2]) {
+        $calendar_where .= ' AND ' . $calendar_rule[0] . '(created_at) = ' . (int)$calendar_value;
+    }
+}
 // 4. สร้างคำสั่ง SQL ดึงข้อมูลตามเงื่อนไขการกรอง
 if ($filter_tech !== 'all' && !empty($filter_tech)) {
     // กรณีดูแบบ "รายบุคคล"
-    $stmt = $conn->prepare("SELECT * FROM repairs WHERE technician_name = ? ORDER BY created_at DESC");
+    $stmt = $conn->prepare("SELECT * FROM repairs WHERE technician_name = ?$calendar_where ORDER BY created_at DESC");
     $stmt->bind_param("s", $filter_tech);
     $stmt->execute();
     $result = $stmt->get_result();
     $report_title_suffix = "(เฉพาะผลงานของ: " . htmlspecialchars($filter_tech) . ")";
 } else {
     // กรณีดูแบบ "ภาพรวมทั้งหมด"
-    $sql = "SELECT * FROM repairs ORDER BY created_at DESC";
+    $sql = "SELECT * FROM repairs WHERE 1=1$calendar_where ORDER BY created_at DESC";
     $result = $conn->query($sql);
     $report_title_suffix = "(ภาพรวมระบบทั้งหมด)";
 }
@@ -57,7 +65,10 @@ $thai_months = [
     "05" => "พฤษภาคม", "06" => "มิถุนายน", "07" => "กรกฎาคม", "08" => "สิงหาคม",
     "09" => "กันยายน", "10" => "ตุลาคม", "11" => "พฤศจิกายน", "12" => "ธันวาคม"
 ];
-$current_month = $thai_months[date('m')] . " " . (date('Y') + 543);
+$calendar_month = isset($_GET['month']) ? (int)$_GET['month'] : 0;
+$calendar_year = isset($_GET['year']) ? (int)$_GET['year'] : 0;
+$calendar_day = isset($_GET['day']) ? (int)$_GET['day'] : 0;
+$current_month = ($calendar_day >= 1 && $calendar_day <= 31 ? 'วันที่ ' . $calendar_day . ' ' : '') . ($calendar_month >= 1 && $calendar_month <= 12 ? $thai_months[sprintf('%02d', $calendar_month)] : 'ทุกเดือน') . ($calendar_year >= 1000 && $calendar_year <= 9999 ? ' พ.ศ. ' . ($calendar_year + 543) : ' ทุกปี');
 $current_date = date('d/m/') . (date('Y') + 543);
 $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้ดูแลระบบ";
 ?>
@@ -92,7 +103,7 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
             <td colspan="12" class="sub-header">ขอบเขตการรายงาน: <?php echo $report_title_suffix; ?></td>
         </tr>
         <tr>
-            <td colspan="4"><b>ข้อมูลประจำเดือน:</b> <?php echo $current_month; ?></td>
+            <td colspan="4"><b>ช่วงเวลาข้อมูล:</b> <?php echo $current_month; ?></td>
             <td colspan="4"><b>วันที่พิมพ์รายงาน:</b> <?php echo $current_date; ?></td>
             <td colspan="4"><b>ผู้พิมพ์รายงาน:</b> <?php echo $print_by; ?></td>
         </tr>

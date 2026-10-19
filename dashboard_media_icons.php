@@ -42,6 +42,6 @@ function dm_enrich($conn, array $row) {
 function dm_icons($conn, array $row) {
     $row = dm_enrich($conn, $row); $html = '';
     if ($row['attachment_image_count'] > 0) $html .= '<i class="fas fa-image text-slate-400 ml-1" title="มีรูปภาพแนบ" role="img" aria-label="มีรูปภาพแนบ"></i>';
-    if ($row['attachment_video_count'] > 0) $html .= '<i class="fas fa-video text-blue-500 ml-1" title="มีวิดีโอแนบ" role="img" aria-label="มีวิดีโอแนบ"></i>';
+    if ($row['attachment_video_count'] > 0) $html .= '<i class="fas fa-video text-slate-400 ml-1" title="มีวิดีโอแนบ" role="img" aria-label="มีวิดีโอแนบ"></i>';
     return $html;
 }

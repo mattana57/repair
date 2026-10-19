@@ -1,17 +1,18 @@
 (() => {
     'use strict';
-    const init = () => {
-        const controls = ['Day','Month','Year'].map(part => document.getElementById('table-' + part + 'Container'));
-        const fields = Object.fromEntries(['day','month','year'].map(key => [key, document.getElementById('table' + key[0].toUpperCase() + key.slice(1))]));
-        if (controls.some(node => !node) || Object.values(fields).some(node => !node) || typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) return;
+    const mount = config => {
+        const controls = config.controls;
+        const fields = config.fields;
+        if (controls.some(node => !node) || Object.values(fields).some(node => !node) || typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) return null;
+        const suffix = config.key === 'table' ? '' : '-' + config.key;
         const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
         const weekdays = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
         const todayParts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone:'Asia/Bangkok', year:'numeric', month:'numeric', day:'numeric'}).formatToParts(new Date()).map(p => [p.type,p.value]));
         const today = {year:Number(todayParts.year), month:Number(todayParts.month), day:Number(todayParts.day)};
-        const availableYears = new Set(Array.from(document.querySelectorAll('#table-YearList [data-value]'), node => Number(node.dataset.value)).filter(n => Number.isInteger(n) && n >= 1000 && n <= 9999));
+        const availableYears = new Set(Array.from(controls.flatMap(node => Array.from(node.querySelectorAll('[data-value]'))), node => Number(node.dataset.value)).filter(n => Number.isInteger(n) && n >= 1000 && n <= 9999));
         for (let year = Math.max(1000, today.year - 100); year <= Math.min(9999, today.year + 20); year++) availableYears.add(year);
         let mode = 'date', viewYear = today.year, viewMonth = today.month, selectedDate = null, period = {month:'all', year:'all'};
-        const read = () => Object.fromEntries(Object.entries(fields).map(([key,node]) => [key,node.value]));
+        const read = () => Object.fromEntries(Object.entries(fields).map(([key,node]) => [key,(node.value === '0' || node.value === 'all' ? 'all' : key === 'month' ? String(Number(node.value)).padStart(2,'0') : node.value)]));
         const monthValue = month => String(month).padStart(2,'0');
         const validDate = value => /^\d{4}$/.test(value.year) && /^\d{1,2}$/.test(value.month) && /^\d{1,2}$/.test(value.day) && Number(value.day)>=1 && Number(value.month)>=1 && Number(value.month)<=12 && Number(value.day)<=new Date(Number(value.year),Number(value.month),0).getDate();
         const describe = value => {
@@ -22,10 +23,10 @@
             return parts.join(' · ');
         };
         const trigger = document.createElement('button');
-        trigger.type = 'button'; trigger.className = 'rc-trigger'; trigger.id = 'repairsCalendarTrigger';
-        trigger.setAttribute('aria-haspopup','dialog'); trigger.setAttribute('aria-controls','repairsCalendarDialog'); trigger.setAttribute('aria-expanded','false');
+        trigger.type = 'button'; trigger.className = 'rc-trigger'; trigger.id = 'repairsCalendarTrigger' + suffix;
+        trigger.setAttribute('aria-haspopup','dialog'); trigger.setAttribute('aria-controls','repairsCalendarDialog' + suffix); trigger.setAttribute('aria-expanded','false');
         trigger.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 11h18"/></svg><span></span><svg class="rc-caret" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4.5h10L7 9.5z"/></svg>';
-        const dialog = document.createElement('dialog'); dialog.id = 'repairsCalendarDialog'; dialog.className = 'rc-dialog'; dialog.setAttribute('aria-labelledby','rc-title');
+        const dialog = document.createElement('dialog'); dialog.id = 'repairsCalendarDialog' + suffix; dialog.className = 'rc-dialog'; dialog.setAttribute('aria-labelledby','rc-title' + suffix);if(config.chart){trigger.classList.add('rc-chart');dialog.classList.add('rc-chart');}
         dialog.innerHTML = `
             <header class="rc-header"><div><p>ตัวกรองวันที่แจ้งซ่อม</p><h3 id="rc-title">เลือกช่วงเวลาที่ต้องการดู</h3></div><button type="button" data-rc="close" class="rc-close" aria-label="ปิดปฏิทิน">×</button></header>
             <div class="rc-tabs" role="tablist" aria-label="รูปแบบการเลือกช่วงเวลา">
@@ -44,7 +45,13 @@
                 <p class="rc-help">โหมดนี้แสดงทุกวันในเดือนหรือปีที่เลือก</p>
             </section>
             <footer class="rc-footer"><p id="rc-selection" aria-live="polite"></p><div><button type="button" data-rc="close" class="rc-cancel">ยกเลิก</button><button type="button" data-rc="apply" class="rc-apply">ใช้ตัวกรอง</button></div></footer>`;
-        const get = selector => dialog.querySelector(selector);
+        if (suffix) {
+            dialog.querySelectorAll('[id]').forEach(node => node.id += suffix);
+            for (const attr of ['for','aria-controls','aria-labelledby']) dialog.querySelectorAll('['+attr+']').forEach(node => node.setAttribute(attr,node.getAttribute(attr)+suffix));
+        }
+        const get = selector => dialog.querySelector(selector.startsWith('#') ? selector + suffix : selector);
+        get('.rc-header p').textContent = config.chart ? 'ตัวกรองช่วงเวลาของกราฟ' : 'ตัวกรองช่วงเวลา';
+
         get('#rc-view-month').replaceChildren(...months.map((month,index)=>{const option=document.createElement('option');option.value=index+1;option.textContent=month;return option;}));
         function fillYears(select, value, all) {
             const years = new Set(availableYears); if (value !== 'all') years.add(Number(value)); years.add(viewYear);
@@ -97,16 +104,16 @@
             if(action==='today'){viewYear=today.year;viewMonth=today.month;selectedDate={day:String(today.day),month:monthValue(today.month),year:String(today.year)};render();}
             if(action==='apply'){
                 const value=mode==='date'?selectedDate:{day:'all',...period};if(!value)return;
-                for(const [key,valuePart] of Object.entries(value))fields[key].value=valuePart;
+                for(const [key,valuePart] of Object.entries(value))fields[key].value=config.zeroAll && valuePart === 'all' ? '0' : valuePart;
                 // ใช้เส้นทางกรอง/โหลดตารางและ PHP แบ่งหน้าเดิม ไม่กรองแถวด้วย JavaScript
-                sync();dialog.close();window.filterRepairsTable();
+                sync();dialog.close();config.apply();
             }
             if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}
         });
         dialog.addEventListener('change',event=>{
-            if(event.target.id==='rc-view-month')viewMonth=Number(event.target.value);
-            if(event.target.id==='rc-view-year')viewYear=Number(event.target.value);
-            if(event.target.id==='rc-period-year')period.year=event.target.value;
+            if(event.target===get('#rc-view-month'))viewMonth=Number(event.target.value);
+            if(event.target===get('#rc-view-year'))viewYear=Number(event.target.value);
+            if(event.target===get('#rc-period-year'))period.year=event.target.value;
             render();position();
         });
         dialog.addEventListener('keydown',event=>{
@@ -119,9 +126,8 @@
         dialog.addEventListener('close',()=>trigger.setAttribute('aria-expanded','false'));
         trigger.addEventListener('click',open);window.addEventListener('resize',position);
         document.body.appendChild(dialog);controls[0].before(trigger);controls.forEach(node=>node.classList.add('rc-legacy-hidden'));
-        const original=window.filterRepairsTable;
-        if(typeof original==='function')window.filterRepairsTable=function(...args){sync();return original.apply(this,args);};
-        document.addEventListener('DOMContentLoaded',sync,{once:true});window.addEventListener('popstate',()=>queueMicrotask(sync));sync();
+        sync();
+        return {trigger,dialog,sync,destroy(){window.removeEventListener('resize',position);if(dialog.open)dialog.close();dialog.remove();}};
     };
-    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+    window.RepairCalendar = {mount};
 })();

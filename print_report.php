@@ -11,6 +11,7 @@ require_once 'db_connect.php';
 require_once __DIR__ . '/activity_log.php';
 
 // รับค่าจาก URL
+$selected_day = isset($_GET['day']) && is_string($_GET['day']) && ctype_digit($_GET['day']) && (int)$_GET['day'] >= 1 && (int)$_GET['day'] <= 31 ? (int)$_GET['day'] : 0;
 $selected_tech = isset($_GET['tech']) ? trim($_GET['tech']) : 'all';
 $selected_month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
 $selected_year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
@@ -94,6 +95,7 @@ if($years_query && $years_query->num_rows > 0) {
 
 // เงื่อนไขการค้นหา SQL
 $where_conditions = [];
+if ($selected_day > 0) { $where_conditions[] = "DAY(created_at) = $selected_day"; }
 if ($selected_year > 0) {
     $where_conditions[] = "YEAR(created_at) = $selected_year";
 }
@@ -143,6 +145,7 @@ if($repairs_list && $repairs_list->num_rows > 0) {
 
 $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 $thai_year = $selected_year + 543;
+$calendar_period_label = ($selected_day > 0 ? 'วันที่ ' . $selected_day . ' ' : '') . ($selected_month > 0 && isset($thai_months[$selected_month]) ? $thai_months[$selected_month] : 'ทุกเดือน') . ($selected_year > 0 ? ' พ.ศ. ' . $thai_year : ' ทุกปี');
 
 if ($repairs_list !== false) {
     mbsActivityLog(
@@ -167,6 +170,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
     $sign_role = "ผู้รายงาน / ผู้จัดทำ";
     $doc_purpose = "ข้อมูลดังกล่าวสามารถนำไปใช้วางแผนการจัดซื้อวัสดุอุปกรณ์สำรอง และกำหนดแนวทางการบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) ในภาคการศึกษาถัดไปให้มีประสิทธิภาพมากยิ่งขึ้น";
 }
+if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected_day; }
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -323,6 +327,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             color: #a5b4fc !important;
         }
     </style>
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-3">
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
 
@@ -454,12 +459,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </div>
 
-                    <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+                    <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>" 
                        class="group px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                         <i class="fas fa-table mr-1.5 transition-colors <?php echo $report_type === 'table' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> ตารางรายงาน
                     </a>
                     
-                    <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+                    <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>" 
                        class="group px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'memo' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                         <i class="fas fa-file-alt mr-1.5 transition-colors <?php echo $report_type === 'memo' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> บันทึกข้อความ
                     </a>
@@ -492,12 +497,12 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             
             <!-- ✨ เปลี่ยน portrait:grid เป็น portrait:flex เพื่อให้ปุ่มตาราง/บันทึก หดตัวพอดีคำในมือถือแนวตั้ง ✨ -->
             <div class="flex portrait:flex md:portrait:flex lg:hidden items-center gap-2.5">
-                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>" 
                    class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                     <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> ตารางรายงาน
                 </a>
                 
-                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" 
+                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>" 
                    class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'memo' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                     <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> บันทึกข้อความ
                 </a>
@@ -527,11 +532,11 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <td class="memo-lbl">ที่</td>
                             <td style="width: 48%;">ศธ ๐๕๓๐.๑๑/.........................</td>
                             <td style="width: 1%; font-weight:700; white-space:nowrap; padding-right: 4px;">วันที่</td>
-                            <td><?php echo toThaiNumber(date('j'))." ".$thai_months[$selected_month]." ".toThaiNumber($thai_year); ?></td>
+                            <td><?php echo toThaiNumber(date('j'))." ".$thai_months[(int)date('n')]." ".toThaiNumber((int)date('Y') + 543); ?></td>
                         </tr>
                         <tr>
                             <td class="memo-lbl">เรื่อง</td>
-                            <td colspan="3"><?php echo $report_title; ?> ประจำเดือน <?php echo $thai_months[$selected_month]; ?></td>
+                            <td colspan="3"><?php echo $report_title; ?> ช่วงเวลา <?php echo $calendar_period_label; ?></td>
                         </tr>
                         <tr>
                             <td class="memo-lbl">เรียน</td>
@@ -544,7 +549,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             ด้วย ฝ่ายเทคโนโลยีสารสนเทศ คณะการบัญชีและการจัดการ ได้ดำเนินการเปิดรับแจ้งซ่อมและบำรุงรักษาอุปกรณ์คอมพิวเตอร์ ระบบเครือข่าย ไฟฟ้า และอาคารสถานที่ ผ่านระบบแจ้งซ่อมออนไลน์ (MBS REPAIR) นั้น
                         </p>
                         <p class="gov-p gov-indent">
-                            ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงานประจำเดือน <?php echo $thai_months[$selected_month]; ?> เพื่อรายงานผลการดำเนินงานให้ทราบ โดยมีรายละเอียดดังต่อไปนี้
+                            ในการนี้ ทางผู้ดูแลระบบได้รวบรวมข้อมูลสถิติการปฏิบัติงานช่วงเวลา <?php echo $calendar_period_label; ?> เพื่อรายงานผลการดำเนินงานให้ทราบ โดยมีรายละเอียดดังต่อไปนี้
                         </p>
 
                         <div class="mb-2">
@@ -636,7 +641,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
                             <h2 class="text-xl font-bold text-slate-900">รายงานสรุปผลการปฏิบัติงานซ่อมบำรุงครุภัณฑ์</h2>
                             <p class="text-sm font-semibold text-slate-700 mt-1">คณะการบัญชีและการจัดการ มหาวิทยาลัยมหาสารคาม</p>
                             <p class="text-xs text-slate-600 mt-1">
-                                <strong>ประจำเดือน:</strong> <?php echo $thai_months[$selected_month]; ?> พ.ศ. <?php echo $selected_year + 543; ?> <br>
+                                <strong>ช่วงเวลา:</strong> <?php echo $calendar_period_label; ?> <br>
                                 <strong>ช่างผู้รับผิดชอบ:</strong> 
                                 <?php 
                                     if ($selected_tech === 'all') {
@@ -1181,5 +1186,7 @@ if ($selected_tech !== 'all' && !empty($selected_tech)) {
             });
         }
     </script>
+<script src="repairs_calendar.js?v=20261019-3"></script>
+<script src="dashboard_calendars.js?v=20261019-1"></script>
 </body>
 </html>
