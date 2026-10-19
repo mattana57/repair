@@ -179,6 +179,30 @@ function at_purge_technician_with_accounts($conn, $id) {
     return $deletedAccounts;
 }
 
+// กู้คืนด้วยกติกาเดียวกันทั้งปุ่มรายรายการและรายการที่เลือก
+function at_restore_row($conn, $kind, $table, $id) {
+    $restoredTechAccountCount = 0;
+    if ($kind === 'tech') {
+        // ผูกบัญชีด้วย technician_id เท่านั้น คงรหัสและการผูก LINE เดิม
+        $linked = at_stmt($conn, 'SELECT id, role, deleted_at FROM users WHERE technician_id = ? FOR UPDATE', 'i', [$id]);
+        $linkedRows = $linked->get_result()->fetch_all(MYSQLI_ASSOC); $linked->close();
+        foreach ($linkedRows as $linkedRow) {
+            if (strtolower((string)$linkedRow['role']) !== 'technician') {
+                throw new RuntimeException('บัญชีที่ผูกเจ้าหน้าที่มีประเภทไม่ถูกต้อง กรุณาตรวจสอบก่อน');
+            }
+        }
+        at_stmt($conn, 'UPDATE technicians SET deleted_at = NULL WHERE id = ? AND deleted_at IS NOT NULL', 'i', [$id])->close();
+        // ไม่กู้คืนบัญชีที่ถูกย้ายเข้าถังขยะแยกไว้ และไม่สร้างบัญชีหรือผูก LINE ใหม่
+        $activate = at_stmt($conn, "UPDATE users SET is_active = 1, auth_version = auth_version + 1 WHERE technician_id = ? AND LOWER(role) = 'technician' AND deleted_at IS NULL", 'i', [$id]);
+        $restoredTechAccountCount = $activate->affected_rows;
+        $activate->close();
+    } else {
+        $keepUpdatedAt = $table === 'repairs' ? ', updated_at = updated_at' : '';
+        at_stmt($conn, "UPDATE $table SET deleted_at = NULL$keepUpdatedAt WHERE id = ? AND deleted_at IS NOT NULL", 'i', [$id])->close();
+    }
+    return $restoredTechAccountCount;
+}
+
 function at_handle_request($conn) {
     // ปิดช่องทาง DELETE ผ่าน GET เก่า ไม่แปลงคำขอเก่าเป็นการลบถาวร
     foreach (['delete_asset', 'delete_user', 'delete_tech', 'delete_reporter'] as $legacy) {
@@ -273,24 +297,7 @@ function at_handle_request($conn) {
                 at_stmt($conn, "UPDATE $table SET deleted_at = NOW()$keepUpdatedAt WHERE id = ? AND deleted_at IS NULL", 'i', [$id])->close();
             }
         } elseif ($action === 'restore') {
-            if ($kind === 'tech') {
-                // ผูกบัญชีด้วย technician_id เท่านั้น คงรหัสและการผูก LINE เดิม
-                $linked = at_stmt($conn, 'SELECT id, role, deleted_at FROM users WHERE technician_id = ? FOR UPDATE', 'i', [$id]);
-                $linkedRows = $linked->get_result()->fetch_all(MYSQLI_ASSOC); $linked->close();
-                foreach ($linkedRows as $linkedRow) {
-                    if (strtolower((string)$linkedRow['role']) !== 'technician') {
-                        throw new RuntimeException('บัญชีที่ผูกเจ้าหน้าที่มีประเภทไม่ถูกต้อง กรุณาตรวจสอบก่อน');
-                    }
-                }
-                at_stmt($conn, 'UPDATE technicians SET deleted_at = NULL WHERE id = ? AND deleted_at IS NOT NULL', 'i', [$id])->close();
-                // ไม่กู้คืนบัญชีที่ถูกย้ายเข้าถังขยะแยกไว้ และไม่สร้างบัญชีหรือผูก LINE ใหม่
-                $activate = at_stmt($conn, "UPDATE users SET is_active = 1, auth_version = auth_version + 1 WHERE technician_id = ? AND LOWER(role) = 'technician' AND deleted_at IS NULL", 'i', [$id]);
-                $restoredTechAccountCount = $activate->affected_rows;
-                $activate->close();
-            } else {
-                $keepUpdatedAt = $table === 'repairs' ? ', updated_at = updated_at' : '';
-                at_stmt($conn, "UPDATE $table SET deleted_at = NULL$keepUpdatedAt WHERE id = ? AND deleted_at IS NOT NULL", 'i', [$id])->close();
-            }
+            $restoredTechAccountCount = at_restore_row($conn, $kind, $table, $id);
         } elseif ($kind === 'tech') {
             $purgedLinkedAccounts = at_purge_technician_with_accounts($conn, $id);
         } elseif ($table === 'users' && in_array(strtolower((string)$row['role']), ['admin', 'executive'], true)) {
@@ -327,11 +334,12 @@ function at_handle_request($conn) {
     }
 }
 
-// Bulk requests use the same guards and deletion rules as single-item Trash actions.
+// Bulk requests use the same guards and restore/purge rules as single-item Trash actions.
 function at_handle_bulk_request($conn) {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST'
-        || !in_array($_POST['trash_action'] ?? null, ['bulk_select', 'bulk_purge'], true)) return;
+        || !in_array($_POST['trash_action'] ?? null, ['bulk_select', 'bulk_purge', 'bulk_restore'], true)) return;
     $selectOnly = $_POST['trash_action'] === 'bulk_select';
+    $restoreSelected = $_POST['trash_action'] === 'bulk_restore';
     $started = false;
     $audit = [];
     try {
@@ -341,7 +349,7 @@ function at_handle_bulk_request($conn) {
             throw new RuntimeException('คำขอหมดอายุ กรุณารีเฟรชหน้าแล้วลองใหม่');
         }
         if (!$selectOnly && ($_POST['trash_confirm'] ?? null) !== '1') {
-            throw new RuntimeException('กรุณายืนยันการลบถาวรก่อน');
+            throw new RuntimeException($restoreSelected ? 'กรุณายืนยันการกู้คืนก่อน' : 'กรุณายืนยันการลบถาวรก่อน');
         }
         if (!$selectOnly) {
             $engines = at_stmt($conn, "SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('users','technicians','repairs','assets')");
@@ -373,7 +381,7 @@ function at_handle_bulk_request($conn) {
         if (!is_string($rawItems)) throw new RuntimeException('รายการที่เลือกไม่ถูกต้อง');
         $items = json_decode($rawItems, true, 16, JSON_THROW_ON_ERROR);
         if (!is_array($items) || !$items || array_keys($items) !== range(0, count($items)-1)) {
-            throw new RuntimeException('กรุณาเลือกรายการก่อนลบ');
+            throw new RuntimeException($restoreSelected ? 'กรุณาเลือกรายการก่อนกู้คืน' : 'กรุณาเลือกรายการก่อนลบ');
         }
         $tables = ['asset'=>'assets', 'user'=>'users', 'tech'=>'technicians', 'repair'=>'repairs', 'loginlog'=>'login_logs', 'activitylog'=>'user_activity_logs'];
         $seen = [];
@@ -386,7 +394,7 @@ function at_handle_bulk_request($conn) {
             if ($id === false || !is_string($deletedAt) || !preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/D', $deletedAt)) {
                 throw new RuntimeException('ข้อมูลรายการที่เลือกไม่ถูกต้อง กรุณาเลือกใหม่');
             }
-            if ($item['kind'] === 'tech' && ($_POST['trash_confirm_linked_account'] ?? null) !== '1') {
+            if (!$restoreSelected && $item['kind'] === 'tech' && ($_POST['trash_confirm_linked_account'] ?? null) !== '1') {
                 throw new RuntimeException('กรุณายืนยันการลบเจ้าหน้าที่พร้อมบัญชีเว็บที่ผูกอยู่');
             }
             $key = $item['kind'] . ':' . $id;
@@ -394,7 +402,7 @@ function at_handle_bulk_request($conn) {
             $seen[$key] = true; $item['id'] = $id;
         }
         unset($item);
-        // Delete selected work orders/accounts first to respect dependencies on technicians.
+        // จัดการบัญชีที่เลือกก่อนเจ้าหน้าที่ เพื่อให้กติกาการกู้คืนและลบทำงานตามลำดับเดิม
         $order = ['loginlog'=>0, 'activitylog'=>0, 'repair'=>1, 'user'=>2, 'asset'=>3, 'tech'=>4];
         usort($items, static function ($a, $b) use ($order) {
             $rank = $order[$a['kind']] <=> $order[$b['kind']];
@@ -410,6 +418,11 @@ function at_handle_bulk_request($conn) {
             if ($table === 'users' && $id === (int)$_SESSION['user_id']) {
                 throw new RuntimeException('ไม่สามารถลบบัญชีที่กำลังใช้งานอยู่ได้');
             }
+            if ($restoreSelected) {
+                at_restore_row($conn, $kind, $table, $id);
+                $audit[] = [$table, $id];
+                continue;
+            }
             if ($kind === 'tech') {
                 $linkedAccounts = at_purge_technician_with_accounts($conn, $id);
                 foreach ($linkedAccounts as $accountId) $audit[] = ['users', $accountId];
@@ -423,14 +436,14 @@ function at_handle_bulk_request($conn) {
             }
             $audit[] = [$table, $id];
         }
-        if (!$conn->commit()) throw new RuntimeException('ไม่สามารถยืนยันการลบได้ กรุณาตรวจรายการก่อนลองใหม่');
+        if (!$conn->commit()) throw new RuntimeException($restoreSelected ? 'ไม่สามารถยืนยันการกู้คืนได้ กรุณาตรวจรายการก่อนลองใหม่' : 'ไม่สามารถยืนยันการลบได้ กรุณาตรวจรายการก่อนลองใหม่');
         $started = false;
         try {
             foreach ($audit as $entry) {
-                if (function_exists('mbsActivityLog')) mbsActivityLog($conn, 'TRASH_PURGE', $entry[0], $entry[1], 'ลบถาวรจากรายการที่เลือกในถังขยะ');
+                if (function_exists('mbsActivityLog')) mbsActivityLog($conn, $restoreSelected ? 'TRASH_RESTORE' : 'TRASH_PURGE', $entry[0], $entry[1], $restoreSelected ? 'กู้คืนจากรายการที่เลือกในถังขยะ' : 'ลบถาวรจากรายการที่เลือกในถังขยะ');
             }
         } catch (Throwable $logError) { error_log('Bulk Trash activity log failed'); }
-        at_redirect('success', 'ลบรายการที่เลือกถาวรแล้ว ' . count($items) . ' รายการ');
+        at_redirect('success', ($restoreSelected ? 'กู้คืนข้อมูลที่เลือกแล้ว ' : 'ลบรายการที่เลือกถาวรแล้ว ') . count($items) . ' รายการ');
     } catch (Throwable $error) {
         if ($started) { try { $conn->rollback(); } catch (Throwable $ignored) {} }
         $message = $error instanceof RuntimeException && !($error instanceof mysqli_sql_exception)

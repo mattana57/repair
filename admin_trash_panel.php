@@ -38,12 +38,12 @@ document.addEventListener('DOMContentLoaded', function () {
             <div id="trashBulkToolbar" class="hidden flex-wrap items-center gap-2 p-2 rounded-2xl bg-slate-50 border border-slate-200" aria-label="จัดการรายการที่เลือก">
                 <button type="button" id="trashChooseButton" onclick="selectTrashItems()" class="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-blue-50">เลือก</button>
                 <button type="button" id="trashChooseAllButton" onclick="selectAllTrashItems()" class="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-blue-50 disabled:opacity-50">เลือกทั้งหมด</button>
+                <button type="button" id="trashRestoreSelectedButton" onclick="restoreSelectedTrashItems()" disabled class="px-4 py-2 rounded-xl text-sm font-bold bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-100 disabled:opacity-50">กู้คืน</button>
                 <button type="button" onclick="deselectTrashItems()" class="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-blue-50">ไม่เลือก</button>
                 <button type="button" id="trashDeleteSelectedButton" onclick="deleteSelectedTrashItems()" disabled class="px-4 py-2 rounded-xl text-sm font-bold bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed">ลบ</button>
                 <span id="trashSelectedCount" class="ml-auto px-2 text-xs font-semibold text-slate-500" role="status" aria-live="polite">ยังไม่ได้เลือกรายการ</span>
             </div>
-            <p class="text-sm text-slate-500">รายการในถังขยะยังไม่ถูกลบจริง ข้อมูลยังอยู่ในฐานข้อมูลและสามารถกู้คืนได้</p>
-            <p class="text-sm text-slate-500">หากกดลบถาวร ข้อมูลจะถูกลบออกจากฐานข้อมูลและหน้าแดชบอร์ด และไม่สามารถกู้คืนได้</p>
+            <p class="text-sm text-slate-500">รายการในถังขยะยังไม่ถูกลบจริง ข้อมูลยังอยู่ในฐานข้อมูลและสามารถกู้คืนได้ หากกดลบถาวร ข้อมูลจะถูกลบออกจากฐานข้อมูลและหน้าแดชบอร์ด และไม่สามารถกู้คืนได้</p>
             <?php if (is_array($atNotice)): ?>
             <div role="status" class="p-4 rounded-xl text-sm font-semibold <?= ($atNotice['type'] ?? '') === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' ?>"><?= $atEscape($atNotice['message'] ?? '') ?></div>
             <?php endif; ?>
@@ -311,6 +311,7 @@ function refreshTrashSelectionUI() {
         : trashBulkSelected.size ? 'เลือกแล้ว ' + trashBulkSelected.size.toLocaleString('th-TH') + ' รายการ' : 'ยังไม่ได้เลือกรายการ';
     document.getElementById('trashChooseAllButton').disabled = trashBulkBusy || trashBulkDeleting;
     document.getElementById('trashDeleteSelectedButton').disabled = !trashBulkSelected.size || trashBulkBusy || trashBulkDeleting;
+    document.getElementById('trashRestoreSelectedButton').disabled = !trashBulkSelected.size || trashBulkBusy || trashBulkDeleting;
     document.getElementById('trashChooseButton').classList.toggle('text-blue-600', visible);
     document.getElementById('trashChooseButton').classList.toggle('bg-blue-50', visible);
 }
@@ -385,6 +386,24 @@ async function deleteSelectedTrashItems() {
         cancelTrashSearch();
         const form = document.createElement('form'); form.method = 'post'; form.action = window.location.href;
         const fields = {trash_action:'bulk_purge',trash_items:JSON.stringify(items),trash_confirm:'1',trash_confirm_linked_account:items.some(item=>item.kind === 'tech')?'1':'0',csrf_token:<?= json_encode($_SESSION['csrf_token']) ?>};
+        for (const [name,value] of Object.entries(fields)) {const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input);}
+        document.body.appendChild(form); form.submit(); submitted = true;
+    } finally {if (!submitted) {trashBulkDeleting = false; refreshTrashSelectionUI();}}
+}
+async function restoreSelectedTrashItems() {
+    if (!trashBulkSelected.size || trashBulkBusy || trashBulkDeleting) return;
+    const items = Array.from(trashBulkSelected.values()); const version = trashBulkVersion;
+    let text = 'จะกู้คืนรายการที่เลือก ' + items.length.toLocaleString('th-TH') + ' รายการกลับไปยังหน้ารายการเดิม';
+    if (items.some(item=>item.kind === 'tech')) text += ' เจ้าหน้าที่จะเปิดใช้บัญชีเว็บที่ผูกตามกติกาเดิม โดยไม่กู้คืนบัญชีเว็บที่อยู่ใน Trash แยกไว้หากไม่ได้เลือกบัญชีนั้น';
+    if (items.some(item=>item.kind === 'user')) text += ' บัญชีเว็บที่ไม่ได้เปิดใช้จากการกู้คืนเจ้าหน้าที่จะยังคงปิดใช้งานตามเดิม';
+    trashBulkDeleting = true; refreshTrashSelectionUI();
+    let submitted = false;
+    try {
+        const result = await Swal.fire({title:'กู้คืนรายการที่เลือก?',text,icon:'question',showCancelButton:true,confirmButtonText:'กู้คืนข้อมูล',cancelButtonText:'ยกเลิก',confirmButtonColor:'#2563eb'});
+        if (!result.isConfirmed || version !== trashBulkVersion) return;
+        cancelTrashSearch();
+        const form = document.createElement('form'); form.method = 'post'; form.action = window.location.href;
+        const fields = {trash_action:'bulk_restore',trash_items:JSON.stringify(items),trash_confirm:'1',csrf_token:<?= json_encode($_SESSION['csrf_token']) ?>};
         for (const [name,value] of Object.entries(fields)) {const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input);}
         document.body.appendChild(form); form.submit(); submitted = true;
     } finally {if (!submitted) {trashBulkDeleting = false; refreshTrashSelectionUI();}}

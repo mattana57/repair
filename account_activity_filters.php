@@ -18,7 +18,6 @@ $lh_year_options = ['all'=>'ทุกปี'];foreach($lh_years as $lh_y)$lh_yea
             <input type="text" data-activity-search id="accountActivitySearch" name="lh_q" value="<?= tp_text($lh_q) ?>" maxlength="200" placeholder="ค้นหาข้อมูลในตาราง..." class="w-full bg-white border border-slate-200 text-sm rounded-xl pl-10 pr-[95px] py-2.5 h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all font-medium shadow-sm">
             <button id="accountActivityClear" type="button" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 <?= $lh_q===''?'hidden':'' ?> items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm" aria-hidden="true"></i>ล้างค่า</button>
         </div>
-        <?php lb_edit_menu($lh_user>0?'activityevent':'activityperson'); ?>
         </div>
         <div class="flex flex-wrap items-center gap-2 shrink-0 max-w-full relative z-40">
         <?php foreach(['Day'=>['day',$lh_days,'วัน'],'Month'=>['month',['all'=>'ทุกเดือน']+$lh_months,'เดือน'],'Year'=>['year',$lh_year_options,'ปี']] as $lh_part=>$lh_spec):

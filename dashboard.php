@@ -4474,7 +4474,14 @@ if (isset($_GET['api_check_hash'])) {
                             <i class="fas fa-arrow-left" aria-hidden="true"></i>
                             กลับหน้าสรุปการเข้าสู่ระบบ
                         </a>
-                        <?php if ($login_detail === 'failed') lb_edit_menu('loginlog'); ?>
+                        <?php
+                        if ($login_detail === 'failed') {
+                            lb_edit_menu('loginlog');
+                        } elseif (in_array($login_detail, ['admin', 'executive', 'technician'], true)) {
+                            $activity_menu_user = filter_var(tp_get('pg_logs_q', '0'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+                            lb_edit_menu($activity_menu_user === false ? 'activityperson' : 'activityevent');
+                        }
+                        ?>
                     </div>
 
                     <?php
