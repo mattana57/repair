@@ -2662,7 +2662,7 @@ if (isset($_GET['api_check_hash'])) {
 .ab-check{width:16px;height:16px;accent-color:#2563eb;cursor:pointer;}
 .ab-check:disabled{cursor:not-allowed;opacity:.4;}
 </style>
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-1">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-2">
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
@@ -9085,6 +9085,6 @@ if (isset($_GET['api_check_hash'])) {
 <div id="ab-settings" hidden data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></div>
 <script src="admin_table_bulk.js?v=20261019-3"></script>
 <script src="admin_log_bulk.js?v=20261019-2"></script>
-<script src="repairs_calendar.js?v=20261019-1"></script>
+<script src="repairs_calendar.js?v=20261019-2"></script>
 </body>
 </html>

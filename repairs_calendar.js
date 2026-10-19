@@ -24,7 +24,7 @@
         const trigger = document.createElement('button');
         trigger.type = 'button'; trigger.className = 'rc-trigger'; trigger.id = 'repairsCalendarTrigger';
         trigger.setAttribute('aria-haspopup','dialog'); trigger.setAttribute('aria-controls','repairsCalendarDialog'); trigger.setAttribute('aria-expanded','false');
-        trigger.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 11h18"/></svg><span></span><span aria-hidden="true">⌄</span>';
+        trigger.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 11h18"/></svg><span></span><svg class="rc-caret" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4.5h10L7 9.5z"/></svg>';
         const dialog = document.createElement('dialog'); dialog.id = 'repairsCalendarDialog'; dialog.className = 'rc-dialog'; dialog.setAttribute('aria-labelledby','rc-title');
         dialog.innerHTML = `
             <header class="rc-header"><div><p>ตัวกรองวันที่แจ้งซ่อม</p><h3 id="rc-title">เลือกช่วงเวลาที่ต้องการดู</h3></div><button type="button" data-rc="close" class="rc-close" aria-label="ปิดปฏิทิน">×</button></header>
@@ -33,7 +33,7 @@
                 <button type="button" id="rc-tab-period" role="tab" aria-controls="rc-period" data-rc-mode="period">เลือกเดือน/ปี</button>
             </div>
             <section id="rc-date" class="rc-pane" role="tabpanel" aria-labelledby="rc-tab-date">
-                <div class="rc-nav"><button type="button" data-rc="prev" aria-label="เดือนก่อนหน้า">‹</button><label class="rc-sr" for="rc-view-month">เดือนในปฏิทิน</label><select id="rc-view-month"></select><label class="rc-sr" for="rc-view-year">ปีในปฏิทิน พ.ศ.</label><select id="rc-view-year"></select><button type="button" data-rc="next" aria-label="เดือนถัดไป">›</button></div>
+                <div class="rc-nav"><button type="button" data-rc="prev" aria-label="เดือนก่อนหน้า"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button><label class="rc-sr" for="rc-view-month">เดือนในปฏิทิน</label><select id="rc-view-month"></select><label class="rc-sr" for="rc-view-year">ปีในปฏิทิน พ.ศ.</label><select id="rc-view-year"></select><button type="button" data-rc="next" aria-label="เดือนถัดไป"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button></div>
                 <div class="rc-weekdays" aria-hidden="true">${weekdays.map(day=>'<span>'+day+'</span>').join('')}</div>
                 <div class="rc-days" role="group" aria-label="วันในปฏิทิน"></div>
                 <button type="button" data-rc="today" class="rc-today">เลือกวันนี้</button>
