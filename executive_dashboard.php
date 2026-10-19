@@ -1053,8 +1053,19 @@ if (isset($_GET['api_check_hash'])) {
     </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-4">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-6">
     <link rel="stylesheet" href="project_footer.css?v=20261019-2">
+    <style id="calendar-first-paint">
+        /* ปฏิทินใช้ค่าฟิลด์เดิม แต่ไม่แสดงดรอปดาวน์เก่าระหว่างโหลด */
+        [id$="-DayContainer"],
+        [id$="-MonthContainer"],
+        [id$="-YearContainer"],
+        #monthDropdownContainer,
+        #yearDropdownContainer,
+        #repairsMainCard .th-filter-group > details:nth-of-type(-n+3) {
+            display: none !important;
+        }
+    </style>
 </head>
 
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">

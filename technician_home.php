@@ -1149,9 +1149,20 @@ if (isset($_GET['th_fragment'])
         }
     }
     </style>
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-4">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261019-6">
     <link rel="stylesheet" href="project_footer.css?v=20261019-2">
     <link rel="stylesheet" href="technician_layout.css?v=20261019-1">
+    <style id="calendar-first-paint">
+        /* ปฏิทินใช้ค่าฟิลด์เดิม แต่ไม่แสดงดรอปดาวน์เก่าระหว่างโหลด */
+        [id$="-DayContainer"],
+        [id$="-MonthContainer"],
+        [id$="-YearContainer"],
+        #monthDropdownContainer,
+        #yearDropdownContainer,
+        #repairsMainCard .th-filter-group > details:nth-of-type(-n+3) {
+            display: none !important;
+        }
+    </style>
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
