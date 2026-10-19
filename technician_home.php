@@ -22,7 +22,7 @@ require_once 'db_connect.php';
 
 // ✨ 4. ใช้การตรวจบัญชีล่าสุด: ตรวจว่าบัญชีเชื่อมกับช่างที่มีอยู่จริงในระบบหรือไม่
 // (ป้องกันกรณีตาราง users ยังอยู่ แต่ชื่อช่างในตาราง technicians ถูกแอดมินลบทิ้งไปแล้ว)
-$stmt_tech = $conn->prepare("SELECT id, approval_status, full_name, english_name, avatar_url FROM technicians WHERE id = ? AND deleted_at IS NULL");
+$stmt_tech = $conn->prepare("SELECT id, approval_status, full_name, english_name FROM technicians WHERE id = ? AND deleted_at IS NULL");
 $stmt_tech->bind_param("i", $tech_id_session);
 $stmt_tech->execute();
 $res_tech = $stmt_tech->get_result();
@@ -64,20 +64,9 @@ require_once __DIR__ . '/dashboard_activity.php';
 $user_id = $_SESSION['user_id'];
 $full_name = $tech_data['full_name']; // ดึงชื่อล่าสุดจากตาราง technicians โดยตรง
 
-// ใช้อวตารเริ่มต้นแบบเดียวกับตาราง Team ฝั่งแอดมิน
-$tech_profile_image =
-    'https://api.dicebear.com/7.x/notionists/svg?seed='
-    . urlencode($full_name)
-    . '&backgroundColor=e2e8f0';
-
-// ถ้าแอดมินกำหนดรูปเจ้าหน้าที่ไว้ ให้ใช้รูปนั้นแทน
-$tech_avatar_path = (string) ($tech_data['avatar_url'] ?? '');
-
-if (preg_match('~\Auploads/[A-Za-z0-9_.-]+\.(?:jpg|jpeg|png|webp|gif)\z~i', $tech_avatar_path)
-    && is_file(__DIR__ . '/' . $tech_avatar_path)) {
-    $tech_profile_image = $tech_avatar_path
-        . '?v=' . filemtime(__DIR__ . '/' . $tech_avatar_path);
-}
+// รูปส่วนตัวแยกจากรูปข้อมูลเจ้าหน้าที่ที่แอดมินดูแล
+define('MBS_TECH_PERSONAL_PROFILE', true);
+require __DIR__ . '/technician_profile_avatar.php';
 
 $tech_profile_english = (string) ($tech_data['english_name'] ?? '');
 
@@ -1163,6 +1152,20 @@ if (isset($_GET['th_fragment'])
             display: none !important;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style id="tech-personal-avatar-ui">
+        .tech-dashboard-ui .tech-avatar-action-menu { min-width:192px; padding:12px; border-radius:16px; }
+        .tech-dashboard-ui .tech-avatar-action-menu > button { width:100%; gap:12px; padding:12px 8px; }
+        .tech-dashboard-ui .tech-avatar-action-menu .tpa-delete { color:#fb7185; }
+        .tech-dashboard-ui .tech-avatar-action-menu i { width:16px; text-align:center; }
+        #avatarPreviewConfirmModal.tpa-preview { position:fixed; inset:0; width:100vw; height:100vh; height:100dvh; max-width:none; max-height:none; margin:0; padding:0; border:0; background:#0f0f0f; color:white; overflow:hidden; }
+        #avatarPreviewConfirmModal.tpa-preview:not([open]) { display:none; }
+        #avatarPreviewConfirmModal.tpa-preview[open] { display:flex; align-items:center; justify-content:center; }
+        #avatarPreviewConfirmModal::backdrop { background:#0f0f0f; }
+        #avatarPreviewConfirmModal #cropCircleMask { width:min(320px,calc(100vw - 64px),calc(100dvh - 200px)); height:auto; aspect-ratio:1; flex-shrink:0; }
+        #avatarPreviewConfirmModal > div:last-child { max-height:calc(100dvh - 24px); max-width:calc(100vw - 24px); }
+        @media(min-width:640px) { #avatarPreviewConfirmModal > div:last-child { max-height:none; max-width:none; } }
+    </style>
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1197,18 +1200,16 @@ if (isset($_GET['th_fragment'])
                                                     class="tech-mobile-photo-large"
                                                 >
                                                 <span class="tech-avatar-camera">
-                                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                                    <i class="fas fa-camera" aria-hidden="true"></i>
                                                 </span>
                                             </summary>
 
                                             <div class="tech-avatar-action-menu">
-                                                <button
-                                                    type="button"
-                                                    onclick="this.closest('details').removeAttribute('open'); document.getElementById('tech-profile-viewer').showModal();"
-                                                >
-                                                    <i class="fas fa-eye" aria-hidden="true"></i>
-                                                    <span>ดูรูปภาพ</span>
-                                                </button>
+                                                <button type="button" onclick="this.closest('details').removeAttribute('open'); document.getElementById('tech-profile-viewer').showModal();"><i class="fas fa-eye" aria-hidden="true"></i><span>ดูรูปภาพ</span></button>
+                                                <button type="button" onclick="tpaOpenPicker()"><i class="fas fa-camera" aria-hidden="true"></i><span>เปลี่ยนรูปภาพ</span></button>
+                                                <?php if ($tech_has_personal_avatar): ?>
+                                                <button type="button" class="tpa-delete" onclick="tpaDelete()"><i class="fas fa-trash-alt" aria-hidden="true"></i><span>ลบรูปภาพ</span></button>
+                                                <?php endif; ?>
                                             </div>
                                         </details>
                                     <?php else: ?>
@@ -1302,6 +1303,10 @@ if (isset($_GET['th_fragment'])
 
     <main class="flex-1 overflow-y-auto w-full relative mbs-tech-footer-main">
         <div class="tech-page-shell max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <?php if (is_array($tech_profile_notice)): ?>
+                <p role="status" class="rounded-xl border px-4 py-3 mb-4 <?= !empty($tech_profile_notice['ok']) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' ?>"><?= htmlspecialchars((string)$tech_profile_notice['text'], ENT_QUOTES, 'UTF-8') ?></p>
+            <?php endif; ?>
+
 
             <?php
             // ดึงข้อมูลตำแหน่งและฝ่ายงานเพื่อมาแสดงใน Banner
@@ -1817,7 +1822,13 @@ if (isset($_GET['th_fragment'])
                 + "shadow-indigo-200 transition-colors cursor-pointer capsule-btn";
 
             if (tabId === 'dash') {
+                const homeUrl = new URL(window.location.href);
+                homeUrl.searchParams.set('tab', 'dash');
+                ['hd','hm','hy','hs','hq','hp','th_fragment','th_line_user_id'].forEach(key => homeUrl.searchParams.delete(key));
+                homeUrl.hash = '';
+                window.history.replaceState(null, '', homeUrl.pathname + homeUrl.search);
                 renderDashTable();
+                if (!initial) window.scrollTo({top:0, behavior:'smooth'});
             }
         }
 
@@ -2189,6 +2200,8 @@ if (isset($_GET['th_fragment'])
 
             if (new URLSearchParams(window.location.search).get('tab') === 'history') {
                 showTab('history', 'all', false, true);
+            } else {
+                showTab('dash', 'all', false, true);
             }
         });
 
@@ -2781,5 +2794,6 @@ if (isset($_GET['th_fragment'])
 <?php mbsDashboardActivityScript(); ?>
 <script src="repairs_calendar.js?v=20261019-4"></script>
 <script src="dashboard_calendars.js?v=20261019-1"></script>
+<?php require __DIR__ . '/technician_profile_avatar_panel.php'; ?>
 </body>
 </html>
