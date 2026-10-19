@@ -541,6 +541,18 @@ if (isset($_GET['th_fragment'])
         body.tech-dashboard-ui {
             background: #f5f7fc;
             color: #17213a;
+            margin: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        /* ส่วนท้ายเจ้าหน้าที่เต็มหน้าจอ อยู่นอกกรอบเนื้อหาที่จำกัดความกว้าง */
+        body.tech-dashboard-ui > .mbs-project-footer {
+            align-self: stretch;
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            border-radius: 0;
         }
 
         .tech-dashboard-ui .tech-topbar {
@@ -1592,8 +1604,8 @@ if (isset($_GET['th_fragment'])
             ?>
 
         </div>
-        <?php include __DIR__ . '/project_footer.php'; ?>
     </main>
+    <?php include __DIR__ . '/project_footer.php'; ?>
 
     <!-- Javascript สำหรับวาดกราฟและตาราง -->
     <script>
