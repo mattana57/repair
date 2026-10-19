@@ -1066,6 +1066,7 @@ if (isset($_GET['api_check_hash'])) {
             display: none !important;
         }
     </style>
+<link rel="stylesheet" href="self_profile.css?v=20261020-1">
 </head>
 
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -1184,6 +1185,13 @@ if (isset($_GET['api_check_hash'])) {
                             </div>
                         </div>
                     </div>
+                    <?php if (strtolower($_SESSION['role'])==='executive'): ?>
+                    <div class="px-2 pt-2 border-t border-slate-100"><button type="button" class="sp-personal-menu-button" data-self-profile-open>
+    <span class="sp-menu-icon"><i class="fas fa-user-edit" aria-hidden="true"></i></span>
+    <span class="sp-menu-copy"><strong>แก้ไขข้อมูลส่วนตัว</strong><small>ชื่อ, เบอร์โทร, ชื่อผู้ใช้</small></span>
+    <i class="fas fa-chevron-right sp-menu-arrow" aria-hidden="true"></i>
+</button></div>
+                    <?php endif; ?>
 
                 </div>
             </div>
@@ -4324,5 +4332,6 @@ if (isset($_GET['api_check_hash'])) {
 <?php mbsDashboardActivityScript(); ?>
 <script src="repairs_calendar.js?v=20261019-4"></script>
 <script src="dashboard_calendars.js?v=20261019-1"></script>
+<?php require __DIR__ . '/self_profile_panel.php'; ?>
 </body>
 </html>

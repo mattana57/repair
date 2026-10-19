@@ -8925,6 +8925,7 @@ if (isset($_GET['api_check_hash'])) {
                         '#repairsTable tbody',        // All Repairs List
                         '#pg-repairs-footer',         // จำนวนรายการและปุ่มแบ่งหน้า
                         '#techniciansTableBody',      // Technicians (Admin)
+                        '#managementAccountsBody',    // ข้อมูลบัญชีที่เจ้าของแก้จากหน้าต่างส่วนตัว
                         '#techCardsContainer',        // Tech Cards (Executive)
                         '#assets table tbody',        // Assets (Admin)
                         '#pg-assets-footer',          // จำนวนรายการและปุ่มแบ่งหน้า Assets

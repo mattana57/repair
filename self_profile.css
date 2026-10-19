@@ -1,0 +1,32 @@
+.sp-dialog{position:fixed;inset:0;box-sizing:border-box;margin:auto;padding:0;width:min(448px,calc(100vw - 32px));max-width:448px;max-height:90vh;max-height:90dvh;border:0;border-radius:24px;background:#fff;color:#334155;box-shadow:0 25px 70px #0f172a38;font-family:'Plus Jakarta Sans','Kanit',sans-serif;opacity:0;transition:opacity .18s ease;overflow:hidden}
+.sp-dialog.sp-open{opacity:1}.sp-dialog::backdrop{background:#0f172a66;backdrop-filter:blur(4px)}
+.sp-dialog[open] #selfProfileForm{display:flex;flex-direction:column;max-height:90vh;max-height:90dvh;margin:0;overflow:hidden}
+.sp-dialog .sp-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;flex-shrink:0;border-bottom:1px solid #f1f5f9;background:white}
+.sp-dialog .sp-header h2{font:700 20px/1.4 'Plus Jakarta Sans','Kanit',sans-serif;color:#1e293b;margin:0}
+.sp-dialog .sp-close{width:32px;height:32px;flex:none;border:0;border-radius:50%;background:#f1f5f9;color:#94a3b8;font:500 22px/1 sans-serif;cursor:pointer}
+.sp-dialog .sp-close:hover{color:#e11d48;background:#fff1f2}
+.sp-dialog .sp-body{overflow-y:auto;overscroll-behavior:contain;min-height:0;padding:8px 24px 24px;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
+.sp-dialog .sp-field{margin:0 0 20px;min-width:0;position:relative}.sp-dialog .sp-field:last-child{margin-bottom:0}
+.sp-dialog .sp-field label{display:block;font-size:12px;line-height:16px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:8px;letter-spacing:.04em}
+.sp-dialog .sp-field label span{color:#f43f5e}.sp-dialog .sp-field label small{font-size:inherit;font-weight:500;color:#94a3b8;text-transform:none}
+.sp-dialog input:not([type=hidden]),.sp-dialog .sp-static,.sp-dialog .sp-select{box-sizing:border-box;display:block;width:100%;min-height:46px;margin:0;padding:12px 16px;border:1px solid #dfe5f2;border-radius:12px;background:white;color:#334155;box-shadow:0 2px 3px #0f172a05;font-family:inherit;font-size:14px;line-height:20px;font-weight:500;text-align:left;outline:none}
+.sp-dialog input[name=full_name]{font-weight:700}.sp-dialog input::placeholder{color:#94a3b8}
+.sp-dialog input:focus,.sp-dialog .sp-select:focus-visible,.sp-dialog .sp-select[aria-expanded=true]{border-color:#c7d2fe;box-shadow:0 0 0 3px #e0e7ff}
+.sp-dialog .sp-combo{position:relative}.sp-dialog .sp-select{display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer}
+.sp-dialog .sp-select span{min-width:0;overflow-wrap:anywhere}.sp-dialog .sp-chevron{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #94a3b8;flex-shrink:0}
+.sp-dialog .sp-options{box-sizing:border-box;position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:10;background:white;border:1px solid #f1f5f9;border-radius:22px;padding:8px;box-shadow:0 16px 36px #0f172a26;overflow-y:auto;overscroll-behavior:contain;max-height:260px;scrollbar-width:thin}
+.sp-dialog .sp-option{box-sizing:border-box;display:block;width:100%;border:0;background:white;color:#334155;font:600 14px/22px 'Kanit',sans-serif;text-align:left;padding:11px 15px;border-radius:15px;cursor:pointer;outline:none}
+.sp-dialog .sp-option:hover,.sp-dialog .sp-option:focus{background:#f8fafc}.sp-dialog .sp-option[aria-selected=true]{background:#eef2ff;color:#4f46e5}
+.sp-dialog input.sp-custom{margin-top:12px}.sp-dialog [hidden]{display:none!important}
+.sp-dialog .sp-footer{display:flex;justify-content:flex-end;gap:12px;padding:16px 24px 24px;border-top:1px solid #f1f5f9;background:white;flex-shrink:0}
+.sp-dialog .sp-footer button{min-height:42px;padding:10px 20px;border-radius:12px;font:700 14px/20px 'Plus Jakarta Sans','Kanit',sans-serif;cursor:pointer}
+.sp-dialog .sp-cancel{background:white;border:1px solid #dfe5f2;color:#475569;box-shadow:0 2px 3px #0f172a05}.sp-dialog .sp-cancel:hover{background:#f8fafc}
+.sp-dialog .sp-save{background:#2563eb;color:white;border:1px solid #2563eb;box-shadow:0 4px 8px #2563eb30}.sp-dialog .sp-save:hover{background:#1d4ed8}
+.sp-dialog button:disabled{opacity:.55;cursor:wait}.sp-dialog .sp-message{font-size:14px;line-height:1.6;color:#be123c;background:#fff1f2;border:1px solid #ffe4e6;border-radius:12px;padding:12px;margin:0 0 22px}
+.sp-dialog .sp-message.sp-success{color:#047857;background:#ecfdf5;border-color:#d1fae5}
+.sp-dialog .sp-invalid{border-color:#fb7185!important;box-shadow:0 0 0 2px #ffe4e6!important}
+.sp-personal-menu-button{box-sizing:border-box;width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;border:0;background:white;text-align:left;padding:13px 18px;color:#1e293b;border-radius:16px;cursor:pointer;font-family:inherit}
+.sp-personal-menu-button:hover{background:#f8fafc}.sp-personal-menu-button .sp-menu-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:40px;height:40px;border-radius:14px;background:#f1f5f9;color:#64748b}
+.sp-personal-menu-button .sp-menu-copy{flex:1}.sp-personal-menu-button strong{display:block;font-size:13px;font-weight:800;line-height:1.5}.sp-personal-menu-button small{display:block;color:#94a3b8;font-size:11px;line-height:1.5}.sp-personal-menu-button .sp-menu-arrow{color:#cbd5e1;font-size:12px}
+@media(max-width:540px){.sp-dialog{width:calc(100vw - 24px);max-height:calc(100dvh - 24px);border-radius:24px}.sp-dialog[open] #selfProfileForm{max-height:calc(100dvh - 24px)}.sp-dialog .sp-header{padding:20px 22px}.sp-dialog .sp-header h2{font-size:20px}.sp-dialog .sp-body{padding:12px 22px 22px}.sp-dialog .sp-footer{padding:16px 22px}.sp-dialog .sp-field{margin-bottom:20px}}
+@media(prefers-reduced-motion:reduce){.sp-dialog{transition:none}}

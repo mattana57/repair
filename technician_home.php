@@ -1166,6 +1166,7 @@ if (isset($_GET['th_fragment'])
         #avatarPreviewConfirmModal > div:last-child { max-height:calc(100dvh - 24px); max-width:calc(100vw - 24px); }
         @media(min-width:640px) { #avatarPreviewConfirmModal > div:last-child { max-height:none; max-width:none; } }
     </style>
+<link rel="stylesheet" href="self_profile.css?v=20261020-1">
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1236,6 +1237,11 @@ if (isset($_GET['th_fragment'])
                                 </div>
                             </div>
 
+                            <button type="button" class="sp-personal-menu-button" data-self-profile-open>
+    <span class="sp-menu-icon"><i class="fas fa-user-edit" aria-hidden="true"></i></span>
+    <span class="sp-menu-copy"><strong>แก้ไขข้อมูลส่วนตัว</strong><small>ชื่อ, เบอร์โทร, ชื่อผู้ใช้</small></span>
+    <i class="fas fa-chevron-right sp-menu-arrow" aria-hidden="true"></i>
+</button>
                             <a href="verify_email_page.php">
                                 <i class="fas fa-envelope text-indigo-500" aria-hidden="true"></i>
                                 ยืนยันอีเมล
@@ -2795,5 +2801,6 @@ if (isset($_GET['th_fragment'])
 <script src="repairs_calendar.js?v=20261019-4"></script>
 <script src="dashboard_calendars.js?v=20261019-1"></script>
 <?php require __DIR__ . '/technician_profile_avatar_panel.php'; ?>
+<?php require __DIR__ . '/self_profile_panel.php'; ?>
 </body>
 </html>
