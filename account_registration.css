@@ -4,17 +4,3 @@
 .ar-draft-badge { display:inline-flex;align-items:center;border:1px solid #fcd34d;background:#fef3c7;color:#92400e;border-radius:9px;padding:4px 9px;font-size:12px;font-weight:600;line-height:1.5;max-width:100%; }
 .ar-draft-caption { color:#92400e;font-size:12px;line-height:1.6;margin:4px 0 9px; }
 #techAdmin_username[readonly] { background:#e5e7eb !important;color:#6b7280 !important;border-color:#d1d5db !important;cursor:not-allowed;box-shadow:none !important; }
-.ar-page { margin:0;min-height:100vh;box-sizing:border-box;background:#f8fafc;color:#334155;font-family:Kanit,sans-serif;padding:32px 16px; }
-.ar-card { box-sizing:border-box;max-width:680px;margin:0 auto;background:white;border:1px solid #e2e8f0;border-radius:20px;padding:28px;box-shadow:0 12px 35px #0f172a0a; }
-.ar-card h1 { font-size:23px;margin:0 0 10px;color:#0f172a; }
-.ar-card p { line-height:1.75; }
-.ar-grid { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
-.ar-field { display:flex;flex-direction:column;gap:7px;margin:0 0 16px;font-size:14px; }
-.ar-field input { box-sizing:border-box;width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:#f8fafc; }
-.ar-field input:focus { outline:2px solid #93c5fd;outline-offset:1px; }
-.ar-button { border:0;background:#2563eb;color:white;border-radius:10px;padding:12px 18px;font:inherit;cursor:pointer; }
-.ar-error { padding:12px;border-radius:10px;background:#fff1f2;color:#9f1239; }
-.ar-success { padding:12px;border-radius:10px;background:#ecfdf5;color:#065f46; }
-.ar-link { color:#1d4ed8;display:inline-block;margin-top:16px; }
-.ar-muted { font-size:13px;color:#64748b; }
-@media(max-width:540px){.ar-grid{grid-template-columns:1fr;gap:0}.ar-card{padding:20px}.ar-page{padding:18px 12px}}

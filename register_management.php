@@ -79,8 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'รหัสผ่านต้องผ่านเงื่อนไขที่แสดงใต้ช่องรหัสผ่านทุกข้อ';
         } elseif ($password !== $confirmation) {
             $error = 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน';
-        } elseif (arGateRegistration($conn, $account_role, $form_values, $password, $error)) {
-            // รายการที่แอดมินเตรียมไว้ต้องยืนยัน OTP ก่อนเชื่อม ไม่สร้างรายการซ้ำ
+        } elseif (arGateRegistration($conn, $account_role, $form_values, $password, $error, $success)) {
+            // บันทึกชื่อผู้ใช้และรหัสผ่านจากฟอร์มลงในรายการที่แอดมินเตรียมไว้
         } else {
             $stmt_check = null;
             $stmt_insert = null;
@@ -190,7 +190,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <a href="login.php" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center px-4 py-3 rounded-xl font-bold transition-all mt-4">กลับไปหน้าเข้าสู่ระบบ</a>
         <?php else: ?>
-            <p class="text-sm text-slate-600 mb-5">มีบัญชีแล้วและต้องการเปลี่ยนข้อมูลหรือชื่อผู้ใช้? <a class="font-bold text-blue-600 underline" href="account_profile.php">เข้าสู่ระบบแล้วแก้ไขบัญชีเดิม</a></p>
             <form id="registrationForm" action="" method="POST" class="space-y-6">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
                 <div>

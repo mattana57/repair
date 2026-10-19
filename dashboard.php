@@ -2134,7 +2134,7 @@ if (isset($_GET['api_check_hash'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MBS Repair Dashboard</title>
-    <link rel="stylesheet" href="account_registration.css?v=20261019-1">
+    <link rel="stylesheet" href="account_registration.css?v=20261019-2">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="dashboard_media_icons.js?v=20261019-2"></script>
     <script src="password_policy.js"></script>
@@ -2700,7 +2700,6 @@ if (isset($_GET['api_check_hash'])) {
             <button onclick="show('trash')" class="nav-btn <?php echo $active_tab === 'trash' ? 'active-btn' : ''; ?>" id="btn-trash"><i class="fas fa-trash-alt"></i> Trash</button>
             
             <div class="mt-auto pt-4 border-t border-slate-50">
-                                <a href="account_profile.php" class="nav-btn"><i class="fas fa-user-edit"></i> ข้อมูลบัญชีของฉัน</a>
                 <a href="verify_email_page.php" class="nav-btn">
                     <i class="fas fa-envelope"></i> ยืนยันอีเมล
                 </a>
@@ -4859,7 +4858,7 @@ if (isset($_GET['api_check_hash'])) {
                             <input type="hidden" id="techAdmin_password" value="" disabled>
                             <span id="passwordReqStar" hidden></span><span id="pwdHint" hidden></span>
                         </div>
-                        <p class="text-xs text-slate-500 md:col-span-2">รายการที่เพิ่มโดยแอดมิน: ให้เจ้าของลงทะเบียนด้วยข้อมูลที่เตรียมไว้ แล้วรับ OTP ทางอีเมลเพื่อยืนยันและตั้งชื่อผู้ใช้ของตนเอง</p>
+                        <p class="text-xs text-slate-500 md:col-span-2">รายการที่เพิ่มโดยแอดมิน: ให้ผู้ใช้สมัครสมาชิกด้วยข้อมูลที่เตรียมไว้ พร้อมตั้งชื่อผู้ใช้และรหัสผ่านของตนเอง</p>
                     </div>
 
                     <div id="adminLevelDiv" class="hidden">
