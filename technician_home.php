@@ -1096,6 +1096,24 @@ if (isset($_GET['th_fragment'])
         }
     }
     </style>
+
+    <style>
+    @media (max-width: 767px), (any-pointer: coarse) {
+        .tech-dashboard-ui .tech-status-chart-frame {
+            display:block;
+            flex:0 0 auto;
+            position:relative;
+            height:clamp(310px, 60vw, 370px);
+            min-height:310px;
+            max-height:none;
+        }
+        .tech-dashboard-ui .tech-status-chart-frame > canvas {
+            display:block;
+            width:100% !important;
+            height:100% !important;
+        }
+    }
+    </style>
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1411,7 +1429,7 @@ if (isset($_GET['th_fragment'])
                                 </div>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[280px] flex justify-center items-center">
+                        <div class="tech-status-chart-frame flex-1 relative w-full h-[280px] flex justify-center items-center">
                             <canvas id="statusChart"></canvas>
                         </div>
                     </div>
@@ -1784,7 +1802,12 @@ if (isset($_GET['th_fragment'])
             return window.matchMedia('(max-width: 767px), (any-pointer: coarse)').matches;
         }
         function techLocationAxisWidth(chart) {
-            return Math.min(160, Math.max(90, chart.width * 0.38));
+            // ให้พื้นที่ตามชื่อจริง ชื่อสั้นไม่ต้องเว้นช่องว่างกว้างเท่าชื่อยาว
+            const ctx = chart.ctx;
+            ctx.save(); ctx.font = "bold 12px 'Plus Jakarta Sans', 'Kanit', sans-serif";
+            const longest = Math.max(0, ...chart.data.labels.map(label => ctx.measureText(String(label)).width));
+            ctx.restore();
+            return Math.min(Math.max(70, Math.min(150, chart.width * 0.30)), Math.max(30, Math.ceil(longest) + 16));
         }
         function techLocationTick(value) {
             const label = String(this.getLabelForValue(value));
@@ -2452,6 +2475,35 @@ if (isset($_GET['th_fragment'])
         #techReporterTable td {padding:16px 12px;font-size:12px;line-height:1.6;vertical-align:top}
         #techReporterModalFooter {flex-shrink:0}
         #techReporterModalFooter .th-pagination {margin:0}
+
+/* iPad ทั้งสองแนว / มือถือแนวนอน: ตารางครบทุกคอลัมน์ */
+@media (min-width: 768px) and (any-pointer: coarse), (max-width: 767px) and (orientation: landscape) {
+    .tech-dashboard-ui #techReporterModal .tech-reporter-scroll {overflow-x:hidden;overflow-y:auto;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable {width:100% !important;min-width:0 !important;table-layout:fixed !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th, .tech-dashboard-ui #techReporterModal #techReporterTable td {
+        min-width:0 !important;max-width:none;white-space:normal !important;
+        word-break:normal !important;overflow-wrap:anywhere;letter-spacing:0 !important;
+        padding:10px 3px !important;
+    }
+    .tech-dashboard-ui #techReporterModal #techReporterTable th {font-size:clamp(8px, .8vw, 9.5px) !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable td {font-size:clamp(9px, .95vw, 12px) !important;line-height:1.6;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable td :is(div,span) {min-width:0;max-width:100%;white-space:normal !important;overflow-wrap:anywhere;font-size:inherit;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable td .th-status {padding:3px 4px;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable tbody td, .tech-dashboard-ui #techReporterModal #techReporterTable tbody td:first-child {padding:10px 3px !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable td .th-date, .tech-dashboard-ui #techReporterModal #techReporterTable td .th-status {white-space:normal !important;overflow-wrap:anywhere;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(1) {width:3% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(2) {width:8% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(3) {width:8% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(4) {width:11% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(5) {width:10% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(6) {width:11% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(7) {width:10% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(8) {width:8% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(9) {width:6% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(10) {width:9% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(11) {width:8% !important;}
+    .tech-dashboard-ui #techReporterModal #techReporterTable th:nth-child(12) {width:8% !important;}
+}
         @media(prefers-reduced-motion:reduce) {#techReporterModal {transition:none}}
         @media(max-width:640px) {#techReporterModal {width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0}}
     </style>

@@ -855,6 +855,35 @@ rsort($thYears);
     .tech-dashboard-ui #repairsMainCard #historyTableFull tbody td::before {display: none;content: none;}
     .tech-dashboard-ui #repairsMainCard #historyTableFull .th-status {white-space: nowrap !important;}
 }
+
+/* iPad ทั้งสองแนว / มือถือแนวนอน: ตารางครบทุกคอลัมน์ */
+@media (min-width: 768px) and (any-pointer: coarse), (max-width: 767px) and (orientation: landscape) {
+    .tech-dashboard-ui #repairsMainCard .history-table-scroll {overflow-x:hidden;overflow-y:auto;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull {width:100% !important;min-width:0 !important;table-layout:fixed !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th, .tech-dashboard-ui #repairsMainCard #historyTableFull td {
+        min-width:0 !important;max-width:none;white-space:normal !important;
+        word-break:normal !important;overflow-wrap:anywhere;letter-spacing:0 !important;
+        padding:10px 3px !important;
+    }
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th {font-size:clamp(8px, .8vw, 9.5px) !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull td {font-size:clamp(9px, .95vw, 12px) !important;line-height:1.6;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull td :is(div,span) {min-width:0;max-width:100%;white-space:normal !important;overflow-wrap:anywhere;font-size:inherit;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull td .th-status {padding:3px 4px;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull tbody td, .tech-dashboard-ui #repairsMainCard #historyTableFull tbody td:first-child {padding:10px 3px !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull td .th-date, .tech-dashboard-ui #repairsMainCard #historyTableFull td .th-status {white-space:normal !important;overflow-wrap:anywhere;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(1) {width:3% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(2) {width:8% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(3) {width:8% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(4) {width:11% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(5) {width:10% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(6) {width:11% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(7) {width:10% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(8) {width:8% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(9) {width:6% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(10) {width:9% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(11) {width:8% !important;}
+    .tech-dashboard-ui #repairsMainCard #historyTableFull th:nth-child(12) {width:8% !important;}
+}
 </style>
 
 <div id="tab-content-history"
