@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/initial_password_policy.php';
 // ตรวจ OTP เท่านั้น ไม่ตั้งรหัสผ่านและไม่ออกสิทธิ์ล็อกอิน
 if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     http_response_code(403);
@@ -93,7 +94,7 @@ function otpVerificationCheck(
         $user = otpRequestRow(otpRequestStatement(
             $conn,
             'SELECT id, role, is_active, technician_id, email,
-                    verified_email, email_verified_at, auth_version
+                    verified_email, email_verified_at, initial_password_pending, auth_version
              FROM users WHERE id = ? FOR UPDATE',
             'i', [$user_id]
         ));
@@ -134,9 +135,8 @@ function otpVerificationCheck(
             && (int) $request['is_live'] === 1
             && (int) $request['failed_attempts'] < $limit;
         if ($eligible && $purpose === 'password_reset') {
-            $eligible = !empty($user['email_verified_at'])
-                && is_string($user['verified_email'])
-                && $user['verified_email'] === $email;
+            $eligible = initialPasswordModeMatches($user, $context)
+                && initialPasswordEmailEligible($user, $email);
         }
         if ($eligible && $purpose === 'email_verification') {
             $eligible = (string) $session_version === (string) $user['auth_version']
@@ -186,6 +186,7 @@ function otpVerificationCheck(
                 'role' => (string) $user['role'],
                 'technician_id' => $user['technician_id'],
                 'target_email' => $email,
+                'initial_password_pending' => initialPasswordPending($user) ? 1 : 0,
                 'expires_at' => min((int) $request['expiry_epoch'],
                     (int) $request['database_now'] + $config['reset_grant_lifetime_seconds']),
             ];

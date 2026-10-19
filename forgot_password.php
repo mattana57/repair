@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Cache-Control: no-store');
 
         $fake_token = bin2hex(random_bytes(32));
-        $neutral_message = 'หากบัญชีนี้มีสิทธิ์ใช้งานและยืนยันอีเมลแล้ว ระบบจะส่งรหัส OTP ไปยังอีเมลดังกล่าว';
+        $neutral_message = 'หากบัญชีนี้มีสิทธิ์ตั้งรหัสผ่านครั้งแรกหรือรีเซ็ตรหัสผ่าน ระบบจะส่ง OTP ไปยังอีเมลที่บันทึกไว้';
 
         $response_token = $fake_token;
 
@@ -302,7 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="mt-8 pt-6 border-t border-slate-100 text-center">
                 <p class="text-sm font-bold text-slate-600 mb-2">เข้าถึงอีเมลไม่ได้ใช่หรือไม่?</p>
-                <p class="text-xs text-slate-500 mb-4">หากคุณยังไม่เคยยืนยันอีเมล หรือไม่สามารถเข้าถึงอีเมลเดิมได้ กรุณาติดต่อแอดมินเพื่อขอรหัสผ่านชั่วคราว</p>
+                <p class="text-xs text-slate-500 mb-4">บัญชีที่แอดมินสร้างใหม่ใช้หน้านี้ตั้งรหัสผ่านครั้งแรกได้ ส่วนบัญชีเดิมต้องยืนยันอีเมลไว้แล้ว หากเข้าอีเมลไม่ได้ให้ติดต่อแอดมินตรวจสอบตัวตน</p>
                 <a href="login.php" class="text-indigo-600 font-bold hover:text-indigo-800 text-sm transition-colors"><i class="fas fa-arrow-left mr-1"></i> กลับไปหน้าเข้าสู่ระบบ</a>
             </div>
         </div>

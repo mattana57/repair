@@ -1134,17 +1134,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
 
     $account_username = $read_account_text('username');
     $account_password = $read_account_text('password', false);
+    // แอดมินไม่รับหรือตั้งรหัสผ่านเข้าเว็บให้ผู้อื่นอีกต่อไป
+    if ($account_password !== '') {
+        $reject_account_form('เจ้าของบัญชีต้องตั้งรหัสผ่านผ่าน OTP ด้วยตนเอง');
+    }
 
     if ($role === 'Technician'
         && ($account_username === '' || $account_username === '-')) {
         $reject_account_form('กรุณาระบุชื่อผู้ใช้งาน (Username)');
     }
 
-    if ($role === 'Technician'
-        && $user_id === 0
-        && $account_password === '') {
-        $reject_account_form('กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่ของช่าง');
-    }
 
     // รองรับชื่อผู้ใช้ภาษาไทย แต่ไม่รับช่องว่างหรืออักขระควบคุม
     if ($account_username !== ''
@@ -1416,12 +1415,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 );
             }
 
-            if (!$existing_user
-                && $web_username !== ''
-                && $web_password === '') {
-                throw new Exception(
-                    'กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่ของช่าง'
-                );
+            if (!$existing_user && $web_username !== '') {
+                // ไม่มีรหัสผ่านที่แอดมินหรือผู้ใช้รู้จนกว่าจะยืนยัน OTP และตั้งเอง
+                $web_password = bin2hex(random_bytes(32));
             }
 
             if (!$existing_user
@@ -1723,7 +1719,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     }
 
                     $role_tech = 'Technician';
-                    $u_ins = $conn->prepare("INSERT INTO users (username, password, full_name, role, technician_id, is_active, auth_version, must_change_password) VALUES (?, ?, ?, ?, ?, ?, 1, 1)");
+                    $u_ins = $conn->prepare("INSERT INTO users (username, password, full_name, role, technician_id, is_active, auth_version, must_change_password, initial_password_pending) VALUES (?, ?, ?, ?, ?, ?, 1, 0, 1)");
 
                     if (!$u_ins) {
                         throw new RuntimeException('ไม่สามารถเตรียมการสร้างบัญชีช่างได้');
@@ -1858,9 +1854,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             $reject_account_form('กรุณาระบุ Username');
         }
 
-        if ($user_id === 0 && $password === '') {
-            $reject_account_form('กรุณากำหนดรหัสผ่านสำหรับบัญชีใหม่');
-        }
+
 
                 try {
         if ($user_id > 0) {
@@ -1944,14 +1938,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             $admin_transaction_started = true;
             $avatar_url = $account_upload('avatar', 'admin_');
             if ($user_id === 0) {
-                $hashed_admin_pwd = password_hash($password, PASSWORD_DEFAULT);
+                $hashed_admin_pwd = password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT);
                 if (!is_string($hashed_admin_pwd) || $hashed_admin_pwd === '') {
                     throw new RuntimeException('จัดเตรียมรหัสผ่านไม่ได้');
                 }
                 $stmt = $conn->prepare(
                     "INSERT INTO users (username, password, full_name, english_name, position,
-                     phone, email, department, role, avatar_url, is_active, must_change_password, auth_version)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)"
+                     phone, email, department, role, avatar_url, is_active, must_change_password, auth_version, initial_password_pending)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 1)"
                 );
                 if (!$stmt) throw new RuntimeException('เตรียมสร้างบัญชีไม่ได้');
                 try {
@@ -4870,20 +4864,11 @@ if (isset($_GET['api_check_hash'])) {
                             <input type="text" name="username" id="techAdmin_username" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="ระบุชื่อผู้ใช้งาน (Username)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="ระบุชื่อผู้ใช้งาน (Username)">
                             <p id="err_techAdmin_username" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุชื่อผู้ใช้งาน (Username)</span></p>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                                Password <span class="text-rose-500" id="passwordReqStar">*</span>
-                                <span class="text-slate-400 font-normal normal-case" id="pwdHint"></span>
-                            </label>
-                            <div class="relative">
-                                <input type="password" name="password" id="techAdmin_password" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="••••••••" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="••••••••">
-                                <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-indigo-600 focus:outline-none" onclick="togglePasswordVisibility('techAdmin_password', 'eyeIcon')">
-                                    <i id="eyeIcon" class="fas fa-eye-slash"></i>
-                                </button>
-                            </div>
-                            <p id="err_techAdmin_password" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณากำหนดรหัสผ่าน (Password)</span></p>
-                            <p class="text-[11px] text-slate-500 mt-2"><?php echo htmlspecialchars(passwordPolicyHint(), ENT_QUOTES, 'UTF-8'); ?></p>
+                        <div hidden>
+                            <input type="hidden" id="techAdmin_password" value="" disabled>
+                            <span id="passwordReqStar" hidden></span><span id="pwdHint" hidden></span>
                         </div>
+                        <p class="text-xs text-slate-500 md:col-span-2">บัญชีที่สร้างใหม่: แจ้งชื่อผู้ใช้ให้เจ้าของบัญชีไปที่หน้า “ลืมรหัสผ่าน” เพื่อรับ OTP ทางอีเมลและตั้งรหัสผ่านครั้งแรกด้วยตนเอง</p>
                     </div>
 
                     <div id="adminLevelDiv" class="hidden">
@@ -7786,7 +7771,7 @@ if (isset($_GET['api_check_hash'])) {
                 loginCredsDiv.classList.remove('hidden'); 
                 if(accountStatusDiv) accountStatusDiv.classList.remove('hidden');
                     document.getElementById('techAdmin_username').required = true;
-                document.getElementById('techAdmin_password').required = (id === '');
+                document.getElementById('techAdmin_password').required = false;
                 if (document.getElementById('usernameReqStar')) {
                     document.getElementById('usernameReqStar').style.display = 'inline';
                 }
@@ -7871,17 +7856,10 @@ if (isset($_GET['api_check_hash'])) {
                 eyeIcon.classList.add('fa-eye-slash');
             }
 
-            const needsWebAccount = id === '' || (!isManagement && (!u || u.trim() === '' || u.trim() === '-'));
-            if (needsWebAccount) {
-                pwdInput.required = true;
-                passwordReqStar.style.display = 'inline';
-                pwdHint.innerText = id === '' ? '' : '(ต้องกำหนดรหัสผ่านสำหรับบัญชีเว็บใหม่)';
-            } else {
-                pwdInput.required = false;
-                passwordReqStar.style.display = 'none';
-                pwdHint.innerText = '(เว้นว่างไว้หากไม่ต้องการเปลี่ยน)';
-            }
-            
+            pwdInput.required = false;
+            passwordReqStar.style.display = 'none';
+            pwdHint.innerText = '';
+
             document.getElementById('techAdmin_department_select').name = "department_select"; document.getElementById('techAdmin_department_custom').name = "department_custom";
             setDropdownOrCustom('techAdmin_department_select', 'techAdmin_department_custom', d);
             toggleModal('techAdminModal'); 

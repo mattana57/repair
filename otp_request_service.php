@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/initial_password_policy.php';
 // ข้อ 2.7: กระบวนการขอและสร้าง OTP ร่วมกัน
 // ไม่สร้างตาราง ไม่เปลี่ยนรหัสผ่าน และไม่ออก Session ล็อกอิน
 
@@ -382,7 +383,7 @@ function otpRequestCreateAndSend(
             otpRequestStatement(
                 $conn,
                 "SELECT id, role, is_active, technician_id,
-                        email, verified_email, email_verified_at,
+                        email, verified_email, email_verified_at, initial_password_pending,
                         auth_version
                  FROM users
                  WHERE $where
@@ -473,7 +474,7 @@ function otpRequestCreateAndSend(
                 && $user['verified_email'] === $target_email
                 && !empty($user['email_verified_at']);
 
-            if ($purpose === 'password_reset' && !$email_verified) {
+            if ($purpose === 'password_reset' && !$email_verified && !initialPasswordPending($user)) {
                 $stop = 'not_eligible';
 
             } elseif ($purpose === 'email_verification'
@@ -636,7 +637,7 @@ function otpRequestCreateAndSend(
         require_once __DIR__ . '/mailer.php';
 
         $mail_purpose = $purpose === 'password_reset'
-            ? 'รีเซ็ตรหัสผ่าน'
+            ? (initialPasswordPending($user) ? 'ตั้งรหัสผ่านครั้งแรก' : 'รีเซ็ตรหัสผ่าน')
             : 'ยืนยันบัญชีอีเมล';
 
         try {
@@ -688,6 +689,7 @@ function otpRequestCreateAndSend(
             'role' => (string) $user['role'],
             'technician_id' => $user['technician_id'],
             'target_email' => $target_email,
+            'initial_password_pending' => initialPasswordPending($user) ? 1 : 0,
         ];
 
         return [

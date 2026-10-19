@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/initial_password_policy.php';
 // บันทึกรหัสผ่านหลังตรวจ OTP เท่านั้น ไม่ออกสิทธิ์ล็อกอิน
 if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     http_response_code(403);
@@ -63,7 +64,7 @@ function passwordResetSave($conn, $token, $password, $confirmation)
         // ลำดับล็อกเดียวกับการขอและตรวจ OTP
         $user = otpRequestRow(otpRequestStatement($conn,
             'SELECT id, role, is_active, technician_id, email,
-                    verified_email, email_verified_at, auth_version
+                    verified_email, email_verified_at, initial_password_pending, auth_version
              FROM users WHERE id = ? FOR UPDATE', 'i', [$user_id]));
         $technician = null;
         if ($user && strtolower((string) $user['role']) === 'technician'
@@ -90,9 +91,8 @@ function passwordResetSave($conn, $token, $password, $confirmation)
             && $user['technician_id'] === $grant['technician_id']
             && $email !== null && $email === $grant['target_email']
             && $email === $request['target_email']
-            && is_string($user['verified_email'])
-            && $email === $user['verified_email']
-            && !empty($user['email_verified_at'])
+            && initialPasswordModeMatches($user, $grant)
+            && initialPasswordEmailEligible($user, $email)
             && $request['verified_at'] !== null
             && $request['used_at'] === null
             && (int) $request['is_canceled'] === 0
@@ -135,9 +135,12 @@ function passwordResetSave($conn, $token, $password, $confirmation)
         // รหัสส่วนตัวใหม่ไม่ต้องผ่านขั้นตอนรหัสผ่านชั่วคราวอีก
         $stmt = otpRequestStatement($conn,
             'UPDATE users SET password = ?, auth_version = auth_version + 1,
-                    must_change_password = 0
+                    must_change_password = 0,
+                    verified_email = IF(initial_password_pending = 1, ?, verified_email),
+                    email_verified_at = IF(initial_password_pending = 1, NOW(), email_verified_at),
+                    initial_password_pending = 0
              WHERE id = ? AND is_active = 1 AND auth_version = ?',
-            'sii', [$hashed, $user_id, $version]);
+            'ssii', [$hashed, $email, $user_id, $version]);
         if ($stmt->affected_rows !== 1) {
             $stmt->close();
             throw new RuntimeException('Password reset account update failed');
