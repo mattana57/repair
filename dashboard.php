@@ -4858,7 +4858,7 @@ if (isset($_GET['api_check_hash'])) {
                             <input type="hidden" id="techAdmin_password" value="" disabled>
                             <span id="passwordReqStar" hidden></span><span id="pwdHint" hidden></span>
                         </div>
-                        <p class="text-xs text-slate-500 md:col-span-2">รายการที่เพิ่มโดยแอดมิน: ให้ผู้ใช้สมัครสมาชิกด้วยข้อมูลที่เตรียมไว้ พร้อมตั้งชื่อผู้ใช้และรหัสผ่านของตนเอง</p>
+                        <p id="adminAddAccountHint" hidden class="text-xs text-slate-500 md:col-span-2">รายการที่เพิ่มโดยแอดมิน: ให้ผู้ใช้สมัครสมาชิกด้วยข้อมูลที่เตรียมไว้ พร้อมตั้งชื่อผู้ใช้และรหัสผ่านของตนเอง</p>
                     </div>
 
                     <div id="adminLevelDiv" class="hidden">
@@ -7708,6 +7708,7 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='', em='', isActive=1) { 
+            document.getElementById('adminAddAccountHint').hidden = id !== '';
             // ✨ ล้างสถานะสีแดงค้างเก่าออกให้หมดทุกช่องก่อนเปิดหน้าต่าง ✨
             ['techAdmin_username', 'techAdmin_password', 'techAdmin_fullname', 'techAdmin_phone', 'techAdmin_email', 'techAdmin_position_select', 'techAdmin_position_custom', 'techAdmin_department_select', 'techAdmin_department_custom'].forEach(elId => {
                 clearFieldError(document.getElementById(elId));
