@@ -2657,6 +2657,15 @@ if (isset($_GET['api_check_hash'])) {
     <style id="admin-mobile-portrait-layout">
         /* เฉพาะมือถือแนวตั้ง: ปุ่มฝ่ายงาน 2 แถว และการ์ด Login History 2 x 2 */
         @media (max-width: 639px) and (orientation: portrait) {
+            #accountActivityFilters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #accountActivityFilters > div {
+                width: 100%;
+                min-width: 0;
+                flex: none;
+            }
             .admin-department-filters {
                 display: grid !important;
                 grid-template-columns: max-content minmax(0, 1fr);
