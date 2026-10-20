@@ -79,8 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'รหัสผ่านต้องผ่านเงื่อนไขที่แสดงใต้ช่องรหัสผ่านทุกข้อ';
         } elseif ($password !== $confirmation) {
             $error = 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน';
-        } elseif (arGateRegistration($conn, $account_role, $form_values, $password, $error, $success)) {
-            // บันทึกชื่อผู้ใช้และรหัสผ่านจากฟอร์มลงในรายการที่แอดมินเตรียมไว้
         } else {
             $stmt_check = null;
             $stmt_insert = null;
@@ -108,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     // รับเฉพาะประเภทบัญชีสองค่าที่อนุญาตในหน้านี้ ไม่รับรหัสเจ้าหน้าที่
                     $role = $account_role;
-                    $is_active = 1;
+                    $is_active = 0;
                     $auth_version = 1;
                     $tech_id = null;
                     // อีเมลยังไม่ยืนยัน ไม่สร้างหรือผูกข้อมูล technicians
@@ -132,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } elseif ($stmt_insert->affected_rows !== 1) {
                         throw new RuntimeException('Registration insert failed');
                     } else {
-                        $success = 'สมัครสมาชิกสำเร็จ! ประเภทบัญชี: ' . $registration_roles[$account_role] . ' สามารถเข้าสู่ระบบด้วยบัญชีที่สมัครได้ อีเมลที่กรอกยังไม่ได้รับการยืนยัน';
+                        $success = 'สมัครสมาชิกสำเร็จ! ประเภทบัญชี: ' . $registration_roles[$account_role] . ' บัญชียังถูกระงับ กรุณารอแอดมินเปิดใช้งานก่อนเข้าสู่ระบบ อีเมลที่กรอกยังไม่ได้รับการยืนยัน';
                     }
                 }
             } catch (Throwable $e) {

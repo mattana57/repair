@@ -1108,6 +1108,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
         $user_id = $validated_user_id;
     }
 
+    if ($user_id === 0) {
+        $reject_account_form('กรุณาให้เจ้าของบัญชีสมัครสมาชิกผ่านหน้าสมัครสมาชิก');
+    }
+
     $role = $read_account_text('role', false);
 
     if (!in_array($role, ['Technician', 'Admin', 'Executive'], true)) {
@@ -1133,11 +1137,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
 
     $is_active = (int) $raw_is_active;
 
-    // Username อ่านจากรายการเดิมเท่านั้น ไม่เชื่อค่าที่แอดมินส่งมา
+    // แก้ Username ได้เฉพาะแอดมินเจ้าของ Session เท่านั้น
+    $can_edit_own_username = $role === 'Admin'
+        && $user_id === (int)$_SESSION['user_id'];
     try {
         $account_username = arAdminUsername($conn, $role, $user_id);
     } catch (Throwable $e) {
         $reject_account_form('ไม่สามารถตรวจชื่อผู้ใช้เดิมได้');
+    }
+    if ($can_edit_own_username) {
+        $account_username = $read_account_text('username');
+        if ($account_username === '' || $account_username === '-'
+            || mb_strlen($account_username, 'UTF-8') > 50
+            || preg_match('/[\x00-\x1F\x7F]/u', $account_username)) {
+            $reject_account_form('กรุณากรอกชื่อผู้ใช้ให้ถูกต้อง ไม่เกิน 50 ตัวอักษร');
+        }
     }
     $account_password = $read_account_text('password', false);
     // แอดมินไม่รับหรือตั้งรหัสผ่านเข้าเว็บให้ผู้อื่นอีกต่อไป
@@ -1942,11 +1956,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                 $action = 'CREATE_USER';
                 $description = "เพิ่มข้อมูลบัญชี $role โดยแอดมิน — รอเจ้าของบัญชีลงทะเบียน";
             } else {
-                $locked_username = arRow($conn, 'SELECT username FROM users WHERE id=? FOR UPDATE', 'i', [$user_id]);
+                $locked_username = arRow($conn, 'SELECT username, role FROM users WHERE id=? AND deleted_at IS NULL FOR UPDATE', 'i', [$user_id]);
                 if (!$locked_username) throw new RuntimeException('ไม่พบบัญชีเดิม');
-                $username = $locked_username['username'];
+                $own_username_changed = false;
+                if ($can_edit_own_username && strtolower((string)$locked_username['role']) === 'admin') {
+                    $own_username_changed = $locked_username['username'] !== $username;
+                } else {
+                    $username = $locked_username['username'];
+                }
                 $fresh_admin_stmt = $account_query(
-                    'SELECT role, technician_id, is_active, email, avatar_url FROM users WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
+                    'SELECT role, technician_id, is_active, email, avatar_url, auth_version FROM users WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
                     'i', [$user_id]
                 );
                 try {
@@ -1961,13 +1980,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
                     throw new RuntimeException('ประเภทบัญชีเป้าหมายเปลี่ยนไป');
                 }
                 $admin_email_changed = $existing_adm['email'] !== $email;
+                if ($can_edit_own_username
+                    && (int)$existing_adm['auth_version'] !== (int)($_SESSION['auth_version'] ?? 0)) {
+                    throw new RuntimeException('ข้อมูลบัญชีเปลี่ยนไป กรุณาเข้าสู่ระบบใหม่');
+                }
                 $update_fields = ['username = ?', 'full_name = ?', 'english_name = ?',
                     'position = ?', 'phone = ?', 'email = ?', 'department = ?', 'role = ?', 'is_active = ?'];
                 $update_values = [$username, $full_name, $english_name, $position,
                     $phone, $email, $department, $role, $is_active];
                 $update_types = 'ssssssssi';
                 $version_increment = ($password !== '' || $existing_adm['role'] !== $role
-                    || (int) $existing_adm['is_active'] !== $is_active || $admin_email_changed) ? 1 : 0;
+                    || (int) $existing_adm['is_active'] !== $is_active || $admin_email_changed || $own_username_changed) ? 1 : 0;
                 if ($admin_email_changed) {
                     $update_fields[] = 'verified_email = NULL';
                     $update_fields[] = 'email_verified_at = NULL';
@@ -2031,6 +2054,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             $admin_commit_attempted = true;
             if (!$conn->commit()) throw new RuntimeException('ยืนยันการบันทึกไม่ได้');
             $admin_transaction_started = false;
+            if ($can_edit_own_username && $role === 'Admin' && $is_active === 1) {
+                $_SESSION['username'] = $username;
+                $_SESSION['auth_version'] = (int)$existing_adm['auth_version'] + $version_increment;
+            }
 
             $activity_account_action = $user_id === 0
                 ? 'CREATE_ACCOUNT'
@@ -3528,19 +3555,6 @@ if (isset($_GET['api_check_hash'])) {
 
             <div id="technicians" class="section <?php echo $active_tab === 'technicians' ? '' : 'hidden'; ?> space-y-6 no-print">
                 <?php tb_notice(); ?>
-                <!-- ✨ เพิ่ม landscape:flex-row และ landscape:items-center เพื่อให้บรรทัดนี้จัดเรียงแบบแนวนอนเฉพาะในมือถือแนวนอน ✨ -->
-                <div class="flex flex-col landscape:flex-row md:flex-row justify-between items-start landscape:items-center md:items-center gap-4 mb-2">
-                    <div>
-                        
-                    </div>
-                    <!-- ✨ เพิ่ม portrait:items-end เพื่อบังคับให้ปุ่มชิดขวาในมือถือแนวตั้ง และจัดวางอยู่คนละบรรทัด ✨ -->
-                    <div class="flex flex-col portrait:items-end landscape:flex-row md:flex-row w-full landscape:w-auto md:w-auto gap-3">
-                        <!-- ✨ ใช้ portrait:w-[55%] เพื่อย่อปุ่มให้สั้นลงประมาณครึ่งนึงในมือถือแนวตั้ง ✨ -->
-                        <button onclick="openTechAdminModal('Admin')" class="w-full portrait:w-[55%] landscape:w-auto md:w-auto flex-none bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center"><i class="fas fa-user-shield mr-2"></i> Add Admin</button>
-                        <button onclick="openTechAdminModal('Technician')" class="w-full portrait:w-[55%] landscape:w-auto md:w-auto flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center transition-all"><i class="fas fa-plus mr-2"></i> Add Technician</button>
-                    </div>
-                </div>
-
                 <div id="managementAccounts">
                     <?php
                     $management_role = tp_get('team_account_role', 'admin');
@@ -3945,7 +3959,6 @@ if (isset($_GET['api_check_hash'])) {
                         <h3 class="font-extrabold text-xl mb-2 text-rose-500">ไม่พบรายชื่อเจ้าหน้าที่ในระบบ</h3>
                         <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
                             ไม่มีเจ้าหน้าที่ชื่อนี้อยู่ในระบบ ลองตรวจสอบตัวสะกด<br>ทั้งภาษาไทยและภาษาอังกฤษดูอีกครั้งนะครับ<br>
-                            <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นเจ้าหน้าที่ใหม่ ต้องทำการ <span onclick="openTechAdminModal('Technician')" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
                         </p>
                     </div>
                 </div>
@@ -4160,7 +4173,6 @@ if (isset($_GET['api_check_hash'])) {
                     <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
                         ไม่มีเจ้าหน้าที่ชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">เจ้าหน้าที่ท่านนี้ยังไม่ได้ทำการ <span class="text-emerald-500">"ผูกบัญชี LINE"</span></strong><br>
                         ลองตรวจสอบตัวสะกด<br>ทั้งภาษาไทยและภาษาอังกฤษดูอีกครั้งนะครับ<br>
-                        <span class="text-xs text-slate-400 mt-2 block">ถ้าเป็นเจ้าหน้าที่ใหม่ ต้องไปที่หน้าเมนู <strong>"Team"</strong> เพื่อทำการ <span onclick="show('technicians'); setTimeout(() => openTechAdminModal('Technician'), 200);" class="text-indigo-600 font-bold cursor-pointer hover:text-indigo-800 underline transition-colors">"Add Technician"</span> เพิ่มเข้าสู่ระบบก่อน</span>
                     </p>
                 </div>
             </div>
@@ -4892,7 +4904,7 @@ if (isset($_GET['api_check_hash'])) {
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username <span class="normal-case tracking-normal font-medium">(ไม่อนุญาตให้แก้ไข)</span> <span class="text-rose-500" id="usernameReqStar" style="display:none">*</span></label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username <span id="usernameReadonlyNote" class="normal-case tracking-normal font-medium">(ไม่อนุญาตให้แก้ไข)</span> <span class="text-rose-500" id="usernameReqStar" style="display:none">*</span></label>
                             <input type="text" name="username" id="techAdmin_username" readonly aria-readonly="true" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="รอเจ้าของบัญชีลงทะเบียน" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="รอเจ้าของบัญชีลงทะเบียน">
                             <p id="err_techAdmin_username" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุชื่อผู้ใช้งาน (Username)</span></p>
                         </div>
@@ -4900,7 +4912,6 @@ if (isset($_GET['api_check_hash'])) {
                             <input type="hidden" id="techAdmin_password" value="" disabled>
                             <span id="passwordReqStar" hidden></span><span id="pwdHint" hidden></span>
                         </div>
-                        <p id="adminAddAccountHint" hidden class="text-xs text-slate-500 md:col-span-2">รายการที่เพิ่มโดยแอดมิน: ให้ผู้ใช้สมัครสมาชิกด้วยข้อมูลที่เตรียมไว้ พร้อมตั้งชื่อผู้ใช้และรหัสผ่านของตนเอง</p>
                     </div>
 
                     <div id="adminLevelDiv" class="hidden">
@@ -7750,7 +7761,7 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='', em='', isActive=1) { 
-            document.getElementById('adminAddAccountHint').hidden = id !== '';
+            if (!id || String(id) === '0') return;
             // ✨ ล้างสถานะสีแดงค้างเก่าออกให้หมดทุกช่องก่อนเปิดหน้าต่าง ✨
             ['techAdmin_username', 'techAdmin_password', 'techAdmin_fullname', 'techAdmin_phone', 'techAdmin_email', 'techAdmin_position_select', 'techAdmin_position_custom', 'techAdmin_department_select', 'techAdmin_department_custom'].forEach(elId => {
                 clearFieldError(document.getElementById(elId));
@@ -7851,9 +7862,12 @@ if (isset($_GET['api_check_hash'])) {
             document.getElementById('techAdmin_id').value = id;
             const usernameInput = document.getElementById('techAdmin_username');
             usernameInput.value = u || '';
-            usernameInput.readOnly = true;
-            usernameInput.required = Boolean(u);
-            document.getElementById('usernameReqStar').style.display = u ? 'inline' : 'none'; 
+            const canEditOwnUsername = role.toLowerCase() === 'admin' && String(id) === <?= json_encode((string)$_SESSION['user_id']) ?>;
+            usernameInput.readOnly = !canEditOwnUsername;
+            usernameInput.setAttribute('aria-readonly', String(!canEditOwnUsername));
+            usernameInput.required = canEditOwnUsername || Boolean(u);
+            document.getElementById('usernameReadonlyNote').hidden = canEditOwnUsername;
+            document.getElementById('usernameReqStar').style.display = usernameInput.required ? 'inline' : 'none'; 
             if(document.getElementById('techAdmin_is_active')) document.getElementById('techAdmin_is_active').value = isActive;
             document.getElementById('techAdmin_fullname').value = cleanFullName;
             document.getElementById('techAdmin_englishname').value = cleanEngName;
