@@ -35,11 +35,11 @@ function tpa_upload($file, $uid) {
     return $path;
 }
 function tpa_change($conn, $uid, $techId, $action, $file) {
-    $started = false; $new = null; $old = null; $commitAttempted = false;
+    $started = false; $new = null; $old = null; $oldTech = null; $commitAttempted = false;
     try {
         if (!$conn->begin_transaction()) throw new RuntimeException('เริ่มบันทึกไม่ได้');
         $started = true;
-        $stmt = tpa_stmt($conn, 'SELECT u.id, u.role, u.technician_id, u.is_active, u.auth_version, u.deleted_at, u.avatar_url, t.approval_status, t.deleted_at AS tech_deleted_at FROM users u JOIN technicians t ON t.id = u.technician_id WHERE u.id = ? FOR UPDATE', 'i', [$uid]);
+        $stmt = tpa_stmt($conn, 'SELECT u.id, u.role, u.technician_id, u.is_active, u.auth_version, u.deleted_at, u.avatar_url, t.avatar_url AS tech_avatar_url, t.approval_status, t.deleted_at AS tech_deleted_at FROM users u JOIN technicians t ON t.id = u.technician_id WHERE u.id = ? FOR UPDATE', 'i', [$uid]);
         try { $row = $stmt->get_result()->fetch_assoc(); } finally { $stmt->close(); }
         if (!$row || strtolower((string)$row['role']) !== 'technician' || (int)$row['technician_id'] !== (int)$techId
             || (int)$row['is_active'] !== 1 || $row['deleted_at'] !== null || $row['tech_deleted_at'] !== null
@@ -47,8 +47,11 @@ function tpa_change($conn, $uid, $techId, $action, $file) {
             || (isset($_SESSION['auth_version']) && (int)$row['auth_version'] !== (int)$_SESSION['auth_version'])) throw new RuntimeException('สิทธิ์บัญชีเปลี่ยนแล้ว กรุณาเข้าสู่ระบบใหม่');
         if (!in_array($action, ['upload', 'delete'], true)) throw new RuntimeException('คำขอไม่ถูกต้อง');
         $old = $row['avatar_url'];
+        $oldTech = $row['tech_avatar_url'];
         if ($action === 'upload') $new = tpa_upload($file, $uid);
         $stmt = tpa_stmt($conn, "UPDATE users SET avatar_url = ? WHERE id = ? AND LOWER(role) = 'technician' AND technician_id = ? AND deleted_at IS NULL", 'sii', [$new, $uid, $techId]);
+        $stmt->close();
+        $stmt = tpa_stmt($conn, 'UPDATE technicians SET avatar_url = ? WHERE id = ? AND deleted_at IS NULL', 'si', [$new, $techId]);
         $stmt->close();
         $commitAttempted = true;
         if (!$conn->commit()) throw new RuntimeException('ยืนยันการบันทึกไม่ได้ กรุณาตรวจรูปปัจจุบันก่อนทำรายการซ้ำ');
@@ -60,6 +63,9 @@ function tpa_change($conn, $uid, $techId, $action, $file) {
         throw $e;
     }
     try { tpa_cleanup($conn, $old, $uid); } catch (Throwable $ignored) { error_log('Technician personal avatar cleanup skipped'); }
+    if ($oldTech !== $old) {
+        try { tpa_cleanup($conn, $oldTech, $uid); } catch (Throwable $ignored) { error_log('Technician shared avatar cleanup skipped'); }
+    }
     try { if (function_exists('mbsActivityLog')) mbsActivityLog($conn, 'PROFILE_PHOTO', 'user', $uid, $action === 'delete' ? 'ลบรูปโปรไฟล์ส่วนตัวเจ้าหน้าที่' : 'เปลี่ยนรูปโปรไฟล์ส่วนตัวเจ้าหน้าที่'); } catch (Throwable $ignored) { error_log('Technician personal avatar log skipped'); }
 }
 if (!is_string($_SESSION['csrf_token'] ?? null) || $_SESSION['csrf_token'] === '') $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -81,7 +87,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['tech_profile_
 }
 $tech_profile_notice = $_SESSION['tech_profile_notice'] ?? null;
 unset($_SESSION['tech_profile_notice']);
-$stmt = tpa_stmt($conn, "SELECT avatar_url FROM users WHERE id = ? AND LOWER(role) = 'technician' AND technician_id = ? AND deleted_at IS NULL", 'ii', [(int)$_SESSION['user_id'], (int)$tech_id_session]);
+$stmt = tpa_stmt($conn, "SELECT t.avatar_url FROM users u JOIN technicians t ON t.id = u.technician_id WHERE u.id = ? AND LOWER(u.role) = 'technician' AND u.technician_id = ? AND u.deleted_at IS NULL AND t.deleted_at IS NULL", 'ii', [(int)$_SESSION['user_id'], (int)$tech_id_session]);
 try { $tech_personal_account = $stmt->get_result()->fetch_assoc(); } finally { $stmt->close(); }
 $tech_has_personal_avatar = false;
 $tech_profile_image = 'https://api.dicebear.com/7.x/notionists/svg?seed=' . urlencode((string)($_SESSION['username'] ?? $_SESSION['user_id']) . '_web_profile') . '&backgroundColor=e2e8f0';
