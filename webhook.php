@@ -383,17 +383,19 @@ function mbsRequesterList($db, $userId, $scope, $before = 0) {
         'footer'=>['type'=>'box','layout'=>'vertical','spacing'=>'sm','contents'=>$footer]]];
 }
 function mbsRequesterDetail($db, $userId, $id, $part = 0) {
-    $rows = mbsRequesterQuery($db,'SELECT id,ticket_no,equipment_type,location,problem_desc,status,technician_name,created_at FROM repairs WHERE id=? AND line_user_id=?'.mbsRequesterVisibleSql($db).' LIMIT 1','is',$id,$userId);
+    $rows = mbsRequesterQuery($db,'SELECT id,ticket_no,equipment_type,location,problem_desc,repair_note,status,technician_name,created_at FROM repairs WHERE id=? AND line_user_id=?'.mbsRequesterVisibleSql($db).' LIMIT 1','is',$id,$userId);
     if (!$rows) { return ['type'=>'text','text'=>'ไม่พบรายการนี้ในบัญชี LINE ของคุณค่ะ']; }
     $row = $rows[0];
-    // ไม่เผยแพร่หมายเหตุภายใน เบอร์เจ้าหน้าที่ หรือข้อมูลผู้แจ้งอื่น
-    $detail = (string)$row['problem_desc'];
+    // แสดงหมายเหตุใบงาน repair_note ตามคำขอ ไม่ดึง root_cause หรือข้อมูลผู้แจ้งอื่น
+    $note = trim((string)($row['repair_note'] ?? ''));
+    $detail = "รายละเอียดที่แจ้ง:\n".(trim((string)$row['problem_desc']) !== '' ? (string)$row['problem_desc'] : 'ไม่ระบุ')
+        ."\n\nหมายเหตุจากเจ้าหน้าที่:\n".($note !== '' ? $note : 'ยังไม่มีหมายเหตุ');
     $pages = max(1,(int)ceil(mb_strlen($detail,'UTF-8')/1500));
     if ($part >= $pages) { return ['type'=>'text','text'=>'ไม่มีรายละเอียดเพิ่มเติมแล้วค่ะ']; }
     $text = 'รายการ: '.mbsRequesterText($row['ticket_no'],40)."\nสถานที่: ".mbsRequesterText($row['location'],150)
         ."\nเรื่อง: ".mbsRequesterText($row['equipment_type'],100)."\nสถานะ: ".mbsRequesterStatus($row['status'])
         ."\nผู้รับผิดชอบ: ".(trim((string)$row['technician_name']) !== '' ? mbsRequesterText($row['technician_name'],100) : 'รอเจ้าหน้าที่รับเรื่อง')
-        ."\nแจ้งเมื่อ: ".mbsRequesterText($row['created_at'],40)."\n\nรายละเอียดที่แจ้ง".($pages > 1 ? ' ('.($part+1).'/'.$pages.')' : '').":\n"
+        ."\nแจ้งเมื่อ: ".mbsRequesterText($row['created_at'],40)."\n\nข้อมูลรายการ".($pages > 1 ? ' ('.($part+1).'/'.$pages.')' : '').":\n"
         .(trim($detail) !== '' ? mb_substr($detail,$part*1500,1500,'UTF-8') : 'ไม่ระบุ');
     $items = [];
     if ($part+1 < $pages) { $items[] = ['type'=>'action','action'=>['type'=>'postback','label'=>'อ่านรายละเอียดต่อ','data'=>'action=my_request_detail&id='.$id.'&part='.($part+1)]]; }
