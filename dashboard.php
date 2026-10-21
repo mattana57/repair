@@ -2747,7 +2747,7 @@ if (isset($_GET['api_check_hash'])) {
             'technicians' => 'Team Management',
             'team_cards' => 'Team Management',
             'assets' => 'Assets Database',
-            'users' => 'Reporter History',
+            'users' => 'User Information',
             'reports' => 'Official Report',
             'login_logs' => 'Login History',
             'trash' => 'Trash'
@@ -4256,7 +4256,7 @@ if (isset($_GET['api_check_hash'])) {
                 <div class="modern-card overflow-hidden flex flex-col">
                     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
                         <div>
-                            <h2 class="text-xl font-extrabold text-slate-800">Reporter History</h2>
+                            <h2 class="text-xl font-extrabold text-slate-800">Contacts</h2>
                             <p class="text-sm font-medium text-slate-400 mt-0.5">Database of personnel who reported issues</p>
                         </div>
                         <!-- ✨ ช่องค้นหาพร้อมปุ่มล้างค่า ✨ -->
@@ -5306,7 +5306,7 @@ if (isset($_GET['api_check_hash'])) {
             'technicians': 'Team Management',
             'team_cards': 'Team Management',
             'assets': 'Assets Database',
-            'users': 'Reporter History',
+            'users': 'User Information',
             'reports': 'Official Report'
         };
 
