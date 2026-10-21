@@ -3779,7 +3779,9 @@ if (isset($_GET['api_check_hash'])) {
                             $techs_by_dept = [];
                             // โหลดบัญชีด้วย users.technician_id
                             $tech_res = $conn->query("
-                                SELECT t.*, u.username AS web_username, u.is_active AS web_is_active, u.registration_pending AS web_registration_pending 
+                                SELECT t.*, u.username AS web_username, u.is_active AS web_is_active, u.registration_pending AS web_registration_pending,
+                                       (SELECT lu.line_display_name FROM line_users lu
+                                        WHERE BINARY lu.line_user_id = BINARY t.line_user_id LIMIT 1) AS linked_line_display_name 
                                 FROM technicians t 
                                 LEFT JOIN users u ON t.id = u.technician_id 
                                 WHERE t.deleted_at IS NULL
@@ -3902,6 +3904,17 @@ if (isset($_GET['api_check_hash'])) {
                                             $t_email_html = "<div class='flex items-center text-rose-400 mt-1.5'><div class='w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center mr-2 shrink-0'><i class='fas fa-envelope text-[10px] text-rose-500'></i></div><span class='text-[12px] font-bold text-rose-500'>ไม่ระบุอีเมล</span></div>";
                                         }
 
+                                        // อ่านชื่อ LINE ตามบัญชีที่ผูกไว้เท่านั้น ไม่ใช้ชื่อจริงหรือ Username แทน
+                                        $t_line_linked = $t['approval_status'] === 'อนุมัติแล้ว'
+                                            && trim((string)($t['line_user_id'] ?? '')) !== '';
+                                        $t_line_name = $t_line_linked ? trim((string)($t['linked_line_display_name'] ?? '')) : '';
+                                        $t_line_text = $t_line_linked
+                                            ? ($t_line_name !== '' ? $t_line_name : 'ยังไม่มีชื่อ LINE ในระบบ')
+                                            : 'ยังไม่ได้ผูกบัญชี LINE';
+                                        $t_line_html = $t_line_linked
+                                            ? "<div class='flex items-center mt-1.5'><i class='fab fa-line text-[#06C755] text-[16px] mr-2 shrink-0' aria-hidden='true'></i><span class='text-[12px] font-bold text-indigo-600'>" . htmlspecialchars($t_line_text, ENT_QUOTES, 'UTF-8') . "</span></div>"
+                                            : '';
+
                                         // ใช้เกณฑ์เดียวกับป้ายผูกบัญชีแล้วด้านขวา ไม่เปลี่ยนสถานะ LINE
                                         $new_staff_notice = ($t['approval_status'] !== 'อนุมัติแล้ว')
                                             ? "<div class='text-xs font-bold text-orange-600 mb-2' style='display:inline-flex;align-items:center;box-sizing:border-box;border:1px solid #fdba74;background:#fff7ed;border-radius:10px;overflow:hidden;padding:4px 10px;line-height:16px'>เจ้าหน้าที่ใหม่</div>"
@@ -3910,7 +3923,7 @@ if (isset($_GET['api_check_hash'])) {
                                         $staff_notice_class = $new_staff_notice !== '' ? ' mbs-unlinked-staff' : '';
                                         $staff_draft_badge = !empty($t['web_registration_pending']) ? arDraftBadge('technician') : '';
                                         if (!empty($t['web_registration_pending'])) $staff_notice_class .= ' ar-draft-row';
-                                        $tech_edit_args = arModalArgs(['Technician', (string)$t['id'], (string)($t['web_username'] ?? ''), $th_name, $en_name, $pos, (string)($t['phone'] ?? ''), (string)($t['department'] ?? ''), html_entity_decode($img_src, ENT_QUOTES, 'UTF-8'), (string)($t['email'] ?? ''), (string)$js_web_active]);
+                                        $tech_edit_args = arModalArgs(['Technician', (string)$t['id'], (string)($t['web_username'] ?? ''), $th_name, $en_name, $pos, (string)($t['phone'] ?? ''), (string)($t['department'] ?? ''), html_entity_decode($img_src, ENT_QUOTES, 'UTF-8'), (string)($t['email'] ?? ''), (string)$js_web_active, $t_line_name, $t_line_linked]);
                                         echo "<tr class='bg-white hover:bg-slate-50/50 transition-colors border-b border-slate-100 tech-dept-row{$staff_notice_class}' data-tb-tech-id='{$t['id']}' data-dept='".htmlspecialchars($dept)."' data-tech-name='{$js_search_name}'>
                                             <td class='px-6 py-4 align-top mbs-team-name'>
                                                 {$staff_draft_badge}
@@ -3930,6 +3943,7 @@ if (isset($_GET['api_check_hash'])) {
                                             <td class='px-6 py-4 align-top text-slate-500 font-medium mbs-team-contact'>
                                                 <div>".formatPhoneHtml($t['phone'])."</div>
                                                 {$t_email_html}
+                                                {$t_line_html}
                                             </td>
                                             <td class='px-6 py-4 align-middle text-center'>{$statusBadge}</td>
                                             <td class='px-6 py-4 align-middle text-center'><span class='px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'>{$total_jobs}</span></td>
@@ -4907,6 +4921,13 @@ if (isset($_GET['api_check_hash'])) {
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username <span id="usernameReadonlyNote" class="normal-case tracking-normal font-medium">(ไม่อนุญาตให้แก้ไข)</span> <span class="text-rose-500" id="usernameReqStar" style="display:none">*</span></label>
                             <input type="text" name="username" id="techAdmin_username" readonly aria-readonly="true" oninput="clearFieldError(this)" onfocus="clearFieldError(this)" data-default-placeholder="รอเจ้าของบัญชีลงทะเบียน" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:outline-none font-medium shadow-sm transition-all" placeholder="รอเจ้าของบัญชีลงทะเบียน">
                             <p id="err_techAdmin_username" class="hidden text-[11px] font-bold text-rose-500 mt-1.5 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i><span>กรุณาระบุชื่อผู้ใช้งาน (Username)</span></p>
+                        </div>
+                        <div id="techAdminLineDiv" hidden>
+                            <label for="techAdmin_line_name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">LINE <span class="normal-case tracking-normal font-medium">(ไม่อนุญาตให้แก้ไข)</span> <span class="text-rose-500">*</span></label>
+                            <div class="relative">
+                                <i class="fab fa-line text-[#06C755] text-xl absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true"></i>
+                                <input type="text" id="techAdmin_line_name" disabled aria-readonly="true" class="w-full border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-sm font-medium shadow-sm cursor-not-allowed" style="background-color:#e5e7eb;color:#6b7280;opacity:1;-webkit-text-fill-color:#6b7280;">
+                            </div>
                         </div>
                         <div hidden>
                             <input type="hidden" id="techAdmin_password" value="" disabled>
@@ -7760,7 +7781,7 @@ if (isset($_GET['api_check_hash'])) {
             return true;
         }
 
-        function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='', em='', isActive=1) { 
+        function openTechAdminModal(role, id='', u='', f='', en='', pos='', p='', d='', avatarUrl='', em='', isActive=1, lineDisplayName='', lineLinked=false) { 
             if (!id || String(id) === '0') return;
             // ✨ ล้างสถานะสีแดงค้างเก่าออกให้หมดทุกช่องก่อนเปิดหน้าต่าง ✨
             ['techAdmin_username', 'techAdmin_password', 'techAdmin_fullname', 'techAdmin_phone', 'techAdmin_email', 'techAdmin_position_select', 'techAdmin_position_custom', 'techAdmin_department_select', 'techAdmin_department_custom'].forEach(elId => {
@@ -7768,6 +7789,12 @@ if (isset($_GET['api_check_hash'])) {
             });
 
             let isManagement = (role.toLowerCase() === 'admin' || role.toLowerCase() === 'executive');
+            const lineDiv = document.getElementById('techAdminLineDiv');
+            const lineNameInput = document.getElementById('techAdmin_line_name');
+            lineDiv.hidden = isManagement;
+            lineNameInput.value = isManagement ? '' : (lineLinked
+                ? (String(lineDisplayName || '').trim() || 'ยังไม่มีชื่อ LINE ในระบบ')
+                : 'ยังไม่ได้ผูกบัญชี LINE');
             let baseRole = isManagement ? 'Admin' : 'Technician';
             let title = isManagement ? 'Manage Administrator' : 'Manage Technician';
             document.getElementById('techAdminModalTitle').innerHTML = title; 
