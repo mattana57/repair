@@ -310,6 +310,143 @@ function mbsLineStaffAccount($conn, $line_user_id) {
     $stmt->close();return $row;
 }
 
+// เมนูผู้แจ้ง: อ่านอย่างเดียว ตรวจเจ้าของด้วย LINE user ID ทุกครั้ง
+function mbsRequesterQuery($db, $sql, $types = '', ...$params) {
+    $stmt = $db->prepare($sql);
+    if (!$stmt) { throw new RuntimeException('Requester query prepare failed'); }
+    if ($types !== '') { $stmt->bind_param($types, ...$params); }
+    if (!$stmt->execute()) { throw new RuntimeException('Requester query failed'); }
+    $result = $stmt->get_result();
+    $rows = [];
+    while ($row = $result->fetch_assoc()) { $rows[] = $row; }
+    $stmt->close();
+    return $rows;
+}
+function mbsRequesterVisibleSql($db) {
+    static $filter = null;
+    if ($filter !== null) { return $filter; }
+    $columns = mbsRequesterQuery($db, 'SHOW COLUMNS FROM repairs');
+    $names = array_column($columns, 'Field');
+    $filter = '';
+    // รองรับถังขยะที่มีอยู่ โดยไม่เพิ่มหรือแก้โครงสร้างฐานข้อมูล
+    if (in_array('deleted_at', $names, true)) { $filter .= ' AND deleted_at IS NULL'; }
+    if (in_array('is_deleted', $names, true)) { $filter .= ' AND COALESCE(is_deleted,0)=0'; }
+    return $filter;
+}
+function mbsRequesterText($text, $limit = 160) {
+    $text = trim(preg_replace('/\s+/u', ' ', (string)$text));
+    return mb_strlen($text, 'UTF-8') > $limit ? mb_substr($text, 0, $limit, 'UTF-8').'…' : ($text !== '' ? $text : 'ไม่ระบุ');
+}
+function mbsRequesterStatus($status) {
+    $labels = ['ซ่อมเสร็จแล้ว'=>'ดำเนินการเสร็จแล้ว', 'ช่างรับเรื่องแจ้งซ่อมแล้ว'=>'รับเรื่องแล้ว'];
+    return $labels[$status] ?? mbsRequesterText($status, 100);
+}
+function mbsRequesterButton($label, $data) {
+    return ['type'=>'button','style'=>'secondary','height'=>'sm',
+        'action'=>['type'=>'postback','label'=>$label,'data'=>$data]];
+}
+function mbsRequesterMenu() {
+    return ['type'=>'flex','altText'=>'รายการแจ้งของฉัน: เลือกดูรายการ', 'contents'=>[
+        'type'=>'bubble','body'=>['type'=>'box','layout'=>'vertical','spacing'=>'md','contents'=>[
+            ['type'=>'text','text'=>'รายการแจ้งของฉัน','weight'=>'bold','size'=>'lg','wrap'=>true],
+            ['type'=>'text','text'=>'ต้องการดูรายการแบบไหนคะ?','wrap'=>true]]],
+        'footer'=>['type'=>'box','layout'=>'vertical','spacing'=>'sm','contents'=>[
+            mbsRequesterButton('รายการที่ยังไม่เสร็จ','action=my_requests&scope=open'),
+            mbsRequesterButton('ประวัติการแจ้งทั้งหมด','action=my_requests&scope=all')]]]];
+}
+function mbsRequesterList($db, $userId, $scope, $before = 0) {
+    $sql = 'SELECT id,ticket_no,equipment_type,location,problem_desc,status,created_at FROM repairs WHERE line_user_id=?'.mbsRequesterVisibleSql($db);
+    $params = [$userId]; $types = 's';
+    if ($scope === 'open') {
+        $sql .= " AND COALESCE(status,'') NOT IN ('ซ่อมเสร็จแล้ว','ดำเนินการเสร็จแล้ว','ปิดงานแล้ว','ยกเลิก','ยกเลิกแล้ว')";
+    }
+    if ($before > 0) { $sql .= ' AND id<?'; $params[] = $before; $types .= 'i'; }
+    $rows = mbsRequesterQuery($db, $sql.' ORDER BY id DESC LIMIT 6', $types, ...$params);
+    $more = count($rows) > 5; $rows = array_slice($rows, 0, 5);
+    $title = $scope === 'open' ? 'รายการที่ยังไม่เสร็จ' : 'ประวัติการแจ้งทั้งหมด';
+    if (!$rows) { return ['type'=>'text','text'=>$before > 0 ? 'ไม่มีรายการเพิ่มเติมแล้วค่ะ' : ($scope === 'open' ? 'คุณไม่มีรายการที่ยังไม่เสร็จค่ะ' : 'ยังไม่พบประวัติการแจ้งของคุณค่ะ')]; }
+    $contents = [['type'=>'text','text'=>$title,'size'=>'lg','weight'=>'bold','wrap'=>true]];
+    foreach ($rows as $row) {
+        $contents[] = ['type'=>'separator','margin'=>'md'];
+        $contents[] = ['type'=>'box','layout'=>'vertical','spacing'=>'xs','margin'=>'md','contents'=>[
+            ['type'=>'text','text'=>mbsRequesterText($row['ticket_no'],40),'weight'=>'bold','wrap'=>true],
+            ['type'=>'text','text'=>'สถานที่: '.mbsRequesterText($row['location'],100),'wrap'=>true,'size'=>'sm'],
+            ['type'=>'text','text'=>mbsRequesterText($row['problem_desc'],100),'wrap'=>true,'size'=>'sm'],
+            ['type'=>'text','text'=>'สถานะ: '.mbsRequesterStatus($row['status']),'wrap'=>true,'size'=>'sm'],
+            mbsRequesterButton('ดูรายละเอียด','action=my_request_detail&id='.(int)$row['id'])]];
+    }
+    $footer = [];
+    if ($more) { $footer[] = mbsRequesterButton('ดูเพิ่มเติม','action=my_requests&scope='.$scope.'&before='.(int)end($rows)['id']); }
+    $footer[] = mbsRequesterButton('กลับไปเลือกประเภท','action=my_requests_menu');
+    return ['type'=>'flex','altText'=>$title.' ('.count($rows).' รายการ)','contents'=>[
+        'type'=>'bubble','size'=>'mega','body'=>['type'=>'box','layout'=>'vertical','contents'=>$contents],
+        'footer'=>['type'=>'box','layout'=>'vertical','spacing'=>'sm','contents'=>$footer]]];
+}
+function mbsRequesterDetail($db, $userId, $id, $part = 0) {
+    $rows = mbsRequesterQuery($db,'SELECT id,ticket_no,equipment_type,location,problem_desc,status,technician_name,created_at FROM repairs WHERE id=? AND line_user_id=?'.mbsRequesterVisibleSql($db).' LIMIT 1','is',$id,$userId);
+    if (!$rows) { return ['type'=>'text','text'=>'ไม่พบรายการนี้ในบัญชี LINE ของคุณค่ะ']; }
+    $row = $rows[0];
+    // ไม่เผยแพร่หมายเหตุภายใน เบอร์เจ้าหน้าที่ หรือข้อมูลผู้แจ้งอื่น
+    $detail = (string)$row['problem_desc'];
+    $pages = max(1,(int)ceil(mb_strlen($detail,'UTF-8')/1500));
+    if ($part >= $pages) { return ['type'=>'text','text'=>'ไม่มีรายละเอียดเพิ่มเติมแล้วค่ะ']; }
+    $text = 'รายการ: '.mbsRequesterText($row['ticket_no'],40)."\nสถานที่: ".mbsRequesterText($row['location'],150)
+        ."\nเรื่อง: ".mbsRequesterText($row['equipment_type'],100)."\nสถานะ: ".mbsRequesterStatus($row['status'])
+        ."\nผู้รับผิดชอบ: ".(trim((string)$row['technician_name']) !== '' ? mbsRequesterText($row['technician_name'],100) : 'รอเจ้าหน้าที่รับเรื่อง')
+        ."\nแจ้งเมื่อ: ".mbsRequesterText($row['created_at'],40)."\n\nรายละเอียดที่แจ้ง".($pages > 1 ? ' ('.($part+1).'/'.$pages.')' : '').":\n"
+        .(trim($detail) !== '' ? mb_substr($detail,$part*1500,1500,'UTF-8') : 'ไม่ระบุ');
+    $items = [];
+    if ($part+1 < $pages) { $items[] = ['type'=>'action','action'=>['type'=>'postback','label'=>'อ่านรายละเอียดต่อ','data'=>'action=my_request_detail&id='.$id.'&part='.($part+1)]]; }
+    $items[] = ['type'=>'action','action'=>['type'=>'postback','label'=>'รายการแจ้งของฉัน','data'=>'action=my_requests_menu']];
+    return ['type'=>'text','text'=>$text,'quickReply'=>['items'=>$items]];
+}
+function mbsRequesterHelp() {
+    return ['type'=>'text','text'=>"📖 วิธีใช้งานสำหรับผู้แจ้ง\n\n1. เริ่มใช้งานครั้งแรก\nส่งชื่อที่ต้องการใช้พร้อมเบอร์โทร ใช้ชื่อเล่นได้ ไม่บังคับชื่อจริง เช่น แพรว 0812345678\n\n2. แจ้งซ่อมหรือขอรับบริการ\nพิมพ์สถานที่และสิ่งที่ต้องการในแชต เช่น ‘แอร์ห้อง 901 ไม่เย็น’ หรือ ‘ขอไมค์ลอย 2 ตัว ห้อง SBB603’ หากไม่ทราบอาการแน่ชัด บอกตามที่พบได้เลยค่ะ\n\n3. แนบรูปหรือวิดีโอ\nส่งก่อนข้อความแจ้งเรื่องได้ หรือส่งตามหลังภายใน 5 นาทีหลังสร้างรายการ ส่งไฟล์ของรายการเดิมให้ครบก่อนแจ้งเรื่องใหม่ เพื่อไม่ให้แนบผิดรายการ\nรองรับไม่เกิน 10 รูปและ 2 วิดีโอต่อรายการ รูปไม่เกิน 10 MB วิดีโอไม่เกิน 50 MB ต่อไฟล์\n\n4. ติดตามรายการ\nกด ‘รายการแจ้งของฉัน’ เลือกรายการที่ยังไม่เสร็จหรือประวัติทั้งหมด ดูครั้งละ 5 รายการ กด ‘ดูรายละเอียด’ หรือ ‘ดูเพิ่มเติม’ ได้ ระบบแสดงเฉพาะรายการของบัญชี LINE นี้\n\n5. รับแจ้งสถานะและประเมินบริการ\nระบบแจ้งเมื่อเจ้าหน้าที่รับเรื่องและดำเนินการเสร็จ ประเมินจากข้อความของรายการนั้นได้\n\n6. แก้ไขข้อมูลติดต่อ\nพิมพ์ ‘เปลี่ยนชื่อ แพรว’ หรือ ‘เปลี่ยนเบอร์ 0812345678’\n\n7. ติดต่อสอบถาม\nกด ‘ช่องทางติดต่อ’ เพื่อดูเบอร์โทร อีเมล และเวลาติดต่อค่ะ"];
+}
+function mbsRequesterContact() {
+    return ['type'=>'text','text'=>"☎️ ช่องทางติดต่อ\n\nโทร: 0XX-XXX-XXXX\nอีเมล: support@example.com\nเวลาติดต่อ: จันทร์–ศุกร์ 08.30–16.30 น.\n\nข้อมูลสมมุติสำหรับทดสอบระบบ\nปุ่มนี้แสดงข้อมูลติดต่อ ไม่ได้เริ่มสนทนากับเจ้าหน้าที่โดยตรงค่ะ"];
+}
+function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken) {
+    $type = $event['type'] ?? '';
+    $command = null; $data = [];
+    if ($type === 'message' && ($event['message']['type'] ?? '') === 'text') {
+        $text = trim($event['message']['text']);
+        if (in_array($text,['รายการแจ้งของฉัน','งานของฉัน','ติดตามงาน','ประวัติการแจ้ง'],true)) { $command = 'my_requests_menu'; }
+        elseif ($text === 'วิธีใช้งาน') { $command = 'help'; }
+        elseif ($text === 'ช่องทางติดต่อ') { $command = 'contact'; }
+    } elseif ($type === 'postback') {
+        parse_str($event['postback']['data'] ?? '',$data);
+        if (isset($data['action']) && is_string($data['action']) && in_array($data['action'],['my_requests_menu','my_requests','my_request_detail'],true)) { $command = $data['action']; }
+    }
+    if ($command === null) { return false; }
+    // ประวัติผู้แจ้งแสดงเฉพาะแชตส่วนตัว ไม่เผยแพร่ลงกลุ่มหรือห้องรวม
+    if (($event['source']['type'] ?? '') !== 'user' || !is_string($userId) || $userId === '') { return true; }
+    try {
+        if ($command === 'my_requests_menu') { $message = mbsRequesterMenu(); }
+        elseif ($command === 'help') { $message = mbsRequesterHelp(); }
+        elseif ($command === 'contact') { $message = mbsRequesterContact(); }
+        elseif ($command === 'my_requests') {
+            $scope = $data['scope'] ?? 'open';
+            $before = filter_var($data['before'] ?? 0,FILTER_VALIDATE_INT,['options'=>['min_range'=>0]]);
+            if (!is_string($scope) || !in_array($scope,['open','all'],true) || $before === false) { throw new InvalidArgumentException('Invalid list parameters'); }
+            $message = mbsRequesterList($db,$userId,$scope,$before);
+        } else {
+            $id = filter_var($data['id'] ?? null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+            $part = filter_var($data['part'] ?? 0,FILTER_VALIDATE_INT,['options'=>['min_range'=>0,'max_range'=>1000000]]);
+            if ($id === false || $id === null || $part === false) { throw new InvalidArgumentException('Invalid detail parameters'); }
+            $message = mbsRequesterDetail($db,$userId,$id,$part);
+        }
+    } catch (InvalidArgumentException $e) {
+        $message = ['type'=>'text','text'=>'คำสั่งไม่ถูกต้องค่ะ กรุณากดรายการแจ้งของฉันใหม่'];
+    } catch (Throwable $e) {
+        error_log('LINE requester menu failed: '.get_class($e));
+        $message = ['type'=>'text','text'=>'ยังเปิดรายการไม่ได้ค่ะ กรุณาลองใหม่ภายหลัง'];
+    }
+    send_reply($replyToken,$message,$accessToken);
+    return true;
+}
+
+
 $content = file_get_contents('php://input');
 $events = json_decode($content, true);
 
@@ -318,6 +455,8 @@ if (!is_null($events['events'])) {
         $replyToken = isset($event['replyToken']) ? $event['replyToken'] : null;
         $userId = $event['source']['userId'];
         $groupId = isset($event['source']['groupId']) ? $event['source']['groupId'] : null;
+
+        if (mbsHandleRequesterMenu($conn, $event, $userId, $replyToken, $channelAccessToken)) { continue; }
 
         $line_name = get_line_profile($userId, null, $channelAccessToken);
         $words_to_remove = ['เปลี่ยนชื่อ', 'เปลี่ยนเบอร์', 'แก้ไขข้อมูล', 'แก้ชื่อ', 'เปี่ยนชื่อ', 'เปลียนชื่อ', 'เปลี่ชื่อ', 'เปี่ยนเบอร์', 'แก้เบอร์', 'จาก', 'เดิม', 'ด้วย', 'เป็น', 'ใหม่', 'ชื่อ-สกุล', 'ชื่อ-นามสกุล', 'ชื่อ', 'นามสกุล', 'เบอร์โทรศัพท์', 'เบอร์โทร','เบอโทร', 'เบอร์', 'โทรศัพท์', 'โทร', 'tel', 'นะคะ', 'นะครับ', 'ค่ะ', 'ครับ', 'คับ', 'จ้า', 'จ๊ะ', 'นะ', 'หน่อย', 'และ', 'หรือ', 'ทั้ง', 'ได้ไหม', 'ได้มั้ย', 'คะ', 'ข้อมูล', 'กับ', 'ปรับ', 'ปรุง', 'แก้', 'นี้', 'เบอ', 'จ้ะ', 'ค้าบ', 'อยาก', 'ต้องการ', 'ช่วย', 'ให้', 'ค่า', 'ต้อง', 'การ', 'ครัช', 'ได้', 'มั้ย', 'ไหม', 'โท', 'สกุล', 'เอา', 'ออก', 'แล้ว', 'ถ้า', 'หาก', 'สอง', 'อย่าง', '2', ':', '-', ','];
