@@ -357,6 +357,40 @@ function formatEmptyOrDash($val) {
     return htmlspecialchars($val);
 }
 
+// เลขรายการประจำวัน: อ่านเลขเดียวกับ LINE เท่านั้น ไม่สร้างหรือเปลี่ยนเลข
+function mbsDashboardDailyLabels($conn) {
+    static $labels = null;
+    if ($labels !== null) return $labels;
+    $labels = [];
+    try {
+        $check = $conn->query("SHOW TABLES LIKE 'repair_daily_labels'");
+        if (!$check || $check->num_rows === 0) return $labels;
+        $result = $conn->query("SELECT repair_id, request_date, daily_no FROM repair_daily_labels");
+        if (!$result) return $labels;
+        $months = [1=>'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        while ($label = $result->fetch_assoc()) {
+            $date = (string)$label['request_date'];
+            if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $date, $parts)) continue;
+            $month = (int)$parts[2];
+            if (!isset($months[$month])) continue;
+            $labels[(int)$label['repair_id']] = 'รายการแจ้ง #' . str_pad((string)(int)$label['daily_no'], 3, '0', STR_PAD_LEFT)
+                . ' · ' . (int)$parts[3] . ' ' . $months[$month] . ' ' . ((int)$parts[1] + 543);
+        }
+        $result->free();
+    } catch (Throwable $e) {
+        error_log('Dashboard daily labels unavailable');
+    }
+    return $labels;
+}
+
+function mbsDashboardDailyLabelHtml($conn, $repairId) {
+    $labels = mbsDashboardDailyLabels($conn);
+    $text = $labels[(int)$repairId] ?? '';
+    if ($text === '') return '';
+    return '<div class="font-sans text-xs font-semibold text-blue-700 mb-1">'
+        . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</div>';
+}
+
 function thaiNum($num) {
     return str_replace(
         array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
@@ -541,6 +575,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
                 $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
 
                 $ticket_no = formatEmptyOrDash($row['ticket_no']);
+                $daily_label_html = mbsDashboardDailyLabelHtml($conn, $row['id']);
 
                 // ✨ ดึงชื่อจริงและเบอร์โทร ✨
                 $raw_rep = trim((string)$row['reporter_name']);
@@ -630,7 +665,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
                         <div class='font-medium text-slate-700'>{$created_date}</div>
                         {$created_time_html}
                     </td>
-                    <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
+                    <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$daily_label_html}{$ticket_no}</td>
                     <td class='px-6 py-4 align-top'>
                         <div class='text-slate-800 font-bold'>{$reporter_name}</div>
                         <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
@@ -3255,6 +3290,7 @@ if (isset($_GET['api_check_hash'])) {
                                             $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                             $statusText = htmlspecialchars($rd['status']);
                                             $ticket_no = formatEmptyOrDash($rd['ticket_no']);
+                                            $daily_label_html = mbsDashboardDailyLabelHtml($conn, $rd['id']);
                                             
                                             // ✨ ดึงชื่อจริงและเบอร์โทรมาแสดง ✨
                                             $raw_rep = trim((string)$rd['reporter_name']);
@@ -3280,7 +3316,7 @@ if (isset($_GET['api_check_hash'])) {
                                                     <div class='font-medium text-slate-700'>{$date_fmt}</div>
                                                     {$time_html}
                                                 </td>
-                                                <td class='px-6 py-4 align-top text-slate-500 font-mono font-semibold'>{$ticket_no}</td>
+                                                <td class='px-6 py-4 align-top text-slate-500 font-mono font-semibold'>{$daily_label_html}{$ticket_no}</td>
                                                 <td class='px-6 py-4 align-top'>
                                                     <div class='flex items-center'>
                                                         <div class='w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mr-3 text-xs shrink-0'><i class='fas fa-user'></i></div>
@@ -3437,6 +3473,7 @@ if (isset($_GET['api_check_hash'])) {
                                         $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
                                         
                                         $ticket_no = formatEmptyOrDash($row['ticket_no']);
+                $daily_label_html = mbsDashboardDailyLabelHtml($conn, $row['id']);
                                         
                                         // ✨ ดึงชื่อจริงและเบอร์โทร ✨
                                         $raw_rep = trim((string)$row['reporter_name']);
@@ -3514,7 +3551,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 <div class='font-medium text-slate-700'>{$created_date}</div>
                                                 {$created_time_html}
                                             </td>
-                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$ticket_no}</td>
+                                            <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>{$daily_label_html}{$ticket_no}</td>
                                             <td class='px-6 py-4 align-top'>
                                                 <div class='text-slate-800 font-bold'>{$reporter_name}</div>
                                                 <div class='text-slate-500 text-[11px] font-medium mt-0.5'>{$phone_number}</div>
@@ -5191,6 +5228,7 @@ if (isset($_GET['api_check_hash'])) {
     <!-- ================== JAVASCRIPT ================== -->
     <script>
         window.allRepairs = <?php echo $all_repairs_json; ?>;
+        window.repairDailyLabels = <?php echo json_encode(mbsDashboardDailyLabels($conn), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE); ?>;
         window.techDeptMap = <?php echo $tech_dept_map_json; ?>;
         window.techInfoMap = <?php echo $tech_info_map_json; ?>; 
         window.lineUsersMap = <?php echo $line_users_map_json; ?>; // ✨ แมปข้อมูลผู้ใช้งาน LINE
@@ -8074,6 +8112,8 @@ if (isset($_GET['api_check_hash'])) {
 
                     let statusText = formatValJS(r.status);
                     let ticket_no = formatValJS(r.ticket_no);
+                    const dailyLabel = (window.repairDailyLabels || {})[r.id] || '';
+                    const dailyLabelHtml = dailyLabel ? '<div class="font-sans text-xs font-semibold text-blue-700 mb-1">' + formatValJS(dailyLabel) + '</div>' : '';
 
                     // สร้างรูปแบบวันที่รับแจ้ง (Date / Time)
                     let createdDate = '-';
@@ -8140,7 +8180,7 @@ if (isset($_GET['api_check_hash'])) {
                             <div class="font-medium text-slate-700">${createdDate}</div>
                             ${createdTime}
                         </td>
-                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${ticket_no}</td>
+                        <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${dailyLabelHtml}${ticket_no}</td>
                         <td class="px-6 py-4 align-top">
                             <div class='flex items-center'>
                                 <div class='w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mr-3 shrink-0'><i class='fas fa-user text-xs text-slate-400'></i></div>
