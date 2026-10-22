@@ -1059,6 +1059,7 @@ rsort($thYears);
             </div>
         </div>
 
+        <?php if (!empty($job_action_notice)): ?><p role="status" class="px-6 py-3 text-sm font-bold text-slate-700"><?= $thEscape($job_action_notice) ?></p><?php endif; ?>
         <div class="history-table-scroll w-full custom-scrollbar"
              id="repairsTableContainer">
 
@@ -1130,6 +1131,8 @@ rsort($thYears);
                             </td>
 
                             <td class="font-mono text-slate-500">
+                                <?php $rowDaily=mbsSyncRow($conn,'SELECT request_date,daily_no FROM repair_daily_labels WHERE repair_id=?','i',(int)$r['id']); ?>
+                                <?php if ($rowDaily): ?><div class="font-sans font-bold text-slate-800 mb-1"><?= $thEscape(mbsSyncLabelText($rowDaily)) ?></div><?php endif; ?>
                                 <?= $thEscape(
                                     trim((string) ($r['ticket_no'] ?? '')) !== ''
                                         ? $r['ticket_no']
@@ -1199,16 +1202,18 @@ rsort($thYears);
                             </td>
 
                             <td>
+                                <?php $canAccept=trim((string)$r['status'])==='รอรับเรื่อง' && (int)($r['technician_id'] ?? 0)===0 && empty($r['deleted_at']);
+                                $canClose=(int)($r['technician_id'] ?? 0)===$tech_id && in_array($r['status'],['กำลังดำเนินการ','ช่างรับเรื่องแจ้งซ่อมแล้ว'],true) && empty($r['deleted_at']); ?>
+                                <?php if ($canAccept || $canClose): ?>
+                                <form method="post" action="technician_home.php?tab=history" onsubmit="return confirm(this.dataset.confirm)" data-confirm="<?= $canAccept ? 'ยืนยันรับรายการนี้?' : 'ยืนยันดำเนินการเสร็จและปิดรายการนี้?' ?>">
+                                    <input type="hidden" name="job_action_csrf" value="<?= $thEscape($_SESSION['job_action_csrf']) ?>">
+                                    <input type="hidden" name="repair_id" value="<?= (int)$r['id'] ?>">
+                                    <input type="hidden" name="job_action" value="<?= $canAccept ? 'accept' : 'close' ?>">
+                                    <button type="submit" class="px-3 py-2 rounded-lg text-white font-bold text-xs" style="background:<?= $canAccept ? '#1E3A5F' : '#A8432D' ?>"><?= $canAccept ? 'รับงาน' : 'ปิดงาน' ?></button>
+                                </form>
+                                <?php endif; ?>
                                 <?php if ((int)($r['th_can_edit'] ?? 0) === 1): ?>
-                                <a target="_blank"
-                                   href="update_repair.php?id=<?= (int) $r['id'] ?>"
-                                   onclick="window.open(this.href, 'mbsTechnicianRepair'); return false;"
-                                   class="w-8 h-8 rounded-xl bg-slate-50 text-slate-500 flex items-center justify-center border border-slate-100"
-                                   title="เปิดใบงาน">
-                                    <i class="fas fa-pen-to-square"></i>
-                                </a>
-                                <?php else: ?>
-                                    <span class="text-[11px] text-slate-400 font-medium whitespace-nowrap">รับงานผ่าน LINE</span>
+                                <a target="_blank" href="update_repair.php?id=<?= (int)$r['id'] ?>" onclick="window.open(this.href, 'mbsTechnicianRepair'); return false;" class="mt-1 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 inline-block text-xs" title="เปิดใบงาน">จัดการ</a>
                                 <?php endif; ?>
                             </td>
                         </tr>

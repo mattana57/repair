@@ -73,6 +73,28 @@ $tech_profile_english = (string) ($tech_data['english_name'] ?? '');
 // ใช้ตัวตนที่ Guard ตรวจแล้ว ไม่เปลี่ยนรหัสช่างของคำขอนี้จากการอ่านซ้ำ
 $tech_id = (int) $tech_id_session;
 
+require_once __DIR__.'/line_job_sync.php';
+if (empty($_SESSION['job_action_csrf'])) { $_SESSION['job_action_csrf']=bin2hex(random_bytes(32)); }
+$job_action_notice=$_SESSION['job_action_notice'] ?? '';unset($_SESSION['job_action_notice']);
+if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['job_action'])) {
+    $csrf=$_POST['job_action_csrf'] ?? null;
+    $jobId=filter_var($_POST['repair_id'] ?? null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+    $action=$_POST['job_action'];
+    if (!is_string($csrf) || !hash_equals($_SESSION['job_action_csrf'],$csrf) || !$jobId || !is_string($action) || !in_array($action,['accept','close'],true)) {
+        http_response_code(400);exit('คำขอไม่ถูกต้อง กรุณาเปิดหน้ารายการใหม่');
+    }
+    try {
+        $result=mbsSyncTransition($conn,(int)$jobId,$tech_id,$action);
+        $_SESSION['job_action_notice']=$result['label'].($action==='accept'?' รับงานเรียบร้อยค่ะ':' ปิดงานเรียบร้อยค่ะ');
+        mbsSyncDispatchSafe($conn,(int)$jobId);
+    } catch(Throwable $e) {
+        error_log('Web job action failed: '.get_class($e));
+        $_SESSION['job_action_notice']='ยังทำรายการไม่ได้ค่ะ รายการอาจมีผู้รับแล้ว ปิดงานแล้ว หรือสิทธิ์เปลี่ยน กรุณาตรวจรายการล่าสุด';
+    }
+    header('Location: technician_home.php?tab=history');exit;
+}
+
+
 // สรุปเฉพาะคิวรอร่วมกันและงานตามรหัสเจ้าหน้าที่ ไม่รับรหัสจาก GET และไม่จับคู่ชื่อ
 function techSummaryCounts($conn, $techId) {
     $stmt = $conn->prepare("SELECT COUNT(*) AS total,
