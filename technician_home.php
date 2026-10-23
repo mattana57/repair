@@ -1212,6 +1212,23 @@ if (isset($_GET['th_fragment'])
             display: block;
         }
     </style>
+    <style>
+    /* Expand only the equipment chart on desktop computers. */
+    @media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+        .tech-dashboard-ui .tech-chart-card > .tech-equipment-chart-frame {
+            flex: 1 1 auto;
+            height: 280px;
+            min-height: 280px;
+            max-height: none;
+        }
+        .tech-dashboard-ui .tech-equipment-chart-frame > canvas {
+            position: absolute;
+            inset: 0;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    }
+    </style>
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1505,7 +1522,7 @@ if (isset($_GET['th_fragment'])
                                 </div>
                             </div>
                         </div>
-                        <div class="flex-1 relative w-full h-[280px]">
+                        <div class="tech-equipment-chart-frame flex-1 relative w-full h-[280px]">
                             <canvas id="eqChart"></canvas>
                         </div>
                     </div>
