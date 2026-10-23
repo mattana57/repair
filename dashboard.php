@@ -2949,14 +2949,17 @@ if (isset($_GET['api_check_hash'])) {
                 <!-- ✨ ปรับ Grid เป็น 2 คอลัมน์ (grid-cols-2) ในมือถือ และเพิ่มความห่างให้สมดุล (gap-3) ✨ -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                     <?php 
-                        $resTotal = $conn->query("SELECT count(*) as c FROM repairs WHERE deleted_at IS NULL");
-                        $cTotal = $resTotal ? $resTotal->fetch_assoc()['c'] : 0;
-                        $resPend = $conn->query("SELECT count(*) as c FROM repairs WHERE deleted_at IS NULL AND status='รอรับเรื่อง'");
-                        $cPend = $resPend ? $resPend->fetch_assoc()['c'] : 0;
-                        $resProg = $conn->query("SELECT count(*) as c FROM repairs WHERE deleted_at IS NULL AND status='กำลังดำเนินการ'");
-                        $cProg = $resProg ? $resProg->fetch_assoc()['c'] : 0;
-                        $resComp = $conn->query("SELECT count(*) as c FROM repairs WHERE deleted_at IS NULL AND status='ซ่อมเสร็จแล้ว'");
-                        $cComp = $resComp ? $resComp->fetch_assoc()['c'] : 0;
+                        // ใช้ข้อมูลชุดเดียวกันสำหรับทั้ง 4 การ์ด และไม่นับรายการใน Trash
+                        $repairCardResult = $conn->query("SELECT
+                            COALESCE(SUM(CASE WHEN status = 'รอรับเรื่อง' THEN 1 ELSE 0 END), 0) AS pending_count,
+                            COALESCE(SUM(CASE WHEN status = 'กำลังดำเนินการ' THEN 1 ELSE 0 END), 0) AS progress_count,
+                            COALESCE(SUM(CASE WHEN status = 'ซ่อมเสร็จแล้ว' THEN 1 ELSE 0 END), 0) AS completed_count
+                            FROM repairs WHERE deleted_at IS NULL");
+                        $repairCardCounts = $repairCardResult ? $repairCardResult->fetch_assoc() : [];
+                        $cPend = (int) ($repairCardCounts['pending_count'] ?? 0);
+                        $cProg = (int) ($repairCardCounts['progress_count'] ?? 0);
+                        $cComp = (int) ($repairCardCounts['completed_count'] ?? 0);
+                        $cTotal = $cPend + $cProg + $cComp;
                     ?>
                     
                     <!-- ✨ การ์ดสรุป 4 สถานะ (คุมโทนพื้นหลังสีขาวคลีนเข้ากับธีมหลัก + มีมิติที่ป้ายสถานะและขอบการ์ด) ✨ -->

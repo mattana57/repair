@@ -592,7 +592,7 @@ if (isset($_GET['exec_page_fragment'])) {
 }
 // การ์ดทั้งสี่ใช้ข้อมูลชุดเดียวกัน ไม่รวมใบงานในถังขยะ ไม่อิงตัวกรองตาราง
 function execSummaryCounts($conn) {
-    $result = $conn->query("SELECT COUNT(*) AS total,
+    $result = $conn->query("SELECT
         COALESCE(SUM(status = 'รอรับเรื่อง'), 0) AS waiting,
         COALESCE(SUM(status = 'กำลังดำเนินการ'), 0) AS progress,
         COALESCE(SUM(status = 'ซ่อมเสร็จแล้ว'), 0) AS completed
@@ -600,7 +600,9 @@ function execSummaryCounts($conn) {
     if (!$result) throw new RuntimeException('โหลดสรุปสถานะใบงานไม่สำเร็จ');
     $row = $result->fetch_assoc();
     $result->free();
-    return array_map('intval', $row);
+    $counts = array_map('intval', $row);
+    $counts['total'] = $counts['waiting'] + $counts['progress'] + $counts['completed'];
+    return $counts;
 }
 $exec_summary_counts = execSummaryCounts($conn);
 
