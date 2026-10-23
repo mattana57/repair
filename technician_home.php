@@ -2114,7 +2114,7 @@ if (isset($_GET['th_fragment'])
                     },
                     scales: {
                         y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f8fafc' }, border: {display: false} },
-                        x: { grid: { display: false }, border: {display: false}, ticks: { font: { weight: 'bold' } } }
+                        x: { grid: { display: false }, border: {display: false}, ticks: { minRotation: 0, maxRotation: 0, font: { weight: 'bold' } } }
                     }
                 }
             });
