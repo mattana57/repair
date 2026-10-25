@@ -98,13 +98,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -233,13 +241,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -318,13 +334,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -446,13 +470,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -593,13 +625,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -885,13 +925,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -1020,13 +1068,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -1106,13 +1162,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -1226,13 +1290,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -1373,13 +1445,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -1659,13 +1739,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -1743,13 +1831,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {
@@ -1830,13 +1926,21 @@
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
     gradient.addColorStop(1, "rgba(37, 99, 235, 0.0)");
-    const deptArr = (meta.ratings || []).map((t) => ({
-      name: t.department || "ไม่ระบุฝ่ายงาน",
-      topTech: t.name,
-      topTechAvg: t.avg.toFixed(1),
-      avg: t.avg,
-      count: t.reviews,
-    }));
+    const deptArr = meta.departments
+      ? meta.departments.map((d) => ({
+          name: d.name,
+          topTech: d.leader.name,
+          topTechAvg: d.leader.avg.toFixed(1),
+          avg: d.avg,
+          count: d.reviews,
+        }))
+      : (meta.ratings || []).map((t) => ({
+          name: t.department || "ไม่ระบุฝ่ายงาน",
+          topTech: t.name,
+          topTechAvg: t.avg.toFixed(1),
+          avg: t.avg,
+          count: t.reviews,
+        }));
     const getRatingColor = () => "#3b82f6";
 
     return {

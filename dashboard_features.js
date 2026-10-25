@@ -256,7 +256,10 @@
     );
     chart(
       $("mainStatusChart") || $("statusChart"),
-      groups(rows, "status"),
+      ["รอรับเรื่อง", "กำลังดำเนินการ", "ซ่อมเสร็จแล้ว"].map((status) => [
+        status,
+        rows.filter((r) => r.status === status).length,
+      ]),
       null,
       { donut: true },
     );
@@ -286,6 +289,7 @@
           name: t.full_name,
           department: t.department,
           n: rated.length,
+          scoreSum: rated.reduce((sum, r) => sum + Number(r.rating), 0),
           reviews: rows.filter(
             (r) => +r.technician_id === +t.id && hasReview(r),
           ).length,
@@ -297,17 +301,50 @@
       })
       .filter((t) => t.n > 0)
       .sort((a, b) => b.avg - a.avg || b.n - a.n || a.id - b.id);
+    const departmentMap = new Map();
+    for (const t of ratings) {
+      const name =
+        String(t.department || "ฝ่ายงานทั่วไป").trim() || "ฝ่ายงานทั่วไป";
+      let d = departmentMap.get(name);
+      if (!d) {
+        d = { name, n: 0, sum: 0, reviews: 0, comments: 0, leader: t };
+        departmentMap.set(name, d);
+      }
+      d.n += t.n;
+      d.sum += t.scoreSum;
+    }
+    for (const d of departmentMap.values()) {
+      const ids = new Set(
+        data.technicians
+          .filter(
+            (t) =>
+              (String(t.department || "ฝ่ายงานทั่วไป").trim() ||
+                "ฝ่ายงานทั่วไป") === d.name,
+          )
+          .map((t) => Number(t.id)),
+      );
+      const reviewed = rows.filter(
+        (r) => ids.has(Number(r.technician_id)) && hasReview(r),
+      );
+      d.reviews = reviewed.length;
+      d.comments = reviewed.filter(hasComment).length;
+      d.avg = d.n ? d.sum / d.n : 0;
+    }
+    const departments = [...departmentMap.values()].sort(
+      (a, b) =>
+        b.avg - a.avg || b.n - a.n || a.name.localeCompare(b.name, "th"),
+    );
     const canvas = $("mainRatingChart");
     if (canvas && window.Chart) {
       Chart.getChart(canvas)?.destroy();
       const ratingConfig = {
         type: "bar",
         data: {
-          labels: ratings.map((t) => t.name),
+          labels: departments.map((d) => d.name),
           datasets: [
             {
               label: "คะแนนเฉลี่ย",
-              data: ratings.map((t) => t.avg),
+              data: departments.map((d) => d.avg),
               backgroundColor: palette[1],
               borderRadius: 6,
             },
@@ -323,7 +360,7 @@
             tooltip: {
               callbacks: {
                 label: (c) => {
-                  const t = ratings[c.dataIndex];
+                  const t = departments[c.dataIndex];
                   return (
                     t.avg.toFixed(2) +
                     " / 5 · " +
@@ -339,7 +376,10 @@
             },
           },
           onClick: (e, items) => {
-            if (items.length) openReviews(ratings[items[0].index].id);
+            if (items.length) {
+              const d = departments[items[0].index];
+              if (d) openReviews(d.leader.id, d.name);
+            }
           },
           onHover: (e, x) => {
             canvas.style.cursor = x.length ? "pointer" : "default";
@@ -352,7 +392,7 @@
         canvas,
         [],
         {
-          ratings,
+          departments,
           onClick: ratingConfig.options.onClick,
           onHover: ratingConfig.options.onHover,
           tooltip: ratingConfig.options.plugins.tooltip.callbacks,
@@ -616,81 +656,184 @@
       )
     );
   }
-  function reviewRows() {
-    let rows = (reviewPeriodActive() ? data.repairs : overviewRows()).filter(
-      (r) =>
-        (!reviewState.id || +r.technician_id === +reviewState.id) &&
-        hasReview(r),
+  function reviewScopeRows() {
+    const base = (reviewPeriodActive() ? data.repairs : overviewRows()).filter(
+      hasReview,
     );
-    rows = period(rows, "reviews", "rated_at");
+    return period(base, "reviews", "rated_at");
+  }
+  function reviewRows() {
+    let rows = reviewScopeRows().filter(
+      (r) =>
+        !reviewState.id || Number(r.technician_id) === Number(reviewState.id),
+    );
     if (reviewState.comments) rows = rows.filter(hasComment);
     return rows;
   }
+  function reviewCandidates() {
+    return data.technicians.filter(
+      (t) =>
+        !reviewState.department ||
+        (String(t.department || "ฝ่ายงานทั่วไป").trim() || "ฝ่ายงานทั่วไป") ===
+          reviewState.department,
+    );
+  }
+  function updateReviewHeader() {
+    const scope = reviewScopeRows(),
+      select = $("mbsReviewTech"),
+      tech = data.technicians.find(
+        (t) => Number(t.id) === Number(reviewState.id),
+      );
+    select.replaceChildren();
+    if (!reviewState.department) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "เจ้าหน้าที่ทั้งหมด";
+      select.appendChild(opt);
+    }
+    for (const t of reviewCandidates()) {
+      const reviewed = scope.filter(
+        (r) => Number(r.technician_id) === Number(t.id),
+      );
+      const scored = reviewed.filter(
+        (r) => Number(r.rating) >= 1 && Number(r.rating) <= 5,
+      );
+      const avg = scored.length
+        ? scored.reduce((n, r) => n + Number(r.rating), 0) / scored.length
+        : null;
+      const opt = document.createElement("option");
+      opt.value = String(t.id);
+      opt.textContent =
+        t.full_name +
+        (avg !== null ? "   ★ " + avg.toFixed(1) : "") +
+        " (" +
+        reviewed.length +
+        " รีวิว)";
+      select.appendChild(opt);
+    }
+    select.value = reviewState.id;
+    $("mbsReviewTitle").textContent = tech
+      ? "รีวิวของเจ้าหน้าที่: " + tech.full_name
+      : "รีวิวของเจ้าหน้าที่ทั้งหมด";
+    $("mbsReviewDepartment").textContent = tech
+      ? tech.department || "ฝ่ายงานทั่วไป"
+      : reviewState.department || "ทุกฝ่ายงาน";
+    $("mbsReviewPosition").textContent = tech?.position
+      ? " (" + tech.position + ")"
+      : "";
+  }
   function refreshReviews() {
+    updateReviewHeader();
     const rows = reviewRows(),
       stars = [1, 2, 3, 4, 5].map(
-        (n) => rows.filter((r) => +r.rating === n).length,
-      ),
-      display = reviewState.star
-        ? rows.filter((r) => +r.rating === reviewState.star)
-        : rows;
+        (n) => rows.filter((r) => Number(r.rating) === n).length,
+      );
+    const display = reviewState.star
+      ? rows.filter((r) => Number(r.rating) === reviewState.star)
+      : rows;
     $("mbsReviewSummary").textContent =
       display.length +
       " รีวิว · " +
       display.filter(hasComment).length +
-      " ความคิดเห็น";
+      " คอมเมนต์";
+    $("mbsReviewCount").textContent = display.length + " รีวิว";
     const chips = $("mbsStarChips");
     chips.replaceChildren();
-    for (const n of [0, 5, 4, 3, 2, 1]) {
+    for (const n of [1, 2, 3, 4, 5]) {
       const b = document.createElement("button");
       b.type = "button";
-      b.className = "mbs-chip" + (n === reviewState.star ? " is-selected" : "");
-      b.textContent = n
-        ? n + " ★ (" + stars[n - 1] + ")"
-        : "ทั้งหมด (" + rows.length + ")";
+      b.className =
+        "mbs-classic-star" +
+        (n === reviewState.star ? " is-selected" : "") +
+        (n <= reviewState.star ? " is-filled" : "");
+      b.setAttribute("aria-label", n + " ดาว " + stars[n - 1] + " รีวิว");
+      b.setAttribute("aria-pressed", String(n === reviewState.star));
+      b.innerHTML =
+        '<i class="fas fa-star" aria-hidden="true"></i><span>' +
+        n +
+        " (" +
+        stars[n - 1] +
+        ")</span>";
       b.onclick = () => {
         reviewState.star = n;
         refreshReviews();
       };
       chips.appendChild(b);
     }
+    $("mbsReviewAll").classList.toggle(
+      "is-selected",
+      reviewState.star === 0 && !reviewState.comments,
+    );
+    $("mbsCommentsOnly").classList.toggle("is-selected", reviewState.comments);
+    $("mbsCommentsOnly").setAttribute(
+      "aria-pressed",
+      String(reviewState.comments),
+    );
     const u = serverParams("reviews", reviewState.id);
     u.searchParams.set("mbs_star", reviewState.star);
     u.searchParams.set("mbs_comments", reviewState.comments ? "1" : "0");
     loadTable($("mbsReviewList"), u);
   }
-  function openReviews(id = "") {
+  function openReviews(id = "", department = "") {
     if (data.role === "technician") return;
+    // An older caller may pass the department as its first argument.
+    if (
+      !/^\d+$/.test(String(id)) &&
+      typeof id === "string" &&
+      data.technicians.some(
+        (t) =>
+          (String(t.department || "ฝ่ายงานทั่วไป").trim() ||
+            "ฝ่ายงานทั่วไป") === id,
+      )
+    ) {
+      department = id;
+      id = "";
+    }
     reviewState = {
       id: /^\d+$/.test(String(id)) ? String(id) : "",
+      department:
+        typeof department === "string" &&
+        data.technicians.some(
+          (t) =>
+            (String(t.department || "ฝ่ายงานทั่วไป").trim() ||
+              "ฝ่ายงานทั่วไป") === department,
+        )
+          ? department
+          : "",
       star: 0,
       comments: false,
     };
-    const dlg = dialog("mbsReviews", "คะแนนและรีวิวเจ้าหน้าที่");
+    if (reviewState.department && !reviewState.id)
+      reviewState.id = String(reviewCandidates()[0]?.id || "");
+    const dlg = dialog("mbsReviews", "รีวิวของเจ้าหน้าที่");
+    dlg.setAttribute("aria-labelledby", "mbsReviewTitle");
+    dlg.tabIndex = -1;
+    dlg.classList.add("mbs-review-classic");
+    const header = dlg.querySelector(":scope > header"),
+      close = header.querySelector(".mbs-close");
+    const lead = document.createElement("div");
+    lead.className = "mbs-classic-review-heading";
+    lead.innerHTML =
+      '<div class="mbs-classic-star-icon"><i class="fas fa-star" aria-hidden="true"></i></div><div class="mbs-classic-heading-text"><h2 id="mbsReviewTitle"></h2><p class="mbs-classic-dept-line"><strong id="mbsReviewDepartment"></strong><span id="mbsReviewPosition"></span></p><label class="mbs-review-sr" for="mbsReviewTech">เลือกเจ้าหน้าที่</label><select id="mbsReviewTech"></select></div>';
+    const badge = document.createElement("span");
+    badge.id = "mbsReviewCount";
+    badge.className = "mbs-classic-count";
+    header.replaceChildren(lead, badge, close);
     const body = dlg.querySelector(".mbs-dialog-body");
     body.innerHTML =
-      '<p class="mbs-intro">เริ่มต้นแสดงรีวิวของงานในช่วงหน้าหลัก หากเลือกวันที่รีวิว จะกรองตามเวลาที่ผู้แจ้งให้คะแนนจริง</p><div class="mbs-review-controls"><label>เจ้าหน้าที่ <select id="mbsReviewTech"></select></label><div id="mbsReviewDate"></div><label><input type="checkbox" id="mbsCommentsOnly"> เฉพาะความคิดเห็น</label></div><p id="mbsReviewSummary" aria-live="polite"></p><div id="mbsStarChips" class="mbs-chips"></div><div id="mbsReviewList"></div>';
-    const select = $("mbsReviewTech");
-    select.innerHTML =
-      '<option value="">เจ้าหน้าที่ทั้งหมด</option>' +
-      data.technicians
-        .map(
-          (t) =>
-            '<option value="' +
-            Number(t.id) +
-            '">' +
-            esc(t.full_name) +
-            "</option>",
-        )
-        .join("");
-    select.value = reviewState.id;
-    select.onchange = () => {
-      reviewState.id = select.value;
+      '<div class="mbs-classic-review-toolbar"><div class="mbs-classic-filter-row"><span class="mbs-classic-filter-label">ระดับคะแนน:</span><div id="mbsStarChips"></div><div class="mbs-classic-review-actions"><button type="button" id="mbsCommentsOnly">เฉพาะคอมเมนต์</button><button type="button" id="mbsReviewAll">ทั้งหมด</button></div></div><div class="mbs-classic-date-row"><div id="mbsReviewDate"></div><p id="mbsReviewSummary" aria-live="polite"></p></div></div><div id="mbsReviewList"></div>';
+    $("mbsReviewTech").onchange = (e) => {
+      reviewState.id = e.target.value;
       reviewState.star = 0;
       refreshReviews();
     };
-    $("mbsCommentsOnly").onchange = (e) => {
-      reviewState.comments = e.target.checked;
+    $("mbsCommentsOnly").onclick = () => {
+      reviewState.comments = !reviewState.comments;
+      refreshReviews();
+    };
+    $("mbsReviewAll").onclick = () => {
+      reviewState.star = 0;
+      reviewState.comments = false;
       refreshReviews();
     };
     reviewCalendar?.destroy();
@@ -703,6 +846,7 @@
       reviewCalendar.dialog.querySelector(".rc-header p").textContent =
         "กรองตามวันที่ให้คะแนน/รีวิวจริง";
     if (!dlg.open) dlg.showModal();
+    dlg.focus({ preventScroll: true });
     refreshReviews();
   }
   function mountLocalCalendar(holder, key, apply) {
