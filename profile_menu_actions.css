@@ -1,0 +1,82 @@
+/* Only the requested email/logout rows inside profile menus. */
+#profileDropdownMenu > a.mbs-profile-action,
+.tech-mobile-popover > a.mbs-profile-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 16px;
+  text-decoration: none;
+  text-align: left;
+  color: #1e293b;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  transition: background-color 0.15s;
+}
+#profileDropdownMenu > a.mbs-profile-action {
+  margin: 0 8px 4px;
+}
+.tech-mobile-popover > a.mbs-profile-action {
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+#profileDropdownMenu > a.mbs-profile-action:hover,
+.tech-mobile-popover > a.mbs-profile-action:hover {
+  background: #f8fafc;
+}
+.mbs-profile-action .mbs-profile-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 12px;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 12px;
+}
+.tech-mobile-popover .mbs-profile-action-icon {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+  font-size: 16px;
+  border-radius: 16px;
+}
+.mbs-profile-action .mbs-profile-action-copy {
+  flex: 1;
+  min-width: 0;
+}
+.mbs-profile-action .mbs-profile-action-copy strong {
+  display: block;
+  font-weight: 700;
+}
+.mbs-profile-action .mbs-profile-action-copy small {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+.tech-mobile-popover .mbs-profile-action-copy small {
+  font-size: 11px;
+}
+.mbs-profile-action .mbs-profile-action-arrow {
+  color: #cbd5e1;
+  font-size: 10px;
+  flex: 0 0 auto;
+}
+.mbs-profile-action-logout .mbs-profile-action-icon {
+  background: #fff1f2;
+  color: #e11d48;
+}
+.mbs-profile-action-logout .mbs-profile-action-copy strong {
+  color: #e11d48;
+}
+#profileDropdownMenu > a.mbs-profile-action:focus-visible,
+.tech-mobile-popover > a.mbs-profile-action:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: -2px;
+}

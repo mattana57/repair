@@ -1093,12 +1093,32 @@
     return String(v || "").toLowerCase();
   }
   function moveEmail() {
+    const styleAction = (a, logout = false) => {
+      a.classList.add("mbs-profile-action");
+      a.classList.toggle("mbs-profile-action-logout", logout);
+      a.innerHTML =
+        '<span class="mbs-profile-action-icon"><i class="fas ' +
+        (logout ? "fa-sign-out-alt" : "fa-envelope") +
+        '" aria-hidden="true"></i></span><span class="mbs-profile-action-copy"><strong>' +
+        (logout ? "ออกจากระบบ" : "ยืนยันอีเมล") +
+        "</strong><small>" +
+        (logout ? "สิ้นสุดการใช้งานบัญชีนี้" : "ยืนยันอีเมลของบัญชีคุณ") +
+        '</small></span><i class="fas fa-chevron-right mbs-profile-action-arrow" aria-hidden="true"></i>';
+    };
+    if (data.role === "technician") {
+      for (const a of document.querySelectorAll(
+        '.tech-mobile-popover a[href="verify_email_page.php"],.tech-mobile-popover a[href="logout.php"]',
+      ))
+        styleAction(a, a.getAttribute("href") === "logout.php");
+      return;
+    }
     if (!["admin", "executive"].includes(data.role)) return;
     const menu = $("profileDropdownMenu");
     if (!menu) return;
     for (const a of document.querySelectorAll("#sidebar a,#sidebar button"))
       if (a.textContent.includes("ยืนยันอีเมล")) {
         a.className = "mbs-profile-email";
+        styleAction(a);
         menu.appendChild(a);
       }
   }
