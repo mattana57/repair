@@ -705,13 +705,13 @@
   }
   function reviewScopeRows() {
     const base = (reviewPeriodActive() ? data.repairs : overviewRows()).filter(
-      hasReview,
+      (r) => hasReview(r) || r.status === "ซ่อมเสร็จแล้ว",
     );
     return period(
       base.map((r) => ({
         ...r,
         mbs_review_at:
-          r.rated_at && !String(r.rated_at).startsWith("0000")
+          hasReview(r) && r.rated_at && !String(r.rated_at).startsWith("0000")
             ? r.rated_at
             : r.completed_at,
       })),
@@ -722,7 +722,11 @@
   function reviewRows() {
     let rows = reviewScopeRows().filter(
       (r) =>
-        !reviewState.id || Number(r.technician_id) === Number(reviewState.id),
+        (!reviewState.id ||
+          Number(r.technician_id) === Number(reviewState.id)) &&
+        (reviewState.noReview
+          ? !hasReview(r) && r.status === "ซ่อมเสร็จแล้ว"
+          : hasReview(r)),
     );
     if (reviewState.comments) rows = rows.filter(hasComment);
     return rows;
@@ -750,7 +754,7 @@
     }
     for (const t of reviewCandidates()) {
       const reviewed = scope.filter(
-        (r) => Number(r.technician_id) === Number(t.id),
+        (r) => Number(r.technician_id) === Number(t.id) && hasReview(r),
       );
       const scored = reviewed.filter(
         (r) => Number(r.rating) >= 1 && Number(r.rating) <= 5,
@@ -782,18 +786,44 @@
   function refreshReviews() {
     updateReviewHeader();
     const rows = reviewRows(),
+      unreviewed = reviewScopeRows().filter(
+        (r) =>
+          (!reviewState.id ||
+            Number(r.technician_id) === Number(reviewState.id)) &&
+          r.status === "ซ่อมเสร็จแล้ว" &&
+          !hasReview(r),
+      ).length,
+      starRows = reviewState.noReview
+        ? reviewScopeRows().filter(
+            (r) =>
+              hasReview(r) &&
+              (!reviewState.id ||
+                Number(r.technician_id) === Number(reviewState.id)),
+          )
+        : rows,
       stars = [1, 2, 3, 4, 5].map(
-        (n) => rows.filter((r) => Number(r.rating) === n).length,
+        (n) => starRows.filter((r) => Number(r.rating) === n).length,
       );
     const display = reviewState.star
       ? rows.filter((r) => Number(r.rating) === reviewState.star)
       : rows;
-    $("mbsReviewSummary").textContent =
-      display.length +
-      " รีวิว · " +
-      display.filter(hasComment).length +
-      " คอมเมนต์";
-    $("mbsReviewCount").textContent = display.length + " รีวิว";
+    $("mbsReviewSummary").textContent = reviewState.noReview
+      ? display.length + " รายการ · ยังไม่มีรีวิว"
+      : display.length +
+        " รีวิว · " +
+        display.filter(hasComment).length +
+        " คอมเมนต์";
+    $("mbsReviewCount").textContent =
+      display.length + (reviewState.noReview ? " รายการ" : " รีวิว");
+    $("mbsNoReview").textContent = "ยังไม่มีรีวิว (" + unreviewed + ")";
+    $("mbsNoReview").classList.toggle(
+      "is-selected",
+      Boolean(reviewState.noReview),
+    );
+    $("mbsNoReview").setAttribute(
+      "aria-pressed",
+      String(Boolean(reviewState.noReview)),
+    );
     const chips = $("mbsStarChips");
     chips.replaceChildren();
     for (const n of [1, 2, 3, 4, 5]) {
@@ -812,6 +842,7 @@
         stars[n - 1] +
         ")</span>";
       b.onclick = () => {
+        reviewState.noReview = false;
         reviewState.star = n;
         refreshReviews();
       };
@@ -819,7 +850,7 @@
     }
     $("mbsReviewAll").classList.toggle(
       "is-selected",
-      reviewState.star === 0 && !reviewState.comments,
+      reviewState.star === 0 && !reviewState.comments && !reviewState.noReview,
     );
     $("mbsCommentsOnly").classList.toggle("is-selected", reviewState.comments);
     $("mbsCommentsOnly").setAttribute(
@@ -829,6 +860,7 @@
     const u = serverParams("reviews", reviewState.id);
     u.searchParams.set("mbs_star", reviewState.star);
     u.searchParams.set("mbs_comments", reviewState.comments ? "1" : "0");
+    u.searchParams.set("mbs_no_review", reviewState.noReview ? "1" : "0");
     loadTable($("mbsReviewList"), u);
   }
   function openReviews(id = "", department = "") {
@@ -859,6 +891,7 @@
           : "",
       star: 0,
       comments: false,
+      noReview: false,
     };
     if (reviewState.department && !reviewState.id)
       reviewState.id = String(reviewCandidates()[0]?.id || "");
@@ -878,17 +911,26 @@
     header.replaceChildren(lead, badge, close);
     const body = dlg.querySelector(".mbs-dialog-body");
     body.innerHTML =
-      '<div class="mbs-classic-review-toolbar"><div class="mbs-classic-filter-row"><span class="mbs-classic-filter-label">ระดับคะแนน:</span><div id="mbsStarChips"></div><div class="mbs-classic-review-actions"><button type="button" id="mbsCommentsOnly">เฉพาะคอมเมนต์</button><button type="button" id="mbsReviewAll">ทั้งหมด</button></div></div><div class="mbs-classic-date-row"><div id="mbsReviewDate"></div><p id="mbsReviewSummary" aria-live="polite"></p></div></div><div id="mbsReviewList"></div>';
+      '<div class="mbs-classic-review-toolbar"><div class="mbs-classic-filter-row"><span class="mbs-classic-filter-label">ระดับคะแนน:</span><div id="mbsStarChips"></div><div class="mbs-classic-review-actions"><button type="button" id="mbsNoReview">ยังไม่มีรีวิว (0)</button><button type="button" id="mbsCommentsOnly">เฉพาะคอมเมนต์</button><button type="button" id="mbsReviewAll">ทั้งหมด</button></div></div><div class="mbs-classic-date-row"><div id="mbsReviewDate"></div><p id="mbsReviewSummary" aria-live="polite"></p></div></div><div id="mbsReviewList"></div>';
     $("mbsReviewTech").onchange = (e) => {
       reviewState.id = e.target.value;
+      reviewState.noReview = false;
       reviewState.star = 0;
       refreshReviews();
     };
+    $("mbsNoReview").onclick = () => {
+      reviewState.noReview = true;
+      reviewState.star = 0;
+      reviewState.comments = false;
+      refreshReviews();
+    };
     $("mbsCommentsOnly").onclick = () => {
+      reviewState.noReview = false;
       reviewState.comments = !reviewState.comments;
       refreshReviews();
     };
     $("mbsReviewAll").onclick = () => {
+      reviewState.noReview = false;
       reviewState.star = 0;
       reviewState.comments = false;
       refreshReviews();

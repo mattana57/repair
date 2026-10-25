@@ -21,8 +21,13 @@ function mbs_drill_dispatch($db) {
         if($kind==='reviews'){
             $reviewPeriod=mbs_range('reviews')!==null;foreach(['day','month','year'] as $part){$v=$_GET['mbs_reviews_'.$part]??'all';if(is_string($v)&&ctype_digit($v)&&(int)$v>0)$reviewPeriod=true;}if($reviewPeriod)$rows=$data['repairs'];
             if($data['role']==='technician')throw new RuntimeException('ไม่อนุญาต');
-            $rows=array_values(array_filter($rows,static function($r)use($value){return (!$value||(int)$r['technician_id']===(int)$value)&&((int)($r['rating']??0)>=1&&(int)$r['rating']<=5||trim((string)($r['review_comment']??''))!==''&&trim((string)$r['review_comment'])!=='-');}));
-            foreach($rows as &$reviewRow)$reviewRow['mbs_review_at']=mbs_review_time($reviewRow);unset($reviewRow);
+            $noReview=($_GET['mbs_no_review']??'')==='1';
+            $rows=array_values(array_filter($rows,static function($r)use($value,$noReview){
+                $rated=(int)($r['rating']??0)>=1&&(int)($r['rating']??0)<=5;
+                $comment=trim((string)($r['review_comment']??''));$reviewed=$rated||($comment!==''&&$comment!=='-');
+                return (!$value||(int)$r['technician_id']===(int)$value)&&($noReview?(!$reviewed&&($r['status']??'')==='ซ่อมเสร็จแล้ว'):$reviewed);
+            }));
+            foreach($rows as &$reviewRow)$reviewRow['mbs_review_at']=$noReview?($reviewRow['completed_at']??null):mbs_review_time($reviewRow);unset($reviewRow);
             $rows=mbs_period_rows($rows,'reviews','mbs_review_at');
             if(($_GET['mbs_comments']??'')==='1')$rows=array_values(array_filter($rows,static function($r){$c=trim((string)($r['review_comment']??''));return $c!==''&&$c!=='-';}));
             $star=filter_var($_GET['mbs_star']??null,FILTER_VALIDATE_INT);if($star>=1&&$star<=5)$rows=array_values(array_filter($rows,static function($r)use($star){return (int)$r['rating']===$star;}));
@@ -33,18 +38,18 @@ function mbs_drill_dispatch($db) {
             foreach(['equipment_type','location','technician_id','problem_desc','status'] as $column){$v=$_GET['mbs_match_'.$column]??null;if(is_string($v)&&$v!=='')$rows=array_values(array_filter($rows,static function($r)use($column,$v){return trim((string)($r[$column]??''))===trim($v);}));}
         }
         $total=count($rows);$pages=max(1,(int)ceil($total/50));$page=max(1,min($pages,(int)($_GET['mbs_page']??1)));$slice=array_slice($rows,($page-1)*50,50);
-        echo '<p class="mbs-result-count">'.number_format($total).($kind==='reviews'?' รีวิว':' รายการแจ้งซ่อม').'</p>';
+        echo '<p class="mbs-result-count">'.number_format($total).($kind==='reviews'?(!empty($noReview)?' รายการที่ยังไม่มีรีวิว':' รีวิว'):' รายการแจ้งซ่อม').'</p>';
         if($kind==='reviews'){
             $reviewPeriod=mbs_range('reviews')!==null;foreach(['day','month','year'] as $part){$v=$_GET['mbs_reviews_'.$part]??'all';if(is_string($v)&&ctype_digit($v)&&(int)$v>0)$reviewPeriod=true;}if($reviewPeriod)$rows=$data['repairs'];
-            if(!$total)echo '<p class="mbs-empty">ยังไม่มีรีวิว</p>';
+            if(!$total)echo '<p class="mbs-empty">'.($noReview?'ไม่พบงานที่ยังไม่มีรีวิวในช่วงเวลานี้':'ยังไม่มีรีวิว').'</p>';
             foreach($slice as $r){
                 $stars=(int)($r['rating']??0);$validStars=$stars>=1&&$stars<=5;
-                $starHtml=$validStars?str_repeat('★',$stars).'<span class="mbs-unfilled-stars">'.str_repeat('★',5-$stars).'</span>':'<span class="mbs-unfilled-stars">★★★★★</span><small>ยังไม่ได้ให้คะแนน</small>';
+                $starHtml=$validStars?str_repeat('★',$stars).'<span class="mbs-unfilled-stars">'.str_repeat('★',5-$stars).'</span>':($noReview?'<small>ยังไม่มีรีวิว</small>':'<span class="mbs-unfilled-stars">★★★★★</span><small>ยังไม่ได้ให้คะแนน</small>');
                 $comment=trim((string)($r['review_comment']??''));$hasComment=$comment!==''&&$comment!=='-';
                 $media=function_exists('dm_icons')?dm_icons($db,$r):'';
                 $repairUrl=($data['role']==='executive'?'view_repair.php':'update_repair.php').'?id='.(int)$r['id'].'&source=tech_reviews';
                 $openLink='<a class="mbs-review-open" href="'.mbs_h($repairUrl).'" target="_blank" rel="noopener" title="เปิดใบงานในแท็บใหม่" aria-label="เปิดใบงาน '.mbs_h($r['ticket_no']).' ในแท็บใหม่"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 4h6v6m0-6L10 14M10 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-4"/></svg></a>';
-                echo '<article class="mbs-review" role="link" tabindex="0" data-mbs-review-id="'.(int)$r['id'].'" aria-label="เปิดใบงาน '.mbs_h($r['ticket_no']).' ในแท็บใหม่"><div class="mbs-classic-review-avatar"><i class="fas fa-user" aria-hidden="true"></i></div><div class="mbs-classic-review-content"><div class="mbs-classic-review-row-head"><div><strong class="mbs-classic-review-name">'.mbs_h($r['reporter_label']).' '.$media.'</strong><time>'.mbs_h(mbs_date_display(mbs_review_time($r))).'</time></div><div class="mbs-classic-review-link-tools"><span class="mbs-stars" aria-label="'.($validStars?$stars.' จาก 5 ดาว':'ยังไม่ได้ให้คะแนน').'">'.$starHtml.'</span>'.$openLink.'</div></div><p'.($hasComment?'':' class="mbs-no-review-text"').'>'.($hasComment?nl2br(mbs_h($comment)):'- ไม่มีข้อความรีวิว -').'</p><span class="mbs-classic-tech-badge"><i class="fas fa-tools" aria-hidden="true"></i>เจ้าหน้าที่: '.mbs_h($r['technician_name']).'</span></div></article>';
+                echo '<article class="mbs-review" role="link" tabindex="0" data-mbs-review-id="'.(int)$r['id'].'" aria-label="เปิดใบงาน '.mbs_h($r['ticket_no']).' ในแท็บใหม่"><div class="mbs-classic-review-avatar"><i class="fas fa-user" aria-hidden="true"></i></div><div class="mbs-classic-review-content"><div class="mbs-classic-review-row-head"><div><div class="mbs-classic-review-name-line"><strong class="mbs-classic-review-name">'.mbs_h($r['reporter_label']).'</strong><span class="mbs-stars" aria-label="'.($validStars?$stars.' จาก 5 ดาว':'ยังไม่มีรีวิว').'">'.$starHtml.'</span>'.$media.'</div><time>'.mbs_h(mbs_date_display(mbs_review_time($r))).'</time></div><div class="mbs-classic-review-link-tools">'.$openLink.'</div></div><p'.($hasComment?'':' class="mbs-no-review-text"').'>'.($hasComment?nl2br(mbs_h($comment)):'- ไม่มีข้อความรีวิว -').'</p><span class="mbs-classic-tech-badge"><i class="fas fa-tools" aria-hidden="true"></i>เจ้าหน้าที่: '.mbs_h($r['technician_name']).'</span></div></article>';
             }
         }else{
             echo '<div class="mbs-table-scroll"><table class="mbs-table"><thead><tr><th>เลขที่งาน</th><th>อุปกรณ์ / ปัญหา</th><th>สถานที่</th><th>ผู้แจ้ง</th><th>เจ้าหน้าที่</th><th>สถานะ</th><th>รับงาน</th><th>ปิดงาน</th><th>ระยะเวลาทำงาน</th></tr></thead><tbody>';

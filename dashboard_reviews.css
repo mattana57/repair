@@ -1,4 +1,16 @@
 /* Classic review dialog. Scoped to reviews; analytics dialogs and page layouts are unchanged. */
+#mbsReviews .mbs-classic-review-name-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+#mbsReviews .mbs-classic-review-name-line .mbs-stars {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  margin: 0;
+  font-size: 15px;
+}
 #mbsReviews.mbs-review-classic {
   width: min(700px, 96vw);
   max-width: 96vw;
