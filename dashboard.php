@@ -48,6 +48,8 @@ require_once __DIR__ . '/dashboard_media_icons.php';
 
 define('MBS_DASHBOARD_ACTIVITY', true);
 require_once __DIR__ . '/dashboard_activity.php';
+require_once __DIR__.'/dashboard_features.php';
+mbs_feature_dispatch($conn);
 
 define('MBS_ADMIN_TRASH', true);
 require_once __DIR__ . '/admin_trash.php';
@@ -501,7 +503,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
         $tech_dept_map = [];
         $tech_info_map = [];
 
-        $td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians");
+        $td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians WHERE deleted_at IS NULL");
 
         if($td_res) {
             while($tr = $td_res->fetch_assoc()) {
@@ -745,12 +747,9 @@ if($check_repairs_table && $check_repairs_table->num_rows > 0) {
 $all_repairs_json = "[]";
 $check_repairs_list = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs_list && $check_repairs_list->num_rows > 0) {
-    // ✨ สแตมป์เวลารับงาน (received_at) อัตโนมัติแบบเรียลไทม์ทันทีที่ช่างกดรับงานผ่าน LINE ✨
-    date_default_timezone_set('Asia/Bangkok');
-    $now_realtime = date('Y-m-d H:i:s');
-    $conn->query("UPDATE repairs SET received_at = IF(completed_at IS NOT NULL AND completed_at != '0000-00-00 00:00:00', completed_at, '$now_realtime') WHERE deleted_at IS NULL AND status != 'รอรับเรื่อง' AND (received_at IS NULL OR received_at = '0000-00-00 00:00:00' OR received_at = '' OR received_at = '-')");
+    // Event times are written only by real accept/close actions.
 
-    $select_query = "SELECT * FROM repairs WHERE deleted_at IS NULL ORDER BY created_at DESC";
+    $select_query = "SELECT * FROM repairs WHERE ".mbs_active_repair_sql('repairs')." ORDER BY created_at DESC";
     $rep_res = $conn->query($select_query);
     $reps = [];
     if($rep_res) {
@@ -764,7 +763,7 @@ if($check_repairs_list && $check_repairs_list->num_rows > 0) {
 
 $tech_dept_map = [];
 $tech_info_map = [];
-$td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians");
+$td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians WHERE deleted_at IS NULL");
 if($td_res) {
     while($tr = $td_res->fetch_assoc()) {
         $tech_dept_map[$tr['full_name']] = !empty($tr['department']) ? $tr['department'] : 'ฝ่ายงานทั่วไป';
@@ -1079,12 +1078,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save_user'])) {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>ข้อมูลไม่ถูกต้อง</title>
-        </head>
+        
+<style>#equip-DayContainer,#equip-MonthContainer,#equip-YearContainer,#status-DayContainer,#status-MonthContainer,#status-YearContainer,#loc-DayContainer,#loc-MonthContainer,#loc-YearContainer,#tech-DayContainer,#tech-MonthContainer,#tech-YearContainer,#rating-DayContainer,#rating-MonthContainer,#rating-YearContainer,#reporter-DayContainer,#reporter-MonthContainer,#reporter-YearContainer,#rep-DayContainer,#rep-MonthContainer,#rep-YearContainer{display:none!important}</style>
+<link rel="stylesheet" href="dashboard_features.css?v=20261025-1">
+</head>
         <body>
             <h1>ไม่สามารถบันทึกข้อมูลได้</h1>
             <p>' . $message_html . '</p>
             <a href="?tab=technicians">กลับไปหน้าจัดการบัญชี</a>
-        </body>
+        <?php mbs_feature_assets($conn); ?>
+</body>
         </html>';
 
         exit();
@@ -2702,7 +2705,7 @@ if (isset($_GET['api_check_hash'])) {
 .ab-check{width:16px;height:16px;accent-color:#2563eb;cursor:pointer;}
 .ab-check:disabled{cursor:not-allowed;opacity:.4;}
 </style>
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-6">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261025-1">
     <link rel="stylesheet" href="project_footer.css?v=20261019-2">
     <link rel="stylesheet" href="admin_team_bulk.css?v=20261019-1">
     <style id="calendar-first-paint">
@@ -2758,6 +2761,9 @@ if (isset($_GET['api_check_hash'])) {
             }
         }
     </style>
+
+<style>#equip-DayContainer,#equip-MonthContainer,#equip-YearContainer,#status-DayContainer,#status-MonthContainer,#status-YearContainer,#loc-DayContainer,#loc-MonthContainer,#loc-YearContainer,#tech-DayContainer,#tech-MonthContainer,#tech-YearContainer,#rating-DayContainer,#rating-MonthContainer,#rating-YearContainer,#reporter-DayContainer,#reporter-MonthContainer,#reporter-YearContainer,#rep-DayContainer,#rep-MonthContainer,#rep-YearContainer{display:none!important}</style>
+<link rel="stylesheet" href="dashboard_features.css?v=20261025-1">
 </head>
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
 
@@ -2954,7 +2960,7 @@ if (isset($_GET['api_check_hash'])) {
                             COALESCE(SUM(CASE WHEN status = 'รอรับเรื่อง' THEN 1 ELSE 0 END), 0) AS pending_count,
                             COALESCE(SUM(CASE WHEN status = 'กำลังดำเนินการ' THEN 1 ELSE 0 END), 0) AS progress_count,
                             COALESCE(SUM(CASE WHEN status = 'ซ่อมเสร็จแล้ว' THEN 1 ELSE 0 END), 0) AS completed_count
-                            FROM repairs WHERE deleted_at IS NULL");
+                            FROM repairs WHERE ".mbs_active_repair_sql('repairs').mbs_overview_sql()."");
                         $repairCardCounts = $repairCardResult ? $repairCardResult->fetch_assoc() : [];
                         $cPend = (int) ($repairCardCounts['pending_count'] ?? 0);
                         $cProg = (int) ($repairCardCounts['progress_count'] ?? 0);
@@ -2970,7 +2976,7 @@ if (isset($_GET['api_check_hash'])) {
                             <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-violet-50 text-violet-600 border border-violet-200/80 shadow-2xs">TOTAL</span>
                         </div>
                         <div>
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
+                            <h3 id="adminCount-total" class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cTotal; ?></h3>
                             <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Total Repairs</p>
                         </div>
                     </div>
@@ -2982,7 +2988,7 @@ if (isset($_GET['api_check_hash'])) {
                             <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#fef3c7] text-[#d97706] border border-amber-300/60 shadow-2xs">WAITING</span>
                         </div>
                         <div>
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
+                            <h3 id="adminCount-pending" class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cPend; ?></h3>
                             <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Pending</p>
                         </div>
                     </div>
@@ -2994,7 +3000,7 @@ if (isset($_GET['api_check_hash'])) {
                             <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#e0e7ff] text-[#4f46e5] border border-indigo-300/60 shadow-2xs">ACTIVE</span>
                         </div>
                         <div>
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
+                            <h3 id="adminCount-in_progress" class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cProg; ?></h3>
                             <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">In Progress</p>
                         </div>
                     </div>
@@ -3006,7 +3012,7 @@ if (isset($_GET['api_check_hash'])) {
                             <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wider bg-[#d1fae5] text-[#059669] border border-emerald-300/60 shadow-2xs">DONE</span>
                         </div>
                         <div>
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
+                            <h3 id="adminCount-completed" class="text-2xl sm:text-3xl font-extrabold text-slate-800"><?php echo $cComp; ?></h3>
                             <p class="text-[11px] sm:text-sm font-medium text-slate-500 mt-0.5 sm:mt-1 truncate">Completed</p>
                         </div>
                     </div>
@@ -3287,7 +3293,7 @@ if (isset($_GET['api_check_hash'])) {
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100">
                                     <?php
-                                    $recent_dash = $conn->query("SELECT * FROM repairs WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 5");
+                                    $recent_dash = $conn->query("SELECT * FROM repairs WHERE ".mbs_active_repair_sql('repairs').mbs_overview_sql()." ORDER BY created_at DESC LIMIT 5");
                                     if($recent_dash && $recent_dash->num_rows > 0){
                                         while($rd = $recent_dash->fetch_assoc()) {
                                             $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
@@ -8177,7 +8183,7 @@ if (isset($_GET['api_check_hash'])) {
 
                     let imageIcon = dashboardMediaIcons(r);
 
-                    tbody.innerHTML += `<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
+                    tbody.innerHTML += `<tr data-mbs-repair-id="${Number(r.id)}" class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
                         <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">${Number(r.id)}</td>
                         <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                             <div class="font-medium text-slate-700">${createdDate}</div>
@@ -9216,9 +9222,10 @@ if (isset($_GET['api_check_hash'])) {
 <div id="ab-settings" hidden data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></div>
 <script src="admin_table_bulk.js?v=20261019-3"></script>
 <script src="admin_log_bulk.js?v=20261019-2"></script>
-<script src="repairs_calendar.js?v=20261019-4"></script>
-<script src="dashboard_calendars.js?v=20261019-1"></script>
+<script src="repairs_calendar.js?v=20261025-1"></script>
+<script src="dashboard_calendars.js?v=20261025-1"></script>
 <span id="tb-settings" hidden data-user="<?= (int)$_SESSION['user_id'] ?>" data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></span>
 <script src="admin_team_bulk.js?v=20261019-1"></script>
+<?php mbs_feature_assets($conn); ?>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/dashboard_features.php';
 // ปฏิเสธการเปิดไฟล์ช่วยผ่าน URL โดยตรง
 if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     http_response_code(403);
@@ -55,7 +56,7 @@ function tp_url(array $changes = [], array $remove = []) {
         if (
             is_string($value)
             && (
-                $key === 'tab'
+                $key === 'tab' || preg_match('/^mbs_[a-zA-Z-]+_(start|end|day|month|year)$/D', $key)
                 || preg_match(
                     '/^pg_(repairs|admins|techs|assets|reporters|logs|history)_(page|q|month|year|status|department)$/D',
                     $key
@@ -271,9 +272,10 @@ function tp_repairs(
         }
     }
 
-    $where = '(' . $baseWhere . ') AND r.deleted_at IS NULL AND ' . $search;
+    $where = '(' . $baseWhere . ') AND '.mbs_active_repair_sql('r').' AND ' . $search;
     $types = $baseTypes . $types;
     $values = array_merge($baseValues, $values);
+    $where .= mbs_range_clause('table','r.created_at',$types,$values);
 
     $month = tp_get('pg_' . $prefix . '_month');
     $year = tp_get('pg_' . $prefix . '_year');
@@ -936,7 +938,7 @@ function tp_repair_rows(
                 $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
             }
 
-            echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+            echo "<tr data-mbs-repair-id='".(int)$row['id']."' class='hover:bg-slate-50/50 transition-colors search-row'>
                 <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
                 <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                     <div class='font-medium text-slate-700'>{$created_date}</div>

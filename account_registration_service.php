@@ -110,6 +110,7 @@ function arCompletePreparedRegistration($db, $id, $role, $data, $password)
 
 function arGateRegistration($db, $role, $data, $password, &$error, &$success)
 {
+    if (strtolower((string)$role)==='admin') { $error='ระบบใช้บัญชีแอดมินหลักเพียงบัญชีเดียว ไม่เปิดรับสมัครแอดมินเพิ่มเติม'; return true; }
     try {
         if (arRow($db,'SELECT id FROM users WHERE username=? LIMIT 1','s',[$data['username']])) {
             $error=arDuplicateMessage();

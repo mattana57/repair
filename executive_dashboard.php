@@ -14,6 +14,8 @@ require_once __DIR__ . '/dashboard_media_icons.php';
 
 define('MBS_DASHBOARD_ACTIVITY', true);
 require_once __DIR__ . '/dashboard_activity.php';
+require_once __DIR__.'/dashboard_features.php';
+mbs_feature_dispatch($conn);
 
 $conn->set_charset("utf8mb4");
 
@@ -159,12 +161,9 @@ function timeAgo($datetime) {
 $all_repairs_json = "[]";
 $check_repairs_list = $conn->query("SHOW TABLES LIKE 'repairs'");
 if($check_repairs_list && $check_repairs_list->num_rows > 0) {
-    // ✨ สแตมป์เวลารับงาน (received_at) อัตโนมัติแบบเรียลไทม์ทันทีที่ช่างกดรับงานผ่าน LINE ✨
-    date_default_timezone_set('Asia/Bangkok');
-    $now_realtime = date('Y-m-d H:i:s');
-    $conn->query("UPDATE repairs SET received_at = IF(completed_at IS NOT NULL AND completed_at != '0000-00-00 00:00:00', completed_at, '$now_realtime') WHERE status != 'รอรับเรื่อง' AND (received_at IS NULL OR received_at = '0000-00-00 00:00:00' OR received_at = '' OR received_at = '-')");
+    // Event times are written only by actual accept/close actions.
 
-    $select_query = "SELECT * FROM repairs ORDER BY created_at DESC";
+    $select_query = "SELECT * FROM repairs WHERE ".mbs_active_repair_sql('repairs')." ORDER BY created_at DESC";
     $rep_res = $conn->query($select_query);
     $reps = [];
     if($rep_res) {
@@ -178,7 +177,7 @@ if($check_repairs_list && $check_repairs_list->num_rows > 0) {
 
 $tech_dept_map = [];
 $tech_info_map = [];
-$td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians");
+$td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians WHERE deleted_at IS NULL");
 if($td_res) {
     while($tr = $td_res->fetch_assoc()) {
         $tech_dept_map[$tr['full_name']] = !empty($tr['department']) ? $tr['department'] : 'ฝ่ายงานทั่วไป';
@@ -238,7 +237,7 @@ $pageTitles = [
 $currentTitle = isset($pageTitles[$active_tab]) ? $pageTitles[$active_tab] : 'Dashboard Overview';
 // ✨ ดึงข้อมูลชุดเต็มของช่างและแอดมินมาสร้าง Hash เพื่อให้ฝั่งผู้บริหารรับรู้การแก้ไขจากฝั่งแอดมินแบบเรียลไทม์ 100% ✨
 $all_techs_sync = [];
-$t_sync_q = $conn->query("SELECT id, full_name, english_name, department, position, phone, email, avatar_url, approval_status FROM technicians ORDER BY id ASC");
+$t_sync_q = $conn->query("SELECT id, full_name, english_name, department, position, phone, email, avatar_url, approval_status FROM technicians WHERE deleted_at IS NULL ORDER BY id ASC");
 if ($t_sync_q) { while($r = $t_sync_q->fetch_assoc()) $all_techs_sync[] = $r; }
 
 $all_users_sync = [];
@@ -287,7 +286,7 @@ function execRepairsDate($part) {
 
 function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
     $prefix = $kind === 'history' ? 'eh_' : 'er_';
-    $where = ['1=1'];
+    $where = [mbs_active_repair_sql('r')];
     $values = [];
     if ($kind === 'history') {
         if (execPageGet('eh_type') !== 'technician' && isset($_GET['eh_line_user_id'])) {
@@ -369,6 +368,7 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
         $where[] = "$text LIKE ? ESCAPE '!'";
         $values[] = '%' . strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
     }
+    $range=mbs_range($kind==='history'?'history':'table');if($range){$where[]='r.created_at >= ? AND r.created_at < ?';$values[]=$range[0].' 00:00:00';$values[]=$range[1].' 00:00:00';}
     $filter = implode(' AND ', $where);
     $count = execPageRun($conn, "SELECT COUNT(*) AS total FROM repairs r WHERE $filter", $values);
     $total = (int)$count->fetch_assoc()['total'];
@@ -389,6 +389,7 @@ function execPageFooter($data, $kind) {
     foreach (['er_q','er_day','er_month','er_year','er_status','er_page','eh_q','eh_day','eh_month','eh_year','eh_type','eh_name','eh_line_user_id','eh_page'] as $key) {
         if (isset($_GET[$key]) && is_string($_GET[$key])) $params[$key] = $_GET[$key];
     }
+    foreach($_GET as $key=>$value)if(is_string($value)&&preg_match('/^mbs_[a-zA-Z-]+_(start|end)$/D',$key))$params[$key]=$value;
     $first = $data['total'] ? $data['offset'] + 1 : 0;
     $last = min($data['total'], $data['offset'] + 50);
     $html = '<div class="exec-page-footer"><p class="exec-page-summary">แสดงรายการ <strong>' . number_format($first) . '–' . number_format($last)
@@ -493,7 +494,7 @@ function execPageRows($result, $kind, $line_users_map, $tech_info_map, $tech_dep
             $historyStatus = formatEmptyOrDash($row['status']);
             $historyDescTitle = strip_tags($problem_desc);
             echo <<<HTML
-                <tr class="hover:bg-slate-50/50 transition-colors search-row border-b border-slate-100 last:border-0">
+                <tr data-mbs-repair-id="{$historyId}" class="hover:bg-slate-50/50 transition-colors search-row border-b border-slate-100 last:border-0">
                     <td class="px-6 py-4 align-top font-mono font-semibold text-slate-600">{$historyId}</td>
                     <td class="px-6 py-4 align-top text-xs whitespace-nowrap">
                         <div class="font-medium text-slate-700">{$created_date}</div>
@@ -533,7 +534,7 @@ function execPageRows($result, $kind, $line_users_map, $tech_info_map, $tech_dep
                 </tr>
         HTML;
         } else {
-            echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+            echo "<tr data-mbs-repair-id='".(int)$row['id']."' class='hover:bg-slate-50/50 transition-colors search-row'>
                 <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
                 <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                     <div class='font-medium text-slate-700'>{$created_date}</div>
@@ -596,7 +597,7 @@ function execSummaryCounts($conn) {
         COALESCE(SUM(status = 'รอรับเรื่อง'), 0) AS waiting,
         COALESCE(SUM(status = 'กำลังดำเนินการ'), 0) AS progress,
         COALESCE(SUM(status = 'ซ่อมเสร็จแล้ว'), 0) AS completed
-        FROM repairs WHERE deleted_at IS NULL");
+        FROM repairs WHERE ".mbs_active_repair_sql('repairs').mbs_overview_sql()."");
     if (!$result) throw new RuntimeException('โหลดสรุปสถานะใบงานไม่สำเร็จ');
     $row = $result->fetch_assoc();
     $result->free();
@@ -1055,7 +1056,7 @@ if (isset($_GET['api_check_hash'])) {
     </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-6">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261025-1">
     <link rel="stylesheet" href="project_footer.css?v=20261019-2">
     <style id="calendar-first-paint">
         /* ปฏิทินใช้ค่าฟิลด์เดิม แต่ไม่แสดงดรอปดาวน์เก่าระหว่างโหลด */
@@ -1069,6 +1070,9 @@ if (isset($_GET['api_check_hash'])) {
         }
     </style>
 <link rel="stylesheet" href="self_profile.css?v=20261020-1">
+
+<style>#equip-DayContainer,#equip-MonthContainer,#equip-YearContainer,#status-DayContainer,#status-MonthContainer,#status-YearContainer,#loc-DayContainer,#loc-MonthContainer,#loc-YearContainer,#tech-DayContainer,#tech-MonthContainer,#tech-YearContainer,#rating-DayContainer,#rating-MonthContainer,#rating-YearContainer,#reporter-DayContainer,#reporter-MonthContainer,#reporter-YearContainer,#rep-DayContainer,#rep-MonthContainer,#rep-YearContainer{display:none!important}</style>
+<link rel="stylesheet" href="dashboard_features.css?v=20261025-1">
 </head>
 
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -1540,7 +1544,7 @@ if (isset($_GET['api_check_hash'])) {
                                 </thead>
                                 <tbody class="text-sm divide-y divide-slate-100">
                                     <?php
-                                    $recent_dash = $conn->query("SELECT * FROM repairs ORDER BY created_at DESC LIMIT 5");
+                                    $recent_dash = $conn->query("SELECT * FROM repairs WHERE ".mbs_active_repair_sql('repairs').mbs_overview_sql()." ORDER BY created_at DESC LIMIT 5");
                                     if($recent_dash && $recent_dash->num_rows > 0){
                                         while($rd = $recent_dash->fetch_assoc()) {
                                             $stClass = ($rd['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($rd['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
@@ -4332,8 +4336,9 @@ if (isset($_GET['api_check_hash'])) {
         window.addEventListener('focus', autoRefreshAllData);
     </script>
 <?php mbsDashboardActivityScript(); ?>
-<script src="repairs_calendar.js?v=20261019-4"></script>
-<script src="dashboard_calendars.js?v=20261019-1"></script>
+<script src="repairs_calendar.js?v=20261025-1"></script>
+<script src="dashboard_calendars.js?v=20261025-1"></script>
 <?php require __DIR__ . '/self_profile_panel.php'; ?>
+<?php mbs_feature_assets($conn); ?>
 </body>
 </html>

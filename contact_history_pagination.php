@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/dashboard_features.php';
 // ปฏิเสธการเปิดไฟล์ช่วยผ่าน URL โดยตรง
 if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     http_response_code(403);
@@ -39,7 +40,7 @@ function ch_contacts_page($conn, array $lineMap, $all = false) {
         FROM line_users lu LEFT JOIN (SELECT latest.id, latest.line_user_id, latest.line_display_name,
         latest.reporter_name, latest.phone_number, latest.created_at, grouped.total_repairs
         FROM (SELECT MAX(id) AS latest_id, COUNT(*) AS total_repairs FROM repairs
-        WHERE deleted_at IS NULL
+        WHERE deleted_at IS NULL AND (technician_id IS NULL OR technician_id=0 OR EXISTS (SELECT 1 FROM technicians mbs_contact_tech WHERE mbs_contact_tech.id=repairs.technician_id AND mbs_contact_tech.deleted_at IS NULL))
         GROUP BY CAST(CASE WHEN line_user_id IS NULL OR TRIM(line_user_id) = ''
             THEN CONCAT('repair:',id) ELSE CONCAT('line:',line_user_id) END AS BINARY)) grouped JOIN repairs latest ON latest.id = grouped.latest_id) history
           ON TRIM(lu.line_user_id) <> '' AND BINARY history.line_user_id = BINARY lu.line_user_id
@@ -58,7 +59,7 @@ function ch_contacts_page($conn, array $lineMap, $all = false) {
         FROM (SELECT latest.id, latest.line_user_id, latest.line_display_name,
         latest.reporter_name, latest.phone_number, latest.created_at, grouped.total_repairs
         FROM (SELECT MAX(id) AS latest_id, COUNT(*) AS total_repairs FROM repairs
-        WHERE deleted_at IS NULL
+        WHERE deleted_at IS NULL AND (technician_id IS NULL OR technician_id=0 OR EXISTS (SELECT 1 FROM technicians mbs_contact_tech WHERE mbs_contact_tech.id=repairs.technician_id AND mbs_contact_tech.deleted_at IS NULL))
         GROUP BY CAST(CASE WHEN line_user_id IS NULL OR TRIM(line_user_id) = ''
             THEN CONCAT('repair:',id) ELSE CONCAT('line:',line_user_id) END AS BINARY)) grouped JOIN repairs latest ON latest.id = grouped.latest_id) history
         WHERE NOT EXISTS (SELECT 1 FROM line_users lu
@@ -122,7 +123,7 @@ function ch_history_page(
         $types = 's';
     }
 
-    $where = '(' . $where . ') AND r.deleted_at IS NULL';
+    $where = '(' . $where . ') AND '.mbs_active_repair_sql('r');
 
     $q = preg_replace('/\s+/u', '', tp_get('pg_history_q'));
 
@@ -180,6 +181,7 @@ function ch_history_page(
         $types .= str_repeat('s', count($params) - strlen($types));
     }
 
+    $where .= mbs_range_clause('history','r.created_at',$types,$params);
     $day = tp_get('pg_history_day', 'all');
     if (ctype_digit($day) && (int)$day >= 1 && (int)$day <= 31) {
         $where .= ' AND DAY(r.created_at) = ?';

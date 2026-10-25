@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/dashboard_features.php';
 // ใช้ผ่าน technician_home.php หลังตรวจสิทธิ์แล้วเท่านั้น
 if (!defined('MBS_TECH_HISTORY')) {
     http_response_code(403);
@@ -77,6 +78,8 @@ if ($thOnHistory) {
         : "(TRIM(status) = 'รอรับเรื่อง' OR (" . $where . '))';
     $thTypes = '';
     $thParams = [];
+    $thWhere .= ' AND '.mbs_active_repair_sql('repairs');
+    $thWhere .= mbs_range_clause('technician-history','created_at',$thTypes,$thParams);
 
     if ($thReporterMode) {
         // จำกัดผู้แจ้งด้วย LINE ID และคงเงื่อนไขเจ้าของงานจากหน้าเดิม
@@ -1122,7 +1125,7 @@ rsort($thYears);
                                 : 'badge-pending'
                             );
                     ?>
-                        <tr class="hover:bg-slate-50/50">
+                        <tr data-mbs-repair-id="<?= (int)$r['id'] ?>" class="hover:bg-slate-50/50">
                             <td class="font-mono font-semibold text-slate-600">
                                 <?= (int) $r['id'] ?>
                             </td>

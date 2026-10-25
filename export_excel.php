@@ -8,6 +8,7 @@ if (!in_array(strtolower($_SESSION['role'] ?? ''), ['admin', 'executive'], true)
 }
 
 require_once 'db_connect.php';
+require_once __DIR__.'/dashboard_features.php';
 require_once __DIR__ . '/activity_log.php';
 
 // 1. รับค่าชื่อช่างที่ส่งมาจากการเลือก Dropdown ในหน้า Dashboard
@@ -27,7 +28,7 @@ header("Expires: 0");
 echo "\xEF\xBB\xBF";
 
 // ตัวกรองปฏิทินจากหน้ารายงาน: 0/all คือไม่จำกัด และทุกค่าต้องเป็นตัวเลขที่ตรวจแล้ว
-$calendar_where = '';
+$calendar_where = ' AND '.mbs_active_repair_sql('repairs').mbs_range_literal('report','created_at');
 foreach (['day'=>['DAY',1,31], 'month'=>['MONTH',1,12], 'year'=>['YEAR',1000,9999]] as $calendar_key=>$calendar_rule) {
     $calendar_value = $_GET[$calendar_key] ?? '0';
     if (is_string($calendar_value) && ctype_digit($calendar_value) && (int)$calendar_value >= $calendar_rule[1] && (int)$calendar_value <= $calendar_rule[2]) {
@@ -69,6 +70,7 @@ $calendar_month = isset($_GET['month']) ? (int)$_GET['month'] : 0;
 $calendar_year = isset($_GET['year']) ? (int)$_GET['year'] : 0;
 $calendar_day = isset($_GET['day']) ? (int)$_GET['day'] : 0;
 $current_month = ($calendar_day >= 1 && $calendar_day <= 31 ? 'วันที่ ' . $calendar_day . ' ' : '') . ($calendar_month >= 1 && $calendar_month <= 12 ? $thai_months[sprintf('%02d', $calendar_month)] : 'ทุกเดือน') . ($calendar_year >= 1000 && $calendar_year <= 9999 ? ' พ.ศ. ' . ($calendar_year + 543) : ' ทุกปี');
+if(mbs_range('report'))$current_month=mbs_range_label('report');
 $current_date = date('d/m/') . (date('Y') + 543);
 $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้ดูแลระบบ";
 ?>

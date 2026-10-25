@@ -8,6 +8,7 @@ if (!in_array(strtolower($_SESSION['role'] ?? ''), ['admin', 'executive'], true)
 }
 
 require_once 'db_connect.php';
+require_once __DIR__.'/dashboard_features.php';
 require_once __DIR__ . '/activity_log.php';
 
 // รับค่าจาก URL
@@ -38,7 +39,7 @@ $tech_formal_name = getPrefixName($selected_tech);
 
 // กำหนดรายชื่อช่างและจัดกลุ่มตามฝ่ายงาน (ดึงจากฐานข้อมูลอัตโนมัติแบบ Real-time)
 $grouped_techs = [];
-$tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE full_name IS NOT NULL AND full_name != '' ORDER BY department ASC, full_name ASC");
+$tech_res = $conn->query("SELECT full_name, department FROM technicians WHERE deleted_at IS NULL AND full_name IS NOT NULL AND full_name != '' ORDER BY department ASC, full_name ASC");
 
 if ($tech_res && $tech_res->num_rows > 0) {
     while ($t = $tech_res->fetch_assoc()) {
@@ -94,7 +95,8 @@ if($years_query && $years_query->num_rows > 0) {
 }
 
 // เงื่อนไขการค้นหา SQL
-$where_conditions = [];
+$where_conditions = [mbs_active_repair_sql('repairs')];
+if(mbs_range('report'))$where_conditions[]='1=1'.mbs_range_literal('report','created_at');
 if ($selected_day > 0) { $where_conditions[] = "DAY(created_at) = $selected_day"; }
 if ($selected_year > 0) {
     $where_conditions[] = "YEAR(created_at) = $selected_year";
@@ -146,6 +148,7 @@ if($repairs_list && $repairs_list->num_rows > 0) {
 $thai_months = [1=>"มกราคม", 2=>"กุมภาพันธ์", 3=>"มีนาคม", 4=>"เมษายน", 5=>"พฤษภาคม", 6=>"มิถุนายน", 7=>"กรกฎาคม", 8=>"สิงหาคม", 9=>"กันยายน", 10=>"ตุลาคม", 11=>"พฤศจิกายน", 12=>"ธันวาคม"];
 $thai_year = $selected_year + 543;
 $calendar_period_label = ($selected_day > 0 ? 'วันที่ ' . $selected_day . ' ' : '') . ($selected_month > 0 && isset($thai_months[$selected_month]) ? $thai_months[$selected_month] : 'ทุกเดือน') . ($selected_year > 0 ? ' พ.ศ. ' . $thai_year : ' ทุกปี');
+if(mbs_range('report'))$calendar_period_label=mbs_range_label('report');
 
 if ($repairs_list !== false) {
     mbsActivityLog(
@@ -327,7 +330,7 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
             color: #a5b4fc !important;
         }
     </style>
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-4">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261025-1">
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
 
@@ -459,12 +462,12 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
                         <i class="fas fa-arrow-left mr-2"></i> Dashboard
                     </div>
 
-                    <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>" 
+                    <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>&amp;mbs_report_start=<?= htmlspecialchars($_GET["mbs_report_start"]??"",ENT_QUOTES,"UTF-8") ?>&amp;mbs_report_end=<?= htmlspecialchars($_GET["mbs_report_end"]??"",ENT_QUOTES,"UTF-8") ?>" 
                        class="group px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                         <i class="fas fa-table mr-1.5 transition-colors <?php echo $report_type === 'table' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> ตารางรายงาน
                     </a>
                     
-                    <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>" 
+                    <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>&amp;mbs_report_start=<?= htmlspecialchars($_GET["mbs_report_start"]??"",ENT_QUOTES,"UTF-8") ?>&amp;mbs_report_end=<?= htmlspecialchars($_GET["mbs_report_end"]??"",ENT_QUOTES,"UTF-8") ?>" 
                        class="group px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'memo' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                         <i class="fas fa-file-alt mr-1.5 transition-colors <?php echo $report_type === 'memo' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> บันทึกข้อความ
                     </a>
@@ -497,12 +500,12 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
             
             <!-- ✨ เปลี่ยน portrait:grid เป็น portrait:flex เพื่อให้ปุ่มตาราง/บันทึก หดตัวพอดีคำในมือถือแนวตั้ง ✨ -->
             <div class="flex portrait:flex md:portrait:flex lg:hidden items-center gap-2.5">
-                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>" 
+                <a href="print_report.php?type=table&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>&amp;mbs_report_start=<?= htmlspecialchars($_GET["mbs_report_start"]??"",ENT_QUOTES,"UTF-8") ?>&amp;mbs_report_end=<?= htmlspecialchars($_GET["mbs_report_end"]??"",ENT_QUOTES,"UTF-8") ?>" 
                    class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'table' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                     <i class="fas fa-table mr-1.5 <?php echo $report_type === 'table' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> ตารางรายงาน
                 </a>
                 
-                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>" 
+                <a href="print_report.php?type=memo&tech=<?php echo urlencode($selected_tech); ?>&month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>&day=<?php echo $selected_day; ?>&amp;mbs_report_start=<?= htmlspecialchars($_GET["mbs_report_start"]??"",ENT_QUOTES,"UTF-8") ?>&amp;mbs_report_end=<?= htmlspecialchars($_GET["mbs_report_end"]??"",ENT_QUOTES,"UTF-8") ?>" 
                    class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border-2 shadow-sm active:scale-95 <?php echo $report_type === 'memo' ? 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-600 dark:text-white dark:border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700 active:bg-indigo-50'; ?>">
                     <i class="fas fa-file-alt mr-1.5 <?php echo $report_type === 'memo' ? 'text-indigo-700 dark:text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-indigo-500'; ?>"></i> บันทึกข้อความ
                 </a>
@@ -1186,7 +1189,7 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
             });
         }
     </script>
-<script src="repairs_calendar.js?v=20261019-4"></script>
-<script src="dashboard_calendars.js?v=20261019-1"></script>
+<script src="repairs_calendar.js?v=20261025-1"></script>
+<script src="dashboard_calendars.js?v=20261025-1"></script>
 </body>
 </html>

@@ -53,6 +53,8 @@ require_once __DIR__ . '/dashboard_media_icons.php';
 
 define('MBS_DASHBOARD_ACTIVITY', true);
 require_once __DIR__ . '/dashboard_activity.php';
+require_once __DIR__.'/dashboard_features.php';
+mbs_feature_dispatch($conn);
 
 // ====================================================================
 // ✅ สามารถดึงข้อมูลได้อย่างปลอดภัย 100%
@@ -101,7 +103,7 @@ function techSummaryCounts($conn, $techId) {
         COALESCE(SUM(status = 'รอรับเรื่อง'), 0) AS pending,
         COALESCE(SUM(status = 'กำลังดำเนินการ'), 0) AS in_progress,
         COALESCE(SUM(status = 'ซ่อมเสร็จแล้ว'), 0) AS completed
-        FROM repairs WHERE deleted_at IS NULL
+        FROM repairs WHERE ".mbs_active_repair_sql('repairs').mbs_overview_sql()."
         AND (status = 'รอรับเรื่อง' OR technician_id = ?)");
     if (!$stmt) throw new RuntimeException('โหลดสรุปสถานะใบงานไม่สำเร็จ');
     try {
@@ -181,7 +183,7 @@ if ($res_repairs) {
 // ดึงข้อมูลแผนกและตำแหน่งของช่างทั้งหมดเพื่อนำไปใช้ในตาราง
 $tech_dept_map = [];
 $tech_info_map = [];
-$td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians");
+$td_res = $conn->query("SELECT full_name, department, english_name, position FROM technicians WHERE deleted_at IS NULL");
 if($td_res) {
     while($tr = $td_res->fetch_assoc()) {
         $tech_dept_map[$tr['full_name']] = !empty($tr['department']) ? $tr['department'] : 'ฝ่ายงานทั่วไป';
@@ -1160,7 +1162,7 @@ if (isset($_GET['th_fragment'])
         }
     }
     </style>
-<link rel="stylesheet" href="repairs_calendar.css?v=20261019-6">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261025-1">
     <link rel="stylesheet" href="project_footer.css?v=20261019-2">
     <link rel="stylesheet" href="technician_layout.css?v=20261019-1">
     <style id="calendar-first-paint">
@@ -1229,6 +1231,9 @@ if (isset($_GET['th_fragment'])
         }
     }
     </style>
+
+<style>#equip-DayContainer,#equip-MonthContainer,#equip-YearContainer,#status-DayContainer,#status-MonthContainer,#status-YearContainer,#loc-DayContainer,#loc-MonthContainer,#loc-YearContainer,#tech-DayContainer,#tech-MonthContainer,#tech-YearContainer,#rating-DayContainer,#rating-MonthContainer,#rating-YearContainer,#reporter-DayContainer,#reporter-MonthContainer,#reporter-YearContainer,#rep-DayContainer,#rep-MonthContainer,#rep-YearContainer{display:none!important}</style>
+<link rel="stylesheet" href="dashboard_features.css?v=20261025-1">
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -2867,9 +2872,10 @@ if (isset($_GET['th_fragment'])
         });
     </script>
 <?php mbsDashboardActivityScript(); ?>
-<script src="repairs_calendar.js?v=20261019-4"></script>
-<script src="dashboard_calendars.js?v=20261019-1"></script>
+<script src="repairs_calendar.js?v=20261025-1"></script>
+<script src="dashboard_calendars.js?v=20261025-1"></script>
 <?php require __DIR__ . '/technician_profile_avatar_panel.php'; ?>
 <?php require __DIR__ . '/self_profile_panel.php'; ?>
+<?php mbs_feature_assets($conn); ?>
 </body>
 </html>

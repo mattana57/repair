@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/dashboard_features.php';
 if (!defined('MBS_ADMIN_TRASH') || strtolower((string)($_SESSION['role']??''))!=='admin') {http_response_code(403);exit('ไม่อนุญาตให้เข้าถึงหน้านี้');}
 function lb_active($conn,$table) {return at_has_log_archive($conn,$table)?'deleted_at IS NULL':'1=1';}
 function lb_login_filters() {
@@ -17,6 +18,7 @@ function lb_login_filters() {
     }
     $role=tp_get('pg_logs_role','all');if(in_array($role,['admin','executive','technician'],true)){$where.=' AND LOWER(role)=?';$types.='s';$values[]=$role;}
     $q=tp_get('pg_logs_q');if($q!==''){$where.=" AND CONCAT_WS(' ', username, role, ip_address, status, login_time, CONCAT(DATE_FORMAT(login_time, '%d/%m/'), YEAR(login_time) + 543)) LIKE ? ESCAPE '!'";$types.='s';$values[]=tp_like($q);}
+    $where .= mbs_range_clause('login','login_time',$types,$values);
     return [$where,$types,$values];
 }
 function lb_activity_filters($includeUser=false) {
@@ -31,6 +33,7 @@ function lb_activity_filters($includeUser=false) {
     $q=mb_substr(tp_get('lh_q',''),0,200,'UTF-8');if($q!==''){$where.=" AND CONCAT_WS(' ', username, full_name, role, summary, action_code, created_at) LIKE ? ESCAPE '!'";$types.='s';$values[]=tp_like($q);}
     $user=filter_var(tp_get('pg_logs_q','0'),FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
     if($includeUser&&$user!==false){$where.=' AND user_id=?';$types.='i';$values[]=$user;}
+    $where .= mbs_range_clause('accountActivity','created_at',$types,$values);
     return [$where,$types,$values];
 }
 function lb_query($kind) {return $kind==='loginlog'?lb_login_filters():lb_activity_filters($kind==='activityevent');}

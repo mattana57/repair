@@ -1,0 +1,291 @@
+/* Existing colours outside chart calendars are retained. */
+.mbs-overview-filter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 4px 0 20px;
+  font-size: 14px;
+  color: #475569;
+  flex-wrap: wrap;
+}
+.mbs-dialog {
+  width: min(1400px, 96vw);
+  max-width: 96vw;
+  max-height: 92dvh;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 0;
+  background: #f8fafc;
+  color: #0f172a;
+  box-shadow: 0 24px 90px #0f172a40;
+  z-index: 99999;
+  font-family: Sarabun, sans-serif;
+}
+.mbs-dialog::backdrop {
+  background: #0f172a99;
+  backdrop-filter: blur(3px);
+}
+.mbs-dialog > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.mbs-dialog h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+}
+.mbs-close {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  font-size: 26px;
+  border: 0;
+  cursor: pointer;
+}
+.mbs-dialog-body {
+  padding: 24px;
+}
+.mbs-intro {
+  color: #475569;
+  margin-bottom: 20px;
+}
+.mbs-drill-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.mbs-drill-charts section {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: white;
+  padding: 18px;
+  min-width: 0;
+}
+.mbs-drill-charts h3 {
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.mbs-drill-chart {
+  height: 300px;
+  position: relative;
+}
+.mbs-drill-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+.mbs-button,
+.mbs-chip,
+.mbs-pages a {
+  border: 1px solid #cbd5e1;
+  background: white;
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.mbs-button:hover,
+.mbs-chip:hover {
+  background: #eff6ff;
+}
+.mbs-table-scroll {
+  overflow: auto;
+  max-height: 52vh;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+.mbs-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.mbs-table th,
+.mbs-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  min-width: 110px;
+  vertical-align: top;
+}
+.mbs-table th {
+  background: #eff6ff;
+  position: sticky;
+  top: 0;
+  color: #1e40af;
+  z-index: 1;
+}
+.mbs-table small {
+  display: block;
+  color: #64748b;
+  max-width: 300px;
+  overflow-wrap: anywhere;
+}
+.mbs-pages {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.mbs-pages [aria-current="page"],
+.mbs-chip.is-selected {
+  background: #1d4ed8;
+  color: white;
+  border-color: #1d4ed8;
+}
+.mbs-reporter {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+  background: white;
+}
+.mbs-reporter:hover {
+  background: #eff6ff;
+}
+.mbs-reporter strong {
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+.mbs-review-controls {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.mbs-review-controls select {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px;
+  background: white;
+  max-width: 260px;
+}
+.mbs-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.mbs-review {
+  padding: 20px;
+  margin: 12px 0;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 16px;
+}
+.mbs-review strong,
+.mbs-review time,
+.mbs-stars {
+  display: block;
+}
+.mbs-stars {
+  color: #b45309;
+  margin: 8px 0;
+  letter-spacing: 2px;
+}
+.mbs-review time,
+.mbs-review small {
+  color: #64748b;
+  font-size: 13px;
+}
+.mbs-review p {
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.mbs-result-count {
+  margin: 12px 0;
+  font-weight: 700;
+}
+.mbs-empty {
+  padding: 30px;
+  text-align: center;
+  color: #64748b;
+}
+.mbs-readonly-profile
+  :is(input:not([type="hidden"]), select, textarea):disabled {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  cursor: not-allowed;
+}
+.mbs-required {
+  color: #e11d48;
+}
+.mbs-account-time {
+  color: #64748b;
+  font-size: 12px;
+  margin: -2px 0 8px;
+}
+.mbs-profile-email {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  color: #475569;
+}
+.mbs-profile-email:hover {
+  background: #f1f5f9;
+}
+.mbs-duration {
+  white-space: normal;
+  min-width: 150px;
+  padding: 12px;
+}
+.mbs-tech-jobs {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 8px;
+}
+.mbs-tech-jobs button {
+  display: block;
+  color: #1d4ed8;
+  margin-top: 6px;
+}
+@media (max-width: 640px) {
+  .mbs-dialog {
+    width: 98vw;
+    max-width: 98vw;
+    border-radius: 14px;
+  }
+  .mbs-dialog-body {
+    padding: 14px;
+  }
+  .mbs-dialog > header {
+    padding: 14px;
+  }
+  .mbs-dialog h2 {
+    font-size: 17px;
+  }
+  .mbs-drill-charts {
+    grid-template-columns: 1fr;
+  }
+  .mbs-review-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .mbs-overview-filter {
+    gap: 8px;
+  }
+}
+
+.mbs-history-link {
+  color: #1d4ed8;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 6px 0;
+}

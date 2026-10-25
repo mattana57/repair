@@ -4,6 +4,17 @@
         const controls = config.controls;
         const fields = config.fields;
         if (controls.some(node => !node) || Object.values(fields).some(node => !node) || typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) return null;
+        const rangeKey = 'mbs_' + config.key;
+        const rangeFields = {};
+        const rangeHost = controls[0].closest('form') || controls[0].parentNode;
+        for (const part of ['start','end']) {
+            let field=rangeHost.querySelector('input[name="'+rangeKey+'_'+part+'"]');
+            if(!field){field=document.createElement('input');field.type='hidden';field.name=rangeKey+'_'+part;field.value=new URLSearchParams(location.search).get(field.name)||'';rangeHost.appendChild(field);}
+            rangeFields[part]=field;
+        }
+        const rangeText = () => rangeFields.start.value && rangeFields.end.value ? rangeFields.start.value.split('-').reverse().join('/')+' – '+rangeFields.end.value.split('-').reverse().join('/') : '';
+        const saveRange = () => {window.mbsRanges=window.mbsRanges||{};window.mbsRanges[config.key]={start:rangeFields.start,end:rangeFields.end};const u=new URL(location.href);for(const part of ['start','end']){const v=rangeFields[part].value;if(v)u.searchParams.set(rangeKey+'_'+part,v);else u.searchParams.delete(rangeKey+'_'+part);}history.replaceState(history.state,'',u);};
+        saveRange();
         const suffix = config.key === 'table' ? '' : '-' + config.key;
         const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
         const weekdays = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
@@ -31,6 +42,7 @@
             <header class="rc-header"><div><p>ตัวกรองวันที่แจ้งซ่อม</p><h3 id="rc-title">เลือกช่วงเวลาที่ต้องการดู</h3></div><button type="button" data-rc="close" class="rc-close" aria-label="ปิดปฏิทิน">×</button></header>
             <div class="rc-tabs" role="tablist" aria-label="รูปแบบการเลือกช่วงเวลา">
                 <button type="button" id="rc-tab-date" role="tab" aria-controls="rc-date" data-rc-mode="date">เลือกวันที่</button>
+                <button type="button" id="rc-tab-range" role="tab" aria-controls="rc-range" data-rc-mode="range">เริ่ม–สิ้นสุด</button>
                 <button type="button" id="rc-tab-period" role="tab" aria-controls="rc-period" data-rc-mode="period">เลือกเดือน/ปี</button>
             </div>
             <section id="rc-date" class="rc-pane" role="tabpanel" aria-labelledby="rc-tab-date">
@@ -43,6 +55,13 @@
                 <label class="rc-year-label" for="rc-period-year">เลือกปี <span>พ.ศ.</span></label><select id="rc-period-year"></select>
                 <p class="rc-month-label">เลือกเดือน</p><div class="rc-months">${months.map((month,index)=>'<button type="button" data-rc-month="'+monthValue(index+1)+'">'+month+'</button>').join('')}</div>
                 <p class="rc-help">โหมดนี้แสดงทุกวันในเดือนหรือปีที่เลือก</p>
+            </section>
+            <section id="rc-range" class="rc-pane" role="tabpanel" aria-labelledby="rc-tab-range" hidden>
+                <label>วันที่เริ่มต้น (Start)<input type="date" data-rc-start required></label>
+                <label>วันที่สิ้นสุด (End)<input type="date" data-rc-end required></label>
+                <label>ปีงบประมาณ พ.ศ.<select data-rc-fiscal><option value="">เลือกปีงบประมาณ</option>${Array.from({length:15},(_,i)=>today.year+543-10+i).map(y=>'<option value="'+y+'">'+y+'</option>').join('')}</select></label>
+                <p class="rc-help">ปีงบประมาณ: 1 ตุลาคมปีก่อน ถึง 30 กันยายนของปีที่เลือก รวมวันเริ่มต้นและวันสิ้นสุด</p>
+                <p data-rc-range-error role="alert" class="rc-range-error"></p>
             </section>
             <footer class="rc-footer"><p id="rc-selection" aria-live="polite"></p><div><button type="button" data-rc="close" class="rc-cancel">ยกเลิก</button><button type="button" data-rc="apply" class="rc-apply">ใช้ตัวกรอง</button></div></footer>`;
         if (suffix) {
@@ -61,7 +80,7 @@
         }
         function render() {
             for (const tab of dialog.querySelectorAll('[data-rc-mode]')) {const active=tab.dataset.rcMode===mode;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;}
-            get('#rc-date').hidden=mode!=='date';get('#rc-period').hidden=mode!=='period';
+            get('#rc-date').hidden=mode!=='date';get('#rc-period').hidden=mode!=='period';get('#rc-range').hidden=mode!=='range';
             if (mode === 'date') {
                 get('#rc-view-month').value=viewMonth;fillYears(get('#rc-view-year'),String(viewYear),false);
                 const first=new Date(viewYear,viewMonth-1,1).getDay(), count=new Date(viewYear,viewMonth,0).getDate(),nodes=[];
@@ -74,13 +93,14 @@
                     nodes.push(button);
                 }
                 get('.rc-days').replaceChildren(...nodes);
-            } else {
+            } else if(mode === 'period') {
                 fillYears(get('#rc-period-year'),period.year,true);
                 if(period.year==='all')period.month='all';
                 for(const button of dialog.querySelectorAll('[data-rc-month]')) {button.setAttribute('aria-pressed',String(button.dataset.rcMonth===period.month));button.disabled=period.year==='all';}
                 get('.rc-help').textContent=period.year==='all'?'ทุกปีแสดงทุกเดือนและทุกปี เลือกปีเจาะจงหากต้องการเลือกเดือน':'แสดงทั้งปีที่เลือก หรือเลือกเดือนเพื่อดูเฉพาะเดือนนั้น';
             }
             const value=mode==='date'?selectedDate:{day:'all',...period};
+            if(mode==='range'){const a=get('[data-rc-start]').value,b=get('[data-rc-end]').value;const valid=Boolean(a&&b&&a<=b&&get('[data-rc-start]').validity.valid&&get('[data-rc-end]').validity.valid);get('[data-rc-range-error]').textContent=a&&b&&a>b?'วันเริ่มต้นต้องไม่เกินวันสิ้นสุด':'';get('#rc-selection').textContent=valid?a.split('-').reverse().join('/')+' – '+b.split('-').reverse().join('/'):'เลือกวันที่เริ่มต้นและสิ้นสุด';get('[data-rc="apply"]').disabled=!valid;return;}
             get('#rc-selection').textContent=value?describe(value):'เลือกวันที่จากปฏิทิน';get('[data-rc="apply"]').disabled=!value;
         }
         function position() {
@@ -89,10 +109,11 @@
             dialog.style.left=Math.max(12,Math.min(rect.right-width,window.innerWidth-width-12))+'px';
             dialog.style.top=Math.max(12,Math.min(rect.bottom+8,window.innerHeight-height-12))+'px';
         }
-        function sync() {const label=describe(read());trigger.querySelector('span').textContent=label;trigger.setAttribute('aria-label','ตัวกรองวันที่แจ้งซ่อม: '+label);}
+        function sync() {const label=rangeText()||describe(read());trigger.querySelector('span').textContent=label;trigger.setAttribute('aria-label','ตัวกรองวันที่แจ้งซ่อม: '+label);}
         function open() {
             const value=read();selectedDate=validDate(value)?{...value}:null;period={month:value.month,year:value.year};
-            mode=value.day==='all'?'period':'date';viewYear=value.year==='all'?today.year:Number(value.year);viewMonth=value.month==='all'?today.month:Number(value.month);
+            get('[data-rc-start]').value=rangeFields.start.value;get('[data-rc-end]').value=rangeFields.end.value;
+            mode=rangeText()?'range':value.day==='all'?'period':'date';viewYear=value.year==='all'?today.year:Number(value.year);viewMonth=value.month==='all'?today.month:Number(value.month);
             render();dialog.showModal();trigger.setAttribute('aria-expanded','true');position();
         }
         function moveMonth(delta) {const date=new Date(viewYear,viewMonth-1+delta,1);if(date.getFullYear()<1000||date.getFullYear()>9999)return;viewYear=date.getFullYear();viewMonth=date.getMonth()+1;render();position();}
@@ -105,7 +126,8 @@
             if(action==='prev'||action==='next')moveMonth(action==='prev'?-1:1);
             if(action==='today'){viewYear=today.year;viewMonth=today.month;selectedDate={day:String(today.day),month:monthValue(today.month),year:String(today.year)};render();}
             if(action==='apply'){
-                const value=mode==='date'?selectedDate:{day:'all',...period};if(!value)return;
+                const value=mode==='range'?{day:'all',month:'all',year:'all'}:mode==='date'?selectedDate:{day:'all',...period};if(!value)return;
+                rangeFields.start.value=mode==='range'?get('[data-rc-start]').value:'';rangeFields.end.value=mode==='range'?get('[data-rc-end]').value:'';saveRange();
                 for(const [key,valuePart] of Object.entries(value))fields[key].value=config.zeroAll && valuePart === 'all' ? '0' : valuePart;
                 // ใช้เส้นทางกรอง/โหลดตารางและ PHP แบ่งหน้าเดิม ไม่กรองแถวด้วย JavaScript
                 sync();dialog.close();config.apply();
@@ -116,11 +138,12 @@
             if(event.target===get('#rc-view-month'))viewMonth=Number(event.target.value);
             if(event.target===get('#rc-view-year'))viewYear=Number(event.target.value);
             if(event.target===get('#rc-period-year')){period.year=event.target.value;period.month='all';}
+            if(event.target===get('[data-rc-fiscal]')&&event.target.value){const y=Number(event.target.value)-543;get('[data-rc-start]').value=String(y-1)+'-10-01';get('[data-rc-end]').value=String(y)+'-09-30';}
             render();position();
         });
         dialog.addEventListener('keydown',event=>{
             const tab=event.target.closest('[data-rc-mode]');
-            if(tab&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();mode=mode==='date'?'period':'date';render();position();get('#rc-tab-'+mode).focus();return;}
+            if(tab&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();mode=['date','range','period'][(['date','range','period'].indexOf(mode)+(event.key==='ArrowRight'?1:2))%3];render();position();get('#rc-tab-'+mode).focus();return;}
             const button=event.target.closest('[data-rc-day]');if(!button)return;
             const day=Number(button.dataset.rcDay),date=new Date(viewYear,viewMonth-1,day),offset={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7,Home:-date.getDay(),End:6-date.getDay()}[event.key];
             if(offset===undefined)return;event.preventDefault();date.setDate(day+offset);viewYear=date.getFullYear();viewMonth=date.getMonth()+1;render();get('[data-rc-day="'+date.getDate()+'"]').focus();
@@ -129,7 +152,7 @@
         trigger.addEventListener('click',open);window.addEventListener('resize',position);
         document.body.appendChild(dialog);controls[0].before(trigger);controls.forEach(node=>node.classList.add('rc-legacy-hidden'));
         sync();
-        return {trigger,dialog,sync,destroy(){window.removeEventListener('resize',position);if(dialog.open)dialog.close();dialog.remove();}};
+        return {trigger,dialog,fields,sync,destroy(){window.removeEventListener('resize',position);if(dialog.open)dialog.close();dialog.remove();}};
     };
     window.RepairCalendar = {mount};
 })();

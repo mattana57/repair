@@ -21,7 +21,7 @@
             for (const instance of instances) if (!instance.trigger.isConnected) {instance.destroy(); instances.delete(instance);}
             for (const monthControl of document.querySelectorAll('[id$="-MonthContainer"]')) {
                 const prefix = monthControl.id.slice(0,-'-MonthContainer'.length), yearControl = document.getElementById(prefix+'-YearContainer'), dayControl = document.getElementById(prefix+'-DayContainer');
-                if (!yearControl) continue;
+                if (!yearControl || charts.has(prefix)) continue;
                 const controls = [dayControl, monthControl, yearControl].filter(Boolean); if (mounted.has(controls[0])) continue;
                 const callbackName = /,\s*([A-Za-z_$][\w$]*)\s*\)\s*$/.exec(monthControl.getAttribute('onkeydown') || '')?.[1];
                 if (!callbackName || typeof window[callbackName] !== 'function') continue;

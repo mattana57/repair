@@ -46,3 +46,7 @@
 
 .rc-dialog .rc-months button:disabled{opacity:.45;cursor:not-allowed}
 .rc-dialog .rc-months button:disabled:hover{background:white;color:#64748b}
+/* Start–End date selection, shared by dashboard and report calendars. */
+.rc-dialog #rc-range label,.rc-dialog [id^="rc-range-"] label{display:grid;gap:7px;font-weight:700;color:#334155;margin:12px 0}
+.rc-dialog input[type=date]{width:100%;padding:10px 12px;border:1px solid #bfdbfe;border-radius:12px;background:#fff;color:#1e3a8a;font:inherit}
+.rc-range-error{color:#be123c;font-size:13px}.rc-tabs{display:flex;gap:4px}.rc-tabs button{flex:1;font-size:12px}

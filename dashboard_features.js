@@ -1,0 +1,1056 @@
+/* Shared, authenticated dashboard analytics. All drill-down tables are paginated by PHP. */
+(() => {
+  "use strict";
+  const seed = document.getElementById("mbsFeaturesData");
+  if (!seed) return;
+  let data;
+  try {
+    data = JSON.parse(seed.textContent);
+  } catch {
+    return;
+  }
+  const $ = (id) => document.getElementById(id),
+    esc = (s) =>
+      String(s ?? "").replace(
+        /[&<>"']/g,
+        (c) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          })[c],
+      );
+  const palette = [
+    "#1e40af",
+    "#2563eb",
+    "#3b82f6",
+    "#60a5fa",
+    "#93c5fd",
+    "#1d4ed8",
+    "#0284c7",
+  ];
+  const dateText = (s) =>
+    /^\d{4}-\d{2}-\d{2}/.test(s || "")
+      ? s.slice(8, 10) +
+        "/" +
+        s.slice(5, 7) +
+        "/" +
+        s.slice(0, 4) +
+        " " +
+        s.slice(11, 16)
+      : "ไม่ทราบวันเวลาเดิม";
+  const validDate = (s) => {
+    if (!/^[1-9]\d{3}-\d{2}-\d{2}$/.test(s || "")) return false;
+    const d = new Date(s + "T00:00:00Z");
+    return !Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === s;
+  };
+  let selected = { kind: "", value: "", match: {} },
+    reviewState = { id: "", star: 0, comments: false },
+    chartRefs = [],
+    fetchVersion = 0;
+  window.mbsRanges = window.mbsRanges || {};
+  const urlState = new URL(location.href);
+  function period(rows, key = "overview", column = "created_at") {
+    const range = window.mbsRanges[key];
+    const a =
+        range?.start?.value ||
+        urlState.searchParams.get("mbs_" + key + "_start"),
+      b = range?.end?.value || urlState.searchParams.get("mbs_" + key + "_end");
+    const fields = key === "overview" ? overviewFields : null;
+    return rows.filter((r) => {
+      const dt = String(r[column] || "");
+      if (validDate(a) && validDate(b) && a <= b)
+        return dt.slice(0, 10) >= a && dt.slice(0, 10) <= b;
+      return ["day", "month", "year"].every((part, i) => {
+        const v =
+          fields?.[part]?.value ||
+          urlState.searchParams.get("mbs_" + key + "_" + part) ||
+          "all";
+        return (
+          !/^\d+$/.test(v) ||
+          +v === 0 ||
+          +dt.slice([8, 5, 0][i], [10, 7, 4][i]) === +v
+        );
+      });
+    });
+  }
+  let overviewFields = null,
+    reviewCalendar = null;
+  function ownRows() {
+    return data.role === "technician"
+      ? data.repairs.filter((r) => +r.technician_id === +data.technicianId)
+      : data.repairs;
+  }
+  function overviewRows() {
+    return period(ownRows());
+  }
+  function groups(rows, field) {
+    const map = new Map();
+    for (const r of rows) {
+      const key = String(r[field] ?? "").trim();
+      if (!key) continue;
+      map.set(key, (map.get(key) || 0) + 1);
+    }
+    return [...map].sort(
+      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "th"),
+    );
+  }
+  function technicianName(id) {
+    return (
+      data.technicians.find((t) => +t.id === +id)?.full_name ||
+      "ไม่ระบุเจ้าหน้าที่"
+    );
+  }
+  function reporterName(id) {
+    return (
+      data.repairs.find((r) => r.line_user_id === id)?.reporter_label ||
+      "ไม่ระบุชื่อผู้แจ้ง"
+    );
+  }
+  function locationLabel(row) {
+    return row.location || "ไม่ระบุสถานที่";
+  }
+  function chart(
+    canvas,
+    pairs,
+    kind,
+    { donut = false, labels = null, click = null, horizontal = true } = {},
+  ) {
+    if (!canvas || !window.Chart) return;
+    Chart.getChart(canvas)?.destroy();
+    const keys = pairs.map((x) => x[0]),
+      values = pairs.map((x) => x[1]);
+    const instance = new Chart(canvas, {
+      type: donut ? "doughnut" : "bar",
+      data: {
+        labels: labels || keys,
+        datasets: [
+          {
+            label: "จำนวนงาน",
+            data: values,
+            backgroundColor: donut
+              ? keys.map(
+                  (k) =>
+                    ({
+                      รอรับเรื่อง:
+                        data.role === "technician" ? "#fbbf24" : "#f59e0b",
+                      กำลังดำเนินการ: "#38bdf8",
+                      ซ่อมเสร็จแล้ว: "#10b981",
+                    })[k] || "#a78bfa",
+                )
+              : values.map((_, i) => palette[i % palette.length]),
+            borderRadius: donut ? 0 : 6,
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: donut ? "75%" : undefined,
+        indexAxis: donut ? "x" : horizontal ? "y" : "x",
+        plugins: {
+          legend: { display: donut, position: "bottom" },
+          tooltip: {
+            callbacks: {
+              label: (c) =>
+                (labels || keys)[c.dataIndex] +
+                ": " +
+                values[c.dataIndex] +
+                " รายการ",
+            },
+          },
+        },
+        scales: donut
+          ? {}
+          : {
+              x: { beginAtZero: true, ticks: { precision: 0 } },
+              y: {
+                beginAtZero: true,
+                ticks: { precision: 0, autoSkip: false },
+              },
+            },
+        onClick: (e, items) => {
+          if (!items.length) return;
+          const key = keys[items[0].index];
+          if (click) click(key);
+          else if (kind) openAnalytics(kind, key);
+        },
+        onHover: (e, items) => {
+          canvas.style.cursor =
+            items.length && (click || kind) ? "pointer" : "default";
+        },
+      },
+    });
+    if (canvas.closest("#mbsAnalytics")) chartRefs.push(instance);
+    return instance;
+  }
+  function counts() {
+    const rows = period(data.repairs),
+      pending = rows.filter((r) => r.status === "รอรับเรื่อง").length,
+      progress = rows.filter((r) => r.status === "กำลังดำเนินการ").length,
+      completed = rows.filter((r) => r.status === "ซ่อมเสร็จแล้ว").length;
+    return {
+      total: pending + progress + completed,
+      pending,
+      in_progress: progress,
+      completed,
+    };
+  }
+  function renderCards() {
+    const c = counts();
+    const extra = {
+      execCountTotal: c.total,
+      execCountWaiting: c.pending,
+      execCountProgress: c.in_progress,
+      execCountCompleted: c.completed,
+    };
+    for (const [id, v] of Object.entries(extra))
+      if ($(id)) $(id).textContent = v;
+    for (const [key, v] of Object.entries(c))
+      for (const id of [
+        "techCount-" + key,
+        "adminCount-" + key,
+        "executiveCount-" + key,
+      ])
+        if ($(id)) $(id).textContent = v;
+  }
+  function renderOverview() {
+    if (data.error) return;
+    if (!overviewFields) return;
+    const rows = overviewRows();
+    chart(
+      $("mainEquipChart") || $("eqChart"),
+      groups(rows, "equipment_type").slice(0, 10),
+      "equipment",
+      { horizontal: false },
+    );
+    chart(
+      $("mainStatusChart") || $("statusChart"),
+      groups(rows, "status"),
+      null,
+      { donut: true },
+    );
+    chart(
+      $("mainLocChart") || $("locChart"),
+      groups(rows, "location").slice(0, 10),
+      "location",
+    );
+    const byTech = groups(rows, "technician_id").filter(([id]) => +id > 0);
+    chart($("mainTechChart"), byTech, "technician", {
+      labels: byTech.map(([id]) => technicianName(id)),
+      horizontal: false,
+    });
+    const ratings = data.technicians
+      .map((t) => {
+        const rated = rows.filter(
+            (r) =>
+              +r.technician_id === +t.id && +r.rating >= 1 && +r.rating <= 5,
+          ),
+          comments = rows.filter(
+            (r) => +r.technician_id === +t.id && hasComment(r),
+          );
+        return {
+          id: t.id,
+          name: t.full_name,
+          n: rated.length,
+          reviews: rows.filter(
+            (r) => +r.technician_id === +t.id && hasReview(r),
+          ).length,
+          comments: comments.length,
+          avg: rated.length
+            ? rated.reduce((s, r) => s + +r.rating, 0) / rated.length
+            : 0,
+        };
+      })
+      .filter((t) => t.n > 0)
+      .sort((a, b) => b.avg - a.avg || b.n - a.n || a.id - b.id);
+    const canvas = $("mainRatingChart");
+    if (canvas && window.Chart) {
+      Chart.getChart(canvas)?.destroy();
+      new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: ratings.map((t) => t.name),
+          datasets: [
+            {
+              label: "คะแนนเฉลี่ย",
+              data: ratings.map((t) => t.avg),
+              backgroundColor: palette[1],
+              borderRadius: 6,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: "y",
+          scales: { x: { min: 0, max: 5 }, y: { ticks: { autoSkip: false } } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (c) => {
+                  const t = ratings[c.dataIndex];
+                  return (
+                    t.avg.toFixed(2) +
+                    " / 5 · " +
+                    t.n +
+                    " คะแนน · " +
+                    t.reviews +
+                    " รีวิว · " +
+                    t.comments +
+                    " ความคิดเห็น"
+                  );
+                },
+              },
+            },
+          },
+          onClick: (e, items) => {
+            if (items.length) openReviews(ratings[items[0].index].id);
+          },
+          onHover: (e, x) => {
+            canvas.style.cursor = x.length ? "pointer" : "default";
+          },
+        },
+      });
+    }
+    const list = $("topReportersList") || $("topReportersContainer");
+    if (list) {
+      list.replaceChildren();
+      for (const [id, n] of groups(rows, "line_user_id").slice(0, 10)) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "mbs-reporter";
+        btn.innerHTML =
+          "<span>" +
+          esc(reporterName(id)) +
+          "</span><strong>" +
+          n +
+          ' ครั้ง <span aria-hidden="true">↗</span></strong>';
+        btn.addEventListener("click", () => openAnalytics("reporter", id));
+        list.appendChild(btn);
+      }
+      if (!list.children.length) list.textContent = "ไม่พบรายการในช่วงเวลานี้";
+    }
+    renderCards();
+    renderRecent();
+    decorateDuration();
+    enhanceTechnicians();
+  }
+  function renderRecent() {
+    const body =
+      $("dashTableBody") || document.querySelector("#dash table tbody");
+    if (!body) return;
+    const rows = overviewRows().slice(0, 5);
+    body.innerHTML =
+      rows
+        .map(
+          (r) =>
+            '<tr><td class="px-6 py-4">' +
+            Number(r.id) +
+            '</td><td class="px-6 py-4">' +
+            esc(dateText(r.created_at)) +
+            '</td><td class="px-6 py-4">' +
+            esc(r.ticket_no) +
+            '</td><td class="px-6 py-4">' +
+            esc(r.reporter_label) +
+            '</td><td class="px-6 py-4">' +
+            esc(r.equipment_type) +
+            (typeof window.dashboardMediaIcons === "function"
+              ? window.dashboardMediaIcons(r)
+              : "") +
+            '<small style="display:block">' +
+            esc(r.location) +
+            '</small></td><td class="px-6 py-4">' +
+            esc(r.status) +
+            "</td></tr>",
+        )
+        .join("") ||
+      '<tr><td colspan="6" class="px-6 py-4">ไม่พบรายการในช่วงเวลานี้</td></tr>';
+  }
+  function hasComment(r) {
+    return (
+      !!String(r.review_comment || "").trim() &&
+      String(r.review_comment).trim() !== "-"
+    );
+  }
+  function hasReview(r) {
+    return (+r.rating >= 1 && +r.rating <= 5) || hasComment(r);
+  }
+  function dialog(id, title) {
+    let el = $(id);
+    if (el) return el;
+    el = document.createElement("dialog");
+    el.id = id;
+    el.className = "mbs-dialog";
+    el.innerHTML =
+      '<header><h2></h2><button type="button" class="mbs-close" aria-label="ปิดหน้าต่าง">×</button></header><div class="mbs-dialog-body"></div>';
+    el.querySelector("h2").textContent = title;
+    el.querySelector(".mbs-close").onclick = () => el.close();
+    el.addEventListener("click", (e) => {
+      if (e.target === el) {
+        const r = el.getBoundingClientRect();
+        if (
+          e.clientX < r.left ||
+          e.clientX > r.right ||
+          e.clientY < r.top ||
+          e.clientY > r.bottom
+        )
+          el.close();
+      }
+    });
+    document.body.appendChild(el);
+    return el;
+  }
+  function serverParams(kind, value, match = {}) {
+    const u = new URL(location.href);
+    u.searchParams.set("mbs_drill", kind);
+    u.searchParams.set("mbs_value", value);
+    u.searchParams.delete("mbs_features_data");
+    u.searchParams.delete("mbs_page");
+    for (const [p, field] of Object.entries(overviewFields || {}))
+      u.searchParams.set("mbs_overview_" + p, field.value);
+    for (const [k, v] of Object.entries(window.mbsRanges)) {
+      if (v.start.value && v.end.value) {
+        u.searchParams.set("mbs_" + k + "_start", v.start.value);
+        u.searchParams.set("mbs_" + k + "_end", v.end.value);
+      } else {
+        u.searchParams.delete("mbs_" + k + "_start");
+        u.searchParams.delete("mbs_" + k + "_end");
+      }
+    }
+    for (const k of [...u.searchParams.keys()])
+      if (k.startsWith("mbs_match_")) u.searchParams.delete(k);
+    for (const [k, v] of Object.entries(match))
+      u.searchParams.set("mbs_match_" + k, v);
+    return u;
+  }
+  async function loadTable(container, url) {
+    const version = String(++fetchVersion);
+    container.dataset.request = version;
+    container.setAttribute("aria-busy", "true");
+    try {
+      const res = await fetch(url, {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      if (res.redirected) {
+        location.assign(res.url);
+        return;
+      }
+      if (!res.ok) throw Error();
+      const text = await res.text();
+      if (container.dataset.request !== version) return;
+      container.innerHTML = text;
+      for (const b of container.querySelectorAll("[data-mbs-reporter]"))
+        b.onclick = () => openAnalytics("reporter", b.dataset.mbsReporter);
+      for (const a of container.querySelectorAll(".mbs-pages a"))
+        a.onclick = (e) => {
+          e.preventDefault();
+          loadTable(container, new URL(a.href));
+        };
+    } catch {
+      if (container.dataset.request === version)
+        container.innerHTML =
+          '<p role="alert">โหลดรายการไม่สำเร็จ กรุณาปิดแล้วเปิดอีกครั้ง</p>';
+    } finally {
+      if (container.dataset.request === version)
+        container.removeAttribute("aria-busy");
+    }
+  }
+  function openAnalytics(kind, value) {
+    const title =
+      {
+        reporter: "ข้อมูลการแจ้งซ่อมของ ",
+        technician: "ภาระงานของ ",
+        location: "สถานที่: ",
+        equipment: "อุปกรณ์: ",
+      }[kind] +
+      (kind === "reporter"
+        ? reporterName(value)
+        : kind === "technician"
+          ? technicianName(value)
+          : value);
+    const dlg = dialog("mbsAnalytics", title);
+    dlg.querySelector("h2").textContent = title;
+    chartRefs.forEach((c) => c.destroy());
+    chartRefs = [];
+    selected = { kind, value, match: {} };
+    const key = {
+      reporter: "line_user_id",
+      technician: "technician_id",
+      location: "location",
+      equipment: "equipment_type",
+    }[kind];
+    const rows = overviewRows().filter(
+      (r) => String(r[key] ?? "").trim() === String(value).trim(),
+    );
+    const body = dlg.querySelector(".mbs-dialog-body");
+    body.innerHTML =
+      '<p class="mbs-intro">แจ้งซ่อม ' +
+      rows.length +
+      ' รายการในช่วงที่เลือก · กดแท่งกราฟเพื่อดูรายการที่เกี่ยวข้อง</p><div class="mbs-drill-charts"></div><div class="mbs-drill-actions"><button type="button" class="mbs-button" id="mbsAllHistory">ดูประวัติทั้งหมดในช่วงนี้</button><span id="mbsMatchLabel"></span></div><div id="mbsDrillTable"></div>';
+    const fields =
+      kind === "reporter"
+        ? ["equipment_type", "location", "technician_id"]
+        : kind === "technician"
+          ? ["equipment_type", "location", "status"]
+          : ["equipment_type", "location", "problem_desc"].filter(
+              (f) => f !== key,
+            );
+    for (const f of fields) {
+      const card = document.createElement("section");
+      card.innerHTML =
+        "<h3>" +
+        esc(
+          {
+            equipment_type: "อุปกรณ์ที่แจ้งซ่อม",
+            location: "สถานที่แจ้งซ่อม",
+            technician_id: "เจ้าหน้าที่ผู้รับผิดชอบ",
+            status: "สถานะงาน",
+            problem_desc: "ปัญหาที่แจ้ง",
+          }[f],
+        ) +
+        '</h3><div class="mbs-drill-chart"><canvas></canvas></div>';
+      body.querySelector(".mbs-drill-charts").appendChild(card);
+      const pairs = groups(rows, f).slice(0, 10);
+      chart(card.querySelector("canvas"), pairs, null, {
+        labels: pairs.map(([k]) =>
+          f === "technician_id" ? technicianName(k) : k,
+        ),
+        click: (k) => {
+          selected.match = { [f]: k };
+          $("mbsMatchLabel").textContent =
+            f === "technician_id" ? technicianName(k) : k;
+          loadTable(
+            $("mbsDrillTable"),
+            serverParams(kind, value, selected.match),
+          );
+        },
+      });
+    }
+    $("mbsAllHistory").onclick = () => {
+      selected.match = {};
+      $("mbsMatchLabel").textContent = "";
+      loadTable($("mbsDrillTable"), serverParams(kind, value));
+    };
+    if (!dlg.open) dlg.showModal();
+    loadTable($("mbsDrillTable"), serverParams(kind, value));
+  }
+  function reviewPeriodActive() {
+    const r = window.mbsRanges.reviews;
+    return (
+      !!(r?.start.value && r?.end.value) ||
+      ["day", "month", "year"].some(
+        (p) => +urlState.searchParams.get("mbs_reviews_" + p) > 0,
+      )
+    );
+  }
+  function reviewRows() {
+    let rows = (reviewPeriodActive() ? data.repairs : overviewRows()).filter(
+      (r) =>
+        (!reviewState.id || +r.technician_id === +reviewState.id) &&
+        hasReview(r),
+    );
+    rows = period(rows, "reviews", "rated_at");
+    if (reviewState.comments) rows = rows.filter(hasComment);
+    return rows;
+  }
+  function refreshReviews() {
+    const rows = reviewRows(),
+      stars = [1, 2, 3, 4, 5].map(
+        (n) => rows.filter((r) => +r.rating === n).length,
+      ),
+      display = reviewState.star
+        ? rows.filter((r) => +r.rating === reviewState.star)
+        : rows;
+    $("mbsReviewSummary").textContent =
+      display.length +
+      " รีวิว · " +
+      display.filter(hasComment).length +
+      " ความคิดเห็น";
+    const chips = $("mbsStarChips");
+    chips.replaceChildren();
+    for (const n of [0, 5, 4, 3, 2, 1]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "mbs-chip" + (n === reviewState.star ? " is-selected" : "");
+      b.textContent = n
+        ? n + " ★ (" + stars[n - 1] + ")"
+        : "ทั้งหมด (" + rows.length + ")";
+      b.onclick = () => {
+        reviewState.star = n;
+        refreshReviews();
+      };
+      chips.appendChild(b);
+    }
+    const u = serverParams("reviews", reviewState.id);
+    u.searchParams.set("mbs_star", reviewState.star);
+    u.searchParams.set("mbs_comments", reviewState.comments ? "1" : "0");
+    loadTable($("mbsReviewList"), u);
+  }
+  function openReviews(id = "") {
+    if (data.role === "technician") return;
+    reviewState = {
+      id: /^\d+$/.test(String(id)) ? String(id) : "",
+      star: 0,
+      comments: false,
+    };
+    const dlg = dialog("mbsReviews", "คะแนนและรีวิวเจ้าหน้าที่");
+    const body = dlg.querySelector(".mbs-dialog-body");
+    body.innerHTML =
+      '<p class="mbs-intro">เริ่มต้นแสดงรีวิวของงานในช่วงหน้าหลัก หากเลือกวันที่รีวิว จะกรองตามเวลาที่ผู้แจ้งให้คะแนนจริง</p><div class="mbs-review-controls"><label>เจ้าหน้าที่ <select id="mbsReviewTech"></select></label><div id="mbsReviewDate"></div><label><input type="checkbox" id="mbsCommentsOnly"> เฉพาะความคิดเห็น</label></div><p id="mbsReviewSummary" aria-live="polite"></p><div id="mbsStarChips" class="mbs-chips"></div><div id="mbsReviewList"></div>';
+    const select = $("mbsReviewTech");
+    select.innerHTML =
+      '<option value="">เจ้าหน้าที่ทั้งหมด</option>' +
+      data.technicians
+        .map(
+          (t) =>
+            '<option value="' +
+            Number(t.id) +
+            '">' +
+            esc(t.full_name) +
+            "</option>",
+        )
+        .join("");
+    select.value = reviewState.id;
+    select.onchange = () => {
+      reviewState.id = select.value;
+      reviewState.star = 0;
+      refreshReviews();
+    };
+    $("mbsCommentsOnly").onchange = (e) => {
+      reviewState.comments = e.target.checked;
+      refreshReviews();
+    };
+    reviewCalendar?.destroy();
+    reviewCalendar = mountLocalCalendar(
+      $("mbsReviewDate"),
+      "reviews",
+      refreshReviews,
+    );
+    if (reviewCalendar)
+      reviewCalendar.dialog.querySelector(".rc-header p").textContent =
+        "กรองตามวันที่ให้คะแนน/รีวิวจริง";
+    if (!dlg.open) dlg.showModal();
+    refreshReviews();
+  }
+  function mountLocalCalendar(holder, key, apply) {
+    if (!window.RepairCalendar) return;
+    const controls = [],
+      fields = {};
+    for (const part of ["day", "month", "year"]) {
+      const control = document.createElement("span");
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.value =
+        urlState.searchParams.get("mbs_" + key + "_" + part) || "all";
+      control.appendChild(input);
+      holder.appendChild(control);
+      fields[part] = input;
+      controls.push(control);
+    }
+    return RepairCalendar.mount({
+      key,
+      controls,
+      fields,
+      apply() {
+        for (const [p, f] of Object.entries(fields)) {
+          urlState.searchParams.set("mbs_" + key + "_" + p, f.value);
+          const u = new URL(location.href);
+          u.searchParams.set("mbs_" + key + "_" + p, f.value);
+          history.replaceState(null, "", u);
+        }
+        apply();
+      },
+    });
+  }
+  function mountOverview() {
+    const canvas = $("mainEquipChart") || $("eqChart");
+    if (!canvas) return;
+    const section =
+      $("dash") || $("tab-content-dash") || canvas.closest("section");
+    if (!section) return;
+    const bar = document.createElement("div");
+    bar.className = "mbs-overview-filter";
+    bar.innerHTML =
+      '<span>ช่วงข้อมูลทั้งหน้า</span><div id="mbsOverviewCalendar"></div>';
+    let grid = canvas;
+    while (grid.parentElement && grid.parentElement !== section)
+      grid = grid.parentElement;
+    section.insertBefore(bar, grid);
+    const instance = mountLocalCalendar(
+      $("mbsOverviewCalendar"),
+      "overview",
+      renderOverview,
+    );
+    if (instance) {
+      overviewFields = instance.fields;
+    }
+    renderOverview();
+  }
+  function duration(r) {
+    if (!r.received_at)
+      return r.status === "รอรับเรื่อง"
+        ? "ยังไม่รับงาน"
+        : "ไม่ทราบเวลารับงานเดิม";
+    const parse = (s) => Date.parse(s.replace(" ", "T") + "+07:00");
+    const a = parse(r.received_at),
+      b = r.completed_at ? parse(r.completed_at) : Date.now();
+    if (!Number.isFinite(a) || !Number.isFinite(b) || b < a)
+      return "ไม่ทราบระยะเวลา";
+    const m = Math.floor((b - a) / 60000);
+    return (
+      (r.completed_at ? "" : "กำลังดำเนินการ · ") +
+      (m >= 1440 ? Math.floor(m / 1440) + " วัน " : "") +
+      (m >= 60 ? Math.floor((m % 1440) / 60) + " ชม. " : "") +
+      (m % 60) +
+      " นาที"
+    );
+  }
+  function decorateDuration() {
+    for (const table of document.querySelectorAll(
+      "#historyModal table,#historyTableFull,#techReporterModal table",
+    )) {
+      if (table.closest(".mbs-dialog")) continue;
+      const header = table.querySelector("thead tr");
+      if (!header) continue;
+      let th = header.querySelector(".mbs-duration");
+      if (!th) {
+        th = document.createElement("th");
+        th.className = "mbs-duration";
+        th.textContent = "ระยะเวลาทำงาน";
+        header.appendChild(th);
+      }
+      for (const tr of table.querySelectorAll("tbody tr")) {
+        const id = tr.dataset.mbsRepairId;
+        const r = id
+          ? data.repairs.find((r) => +r.id === +id)
+          : data.repairs.find(
+              (r) =>
+                r.ticket_no &&
+                [...tr.querySelectorAll("td,div,span")].some(
+                  (n) =>
+                    !n.children.length && n.textContent.trim() === r.ticket_no,
+                ),
+            );
+        if (!r) continue;
+        let td = tr.querySelector(".mbs-duration");
+        if (!td) {
+          td = document.createElement("td");
+          td.className = "mbs-duration";
+          tr.appendChild(td);
+        }
+        td.textContent = duration(r);
+      }
+    }
+  }
+  function wrapAdminModal() {
+    if (
+      data.role !== "admin" ||
+      typeof window.openTechAdminModal !== "function"
+    )
+      return;
+    const validate = window.validateTechAdminForm;
+    if (typeof validate === "function")
+      window.validateTechAdminForm = function (e) {
+        if ($("techAdminForm")?.classList.contains("mbs-readonly-profile"))
+          return ["0", "1"].includes($("techAdmin_is_active")?.value);
+        return validate.call(this, e);
+      };
+    const original = window.openTechAdminModal;
+    window.openTechAdminModal = function (...args) {
+      const before = $("techAdminForm");
+      for (const label of before?.querySelectorAll("label") || [])
+        if (label.dataset.mbsOriginal)
+          label.innerHTML = label.dataset.mbsOriginal;
+      for (const el of before?.querySelectorAll(
+        "[data-mbs-original-required]",
+      ) || [])
+        el.required = el.dataset.mbsOriginalRequired === "1";
+      const result = original.apply(this, args);
+      const [role, id] = args,
+        form = $("techAdminForm");
+      if (!form) return result;
+      const own =
+        strRole(role) === "admin" &&
+        String(id) ===
+          String(document.querySelector("#tb-settings")?.dataset.user);
+      const locked = !!id && !own;
+      form.classList.toggle("mbs-readonly-profile", locked);
+      for (const el of form.querySelectorAll(
+        "input:not([type=hidden]),select,textarea",
+      )) {
+        if (el.id === "techAdmin_is_active") continue;
+        if (el.id === "techAdmin_level") {
+          el.disabled = true;
+          continue;
+        }
+        el.dataset.mbsOriginalRequired = el.required ? "1" : "0";
+        el.disabled = locked;
+        if (locked) el.required = false;
+      }
+      for (const label of form.querySelectorAll("label")) {
+        label.dataset.mbsOriginal = label.innerHTML;
+        if (locked && !/account status|สถานะบัญชี/i.test(label.textContent)) {
+          label.textContent =
+            label.textContent
+              .replace(/\s*\([^)]*\)/g, "")
+              .replace(/\*/g, "")
+              .trim() + " (ไม่อนุญาตให้แก้ไข) ";
+          const star = document.createElement("span");
+          star.className = "mbs-required";
+          star.textContent = "*";
+          label.appendChild(star);
+        }
+      }
+      for (const note of form.querySelectorAll(".mbs-account-time"))
+        note.remove();
+      const tech =
+          strRole(role) === "technician"
+            ? data.technicians.find((t) => +t.id === +id)
+            : null,
+        account = tech || data.accounts.find((a) => +a.id === +id);
+      for (const [field, caption, value] of [
+        ["techAdmin_username", "สมัครสมาชิก", account?.registered_at],
+        ["techAdmin_line_name", "ผูกบัญชี LINE", tech?.line_linked_at],
+      ]) {
+        const el = $(field),
+          label =
+            form.querySelector('label[for="' + field + '"]') ||
+            el?.parentElement?.querySelector("label");
+        if (label && locked) {
+          const note = document.createElement("p");
+          note.className = "mbs-account-time";
+          note.textContent = caption + ": " + dateText(value);
+          label.after(note);
+        }
+      }
+      if (locked && tech && $("techAdmin_line_name"))
+        $("techAdmin_line_name").value =
+          tech.linked_line_name ||
+          (tech.line_user_id ? "ยังไม่มีชื่อ LINE ในข้อมูล" : "ยังไม่ผูกบัญชี");
+      for (const el of form.querySelectorAll("[onclick]"))
+        if (/avatar|upload|delete/i.test(el.getAttribute("onclick") || ""))
+          el.hidden = locked;
+      return result;
+    };
+  }
+  function strRole(v) {
+    return String(v || "").toLowerCase();
+  }
+  function moveEmail() {
+    if (!["admin", "executive"].includes(data.role)) return;
+    const menu = $("profileDropdownMenu");
+    if (!menu) return;
+    for (const a of document.querySelectorAll("#sidebar a,#sidebar button"))
+      if (a.textContent.includes("ยืนยันอีเมล")) {
+        a.className = "mbs-profile-email";
+        menu.appendChild(a);
+      }
+  }
+  function enhanceTechnicians() {
+    if (data.role !== "admin") return;
+    for (const t of data.technicians) {
+      const btns = [
+        ...document.querySelectorAll('[onclick*="openTechAdminModal"]'),
+      ].filter((b) =>
+        new RegExp(
+          "openTechAdminModal\\(['\"]Technician['\"],\\s*['\"]?" +
+            Number(t.id) +
+            "(?:['\"],|,)",
+          "i",
+        ).test(b.getAttribute("onclick")),
+      );
+      for (const btn of btns) {
+        const row = btn.closest("tr") || btn.closest(".tech-card-item");
+        if (!row) continue;
+        const existing = row.querySelector(".mbs-tech-jobs");
+        const jobs = data.repairs.filter((r) => +r.technician_id === +t.id);
+        const box = document.createElement("div");
+        box.className = "mbs-tech-jobs";
+        box.innerHTML =
+          "<strong>" +
+          jobs.length +
+          " งาน</strong> · กำลังดำเนินการ " +
+          jobs.filter((r) => r.status === "กำลังดำเนินการ").length +
+          " · เสร็จแล้ว " +
+          jobs.filter((r) => r.status === "ซ่อมเสร็จแล้ว").length;
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = "ดูงานที่รับผิดชอบ";
+        b.onclick = () => openAnalytics("technician", String(t.id));
+        box.appendChild(b);
+        if (existing) existing.replaceWith(box);
+        else if (row.matches("tr")) row.cells[4].replaceChildren(box);
+        else row.appendChild(box);
+      }
+    }
+  }
+  // Carry range values through the existing same-page AJAX and PHP pagination.
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = function (input, options) {
+    try {
+      if (typeof input === "string" || input instanceof URL) {
+        const u = new URL(input, location.href);
+        if (u.origin === location.origin && u.pathname === location.pathname) {
+          for (const [p, f] of Object.entries(overviewFields || {}))
+            u.searchParams.set("mbs_overview_" + p, f.value);
+          for (const [k, v] of Object.entries(window.mbsRanges)) {
+            const prefix = "mbs_" + k + "_";
+            if (v.start.value && v.end.value) {
+              u.searchParams.set(prefix + "start", v.start.value);
+              u.searchParams.set(prefix + "end", v.end.value);
+            } else {
+              u.searchParams.delete(prefix + "start");
+              u.searchParams.delete(prefix + "end");
+            }
+          }
+          input = u.href;
+        }
+      }
+    } catch {}
+    return nativeFetch(input, options);
+  };
+  function init() {
+    if (data.error) {
+      const alert = document.createElement("p");
+      alert.role = "alert";
+      alert.textContent = data.error;
+      document.querySelector("main")?.prepend(alert);
+      return;
+    }
+    for (const fn of [
+      "renderAllCharts",
+      "renderEquipChart",
+      "renderStatusChart",
+      "renderLocChart",
+      "renderTechChart",
+      "renderRatingChart",
+      "renderTopReporters",
+      "renderTechReporterRanking",
+      "renderDashTable",
+    ])
+      if (typeof window[fn] === "function") window[fn] = renderOverview;
+    for (const name of [
+      "applyTechnicianSummary",
+      "applyExecutiveSummary",
+      "applyAdminSummary",
+    ])
+      if (typeof window[name] === "function") {
+        const old = window[name];
+        window[name] = (...args) => {
+          const r = old(...args);
+          renderCards();
+          return r;
+        };
+      }
+    window.openTechReviewsModal = openReviews;
+    window.openTechReviews = openReviews;
+    mountOverview();
+    document.addEventListener(
+      "click",
+      (event) => {
+        const a = event.target.closest("a[href]");
+        if (!a) return;
+        const u = new URL(a.href, location.href);
+        if (u.origin !== location.origin) return;
+        const paths = [
+          "dashboard.php",
+          "executive_dashboard.php",
+          "technician_home.php",
+          "executive_report.php",
+          "print_report.php",
+          "export_excel.php",
+        ];
+        if (!paths.includes(u.pathname.split("/").pop())) return;
+        for (const [k, v] of Object.entries(window.mbsRanges)) {
+          if (v.start.value && v.end.value) {
+            u.searchParams.set("mbs_" + k + "_start", v.start.value);
+            u.searchParams.set("mbs_" + k + "_end", v.end.value);
+          }
+        }
+        a.href = u.href;
+      },
+      true,
+    );
+    const rating = $("mainRatingChart");
+    if (rating) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "mbs-button";
+      b.textContent = "ดูดาวและรีวิวทั้งหมด";
+      b.onclick = () => openReviews();
+      rating.parentElement.after(b);
+    }
+    moveEmail();
+    wrapAdminModal();
+    enhanceTechnicians();
+    decorateDuration();
+    let pending = false;
+    new MutationObserver((records) => {
+      if (
+        pending ||
+        !records.some((r) =>
+          [...r.addedNodes].some(
+            (n) => n.nodeType === 1 && n.matches?.("tr,table,tbody"),
+          ),
+        )
+      )
+        return;
+      pending = true;
+      requestAnimationFrame(() => {
+        pending = false;
+        decorateDuration();
+      });
+    }).observe(document.body, { subtree: true, childList: true });
+    setInterval(decorateDuration, 60000);
+    let refreshing = false;
+    setInterval(async () => {
+      if (
+        document.hidden ||
+        refreshing ||
+        document.querySelector("dialog[open]")
+      )
+        return;
+      refreshing = true;
+      try {
+        const u = new URL(location.href);
+        u.searchParams.set("mbs_features_data", "1");
+        const r = await nativeFetch(u, {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        if (r.ok && !r.redirected) {
+          const next = await r.json();
+          if (!next.error) {
+            data = next;
+            renderOverview();
+          }
+        }
+      } catch {
+      } finally {
+        refreshing = false;
+      }
+    }, 30000);
+  }
+  // Override renderers before legacy DOMContentLoaded callbacks execute.
+  for (const fn of [
+    "renderAllCharts",
+    "renderEquipChart",
+    "renderStatusChart",
+    "renderLocChart",
+    "renderTechChart",
+    "renderRatingChart",
+    "renderTopReporters",
+    "renderTechReporterRanking",
+    "renderDashTable",
+  ])
+    if (typeof window[fn] === "function") window[fn] = renderOverview;
+  if (document.readyState === "loading")
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+  else init();
+})();

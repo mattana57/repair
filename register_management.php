@@ -21,7 +21,7 @@ $error = '';
 $success = '';
 $form_values = ['full_name' => '', 'phone' => '', 'email' => '', 'username' => '', 'account_role' => ''];
 
-$registration_roles = ['Admin' => 'ผู้ดูแลระบบ (Admin)', 'Executive' => 'ผู้บริหาร (Executive)'];
+$registration_roles = ['Executive' => 'ผู้บริหาร (Executive)'];
 
 require_once __DIR__ . '/password_policy.php';
 require_once __DIR__ . '/account_registration_service.php';
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $rules = passwordPolicyRules($password);
 
         if (!isset($registration_roles[$account_role])) {
-            $error = 'กรุณาเลือกประเภทบัญชีผู้ดูแลระบบหรือผู้บริหาร';
+            $error = 'กรุณาเลือกประเภทบัญชีผู้บริหาร';
         } elseif ($full_name === '' || $phone === '' || $email === '' || $username === ''
             || $password === '' || $confirmation === '') {
             $error = 'กรุณากรอกข้อมูลให้ครบทุกช่อง';
@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สมัครบัญชีผู้ดูแลระบบ / ผู้บริหาร | MBS Repair System</title>
+    <title>สมัครบัญชีผู้บริหาร | MBS Repair System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-6 sm:py-10">
     <div class="w-full max-w-4xl bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100">
         <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold text-slate-800">สมัครบัญชีผู้ดูแลระบบ / ผู้บริหาร</h2>
+            <h2 class="text-2xl font-bold text-slate-800">สมัครบัญชีผู้บริหาร</h2>
             <p class="text-slate-500 text-sm mt-1">สร้างบัญชีเพื่อเข้าสู่ระบบแจ้งซ่อม</p>
         </div>
 

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/dashboard_features.php';
 // เรียกจาก dashboard.php หลังผ่าน Guard และตรวจบทบาทผู้ดูแลแล้วเท่านั้น
 if (!defined('MBS_ADMIN_TRASH')) {
     http_response_code(403);
@@ -491,6 +492,7 @@ function at_trash_query($conn = null) {
     $kind = isset($_GET['trash_type']) && is_string($_GET['trash_type']) ? $_GET['trash_type'] : 'all';
     if ($kind === 'repair') $kind = 'user';
     $where = '1=1'; $values = []; $types = '';
+    $where .= mbs_range_clause('trash','deleted_at',$types,$values);
     if (in_array($kind, ['asset','user','tech','admin','executive','loginlog','activitylog'], true)) { $where .= ' AND category = ?'; $values[] = $kind; $types .= 's'; }
     else { $kind = 'all'; }
     $period = at_period_filters();
