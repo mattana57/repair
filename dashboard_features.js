@@ -207,7 +207,14 @@
           tooltip: baseConfig.options.plugins.tooltip.callbacks,
         },
       );
-    const instance = new Chart(canvas, restored || baseConfig);
+    const config = restored || baseConfig;
+    if (donut && click && config.options?.plugins?.legend) {
+      config.options.plugins.legend.onClick = (event, item) => {
+        const key = keys[item.index];
+        if (key) click(key);
+      };
+    }
+    const instance = new Chart(canvas, config);
     if (canvas.closest("#mbsAnalytics")) chartRefs.push(instance);
     return instance;
   }
@@ -222,6 +229,17 @@
       in_progress: progress,
       completed,
     };
+  }
+  function openWorkStatus(status) {
+    if (!["รอรับเรื่อง", "กำลังดำเนินการ", "ซ่อมเสร็จแล้ว"].includes(status))
+      return;
+    // Reuse precisely the same navigation and filters as the summary cards.
+    if (data.role === "technician") {
+      if (typeof window.showTab === "function")
+        window.showTab("history", status, true);
+    } else if (typeof window.filterRepairs === "function") {
+      window.filterRepairs(status);
+    }
   }
   function renderCards() {
     const c = counts();
@@ -261,7 +279,7 @@
         rows.filter((r) => r.status === status).length,
       ]),
       null,
-      { donut: true },
+      { donut: true, click: openWorkStatus },
     );
     chart(
       $("mainLocChart") || $("locChart"),
