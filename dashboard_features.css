@@ -1,4 +1,53 @@
 /* Existing colours outside chart calendars are retained. */
+.mbs-overview-filter[hidden] {
+  display: none;
+}
+.mbs-tech-tabs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 20px;
+}
+.tech-dashboard-ui .mbs-tech-tabs-row > .tech-tabs {
+  flex: 0 0 auto;
+  width: auto;
+  margin-bottom: 0;
+}
+.mbs-tech-tabs-row > .mbs-overview-filter {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+.mbs-tech-tabs-row #mbsOverviewCalendar {
+  min-width: 0;
+  max-width: 100%;
+}
+.mbs-tech-tabs-row .rc-trigger {
+  max-width: 100%;
+}
+.mbs-tech-tabs-row .rc-trigger span {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 480px) {
+  .mbs-tech-tabs-row {
+    gap: 8px;
+  }
+  .tech-dashboard-ui .mbs-tech-tabs-row .tech-tabs .capsule-btn {
+    padding-left: 10px;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+  .mbs-tech-tabs-row .rc-trigger {
+    padding: 10px 9px;
+    gap: 6px;
+    font-size: 12px;
+  }
+}
 .mbs-overview-filter {
   display: flex;
   align-items: center;

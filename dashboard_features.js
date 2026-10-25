@@ -998,12 +998,28 @@
     if (!section) return;
     const bar = document.createElement("div");
     bar.className = "mbs-overview-filter";
-    bar.innerHTML =
-      '<span>ช่วงข้อมูลทั้งหน้า</span><div id="mbsOverviewCalendar"></div>';
+    bar.innerHTML = '<div id="mbsOverviewCalendar"></div>';
     let grid = canvas;
     while (grid.parentElement && grid.parentElement !== section)
       grid = grid.parentElement;
-    section.insertBefore(bar, grid);
+    const techTabs =
+      data.role === "technician" ? document.querySelector(".tech-tabs") : null;
+    if (techTabs) {
+      const row = document.createElement("div");
+      row.className = "mbs-tech-tabs-row";
+      techTabs.before(row);
+      row.append(techTabs, bar);
+      const syncVisibility = () => {
+        bar.hidden = section.classList.contains("hidden");
+      };
+      syncVisibility();
+      new MutationObserver(syncVisibility).observe(section, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+    } else {
+      section.insertBefore(bar, grid);
+    }
     const instance = mountLocalCalendar(
       $("mbsOverviewCalendar"),
       "overview",
