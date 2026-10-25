@@ -3,7 +3,37 @@
 // แสดงข้อความแจ้งเตือนให้อ่านได้บนมือถือ โดยคงสถานะ HTTP เดิม
 
 // รูปแบบ Flex ใช้สีน้ำเงินเข้ม สีเทา และพื้นขาว ไม่เปลี่ยนข้อมูลหรือคำสั่ง
-require_once __DIR__.'/line_job_sync.php';
+function mbsReadableFlexNode($node, $inside_flex = false) {
+    if (!is_array($node)) { return $node; }
+    // แบบประเมินคงรูปแบบเดิม ไม่ผ่านการปรับขนาดหรือสีของใบงาน
+    if (($node['type'] ?? '') === 'flex' && ($node['altText'] ?? '') === 'ประเมินผลการซ่อม') {
+        return $node;
+    }
+    $type = $node['type'] ?? null;
+    $inside_flex = $inside_flex || $type === 'flex' || $type === 'bubble';
+    if ($inside_flex && $type === 'bubble') {
+        $node['size'] = 'mega';
+    }
+    if ($inside_flex && $type === 'text') {
+        if (!isset($node['size']) || in_array($node['size'], ['xxs', 'xs', 'sm'], true)) {
+            $node['size'] = 'md';
+        }
+        $node['wrap'] = true;
+        $node['color'] = ($node['weight'] ?? '') === 'bold' ? '#1E3A5F' : '#222222';
+    }
+    if ($inside_flex && $type === 'button') {
+        $node['height'] = 'md';
+        if (($node['style'] ?? '') === 'primary') {
+            $node['color'] = '#1E3A5F';
+        }
+    }
+    foreach ($node as $key => $value) {
+        if (is_array($value)) {
+            $node[$key] = mbsReadableFlexNode($value, $inside_flex);
+        }
+    }
+    return $node;
+}
 
 function mbsUpdateRepairNotice($message) {
     $status = http_response_code();
@@ -386,14 +416,50 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $owner_lock_stmt = null;
 
         try {
-            if (!$conn->begin_transaction()) { throw new RuntimeException('Cannot start job update'); }
-            $owner_transaction_started=true;
-            $locked_job=mbsSyncRow($conn,'SELECT * FROM repairs WHERE id=? AND deleted_at IS NULL FOR UPDATE','i',(int)$update_id);
-            if (!$locked_job || ($is_tech && ((int)$locked_job['technician_id']!==$owner_tech_id || !mbsSyncStaff($conn,$owner_tech_id)))) {
-                throw new RuntimeException('Repair owner changed');
+            if ($is_tech) {
+                if (!$conn->begin_transaction()) {
+                    throw new RuntimeException('Cannot start owner check');
+                }
+                $owner_transaction_started = true;
+
+                $owner_lock_stmt = $conn->prepare(
+                    "SELECT id
+                     FROM repairs
+                     WHERE id = ?
+                       AND technician_id = ?
+                     FOR UPDATE"
+                );
+
+                if (!$owner_lock_stmt
+                    || !$owner_lock_stmt->bind_param(
+                        "ii",
+                        $update_id,
+                        $owner_tech_id
+                    )
+                    || !$owner_lock_stmt->execute()) {
+                    throw new RuntimeException('Cannot check repair owner');
+                }
+
+                $owner_result = $owner_lock_stmt->get_result();
+
+                if (!$owner_result) {
+                    throw new RuntimeException('Cannot read repair owner');
+                }
+
+                $owner_matches = $owner_result->num_rows === 1;
+                $owner_lock_stmt->close();
+                $owner_lock_stmt = null;
+
+                if (!$owner_matches) {
+                    if (!$conn->rollback()) {
+                        throw new RuntimeException('Cannot release owner check');
+                    }
+                    $owner_transaction_started = false;
+
+                    http_response_code(403);
+                    mbsUpdateRepairNotice('ผู้รับผิดชอบใบงานเปลี่ยนแล้ว ไม่อนุญาตให้บันทึก');
+                }
             }
-            if ($locked_job['status']!==$old_status) { throw new RuntimeException('Repair status changed; reload before saving'); }
-            $old_note=trim((string)($locked_job['repair_note'] ?? ''));
 
             if ($is_tech) {
                 $update_sql = "UPDATE repairs
@@ -450,12 +516,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $update_saved = $update_stmt->execute();
 
-            if (!$update_saved) { throw new RuntimeException('Cannot save repair'); }
-            $synced_job=mbsSyncRow($conn,'SELECT * FROM repairs WHERE id=?','i',(int)$update_id);
-            mbsSyncNotifyTransition($conn,$synced_job,$old_status);
-            if (!$conn->commit()) { throw new RuntimeException('Cannot confirm repair update'); }
-            $owner_transaction_started=false;
+            if ($is_tech) {
+                if (!$update_saved) {
+                    throw new RuntimeException('Cannot save repair');
+                }
 
+                if (!$conn->commit()) {
+                    throw new RuntimeException('Cannot confirm repair update');
+                }
+
+                $owner_transaction_started = false;
+            }
         } catch (Throwable $error) {
             if ($owner_lock_stmt instanceof mysqli_stmt) {
                 $owner_lock_stmt->close();
@@ -475,7 +546,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if ($update_saved) {
-            mbsSyncDispatchSafe($conn,(int)$update_id);
             $activity_action =
                 $status === 'ซ่อมเสร็จแล้ว'
                 && $old_status !== 'ซ่อมเสร็จแล้ว'
@@ -530,7 +600,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if(!empty($repair['line_user_id'])) {
                 $messages = [];
                 
-                if (!($status === 'ซ่อมเสร็จแล้ว' && $old_status !== 'ซ่อมเสร็จแล้ว') && $repair_note !== $old_note && $repair_note !== '') {
+                if ($status === 'ซ่อมเสร็จแล้ว' && $old_status !== 'ซ่อมเสร็จแล้ว') {
+                    $textMsg = "🎉 ดำเนินการใบงาน {$repair['ticket_no']} เสร็จสิ้นแล้วค่ะ\n\n" .
+                               "📝 หมายเหตุ: " . (!empty($repair_note) ? $repair_note : "- ไม่มีหมายเหตุ -");
+                               
+                    $review_msg = [
+                        'type' => 'flex',
+                        'altText' => 'ประเมินผลการซ่อม',
+                        'contents' => [
+                            'type' => 'bubble',
+                            'body' => [
+                                'type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm',
+                                'contents' => [
+                                    ['type' => 'text', 'text' => '⭐ ประเมินผลการซ่อม', 'weight' => 'bold', 'color' => '#ffb700', 'size' => 'md'],
+                                    ['type' => 'text', 'text' => "ถึงคุณ ".$repair['reporter_name'], 'weight' => 'bold', 'color' => '#3b82f6', 'size' => 'xs'],
+                                    ['type' => 'text', 'text' => 'เจ้าหน้าที่ '.$tech_display.' ดำเนินการเรียบร้อยแล้วค่ะ', 'weight' => 'bold', 'size' => 'xs', 'wrap' => true],
+                                    ['type' => 'separator', 'margin' => 'sm'],
+                                    ['type' => 'text', 'text' => '1️⃣ ให้คะแนนดาว (กดเปลี่ยนได้)', 'size' => 'xs', 'color' => '#aaaaaa', 'margin' => 'sm'],
+                                    [
+                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm',
+                                        'contents' => [
+                                            ['type' => 'button', 'style' => 'primary', 'color' => '#fbbf24', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '5 ดาว', 'data' => "action=rate&score=5&id={$repair['id']}"]],
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '4 ดาว', 'data' => "action=rate&score=4&id={$repair['id']}"]],
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '3 ดาว', 'data' => "action=rate&score=3&id={$repair['id']}"]]
+                                        ]
+                                    ],
+                                    [
+                                        'type' => 'box', 'layout' => 'horizontal', 'spacing' => 'sm', 'margin' => 'sm',
+                                        'contents' => [
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '2 ดาว', 'data' => "action=rate&score=2&id={$repair['id']}"]],
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '1 ดาว', 'data' => "action=rate&score=1&id={$repair['id']}"]],
+                                            ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'action' => ['type' => 'postback', 'label' => '0 ดาว', 'data' => "action=rate&score=0&id={$repair['id']}"]]
+                                        ]
+                                    ],
+                                    ['type' => 'separator', 'margin' => 'sm'],
+                                    ['type' => 'text', 'text' => '2️⃣ เลือกรีวิว (กดได้หลายข้อ)', 'size' => 'xs', 'color' => '#aaaaaa', 'margin' => 'sm'],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '⏱️ ดำเนินการเร็ว', 'data' => "action=add_tag&tag=ดำเนินการรวดเร็วทันใจ&id={$repair['id']}"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🎯 แก้ปัญหาตรงจุด', 'data' => "action=add_tag&tag=แก้ไขปัญหาได้อย่างตรงจุด&id={$repair['id']}"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '💡 ให้คำแนะนำดี', 'data' => "action=add_tag&tag=อธิบายและให้คำแนะนำชัดเจน&id={$repair['id']}"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🗣️ สุภาพเรียบร้อย', 'data' => "action=add_tag&tag=สุภาพเรียบร้อย บริการเต็มใจ&id={$repair['id']}"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '✨ เก็บงานเรียบร้อย', 'data' => "action=add_tag&tag=ซ่อมแซมและเก็บงานเรียบร้อย&id={$repair['id']}"]],
+                                    ['type' => 'button', 'style' => 'secondary', 'height' => 'sm', 'margin' => 'sm', 'action' => ['type' => 'postback', 'label' => '🙏 ช่วยเหลือดีเยี่ยม', 'data' => "action=add_tag&tag=ช่วยอำนวยความสะดวกได้ดีเยี่ยม&id={$repair['id']}"]],
+                                    ['type' => 'text', 'text' => '*หรือพิมพ์ข้อความรีวิวเพิ่มเติมส่งมาในแชทได้เลยค่ะ', 'size' => 'xxs', 'color' => '#bbbbbb', 'margin' => 'sm', 'wrap' => true]
+                                ]
+                            ]
+                        ]
+                    ];
+                    
+                    $messages = [
+                        ['type' => 'text', 'text' => $textMsg],
+                        $review_msg
+                    ];
+                } 
+                else if ($repair_note !== $old_note && $repair_note !== '') {
                     $textMsg = "📝 อัปเดตความคืบหน้าใบงาน\n\n" .
                                "📋 ใบงาน: {$repair['ticket_no']}\n" .
                                "💻 ปัญหา: {$repair['equipment_type']} ({$repair['location']})\n" .
@@ -747,11 +869,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                 </div>
                                                 <div class="text-[11px] text-slate-400 font-medium">
                                                     <?php 
-                                                    if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
-                                                        echo timeAgo($repair['completed_at']);
-                                                    } else {
-                                                        echo "ไม่ระบุเวลา";
-                                                    }
+                                                    require_once __DIR__ . '/repair_review_datetime.php';
+                                                    echo mbs_repair_review_datetime($repair);
                                                     ?>
                                                 </div>
                                             </div>

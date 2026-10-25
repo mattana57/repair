@@ -403,11 +403,8 @@ if (isset($_GET['id'])) {
                                             </div>
                                             <div class="text-[11px] text-slate-400 font-medium leading-tight">
                                                 <?php 
-                                                if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
-                                                    echo timeAgo($repair['completed_at']);
-                                                } else {
-                                                    echo "ไม่ระบุเวลา";
-                                                }
+                                                require_once __DIR__ . '/repair_review_datetime.php';
+                                                    echo mbs_repair_review_datetime($repair);
                                                 ?>
                                             </div>
                                         </div>
@@ -439,11 +436,8 @@ if (isset($_GET['id'])) {
                                                 </div>
                                                 <div class="text-[11px] text-slate-400 font-medium">
                                                     <?php 
-                                                    if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
-                                                        echo timeAgo($repair['completed_at']);
-                                                    } else {
-                                                        echo "ไม่ระบุเวลา";
-                                                    }
+                                                    require_once __DIR__ . '/repair_review_datetime.php';
+                                                    echo mbs_repair_review_datetime($repair);
                                                     ?>
                                                 </div>
                                             </div>
@@ -476,11 +470,8 @@ if (isset($_GET['id'])) {
                                                 </div>
                                                 <div class="text-[11px] text-slate-400 font-medium">
                                                     <?php 
-                                                    if (!empty($repair['completed_at']) && $repair['completed_at'] != '0000-00-00 00:00:00') {
-                                                        echo timeAgo($repair['completed_at']);
-                                                    } else {
-                                                        echo "ไม่ระบุเวลา";
-                                                    }
+                                                    require_once __DIR__ . '/repair_review_datetime.php';
+                                                    echo mbs_repair_review_datetime($repair);
                                                     ?>
                                                 </div>
                                             </div>
