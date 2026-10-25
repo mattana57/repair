@@ -50,3 +50,6 @@
 .rc-dialog #rc-range label,.rc-dialog [id^="rc-range-"] label{display:grid;gap:7px;font-weight:700;color:#334155;margin:12px 0}
 .rc-dialog input[type=date]{width:100%;padding:10px 12px;border:1px solid #bfdbfe;border-radius:12px;background:#fff;color:#1e3a8a;font:inherit}
 .rc-range-error{color:#be123c;font-size:13px}.rc-tabs{display:flex;gap:4px}.rc-tabs button{flex:1;font-size:12px}
+.rc-range-date-button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:44px;padding:10px 12px;border:1px solid #bfdbfe;border-radius:12px;background:#fff;color:#1e40af;font:700 15px 'Sarabun',sans-serif;text-align:left;cursor:pointer}
+.rc-range-date-button svg{width:20px;height:20px;flex-shrink:0}.rc-range-date-button:hover,.rc-range-date-button[aria-expanded=true]{background:#eff6ff;border-color:#60a5fa}.rc-range-date-button:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
+.rc-range-picker{padding:12px;margin:12px 0;border:1px solid #dbeafe;border-radius:14px;background:#fff}.rc-range-picker[hidden]{display:none}.rc-range-picker-title{margin:0 0 12px;font-size:13px;font-weight:700;color:#1e40af}.rc-dialog input[data-rc-start][hidden],.rc-dialog input[data-rc-end][hidden]{display:none}
