@@ -51,6 +51,13 @@ function mbs_date_display($raw) {
     if(!$raw || substr((string)$raw,0,4)==='0000')return 'ไม่ทราบวันเวลาเดิม';
     try{return (new DateTimeImmutable($raw,new DateTimeZone('Asia/Bangkok')))->format('d/m/Y H:i');}catch(Throwable $e){return 'ไม่ทราบวันเวลาเดิม';}
 }
+function mbs_review_time(array $row) {
+    foreach (['rated_at','completed_at'] as $column) {
+        $value=$row[$column]??null;
+        if(is_string($value)&&$value!==''&&substr($value,0,4)!=='0000')return $value;
+    }
+    return null;
+}
 function mbs_prepare_range_dates() {
     $groups=[
         'table'=>['pg_repairs_day','pg_repairs_month','pg_repairs_year','er_day','er_month','er_year'],
@@ -130,5 +137,5 @@ function mbs_feature_assets($db) {
     echo '<link rel="stylesheet" href="dashboard_reviews.css?v=20261025-4">';
     echo '<script type="application/json" id="mbsFeaturesData">'.json_encode($data,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE).'</script>';
     echo '<script src="dashboard_chart_appearance.js?v=20261025-3"></script>';
-    echo '<script src="dashboard_features.js?v=20261025-4"></script>';
+    echo '<script src="dashboard_features.js?v=20261025-5"></script>';
 }

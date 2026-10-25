@@ -689,7 +689,17 @@
     const base = (reviewPeriodActive() ? data.repairs : overviewRows()).filter(
       hasReview,
     );
-    return period(base, "reviews", "rated_at");
+    return period(
+      base.map((r) => ({
+        ...r,
+        mbs_review_at:
+          r.rated_at && !String(r.rated_at).startsWith("0000")
+            ? r.rated_at
+            : r.completed_at,
+      })),
+      "reviews",
+      "mbs_review_at",
+    );
   }
   function reviewRows() {
     let rows = reviewScopeRows().filter(
