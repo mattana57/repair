@@ -1998,6 +1998,31 @@
         factories[role + "-" + kind] || factories["admin-" + kind];
       if (!factory) return null;
       const config = factory(canvas, pairs, meta);
+      if (kind === "rating" && meta.departments) {
+        config.data.datasets[0].label = "คะแนนเฉลี่ยเจ้าหน้าที่";
+        config.plugins = config.plugins || [];
+        config.plugins.push({
+          id: "mbs_visible_rating_counts",
+          afterDraw(chart) {
+            const axis = chart.scales.y;
+            if (!axis) return;
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.font = '500 11px "Sarabun", sans-serif';
+            ctx.fillStyle = "#64748b";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            meta.departments.forEach((d, index) => {
+              ctx.fillText(
+                d.n + " คะแนน · " + d.reviews + " รีวิว",
+                10,
+                axis.getPixelForTick(index) + 35,
+              );
+            });
+            ctx.restore();
+          },
+        });
+      }
       if (kind === "status" && pairs.length) {
         // Keep actual filtered counts and labels; only the original ring/legend presentation is restored.
         config.data.labels = pairs.map((p) => p[0]);

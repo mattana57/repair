@@ -348,10 +348,22 @@
       d.comments = reviewed.filter(hasComment).length;
       d.avg = d.n ? d.sum / d.n : 0;
     }
-    const departments = [...departmentMap.values()].sort(
-      (a, b) =>
-        b.avg - a.avg || b.n - a.n || a.name.localeCompare(b.name, "th"),
-    );
+    // Preserve the department presentation, but rank and draw the technician
+    // named on each bar using that same technician's score and review counts.
+    const departments = [...departmentMap.values()]
+      .map((d) => ({
+        ...d,
+        avg: d.leader.avg,
+        n: d.leader.n,
+        reviews: d.leader.reviews,
+        comments: d.leader.comments,
+      }))
+      .sort(
+        (a, b) =>
+          b.avg - a.avg ||
+          b.n - a.n ||
+          Number(a.leader.id) - Number(b.leader.id),
+      );
     const canvas = $("mainRatingChart");
     if (canvas && window.Chart) {
       Chart.getChart(canvas)?.destroy();
