@@ -122,7 +122,7 @@
     Chart.getChart(canvas)?.destroy();
     const keys = pairs.map((x) => x[0]),
       values = pairs.map((x) => x[1]);
-    const instance = new Chart(canvas, {
+    const baseConfig = {
       type: donut ? "doughnut" : "bar",
       data: {
         labels: labels || keys,
@@ -183,7 +183,31 @@
             items.length && (click || kind) ? "pointer" : "default";
         },
       },
-    });
+    };
+    const overviewKind = {
+      mainEquipChart: "equipment",
+      eqChart: "equipment",
+      mainStatusChart: "status",
+      statusChart: "status",
+      mainLocChart: "location",
+      locChart: "location",
+      mainTechChart: "technician",
+    }[canvas.id];
+    const restored =
+      overviewKind &&
+      window.MbsOverviewAppearance?.build(
+        data.role,
+        overviewKind,
+        canvas,
+        pairs,
+        {
+          labels,
+          onClick: baseConfig.options.onClick,
+          onHover: baseConfig.options.onHover,
+          tooltip: baseConfig.options.plugins.tooltip.callbacks,
+        },
+      );
+    const instance = new Chart(canvas, restored || baseConfig);
     if (canvas.closest("#mbsAnalytics")) chartRefs.push(instance);
     return instance;
   }
@@ -223,7 +247,10 @@
     const rows = overviewRows();
     chart(
       $("mainEquipChart") || $("eqChart"),
-      groups(rows, "equipment_type").slice(0, 10),
+      groups(rows, "equipment_type").slice(
+        0,
+        data.role === "technician" ? 6 : 7,
+      ),
       "equipment",
       { horizontal: false },
     );
@@ -235,10 +262,12 @@
     );
     chart(
       $("mainLocChart") || $("locChart"),
-      groups(rows, "location").slice(0, 10),
+      groups(rows, "location").slice(0, 5),
       "location",
     );
-    const byTech = groups(rows, "technician_id").filter(([id]) => +id > 0);
+    const byTech = groups(rows, "technician_id")
+      .filter(([id]) => +id > 0)
+      .slice(0, 5);
     chart($("mainTechChart"), byTech, "technician", {
       labels: byTech.map(([id]) => technicianName(id)),
       horizontal: false,
@@ -255,6 +284,7 @@
         return {
           id: t.id,
           name: t.full_name,
+          department: t.department,
           n: rated.length,
           reviews: rows.filter(
             (r) => +r.technician_id === +t.id && hasReview(r),
@@ -270,7 +300,7 @@
     const canvas = $("mainRatingChart");
     if (canvas && window.Chart) {
       Chart.getChart(canvas)?.destroy();
-      new Chart(canvas, {
+      const ratingConfig = {
         type: "bar",
         data: {
           labels: ratings.map((t) => t.name),
@@ -315,25 +345,62 @@
             canvas.style.cursor = x.length ? "pointer" : "default";
           },
         },
-      });
+      };
+      const restored = window.MbsOverviewAppearance?.build(
+        data.role,
+        "rating",
+        canvas,
+        [],
+        {
+          ratings,
+          onClick: ratingConfig.options.onClick,
+          onHover: ratingConfig.options.onHover,
+          tooltip: ratingConfig.options.plugins.tooltip.callbacks,
+        },
+      );
+      new Chart(canvas, restored || ratingConfig);
     }
     const list = $("topReportersList") || $("topReportersContainer");
     if (list) {
       list.replaceChildren();
-      for (const [id, n] of groups(rows, "line_user_id").slice(0, 10)) {
+      const limit =
+        data.role === "technician"
+          ? typeof techReporterLimit !== "undefined"
+            ? techReporterLimit
+            : "all"
+          : typeof currentTopReportersLimit !== "undefined"
+            ? currentTopReportersLimit
+            : "all";
+      let ranked = groups(rows, "line_user_id");
+      if (limit !== "all" && Number(limit) > 0)
+        ranked = ranked.slice(0, Number(limit));
+      ranked.forEach(([id, n], index) => {
+        const rankColor =
+          index === 0
+            ? "text-[#eab308] bg-[#fefce8] border-[#fde047]"
+            : index === 1
+              ? "text-[#94a3b8] bg-[#f8fafc] border-[#e2e8f0]"
+              : index === 2
+                ? "text-[#d97706] bg-[#fffbeb] border-[#fde68a]"
+                : "text-indigo-500 bg-indigo-50 border-indigo-100";
+        const rankIcon =
+          index === 0
+            ? '<i class="fas fa-trophy text-lg drop-shadow-sm"></i>'
+            : index < 3
+              ? '<i class="fas fa-medal text-lg drop-shadow-sm"></i>'
+              : '<span class="text-sm font-black">#' + (index + 1) + "</span>";
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "mbs-reporter";
-        btn.innerHTML =
-          "<span>" +
-          esc(reporterName(id)) +
-          "</span><strong>" +
-          n +
-          ' ครั้ง <span aria-hidden="true">↗</span></strong>';
+        btn.className =
+          "mbs-ranked-reporter w-full text-left p-4 md:p-5 hover:bg-slate-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0 cursor-pointer group";
+        btn.title = "คลิกเพื่อดูรายละเอียดการแจ้งซ่อมของ " + reporterName(id);
+        btn.innerHTML = `<div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${rankColor} shrink-0 group-hover:scale-110 transition-transform">${rankIcon}</div><div><div class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">${esc(reporterName(id))}</div><div class="text-[11px] text-slate-400 font-medium mt-0.5">บุคลากรผู้แจ้งซ่อม</div></div></div><div class="text-right flex items-center"><div class="flex flex-col items-end"><span class="text-xl font-extrabold text-indigo-600">${n}</span><span class="text-[11px] text-slate-500 font-medium ml-1">รายการ</span></div><div class="ml-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all shadow-sm"><i class="fas fa-chevron-right text-slate-400 group-hover:text-indigo-600 transition-all group-hover:translate-x-0.5 text-xs"></i></div></div>`;
         btn.addEventListener("click", () => openAnalytics("reporter", id));
         list.appendChild(btn);
-      }
-      if (!list.children.length) list.textContent = "ไม่พบรายการในช่วงเวลานี้";
+      });
+      if (!ranked.length)
+        list.innerHTML =
+          '<div class="p-10 flex flex-col items-center justify-center text-center h-full min-h-[250px]"><i class="fas fa-user-tag text-4xl text-slate-200 mb-3"></i><p class="text-slate-400 font-medium text-sm mt-2">ไม่พบข้อมูลผู้แจ้งในช่วงเวลานี้</p></div>';
     }
     renderCards();
     renderRecent();
@@ -866,7 +933,8 @@
         ).test(b.getAttribute("onclick")),
       );
       for (const btn of btns) {
-        const row = btn.closest("tr") || btn.closest(".tech-card-item");
+        if (btn.closest("tr")) continue;
+        const row = btn.closest(".tech-card-item");
         if (!row) continue;
         const existing = row.querySelector(".mbs-tech-jobs");
         const jobs = data.repairs.filter((r) => +r.technician_id === +t.id);
@@ -885,7 +953,6 @@
         b.onclick = () => openAnalytics("technician", String(t.id));
         box.appendChild(b);
         if (existing) existing.replaceWith(box);
-        else if (row.matches("tr")) row.cells[4].replaceChildren(box);
         else row.appendChild(box);
       }
     }
@@ -977,15 +1044,6 @@
       },
       true,
     );
-    const rating = $("mainRatingChart");
-    if (rating) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "mbs-button";
-      b.textContent = "ดูดาวและรีวิวทั้งหมด";
-      b.onclick = () => openReviews();
-      rating.parentElement.after(b);
-    }
     moveEmail();
     wrapAdminModal();
     enhanceTechnicians();
@@ -1007,6 +1065,11 @@
         decorateDuration();
       });
     }).observe(document.body, { subtree: true, childList: true });
+    let appearanceResizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(appearanceResizeTimer);
+      appearanceResizeTimer = setTimeout(renderOverview, 120);
+    });
     setInterval(decorateDuration, 60000);
     let refreshing = false;
     setInterval(async () => {
