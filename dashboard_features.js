@@ -552,6 +552,35 @@
       const text = await res.text();
       if (container.dataset.request !== version) return;
       container.innerHTML = text;
+      for (const row of container.querySelectorAll("[data-mbs-review-id]")) {
+        const open = () => {
+          const id = Number(row.dataset.mbsReviewId);
+          if (!Number.isSafeInteger(id) || id < 1) return;
+          if (typeof window.openReviewTab === "function")
+            window.openReviewTab(id);
+          else
+            window.open(
+              (data.role === "executive"
+                ? "view_repair.php"
+                : "update_repair.php") +
+                "?id=" +
+                id +
+                "&source=tech_reviews",
+              "_blank",
+              "noopener",
+            );
+        };
+        row.onclick = (e) => {
+          if (e.target.closest("a,button,input,select,textarea,[onclick]"))
+            return;
+          open();
+        };
+        row.onkeydown = (e) => {
+          if (e.target !== row || !["Enter", " "].includes(e.key)) return;
+          e.preventDefault();
+          open();
+        };
+      }
       for (const b of container.querySelectorAll("[data-mbs-reporter]"))
         b.onclick = () => openAnalytics("reporter", b.dataset.mbsReporter);
       for (const a of container.querySelectorAll(".mbs-pages a"))

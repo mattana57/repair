@@ -434,3 +434,58 @@
     margin: 3px 0 0;
   }
 }
+
+/* Restore the original review-to-repair navigation and hover affordance. */
+#mbsReviews .mbs-review[data-mbs-review-id] {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+#mbsReviews .mbs-review[data-mbs-review-id]:hover,
+#mbsReviews .mbs-review[data-mbs-review-id]:focus-visible {
+  background: #f8fafc;
+}
+#mbsReviews .mbs-review[data-mbs-review-id]:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: -2px;
+}
+#mbsReviews .mbs-review[data-mbs-review-id]:hover .mbs-classic-review-name {
+  color: #4f46e5;
+}
+#mbsReviews .mbs-review[data-mbs-review-id]:hover .mbs-classic-review-avatar {
+  color: #6366f1;
+  background: #e0e7ff;
+}
+#mbsReviews .mbs-classic-review-link-tools {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-shrink: 0;
+}
+#mbsReviews .mbs-review-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  color: #6366f1;
+  text-decoration: none;
+  flex: none;
+}
+#mbsReviews .mbs-review-open svg {
+  width: 15px;
+  height: 15px;
+}
+#mbsReviews .mbs-review-open:hover {
+  background: #eef2ff;
+}
+@media (hover: hover) {
+  #mbsReviews .mbs-review-open {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  #mbsReviews .mbs-review:hover .mbs-review-open,
+  #mbsReviews .mbs-review:focus-within .mbs-review-open {
+    opacity: 1;
+  }
+}
