@@ -59,11 +59,11 @@
             <section id="rc-range" class="rc-pane" role="tabpanel" aria-labelledby="rc-tab-range" hidden>
                 <label>วันที่เริ่มต้น (Start)<input type="date" data-rc-start required hidden><button type="button" class="rc-range-date-button" data-rc-range-open="start" aria-expanded="false"><span>เลือกวันที่เริ่มต้น</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 11h18"/></svg></button></label>
                 <label>วันที่สิ้นสุด (End)<input type="date" data-rc-end required hidden><button type="button" class="rc-range-date-button" data-rc-range-open="end" aria-expanded="false"><span>เลือกวันที่สิ้นสุด</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 11h18"/></svg></button></label>
-                <div class="rc-range-picker" hidden>
-                    <p class="rc-range-picker-title"></p>
-                    <div class="rc-nav"><button type="button" data-rc-range-nav="-1" aria-label="เดือนก่อนหน้า"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button><select data-rc-range-month aria-label="เดือน"></select><select data-rc-range-year aria-label="ปี พ.ศ."></select><button type="button" data-rc-range-nav="1" aria-label="เดือนถัดไป"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button></div>
-                    <div class="rc-weekdays" aria-hidden="true">${weekdays.map(day=>'<span>'+day+'</span>').join('')}</div>
+                <div class="rc-range-picker" popover="manual" hidden aria-label="ปฏิทินเลือกวันที่">
+                    <div class="rc-range-popup-header"><div class="rc-range-popup-heading"><select data-rc-range-month aria-label="เดือน"></select><select data-rc-range-year aria-label="ปี ค.ศ."></select><span aria-hidden="true">▾</span></div><div class="rc-range-popup-arrows"><button type="button" data-rc-range-nav="-1" aria-label="เดือนก่อนหน้า"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7"/></svg></button><button type="button" data-rc-range-nav="1" aria-label="เดือนถัดไป"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 5 7 7-7 7"/></svg></button></div></div>
+                    <div class="rc-weekdays" aria-hidden="true">${['อา','จ','อ','พ','พฤ','ศ','ส'].map(day=>'<span>'+day+'</span>').join('')}</div>
                     <div class="rc-days rc-range-days" role="group" aria-label="เลือกวันเริ่มต้นหรือสิ้นสุด"></div>
+                    <div class="rc-range-popup-footer"><button type="button" data-rc-range-clear>ล้าง</button><button type="button" data-rc-range-today>วันนี้</button></div>
                 </div>
                 <label>ปีงบประมาณ พ.ศ.<select data-rc-fiscal><option value="">เลือกปีงบประมาณ</option>${Array.from({length:15},(_,i)=>today.year+543-10+i).map(y=>'<option value="'+y+'">'+y+'</option>').join('')}</select></label>
                 <p class="rc-help">ปีงบประมาณ: 1 ตุลาคมปีก่อน ถึง 30 กันยายนของปีที่เลือก รวมวันเริ่มต้นและวันสิ้นสุด</p>
@@ -83,21 +83,23 @@
                 button.querySelector('span').textContent=value?value.split('-').reverse().join('/'):part==='start'?'เลือกวันที่เริ่มต้น':'เลือกวันที่สิ้นสุด';
                 button.setAttribute('aria-expanded',String(mode==='range'&&rangeTarget===part));
             }
-            const panel=get('.rc-range-picker');panel.hidden=mode!=='range'||!rangeTarget;
-            if(panel.hidden)return;
-            get('.rc-range-picker-title').textContent=rangeTarget==='start'?'เลือกวันที่เริ่มต้น':'เลือกวันที่สิ้นสุด';
+            const panel=get('.rc-range-picker'),visible=mode==='range'&&Boolean(rangeTarget);
+            if(!visible){if(typeof panel.hidePopover==='function'&&panel.matches(':popover-open'))panel.hidePopover();panel.hidden=true;return;}
+            panel.hidden=false;
+            if(dialog.open&&typeof panel.showPopover==='function'&&!panel.matches(':popover-open'))panel.showPopover();
             const monthSelect=get('[data-rc-range-month]');
             monthSelect.replaceChildren(...months.map((text,i)=>{const option=document.createElement('option');option.value=i+1;option.textContent=text;return option;}));monthSelect.value=rangeMonth;
-            fillYears(get('[data-rc-range-year]'),String(rangeYear),false);
-            const first=new Date(rangeYear,rangeMonth-1,1).getDay(),count=new Date(rangeYear,rangeMonth,0).getDate(),nodes=[];
-            for(let i=0;i<first;i++){const span=document.createElement('span');span.className='rc-empty';span.setAttribute('aria-hidden','true');nodes.push(span);}
-            for(let day=1;day<=count;day++){
-                const value=String(rangeYear)+'-'+monthValue(rangeMonth)+'-'+String(day).padStart(2,'0');
+            fillYears(get('[data-rc-range-year]'),String(rangeYear),false);for(const option of get('[data-rc-range-year]').options)option.textContent=option.value;
+            const first=new Date(rangeYear,rangeMonth-1,1).getDay(),nodes=[];
+            for(let index=0;index<42;index++){
+                const date=new Date(rangeYear,rangeMonth-1,index-first+1),day=date.getDate();
+                const value=String(date.getFullYear())+'-'+monthValue(date.getMonth()+1)+'-'+String(day).padStart(2,'0');
                 const button=document.createElement('button');button.type='button';button.dataset.rcRangeDay=value;button.textContent=day;
-                button.setAttribute('aria-label',day+' '+months[rangeMonth-1]+' '+(rangeYear+543));button.setAttribute('aria-pressed',String(value===rangeInput(rangeTarget).value));
-                if(rangeYear===today.year&&rangeMonth===today.month&&day===today.day)button.setAttribute('aria-current','date');nodes.push(button);
+                if(date.getMonth()+1!==rangeMonth)button.className='rc-range-adjacent';
+                button.setAttribute('aria-label',day+' '+months[date.getMonth()]+' '+date.getFullYear());button.setAttribute('aria-pressed',String(value===rangeInput(rangeTarget).value));
+                if(date.getFullYear()===today.year&&date.getMonth()+1===today.month&&day===today.day)button.setAttribute('aria-current','date');nodes.push(button);
             }
-            get('.rc-range-days').replaceChildren(...nodes);
+            get('.rc-range-days').replaceChildren(...nodes);positionRangePicker();
         }
         get('.rc-header p').textContent = config.chart ? 'ตัวกรองช่วงเวลาของกราฟ' : 'ตัวกรองช่วงเวลา';
 
@@ -134,11 +136,19 @@
             if(mode==='range'){const a=get('[data-rc-start]').value,b=get('[data-rc-end]').value;const valid=Boolean(a&&b&&a<=b&&get('[data-rc-start]').validity.valid&&get('[data-rc-end]').validity.valid);get('[data-rc-range-error]').textContent=a&&b&&a>b?'วันเริ่มต้นต้องไม่เกินวันสิ้นสุด':'';get('#rc-selection').textContent=valid?a.split('-').reverse().join('/')+' – '+b.split('-').reverse().join('/'):'เลือกวันที่เริ่มต้นและสิ้นสุด';get('[data-rc="apply"]').disabled=!valid;return;}
             get('#rc-selection').textContent=value?describe(value):'เลือกวันที่จากปฏิทิน';get('[data-rc="apply"]').disabled=!value;
         }
+        function positionRangePicker() {
+            const panel=get('.rc-range-picker');if(panel.hidden||!rangeTarget||!dialog.open)return;
+            const rect=get('[data-rc-range-open="'+rangeTarget+'"]').getBoundingClientRect();
+            const width=panel.getBoundingClientRect().width||272,height=panel.getBoundingClientRect().height||350;
+            const top=rect.top>=height+8?rect.top-height-4:rect.bottom+4;
+            panel.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-width-8))+'px';
+            panel.style.top=Math.max(8,Math.min(top,window.innerHeight-height-8))+'px';
+        }
         function position() {
             if(!dialog.open)return;
             const rect=trigger.getBoundingClientRect(),width=dialog.getBoundingClientRect().width,height=dialog.getBoundingClientRect().height;
             dialog.style.left=Math.max(12,Math.min(rect.right-width,window.innerWidth-width-12))+'px';
-            dialog.style.top=Math.max(12,Math.min(rect.bottom+8,window.innerHeight-height-12))+'px';
+            dialog.style.top=Math.max(12,Math.min(rect.bottom+8,window.innerHeight-height-12))+'px';positionRangePicker();
         }
         function sync() {const label=rangeText()||describe(read());trigger.querySelector('span').textContent=label;trigger.setAttribute('aria-label','ตัวกรองวันที่แจ้งซ่อม: '+label);}
         function open() {
@@ -150,6 +160,7 @@
         }
         function moveMonth(delta) {const date=new Date(viewYear,viewMonth-1+delta,1);if(date.getFullYear()<1000||date.getFullYear()>9999)return;viewYear=date.getFullYear();viewMonth=date.getMonth()+1;render();position();}
         dialog.addEventListener('click',event=>{
+            if(rangeTarget&&(event.target.closest('[data-rc-range-clear]')||event.target.closest('[data-rc-range-today]'))){const part=rangeTarget;rangeInput(part).value=event.target.closest('[data-rc-range-today]')?String(today.year)+'-'+monthValue(today.month)+'-'+String(today.day).padStart(2,'0'):'';get('[data-rc-fiscal]').value='';rangeTarget=null;render();position();get('[data-rc-range-open="'+part+'"]').focus();return;}
             const rangeOpen=event.target.closest('[data-rc-range-open]');
             if(rangeOpen){rangeTarget=rangeTarget===rangeOpen.dataset.rcRangeOpen?null:rangeOpen.dataset.rcRangeOpen;if(rangeTarget){const value=rangeInput(rangeTarget).value||rangeInput('start').value;if(value){rangeYear=Number(value.slice(0,4));rangeMonth=Number(value.slice(5,7));}else{rangeYear=today.year;rangeMonth=today.month;}}render();position();return;}
             const rangeNav=event.target.closest('[data-rc-range-nav]');
@@ -188,11 +199,14 @@
             const day=Number(button.dataset.rcDay),date=new Date(viewYear,viewMonth-1,day),offset={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7,Home:-date.getDay(),End:6-date.getDay()}[event.key];
             if(offset===undefined)return;event.preventDefault();date.setDate(day+offset);viewYear=date.getFullYear();viewMonth=date.getMonth()+1;render();get('[data-rc-day="'+date.getDate()+'"]').focus();
         });
-        dialog.addEventListener('close',()=>trigger.setAttribute('aria-expanded','false'));
+        dialog.addEventListener('close',()=>{rangeTarget=null;renderRangePicker();trigger.setAttribute('aria-expanded','false');});
+        dialog.addEventListener('scroll',positionRangePicker);
+        const outsideRange=event=>{if(rangeTarget&&!get('.rc-range-picker').contains(event.target)&&!event.target.closest('[data-rc-range-open]')){rangeTarget=null;renderRangePicker();}};
+        document.addEventListener('pointerdown',outsideRange,true);
         trigger.addEventListener('click',open);window.addEventListener('resize',position);
         document.body.appendChild(dialog);controls[0].before(trigger);controls.forEach(node=>node.classList.add('rc-legacy-hidden'));
         sync();
-        return {trigger,dialog,fields,sync,destroy(){window.removeEventListener('resize',position);if(dialog.open)dialog.close();dialog.remove();}};
+        return {trigger,dialog,fields,sync,destroy(){document.removeEventListener('pointerdown',outsideRange,true);window.removeEventListener('resize',position);if(dialog.open)dialog.close();dialog.remove();}};
     };
     window.RepairCalendar = {mount};
 })();
