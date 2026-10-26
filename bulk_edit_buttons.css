@@ -1,0 +1,40 @@
+/* Shared appearance only; retain each page's existing bulk-edit handlers. */
+button.ab-edit-button,
+button[data-ab-edit],
+button[data-lb-edit],
+button#tb-edit,
+button#trashEditButton,
+button#mbsCardEdit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f43f5e !important;
+  color: #fff !important;
+  border: 1px solid #f43f5e !important;
+  border-radius: 12px !important;
+  padding: 8px 14px !important;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+}
+button.ab-edit-button:hover,
+button[data-ab-edit]:hover,
+button[data-lb-edit]:hover,
+button#tb-edit:hover,
+button#trashEditButton:hover,
+button#mbsCardEdit:hover {
+  background: #e11d48 !important;
+  border-color: #e11d48 !important;
+}
+button.ab-edit-button:focus-visible,
+button[data-ab-edit]:focus-visible,
+button[data-lb-edit]:focus-visible,
+button#tb-edit:focus-visible,
+button#trashEditButton:focus-visible,
+button#mbsCardEdit:focus-visible {
+  outline: 3px solid #fda4af;
+  outline-offset: 3px;
+}
