@@ -663,7 +663,7 @@
       rows.length +
       ' รายการในช่วงที่เลือก · กดแท่งกราฟเพื่อดูรายการที่เกี่ยวข้อง</p><div class="mbs-drill-charts"></div><div class="mbs-drill-actions"><button type="button" class="mbs-button" id="mbsAllHistory">ดูประวัติทั้งหมดในช่วงนี้</button><span id="mbsMatchLabel"></span></div><div id="mbsDrillTable"></div>';
     if (detailed) {
-      body.innerHTML = '<div class="mbs-analytics-summary"></div><p class="mbs-analytics-guide">เลือกแถบในกราฟเพื่อกรองรายการงานด้านล่าง</p><div class="mbs-drill-charts"></div><section class="mbs-analytics-results"><div class="mbs-drill-actions"><div><h3>รายการงานแจ้งซ่อม</h3><p id="mbsMatchLabel" aria-live="polite">แสดงงานทั้งหมดในช่วงที่เลือก</p></div><button type="button" class="mbs-button" id="mbsAllHistory">แสดงงานทั้งหมด</button></div><div id="mbsDrillTable"></div></section>';
+      body.innerHTML = '<div class="mbs-analytics-summary"></div><p class="mbs-analytics-guide">เลือกแถบในกราฟเพื่อกรองรายการงาน · กดแถบเดิมซ้ำเพื่อยกเลิก</p><div class="mbs-drill-charts"></div><section class="mbs-analytics-results"><div class="mbs-drill-actions"><div><h3>รายการงานแจ้งซ่อม</h3><p id="mbsMatchLabel" aria-live="polite">แสดงงานทั้งหมดในช่วงที่เลือก</p></div><button type="button" class="mbs-button" id="mbsAllHistory">แสดงงานทั้งหมด</button></div><div id="mbsDrillTable"></div></section>';
       for (const [label, count, tone] of [
         ["งานทั้งหมด", rows.length, "total"],
         ["รอรับเรื่อง", rows.filter(r => String(r.status).trim() === "รอรับเรื่อง").length, "pending"],
@@ -711,9 +711,10 @@
           b.innerHTML='<span class="mbs-analytics-bar-label"></span><strong>' + count + ' <small>งาน</small></strong><span class="mbs-analytics-track" aria-hidden="true"><span style="width:' + count/max*100 + '%"></span></span>';
           b.querySelector(".mbs-analytics-bar-label").textContent=(f === "technician_id" ? technicianName(key) : key) || "ไม่ระบุ";
           b.onclick=()=>{
-            selected.match={ [f]:key };
-            for(const other of body.querySelectorAll(".mbs-analytics-bar"))other.setAttribute("aria-pressed",String(other===b));
-            $("mbsMatchLabel").textContent="กรองตาม " + card.querySelector("h3").textContent + ": " + ((f === "technician_id" ? technicianName(key) : key) || "ไม่ระบุ");
+            const clear = selected.match[f] === key;
+            selected.match=clear ? {} : { [f]:key };
+            for(const other of body.querySelectorAll(".mbs-analytics-bar"))other.setAttribute("aria-pressed",String(!clear && other===b));
+            $("mbsMatchLabel").textContent=clear ? "แสดงงานทั้งหมดในช่วงที่เลือก" : "กรองตาม " + card.querySelector("h3").textContent + ": " + ((f === "technician_id" ? technicianName(key) : key) || "ไม่ระบุ");
             loadTable($("mbsDrillTable"),serverParams(kind,value,selected.match));
           };
           list.appendChild(b);
