@@ -32,6 +32,7 @@
 .mbs-analytics-detail .mbs-drill-actions h3 { margin: 0; font-size: 16px; }
 .mbs-analytics-detail #mbsMatchLabel { margin: 5px 0 0; font-size: 12px; color: #64748b; overflow-wrap: anywhere; }
 .mbs-analytics-detail #mbsAllHistory { font-family: inherit; color: #1d4ed8; border-color: #bfdbfe; font-size: 12px; }
+.mbs-analytics-detail #mbsTechnicianTableHistory { font-family: inherit; font-size: 12px; }
 .mbs-analytics-detail .mbs-result-count { font-size: 13px; color: #475569; }
 
 /* One readable card per work order; no narrow table columns. */

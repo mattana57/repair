@@ -162,7 +162,7 @@ function mbs_feature_assets($db) {
     try{$data=mbs_feature_payload($db);}catch(Throwable $e){error_log('Dashboard features load failed: '.$e->getMessage());$data=['role'=>strtolower((string)($_SESSION['role']??'')),'repairs'=>[],'technicians'=>[],'accounts'=>[],'error'=>'โหลดข้อมูลไม่สำเร็จ'];}
     echo '<link rel="stylesheet" href="dashboard_reviews.css?v=20261026-3">';
     echo '<link rel="stylesheet" href="history_focus.css?v=20261026-1">';
-    echo '<link rel="stylesheet" href="dashboard_analytics.css?v=20261026-8">';
+    echo '<link rel="stylesheet" href="dashboard_analytics.css?v=20261026-9">';
     echo '<link rel="stylesheet" href="technician_cards.css?v=20261026-1">';
     echo '<link rel="stylesheet" href="bulk_edit_buttons.css?v=20261026-2">';
     echo '<script src="bulk_edit_menu.js?v=20261026-1" defer></script>';
