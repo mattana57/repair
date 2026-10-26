@@ -614,7 +614,7 @@
         };
       }
       for (const b of container.querySelectorAll("[data-mbs-reporter]"))
-        b.onclick = () => openAnalytics("reporter", b.dataset.mbsReporter);
+        b.onclick = () => openReporterHistory(b.dataset.mbsReporter);
       for (const a of container.querySelectorAll(".mbs-pages a"))
         a.onclick = (e) => {
           e.preventDefault();
@@ -627,6 +627,47 @@
     } finally {
       if (container.dataset.request === version)
         container.removeAttribute("aria-busy");
+    }
+  }
+  function openReporterHistory(lineId) {
+    if (typeof lineId !== "string" || !lineId.trim() || lineId.length > 200) return;
+    const technician = data.role === "technician";
+    const history = $(technician ? "techReporterModal" : "historyModal");
+    const open = technician ? window.openTechReporterHistory : window.viewHistory;
+    if (!history || typeof open !== "function") return;
+    const analytics = $("mbsAnalytics");
+    const returnToAnalytics = !!analytics?.open;
+    const body = analytics?.querySelector(".mbs-dialog-body");
+    const scrollTop = body?.scrollTop || 0;
+    const previousOverflow = document.body.style.overflow;
+    let wasOpen = false;
+    const isOpen = () => technician ? history.open :
+      !history.classList.contains("opacity-0") && !history.classList.contains("pointer-events-none");
+    const restore = () => {
+      observer.disconnect();
+      history.removeEventListener("close", restore);
+      if (returnToAnalytics && analytics.isConnected && !analytics.open) {
+        analytics.showModal();
+        document.body.style.overflow = previousOverflow;
+        if (body) body.scrollTop = scrollTop;
+      }
+    };
+    const observer = new MutationObserver(() => {
+      if (isOpen()) wasOpen = true;
+      else if (wasOpen) restore();
+    });
+    observer.observe(history, { attributes: true, attributeFilter: ["class", "open"] });
+    if (technician) history.addEventListener("close", restore, { once: true });
+    if (returnToAnalytics) analytics.close();
+    try {
+      const name = reporterName(lineId);
+      const result = technician ? open(name, lineId) : data.role === "executive"
+        ? open(name, "reporter", lineId)
+        : open(name, "reporter", false, false, null, lineId);
+      wasOpen = isOpen();
+      Promise.resolve(result).catch(restore);
+    } catch {
+      restore();
     }
   }
   function openAnalytics(kind, value) {
