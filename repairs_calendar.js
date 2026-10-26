@@ -12,7 +12,8 @@
             if(!field){field=document.createElement('input');field.type='hidden';field.name=rangeKey+'_'+part;field.value=new URLSearchParams(location.search).get(field.name)||'';rangeHost.appendChild(field);}
             rangeFields[part]=field;
         }
-        const rangeText = () => rangeFields.start.value && rangeFields.end.value ? rangeFields.start.value.split('-').reverse().join('/')+' – '+rangeFields.end.value.split('-').reverse().join('/') : '';
+        const thaiRangeDate = value => { const [year,month,day]=value.split('-'); return day+'/'+month+'/'+(Number(year)+543); };
+        const rangeText = () => rangeFields.start.value && rangeFields.end.value ? thaiRangeDate(rangeFields.start.value)+' – '+thaiRangeDate(rangeFields.end.value) : '';
         const saveRange = () => {window.mbsRanges=window.mbsRanges||{};window.mbsRanges[config.key]={start:rangeFields.start,end:rangeFields.end};const u=new URL(location.href);for(const part of ['start','end']){const v=rangeFields[part].value;if(v)u.searchParams.set(rangeKey+'_'+part,v);else u.searchParams.delete(rangeKey+'_'+part);}history.replaceState(history.state,'',u);};
         saveRange();
         const suffix = config.key === 'table' ? '' : '-' + config.key;
@@ -78,7 +79,7 @@
         function renderRangePicker() {
             for(const part of ['start','end']) {
                 const button=get('[data-rc-range-open="'+part+'"]'), value=rangeInput(part).value;
-                button.querySelector('span').textContent=value?value.split('-').reverse().join('/'):part==='start'?'เลือกวันที่เริ่มต้น':'เลือกวันที่สิ้นสุด';
+                button.querySelector('span').textContent=value?thaiRangeDate(value):part==='start'?'เลือกวันที่เริ่มต้น':'เลือกวันที่สิ้นสุด';
                 button.setAttribute('aria-expanded',String(mode==='range'&&rangeTarget===part));
             }
             const panel=get('.rc-range-picker'),visible=mode==='range'&&Boolean(rangeTarget);
@@ -94,7 +95,7 @@
                 const value=String(date.getFullYear())+'-'+monthValue(date.getMonth()+1)+'-'+String(day).padStart(2,'0');
                 const button=document.createElement('button');button.type='button';button.dataset.rcRangeDay=value;button.textContent=day;
                 if(date.getMonth()+1!==rangeMonth)button.className='rc-range-adjacent';
-                button.setAttribute('aria-label',day+' '+months[date.getMonth()]+' '+date.getFullYear());button.setAttribute('aria-pressed',String(value===rangeInput(rangeTarget).value));
+                button.setAttribute('aria-label',day+' '+months[date.getMonth()]+' '+(date.getFullYear()+543));button.setAttribute('aria-pressed',String(value===rangeInput(rangeTarget).value));
                 if(date.getFullYear()===today.year&&date.getMonth()+1===today.month&&day===today.day)button.setAttribute('aria-current','date');nodes.push(button);
             }
             get('.rc-range-days').replaceChildren(...nodes);positionRangePicker();
@@ -131,7 +132,7 @@
                 get('.rc-help').textContent=period.year==='all'?'ทุกปีแสดงทุกเดือนและทุกปี เลือกปีเจาะจงหากต้องการเลือกเดือน':'แสดงทั้งปีที่เลือก หรือเลือกเดือนเพื่อดูเฉพาะเดือนนั้น';
             }
             const value=mode==='date'?selectedDate:{day:'all',...period};
-            if(mode==='range'){const a=get('[data-rc-start]').value,b=get('[data-rc-end]').value;const valid=Boolean(a&&b&&a<=b&&get('[data-rc-start]').validity.valid&&get('[data-rc-end]').validity.valid);get('[data-rc-range-error]').textContent=a&&b&&a>b?'วันเริ่มต้นต้องไม่เกินวันสิ้นสุด':'';get('#rc-selection').textContent=valid?a.split('-').reverse().join('/')+' – '+b.split('-').reverse().join('/'):'เลือกวันที่เริ่มต้นและสิ้นสุด';get('[data-rc="apply"]').disabled=!valid;return;}
+            if(mode==='range'){const a=get('[data-rc-start]').value,b=get('[data-rc-end]').value;const valid=Boolean(a&&b&&a<=b&&get('[data-rc-start]').validity.valid&&get('[data-rc-end]').validity.valid);get('[data-rc-range-error]').textContent=a&&b&&a>b?'วันเริ่มต้นต้องไม่เกินวันสิ้นสุด':'';get('#rc-selection').textContent=valid?thaiRangeDate(a)+' – '+thaiRangeDate(b):'เลือกวันที่เริ่มต้นและสิ้นสุด';get('[data-rc="apply"]').disabled=!valid;return;}
             get('#rc-selection').textContent=value?describe(value):'เลือกวันที่จากปฏิทิน';get('[data-rc="apply"]').disabled=!value;
         }
         function positionRangePicker() {
