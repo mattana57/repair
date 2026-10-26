@@ -4,6 +4,7 @@
     const failed = new URL(location.href).searchParams.get('pg_logs_status') === 'failed';
     for (const [id, editSelector, after] of [
       ['tb-count', '#tb-edit', false],
+      ['ab-count-asset', '[data-ab-edit="asset"]', false],
       ['lb-count-loginlog', '[data-lb-edit="loginlog"]', !failed],
       ['lb-count-activityperson', '[data-lb-edit="activityperson"]', false],
       ['lb-count-activityevent', '[data-lb-edit="activityevent"]', false],
@@ -22,6 +23,12 @@
       if (count.parentElement === group) continue;
       if (after) group.append(count);
       else group.prepend(count);
+    }
+    const reporterCount = document.getElementById('ab-count-reporter');
+    const subtitle = [...document.querySelectorAll('#users p')].find(el =>
+      el.textContent.trim() === 'Database of personnel who reported issues');
+    if (reporterCount && subtitle && subtitle.nextElementSibling !== reporterCount) {
+      subtitle.after(reporterCount);
     }
   }
   function labels() {
