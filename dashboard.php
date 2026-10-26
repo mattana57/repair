@@ -4908,7 +4908,7 @@ if (isset($_GET['api_check_hash'])) {
                 <input type="hidden" name="delete_avatar_flag" id="delete_avatar_flag" value="0">
                 
                 <!-- ✨ เปลี่ยนมาใช้ pt-4 และ flex-col gap-5 เพื่อแก้ปัญหาช่องว่างโล่งๆ ด้านบน ✨ -->
-                <div class="px-6 pt-2 pb-6 overflow-y-auto custom-scrollbar flex-1 flex flex-col gap-5">
+                <div class="mbs-technician-fields px-6 pt-2 pb-6 overflow-y-auto custom-scrollbar flex-1 flex flex-col gap-5">
                     
                     <!-- ✨ ย้ายส่วนอัปโหลดรูปภาพขึ้นมาเป็นอันดับ 1 ให้โชว์บนสุดเสมอ ✨ -->
                     <div id="avatarDiv" class="hidden space-y-3">

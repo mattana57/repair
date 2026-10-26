@@ -1,0 +1,31 @@
+/* Admin Manage Technician only. Keep the original footer and button sizes. */
+@media (min-width: 768px) {
+  #techAdminModal:has(#techAdminForm[data-mbs-managed-role="technician"]) > .modal-container {
+    max-width: 960px;
+  }
+  #techAdminForm[data-mbs-managed-role="technician"] > .mbs-technician-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 28px;
+    align-content: start;
+    align-items: end;
+  }
+  #techAdminForm[data-mbs-managed-role="technician"] > .mbs-technician-fields > div {
+    min-width: 0;
+  }
+  #techAdminForm[data-mbs-managed-role="technician"] #avatarDiv {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  #techAdminForm[data-mbs-managed-role="technician"] #loginCredsDiv {
+    display: contents;
+  }
+  #techAdminForm[data-mbs-managed-role="technician"] #accountStatusDiv { grid-column: 1; grid-row: 2; }
+  #techAdminForm[data-mbs-managed-role="technician"] #loginCredsDiv > div:has(> #techAdmin_username) { grid-column: 1; grid-row: 3; }
+  #techAdminForm[data-mbs-managed-role="technician"] #techAdminLineDiv { grid-column: 1; grid-row: 4; }
+  #techAdminForm[data-mbs-managed-role="technician"] .mbs-technician-fields > div:has(> #techAdmin_fullname) { grid-column: 1; grid-row: 5; }
+  #techAdminForm[data-mbs-managed-role="technician"] .mbs-technician-fields > div:has(> #techAdmin_englishname) { grid-column: 2; grid-row: 2; }
+  #techAdminForm[data-mbs-managed-role="technician"] .mbs-technician-fields > div:has(> #techAdmin_phone) { grid-column: 2; grid-row: 3; }
+  #techAdminForm[data-mbs-managed-role="technician"] .mbs-technician-fields > div:has(> #techAdmin_email) { grid-column: 2; grid-row: 4; }
+  #techAdminForm[data-mbs-managed-role="technician"] #deptDiv { grid-column: 2; grid-row: 5; }
+}
