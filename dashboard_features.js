@@ -41,6 +41,7 @@
         " " +
         s.slice(11, 16)
       : "ไม่ทราบวันเวลาเดิม";
+  const accountDateText = (s) => dateText(s).replace(/ (\d{2}:\d{2})$/, "\u00a0\u00a0$1");
   const validDate = (s) => {
     if (!/^[1-9]\d{3}-\d{2}-\d{2}$/.test(s || "")) return false;
     const d = new Date(s + "T00:00:00Z");
@@ -1166,7 +1167,7 @@
           const note = document.createElement("p");
           note.className = "mbs-account-time";
           note.dataset.mbsAccountTime = field;
-          note.textContent = caption + ": " + dateText(value);
+          note.textContent = caption + ": " + accountDateText(value);
           label.after(note);
         }
       }
@@ -1224,7 +1225,7 @@
       const note = form.querySelector(
         '[data-mbs-account-time="techAdmin_line_name"]',
       );
-      const text = "ผูกบัญชี LINE: " + dateText(tech.line_linked_at);
+      const text = "ผูกบัญชี LINE: " + accountDateText(tech.line_linked_at);
       if (note && note.textContent !== text) note.textContent = text;
       const cached = data.technicians.find((t) => String(t.id) === id);
       if (cached) cached.line_linked_at = tech.line_linked_at;
