@@ -344,7 +344,7 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
         $where[] = 'YEAR(r.created_at) = ?';
         $values[] = (int)$year;
     }
-    $status = $kind === 'history' ? (execPageGet('eh_type') === 'technician' ? execPageGet('eh_status', 'all') : 'all') : execPageGet('er_status', 'all');
+    $status = $kind === 'history' ? execPageGet('eh_status', 'all') : execPageGet('er_status', 'all');
     if ($kind === 'history' && !in_array($status, ['all','รอรับเรื่อง','กำลังดำเนินการ','ซ่อมเสร็จแล้ว'], true)) $where[] = '1=0';
     if ($status !== 'all') {
         $where[] = 'r.status = ?';
@@ -2262,8 +2262,8 @@ if (isset($_GET['api_check_hash'])) {
                 p.set('eh_type', window.currentHistoryType || 'reporter');
                 if (window.currentHistoryType === 'technician') {
                     if (window.currentHistoryTechnicianId) p.set('eh_technician_id', String(window.currentHistoryTechnicianId));
-                    p.set('eh_status', value('historyStatus','all'));
                 }
+                p.set('eh_status', value('historyStatus','all'));
                 p.set('eh_name', window.currentHistoryName || '');
                 if (window.currentHistoryType === 'reporter' && window.currentHistoryLineUserId !== null && window.currentHistoryLineUserId !== undefined) p.set('eh_line_user_id', window.currentHistoryLineUserId);
             } else {
@@ -3596,7 +3596,7 @@ if (isset($_GET['api_check_hash'])) {
         function viewHistory(fullName, type, reporterLineId = null, repairId = null, reportedDate = null, technicianId = null) {
             const techId = Number(technicianId);
             window.currentHistoryTechnicianId = type === 'technician' && Number.isSafeInteger(techId) && techId > 0 ? techId : null;
-            document.getElementById('history-StatusContainer').classList.toggle('hidden',type !== 'technician');
+            document.getElementById('history-StatusContainer').classList.remove('hidden');
             selectHistoryStatusDropdown('all','ทั้งหมด',false);
             const jobId = Number(repairId);
             const focusModal = document.getElementById('historyModal');

@@ -8115,8 +8115,7 @@ if (isset($_GET['api_check_hash'])) {
             if (!refresh && !restore) {
                 url.searchParams.delete('pg_history_page');
                 url.searchParams.delete('pg_history_q');
-                if (type === 'technician') url.searchParams.set('pg_history_status', 'all');
-                else url.searchParams.delete('pg_history_status');
+                url.searchParams.set('pg_history_status', 'all');
                 url.searchParams.set('pg_history_day', document.getElementById('historyDay').value);
                 url.searchParams.set(
                     'pg_history_month',
@@ -8353,8 +8352,8 @@ if (isset($_GET['api_check_hash'])) {
                 );
             }
 
-            document.getElementById('history-StatusContainer').classList.toggle('hidden', type !== 'technician');
-            const historyStatus = type === 'technician' ? (url.searchParams.get('pg_history_status') || 'all') : 'all';
+            document.getElementById('history-StatusContainer').classList.remove('hidden');
+            const historyStatus = url.searchParams.get('pg_history_status') || 'all';
             selectHistoryStatusDropdown(historyStatus, historyStatus === 'all' ? 'ทั้งหมด' : historyStatus, false);
             historyFiltersRestoring = false;
             toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');
@@ -8620,7 +8619,7 @@ if (isset($_GET['api_check_hash'])) {
                 day: document.getElementById('historyDay').value,
                 month: document.getElementById('historyMonth').value,
                 year: document.getElementById('historyYear').value,
-                status: window.currentHistoryType === 'technician' ? document.getElementById('historyStatus').value : 'all'
+                status: document.getElementById('historyStatus').value
             };
 
             for (const [key, value] of Object.entries(values)) {

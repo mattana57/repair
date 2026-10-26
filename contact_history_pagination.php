@@ -132,7 +132,7 @@ function ch_history_page(
         if ($jobId === false || $type !== 'reporter') $where .= ' AND 1=0';
         // The ID is a focus anchor, not an SQL row filter.
     }
-    if ($type === 'technician') {
+    {
         $status = tp_get('pg_history_status', 'all');
         if ($status !== 'all') {
             if (!in_array($status, ['รอรับเรื่อง','กำลังดำเนินการ','ซ่อมเสร็จแล้ว'], true)) $where .= ' AND 1=0';
