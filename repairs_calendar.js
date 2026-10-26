@@ -23,7 +23,7 @@
         const today = {year:Number(todayParts.year), month:Number(todayParts.month), day:Number(todayParts.day)};
         const availableYears = new Set(Array.from(controls.flatMap(node => Array.from(node.querySelectorAll('[data-value]'))), node => Number(node.dataset.value)).filter(n => Number.isInteger(n) && n >= 1000 && n <= 9999));
         for (let year = Math.max(1000, today.year - 100); year <= Math.min(9999, today.year + 20); year++) availableYears.add(year);
-        let mode = 'range', viewYear = today.year, viewMonth = today.month, selectedDate = null, period = {month:'all', year:'all'};
+        let mode = 'range', viewYear = today.year, viewMonth = today.month, selectedDate = null, period = {month:'all', year:String(today.year)};
         const read = () => Object.fromEntries(Object.entries(fields).map(([key,node]) => [key,(node.value === '0' || node.value === 'all' ? 'all' : key === 'month' ? String(Number(node.value)).padStart(2,'0') : node.value)]));
         const monthValue = month => String(month).padStart(2,'0');
         const validDate = value => /^\d{4}$/.test(value.year) && /^\d{1,2}$/.test(value.month) && /^\d{1,2}$/.test(value.day) && Number(value.day)>=1 && Number(value.month)>=1 && Number(value.month)<=12 && Number(value.day)<=new Date(Number(value.year),Number(value.month),0).getDate();
@@ -151,7 +151,7 @@
         function sync() {const label=rangeText()||describe(read());trigger.querySelector('span').textContent=label;trigger.setAttribute('aria-label','ตัวกรองวันที่แจ้งซ่อม: '+label);}
         function open() {
             rangeTarget=null;
-            const value=read();selectedDate=validDate(value)?{...value}:null;period={month:value.month,year:value.year};
+            const value=read();selectedDate=validDate(value)?{...value}:null;period={month:value.month,year:value.year==='all'?String(today.year):value.year};
             get('[data-rc-start]').value=rangeFields.start.value;get('[data-rc-end]').value=rangeFields.end.value;
             if(!rangeText()&&selectedDate){const day=String(value.day).padStart(2,'0'),iso=value.year+'-'+monthValue(Number(value.month))+'-'+day;get('[data-rc-start]').value=iso;get('[data-rc-end]').value=iso;}
             mode=rangeText()||selectedDate?'range':'period';viewYear=value.year==='all'?today.year:Number(value.year);viewMonth=value.month==='all'?today.month:Number(value.month);
