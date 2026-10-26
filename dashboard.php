@@ -5857,6 +5857,7 @@ if (isset($_GET['api_check_hash'])) {
         function openCustomPositionPrompt() {
             let currentPos = document.getElementById('displayPositionLabel').innerText;
             if (currentPos === 'ระบุตำแหน่งงาน' || currentPos === 'ตำแหน่งงาน') currentPos = '';
+            const positionLocked = document.getElementById('techAdminForm')?.classList.contains('mbs-readonly-profile') === true;
             
             const dropdown = document.getElementById('customPositionDropdown');
             if (dropdown) {
@@ -5873,13 +5874,47 @@ if (isset($_GET['api_check_hash'])) {
                 confirmButtonText: 'ตกลง',
                 cancelButtonText: 'ยกเลิก',
                 confirmButtonColor: '#4f46e5',
+                didOpen: () => {
+                    if (!positionLocked) return;
+                    const input = Swal.getInput();
+                    const notice = document.createElement('p');
+                    notice.id = 'positionReadonlyNotice';
+                    notice.textContent = 'ไม่อนุญาตให้แก้ไขตำแหน่งงานของบัญชีนี้';
+                    Object.assign(notice.style, {
+                        color: '#dc2626', textAlign: 'left', fontSize: '14px',
+                        margin: '0 2em 0', lineHeight: '1.6'
+                    });
+                    input.before(notice);
+                    const alignNotice = () => {
+                        const padding = parseFloat(getComputedStyle(input).paddingLeft) || 0;
+                        notice.style.marginLeft = (input.offsetLeft + padding + input.clientLeft) + 'px';
+                    };
+                    alignNotice();
+                    input.setAttribute('aria-describedby', notice.id);
+                    // Keep the notice aligned with the input text when the viewport changes.
+                    const observer = new ResizeObserver(alignNotice);
+                    observer.observe(Swal.getPopup());
+                    input.mbsPositionNoticeObserver = observer;
+                },
+                willClose: () => Swal.getInput()?.mbsPositionNoticeObserver?.disconnect(),
+                preConfirm: () => {
+                    if (!positionLocked) return;
+                    const input = Swal.getInput();
+                    input.value = currentPos;
+                    input.style.borderColor = '#dc2626';
+                    input.style.boxShadow = '0 0 0 1px #dc2626';
+                    input.setAttribute('aria-invalid', 'true');
+                    input.focus();
+                    return false;
+                },
                 inputValidator: (value) => {
+                    if (positionLocked) return;
                     if (!value || value.trim() === '') {
                         return 'กรุณาระบุตำแหน่งงาน!'
                     }
                 }
             }).then((result) => {
-                if (result.isConfirmed && result.value.trim() !== '') {
+                if (!positionLocked && result.isConfirmed && result.value.trim() !== '') {
                     const newVal = result.value.trim();
                     savePositionValue(newVal);
                     if (!availablePositions.includes(newVal)) {
