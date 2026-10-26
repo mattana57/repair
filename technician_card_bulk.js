@@ -15,6 +15,7 @@
   }
   edit.onclick = () => {
     menu.hidden = !menu.hidden;
+    if (!menu.hidden) { selecting = true; refresh(); }
     edit.setAttribute('aria-expanded', String(!menu.hidden));
   };
   panel.addEventListener('change', e => { if (e.target.matches('.mbs-card-select input')) refresh(); });
@@ -26,7 +27,7 @@
       selecting = true;
       boxes().forEach(el => { if (el.closest('.tech-card-item').getClientRects().length) el.checked = true; });
     }
-    if (action === 'cancel') { selecting = false; boxes().forEach(el => el.checked = false); }
+    if (action === 'cancel') { selecting = false; boxes().forEach(el => el.checked = false); closeMenu(); }
     if (action === 'delete') {
       const selected = boxes().filter(el => el.checked);
       if (!selected.length) return;
@@ -42,5 +43,13 @@
     }
     refresh();
   });
+  function closeMenu() {
+    menu.hidden = true;
+    edit.setAttribute('aria-expanded', 'false');
+  }
+  document.addEventListener('click', e => {
+    if (!menu.hidden && !menu.contains(e.target) && !edit.contains(e.target)) closeMenu();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
   refresh();
 })();

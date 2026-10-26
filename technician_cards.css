@@ -9,11 +9,15 @@
 #techCardsContainer .mbs-tech-card-delete:hover { background:#f43f5e; border-color:#f43f5e; color:#fff; }
 #techCardsContainer .mbs-tech-card-delete:focus-visible { outline:3px solid #fda4af; outline-offset:3px; }
 #techCardsContainer .mbs-card-select { position:absolute; top:12px; left:12px; z-index:20; padding:8px; background:white; border-radius:10px; }
-#techCardsContainer .mbs-card-select[hidden], #team_cards .mbs-card-bulk [hidden] { display:none; }
+#techCardsContainer .mbs-card-select[hidden], #team_cards .mbs-card-bulk [hidden] { display:none !important; }
 #techCardsContainer .mbs-card-select input { width:20px; height:20px; accent-color:#f43f5e; cursor:pointer; display:block; }
-#team_cards .mbs-card-bulk { display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:12px; margin:32px 0 22px; }
+#team_cards .mbs-card-bulk { display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:12px; margin:32px 0 22px; position:relative; }
 #team_cards .mbs-card-bulk button { border:1px solid #fecdd3; border-radius:12px; background:#fff; color:#e11d48; padding:9px 16px; font-size:14px; font-weight:700; cursor:pointer; }
-#team_cards #mbsCardEdit { background:#f43f5e; border-color:#f43f5e; color:#fff; }
-#team_cards #mbsCardMenu { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
+#team_cards #mbsCardEdit { background:transparent; border-color:transparent; color:#f43f5e; padding:8px 10px; }
+#team_cards #mbsCardEdit:hover { color:#e11d48; background:#fff1f2; }
+#team_cards #mbsCardMenu { position:absolute; top:calc(100% + 8px); right:0; z-index:40; display:flex; flex-direction:column; width:180px; padding:8px; gap:4px; background:#fff; border:1px solid #f1f5f9; border-radius:16px; box-shadow:0 12px 30px #0f172a26; }
+#team_cards #mbsCardMenu button { width:100%; text-align:left; border:0; border-radius:10px; background:transparent; color:#475569; }
+#team_cards #mbsCardMenu button:hover { background:#fff1f2; color:#e11d48; }
+#team_cards #mbsCardMenu [data-card-action="delete"] { color:#e11d48; }
 #team_cards #mbsCardSelected { color:#64748b; font-size:13px; font-weight:700; }
 #team_cards .mbs-card-bulk button:disabled { opacity:.45; cursor:not-allowed; }
