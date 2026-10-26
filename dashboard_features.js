@@ -796,6 +796,45 @@
       ? " (" + tech.position + ")"
       : "";
   }
+  function reviewJobRows() {
+    const candidates = new Set(reviewCandidates().map((t) => Number(t.id)));
+    return period(reviewPeriodActive() ? data.repairs : overviewRows(), "reviews", "created_at")
+      .filter((r) => reviewState.id ? Number(r.technician_id) === Number(reviewState.id) : candidates.has(Number(r.technician_id)));
+  }
+  function openReviewJobs() {
+    const rows = reviewJobRows(), technicianId = reviewState.id, department = reviewState.department || "";
+    const dlg = dialog("mbsReviewJobsDialog", "งานที่รับผิดชอบ: " + (technicianId ? technicianName(technicianId) : "เจ้าหน้าที่ทั้งหมด"));
+    dlg.querySelector("h2").textContent = "งานที่รับผิดชอบ: " + (technicianId ? technicianName(technicianId) : "เจ้าหน้าที่ทั้งหมด");
+    const body = dlg.querySelector(".mbs-dialog-body");
+    body.innerHTML = '<p class="mbs-intro">รวม ' + rows.length + ' งานในช่วงที่เลือก · เลือกผู้แจ้งเพื่อดูงานของคนนั้น หรือกดเลขใบงานเพื่อดูรายละเอียด</p><div class="mbs-review-job-reporters"></div><div id="mbsReviewJobsTable"></div>';
+    const params = (reporter = "", repair = "") => {
+      const u = serverParams("review_jobs", technicianId);
+      u.searchParams.set("mbs_jobs_department", department);
+      u.searchParams.set("mbs_jobs_reporter", reporter);
+      u.searchParams.set("mbs_jobs_repair_id", repair);
+      return u;
+    };
+    const groups = new Map();
+    for (const r of rows) {
+      const id = String(r.line_user_id || "").trim(), key = id ? "line:" + id : "repair:" + r.id;
+      if (!groups.has(key)) groups.set(key, {id, repair:id ? "" : String(r.id), name:r.reporter_label || r.reporter_name || "ไม่ระบุผู้แจ้ง", count:0});
+      groups.get(key).count++;
+    }
+    const controls = body.querySelector(".mbs-review-job-reporters");
+    const add = (label, reporter, repair) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "mbs-button"; b.textContent = label;
+      b.dataset.mbsJobsReporter = reporter;
+      b.onclick = () => {
+        for (const item of controls.children) item.setAttribute("aria-pressed", String(item === b));
+        loadTable($("mbsReviewJobsTable"), params(reporter, repair));
+      };
+      b.setAttribute("aria-pressed", String(!reporter && !repair)); controls.appendChild(b);
+    };
+    add("ทั้งหมด " + rows.length + " งาน", "", "");
+    for (const g of [...groups.values()].sort((a,b) => b.count-a.count)) add(g.name + " · " + g.count + " งาน", g.id, g.repair);
+    if (!dlg.open) dlg.showModal();
+    loadTable($("mbsReviewJobsTable"), params());
+  }
   function refreshReviews() {
     updateReviewHeader();
     const rows = reviewRows(),
@@ -828,15 +867,7 @@
         " คอมเมนต์";
     $("mbsReviewCount").textContent =
       display.length + (reviewState.noReview ? " รายการ" : " รีวิว");
-    const jobCandidates = new Set(reviewCandidates().map((t) => Number(t.id)));
-    const jobs = period(
-      reviewPeriodActive() ? data.repairs : overviewRows(),
-      "reviews",
-      "created_at",
-    ).filter((r) => reviewState.id
-      ? Number(r.technician_id) === Number(reviewState.id)
-      : jobCandidates.has(Number(r.technician_id)));
-    $("mbsReviewJobs").textContent = jobs.length + " งาน";
+    $("mbsReviewJobs").textContent = "จำนวนงาน " + reviewJobRows().length;
     $("mbsNoReview").textContent = "ยังไม่มีรีวิว (" + unreviewed + ")";
     $("mbsNoReview").classList.toggle(
       "is-selected",
@@ -932,10 +963,12 @@
     badge.className = "mbs-classic-count";
     const counts = document.createElement("div");
     counts.className = "mbs-classic-review-counts";
-    const jobsBadge = document.createElement("span");
+    const jobsBadge = document.createElement("button");
+    jobsBadge.type = "button";
     jobsBadge.id = "mbsReviewJobs";
     jobsBadge.className = "mbs-classic-count mbs-classic-job-count";
     jobsBadge.title = "จำนวนงานที่ได้รับมอบหมาย ตามวันที่แจ้งซ่อมในช่วงที่เลือก";
+    jobsBadge.onclick = openReviewJobs;
     counts.append(badge, jobsBadge);
     header.replaceChildren(lead, counts, close);
     const body = dlg.querySelector(".mbs-dialog-body");

@@ -538,3 +538,26 @@
     gap: 8px;
   }
 }
+#mbsReviews button.mbs-classic-job-count {
+  cursor: pointer;
+  font-family: inherit;
+  border-color: #cbd5e1;
+}
+#mbsReviews button.mbs-classic-job-count:hover {
+  background: #e2e8f0;
+}
+#mbsReviews button.mbs-classic-job-count:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+.mbs-review-job-reporters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.mbs-review-job-reporters button[aria-pressed="true"] {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}

@@ -16,7 +16,7 @@ function mbs_drill_dispatch($db) {
     header('Content-Type: text/html; charset=utf-8');header('Cache-Control: no-store');
     try{
         $data=mbs_feature_payload($db);$kind=$_GET['mbs_drill'];$value=$_GET['mbs_value']??'';
-        if(!is_string($kind)||!is_string($value)||!in_array($kind,['reporter','equipment','location','technician','reviews'],true))throw new RuntimeException('คำขอไม่ถูกต้อง');
+        if(!is_string($kind)||!is_string($value)||!in_array($kind,['reporter','equipment','location','technician','reviews','review_jobs'],true))throw new RuntimeException('คำขอไม่ถูกต้อง');
         $rows=mbs_period_rows($data['repairs'],'overview');
         if($kind==='reviews'){
             $reviewPeriod=mbs_range('reviews')!==null;foreach(['day','month','year'] as $part){$v=$_GET['mbs_reviews_'.$part]??'all';if(is_string($v)&&ctype_digit($v)&&(int)$v>0)$reviewPeriod=true;}if($reviewPeriod)$rows=$data['repairs'];
@@ -32,6 +32,20 @@ function mbs_drill_dispatch($db) {
             if(($_GET['mbs_comments']??'')==='1')$rows=array_values(array_filter($rows,static function($r){$c=trim((string)($r['review_comment']??''));return $c!==''&&$c!=='-';}));
             $star=filter_var($_GET['mbs_star']??null,FILTER_VALIDATE_INT);if($star>=1&&$star<=5)$rows=array_values(array_filter($rows,static function($r)use($star){return (int)$r['rating']===$star;}));
             usort($rows,static function($a,$b){return strcmp((string)($b['mbs_review_at']??''),(string)($a['mbs_review_at']??''))?:((int)$b['id']-(int)$a['id']);});
+        }elseif($kind==='review_jobs'){
+            if(!in_array($data['role'],['admin','executive'],true))throw new RuntimeException('ไม่อนุญาต');
+            $reviewPeriod=mbs_range('reviews')!==null;
+            foreach(['day','month','year'] as $part){$v=$_GET['mbs_reviews_'.$part]??'all';if(is_string($v)&&ctype_digit($v)&&(int)$v>0)$reviewPeriod=true;}
+            if($reviewPeriod)$rows=$data['repairs'];
+            $rows=mbs_period_rows($rows,'reviews','created_at');
+            $department=$_GET['mbs_jobs_department']??'';
+            if(!is_string($department))throw new RuntimeException('ข้อมูลฝ่ายงานไม่ถูกต้อง');
+            $ids=[];foreach($data['technicians'] as $t)if($department===''||(trim((string)($t['department']??''))?:'ฝ่ายงานทั่วไป')===$department)$ids[]=(int)$t['id'];
+            $rows=array_values(array_filter($rows,static function($r)use($ids,$value){$id=(int)($r['technician_id']??0);return in_array($id,$ids,true)&&($value===''||$id===(int)$value);}));
+            $reporter=$_GET['mbs_jobs_reporter']??'';$repair=$_GET['mbs_jobs_repair_id']??'';
+            if(!is_string($reporter)||!is_string($repair))throw new RuntimeException('ข้อมูลผู้แจ้งไม่ถูกต้อง');
+            if($reporter!=='')$rows=array_values(array_filter($rows,static function($r)use($reporter){return trim((string)($r['line_user_id']??''))===$reporter;}));
+            elseif($repair!=='')$rows=array_values(array_filter($rows,static function($r)use($repair){return (int)$r['id']===(int)$repair;}));
         }else{
             $column=['reporter'=>'line_user_id','equipment'=>'equipment_type','location'=>'location','technician'=>'technician_id'][$kind];
             $rows=array_values(array_filter($rows,static function($r)use($column,$value,$kind){return $kind==='technician'?(int)$r[$column]===(int)$value:trim((string)($r[$column]??''))===trim($value);}));
@@ -53,7 +67,7 @@ function mbs_drill_dispatch($db) {
             }
         }else{
             echo '<div class="mbs-table-scroll"><table class="mbs-table"><thead><tr><th>เลขที่งาน</th><th>อุปกรณ์ / ปัญหา</th><th>สถานที่</th><th>ผู้แจ้ง</th><th>เจ้าหน้าที่</th><th>สถานะ</th><th>รับงาน</th><th>ปิดงาน</th><th>ระยะเวลาทำงาน</th></tr></thead><tbody>';
-            foreach($slice as $r){echo '<tr><td>'.mbs_h($r['ticket_no']).'</td><td>'.mbs_h($r['equipment_type']).'<small>'.mbs_h($r['problem_desc']).'</small></td><td>'.mbs_h($r['location']).'</td><td>'.mbs_h($r['reporter_label']).(!empty($r['line_user_id'])?'<br><button type="button" class="mbs-history-link" data-mbs-reporter="'.mbs_h($r['line_user_id']).'">ดูประวัติผู้แจ้ง</button>':'').'</td><td>'.mbs_h($r['technician_name']).'</td><td>'.mbs_h($r['status']).'</td><td>'.mbs_h(mbs_date_display($r['received_at'])).'</td><td>'.mbs_h($r['completed_at']?mbs_date_display($r['completed_at']):'ยังไม่ปิดงาน').'</td><td>'.mbs_h(mbs_duration($r['received_at'],$r['completed_at'])).'</td></tr>';}
+            foreach($slice as $r){echo '<tr><td>'.($kind==='review_jobs'?'<a class="mbs-history-link" href="'.($data['role']==='executive'?'view_repair.php':'update_repair.php').'?id='.(int)$r['id'].'&amp;source=tech_reviews" target="_blank" rel="noopener">'.mbs_h($r['ticket_no']).'</a>':mbs_h($r['ticket_no'])).'</td><td>'.mbs_h($r['equipment_type']).'<small>'.mbs_h($r['problem_desc']).'</small></td><td>'.mbs_h($r['location']).'</td><td>'.mbs_h($r['reporter_label']).(!empty($r['line_user_id'])?'<br><button type="button" class="mbs-history-link" data-mbs-reporter="'.mbs_h($r['line_user_id']).'">ดูประวัติผู้แจ้ง</button>':'').'</td><td>'.mbs_h($r['technician_name']).'</td><td>'.mbs_h($r['status']).'</td><td>'.mbs_h(mbs_date_display($r['received_at'])).'</td><td>'.mbs_h($r['completed_at']?mbs_date_display($r['completed_at']):'ยังไม่ปิดงาน').'</td><td>'.mbs_h(mbs_duration($r['received_at'],$r['completed_at'])).'</td></tr>';}
             if(!$total)echo '<tr><td colspan="9">ไม่พบรายการในช่วงเวลานี้</td></tr>';
             echo '</tbody></table></div>';
         }
