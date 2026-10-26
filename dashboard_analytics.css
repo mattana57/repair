@@ -164,3 +164,32 @@
  #mbsAnalytics > header { padding:14px; }
  #mbsAnalytics .mbs-analytics-window-actions button { width:36px; height:36px; border-radius:11px; }
 }
+
+/* Expanded analytics: two readable work cards per row when space allows. */
+@media(min-width:768px) {
+ #mbsAnalytics.mbs-analytics-expanded .mbs-analytics-work-list { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch; }
+ #mbsAnalytics.mbs-analytics-expanded .mbs-analytics-work { display:flex; flex-direction:column; }
+ #mbsAnalytics.mbs-analytics-expanded .mbs-analytics-work > footer { margin-top:auto; padding-top:14px; }
+}
+@media(min-width:768px) and (max-width:1100px) {
+ #mbsAnalytics.mbs-analytics-expanded .mbs-analytics-work-people { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ #mbsAnalytics.mbs-analytics-expanded .mbs-analytics-work-times { grid-template-columns:1fr; }
+ #mbsAnalytics.mbs-analytics-expanded .mbs-analytics-work-times > div { display:grid; grid-template-columns:90px minmax(0,1fr); gap:8px; }
+}
+/* Match Transactions' footer without changing pagination/filter logic. */
+#mbsAnalytics .mbs-analytics-pagination { display:block; margin:22px -18px -18px; }
+#mbsAnalytics .mbs-analytics-pagination .tp-footer { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:18px 24px; border-top:1px solid #e2e8f0; border-radius:0 0 16px 16px; background:linear-gradient(110deg,#f8fafc,#eef2ff); font-family:'Sarabun',sans-serif; }
+#mbsAnalytics .mbs-analytics-pagination .tp-summary { font-size:13px; color:#64748b; margin:0; }
+#mbsAnalytics .mbs-analytics-pagination .tp-summary strong { color:#4338ca; }
+#mbsAnalytics .mbs-analytics-pagination .tp-nav { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+#mbsAnalytics .mbs-analytics-pagination :is(.tp-link,.tp-disabled) { box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; min-width:38px; height:38px; padding:0 12px; border:1px solid #e2e8f0; border-radius:11px; background:white; color:#475569; font-size:13px; font-weight:700; text-decoration:none; }
+#mbsAnalytics .mbs-analytics-pagination .tp-link:hover { border-color:#a5b4fc; background:#eef2ff; color:#4338ca; }
+#mbsAnalytics .mbs-analytics-pagination .tp-current { background:#2563eb; color:white; border-color:#2563eb; box-shadow:0 3px 8px #2563eb2e; }
+#mbsAnalytics .mbs-analytics-pagination .tp-disabled { color:#94a3b8; background:#f1f5f9; }
+#mbsAnalytics .mbs-analytics-pagination .tp-dots { color:#94a3b8; padding:0 3px; }
+@media(max-width:640px) {
+ #mbsAnalytics .mbs-analytics-pagination { margin-left:-12px; margin-right:-12px; margin-bottom:-12px; }
+ #mbsAnalytics .mbs-analytics-pagination .tp-footer { padding:14px; justify-content:center; gap:10px; }
+ #mbsAnalytics .mbs-analytics-pagination .tp-summary { text-align:center; width:100%; }
+ #mbsAnalytics .mbs-analytics-pagination .tp-nav { justify-content:center; }
+}

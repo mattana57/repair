@@ -91,8 +91,13 @@ function mbs_drill_dispatch($db) {
             if(!$total)echo '<tr><td colspan="9">ไม่พบรายการในช่วงเวลานี้</td></tr>';
             echo '</tbody></table></div>';
         }
+        if(in_array($kind,['reporter','equipment','location','technician'],true)){
+            require_once __DIR__.'/dashboard_analytics_pagination.php';
+            mbs_render_analytics_pagination($total,$page,$pages);
+        }else{
         echo '<nav class="mbs-pages" aria-label="แบ่งหน้ารายการ">';
         foreach(array_unique([1,max(1,$page-1),$page,min($pages,$page+1),$pages]) as $p){$q=$_GET;$q['mbs_page']=$p;echo '<a '.($p===$page?'aria-current="page" ':'').'href="?'.mbs_h(http_build_query($q)).'">'.$p.'</a>';}
         echo '<span>หน้า '.$page.' / '.$pages.' · หน้าละ 50 รายการ</span></nav>';
+        }
     }catch(Throwable $e){http_response_code(400);echo '<p role="alert">โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่</p>';error_log('Dashboard drill: '.$e->getMessage());}exit;
 }

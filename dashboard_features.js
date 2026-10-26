@@ -766,11 +766,28 @@
       expand = document.createElement("button"); expand.type="button"; expand.className="mbs-analytics-expand";
       header.appendChild(controls); controls.append(expand,close);
       close.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>';
+      let resizeAnimation;
       expand.onclick=()=>{
+        resizeAnimation?.cancel();
+        const before=dlg.getBoundingClientRect();
+        const headerBottom=dlg.querySelector(":scope > header").getBoundingClientRect().bottom;
+        const anchor=[...dlg.querySelectorAll('.mbs-analytics-work')].find(card=>{const rect=card.getBoundingClientRect();return rect.bottom>headerBottom&&rect.top<before.bottom;});
+        const anchorOffset=anchor?anchor.getBoundingClientRect().top-headerBottom:0;
         const active=dlg.classList.toggle("mbs-analytics-expanded");
         expand.setAttribute("aria-pressed",String(active));
         expand.setAttribute("aria-label",active?"ย่อหน้าต่าง":"ขยายหน้าต่าง");expand.title=active?"ย่อหน้าต่าง":"ขยายหน้าต่าง";
         expand.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+(active?'M9 3v6H3m12-6v6h6M9 21v-6H3m12 6v-6h6':'M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6')+'"/></svg>';
+        if(anchor){
+          const nextHeader=dlg.querySelector(":scope > header").getBoundingClientRect().bottom;
+          dlg.scrollTop+=anchor.getBoundingClientRect().top-nextHeader-anchorOffset;
+        }
+        const after=dlg.getBoundingClientRect();
+        if(typeof dlg.animate==='function'&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+          resizeAnimation=dlg.animate([
+            {transformOrigin:'0 0',transform:'translate('+(before.left-after.left)+'px,'+(before.top-after.top)+'px) scale('+(before.width/after.width)+','+(before.height/after.height)+')'},
+            {transformOrigin:'0 0',transform:'translate(0,0) scale(1,1)'}
+          ],{duration:280,easing:'cubic-bezier(.22,1,.36,1)'});
+        }
       };
     }
     expand.setAttribute("aria-pressed","false");expand.setAttribute("aria-label","ขยายหน้าต่าง");expand.title="ขยายหน้าต่าง";
