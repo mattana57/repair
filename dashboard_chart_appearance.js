@@ -1998,6 +1998,11 @@
         factories[role + "-" + kind] || factories["admin-" + kind];
       if (!factory) return null;
       const config = factory(canvas, pairs, meta);
+      // Keep the five-point track and gold stars; soften only the score bars.
+      if (kind === "rating" && config.data.datasets[0].data.some((value) => value > 0)) {
+        config.data.datasets[0].backgroundColor = "#6585b8";
+        config.data.datasets[0].hoverBackgroundColor = "#4f6fa2";
+      }
       // One restrained hue per Overview metric; preserve chart geometry and data.
       const overviewColors = {
         equipment: { base: "#6585b8", hover: "#4f6fa2" },
