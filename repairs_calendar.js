@@ -23,7 +23,7 @@
         const today = {year:Number(todayParts.year), month:Number(todayParts.month), day:Number(todayParts.day)};
         const availableYears = new Set(Array.from(controls.flatMap(node => Array.from(node.querySelectorAll('[data-value]'))), node => Number(node.dataset.value)).filter(n => Number.isInteger(n) && n >= 1000 && n <= 9999));
         for (let year = Math.max(1000, today.year - 100); year <= Math.min(9999, today.year + 20); year++) availableYears.add(year);
-        let mode = 'date', viewYear = today.year, viewMonth = today.month, selectedDate = null, period = {month:'all', year:'all'};
+        let mode = 'range', viewYear = today.year, viewMonth = today.month, selectedDate = null, period = {month:'all', year:'all'};
         const read = () => Object.fromEntries(Object.entries(fields).map(([key,node]) => [key,(node.value === '0' || node.value === 'all' ? 'all' : key === 'month' ? String(Number(node.value)).padStart(2,'0') : node.value)]));
         const monthValue = month => String(month).padStart(2,'0');
         const validDate = value => /^\d{4}$/.test(value.year) && /^\d{1,2}$/.test(value.month) && /^\d{1,2}$/.test(value.day) && Number(value.day)>=1 && Number(value.month)>=1 && Number(value.month)<=12 && Number(value.day)<=new Date(Number(value.year),Number(value.month),0).getDate();
@@ -42,7 +42,6 @@
         dialog.innerHTML = `
             <header class="rc-header"><div><p>ตัวกรองวันที่แจ้งซ่อม</p><h3 id="rc-title">เลือกช่วงเวลาที่ต้องการดู</h3></div><button type="button" data-rc="close" class="rc-close" aria-label="ปิดปฏิทิน">×</button></header>
             <div class="rc-tabs" role="tablist" aria-label="รูปแบบการเลือกช่วงเวลา">
-                <button type="button" id="rc-tab-date" role="tab" aria-controls="rc-date" data-rc-mode="date">เลือกวันที่</button>
                 <button type="button" id="rc-tab-range" role="tab" aria-controls="rc-range" data-rc-mode="range">เริ่ม–สิ้นสุด</button>
                 <button type="button" id="rc-tab-period" role="tab" aria-controls="rc-period" data-rc-mode="period">เลือกเดือน/ปี</button>
             </div>
@@ -154,7 +153,8 @@
             rangeTarget=null;
             const value=read();selectedDate=validDate(value)?{...value}:null;period={month:value.month,year:value.year};
             get('[data-rc-start]').value=rangeFields.start.value;get('[data-rc-end]').value=rangeFields.end.value;
-            mode=rangeText()?'range':value.day==='all'?'period':'date';viewYear=value.year==='all'?today.year:Number(value.year);viewMonth=value.month==='all'?today.month:Number(value.month);
+            if(!rangeText()&&selectedDate){const day=String(value.day).padStart(2,'0'),iso=value.year+'-'+monthValue(Number(value.month))+'-'+day;get('[data-rc-start]').value=iso;get('[data-rc-end]').value=iso;}
+            mode=rangeText()||selectedDate?'range':'period';viewYear=value.year==='all'?today.year:Number(value.year);viewMonth=value.month==='all'?today.month:Number(value.month);
             render();dialog.showModal();trigger.setAttribute('aria-expanded','true');position();
         }
         function moveMonth(delta) {const date=new Date(viewYear,viewMonth-1+delta,1);if(date.getFullYear()<1000||date.getFullYear()>9999)return;viewYear=date.getFullYear();viewMonth=date.getMonth()+1;render();position();}
@@ -192,7 +192,7 @@
         });
         dialog.addEventListener('keydown',event=>{
             const tab=event.target.closest('[data-rc-mode]');
-            if(tab&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();mode=['date','range','period'][(['date','range','period'].indexOf(mode)+(event.key==='ArrowRight'?1:2))%3];render();position();get('#rc-tab-'+mode).focus();return;}
+            if(tab&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();mode=mode==='range'?'period':'range';render();position();get('#rc-tab-'+mode).focus();return;}
             const button=event.target.closest('[data-rc-day]');if(!button)return;
             const day=Number(button.dataset.rcDay),date=new Date(viewYear,viewMonth-1,day),offset={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7,Home:-date.getDay(),End:6-date.getDay()}[event.key];
             if(offset===undefined)return;event.preventDefault();date.setDate(day+offset);viewYear=date.getFullYear();viewMonth=date.getMonth()+1;render();get('[data-rc-day="'+date.getDate()+'"]').focus();
