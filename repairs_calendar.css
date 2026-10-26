@@ -66,3 +66,14 @@
 .rc-range-picker .rc-days button.rc-range-adjacent{color:#888}.rc-range-picker .rc-days button:hover{background:#eee}.rc-range-picker .rc-days button[aria-current=date]{border-color:#0783ff;color:#000}.rc-range-picker .rc-days button[aria-pressed=true]{background:#0783ff;border-color:#0783ff;color:#fff}
 .rc-range-picker .rc-range-popup-footer{display:flex;justify-content:space-between;margin-top:12px}.rc-range-picker .rc-range-popup-footer button{padding:4px 12px;border:0;background:#fff;color:#0783ff;font:13px Tahoma,Arial,sans-serif;cursor:pointer}
 .rc-range-picker button:focus-visible,.rc-range-picker select:focus-visible{outline:2px solid #0783ff;outline-offset:-2px}
+
+/* Give both native month/year dropdowns their own visible arrow and hit area. */
+.rc-range-picker .rc-range-popup-heading { flex:1; gap:4px; }
+.rc-range-picker .rc-range-popup-heading select {
+  appearance:auto; -webkit-appearance:auto; height:32px; padding:3px 2px;
+  border:1px solid #e2e8f0; border-radius:5px; background-color:#fff;
+  color:#111; box-sizing:border-box; flex-shrink:1; cursor:pointer;
+}
+.rc-range-picker select[data-rc-range-month] { width:100px; }
+.rc-range-picker select[data-rc-range-year] { width:74px; }
+.rc-range-picker .rc-range-popup-arrows { flex-shrink:0; }
