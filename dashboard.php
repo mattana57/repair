@@ -4235,9 +4235,10 @@ if (isset($_GET['api_check_hash'])) {
                         <i class="fas fa-user-lock text-3xl text-indigo-300"></i>
                     </div>
                     <h3 class="font-extrabold text-xl mb-2"><span class="text-rose-500">ไม่พบรายชื่อเจ้าหน้าที่</span> <span class="text-emerald-500">(ที่ผูกบัญชีแล้ว)</span></h3>
-                    <p class="text-slate-500 text-sm font-medium max-w-md mx-auto leading-relaxed">
-                        ไม่มีเจ้าหน้าที่ชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">เจ้าหน้าที่ท่านนี้ยังไม่ได้ทำการ <span class="text-emerald-500">"ผูกบัญชี LINE"</span></strong><br>
-                        ลองตรวจสอบตัวสะกด<br>ทั้งภาษาไทยและภาษาอังกฤษดูอีกครั้งนะครับ<br>
+                    <p class="text-slate-500 text-sm font-medium max-w-3xl mx-auto leading-relaxed">
+                        ไม่มีเจ้าหน้าที่ชื่อนี้อยู่ในระบบ หรือ <strong class="text-indigo-600">เจ้าหน้าที่ท่านนี้ยังไม่ได้ทำการ <span class="text-emerald-500 whitespace-nowrap">"ผูกบัญชี LINE"</span></strong><br>
+                        ลองตรวจสอบตัวสะกด ทั้งภาษาไทยและภาษาอังกฤษ<br>
+                        ดูอีกครั้งนะครับ
                     </p>
                 </div>
             </div>
