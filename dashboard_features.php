@@ -105,6 +105,18 @@ function mbs_feature_payload($db) {
 }
 require_once __DIR__.'/dashboard_drill.php';
 function mbs_feature_dispatch($db) {
+    if(isset($_GET['mbs_line_link_data'])) {
+        header('Content-Type: application/json; charset=utf-8');header('Cache-Control: no-store');
+        if(strtolower((string)($_SESSION['role']??''))!=='admin'){http_response_code(403);echo '{"error":"ไม่อนุญาต"}';exit;}
+        $id=filter_var($_GET['mbs_technician_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+        if(!$id){http_response_code(400);echo '{"error":"ข้อมูลเจ้าหน้าที่ไม่ถูกต้อง"}';exit;}
+        try {
+            $rows=mbs_feature_rows($db,"SELECT t.id,t.line_linked_at FROM technicians t WHERE t.id=? AND t.deleted_at IS NULL LIMIT 1",'i',[$id]);
+            if(!$rows){http_response_code(404);echo '{"error":"ไม่พบเจ้าหน้าที่"}';exit;}
+            echo json_encode(['technician'=>$rows[0]],JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE);
+        }catch(Throwable $e){http_response_code(503);echo '{"error":"โหลดข้อมูลไม่สำเร็จ"}';error_log('LINE link time read failed: '.get_class($e));}
+        exit;
+    }
     mbs_drill_dispatch($db);
     if(isset($_GET['mbs_features_data'])){
         header('Content-Type: application/json; charset=utf-8');header('Cache-Control: no-store');
@@ -138,5 +150,5 @@ function mbs_feature_assets($db) {
     echo '<link rel="stylesheet" href="profile_menu_actions.css?v=20261025-1">';
     echo '<script type="application/json" id="mbsFeaturesData">'.json_encode($data,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE).'</script>';
     echo '<script src="dashboard_chart_appearance.js?v=20261025-4"></script>';
-    echo '<script src="dashboard_features.js?v=20261025-10"></script>';
+    echo '<script src="dashboard_features.js?v=20261026-1"></script>';
 }

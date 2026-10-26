@@ -1113,6 +1113,8 @@
       const [role, id] = args,
         form = $("techAdminForm");
       if (!form) return result;
+      form.dataset.mbsManagedRole = strRole(role);
+      form.dataset.mbsManagedId = String(id || "");
       const own =
         strRole(role) === "admin" &&
         String(id) ===
@@ -1163,6 +1165,7 @@
         if (label && locked) {
           const note = document.createElement("p");
           note.className = "mbs-account-time";
+          note.dataset.mbsAccountTime = field;
           note.textContent = caption + ": " + dateText(value);
           label.after(note);
         }
@@ -1174,8 +1177,62 @@
       for (const el of form.querySelectorAll("[onclick]"))
         if (/avatar|upload|delete/i.test(el.getAttribute("onclick") || ""))
           el.hidden = locked;
+      refreshManagedLineTime();
       return result;
     };
+  }
+  let lineTimeRefreshing = false;
+  async function refreshManagedLineTime() {
+    const form = $("techAdminForm"),
+      modal = $("techAdminModal");
+    if (
+      data.role !== "admin" ||
+      document.hidden ||
+      lineTimeRefreshing ||
+      !form ||
+      !modal ||
+      modal.classList.contains("opacity-0") ||
+      modal.classList.contains("hidden") ||
+      modal.hidden ||
+      form.dataset.mbsManagedRole !== "technician"
+    )
+      return;
+    const id = form.dataset.mbsManagedId;
+    if (!/^[1-9][0-9]*$/.test(id || "")) return;
+    lineTimeRefreshing = true;
+    try {
+      const u = new URL(location.href);
+      u.search = "";
+      u.searchParams.set("mbs_line_link_data", "1");
+      u.searchParams.set("mbs_technician_id", id);
+      const response = await nativeFetch(u, {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      if (!response.ok || response.redirected) return;
+      const next = await response.json(),
+        tech = next.technician;
+      if (
+        !tech ||
+        String(tech.id) !== id ||
+        form.dataset.mbsManagedId !== id ||
+        form.dataset.mbsManagedRole !== "technician" ||
+        modal.classList.contains("opacity-0") ||
+        modal.hidden
+      )
+        return;
+      const note = form.querySelector(
+        '[data-mbs-account-time="techAdmin_line_name"]',
+      );
+      const text = "ผูกบัญชี LINE: " + dateText(tech.line_linked_at);
+      if (note && note.textContent !== text) note.textContent = text;
+      const cached = data.technicians.find((t) => String(t.id) === id);
+      if (cached) cached.line_linked_at = tech.line_linked_at;
+    } catch {
+      // Keep the last confirmed timestamp while the network is unavailable.
+    } finally {
+      lineTimeRefreshing = false;
+    }
   }
   function strRole(v) {
     return String(v || "").toLowerCase();
@@ -1337,6 +1394,11 @@
     );
     moveEmail();
     wrapAdminModal();
+    if (data.role === "admin") {
+      setInterval(refreshManagedLineTime, 3000);
+      document.addEventListener("visibilitychange", refreshManagedLineTime);
+      window.addEventListener("focus", refreshManagedLineTime);
+    }
     enhanceTechnicians();
     decorateDuration();
     let pending = false;
