@@ -671,10 +671,27 @@
         ["กำลังดำเนินการ", rows.filter(r => String(r.status).trim() === "กำลังดำเนินการ").length, "progress"],
         ["ซ่อมเสร็จแล้ว", rows.filter(r => String(r.status).trim() === "ซ่อมเสร็จแล้ว").length, "complete"],
       ]) {
-        const item = document.createElement("div"); item.className = "mbs-analytics-stat mbs-analytics-" + tone;
-        item.innerHTML = '<span>' + label + '</span><strong>' + count + '<small>งาน</small></strong>';
+        const item = document.createElement("button"); item.type = "button"; item.className = "mbs-analytics-stat mbs-analytics-" + tone;
+        const status = tone === "total" ? "" : label;
+        item.dataset.mbsSummaryStatus = status;
+        item.setAttribute("aria-pressed", String(tone === "total"));
+        item.title = "ดูรายการ" + label;
+        item.innerHTML = '<span>' + label + '</span><strong>' + count + '<small>งาน</small></strong><small class="mbs-summary-open">ดูรายการ ↓</small>';
+        item.onclick = async () => {
+          const clear = !status || selected.match.status === status;
+          selected.match = clear ? {} : {status};
+          for (const bar of body.querySelectorAll('.mbs-analytics-bar')) bar.setAttribute('aria-pressed', 'false');
+          syncSummaryCards();
+          $("mbsMatchLabel").textContent = clear ? "แสดงงานทั้งหมดในช่วงที่เลือก" : "สถานะ: " + status;
+          await loadTable($("mbsDrillTable"), serverParams(kind,value,selected.match));
+          if (dlg.open) body.querySelector('.mbs-analytics-results')?.scrollIntoView({behavior:'smooth',block:'start'});
+        };
         body.querySelector(".mbs-analytics-summary").appendChild(item);
       }
+    }
+    function syncSummaryCards() {
+      for (const card of body.querySelectorAll('[data-mbs-summary-status]'))
+        card.setAttribute('aria-pressed', String(card.dataset.mbsSummaryStatus === (selected.match.status || '')));
     }
     const fields =
       kind === "reporter"
@@ -714,6 +731,7 @@
           b.onclick=()=>{
             const clear = selected.match[f] === key;
             selected.match=clear ? {} : { [f]:key };
+            syncSummaryCards();
             for(const other of body.querySelectorAll(".mbs-analytics-bar"))other.setAttribute("aria-pressed",String(!clear && other===b));
             $("mbsMatchLabel").textContent=clear ? "แสดงงานทั้งหมดในช่วงที่เลือก" : "กรองตาม " + card.querySelector("h3").textContent + ": " + ((f === "technician_id" ? technicianName(key) : key) || "ไม่ระบุ");
             loadTable($("mbsDrillTable"),serverParams(kind,value,selected.match));
@@ -748,6 +766,7 @@
     }
     $("mbsAllHistory").onclick = () => {
       selected.match = {};
+      syncSummaryCards();
       $("mbsMatchLabel").textContent = detailed ? "แสดงงานทั้งหมดในช่วงที่เลือก" : "";
       if(detailed)for(const b of body.querySelectorAll(".mbs-analytics-bar"))b.setAttribute("aria-pressed","false");
       loadTable($("mbsDrillTable"), serverParams(kind, value));

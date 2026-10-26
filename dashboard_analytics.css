@@ -8,10 +8,10 @@
 .mbs-analytics-detail .mbs-analytics-stat > span { font-size: 13px; color: #475569; }
 .mbs-analytics-detail .mbs-analytics-stat strong { display: flex; align-items: baseline; gap: 8px; font-size: 28px; line-height: 1.5; }
 .mbs-analytics-detail .mbs-analytics-stat small { font-size: 12px; color: #64748b; font-weight: 500; }
-.mbs-analytics-detail .mbs-analytics-total { border-top: 3px solid #2563eb; color: #1e40af; }
-.mbs-analytics-detail .mbs-analytics-pending { border-top: 3px solid #f59e0b; color: #9a3412; }
-.mbs-analytics-detail .mbs-analytics-progress { border-top: 3px solid #38bdf8; color: #0369a1; }
-.mbs-analytics-detail .mbs-analytics-complete { border-top: 3px solid #10b981; color: #047857; }
+.mbs-analytics-detail .mbs-analytics-total { border-top: 7px solid #2563eb; color: #1e40af; }
+.mbs-analytics-detail .mbs-analytics-pending { border-top: 7px solid #f59e0b; color: #9a3412; }
+.mbs-analytics-detail .mbs-analytics-progress { border-top: 7px solid #38bdf8; color: #0369a1; }
+.mbs-analytics-detail .mbs-analytics-complete { border-top: 7px solid #10b981; color: #047857; }
 .mbs-analytics-detail .mbs-analytics-guide { margin: 20px 0 12px; font-size: 13px; color: #64748b; }
 .mbs-analytics-detail .mbs-drill-charts { grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 16px; }
 .mbs-analytics-detail .mbs-drill-charts section { display: flex; flex-direction: column; padding: 18px; box-shadow: 0 2px 5px #0f172a04; }
@@ -101,6 +101,19 @@
 }
 
 /* Match the top edge of each work card to its actual work status. */
-.mbs-analytics-detail .mbs-analytics-work[data-status-tone="pending"] { border-top: 3px solid #f59e0b; }
-.mbs-analytics-detail .mbs-analytics-work[data-status-tone="progress"] { border-top: 3px solid #38bdf8; }
-.mbs-analytics-detail .mbs-analytics-work[data-status-tone="complete"] { border-top: 3px solid #10b981; }
+.mbs-analytics-detail .mbs-analytics-work[data-status-tone="pending"] { border-top: 7px solid #f59e0b; }
+.mbs-analytics-detail .mbs-analytics-work[data-status-tone="progress"] { border-top: 7px solid #38bdf8; }
+.mbs-analytics-detail .mbs-analytics-work[data-status-tone="complete"] { border-top: 7px solid #10b981; }
+
+/* Clickable summary cards, scoped to analytics detail dialogs. */
+.mbs-analytics-detail button.mbs-analytics-stat { font:inherit; text-align:left; cursor:pointer; box-shadow:0 3px 10px #0f172a0a; transition:transform .15s,box-shadow .15s,background .15s; }
+.mbs-analytics-detail button.mbs-analytics-stat:hover { transform:translateY(-3px); box-shadow:0 9px 20px #0f172a18; }
+.mbs-analytics-detail button.mbs-analytics-stat:focus-visible { outline:3px solid currentColor; outline-offset:3px; }
+.mbs-analytics-detail .mbs-analytics-stat[aria-pressed=true] { box-shadow:0 0 0 2px currentColor; }
+.mbs-analytics-detail button.mbs-analytics-total { background:#eff6ff; }
+.mbs-analytics-detail button.mbs-analytics-pending { background:#fffbeb; }
+.mbs-analytics-detail button.mbs-analytics-progress { background:#f0f9ff; }
+.mbs-analytics-detail button.mbs-analytics-complete { background:#ecfdf5; }
+.mbs-analytics-detail .mbs-summary-open { display:block; margin-top:6px; color:inherit; font-weight:600; }
+.mbs-analytics-detail .mbs-analytics-results { scroll-margin-top:20px; }
+@media(prefers-reduced-motion:reduce) { .mbs-analytics-detail button.mbs-analytics-stat { transition:none; } }
