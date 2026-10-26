@@ -1076,7 +1076,7 @@ if (isset($_GET['api_check_hash'])) {
     </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 
-<link rel="stylesheet" href="repairs_calendar.css?v=20261025-1">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261026-1">
     <link rel="stylesheet" href="project_footer.css?v=20261019-2">
     <style id="calendar-first-paint">
         /* ปฏิทินใช้ค่าฟิลด์เดิม แต่ไม่แสดงดรอปดาวน์เก่าระหว่างโหลด */
@@ -4435,7 +4435,7 @@ if (isset($_GET['api_check_hash'])) {
         window.addEventListener('focus', autoRefreshAllData);
     </script>
 <?php mbsDashboardActivityScript(); ?>
-<script src="repairs_calendar.js?v=20261025-1"></script>
+<script src="repairs_calendar.js?v=20261026-1"></script>
 <script src="dashboard_calendars.js?v=20261025-1"></script>
 <?php require __DIR__ . '/self_profile_panel.php'; ?>
 <?php mbs_feature_assets($conn); ?>

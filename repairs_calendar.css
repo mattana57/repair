@@ -77,3 +77,7 @@
 .rc-range-picker select[data-rc-range-month] { width:100px; }
 .rc-range-picker select[data-rc-range-year] { width:74px; }
 .rc-range-picker .rc-range-popup-arrows { flex-shrink:0; }
+
+.rc-footer button.rc-range-reset { margin-right:auto; padding-left:0; padding-right:8px; border:0; background:transparent; color:#2563eb; }
+.rc-footer button.rc-range-reset:hover { color:#1d4ed8; text-decoration:underline; }
+.rc-footer button.rc-range-reset[hidden] { display:none; }

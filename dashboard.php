@@ -2705,7 +2705,7 @@ if (isset($_GET['api_check_hash'])) {
 .ab-check{width:16px;height:16px;accent-color:#2563eb;cursor:pointer;}
 .ab-check:disabled{cursor:not-allowed;opacity:.4;}
 </style>
-<link rel="stylesheet" href="repairs_calendar.css?v=20261025-1">
+<link rel="stylesheet" href="repairs_calendar.css?v=20261026-1">
     <link rel="stylesheet" href="project_footer.css?v=20261019-2">
     <link rel="stylesheet" href="admin_team_bulk.css?v=20261019-1">
     <style id="calendar-first-paint">
@@ -9354,7 +9354,7 @@ if (isset($_GET['api_check_hash'])) {
 <div id="ab-settings" hidden data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></div>
 <script src="admin_table_bulk.js?v=20261019-3"></script>
 <script src="admin_log_bulk.js?v=20261019-2"></script>
-<script src="repairs_calendar.js?v=20261025-1"></script>
+<script src="repairs_calendar.js?v=20261026-1"></script>
 <script src="dashboard_calendars.js?v=20261025-1"></script>
 <span id="tb-settings" hidden data-user="<?= (int)$_SESSION['user_id'] ?>" data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></span>
 <script src="admin_team_bulk.js?v=20261019-1"></script>
