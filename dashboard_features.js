@@ -828,6 +828,15 @@
         " คอมเมนต์";
     $("mbsReviewCount").textContent =
       display.length + (reviewState.noReview ? " รายการ" : " รีวิว");
+    const jobCandidates = new Set(reviewCandidates().map((t) => Number(t.id)));
+    const jobs = period(
+      reviewPeriodActive() ? data.repairs : overviewRows(),
+      "reviews",
+      "created_at",
+    ).filter((r) => reviewState.id
+      ? Number(r.technician_id) === Number(reviewState.id)
+      : jobCandidates.has(Number(r.technician_id)));
+    $("mbsReviewJobs").textContent = jobs.length + " งาน";
     $("mbsNoReview").textContent = "ยังไม่มีรีวิว (" + unreviewed + ")";
     $("mbsNoReview").classList.toggle(
       "is-selected",
@@ -921,7 +930,14 @@
     const badge = document.createElement("span");
     badge.id = "mbsReviewCount";
     badge.className = "mbs-classic-count";
-    header.replaceChildren(lead, badge, close);
+    const counts = document.createElement("div");
+    counts.className = "mbs-classic-review-counts";
+    const jobsBadge = document.createElement("span");
+    jobsBadge.id = "mbsReviewJobs";
+    jobsBadge.className = "mbs-classic-count mbs-classic-job-count";
+    jobsBadge.title = "จำนวนงานที่ได้รับมอบหมาย ตามวันที่แจ้งซ่อมในช่วงที่เลือก";
+    counts.append(badge, jobsBadge);
+    header.replaceChildren(lead, counts, close);
     const body = dlg.querySelector(".mbs-dialog-body");
     body.innerHTML =
       '<div class="mbs-classic-review-toolbar"><div class="mbs-classic-filter-row"><span class="mbs-classic-filter-label">ระดับคะแนน:</span><div id="mbsStarChips"></div><div class="mbs-classic-review-actions"><button type="button" id="mbsNoReview">ยังไม่มีรีวิว (0)</button><button type="button" id="mbsCommentsOnly">เฉพาะคอมเมนต์</button><button type="button" id="mbsReviewAll">ทั้งหมด</button></div></div><div class="mbs-classic-date-row"><div id="mbsReviewDate"></div><p id="mbsReviewSummary" aria-live="polite"></p></div></div><div id="mbsReviewList"></div>';
