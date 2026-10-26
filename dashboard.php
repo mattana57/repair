@@ -3826,7 +3826,7 @@ if (isset($_GET['api_check_hash'])) {
                             // โหลดบัญชีด้วย users.technician_id
                             $tech_res = $conn->query("
                                 SELECT t.*, u.username AS web_username, u.is_active AS web_is_active, u.registration_pending AS web_registration_pending,
-                                       (SELECT lp.line_display_name FROM technician_line_profiles lp
+                                       (SELECT lp.line_display_name FROM line_technician lp
                                         WHERE lp.technician_id = t.id AND BINARY lp.line_user_id = BINARY t.line_user_id LIMIT 1) AS linked_line_display_name 
                                 FROM technicians t 
                                 LEFT JOIN users u ON t.id = u.technician_id 

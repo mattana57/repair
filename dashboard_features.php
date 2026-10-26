@@ -85,7 +85,7 @@ function mbs_feature_payload($db) {
     }
     $rows=mbs_feature_rows($db,"SELECT r.* FROM repairs r WHERE $where ORDER BY r.created_at DESC,r.id DESC",$types,$args);
     $techSql="SELECT t.*,u.id AS web_user_id,u.username AS web_username,u.created_at AS registered_at,u.is_active AS web_active,
-        (SELECT lp.line_display_name FROM technician_line_profiles lp WHERE lp.technician_id=t.id AND BINARY lp.line_user_id=BINARY t.line_user_id LIMIT 1) AS linked_line_name
+        (SELECT lp.line_display_name FROM line_technician lp WHERE lp.technician_id=t.id AND BINARY lp.line_user_id=BINARY t.line_user_id LIMIT 1) AS linked_line_name
         FROM technicians t LEFT JOIN users u ON u.technician_id=t.id AND LOWER(u.role)='technician' AND u.deleted_at IS NULL
         WHERE t.deleted_at IS NULL";
     $techs=mbs_feature_rows($db,$techSql.($role==='technician'?' AND t.id=?':''),$role==='technician'?'i':'',$role==='technician'?[(int)$_SESSION['technician_id']]:[]);
