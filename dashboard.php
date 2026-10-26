@@ -4061,7 +4061,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 <?php 
                 $departments_data = [];
-                $res_techs = $conn->query("SELECT t.*, (SELECT COUNT(*) FROM repairs r WHERE r.technician_id=t.id AND r.deleted_at IS NULL) AS assigned_job_count FROM technicians t WHERE t.approval_status = 'อนุมัติแล้ว' AND t.deleted_at IS NULL");
+                $res_techs = $conn->query("SELECT t.*, (SELECT lp.line_display_name FROM line_technician lp WHERE lp.technician_id=t.id AND BINARY lp.line_user_id=BINARY t.line_user_id LIMIT 1) AS card_line_name, (SELECT COUNT(*) FROM repairs r WHERE r.technician_id=t.id AND r.deleted_at IS NULL) AS assigned_job_count FROM technicians t WHERE t.approval_status = 'อนุมัติแล้ว' AND t.deleted_at IS NULL");
                 if($res_techs && $res_techs->num_rows > 0) {
                     while($row = $res_techs->fetch_assoc()) {
                         $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป';
@@ -4077,6 +4077,8 @@ if (isset($_GET['api_check_hash'])) {
                             'pos' => !empty($row['position']) ? $row['position'] : getAutoPosition($th_name),
                             'phone' => $row['phone'],
                             'email' => $row['email'] ?? '',
+                            'line_user_id' => trim((string)($row['line_user_id'] ?? '')),
+                            'line_name' => trim((string)($row['card_line_name'] ?? '')),
                             'img' => $img,
                             'raw_name' => $row['full_name'],
                             'technician_id' => (int)$row['id'],
@@ -4217,10 +4219,18 @@ if (isset($_GET['api_check_hash'])) {
                                         <span class="text-[12px] font-bold text-rose-500 truncate">ไม่ระบุอีเมล</span>
                                     </div>
                                 <?php endif; ?>
+                                <?php if ($tech['line_user_id'] !== ''): ?>
+                                    <div class="flex items-center text-slate-600 min-w-0" data-tech-card-line>
+                                        <div class="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center mr-3 shrink-0">
+                                            <i class="fab fa-line text-[14px] text-emerald-500" aria-hidden="true"></i>
+                                        </div>
+                                        <span class="text-[12px] font-bold text-slate-600 break-words min-w-0" data-tech-card-line-name><?php echo htmlspecialchars($tech['line_name'] !== '' ? $tech['line_name'] : 'ยังไม่มีชื่อ LINE ในระบบ', ENT_QUOTES, 'UTF-8'); ?></span>
+                                    </div>
+                                <?php endif; ?>
                                 </div>
 
                                 <div class="mt-auto pt-4">
-                                    <button onclick="viewHistory('<?php echo htmlspecialchars($tech['raw_name'], ENT_QUOTES); ?>', 'technician', false, false, <?php echo (int)$tech['technician_id']; ?>)" 
+                                    <button type="button" data-tech-card-history="<?php echo (int)$tech['technician_id']; ?>" 
                                             class="w-full text-[11px] font-bold text-sky-600 bg-white border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-sky-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center group/btn">
                                         <i class="fas fa-history mr-1.5 text-sky-400 group-hover/btn:text-white transition-colors"></i> 
                                         ดูประวัติงาน

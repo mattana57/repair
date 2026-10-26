@@ -17,7 +17,8 @@ function mbs_drill_dispatch($db) {
     try{
         $data=mbs_feature_payload($db);$kind=$_GET['mbs_drill'];$value=$_GET['mbs_value']??'';
         if(!is_string($kind)||!is_string($value)||!in_array($kind,['reporter','equipment','location','technician','reviews','review_jobs'],true))throw new RuntimeException('คำขอไม่ถูกต้อง');
-        $rows=mbs_period_rows($data['repairs'],'overview');
+        $cardHistory=$data['role']==='admin' && $kind==='technician' && ($_GET['mbs_card_history']??'')==='1';
+        $rows=$cardHistory?$data['repairs']:mbs_period_rows($data['repairs'],'overview');
         if($kind==='reviews'){
             $reviewPeriod=mbs_range('reviews')!==null;foreach(['day','month','year'] as $part){$v=$_GET['mbs_reviews_'.$part]??'all';if(is_string($v)&&ctype_digit($v)&&(int)$v>0)$reviewPeriod=true;}if($reviewPeriod)$rows=$data['repairs'];
             if($data['role']==='technician')throw new RuntimeException('ไม่อนุญาต');

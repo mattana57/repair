@@ -672,11 +672,19 @@
       restore();
     }
   }
-  function openAnalytics(kind, value) {
+  function openAnalytics(kind, value, options = {}) {
+    const cardHistory = options.cardHistory === true && data.role === "admin" && kind === "technician";
+    const analyticsParams = (match = {}) => {
+      const u = serverParams(kind, value, match);
+      u.searchParams.delete("mbs_card_history");
+      if (cardHistory) u.searchParams.set("mbs_card_history", "1");
+      return u;
+    };
+    const allJobsLabel = cardHistory ? "แสดงงานทั้งหมดของเจ้าหน้าที่" : "แสดงงานทั้งหมดในช่วงที่เลือก";
     const title =
       {
         reporter: "ข้อมูลการแจ้งซ่อมของ ",
-        technician: "ภาระงานของ ",
+        technician: cardHistory ? "ประวัติงานเจ้าหน้าที่: " : "ภาระงานของ ",
         location: "สถานที่: ",
         equipment: "อุปกรณ์: ",
       }[kind] +
@@ -698,7 +706,7 @@
       location: "location",
       equipment: "equipment_type",
     }[kind];
-    const rows = overviewRows().filter(
+    const rows = (cardHistory ? ownRows() : overviewRows()).filter(
       (r) => String(r[key] ?? "").trim() === String(value).trim(),
     );
     const body = dlg.querySelector(".mbs-dialog-body");
@@ -708,6 +716,7 @@
       ' รายการในช่วงที่เลือก · กดแท่งกราฟเพื่อดูรายการที่เกี่ยวข้อง</p><div class="mbs-drill-charts"></div><div class="mbs-drill-actions"><button type="button" class="mbs-button" id="mbsAllHistory">ดูประวัติทั้งหมดในช่วงนี้</button><span id="mbsMatchLabel"></span></div><div id="mbsDrillTable"></div>';
     if (detailed) {
       body.innerHTML = '<div class="mbs-analytics-summary"></div><p class="mbs-analytics-guide">เลือกแถบในกราฟเพื่อกรองรายการงาน · กดแถบเดิมซ้ำเพื่อยกเลิก</p><div class="mbs-drill-charts"></div><section class="mbs-analytics-results"><div class="mbs-drill-actions"><div><h3>รายการงานแจ้งซ่อม</h3><p id="mbsMatchLabel" aria-live="polite">แสดงงานทั้งหมดในช่วงที่เลือก</p></div><button type="button" class="mbs-button" id="mbsAllHistory">แสดงงานทั้งหมด</button></div><div id="mbsDrillTable"></div></section>';
+      $("mbsMatchLabel").textContent = allJobsLabel;
       for (const [label, count, tone] of [
         ["งานทั้งหมด", rows.length, "total"],
         ["รอรับเรื่อง", rows.filter(r => String(r.status).trim() === "รอรับเรื่อง").length, "pending"],
@@ -725,8 +734,8 @@
           selected.match = clear ? {} : {status};
           for (const bar of body.querySelectorAll('.mbs-analytics-bar')) bar.setAttribute('aria-pressed', 'false');
           syncSummaryCards();
-          $("mbsMatchLabel").textContent = clear ? "แสดงงานทั้งหมดในช่วงที่เลือก" : "สถานะ: " + status;
-          await loadTable($("mbsDrillTable"), serverParams(kind,value,selected.match));
+          $("mbsMatchLabel").textContent = clear ? allJobsLabel : "สถานะ: " + status;
+          await loadTable($("mbsDrillTable"), analyticsParams(selected.match));
           if (dlg.open) body.querySelector('.mbs-analytics-results')?.scrollIntoView({behavior:'smooth',block:'start'});
         };
         body.querySelector(".mbs-analytics-summary").appendChild(item);
@@ -777,8 +786,8 @@
             selected.match=clear ? {} : { [f]:key };
             syncSummaryCards();
             for(const other of body.querySelectorAll(".mbs-analytics-bar"))other.setAttribute("aria-pressed",String(!clear && other===b));
-            $("mbsMatchLabel").textContent=clear ? "แสดงงานทั้งหมดในช่วงที่เลือก" : "กรองตาม " + card.querySelector("h3").textContent + ": " + ((f === "technician_id" ? technicianName(key) : f === "line_user_id" ? reporterName(key) : key) || "ไม่ระบุ");
-            loadTable($("mbsDrillTable"),serverParams(kind,value,selected.match));
+            $("mbsMatchLabel").textContent=clear ? allJobsLabel : "กรองตาม " + card.querySelector("h3").textContent + ": " + ((f === "technician_id" ? technicianName(key) : f === "line_user_id" ? reporterName(key) : key) || "ไม่ระบุ");
+            loadTable($("mbsDrillTable"),analyticsParams(selected.match));
           };
           list.appendChild(b);
         }
@@ -803,7 +812,7 @@
             f === "technician_id" ? technicianName(k) : k;
           loadTable(
             $("mbsDrillTable"),
-            serverParams(kind, value, selected.match),
+            analyticsParams(selected.match),
           );
         },
       });
@@ -811,12 +820,12 @@
     $("mbsAllHistory").onclick = () => {
       selected.match = {};
       syncSummaryCards();
-      $("mbsMatchLabel").textContent = detailed ? "แสดงงานทั้งหมดในช่วงที่เลือก" : "";
+      $("mbsMatchLabel").textContent = detailed ? allJobsLabel : "";
       if(detailed)for(const b of body.querySelectorAll(".mbs-analytics-bar"))b.setAttribute("aria-pressed","false");
-      loadTable($("mbsDrillTable"), serverParams(kind, value));
+      loadTable($("mbsDrillTable"), analyticsParams());
     };
     if (!dlg.open) dlg.showModal();
-    loadTable($("mbsDrillTable"), serverParams(kind, value));
+    loadTable($("mbsDrillTable"), analyticsParams());
   }
   function reviewPeriodActive() {
     const r = window.mbsRanges.reviews;
@@ -1441,6 +1450,8 @@
       const label = row.querySelector(".fa-line")?.nextElementSibling;
       if (label && label.textContent !== name) label.textContent = name;
     }
+    for (const label of document.querySelectorAll('#techCardsContainer [data-tech-card-id="' + Number(t.id) + '"] [data-tech-card-line-name]'))
+      if (label.textContent !== name) label.textContent = name;
     const form = $("techAdminForm"), input = $("techAdmin_line_name");
     if (input && form?.dataset.mbsManagedRole === "technician" && +form.dataset.mbsManagedId === +t.id)
       input.value = name;
@@ -1482,6 +1493,9 @@
       const badge = card.querySelector(".mbs-tech-card-count");
       const text = data.repairs.filter(r => Number(r.technician_id) === id).length + " งาน";
       if (badge && badge.textContent !== text) badge.textContent = text;
+      const history = card.querySelector("[data-tech-card-history]");
+      if (history) history.onclick = () => openAnalytics("technician", String(id), {cardHistory:true});
+      applyContactLineName(tech);
       const edit = card.querySelector("[data-tech-card-edit]");
       if (edit) edit.onclick = () => {
         const current = data.technicians.find(t => Number(t.id) === id);
