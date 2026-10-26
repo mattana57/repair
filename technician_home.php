@@ -2734,7 +2734,7 @@ if (isset($_GET['th_fragment'])
     </dialog>
     <script>
         const techReporterHistory = {lineId:'', name:'', page:1, timer:null, controller:null, version:0, previousOverflow:''};
-        function openTechReporterHistory(name, lineId, repairId = null) {
+        function openTechReporterHistory(name, lineId, repairId = null, reportedDate = null) {
             const jobId = Number(repairId);
             techReporterHistory.repairId = Number.isSafeInteger(jobId) && jobId > 0 ? jobId : null;
             if (typeof lineId !== 'string' || !lineId.trim() || lineId.length > 200) return;
@@ -2762,7 +2762,10 @@ if (isset($_GET['th_fragment'])
                 modal.showModal();
             }
             if (techReporterHistory.repairId) {
-                for (const part of ['Day','Month','Year']) selectChartDropdown('techReporter-' + part, 'all', {Day:'ทุกวัน',Month:'ทุกเดือน',Year:'ทุกปี'}[part], null);
+                const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(reportedDate || '');
+                const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+                for (const [part,value,label] of parts ? [['Day',String(Number(parts[3])),'วันที่ '+Number(parts[3])],['Month',parts[2],months[Number(parts[2])-1]],['Year',parts[1],String(Number(parts[1])+543)]] : [['Day','all','ทุกวัน'],['Month','all','ทุกเดือน'],['Year','all','ทุกปี']])
+                    selectChartDropdown('techReporter-' + part, value, label, null);
             }
             loadTechReporterHistory(1);
         }

@@ -633,6 +633,19 @@
     const jobId = Number(repairId);
     const exactId = Number.isSafeInteger(jobId) && jobId > 0 ? jobId : null;
     if (typeof lineId !== "string" || !lineId.trim() || lineId.length > 200) return;
+    const job = data.repairs.find(r => Number(r.id) === exactId && r.line_user_id === lineId);
+    const rawDate = String(job?.created_at || "").slice(0, 10);
+    const reportedDate = validDate(rawDate) ? rawDate : null;
+    if (exactId && reportedDate) {
+      const key = data.role === "technician" ? "techReporter" : "history";
+      const range = window.mbsRanges?.[key];
+      const u = new URL(location.href);
+      for (const part of ["start", "end"]) {
+        if (range?.[part]) range[part].value = "";
+        u.searchParams.delete("mbs_" + key + "_" + part);
+      }
+      window.history.replaceState(window.history.state, "", u);
+    }
     const technician = data.role === "technician";
     const history = $(technician ? "techReporterModal" : "historyModal");
     const open = technician ? window.openTechReporterHistory : window.viewHistory;
@@ -663,9 +676,9 @@
     if (returnToAnalytics) analytics.close();
     try {
       const name = reporterName(lineId);
-      const result = technician ? open(name, lineId, exactId) : data.role === "executive"
-        ? open(name, "reporter", lineId, exactId)
-        : open(name, "reporter", false, false, null, lineId, exactId);
+      const result = technician ? open(name, lineId, exactId, reportedDate) : data.role === "executive"
+        ? open(name, "reporter", lineId, exactId, reportedDate)
+        : open(name, "reporter", false, false, null, lineId, exactId, reportedDate);
       wasOpen = isOpen();
       Promise.resolve(result).catch(restore);
     } catch {

@@ -8053,7 +8053,7 @@ if (isset($_GET['api_check_hash'])) {
         let historyFilterTimer = null;
         let historyFiltersRestoring = false;
 
-        async function viewHistory(fullName, type, refresh = false, restore = false, technicianId = null, reporterLineId = null, repairId = null) {
+        async function viewHistory(fullName, type, refresh = false, restore = false, technicianId = null, reporterLineId = null, repairId = null, reportedDate = null) {
             if (!['reporter', 'technician'].includes(type)) return;
 
             const url = new URL(window.location.href);
@@ -8111,7 +8111,9 @@ if (isset($_GET['api_check_hash'])) {
             }
 
             if (!refresh && !restore && url.searchParams.has('pg_history_repair_id')) {
-                for (const part of ['day','month','year']) url.searchParams.set('pg_history_' + part, 'all');
+                const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(reportedDate || '');
+                for (const [part,value] of Object.entries(parts ? {day:String(Number(parts[3])),month:parts[2],year:parts[1]} : {day:'all',month:'all',year:'all'}))
+                    url.searchParams.set('pg_history_' + part, value);
             }
             const periodDefaults = <?= json_encode(['day' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j'), 'month' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'), 'year' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')]); ?>;
             for (const part of ['day', 'month', 'year']) {

@@ -3559,11 +3559,14 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
-        function viewHistory(fullName, type, reporterLineId = null, repairId = null) {
+        function viewHistory(fullName, type, reporterLineId = null, repairId = null, reportedDate = null) {
             const jobId = Number(repairId);
             window.currentHistoryRepairId = type === 'reporter' && Number.isSafeInteger(jobId) && jobId > 0 ? jobId : null;
             if (window.currentHistoryRepairId) {
-                for (const part of ['Day','Month','Year']) document.getElementById('history' + part).value = 'all';
+                const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(reportedDate || '');
+                const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+                for (const [part,value,label] of parts ? [['Day',String(Number(parts[3])),'วันที่ '+Number(parts[3])],['Month',parts[2],months[Number(parts[2])-1]],['Year',parts[1],String(Number(parts[1])+543)]] : [['Day','all','ทุกวัน'],['Month','all','ทุกเดือน'],['Year','all','ทุกปี']])
+                    selectChartDropdown('history-' + part, value, label, null);
             }
             window.currentHistoryLineUserId = type === 'reporter' ? reporterLineId : null;
             window.currentHistoryName = fullName; // ✨ จำชื่อที่เปิดอยู่
