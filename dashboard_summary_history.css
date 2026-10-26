@@ -1,0 +1,38 @@
+/* Total is violet; other status colours and all chart datasets stay intact. */
+.modern-card:has(#adminCount-total),
+.modern-card:has(#execCountTotal),
+.modern-card:has(#techCount-total) { border-bottom-color:#8b5cf6 !important; }
+:is(.modern-card:has(#adminCount-total),.modern-card:has(#execCountTotal),.modern-card:has(#techCount-total)) :is(.bg-violet-50,.text-violet-600) { color:#7c3aed !important; background-color:#f5f3ff !important; border-color:#ddd6fe !important; }
+:is(.modern-card:has(#adminCount-total),.modern-card:has(#execCountTotal),.modern-card:has(#techCount-total)):hover .group-hover\:bg-violet-600 { background-color:#7c3aed !important; color:white !important; }
+#adminCount-total,#execCountTotal,#techCount-total { color:#6d28d9 !important; }
+.mbs-analytics-detail button.mbs-analytics-total { --stat-accent:#8b5cf6; --stat-tint:#f5f3ff; --stat-ink:#6d28d9; }
+.mbs-analytics-detail .mbs-analytics-total .mbs-summary-icon i { color:#7c3aed; }
+
+/* Thirteen history columns, including Work Duration and the final Action. */
+.tech-dashboard-ui #repairsMainCard table#historyTableFull { width:100% !important; min-width:0 !important; table-layout:fixed !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull :is(th,td) { min-width:0 !important; box-sizing:border-box; padding:11px 4px !important; white-space:normal !important; overflow-wrap:anywhere !important; word-break:normal !important; letter-spacing:0 !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th { font-size:9.5px !important; line-height:1.4; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull td { font-size:11px !important; line-height:1.55; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull td :is(div,span,small,a,button) { font-size:inherit !important; max-width:100%; min-width:0; white-space:normal !important; overflow-wrap:anywhere !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull .mbs-duration { min-width:0 !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(1) { width:3% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(2) { width:7% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(3) { width:8% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(4) { width:9% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(5) { width:10% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(6) { width:11% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(7) { width:9% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(8) { width:7% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(9) { width:8% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(10) { width:7% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(11) { width:7% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(12) { width:8% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull th:nth-child(13) { width:6% !important; }
+.tech-dashboard-ui #repairsMainCard table#historyTableFull td:last-child :is(a,button) { padding:5px 3px !important; }
+@media(max-width:767px) {
+ .tech-dashboard-ui #repairsMainCard table#historyTableFull :is(th,td) { padding:9px 2px !important; }
+ .tech-dashboard-ui #repairsMainCard table#historyTableFull th { font-size:9px !important; }
+ .tech-dashboard-ui #repairsMainCard table#historyTableFull td { font-size:10px !important; }
+}
+
+.tech-dashboard-ui #repairsMainCard table#historyTableFull :is(.th-date,.th-status) { white-space:normal !important; overflow-wrap:anywhere !important; font-size:inherit !important; }
