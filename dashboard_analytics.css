@@ -133,3 +133,11 @@
 
 /* Technician-card history actions remain together and wrap on narrow screens. */
 .mbs-history-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:10px; }
+
+/* Use the same Font Awesome glyphs as the home summary cards. */
+.mbs-analytics-detail .mbs-summary-icon i { font-size:23px; line-height:1; }
+.mbs-analytics-detail .mbs-analytics-total .mbs-summary-icon i { color:#2563eb; }
+.mbs-analytics-detail .mbs-analytics-pending .mbs-summary-icon i { color:#d97706; }
+.mbs-analytics-detail .mbs-analytics-progress .mbs-summary-icon i { color:#4f46e5; }
+.mbs-analytics-detail .mbs-analytics-complete .mbs-summary-icon i { color:#059669; }
+@media(max-width:520px) { .mbs-analytics-detail .mbs-summary-icon i { font-size:18px; } }
