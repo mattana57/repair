@@ -1173,12 +1173,13 @@
       }
       if (locked && tech && $("techAdmin_line_name"))
         $("techAdmin_line_name").value =
-          tech.linked_line_name ||
+          resolvedLineName(tech) ||
           (tech.line_user_id ? "ยังไม่มีชื่อ LINE ในข้อมูล" : "ยังไม่ผูกบัญชี");
       for (const el of form.querySelectorAll("[onclick]"))
         if (/avatar|upload|delete/i.test(el.getAttribute("onclick") || ""))
           el.hidden = locked;
       refreshManagedLineTime();
+      refreshContactLineNames();
       return result;
     };
   }
@@ -1268,8 +1269,53 @@
         menu.appendChild(a);
       }
   }
+  const contactLineNames = new Map(), contactLineRetry = new Map();
+  let contactLineRefreshing = false;
+  function resolvedLineName(t) {
+    return String(t.linked_line_name || contactLineNames.get(String(t.id) + ":" + t.line_user_id) || "").trim();
+  }
+  function applyContactLineName(t) {
+    const name = resolvedLineName(t);
+    if (!name) return;
+    for (const row of document.querySelectorAll('[data-tb-tech-id="' + Number(t.id) + '"]')) {
+      const label = row.querySelector(".fa-line")?.nextElementSibling;
+      if (label && label.textContent !== name) label.textContent = name;
+    }
+    const form = $("techAdminForm"), input = $("techAdmin_line_name");
+    if (input && form?.dataset.mbsManagedRole === "technician" && +form.dataset.mbsManagedId === +t.id)
+      input.value = name;
+  }
+  async function refreshContactLineNames() {
+    if (data.role !== "admin" || document.hidden || contactLineRefreshing) return;
+    contactLineRefreshing = true;
+    try {
+      for (const t of data.technicians) {
+        if (!t.line_user_id || t.approval_status !== "อนุมัติแล้ว") continue;
+        if (resolvedLineName(t)) { applyContactLineName(t); continue; }
+        const key = String(t.id) + ":" + t.line_user_id;
+        if ((contactLineRetry.get(key) || 0) > Date.now()) continue;
+        contactLineRetry.set(key, Date.now() + 60000);
+        const u = new URL(location.href); u.search = "";
+        u.searchParams.set("mbs_line_profile_data", "1");
+        u.searchParams.set("mbs_technician_id", String(t.id));
+        try {
+          const r = await nativeFetch(u, {credentials:"same-origin", cache:"no-store"});
+          if (!r.ok || r.redirected) continue;
+          const next = (await r.json()).technician;
+          const current = data.technicians.find(v => +v.id === +t.id);
+          if (!next || +next.id !== +t.id || next.line_user_id !== t.line_user_id ||
+              !current || current.line_user_id !== t.line_user_id || current.approval_status !== "อนุมัติแล้ว") continue;
+          if (typeof next.linked_line_name === "string" && next.linked_line_name.trim()) {
+            contactLineNames.set(key, next.linked_line_name.trim());
+            applyContactLineName(current);
+          }
+        } catch {}
+      }
+    } finally { contactLineRefreshing = false; }
+  }
   function enhanceTechnicians() {
     if (data.role !== "admin") return;
+    refreshContactLineNames();
     for (const t of data.technicians) {
       const btns = [
         ...document.querySelectorAll('[onclick*="openTechAdminModal"]'),
@@ -1397,6 +1443,7 @@
     wrapAdminModal();
     if (data.role === "admin") {
       setInterval(refreshManagedLineTime, 3000);
+      setInterval(refreshContactLineNames, 10000);
       document.addEventListener("visibilitychange", refreshManagedLineTime);
       window.addEventListener("focus", refreshManagedLineTime);
     }
@@ -1417,6 +1464,7 @@
       requestAnimationFrame(() => {
         pending = false;
         decorateDuration();
+        refreshContactLineNames();
       });
     }).observe(document.body, { subtree: true, childList: true });
     let appearanceResizeTimer;
@@ -1445,6 +1493,7 @@
           const next = await r.json();
           if (!next.error) {
             data = next;
+            refreshContactLineNames();
             renderOverview();
           }
         }

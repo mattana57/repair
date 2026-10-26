@@ -85,7 +85,7 @@ function mbs_feature_payload($db) {
     }
     $rows=mbs_feature_rows($db,"SELECT r.* FROM repairs r WHERE $where ORDER BY r.created_at DESC,r.id DESC",$types,$args);
     $techSql="SELECT t.*,u.id AS web_user_id,u.username AS web_username,u.created_at AS registered_at,u.is_active AS web_active,
-        (SELECT lu.line_display_name FROM line_users lu WHERE BINARY lu.line_user_id=BINARY t.line_user_id LIMIT 1) AS linked_line_name
+        (SELECT lp.line_display_name FROM technician_line_profiles lp WHERE lp.technician_id=t.id AND BINARY lp.line_user_id=BINARY t.line_user_id LIMIT 1) AS linked_line_name
         FROM technicians t LEFT JOIN users u ON u.technician_id=t.id AND LOWER(u.role)='technician' AND u.deleted_at IS NULL
         WHERE t.deleted_at IS NULL";
     $techs=mbs_feature_rows($db,$techSql.($role==='technician'?' AND t.id=?':''),$role==='technician'?'i':'',$role==='technician'?[(int)$_SESSION['technician_id']]:[]);
@@ -105,6 +105,19 @@ function mbs_feature_payload($db) {
 }
 require_once __DIR__.'/dashboard_drill.php';
 function mbs_feature_dispatch($db) {
+    if(isset($_GET['mbs_line_profile_data'])) {
+        header('Content-Type: application/json; charset=utf-8');header('Cache-Control: no-store');
+        if(strtolower((string)($_SESSION['role']??''))!=='admin'){http_response_code(403);echo '{"error":"ไม่อนุญาต"}';exit;}
+        $id=filter_var($_GET['mbs_technician_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+        if(!$id){http_response_code(400);echo '{"error":"ข้อมูลเจ้าหน้าที่ไม่ถูกต้อง"}';exit;}
+        try {
+            require_once __DIR__.'/technician_line_profile.php';
+            $t=mbs_technician_line_profile($db,$id);
+            if(!$t){http_response_code(404);echo '{"error":"ไม่พบเจ้าหน้าที่"}';exit;}
+            echo json_encode(['technician'=>$t],JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE);
+        }catch(Throwable $e){http_response_code(503);echo '{"error":"โหลดชื่อ LINE ไม่สำเร็จ"}';error_log('LINE profile read failed: '.get_class($e));}
+        exit;
+    }
     if(isset($_GET['mbs_line_link_data'])) {
         header('Content-Type: application/json; charset=utf-8');header('Cache-Control: no-store');
         if(strtolower((string)($_SESSION['role']??''))!=='admin'){http_response_code(403);echo '{"error":"ไม่อนุญาต"}';exit;}
@@ -150,5 +163,5 @@ function mbs_feature_assets($db) {
     echo '<link rel="stylesheet" href="profile_menu_actions.css?v=20261025-1">';
     echo '<script type="application/json" id="mbsFeaturesData">'.json_encode($data,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE).'</script>';
     echo '<script src="dashboard_chart_appearance.js?v=20261025-4"></script>';
-    echo '<script src="dashboard_features.js?v=20261026-2"></script>';
+    echo '<script src="dashboard_features.js?v=20261026-4"></script>';
 }
