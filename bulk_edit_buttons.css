@@ -1,4 +1,7 @@
 /* Shared appearance only; retain each page's existing bulk-edit handlers. */
+.mbs-edit-count-group { display:inline-flex; align-items:center; justify-content:flex-end; gap:12px; flex-shrink:0; max-width:100%; }
+.mbs-edit-count-group > #tb-count,
+.mbs-edit-count-group > .ab-count { margin:0 !important; white-space:nowrap; font-size:12px; font-weight:700; }
 .ab-menu button i, #tb-menu button i, #mbsCardMenu button i, #trashBulkToolbar button i { display:none !important; }
 #trash .trash-edit-actions { display:flex; align-items:center; gap:12px; }
 #trash .trash-edit-dropdown { position:relative; }
