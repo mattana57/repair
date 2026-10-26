@@ -105,15 +105,31 @@
 .mbs-analytics-detail .mbs-analytics-work[data-status-tone="progress"] { border-top: 7px solid #38bdf8; }
 .mbs-analytics-detail .mbs-analytics-work[data-status-tone="complete"] { border-top: 7px solid #10b981; }
 
-/* Clickable summary cards, scoped to analytics detail dialogs. */
-.mbs-analytics-detail button.mbs-analytics-stat { font:inherit; text-align:left; cursor:pointer; box-shadow:0 3px 10px #0f172a0a; transition:transform .15s,box-shadow .15s,background .15s; }
-.mbs-analytics-detail button.mbs-analytics-stat:hover { transform:translateY(-3px); box-shadow:0 9px 20px #0f172a18; }
-.mbs-analytics-detail button.mbs-analytics-stat:focus-visible { outline:3px solid currentColor; outline-offset:3px; }
-.mbs-analytics-detail .mbs-analytics-stat[aria-pressed=true] { box-shadow:0 0 0 2px currentColor; }
-.mbs-analytics-detail button.mbs-analytics-total { background:#eff6ff; }
-.mbs-analytics-detail button.mbs-analytics-pending { background:#fffbeb; }
-.mbs-analytics-detail button.mbs-analytics-progress { background:#f0f9ff; }
-.mbs-analytics-detail button.mbs-analytics-complete { background:#ecfdf5; }
-.mbs-analytics-detail .mbs-summary-open { display:block; margin-top:6px; color:inherit; font-weight:600; }
+/* Summary buttons: quiet white surfaces, clear metrics and status accents. */
+.mbs-analytics-detail button.mbs-analytics-stat { --stat-accent:#2563eb; --stat-tint:#eff6ff; --stat-ink:#1e40af; position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:9px 8px; padding:17px 18px 13px; min-width:0; overflow:hidden; border:1px solid #e2e8f0; border-top:7px solid var(--stat-accent); border-radius:17px; background:linear-gradient(145deg,#fff 45%,var(--stat-tint)); color:var(--stat-ink); font:inherit; text-align:left; cursor:pointer; box-shadow:0 3px 10px #0f172a06; transition:transform .16s,box-shadow .16s,border-color .16s; }
+.mbs-analytics-detail button.mbs-analytics-pending { --stat-accent:#f59e0b; --stat-tint:#fffbeb; --stat-ink:#9a3412; }
+.mbs-analytics-detail button.mbs-analytics-progress { --stat-accent:#38bdf8; --stat-tint:#f0f9ff; --stat-ink:#0369a1; }
+.mbs-analytics-detail button.mbs-analytics-complete { --stat-accent:#10b981; --stat-tint:#ecfdf5; --stat-ink:#047857; }
+.mbs-analytics-detail .mbs-summary-label { align-self:center; font-size:13px; font-weight:600; color:#475569; line-height:1.5; }
+.mbs-analytics-detail .mbs-summary-icon { grid-column:2; grid-row:1 / 3; align-self:center; display:grid; place-items:center; width:42px; height:42px; border-radius:13px; background:var(--stat-tint); color:var(--stat-accent); box-shadow:inset 0 0 0 1px #ffffff; }
+.mbs-analytics-detail .mbs-summary-icon svg { width:23px; height:23px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.mbs-analytics-detail .mbs-analytics-stat strong { grid-column:1; font-size:34px; font-weight:700; line-height:1.15; letter-spacing:-.7px; gap:7px; color:var(--stat-ink); }
+.mbs-analytics-detail .mbs-analytics-stat strong small { font-size:12px; letter-spacing:0; color:#64748b; }
+.mbs-analytics-detail .mbs-summary-open { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; border-top:1px solid #e2e8f0; margin-top:3px; padding-top:10px; color:#64748b; font-size:11px; font-weight:500; }
+.mbs-analytics-detail .mbs-summary-open svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.mbs-analytics-detail button.mbs-analytics-stat:hover { transform:translateY(-2px); border-color:var(--stat-accent); box-shadow:0 8px 18px #0f172a0e; }
+.mbs-analytics-detail button.mbs-analytics-stat[aria-pressed=true] { border-color:var(--stat-accent); box-shadow:0 0 0 1px var(--stat-accent),0 5px 14px #0f172a08; }
+.mbs-analytics-detail button.mbs-analytics-stat[aria-pressed=true] .mbs-summary-open { color:var(--stat-ink); font-weight:600; }
+.mbs-analytics-detail button.mbs-analytics-stat:focus-visible { outline:3px solid var(--stat-accent); outline-offset:3px; }
 .mbs-analytics-detail .mbs-analytics-results { scroll-margin-top:20px; }
+@media(max-width:520px) {
+ .mbs-analytics-detail button.mbs-analytics-stat { padding:12px 11px 10px; gap:8px 4px; border-radius:14px; }
+ .mbs-analytics-detail .mbs-summary-label { font-size:12px; }
+ .mbs-analytics-detail .mbs-summary-icon { width:31px; height:31px; border-radius:10px; }
+ .mbs-analytics-detail .mbs-summary-icon svg { width:18px; height:18px; }
+ .mbs-analytics-detail .mbs-analytics-stat strong { font-size:28px; }
+}
 @media(prefers-reduced-motion:reduce) { .mbs-analytics-detail button.mbs-analytics-stat { transition:none; } }
+
+/* Technician-card history actions remain together and wrap on narrow screens. */
+.mbs-history-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:10px; }

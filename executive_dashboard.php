@@ -299,9 +299,15 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
                 $values[] = $lineId;
             }
         } else {
-            $column = execPageGet('eh_type') === 'technician' ? 'technician_name' : 'reporter_name';
-            $where[] = "TRIM(r.$column) = ?";
-            $values[] = execPageGet('eh_name');
+            if (execPageGet('eh_type') === 'technician' && isset($_GET['eh_technician_id'])) {
+                $id = filter_var(execPageGet('eh_technician_id'), FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+                if ($id === false) $where[] = '1=0';
+                else { $where[] = 'r.technician_id = ?'; $values[] = $id; }
+            } else {
+                $column = execPageGet('eh_type') === 'technician' ? 'technician_name' : 'reporter_name';
+                $where[] = "TRIM(r.$column) = ?";
+                $values[] = execPageGet('eh_name');
+            }
         }
     }
     $exactHistoryJob = $kind === 'history' && isset($_GET['eh_repair_id']);
@@ -338,7 +344,8 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
         $where[] = 'YEAR(r.created_at) = ?';
         $values[] = (int)$year;
     }
-    $status = $kind === 'history' ? 'all' : execPageGet('er_status', 'all');
+    $status = $kind === 'history' ? (execPageGet('eh_type') === 'technician' ? execPageGet('eh_status', 'all') : 'all') : execPageGet('er_status', 'all');
+    if ($kind === 'history' && !in_array($status, ['all','รอรับเรื่อง','กำลังดำเนินการ','ซ่อมเสร็จแล้ว'], true)) $where[] = '1=0';
     if ($status !== 'all') {
         $where[] = 'r.status = ?';
         $values[] = $status;
@@ -399,7 +406,7 @@ function execPageFooter($data, $kind) {
     $prefix = $kind === 'history' ? 'eh_' : 'er_';
     // ไม่ส่งต่อคำสั่งอื่น เช่น ลบรูปหรือ API ตรวจ Hash ไปกับลิงก์เลขหน้า
     $params = ['tab' => execPageGet('tab', 'repairs')];
-    foreach (['er_q','er_day','er_month','er_year','er_status','er_page','eh_q','eh_day','eh_month','eh_year','eh_type','eh_name','eh_line_user_id','eh_repair_id','eh_page'] as $key) {
+    foreach (['er_q','er_day','er_month','er_year','er_status','er_page','eh_q','eh_day','eh_month','eh_year','eh_type','eh_name','eh_line_user_id','eh_repair_id','eh_technician_id','eh_status','eh_page'] as $key) {
         if (isset($_GET[$key]) && is_string($_GET[$key])) $params[$key] = $_GET[$key];
     }
     foreach($_GET as $key=>$value)if(is_string($value)&&preg_match('/^mbs_[a-zA-Z-]+_(start|end)$/D',$key))$params[$key]=$value;
@@ -2102,6 +2109,19 @@ if (isset($_GET['api_check_hash'])) {
                                 </div>
                                 <input type="hidden" id="historyYear" value="<?php echo date('Y'); ?>">
                             </div>
+                                <div class="hidden relative w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-StatusContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Status', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="history-StatusTrigger" class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-3.5 portrait:px-2.5 sm:px-3.5 landscape:px-3.5 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Status')">
+                                        <span id="history-StatusText" class="truncate">ทั้งหมด</span>
+                                        <i id="history-StatusCaret" class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="history-StatusList" class="chart-dropdown-list absolute z-50 w-[155px] right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col p-2 space-y-1.5" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 bg-slate-50 hover:bg-slate-100 text-center" data-value="all" data-display="ทั้งหมด" onclick="selectHistoryStatusDropdown('all', 'ทั้งหมด')">ทั้งหมด</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#fef3c7] text-[#d97706] hover:brightness-95 text-center shadow-2xs" data-value="รอรับเรื่อง" data-display="รอรับเรื่อง" onclick="selectHistoryStatusDropdown('รอรับเรื่อง', 'รอรับเรื่อง')">รอรับเรื่อง</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#e0e7ff] text-[#4f46e5] hover:brightness-95 text-center shadow-2xs" data-value="กำลังดำเนินการ" data-display="กำลังดำเนินการ" onclick="selectHistoryStatusDropdown('กำลังดำเนินการ', 'กำลังดำเนินการ')">กำลังดำเนินการ</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#d1fae5] text-[#059669] hover:brightness-95 text-center shadow-2xs" data-value="ซ่อมเสร็จแล้ว" data-display="ซ่อมเสร็จแล้ว" onclick="selectHistoryStatusDropdown('ซ่อมเสร็จแล้ว', 'ซ่อมเสร็จแล้ว')">ซ่อมเสร็จแล้ว</div>
+                                    </div>
+                                    <input type="hidden" id="historyStatus" value="all">
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -2240,6 +2260,10 @@ if (isset($_GET['api_check_hash'])) {
                     p.set('eh_repair_id', String(window.currentHistoryRepairId));
                 }
                 p.set('eh_type', window.currentHistoryType || 'reporter');
+                if (window.currentHistoryType === 'technician') {
+                    if (window.currentHistoryTechnicianId) p.set('eh_technician_id', String(window.currentHistoryTechnicianId));
+                    p.set('eh_status', value('historyStatus','all'));
+                }
                 p.set('eh_name', window.currentHistoryName || '');
                 if (window.currentHistoryType === 'reporter' && window.currentHistoryLineUserId !== null && window.currentHistoryLineUserId !== undefined) p.set('eh_line_user_id', window.currentHistoryLineUserId);
             } else {
@@ -2348,7 +2372,7 @@ if (isset($_GET['api_check_hash'])) {
             if (!execInitialParams.has('eh_name')) return;
             // เรียกหลัง INIT เดิม เพื่อให้แท็บและกราฟเริ่มต้นตามเดิมก่อน
             setTimeout(() => {
-                viewHistory(execInitialParams.get('eh_name'), execInitialParams.get('eh_type') || 'reporter', execInitialParams.get('eh_line_user_id'), execInitialParams.get('eh_repair_id'));
+                viewHistory(execInitialParams.get('eh_name'), execInitialParams.get('eh_type') || 'reporter', execInitialParams.get('eh_line_user_id'), execInitialParams.get('eh_repair_id'), null, execInitialParams.get('eh_technician_id'));
                 document.getElementById('searchHistoryModalInput').value = execInitialParams.get('eh_q') || '';
                 toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');
                 execLoadPage('history', execInitialParams.get('eh_page') || 1, false);
@@ -3569,7 +3593,11 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
-        function viewHistory(fullName, type, reporterLineId = null, repairId = null, reportedDate = null) {
+        function viewHistory(fullName, type, reporterLineId = null, repairId = null, reportedDate = null, technicianId = null) {
+            const techId = Number(technicianId);
+            window.currentHistoryTechnicianId = type === 'technician' && Number.isSafeInteger(techId) && techId > 0 ? techId : null;
+            document.getElementById('history-StatusContainer').classList.toggle('hidden',type !== 'technician');
+            selectHistoryStatusDropdown('all','ทั้งหมด',false);
             const jobId = Number(repairId);
             const focusModal = document.getElementById('historyModal');
             if (focusModal) { focusModal.dataset.mbsFocusRepairId = Number.isSafeInteger(jobId) && jobId > 0 ? String(jobId) : ''; delete focusModal.dataset.mbsFocusScrolled; }
@@ -3958,6 +3986,47 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         // ✨ ฟังก์ชันค้นหาข้อมูลในตารางประวัติ (History Modal) ✨
+        function selectHistoryStatusDropdown(val, display, reload = true) {
+            if (!['all','รอรับเรื่อง','กำลังดำเนินการ','ซ่อมเสร็จแล้ว'].includes(val)) {val='all';display='ทั้งหมด';}
+            const list = document.getElementById('history-StatusList');
+            const input = document.getElementById('historyStatus');
+            const textEl = document.getElementById('history-StatusText');
+            const trigger = document.getElementById('history-StatusTrigger');
+            const caret = document.getElementById('history-StatusCaret');
+
+            if (input) input.value = val;
+            if (textEl) textEl.innerText = display;
+            if (list) { list.classList.add('hidden'); list.classList.remove('flex'); }
+
+            if (trigger && caret) {
+                // ล้างสีสถานะเดิมออกก่อน
+                trigger.classList.remove(
+                    'bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50',
+                    'bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]',
+                    'bg-[#e0e7ff]', 'text-[#4f46e5]', 'border-[#c7d2fe]',
+                    'bg-[#d1fae5]', 'text-[#059669]', 'border-[#a7f3d0]'
+                );
+                caret.classList.remove('text-slate-400', 'text-[#d97706]', 'text-[#4f46e5]', 'text-[#059669]');
+
+                if (val === 'รอรับเรื่อง') {
+                    trigger.classList.add('bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]');
+                    caret.classList.add('text-[#d97706]');
+                } else if (val === 'กำลังดำเนินการ') {
+                    trigger.classList.add('bg-[#e0e7ff]', 'text-[#4f46e5]', 'border-[#c7d2fe]');
+                    caret.classList.add('text-[#4f46e5]');
+                } else if (val === 'ซ่อมเสร็จแล้ว') {
+                    trigger.classList.add('bg-[#d1fae5]', 'text-[#059669]', 'border-[#a7f3d0]');
+                    caret.classList.add('text-[#059669]');
+                } else {
+                    trigger.classList.add('bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50');
+                    caret.classList.add('text-slate-400');
+                }
+            }
+
+            if (reload) searchHistoryModalTable();
+        }
+
+
         function searchHistoryModalTable() {
             execSchedulePage('history');
         }

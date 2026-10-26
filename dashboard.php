@@ -5150,6 +5150,19 @@ if (isset($_GET['api_check_hash'])) {
                                 </div>
 
                                 <!-- ✨ ดรอปดาวน์เลือกสถานะ (สีเดียวกับในตารางเป๊ะๆ) ✨ -->
+                                <div class="hidden relative w-[135px] portrait:w-[115px] sm:w-[140px] landscape:w-[140px] outline-none focus:ring-2 focus:ring-indigo-400 rounded-xl" id="history-StatusContainer" tabindex="0" onkeydown="handleChartKeydown(event, 'history-Status', searchHistoryModalTable)" style="font-family: 'Sarabun', sans-serif;">
+                                    <div id="history-StatusTrigger" class="flex items-center justify-between w-full bg-white border border-slate-200 text-sm portrait:text-xs sm:text-sm landscape:text-sm text-slate-700 rounded-xl px-3.5 portrait:px-2.5 sm:px-3.5 landscape:px-3.5 py-2.5 portrait:py-2 sm:py-2.5 landscape:py-2.5 h-[42px] portrait:h-[38px] sm:h-[42px] landscape:h-[42px] focus:outline-none focus:ring-2 focus:ring-indigo-100 font-bold cursor-pointer transition-colors hover:bg-slate-50 shadow-sm" onclick="toggleChartDropdown(event, 'history-Status')">
+                                        <span id="history-StatusText" class="truncate">ทั้งหมด</span>
+                                        <i id="history-StatusCaret" class="fas fa-caret-down text-slate-400 ml-1.5 text-[10px]"></i>
+                                    </div>
+                                    <div id="history-StatusList" class="chart-dropdown-list absolute z-50 w-[155px] right-0 mt-1 bg-white border border-slate-100 rounded-2xl shadow-xl hidden flex-col p-2 space-y-1.5" style="font-family: 'Sarabun', sans-serif;">
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all text-slate-700 bg-slate-50 hover:bg-slate-100 text-center" data-value="all" data-display="ทั้งหมด" onclick="selectHistoryStatusDropdown('all', 'ทั้งหมด')">ทั้งหมด</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#fef3c7] text-[#d97706] hover:brightness-95 text-center shadow-2xs" data-value="รอรับเรื่อง" data-display="รอรับเรื่อง" onclick="selectHistoryStatusDropdown('รอรับเรื่อง', 'รอรับเรื่อง')">รอรับเรื่อง</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#e0e7ff] text-[#4f46e5] hover:brightness-95 text-center shadow-2xs" data-value="กำลังดำเนินการ" data-display="กำลังดำเนินการ" onclick="selectHistoryStatusDropdown('กำลังดำเนินการ', 'กำลังดำเนินการ')">กำลังดำเนินการ</div>
+                                        <div class="chart-dropdown-item px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all bg-[#d1fae5] text-[#059669] hover:brightness-95 text-center shadow-2xs" data-value="ซ่อมเสร็จแล้ว" data-display="ซ่อมเสร็จแล้ว" onclick="selectHistoryStatusDropdown('ซ่อมเสร็จแล้ว', 'ซ่อมเสร็จแล้ว')">ซ่อมเสร็จแล้ว</div>
+                                    </div>
+                                    <input type="hidden" id="historyStatus" value="all">
+                                </div>
                         </div>
 
                         <!-- ปุ่ม Contacts -->
@@ -8102,6 +8115,8 @@ if (isset($_GET['api_check_hash'])) {
             if (!refresh && !restore) {
                 url.searchParams.delete('pg_history_page');
                 url.searchParams.delete('pg_history_q');
+                if (type === 'technician') url.searchParams.set('pg_history_status', 'all');
+                else url.searchParams.delete('pg_history_status');
                 url.searchParams.set('pg_history_day', document.getElementById('historyDay').value);
                 url.searchParams.set(
                     'pg_history_month',
@@ -8338,6 +8353,9 @@ if (isset($_GET['api_check_hash'])) {
                 );
             }
 
+            document.getElementById('history-StatusContainer').classList.toggle('hidden', type !== 'technician');
+            const historyStatus = type === 'technician' ? (url.searchParams.get('pg_history_status') || 'all') : 'all';
+            selectHistoryStatusDropdown(historyStatus, historyStatus === 'all' ? 'ทั้งหมด' : historyStatus, false);
             historyFiltersRestoring = false;
             toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');
 
@@ -8547,6 +8565,47 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         // ✨ ฟังก์ชันค้นหาข้อมูลในตารางประวัติ (History Modal) ✨
+        function selectHistoryStatusDropdown(val, display, reload = true) {
+            if (!['all','รอรับเรื่อง','กำลังดำเนินการ','ซ่อมเสร็จแล้ว'].includes(val)) {val='all';display='ทั้งหมด';}
+            const list = document.getElementById('history-StatusList');
+            const input = document.getElementById('historyStatus');
+            const textEl = document.getElementById('history-StatusText');
+            const trigger = document.getElementById('history-StatusTrigger');
+            const caret = document.getElementById('history-StatusCaret');
+
+            if (input) input.value = val;
+            if (textEl) textEl.innerText = display;
+            if (list) { list.classList.add('hidden'); list.classList.remove('flex'); }
+
+            if (trigger && caret) {
+                // ล้างสีสถานะเดิมออกก่อน
+                trigger.classList.remove(
+                    'bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50',
+                    'bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]',
+                    'bg-[#e0e7ff]', 'text-[#4f46e5]', 'border-[#c7d2fe]',
+                    'bg-[#d1fae5]', 'text-[#059669]', 'border-[#a7f3d0]'
+                );
+                caret.classList.remove('text-slate-400', 'text-[#d97706]', 'text-[#4f46e5]', 'text-[#059669]');
+
+                if (val === 'รอรับเรื่อง') {
+                    trigger.classList.add('bg-[#fef3c7]', 'text-[#d97706]', 'border-[#fde68a]');
+                    caret.classList.add('text-[#d97706]');
+                } else if (val === 'กำลังดำเนินการ') {
+                    trigger.classList.add('bg-[#e0e7ff]', 'text-[#4f46e5]', 'border-[#c7d2fe]');
+                    caret.classList.add('text-[#4f46e5]');
+                } else if (val === 'ซ่อมเสร็จแล้ว') {
+                    trigger.classList.add('bg-[#d1fae5]', 'text-[#059669]', 'border-[#a7f3d0]');
+                    caret.classList.add('text-[#059669]');
+                } else {
+                    trigger.classList.add('bg-white', 'text-slate-700', 'border-slate-200', 'hover:bg-slate-50');
+                    caret.classList.add('text-slate-400');
+                }
+            }
+
+            if (reload) searchHistoryModalTable();
+        }
+
+
         function searchHistoryModalTable() {
             if (historyFiltersRestoring || !window.currentHistoryName) return;
 
@@ -8560,7 +8619,8 @@ if (isset($_GET['api_check_hash'])) {
                 q: document.getElementById('searchHistoryModalInput').value.trim(),
                 day: document.getElementById('historyDay').value,
                 month: document.getElementById('historyMonth').value,
-                year: document.getElementById('historyYear').value
+                year: document.getElementById('historyYear').value,
+                status: window.currentHistoryType === 'technician' ? document.getElementById('historyStatus').value : 'all'
             };
 
             for (const [key, value] of Object.entries(values)) {

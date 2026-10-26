@@ -652,6 +652,14 @@
     if (!history || typeof open !== "function") return;
     history.dataset.mbsFocusRepairId = exactId ? String(exactId) : '';
     delete history.dataset.mbsFocusScrolled;
+    openHistoryFromAnalytics(history, technician, () => {
+      const name = reporterName(lineId);
+      return technician ? open(name, lineId, exactId, reportedDate) : data.role === "executive"
+        ? open(name, "reporter", lineId, exactId, reportedDate)
+        : open(name, "reporter", false, false, null, lineId, exactId, reportedDate);
+    });
+  }
+  function openHistoryFromAnalytics(history, technician, invoke) {
     const analytics = $("mbsAnalytics");
     const returnToAnalytics = !!analytics?.open;
     const body = analytics?.querySelector(".mbs-dialog-body");
@@ -677,15 +685,36 @@
     if (technician) history.addEventListener("close", restore, { once: true });
     if (returnToAnalytics) analytics.close();
     try {
-      const name = reporterName(lineId);
-      const result = technician ? open(name, lineId, exactId, reportedDate) : data.role === "executive"
-        ? open(name, "reporter", lineId, exactId, reportedDate)
-        : open(name, "reporter", false, false, null, lineId, exactId, reportedDate);
+      const result = invoke();
       wasOpen = isOpen();
       Promise.resolve(result).catch(restore);
     } catch {
       restore();
     }
+  }
+  function openTechnicianTableHistory(id) {
+    const techId = Number(id);
+    if (!["admin","executive"].includes(data.role) || !Number.isSafeInteger(techId) || techId <= 0 ||
+        !data.technicians.some(t => Number(t.id) === techId) || typeof window.viewHistory !== "function") return;
+    const modal = $("historyModal");
+    if (!modal) return;
+    const now = new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Bangkok",year:"numeric",month:"2-digit"}).formatToParts(new Date());
+    const today = Object.fromEntries(now.map(part => [part.type,part.value]));
+    const month = overviewFields?.month?.value || urlState.searchParams.get("mbs_overview_month");
+    const year = overviewFields?.year?.value || urlState.searchParams.get("mbs_overview_year");
+    const values = {Day:"all", Month:/^(0?[1-9]|1[0-2])$/.test(month || "") ? String(month).padStart(2,"0") : today.month,
+      Year:/^[1-9]\d{3}$/.test(year || "") ? year : today.year};
+    const range = window.mbsRanges.history;
+    const u = new URL(location.href);
+    for (const part of ["start","end"]) {
+      if (range?.[part]) range[part].value = "";
+      u.searchParams.delete("mbs_history_" + part);
+    }
+    window.history.replaceState(window.history.state,"",u);
+    for (const [part,value] of Object.entries(values)) if ($("history"+part)) $("history"+part).value = value;
+    openHistoryFromAnalytics(modal, false, () => data.role === "executive"
+      ? window.viewHistory(technicianName(techId), "technician", null, null, null, techId)
+      : window.viewHistory(technicianName(techId), "technician", false, false, techId));
   }
   function openAnalytics(kind, value, options = {}) {
     const cardHistory = options.cardHistory === true && data.role === "admin" && kind === "technician";
@@ -732,6 +761,17 @@
     if (detailed) {
       body.innerHTML = '<div class="mbs-analytics-summary"></div><p class="mbs-analytics-guide">เลือกแถบในกราฟเพื่อกรองรายการงาน · กดแถบเดิมซ้ำเพื่อยกเลิก</p><div class="mbs-drill-charts"></div><section class="mbs-analytics-results"><div class="mbs-drill-actions"><div><h3>รายการงานแจ้งซ่อม</h3><p id="mbsMatchLabel" aria-live="polite">แสดงงานทั้งหมดในช่วงที่เลือก</p></div><button type="button" class="mbs-button" id="mbsAllHistory">แสดงงานทั้งหมด</button></div><div id="mbsDrillTable"></div></section>';
       $("mbsMatchLabel").textContent = allJobsLabel;
+      if (kind === "technician" && ["admin","executive"].includes(data.role)) {
+        const group = document.createElement("div");
+        group.className = "mbs-history-actions";
+        const button = document.createElement("button");
+        button.type = "button"; button.className = "mbs-button";
+        button.id = "mbsTechnicianTableHistory";
+        button.textContent = "ดูประวัติเจ้าหน้าที่";
+        button.onclick = () => openTechnicianTableHistory(value);
+        const all = $("mbsAllHistory");
+        all.before(group); group.append(button, all);
+      }
       for (const [label, count, tone] of [
         ["งานทั้งหมด", rows.length, "total"],
         ["รอรับเรื่อง", rows.filter(r => String(r.status).trim() === "รอรับเรื่อง").length, "pending"],
@@ -743,7 +783,13 @@
         item.dataset.mbsSummaryStatus = status;
         item.setAttribute("aria-pressed", String(tone === "total"));
         item.title = "ดูรายการ" + label;
-        item.innerHTML = '<span>' + label + '</span><strong>' + count + '<small>งาน</small></strong><small class="mbs-summary-open">ดูรายการ ↓</small>';
+        const icons = {
+          total:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+          pending:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+          progress:'<path d="M14.5 6.3a5 5 0 0 0-6.8 6.8L3 17.8 6.2 21l4.7-4.7a5 5 0 0 0 6.8-6.8l-3 3-3.2-3.2 3-3Z"/>',
+          complete:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>'
+        };
+        item.innerHTML = '<span class="mbs-summary-label">' + label + '</span><span class="mbs-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24">' + icons[tone] + '</svg></span><strong>' + count + '<small>งาน</small></strong><small class="mbs-summary-open"><span>ดูรายการ</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></small>';
         item.onclick = async () => {
           const clear = !status || selected.match.status === status;
           selected.match = clear ? {} : {status};
@@ -762,7 +808,7 @@
     }
     const fields =
       kind === "reporter"
-        ? ["equipment_type", "location", "technician_id"]
+        ? ["equipment_type", "location", "technician_id", "problem_desc"]
         : kind === "technician"
           ? ["equipment_type", "location", "line_user_id", "problem_desc"]
           : kind === "equipment"
