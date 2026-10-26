@@ -65,8 +65,6 @@
                     <div class="rc-days rc-range-days" role="group" aria-label="เลือกวันเริ่มต้นหรือสิ้นสุด"></div>
                     <div class="rc-range-popup-footer"><button type="button" data-rc-range-clear>ล้าง</button><button type="button" data-rc-range-today>วันนี้</button></div>
                 </div>
-                <label>ปีงบประมาณ พ.ศ.<select data-rc-fiscal><option value="">เลือกปีงบประมาณ</option>${Array.from({length:15},(_,i)=>today.year+543-10+i).map(y=>'<option value="'+y+'">'+y+'</option>').join('')}</select></label>
-                <p class="rc-help">ปีงบประมาณ: 1 ตุลาคมปีก่อน ถึง 30 กันยายนของปีที่เลือก รวมวันเริ่มต้นและวันสิ้นสุด</p>
                 <p data-rc-range-error role="alert" class="rc-range-error"></p>
             </section>
             <footer class="rc-footer"><p id="rc-selection" aria-live="polite"></p><div><button type="button" data-rc="close" class="rc-cancel">ยกเลิก</button><button type="button" data-rc="apply" class="rc-apply">ใช้ตัวกรอง</button></div></footer>`;
@@ -160,13 +158,13 @@
         }
         function moveMonth(delta) {const date=new Date(viewYear,viewMonth-1+delta,1);if(date.getFullYear()<1000||date.getFullYear()>9999)return;viewYear=date.getFullYear();viewMonth=date.getMonth()+1;render();position();}
         dialog.addEventListener('click',event=>{
-            if(rangeTarget&&(event.target.closest('[data-rc-range-clear]')||event.target.closest('[data-rc-range-today]'))){const part=rangeTarget;rangeInput(part).value=event.target.closest('[data-rc-range-today]')?String(today.year)+'-'+monthValue(today.month)+'-'+String(today.day).padStart(2,'0'):'';get('[data-rc-fiscal]').value='';rangeTarget=null;render();position();get('[data-rc-range-open="'+part+'"]').focus();return;}
+            if(rangeTarget&&(event.target.closest('[data-rc-range-clear]')||event.target.closest('[data-rc-range-today]'))){const part=rangeTarget;rangeInput(part).value=event.target.closest('[data-rc-range-today]')?String(today.year)+'-'+monthValue(today.month)+'-'+String(today.day).padStart(2,'0'):'';rangeTarget=null;render();position();get('[data-rc-range-open="'+part+'"]').focus();return;}
             const rangeOpen=event.target.closest('[data-rc-range-open]');
             if(rangeOpen){rangeTarget=rangeTarget===rangeOpen.dataset.rcRangeOpen?null:rangeOpen.dataset.rcRangeOpen;if(rangeTarget){const value=rangeInput(rangeTarget).value||rangeInput('start').value;if(value){rangeYear=Number(value.slice(0,4));rangeMonth=Number(value.slice(5,7));}else{rangeYear=today.year;rangeMonth=today.month;}}render();position();return;}
             const rangeNav=event.target.closest('[data-rc-range-nav]');
             if(rangeNav){const date=new Date(rangeYear,rangeMonth-1+Number(rangeNav.dataset.rcRangeNav),1);if(date.getFullYear()>=1000&&date.getFullYear()<=9999){rangeYear=date.getFullYear();rangeMonth=date.getMonth()+1;}render();position();return;}
             const rangeDay=event.target.closest('[data-rc-range-day]');
-            if(rangeDay&&rangeTarget){const part=rangeTarget;rangeInput(part).value=rangeDay.dataset.rcRangeDay;get('[data-rc-fiscal]').value='';rangeTarget=null;render();position();get('[data-rc-range-open="'+part+'"]').focus();return;}
+            if(rangeDay&&rangeTarget){const part=rangeTarget;rangeInput(part).value=rangeDay.dataset.rcRangeDay;rangeTarget=null;render();position();get('[data-rc-range-open="'+part+'"]').focus();return;}
             const tab=event.target.closest('[data-rc-mode]');if(tab){mode=tab.dataset.rcMode;render();position();get('#rc-tab-'+mode).focus();return;}
             const month=event.target.closest('[data-rc-month]');if(month&&!month.disabled){period.month=month.dataset.rcMonth;render();get('[data-rc-month="'+period.month+'"]').focus();return;}
             const day=event.target.closest('[data-rc-day]');if(day){selectedDate={day:day.dataset.rcDay,month:monthValue(viewMonth),year:String(viewYear)};render();get('[data-rc-day="'+selectedDate.day+'"]').focus();return;}
@@ -189,7 +187,6 @@
             if(event.target===get('#rc-view-month'))viewMonth=Number(event.target.value);
             if(event.target===get('#rc-view-year'))viewYear=Number(event.target.value);
             if(event.target===get('#rc-period-year')){period.year=event.target.value;period.month='all';}
-            if(event.target===get('[data-rc-fiscal]')&&event.target.value){const y=Number(event.target.value)-543;get('[data-rc-start]').value=String(y-1)+'-10-01';get('[data-rc-end]').value=String(y)+'-09-30';rangeTarget=null;}
             render();position();
         });
         dialog.addEventListener('keydown',event=>{
