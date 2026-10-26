@@ -740,8 +740,8 @@
         : kind === "technician"
           ? ["equipment_type", "location", "line_user_id"]
           : kind === "equipment"
-            ? ["equipment_type", "problem_desc"]
-            : ["location", "problem_desc"];
+            ? ["equipment_type", "problem_desc", "line_user_id"]
+            : ["location", "problem_desc", "line_user_id"];
     for (const f of fields) {
       const card = document.createElement("section");
       card.innerHTML =
