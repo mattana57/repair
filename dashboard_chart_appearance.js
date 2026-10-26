@@ -1998,6 +1998,30 @@
         factories[role + "-" + kind] || factories["admin-" + kind];
       if (!factory) return null;
       const config = factory(canvas, pairs, meta);
+      // One restrained hue per Overview metric; preserve chart geometry and data.
+      const overviewColors = {
+        equipment: { base: "#6585b8", hover: "#4f6fa2" },
+        location: { base: "#568f88", hover: "#40766f" },
+        technician: { base: "#8c7bab", hover: "#73628f" },
+      };
+      const tone = overviewColors[kind];
+      if (tone) {
+        config.data.datasets.forEach((dataset) => {
+          if (config.type === "line") {
+            const fill = canvas.getContext("2d").createLinearGradient(0, 0, 0, 400);
+            fill.addColorStop(0, "rgba(101, 133, 184, 0.16)");
+            fill.addColorStop(1, "rgba(101, 133, 184, 0)");
+            dataset.borderColor = tone.base;
+            dataset.backgroundColor = fill;
+            dataset.pointBorderColor = tone.base;
+            dataset.pointHoverBorderColor = tone.hover;
+            dataset.pointHoverBackgroundColor = "#ffffff";
+          } else {
+            dataset.backgroundColor = tone.base;
+            dataset.hoverBackgroundColor = tone.hover;
+          }
+        });
+      }
       if (kind === "rating" && meta.departments) {
         config.data.datasets[0].label = "คะแนนเฉลี่ยเจ้าหน้าที่";
         config.plugins = config.plugins || [];
