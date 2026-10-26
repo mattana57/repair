@@ -3600,7 +3600,7 @@ if (isset($_GET['api_check_hash'])) {
             <!-- ✨ สิ้นสุดส่วนหน้า Transactions ✨ -->
 
             <div id="technicians" class="section <?php echo $active_tab === 'technicians' ? '' : 'hidden'; ?> space-y-6 no-print">
-                <?php tb_notice(); ?>
+                <?php if ($active_tab !== 'team_cards') tb_notice(); ?>
                 <div id="managementAccounts">
                     <?php
                     $management_role = tp_get('team_account_role', 'admin');
@@ -4051,6 +4051,14 @@ if (isset($_GET['api_check_hash'])) {
                     </div>
                 </div>
 
+                <div class="mbs-card-bulk">
+                    <span id="mbsCardSelected" hidden>เลือกแล้ว 0 รายการ</span>
+                    <button type="button" id="mbsCardEdit" aria-expanded="false">แก้ไข</button>
+                    <div id="mbsCardMenu" hidden><button type="button" data-card-action="choose">เลือก</button><button type="button" data-card-action="all">เลือกทั้งหมด</button><button type="button" data-card-action="cancel">ยกเลิก</button><button type="button" data-card-action="delete" disabled>ลบ</button></div>
+                </div>
+                <?php if ($active_tab === 'team_cards') tb_notice(); ?>
+                <form id="mbsCardBulkForm" method="POST" hidden><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>"><input type="hidden" name="team_bulk_action" value="move"><input type="hidden" name="team_bulk_confirm" value="1"><input type="hidden" name="team_bulk_return" value="team_cards"><input type="hidden" name="team_bulk_items" value=""></form>
+
                 <?php 
                 $departments_data = [];
                 $res_techs = $conn->query("SELECT t.*, (SELECT COUNT(*) FROM repairs r WHERE r.technician_id=t.id AND r.deleted_at IS NULL) AS assigned_job_count FROM technicians t WHERE t.approval_status = 'อนุมัติแล้ว' AND t.deleted_at IS NULL");
@@ -4136,7 +4144,9 @@ if (isset($_GET['api_check_hash'])) {
                         <div class="bg-white rounded-[24px] overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-sky-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[260px] w-full sm:w-[260px] tech-card-item" data-tech-card-id="<?php echo (int)$tech['technician_id']; ?>" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
                             <div class="relative w-full aspect-square bg-slate-50 overflow-hidden">
-                                <button type="button" class="mbs-tech-card-edit" data-tech-card-edit="<?php echo (int)$tech['technician_id']; ?>" title="แก้ไขข้อมูลเจ้าหน้าที่" aria-label="แก้ไขข้อมูลเจ้าหน้าที่ <?php echo htmlspecialchars($tech['th'], ENT_QUOTES, 'UTF-8'); ?>"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                                <button type="button" class="mbs-tech-card-edit" data-tech-card-edit="<?php echo (int)$tech['technician_id']; ?>" title="ดูข้อมูลเจ้าหน้าที่" aria-label="ดูข้อมูลเจ้าหน้าที่ <?php echo htmlspecialchars($tech['th'], ENT_QUOTES, 'UTF-8'); ?>"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                                <button type="button" class="mbs-tech-card-delete" onclick="confirmDelete('tech', <?php echo (int)$tech['technician_id']; ?>)" title="ลบเจ้าหน้าที่" aria-label="ย้ายเจ้าหน้าที่เข้าถังขยะ"><i class="fas fa-trash-alt" aria-hidden="true"></i></button>
+                                <label class="mbs-card-select" hidden><input type="checkbox" value="<?php echo (int)$tech['technician_id']; ?>" aria-label="เลือกเจ้าหน้าที่ <?php echo htmlspecialchars($tech['th'], ENT_QUOTES, 'UTF-8'); ?>"></label>
                                 <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
                                      onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
                                      onclick="openImageModal(this.src)"
@@ -4215,11 +4225,7 @@ if (isset($_GET['api_check_hash'])) {
                                         <i class="fas fa-history mr-1.5 text-sky-400 group-hover/btn:text-white transition-colors"></i> 
                                         ดูประวัติงาน
                                     </button>
-                                    <button type="button" onclick="confirmDelete('tech', <?php echo (int)$tech['technician_id']; ?>)"
-                                            class="mt-2 w-full text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 hover:bg-rose-500 hover:text-white hover:border-rose-500 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center"
-                                            aria-label="ย้ายเจ้าหน้าที่เข้าถังขยะ">
-                                        <i class="fas fa-trash-alt mr-1.5" aria-hidden="true"></i> ลบเจ้าหน้าที่
-                                    </button>
+
                                 </div>
                             </div>
 
@@ -9267,6 +9273,7 @@ if (isset($_GET['api_check_hash'])) {
 <script src="dashboard_calendars.js?v=20261025-1"></script>
 <span id="tb-settings" hidden data-user="<?= (int)$_SESSION['user_id'] ?>" data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></span>
 <script src="admin_team_bulk.js?v=20261019-1"></script>
+<script src="technician_card_bulk.js?v=20261026-1"></script>
 <?php mbs_feature_assets($conn); ?>
 </body>
 </html>

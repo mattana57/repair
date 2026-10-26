@@ -92,7 +92,7 @@ function tb_handle_request($conn) {
         if($select){http_response_code(400);header('Content-Type: application/json; charset=UTF-8');header('Cache-Control: no-store');echo json_encode(['error'=>$message],JSON_UNESCAPED_UNICODE);exit;}
         $_SESSION['team_bulk_notice']=['type'=>'error','message'=>$message];
     }
-    $query=['tab'=>'technicians'];
+    $query=['tab'=>(($_POST['team_bulk_return'] ?? '')==='team_cards' ? 'team_cards' : 'technicians')];
     if(in_array($_GET['team_account_role']??null,['admin','executive'],true))$query['team_account_role']=$_GET['team_account_role'];
     header('Location: dashboard.php?'.http_build_query($query,'','&',PHP_QUERY_RFC3986),true,303);exit;
 }
