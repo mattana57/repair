@@ -49,7 +49,7 @@ function mbs_drill_dispatch($db) {
         }else{
             $column=['reporter'=>'line_user_id','equipment'=>'equipment_type','location'=>'location','technician'=>'technician_id'][$kind];
             $rows=array_values(array_filter($rows,static function($r)use($column,$value,$kind){return $kind==='technician'?(int)$r[$column]===(int)$value:trim((string)($r[$column]??''))===trim($value);}));
-            foreach(['equipment_type','location','technician_id','problem_desc','status'] as $column){$v=$_GET['mbs_match_'.$column]??null;if(is_string($v)&&$v!=='')$rows=array_values(array_filter($rows,static function($r)use($column,$v){return trim((string)($r[$column]??''))===trim($v);}));}
+            foreach(['equipment_type','location','technician_id','line_user_id','problem_desc','status'] as $column){$v=$_GET['mbs_match_'.$column]??null;if(is_string($v)&&$v!=='')$rows=array_values(array_filter($rows,static function($r)use($column,$v){return trim((string)($r[$column]??''))===trim($v);}));}
         }
         $total=count($rows);$pages=max(1,(int)ceil($total/50));$page=max(1,min($pages,(int)($_GET['mbs_page']??1)));$slice=array_slice($rows,($page-1)*50,50);
         echo '<p class="mbs-result-count">'.number_format($total).($kind==='reviews'?(!empty($noReview)?' รายการที่ยังไม่มีรีวิว':' รีวิว'):' รายการแจ้งซ่อม').'</p>';

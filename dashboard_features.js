@@ -738,7 +738,7 @@
       kind === "reporter"
         ? ["equipment_type", "location", "technician_id"]
         : kind === "technician"
-          ? ["equipment_type", "location", "status"]
+          ? ["equipment_type", "location", "line_user_id"]
           : ["equipment_type", "location", "problem_desc"].filter(
               (f) => f !== key,
             );
@@ -751,6 +751,7 @@
             equipment_type: "อุปกรณ์ที่แจ้งซ่อม",
             location: "สถานที่แจ้งซ่อม",
             technician_id: "เจ้าหน้าที่ผู้รับผิดชอบ",
+            line_user_id: "ผู้แจ้งซ่อม",
             status: "สถานะงาน",
             problem_desc: "ปัญหาที่แจ้ง",
           }[f],
@@ -768,13 +769,13 @@
           const b = document.createElement("button"); b.type="button"; b.className="mbs-analytics-bar";
           b.dataset.mbsAnalyticsFilter=f; b.dataset.mbsAnalyticsValue=key; b.setAttribute("aria-pressed","false");
           b.innerHTML='<span class="mbs-analytics-bar-label"></span><strong>' + count + ' <small>งาน</small></strong><span class="mbs-analytics-track" aria-hidden="true"><span style="width:' + count/max*100 + '%"></span></span>';
-          b.querySelector(".mbs-analytics-bar-label").textContent=(f === "technician_id" ? technicianName(key) : key) || "ไม่ระบุ";
+          b.querySelector(".mbs-analytics-bar-label").textContent=(f === "technician_id" ? technicianName(key) : f === "line_user_id" ? reporterName(key) : key) || "ไม่ระบุ";
           b.onclick=()=>{
             const clear = selected.match[f] === key;
             selected.match=clear ? {} : { [f]:key };
             syncSummaryCards();
             for(const other of body.querySelectorAll(".mbs-analytics-bar"))other.setAttribute("aria-pressed",String(!clear && other===b));
-            $("mbsMatchLabel").textContent=clear ? "แสดงงานทั้งหมดในช่วงที่เลือก" : "กรองตาม " + card.querySelector("h3").textContent + ": " + ((f === "technician_id" ? technicianName(key) : key) || "ไม่ระบุ");
+            $("mbsMatchLabel").textContent=clear ? "แสดงงานทั้งหมดในช่วงที่เลือก" : "กรองตาม " + card.querySelector("h3").textContent + ": " + ((f === "technician_id" ? technicianName(key) : f === "line_user_id" ? reporterName(key) : key) || "ไม่ระบุ");
             loadTable($("mbsDrillTable"),serverParams(kind,value,selected.match));
           };
           list.appendChild(b);
