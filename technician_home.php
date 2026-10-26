@@ -1204,9 +1204,12 @@ if (isset($_GET['th_fragment'])
             border-radius: 50%;
             background: #eef2ff;
             color: #4f46e5;
-            pointer-events: none;
+            cursor: pointer;
+            padding: 0;
             user-select: none;
         }
+        .tech-header-avatar:disabled { cursor: default; }
+        .tech-header-avatar:focus-visible { outline: 3px solid #c7d2fe; outline-offset: 3px; }
         .tech-header-avatar > img {
             width: 100%;
             height: 100%;
@@ -1250,13 +1253,13 @@ if (isset($_GET['th_fragment'])
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="tech-header-avatar">
+                    <button type="button" class="tech-header-avatar" title="ดูรูปโปรไฟล์" aria-label="ดูรูปโปรไฟล์เจ้าหน้าที่" onclick="document.getElementById('tech-profile-viewer')?.showModal()" <?= $tech_profile_image === '' ? 'disabled' : '' ?>>
                         <?php if ($tech_profile_image !== ''): ?>
                             <img src="<?= htmlspecialchars($tech_profile_image, ENT_QUOTES, 'UTF-8') ?>" alt="รูปโปรไฟล์เจ้าหน้าที่" draggable="false">
                         <?php else: ?>
                             <i class="fas fa-user" role="img" aria-label="รูปโปรไฟล์เจ้าหน้าที่"></i>
                         <?php endif; ?>
-                    </span>
+                    </button>
                     <details class="tech-mobile-menu">
                         <summary class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center"
                                  aria-label="เมนูเจ้าหน้าที่">
