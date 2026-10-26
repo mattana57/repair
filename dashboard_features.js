@@ -739,9 +739,9 @@
         ? ["equipment_type", "location", "technician_id"]
         : kind === "technician"
           ? ["equipment_type", "location", "line_user_id"]
-          : ["equipment_type", "location", "problem_desc"].filter(
-              (f) => f !== key,
-            );
+          : kind === "equipment"
+            ? ["equipment_type", "problem_desc"]
+            : ["location", "problem_desc"];
     for (const f of fields) {
       const card = document.createElement("section");
       card.innerHTML =
