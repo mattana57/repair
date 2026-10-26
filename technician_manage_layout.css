@@ -1,4 +1,7 @@
 /* Admin Manage Technician only. Keep the original footer and button sizes. */
+#techAdminForm[data-mbs-managed-role="technician"] #btnRemoveAvatar {
+  display: none !important;
+}
 @media (min-width: 768px) {
   #techAdminModal:has(#techAdminForm[data-mbs-managed-role="technician"]) > .modal-container {
     max-width: 960px;
