@@ -215,3 +215,36 @@
 .mbs-analytics-detail .mbs-drill-charts .mbs-analytics-bar[aria-pressed="true"] .mbs-analytics-track > span { background:linear-gradient(90deg,var(--chart-selected),var(--chart-selected-end)); }
 .mbs-analytics-detail .mbs-drill-charts .mbs-analytics-bar[aria-pressed="true"] > strong { color:var(--chart-selected); }
 .mbs-analytics-detail .mbs-drill-charts .mbs-analytics-bar:focus-visible { outline:2px solid var(--chart-selected); outline-offset:2px; }
+
+/* Refine the work list's visual hierarchy without changing its contents. */
+.mbs-analytics-detail .mbs-analytics-results { border-color:#e2e8f0; box-shadow:0 3px 12px #0f172a04; }
+.mbs-analytics-detail .mbs-drill-actions h3 { color:#1e293b; font-size:18px; font-weight:700; }
+.mbs-analytics-detail .mbs-analytics-results .mbs-result-count { display:inline-flex; align-items:center; margin:0 0 16px; padding:6px 11px; border-radius:8px; background:#f1f5f9; color:#475569; font-size:12px; font-weight:600; }
+.mbs-analytics-detail .mbs-analytics-work-list { gap:18px; }
+.mbs-analytics-detail .mbs-analytics-work { border-radius:17px; border-right-color:#e2e8f0; border-bottom-color:#e2e8f0; border-left-color:#e2e8f0; box-shadow:0 3px 10px #0f172a04; padding:20px; }
+.mbs-analytics-detail .mbs-analytics-work > header { align-items:flex-start; gap:12px; margin-bottom:12px; }
+.mbs-analytics-detail .mbs-analytics-ticket { display:inline-block; max-width:100%; padding:3px 7px; border-radius:6px; background:#f8fafc; font-size:11px; line-height:1.55; color:#64748b; overflow-wrap:anywhere; }
+.mbs-analytics-detail .mbs-analytics-work h4 { margin:7px 0 0; font-size:18px; line-height:1.45; font-weight:700; color:#1e293b; }
+.mbs-analytics-detail .mbs-analytics-status { padding:6px 10px; font-size:11px; font-weight:600; }
+.mbs-analytics-detail .mbs-analytics-status::before { content:''; display:inline-block; width:5px; height:5px; margin-right:6px; border-radius:50%; background:currentColor; vertical-align:middle; }
+.mbs-analytics-detail .mbs-analytics-work-problem { margin:0 0 16px; padding:10px 12px; border-left:3px solid #cbd5e1; border-radius:0 9px 9px 0; background:#f8fafc; color:#334155; font-size:13px; line-height:1.7; }
+.mbs-analytics-detail .mbs-analytics-work-problem > span { color:#64748b; font-weight:500; }
+.mbs-analytics-detail .mbs-analytics-work-people { gap:14px; padding:1px 2px 4px; margin-bottom:14px; }
+.mbs-analytics-detail .mbs-analytics-work-people dt { color:#64748b; font-size:11px; margin-bottom:5px; }
+.mbs-analytics-detail .mbs-analytics-work-people dd { font-size:13px; line-height:1.6; font-weight:600; }
+.mbs-analytics-detail .mbs-analytics-work-times { padding:12px 14px; gap:12px; border:1px solid #edf2f7; border-radius:11px; background:#f7f9fc; }
+.mbs-analytics-detail .mbs-analytics-work-times dt { font-size:11px; color:#64748b; }
+.mbs-analytics-detail .mbs-analytics-work-times dd { font-size:12px; color:#334155; font-variant-numeric:tabular-nums; line-height:1.6; }
+.mbs-analytics-detail .mbs-analytics-work-times > div + div { border-left:1px solid #e2e8f0; padding-left:12px; }
+.mbs-analytics-detail .mbs-analytics-work > footer { margin-top:16px; padding-top:14px; border-top:1px solid #f1f5f9; gap:10px; }
+.mbs-analytics-detail .mbs-analytics-work > footer .mbs-history-link { padding:8px 11px; border:1px solid #dbe4f0; border-radius:10px; background:white; color:#475569; text-decoration:none; font-size:12px; font-weight:500; }
+.mbs-analytics-detail .mbs-analytics-work > footer .mbs-history-link:hover { background:#f8fafc; border-color:#bfdbfe; color:#1d4ed8; }
+.mbs-analytics-detail .mbs-analytics-work-open { padding:9px 13px; border-radius:10px; font-size:12px; font-weight:600; box-shadow:0 3px 8px #2563eb18; }
+@media(max-width:520px) {
+ .mbs-analytics-detail .mbs-analytics-work { padding:14px; }
+ .mbs-analytics-detail .mbs-analytics-work h4 { font-size:17px; }
+ .mbs-analytics-detail .mbs-analytics-work-times > div + div { border-left:0; border-top:1px solid #e2e8f0; padding-left:0; padding-top:8px; }
+}
+@media(min-width:768px) and (max-width:1100px) {
+ #mbsAnalytics.mbs-analytics-expanded .mbs-analytics-work-times > div + div { border-left:0; border-top:1px solid #e2e8f0; padding-left:0; padding-top:8px; }
+}
