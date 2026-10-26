@@ -642,6 +642,8 @@
           ? technicianName(value)
           : value);
     const dlg = dialog("mbsAnalytics", title);
+    const detailed = ["equipment", "location", "technician"].includes(kind);
+    dlg.classList.toggle("mbs-analytics-detail", detailed);
     dlg.querySelector("h2").textContent = title;
     chartRefs.forEach((c) => c.destroy());
     chartRefs = [];
@@ -660,6 +662,19 @@
       '<p class="mbs-intro">แจ้งซ่อม ' +
       rows.length +
       ' รายการในช่วงที่เลือก · กดแท่งกราฟเพื่อดูรายการที่เกี่ยวข้อง</p><div class="mbs-drill-charts"></div><div class="mbs-drill-actions"><button type="button" class="mbs-button" id="mbsAllHistory">ดูประวัติทั้งหมดในช่วงนี้</button><span id="mbsMatchLabel"></span></div><div id="mbsDrillTable"></div>';
+    if (detailed) {
+      body.innerHTML = '<div class="mbs-analytics-summary"></div><p class="mbs-analytics-guide">เลือกแถบในกราฟเพื่อกรองรายการงานด้านล่าง</p><div class="mbs-drill-charts"></div><section class="mbs-analytics-results"><div class="mbs-drill-actions"><div><h3>รายการงานแจ้งซ่อม</h3><p id="mbsMatchLabel" aria-live="polite">แสดงงานทั้งหมดในช่วงที่เลือก</p></div><button type="button" class="mbs-button" id="mbsAllHistory">แสดงงานทั้งหมด</button></div><div id="mbsDrillTable"></div></section>';
+      for (const [label, count, tone] of [
+        ["งานทั้งหมด", rows.length, "total"],
+        ["รอรับเรื่อง", rows.filter(r => String(r.status).trim() === "รอรับเรื่อง").length, "pending"],
+        ["กำลังดำเนินการ", rows.filter(r => String(r.status).trim() === "กำลังดำเนินการ").length, "progress"],
+        ["ซ่อมเสร็จแล้ว", rows.filter(r => String(r.status).trim() === "ซ่อมเสร็จแล้ว").length, "complete"],
+      ]) {
+        const item = document.createElement("div"); item.className = "mbs-analytics-stat mbs-analytics-" + tone;
+        item.innerHTML = '<span>' + label + '</span><strong>' + count + '<small>งาน</small></strong>';
+        body.querySelector(".mbs-analytics-summary").appendChild(item);
+      }
+    }
     const fields =
       kind === "reporter"
         ? ["equipment_type", "location", "technician_id"]
@@ -684,6 +699,28 @@
         '</h3><div class="mbs-drill-chart"><canvas></canvas></div>';
       body.querySelector(".mbs-drill-charts").appendChild(card);
       const pairs = groups(rows, f).slice(0, 10);
+      if (detailed) {
+        card.querySelector(".mbs-drill-chart").remove();
+        const list = document.createElement("div"); list.className = "mbs-analytics-bars";
+        const max = Math.max(1, ...pairs.map(p => p[1]));
+        if (!pairs.length) { const empty=document.createElement("p");empty.className="mbs-analytics-empty";empty.textContent="ยังไม่มีข้อมูลในช่วงที่เลือก";list.appendChild(empty); }
+        for (const [key,count] of pairs) {
+          const b = document.createElement("button"); b.type="button"; b.className="mbs-analytics-bar";
+          b.dataset.mbsAnalyticsFilter=f; b.dataset.mbsAnalyticsValue=key; b.setAttribute("aria-pressed","false");
+          b.innerHTML='<span class="mbs-analytics-bar-label"></span><strong>' + count + ' <small>งาน</small></strong><span class="mbs-analytics-track" aria-hidden="true"><span style="width:' + count/max*100 + '%"></span></span>';
+          b.querySelector(".mbs-analytics-bar-label").textContent=key || "ไม่ระบุ";
+          b.onclick=()=>{
+            selected.match={ [f]:key };
+            for(const other of body.querySelectorAll(".mbs-analytics-bar"))other.setAttribute("aria-pressed",String(other===b));
+            $("mbsMatchLabel").textContent="กรองตาม " + card.querySelector("h3").textContent + ": " + (key || "ไม่ระบุ");
+            loadTable($("mbsDrillTable"),serverParams(kind,value,selected.match));
+          };
+          list.appendChild(b);
+        }
+        const hint=document.createElement("p");hint.className="mbs-analytics-chart-note";hint.textContent="เรียงจากจำนวนงานมากไปน้อย · สูงสุด 10 รายการ";
+        card.append(list,hint);
+        continue;
+      }
       chart(card.querySelector("canvas"), pairs, null, {
         labels: pairs.map(([k]) =>
           f === "technician_id" ? technicianName(k) : k,
@@ -701,7 +738,8 @@
     }
     $("mbsAllHistory").onclick = () => {
       selected.match = {};
-      $("mbsMatchLabel").textContent = "";
+      $("mbsMatchLabel").textContent = detailed ? "แสดงงานทั้งหมดในช่วงที่เลือก" : "";
+      if(detailed)for(const b of body.querySelectorAll(".mbs-analytics-bar"))b.setAttribute("aria-pressed","false");
       loadTable($("mbsDrillTable"), serverParams(kind, value));
     };
     if (!dlg.open) dlg.showModal();
