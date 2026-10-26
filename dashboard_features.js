@@ -718,8 +718,11 @@
   }
   function openAnalytics(kind, value, options = {}) {
     const cardHistory = options.cardHistory === true && data.role === "admin" && kind === "technician";
+    let searchQuery = "", searchTimer;
     const analyticsParams = (match = {}) => {
       const u = serverParams(kind, value, match);
+      u.searchParams.delete("mbs_q");
+      if (searchQuery) u.searchParams.set("mbs_q", searchQuery);
       u.searchParams.delete("mbs_card_history");
       if (cardHistory) u.searchParams.set("mbs_card_history", "1");
       return u;
@@ -754,6 +757,24 @@
       (r) => String(r[key] ?? "").trim() === String(value).trim(),
     );
     const body = dlg.querySelector(".mbs-dialog-body");
+    dlg.classList.remove("mbs-analytics-expanded");
+    let expand = dlg.querySelector(".mbs-analytics-expand");
+    if (!expand) {
+      const header = dlg.querySelector(":scope > header");
+      const close = header.querySelector(".mbs-close");
+      const controls = document.createElement("div"); controls.className = "mbs-analytics-window-actions";
+      expand = document.createElement("button"); expand.type="button"; expand.className="mbs-analytics-expand";
+      header.appendChild(controls); controls.append(expand,close);
+      close.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>';
+      expand.onclick=()=>{
+        const active=dlg.classList.toggle("mbs-analytics-expanded");
+        expand.setAttribute("aria-pressed",String(active));
+        expand.setAttribute("aria-label",active?"ย่อหน้าต่าง":"ขยายหน้าต่าง");expand.title=active?"ย่อหน้าต่าง":"ขยายหน้าต่าง";
+        expand.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+(active?'M9 3v6H3m12-6v6h6M9 21v-6H3m12 6v-6h6':'M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6')+'"/></svg>';
+      };
+    }
+    expand.setAttribute("aria-pressed","false");expand.setAttribute("aria-label","ขยายหน้าต่าง");expand.title="ขยายหน้าต่าง";
+    expand.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg>';
     body.innerHTML =
       '<p class="mbs-intro">แจ้งซ่อม ' +
       rows.length +
@@ -784,7 +805,7 @@
         item.setAttribute("aria-pressed", String(tone === "total"));
         item.title = "ดูรายการ" + label;
         const icons = {total:'fa-layer-group',pending:'fa-clock',progress:'fa-spinner',complete:'fa-check-circle'};
-        item.innerHTML = '<span class="mbs-summary-label">' + label + '</span><span class="mbs-summary-icon" aria-hidden="true"><i class="fas ' + icons[tone] + '"></i></span><strong>' + count + '<small>งาน</small></strong><small class="mbs-summary-open"><span>ดูรายการ</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></small>';
+        item.innerHTML = '<span class="mbs-summary-label">' + label + '</span><span class="mbs-summary-icon" aria-hidden="true"><i class="fas ' + icons[tone] + '"></i></span><strong>' + count + '<small>งาน</small></strong><small class="mbs-summary-open"><span>ดูรายการ</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14m-5-5 5 5 5-5"/></svg></small>';
         item.onclick = async () => {
           const clear = !status || selected.match.status === status;
           selected.match = clear ? {} : {status};
@@ -797,6 +818,25 @@
         body.querySelector(".mbs-analytics-summary").appendChild(item);
       }
     }
+    const actions = body.querySelector(".mbs-drill-actions");
+    const search = document.createElement("div"); search.className="mbs-analytics-search";
+    search.innerHTML='<svg class="mbs-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input id="mbsAnalyticsSearch" type="text" maxlength="250" aria-label="ค้นหาข้อมูลในรายการงาน" placeholder="ค้นหาข้อมูลในรายการงาน..."><button id="mbsAnalyticsSearchClear" type="button" hidden>ล้างค่า</button>';
+    const queryInput = search.querySelector("input"), clearSearch = search.querySelector("button");
+    const heading = actions.querySelector(":scope > div:not(.mbs-history-actions)");
+    if (heading) heading.classList.add("mbs-analytics-result-heading");
+    actions.insertBefore(search, actions.querySelector(".mbs-history-actions") || $("mbsAllHistory"));
+    const applySearch = () => {
+      clearTimeout(searchTimer);
+      searchQuery = queryInput.value.trim(); clearSearch.hidden = queryInput.value.length === 0;
+      // Invalidate an older request immediately, including during debounce.
+      $("mbsDrillTable").dataset.request=String(++fetchVersion);
+      searchTimer=setTimeout(()=>{if(dlg.open)loadTable($("mbsDrillTable"),analyticsParams(selected.match));},250);
+    };
+    queryInput.oninput=applySearch;
+    clearSearch.onclick=()=>{
+      clearTimeout(searchTimer);queryInput.value="";searchQuery="";clearSearch.hidden=true;
+      loadTable($("mbsDrillTable"),analyticsParams(selected.match));queryInput.focus();
+    };
     function syncSummaryCards() {
       for (const card of body.querySelectorAll('[data-mbs-summary-status]'))
         card.setAttribute('aria-pressed', String(card.dataset.mbsSummaryStatus === (selected.match.status || '')));
@@ -874,6 +914,7 @@
       });
     }
     $("mbsAllHistory").onclick = () => {
+      clearTimeout(searchTimer);queryInput.value="";searchQuery="";clearSearch.hidden=true;
       selected.match = {};
       syncSummaryCards();
       $("mbsMatchLabel").textContent = detailed ? allJobsLabel : "";

@@ -52,6 +52,12 @@ function mbs_drill_dispatch($db) {
             $rows=array_values(array_filter($rows,static function($r)use($column,$value,$kind){return $kind==='technician'?(int)$r[$column]===(int)$value:trim((string)($r[$column]??''))===trim($value);}));
             foreach(['equipment_type','location','technician_id','line_user_id','problem_desc','status'] as $column){$v=$_GET['mbs_match_'.$column]??null;if(is_string($v)&&$v!=='')$rows=array_values(array_filter($rows,static function($r)use($column,$v){return trim((string)($r[$column]??''))===trim($v);}));}
         }
+        if (in_array($kind,['reporter','equipment','location','technician'],true)) {
+            $query=$_GET['mbs_q']??'';
+            if(!is_string($query)||strlen($query)>1000)throw new RuntimeException('คำค้นไม่ถูกต้อง');
+            require_once __DIR__.'/dashboard_analytics_search.php';
+            $rows=mbs_analytics_search_rows($rows,$data['technicians'],$query);
+        }
         $total=count($rows);$pages=max(1,(int)ceil($total/50));$page=max(1,min($pages,(int)($_GET['mbs_page']??1)));$slice=array_slice($rows,($page-1)*50,50);
         echo '<p class="mbs-result-count">'.number_format($total).($kind==='reviews'?(!empty($noReview)?' รายการที่ยังไม่มีรีวิว':' รีวิว'):' รายการแจ้งซ่อม').'</p>';
         if($kind==='reviews'){
