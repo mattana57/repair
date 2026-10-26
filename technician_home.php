@@ -2736,8 +2736,11 @@ if (isset($_GET['th_fragment'])
         const techReporterHistory = {lineId:'', name:'', page:1, timer:null, controller:null, version:0, previousOverflow:''};
         function openTechReporterHistory(name, lineId, repairId = null, reportedDate = null) {
             const jobId = Number(repairId);
+            const focusModal = document.getElementById('techReporterModal');
+            if (focusModal) { focusModal.dataset.mbsFocusRepairId = Number.isSafeInteger(jobId) && jobId > 0 ? String(jobId) : ''; delete focusModal.dataset.mbsFocusScrolled; }
             techReporterHistory.repairId = Number.isSafeInteger(jobId) && jobId > 0 ? jobId : null;
             if (typeof lineId !== 'string' || !lineId.trim() || lineId.length > 200) return;
+            techReporterHistory.focusPending = !!techReporterHistory.repairId;
             techReporterHistory.lineId = lineId;
             const modal = document.getElementById('techReporterModal');
             techReporterHistory.name = String(name);
@@ -2764,7 +2767,7 @@ if (isset($_GET['th_fragment'])
             if (techReporterHistory.repairId) {
                 const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(reportedDate || '');
                 const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-                for (const [part,value,label] of parts ? [['Day',String(Number(parts[3])),'วันที่ '+Number(parts[3])],['Month',parts[2],months[Number(parts[2])-1]],['Year',parts[1],String(Number(parts[1])+543)]] : [['Day','all','ทุกวัน'],['Month','all','ทุกเดือน'],['Year','all','ทุกปี']])
+                for (const [part,value,label] of parts ? [['Day','all','ทุกวัน'],['Month',parts[2],months[Number(parts[2])-1]],['Year',parts[1],String(Number(parts[1])+543)]] : [['Day','all','ทุกวัน'],['Month','all','ทุกเดือน'],['Year','all','ทุกปี']])
                     selectChartDropdown('techReporter-' + part, value, label, null);
             }
             loadTechReporterHistory(1);
@@ -2794,6 +2797,7 @@ if (isset($_GET['th_fragment'])
             const url = new URL('technician_home.php', window.location.href);
             url.search = new URLSearchParams({tab:'history', th_fragment:'1', th_line_user_id:techReporterHistory.lineId, hd:document.getElementById('techReporterDay').value, hm:document.getElementById('techReporterMonth').value, hy:document.getElementById('techReporterYear').value, hs:'all', hq:document.getElementById('techReporterSearch').value.trim(), hp:String(page)}).toString();
             if (techReporterHistory.repairId) url.searchParams.set('th_repair_id', String(techReporterHistory.repairId));
+            if (techReporterHistory.focusPending) url.searchParams.set('th_focus', '1');
             const body = document.getElementById('techReporterTableBody');
             const footer = document.getElementById('techReporterModalFooter');
             body.setAttribute('aria-busy', 'true');
@@ -2807,6 +2811,7 @@ if (isset($_GET['th_fragment'])
                 const nextBody = doc.getElementById('historyTableBody');
                 const nextFooter = doc.querySelector('.th-pagination');
                 if (!nextBody || !nextFooter) throw new Error('response');
+                techReporterHistory.focusPending = false;
                 body.innerHTML = nextBody.innerHTML;
                 footer.replaceChildren(document.importNode(nextFooter, true));
                 const selected = nextFooter.querySelector('[aria-current="page"]');

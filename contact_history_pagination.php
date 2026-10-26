@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/history_focus.php';
 require_once __DIR__.'/dashboard_features.php';
 // ปฏิเสธการเปิดไฟล์ช่วยผ่าน URL โดยตรง
 if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
@@ -129,7 +130,7 @@ function ch_history_page(
     if ($exactHistoryJob) {
         $jobId = filter_var(tp_get('pg_history_repair_id'), FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
         if ($jobId === false || $type !== 'reporter') $where .= ' AND 1=0';
-        else { $where .= ' AND r.id = ?'; $types .= 'i'; $params[] = $jobId; }
+        // The ID is a focus anchor, not an SQL row filter.
     }
     $q = preg_replace('/\s+/u', '', tp_get('pg_history_q'));
 
@@ -187,7 +188,7 @@ function ch_history_page(
         $types .= str_repeat('s', count($params) - strlen($types));
     }
 
-    if (!$exactHistoryJob) $where .= mbs_range_clause('history','r.created_at',$types,$params);
+    $where .= mbs_range_clause('history','r.created_at',$types,$params);
     $day = tp_get('pg_history_day', 'all');
     if (ctype_digit($day) && (int)$day >= 1 && (int)$day <= 31) {
         $where .= ' AND DAY(r.created_at) = ?';
@@ -221,6 +222,15 @@ function ch_history_page(
         $tab = 'dash';
     }
 
+    if ($exactHistoryJob && $jobId !== false && tp_get('pg_history_focus') === '1') {
+        $_GET['pg_history_page'] = (string)mbs_history_focus_page(
+            static function ($sql, $args) use ($conn) {
+                $types = ''; foreach ($args as $value) $types .= is_int($value) ? 'i' : 's';
+                return tp_query($conn, $sql, $types, $args);
+            }, 'SELECT r.id, r.created_at FROM repairs r WHERE '.$where, $params, (int)$jobId
+        );
+    }
+    unset($_GET['pg_history_focus']);
     return tp_page(
         $conn,
         'SELECT r.* FROM repairs r WHERE '

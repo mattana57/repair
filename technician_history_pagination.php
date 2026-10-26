@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/history_focus.php';
 require_once __DIR__.'/dashboard_features.php';
 // ใช้ผ่าน technician_home.php หลังตรวจสิทธิ์แล้วเท่านั้น
 if (!defined('MBS_TECH_HISTORY')) {
@@ -83,8 +84,9 @@ if ($thOnHistory) {
     if ($exactHistoryJob) {
         $jobId = filter_var($thGet('th_repair_id', ''), FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
         if ($jobId === false) $thWhere .= ' AND 1=0';
-        else { $thWhere .= ' AND id = ?'; $thTypes .= 'i'; $thParams[] = $jobId; }
-    } else $thWhere .= mbs_range_clause('technician-history','created_at',$thTypes,$thParams);
+        // The ID is a focus anchor, not an SQL row filter.
+    }
+    $thWhere .= mbs_range_clause($thReporterMode ? 'techReporter' : 'technician-history','created_at',$thTypes,$thParams);
 
     if ($thReporterMode) {
         // จำกัดผู้แจ้งด้วย LINE ID และคงเงื่อนไขเจ้าของงานจากหน้าเดิม
@@ -220,6 +222,14 @@ if ($thOnHistory) {
     $thTotal = (int) $thCount->fetch_assoc()['total'];
     $thPages = max(1, (int) ceil($thTotal / 50));
     $thPage = min($thPage, $thPages);
+    if ($exactHistoryJob && $jobId !== false && $thGet('th_focus', '') === '1') {
+        $thPage = min($thPages, mbs_history_focus_page(
+            static function ($sql, $args) use ($thRun) {
+                $types = ''; foreach ($args as $value) $types .= is_int($value) ? 'i' : 's';
+                return $thRun($sql, $types, $args);
+            }, 'SELECT id, created_at FROM repairs WHERE '.$thWhere, $thParams, (int)$jobId
+        ));
+    }
 
     $thResult = $thRun(
         'SELECT repairs.*, CASE WHEN (' . $where . ') THEN 1 ELSE 0 END AS th_can_edit FROM repairs WHERE ' . $thWhere

@@ -8058,9 +8058,12 @@ if (isset($_GET['api_check_hash'])) {
 
             const url = new URL(window.location.href);
             if (!refresh && !restore) {
+                const modal = document.getElementById('historyModal');
+                if (modal) { modal.dataset.mbsFocusRepairId = repairId ? String(repairId) : ''; delete modal.dataset.mbsFocusScrolled; }
+                url.searchParams.delete('pg_history_focus');
                 const jobId = Number(repairId);
                 if (type === 'reporter' && Number.isSafeInteger(jobId) && jobId > 0)
-                    url.searchParams.set('pg_history_repair_id', String(jobId));
+                    { url.searchParams.set('pg_history_repair_id', String(jobId)); url.searchParams.set('pg_history_focus', '1'); }
                 else url.searchParams.delete('pg_history_repair_id');
             }
             let historyTechId = null;
@@ -8112,7 +8115,7 @@ if (isset($_GET['api_check_hash'])) {
 
             if (!refresh && !restore && url.searchParams.has('pg_history_repair_id')) {
                 const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(reportedDate || '');
-                for (const [part,value] of Object.entries(parts ? {day:String(Number(parts[3])),month:parts[2],year:parts[1]} : {day:'all',month:'all',year:'all'}))
+                for (const [part,value] of Object.entries(parts ? {day:'all',month:parts[2],year:parts[1]} : {day:'all',month:'all',year:'all'}))
                     url.searchParams.set('pg_history_' + part, value);
             }
             const periodDefaults = <?= json_encode(['day' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j'), 'month' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'), 'year' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')]); ?>;
@@ -8164,6 +8167,7 @@ if (isset($_GET['api_check_hash'])) {
                 sessionStorage.removeItem('historyTechnicianId');
             }
 
+            url.searchParams.delete('pg_history_focus');
             url.searchParams.set('pg_history_page', data.page);
 
             history.replaceState(

@@ -650,6 +650,8 @@
     const history = $(technician ? "techReporterModal" : "historyModal");
     const open = technician ? window.openTechReporterHistory : window.viewHistory;
     if (!history || typeof open !== "function") return;
+    history.dataset.mbsFocusRepairId = exactId ? String(exactId) : '';
+    delete history.dataset.mbsFocusScrolled;
     const analytics = $("mbsAnalytics");
     const returnToAnalytics = !!analytics?.open;
     const body = analytics?.querySelector(".mbs-dialog-body");
@@ -1243,9 +1245,18 @@
       if (!th) {
         th = document.createElement("th");
         th.className = "mbs-duration";
-        th.textContent = "ระยะเวลาทำงาน";
         header.appendChild(th);
       }
+      th.textContent = "Work Duration";
+      const columns = [...header.children].filter(cell => !cell.classList.contains("mbs-duration"));
+      const actionIndex = columns.findIndex(cell => /^(actions?|จัดการ)$/i.test(cell.textContent.trim()));
+      const actionHeader = actionIndex >= 0 ? columns[actionIndex] : null;
+      if (actionHeader && actionHeader !== th) {
+        if (header.lastElementChild !== actionHeader) header.appendChild(actionHeader);
+        if (actionHeader.previousElementSibling !== th) header.insertBefore(th, actionHeader);
+      }
+      const modal = table.closest('#historyModal,#techReporterModal');
+      const focusId = modal?.dataset.mbsFocusRepairId;
       for (const tr of table.querySelectorAll("tbody tr")) {
         const id = tr.dataset.mbsRepairId;
         const r = id
@@ -1265,7 +1276,19 @@
           td.className = "mbs-duration";
           tr.appendChild(td);
         }
+        const cells = [...tr.children].filter(cell => !cell.classList.contains('mbs-duration'));
+        const actionCell = actionIndex >= 0 ? cells[actionIndex] : null;
+        if (actionCell) {
+          if (tr.lastElementChild !== actionCell) tr.appendChild(actionCell);
+          if (actionCell.previousElementSibling !== td) tr.insertBefore(td, actionCell);
+        }
         td.textContent = duration(r);
+        const focused = !!focusId && String(r.id) === focusId;
+        tr.classList.toggle('mbs-history-focused', focused);
+        if (focused && modal.dataset.mbsFocusScrolled !== focusId) {
+          modal.dataset.mbsFocusScrolled = focusId;
+          requestAnimationFrame(() => tr.scrollIntoView({block:'center', inline:'nearest', behavior:'auto'}));
+        }
       }
     }
   }

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__.'/history_focus.php';
 require_once 'auth_guard.php';
 
 // อนุญาตเฉพาะ Admin และ Executive ก่อนอ่านข้อมูลหรือรับคำสั่ง
@@ -307,7 +308,7 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
     if ($exactHistoryJob) {
         $jobId = filter_var(execPageGet('eh_repair_id'), FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
         if ($jobId === false || execPageGet('eh_type') === 'technician') $where[] = '1=0';
-        else { $where[] = 'r.id = ?'; $values[] = $jobId; }
+        // The ID is a focus anchor, not an SQL row filter.
     }
     $month = execPageGet($prefix . 'month', date('m'));
     $year = execPageGet($prefix . 'year', date('Y'));
@@ -374,7 +375,7 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
         $where[] = "$text LIKE ? ESCAPE '!'";
         $values[] = '%' . strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
     }
-    $range=$exactHistoryJob?null:mbs_range($kind==='history'?'history':'table');if($range){$where[]='r.created_at >= ? AND r.created_at < ?';$values[]=$range[0].' 00:00:00';$values[]=$range[1].' 00:00:00';}
+    $range=mbs_range($kind==='history'?'history':'table');if($range){$where[]='r.created_at >= ? AND r.created_at < ?';$values[]=$range[0].' 00:00:00';$values[]=$range[1].' 00:00:00';}
     $filter = implode(' AND ', $where);
     $count = execPageRun($conn, "SELECT COUNT(*) AS total FROM repairs r WHERE $filter", $values);
     $total = (int)$count->fetch_assoc()['total'];
@@ -382,6 +383,12 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
     $pages = max(1, (int)ceil($total / 50));
     $raw = execPageGet($prefix . 'page', '1');
     $page = ctype_digit($raw) ? max(1, min($pages, (int)$raw)) : 1;
+    if ($exactHistoryJob && $jobId !== false && execPageGet('eh_focus') === '1') {
+        $page = min($pages, mbs_history_focus_page(
+            static function ($sql, $args) use ($conn) { return execPageRun($conn, $sql, $args); },
+            "SELECT r.id, r.created_at FROM repairs r WHERE $filter", $values, (int)$jobId
+        ));
+    }
     $offset = ($page - 1) * 50;
     // LIMIT/OFFSET ถูกแปลงเป็นจำนวนเต็มและจำกัดขอบเขตแล้วเท่านั้น
     $result = execPageRun($conn, "SELECT r.* FROM repairs r WHERE $filter ORDER BY r.created_at DESC, r.id DESC LIMIT 50 OFFSET $offset", $values);
@@ -2267,6 +2274,7 @@ if (isset($_GET['api_check_hash'])) {
             const key = execPageKey(params);
             const prefix = kind === 'history' ? 'eh_' : 'er_';
             params.set(prefix + 'page', String(page));
+            if (kind === 'history' && window.currentHistoryFocusPending) params.set('eh_focus', '1');
             params.set('exec_page_fragment', kind);
             const tbody = document.querySelector(kind === 'history' ? '#historyTableBody' : '#repairsTable tbody');
             const footer = document.getElementById(kind === 'history' ? 'execHistoryPager' : 'execRepairsPager');
@@ -2280,6 +2288,8 @@ if (isset($_GET['api_check_hash'])) {
                 if (version !== state.version) return;
                 tbody.innerHTML = data.rows;
                 footer.innerHTML = data.footer;
+                if (kind === 'history') window.currentHistoryFocusPending = false;
+                params.delete('eh_focus');
                 state.page = data.page;
                 state.key = key;
                 const url = new URL(location.href);
@@ -3561,11 +3571,14 @@ if (isset($_GET['api_check_hash'])) {
         // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
         function viewHistory(fullName, type, reporterLineId = null, repairId = null, reportedDate = null) {
             const jobId = Number(repairId);
+            const focusModal = document.getElementById('historyModal');
+            if (focusModal) { focusModal.dataset.mbsFocusRepairId = Number.isSafeInteger(jobId) && jobId > 0 ? String(jobId) : ''; delete focusModal.dataset.mbsFocusScrolled; }
             window.currentHistoryRepairId = type === 'reporter' && Number.isSafeInteger(jobId) && jobId > 0 ? jobId : null;
+            window.currentHistoryFocusPending = !!window.currentHistoryRepairId;
             if (window.currentHistoryRepairId) {
                 const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(reportedDate || '');
                 const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-                for (const [part,value,label] of parts ? [['Day',String(Number(parts[3])),'วันที่ '+Number(parts[3])],['Month',parts[2],months[Number(parts[2])-1]],['Year',parts[1],String(Number(parts[1])+543)]] : [['Day','all','ทุกวัน'],['Month','all','ทุกเดือน'],['Year','all','ทุกปี']])
+                for (const [part,value,label] of parts ? [['Day','all','ทุกวัน'],['Month',parts[2],months[Number(parts[2])-1]],['Year',parts[1],String(Number(parts[1])+543)]] : [['Day','all','ทุกวัน'],['Month','all','ทุกเดือน'],['Year','all','ทุกปี']])
                     selectChartDropdown('history-' + part, value, label, null);
             }
             window.currentHistoryLineUserId = type === 'reporter' ? reporterLineId : null;
