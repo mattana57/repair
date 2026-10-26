@@ -77,7 +77,7 @@ function mbs_drill_dispatch($db) {
             echo '</div>';
         }elseif(in_array($kind,['equipment','location','technician','reporter'],true)){
             require_once __DIR__.'/dashboard_analytics_view.php';
-            mbs_render_analytics_table($slice,$total,$data['role']);
+            mbs_render_analytics_table($slice,$total,$data['role'],$kind);
         }else{
             echo '<div class="mbs-table-scroll"><table class="mbs-table"><thead><tr><th>เลขที่งาน</th><th>อุปกรณ์ / ปัญหา</th><th>สถานที่</th><th>ผู้แจ้ง</th><th>เจ้าหน้าที่</th><th>สถานะ</th><th>รับงาน</th><th>ปิดงาน</th><th>ระยะเวลาทำงาน</th></tr></thead><tbody>';
             foreach($slice as $r){echo '<tr><td>'.($kind==='review_jobs'?'<a class="mbs-history-link" href="'.($data['role']==='executive'?'view_repair.php':'update_repair.php').'?id='.(int)$r['id'].'&amp;source=tech_reviews" target="_blank" rel="noopener">'.mbs_h($r['ticket_no']).'</a>':mbs_h($r['ticket_no'])).'</td><td>'.mbs_h($r['equipment_type']).'<small>'.mbs_h($r['problem_desc']).'</small></td><td>'.mbs_h($r['location']).'</td><td>'.mbs_h($r['reporter_label']).(!empty($r['line_user_id'])?'<br><button type="button" class="mbs-history-link" data-mbs-reporter="'.mbs_h($r['line_user_id']).'">ดูประวัติผู้แจ้ง</button>':'').'</td><td>'.mbs_h($r['technician_name']).'</td><td>'.mbs_h($r['status']).'</td><td>'.mbs_h(mbs_date_display($r['received_at'])).'</td><td>'.mbs_h($r['completed_at']?mbs_date_display($r['completed_at']):'ยังไม่ปิดงาน').'</td><td>'.mbs_h(mbs_duration($r['received_at'],$r['completed_at'])).'</td></tr>';}
