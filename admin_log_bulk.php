@@ -95,6 +95,6 @@ function lb_handle($conn){
 lb_handle($conn);
 function lb_edit_menu($kind){
     echo '<div class="ab-edit-wrap"><button type="button" class="ab-edit-button" data-lb-edit="'.$kind.'" aria-expanded="false" aria-controls="lb-menu-'.$kind.'">แก้ไข</button><div id="lb-menu-'.$kind.'" class="ab-menu hidden" role="group" aria-label="จัดการประวัติที่เลือก">';
-    foreach(['choose'=>'เลือก','all'=>'เลือกทั้งหมด','none'=>'ไม่เลือก','delete'=>'ลบ'] as $action=>$label)echo '<button type="button" data-lb-action="'.$action.'" data-lb-kind="'.$kind.'"'.($action==='delete'?' disabled':'').'><i class="fas '.(['choose'=>'fa-check-square','all'=>'fa-check-double','none'=>'fa-square','delete'=>'fa-trash-alt'][$action]).'" aria-hidden="true"></i>'.$label.'</button>';
+    foreach(['choose'=>'เลือก','all'=>'เลือกทั้งหมด','none'=>'ยกเลิก','delete'=>'ลบ'] as $action=>$label)echo '<button type="button" data-lb-action="'.$action.'" data-lb-kind="'.$kind.'"'.($action==='delete'?' disabled':'').'><i class="fas '.(['choose'=>'fa-check-square','all'=>'fa-check-double','none'=>'fa-square','delete'=>'fa-trash-alt'][$action]).'" aria-hidden="true"></i>'.$label.'</button>';
     echo '</div></div>';
 }

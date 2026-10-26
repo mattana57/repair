@@ -99,7 +99,7 @@ function tb_handle_request($conn) {
 tb_handle_request($conn);
 function tb_edit_menu() {
     echo '<div class="tb-edit-wrap"><button type="button" id="tb-edit" class="tb-edit" aria-expanded="false" aria-controls="tb-menu">แก้ไข</button><div id="tb-menu" hidden role="group" aria-label="จัดการบัญชีที่เลือก">';
-    foreach(['choose'=>'เลือก','all'=>'เลือกทั้งหมด','none'=>'ไม่เลือก','delete'=>'ลบ'] as $action=>$label)echo '<button type="button" data-tb-action="'.$action.'"'.($action==='delete'?' disabled':'').'>'.$label.'</button>';
+    foreach(['choose'=>'เลือก','all'=>'เลือกทั้งหมด','none'=>'ยกเลิก','delete'=>'ลบ'] as $action=>$label)echo '<button type="button" data-tb-action="'.$action.'"'.($action==='delete'?' disabled':'').'>'.$label.'</button>';
     echo '</div></div>';
 }
 
