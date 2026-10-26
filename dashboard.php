@@ -8043,10 +8043,16 @@ if (isset($_GET['api_check_hash'])) {
         let historyFilterTimer = null;
         let historyFiltersRestoring = false;
 
-        async function viewHistory(fullName, type, refresh = false, restore = false, technicianId = null, reporterLineId = null) {
+        async function viewHistory(fullName, type, refresh = false, restore = false, technicianId = null, reporterLineId = null, repairId = null) {
             if (!['reporter', 'technician'].includes(type)) return;
 
             const url = new URL(window.location.href);
+            if (!refresh && !restore) {
+                const jobId = Number(repairId);
+                if (type === 'reporter' && Number.isSafeInteger(jobId) && jobId > 0)
+                    url.searchParams.set('pg_history_repair_id', String(jobId));
+                else url.searchParams.delete('pg_history_repair_id');
+            }
             let historyTechId = null;
 
             if (type === 'technician') {
@@ -8094,6 +8100,9 @@ if (isset($_GET['api_check_hash'])) {
                 );
             }
 
+            if (!refresh && !restore && url.searchParams.has('pg_history_repair_id')) {
+                for (const part of ['day','month','year']) url.searchParams.set('pg_history_' + part, 'all');
+            }
             const periodDefaults = <?= json_encode(['day' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('j'), 'month' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('m'), 'year' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Bangkok')))->format('Y')]); ?>;
             for (const part of ['day', 'month', 'year']) {
                 const value = url.searchParams.get('pg_history_' + part);

@@ -79,7 +79,12 @@ if ($thOnHistory) {
     $thTypes = '';
     $thParams = [];
     $thWhere .= ' AND '.mbs_active_repair_sql('repairs');
-    $thWhere .= mbs_range_clause('technician-history','created_at',$thTypes,$thParams);
+    $exactHistoryJob = $thReporterMode && isset($_GET['th_repair_id']);
+    if ($exactHistoryJob) {
+        $jobId = filter_var($thGet('th_repair_id', ''), FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+        if ($jobId === false) $thWhere .= ' AND 1=0';
+        else { $thWhere .= ' AND id = ?'; $thTypes .= 'i'; $thParams[] = $jobId; }
+    } else $thWhere .= mbs_range_clause('technician-history','created_at',$thTypes,$thParams);
 
     if ($thReporterMode) {
         // จำกัดผู้แจ้งด้วย LINE ID และคงเงื่อนไขเจ้าของงานจากหน้าเดิม
@@ -256,6 +261,7 @@ $thUrl = static function ($page, array $changes = []) use (
     if ($thReporterMode) {
         $query['th_line_user_id'] = $thReporterLineId;
         $query['th_fragment'] = '1';
+        if (isset($_GET['th_repair_id']) && is_string($_GET['th_repair_id'])) $query['th_repair_id'] = $_GET['th_repair_id'];
     }
 
     return 'technician_home.php?' . http_build_query(

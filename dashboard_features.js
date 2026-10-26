@@ -614,7 +614,7 @@
         };
       }
       for (const b of container.querySelectorAll("[data-mbs-reporter]"))
-        b.onclick = () => openReporterHistory(b.dataset.mbsReporter);
+        b.onclick = () => openReporterHistory(b.dataset.mbsReporter, b.dataset.mbsRepairId);
       for (const a of container.querySelectorAll(".mbs-pages a"))
         a.onclick = (e) => {
           e.preventDefault();
@@ -629,7 +629,9 @@
         container.removeAttribute("aria-busy");
     }
   }
-  function openReporterHistory(lineId) {
+  function openReporterHistory(lineId, repairId = null) {
+    const jobId = Number(repairId);
+    const exactId = Number.isSafeInteger(jobId) && jobId > 0 ? jobId : null;
     if (typeof lineId !== "string" || !lineId.trim() || lineId.length > 200) return;
     const technician = data.role === "technician";
     const history = $(technician ? "techReporterModal" : "historyModal");
@@ -661,9 +663,9 @@
     if (returnToAnalytics) analytics.close();
     try {
       const name = reporterName(lineId);
-      const result = technician ? open(name, lineId) : data.role === "executive"
-        ? open(name, "reporter", lineId)
-        : open(name, "reporter", false, false, null, lineId);
+      const result = technician ? open(name, lineId, exactId) : data.role === "executive"
+        ? open(name, "reporter", lineId, exactId)
+        : open(name, "reporter", false, false, null, lineId, exactId);
       wasOpen = isOpen();
       Promise.resolve(result).catch(restore);
     } catch {

@@ -2734,7 +2734,9 @@ if (isset($_GET['th_fragment'])
     </dialog>
     <script>
         const techReporterHistory = {lineId:'', name:'', page:1, timer:null, controller:null, version:0, previousOverflow:''};
-        function openTechReporterHistory(name, lineId) {
+        function openTechReporterHistory(name, lineId, repairId = null) {
+            const jobId = Number(repairId);
+            techReporterHistory.repairId = Number.isSafeInteger(jobId) && jobId > 0 ? jobId : null;
             if (typeof lineId !== 'string' || !lineId.trim() || lineId.length > 200) return;
             techReporterHistory.lineId = lineId;
             const modal = document.getElementById('techReporterModal');
@@ -2758,6 +2760,9 @@ if (isset($_GET['th_fragment'])
                 techReporterHistory.previousOverflow = document.body.style.overflow;
                 document.body.style.overflow = 'hidden';
                 modal.showModal();
+            }
+            if (techReporterHistory.repairId) {
+                for (const part of ['Day','Month','Year']) selectChartDropdown('techReporter-' + part, 'all', {Day:'ทุกวัน',Month:'ทุกเดือน',Year:'ทุกปี'}[part], null);
             }
             loadTechReporterHistory(1);
         }
@@ -2785,6 +2790,7 @@ if (isset($_GET['th_fragment'])
             const version = ++techReporterHistory.version;
             const url = new URL('technician_home.php', window.location.href);
             url.search = new URLSearchParams({tab:'history', th_fragment:'1', th_line_user_id:techReporterHistory.lineId, hd:document.getElementById('techReporterDay').value, hm:document.getElementById('techReporterMonth').value, hy:document.getElementById('techReporterYear').value, hs:'all', hq:document.getElementById('techReporterSearch').value.trim(), hp:String(page)}).toString();
+            if (techReporterHistory.repairId) url.searchParams.set('th_repair_id', String(techReporterHistory.repairId));
             const body = document.getElementById('techReporterTableBody');
             const footer = document.getElementById('techReporterModalFooter');
             body.setAttribute('aria-busy', 'true');

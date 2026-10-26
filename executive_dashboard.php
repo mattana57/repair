@@ -303,6 +303,12 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
             $values[] = execPageGet('eh_name');
         }
     }
+    $exactHistoryJob = $kind === 'history' && isset($_GET['eh_repair_id']);
+    if ($exactHistoryJob) {
+        $jobId = filter_var(execPageGet('eh_repair_id'), FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+        if ($jobId === false || execPageGet('eh_type') === 'technician') $where[] = '1=0';
+        else { $where[] = 'r.id = ?'; $values[] = $jobId; }
+    }
     $month = execPageGet($prefix . 'month', date('m'));
     $year = execPageGet($prefix . 'year', date('Y'));
     if ($kind === 'history') {
@@ -368,7 +374,7 @@ function execPageQuery($conn, $kind, $lineMap, $techMap, $deptMap) {
         $where[] = "$text LIKE ? ESCAPE '!'";
         $values[] = '%' . strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
     }
-    $range=mbs_range($kind==='history'?'history':'table');if($range){$where[]='r.created_at >= ? AND r.created_at < ?';$values[]=$range[0].' 00:00:00';$values[]=$range[1].' 00:00:00';}
+    $range=$exactHistoryJob?null:mbs_range($kind==='history'?'history':'table');if($range){$where[]='r.created_at >= ? AND r.created_at < ?';$values[]=$range[0].' 00:00:00';$values[]=$range[1].' 00:00:00';}
     $filter = implode(' AND ', $where);
     $count = execPageRun($conn, "SELECT COUNT(*) AS total FROM repairs r WHERE $filter", $values);
     $total = (int)$count->fetch_assoc()['total'];
@@ -386,7 +392,7 @@ function execPageFooter($data, $kind) {
     $prefix = $kind === 'history' ? 'eh_' : 'er_';
     // ไม่ส่งต่อคำสั่งอื่น เช่น ลบรูปหรือ API ตรวจ Hash ไปกับลิงก์เลขหน้า
     $params = ['tab' => execPageGet('tab', 'repairs')];
-    foreach (['er_q','er_day','er_month','er_year','er_status','er_page','eh_q','eh_day','eh_month','eh_year','eh_type','eh_name','eh_line_user_id','eh_page'] as $key) {
+    foreach (['er_q','er_day','er_month','er_year','er_status','er_page','eh_q','eh_day','eh_month','eh_year','eh_type','eh_name','eh_line_user_id','eh_repair_id','eh_page'] as $key) {
         if (isset($_GET[$key]) && is_string($_GET[$key])) $params[$key] = $_GET[$key];
     }
     foreach($_GET as $key=>$value)if(is_string($value)&&preg_match('/^mbs_[a-zA-Z-]+_(start|end)$/D',$key))$params[$key]=$value;
@@ -2223,6 +2229,9 @@ if (isset($_GET['api_check_hash'])) {
             p.set(prefix + 'year', value(isHistory ? 'historyYear' : 'tableYear', 'all'));
             if (isHistory) {
                 p.set('eh_day', value('historyDay', 'all'));
+                if (window.currentHistoryRepairId) {
+                    p.set('eh_repair_id', String(window.currentHistoryRepairId));
+                }
                 p.set('eh_type', window.currentHistoryType || 'reporter');
                 p.set('eh_name', window.currentHistoryName || '');
                 if (window.currentHistoryType === 'reporter' && window.currentHistoryLineUserId !== null && window.currentHistoryLineUserId !== undefined) p.set('eh_line_user_id', window.currentHistoryLineUserId);
@@ -2329,7 +2338,7 @@ if (isset($_GET['api_check_hash'])) {
             if (!execInitialParams.has('eh_name')) return;
             // เรียกหลัง INIT เดิม เพื่อให้แท็บและกราฟเริ่มต้นตามเดิมก่อน
             setTimeout(() => {
-                viewHistory(execInitialParams.get('eh_name'), execInitialParams.get('eh_type') || 'reporter', execInitialParams.get('eh_line_user_id'));
+                viewHistory(execInitialParams.get('eh_name'), execInitialParams.get('eh_type') || 'reporter', execInitialParams.get('eh_line_user_id'), execInitialParams.get('eh_repair_id'));
                 document.getElementById('searchHistoryModalInput').value = execInitialParams.get('eh_q') || '';
                 toggleClearBtn('searchHistoryModalInput', 'clearHistoryModalBtn');
                 execLoadPage('history', execInitialParams.get('eh_page') || 1, false);
@@ -3550,7 +3559,12 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         // ✨ ประวัติ Modal การคลิกจาก Top Reporters และกราฟ ✨
-        function viewHistory(fullName, type, reporterLineId = null) {
+        function viewHistory(fullName, type, reporterLineId = null, repairId = null) {
+            const jobId = Number(repairId);
+            window.currentHistoryRepairId = type === 'reporter' && Number.isSafeInteger(jobId) && jobId > 0 ? jobId : null;
+            if (window.currentHistoryRepairId) {
+                for (const part of ['Day','Month','Year']) document.getElementById('history' + part).value = 'all';
+            }
             window.currentHistoryLineUserId = type === 'reporter' ? reporterLineId : null;
             window.currentHistoryName = fullName; // ✨ จำชื่อที่เปิดอยู่
             window.currentHistoryType = type;     // ✨ จำประเภทที่เปิดอยู่

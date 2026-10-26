@@ -125,6 +125,12 @@ function ch_history_page(
 
     $where = '(' . $where . ') AND '.mbs_active_repair_sql('r');
 
+    $exactHistoryJob = isset($_GET['pg_history_repair_id']);
+    if ($exactHistoryJob) {
+        $jobId = filter_var(tp_get('pg_history_repair_id'), FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+        if ($jobId === false || $type !== 'reporter') $where .= ' AND 1=0';
+        else { $where .= ' AND r.id = ?'; $types .= 'i'; $params[] = $jobId; }
+    }
     $q = preg_replace('/\s+/u', '', tp_get('pg_history_q'));
 
     if ($q !== '') {
@@ -181,7 +187,7 @@ function ch_history_page(
         $types .= str_repeat('s', count($params) - strlen($types));
     }
 
-    $where .= mbs_range_clause('history','r.created_at',$types,$params);
+    if (!$exactHistoryJob) $where .= mbs_range_clause('history','r.created_at',$types,$params);
     $day = tp_get('pg_history_day', 'all');
     if (ctype_digit($day) && (int)$day >= 1 && (int)$day <= 31) {
         $where .= ' AND DAY(r.created_at) = ?';
