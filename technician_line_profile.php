@@ -41,10 +41,10 @@ function mbs_technician_line_profile($db, $id) {
         }
         if ($name !== '') {
             // Recheck the current link in the write itself; an unlink/relink during the API request must not save a stale identity.
-            $stmt = $db->prepare("INSERT INTO line_technician (technician_id,line_user_id,line_display_name,real_name,full_name,fetched_at)
-                SELECT t.id,t.line_user_id,?,t.full_name,t.full_name,? FROM technicians t
+            $stmt = $db->prepare("INSERT INTO line_technician (technician_id,line_user_id,line_display_name,full_name,fetched_at)
+                SELECT t.id,t.line_user_id,?,t.full_name,? FROM technicians t
                 WHERE t.id=? AND BINARY t.line_user_id=BINARY ? AND t.approval_status='อนุมัติแล้ว' AND t.deleted_at IS NULL
-                ON DUPLICATE KEY UPDATE line_user_id=VALUES(line_user_id),line_display_name=VALUES(line_display_name),real_name=VALUES(real_name),full_name=VALUES(full_name),fetched_at=VALUES(fetched_at)");
+                ON DUPLICATE KEY UPDATE line_user_id=VALUES(line_user_id),line_display_name=VALUES(line_display_name),full_name=VALUES(full_name),fetched_at=VALUES(fetched_at)");
             if (!$stmt) throw new RuntimeException('Cannot prepare technician LINE profile cache');
             $fetchedAt = (new DateTimeImmutable('now',new DateTimeZone('Asia/Bangkok')))->format('Y-m-d H:i:s');
             $stmt->bind_param('ssis',$name,$fetchedAt,$id,$lineId);
