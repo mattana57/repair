@@ -1408,40 +1408,21 @@
   function enhanceTechnicians() {
     if (data.role !== "admin") return;
     refreshContactLineNames();
-    for (const t of data.technicians) {
-      const btns = [
-        ...document.querySelectorAll('[onclick*="openTechAdminModal"]'),
-      ].filter((b) =>
-        new RegExp(
-          "openTechAdminModal\\(['\"]Technician['\"],\\s*['\"]?" +
-            Number(t.id) +
-            "(?:['\"],|,)",
-          "i",
-        ).test(b.getAttribute("onclick")),
-      );
-      for (const btn of btns) {
-        if (btn.closest("tr")) continue;
-        const row = btn.closest(".tech-card-item");
-        if (!row) continue;
-        const existing = row.querySelector(".mbs-tech-jobs");
-        const jobs = data.repairs.filter((r) => +r.technician_id === +t.id);
-        const box = document.createElement("div");
-        box.className = "mbs-tech-jobs";
-        box.innerHTML =
-          "<strong>" +
-          jobs.length +
-          " งาน</strong> · กำลังดำเนินการ " +
-          jobs.filter((r) => r.status === "กำลังดำเนินการ").length +
-          " · เสร็จแล้ว " +
-          jobs.filter((r) => r.status === "ซ่อมเสร็จแล้ว").length;
-        const b = document.createElement("button");
-        b.type = "button";
-        b.textContent = "ดูงานที่รับผิดชอบ";
-        b.onclick = () => openAnalytics("technician", String(t.id));
-        box.appendChild(b);
-        if (existing) existing.replaceWith(box);
-        else row.appendChild(box);
-      }
+    for (const card of document.querySelectorAll("#techCardsContainer [data-tech-card-id]")) {
+      const id = Number(card.dataset.techCardId), tech = data.technicians.find(t => Number(t.id) === id);
+      if (!tech) continue;
+      const badge = card.querySelector(".mbs-tech-card-count");
+      const text = data.repairs.filter(r => Number(r.technician_id) === id).length + " งาน";
+      if (badge && badge.textContent !== text) badge.textContent = text;
+      const edit = card.querySelector("[data-tech-card-edit]");
+      if (edit) edit.onclick = () => {
+        const current = data.technicians.find(t => Number(t.id) === id);
+        if (!current || typeof window.openTechAdminModal !== "function") return;
+        window.openTechAdminModal("Technician", String(id), current.web_username || "", current.full_name || "",
+          current.english_name || "", current.position || "", current.phone || "", current.department || "",
+          current.avatar_url || card.querySelector("img")?.src || "", current.email || "", current.web_active ?? 1,
+          resolvedLineName(current), Boolean(current.line_user_id && current.approval_status === "อนุมัติแล้ว"));
+      };
     }
   }
   // Carry range values through the existing same-page AJAX and PHP pagination.
@@ -1547,7 +1528,7 @@
         pending ||
         !records.some((r) =>
           [...r.addedNodes].some(
-            (n) => n.nodeType === 1 && n.matches?.("tr,table,tbody"),
+            (n) => n.nodeType === 1 && (n.matches?.("tr,table,tbody,.tech-card-item,#techCardsContainer") || n.querySelector?.(".tech-card-item,#techCardsContainer")),
           ),
         )
       )
@@ -1556,6 +1537,7 @@
       requestAnimationFrame(() => {
         pending = false;
         decorateDuration();
+        enhanceTechnicians();
         refreshContactLineNames();
       });
     }).observe(document.body, { subtree: true, childList: true });

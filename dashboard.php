@@ -4053,7 +4053,7 @@ if (isset($_GET['api_check_hash'])) {
 
                 <?php 
                 $departments_data = [];
-                $res_techs = $conn->query("SELECT * FROM technicians WHERE approval_status = 'อนุมัติแล้ว' AND deleted_at IS NULL");
+                $res_techs = $conn->query("SELECT t.*, (SELECT COUNT(*) FROM repairs r WHERE r.technician_id=t.id AND r.deleted_at IS NULL) AS assigned_job_count FROM technicians t WHERE t.approval_status = 'อนุมัติแล้ว' AND t.deleted_at IS NULL");
                 if($res_techs && $res_techs->num_rows > 0) {
                     while($row = $res_techs->fetch_assoc()) {
                         $dept = !empty($row['department']) ? $row['department'] : 'ฝ่ายงานทั่วไป';
@@ -4071,7 +4071,8 @@ if (isset($_GET['api_check_hash'])) {
                             'email' => $row['email'] ?? '',
                             'img' => $img,
                             'raw_name' => $row['full_name'],
-                            'technician_id' => (int)$row['id']
+                            'technician_id' => (int)$row['id'],
+                            'job_count' => (int)$row['assigned_job_count']
                         ];
                     }
                 }
@@ -4132,9 +4133,10 @@ if (isset($_GET['api_check_hash'])) {
                         <?php foreach ($techs as $tech): 
                             $search_name = preg_replace('/\s+/', '', strtolower($tech['raw_name'] . $tech['eng'] . $tech['th']));
                         ?>
-                        <div class="bg-white rounded-[24px] overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-sky-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[260px] w-full sm:w-[260px] tech-card-item" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
+                        <div class="bg-white rounded-[24px] overflow-hidden border border-slate-200/70 shadow-sm hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-sky-300 hover:-translate-y-1 transition-all duration-300 flex flex-col group relative min-w-[260px] w-full sm:w-[260px] tech-card-item" data-tech-card-id="<?php echo (int)$tech['technician_id']; ?>" data-tech-name="<?php echo htmlspecialchars($search_name, ENT_QUOTES); ?>">
                             
                             <div class="relative w-full aspect-square bg-slate-50 overflow-hidden">
+                                <button type="button" class="mbs-tech-card-edit" data-tech-card-edit="<?php echo (int)$tech['technician_id']; ?>" title="แก้ไขข้อมูลเจ้าหน้าที่" aria-label="แก้ไขข้อมูลเจ้าหน้าที่ <?php echo htmlspecialchars($tech['th'], ENT_QUOTES, 'UTF-8'); ?>"><i class="fas fa-edit" aria-hidden="true"></i></button>
                                 <img src="<?php echo htmlspecialchars($tech['img']); ?>" 
                                      onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/notionists/svg?seed=<?php echo urlencode($tech['th']); ?>&backgroundColor=e2e8f0'" 
                                      onclick="openImageModal(this.src)"
@@ -4146,9 +4148,12 @@ if (isset($_GET['api_check_hash'])) {
 
                             <div class="p-5 flex-1 flex flex-col relative z-10 bg-white text-left">
                                 
+                                <div class="mbs-tech-card-name-row">
                                 <h5 class="font-extrabold text-slate-800 text-[17px] leading-tight group-hover:text-sky-500 transition-colors duration-300">
                                     <?php echo htmlspecialchars($tech['th']); ?>
                                 </h5>
+                                    <span class="mbs-tech-card-count"><?php echo (int)$tech['job_count']; ?> งาน</span>
+                                </div>
                                 
                                 <?php if (!empty($tech['eng'])): ?>
                                 <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate"><?php echo htmlspecialchars($tech['eng']); ?></p>
