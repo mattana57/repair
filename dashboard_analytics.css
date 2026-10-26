@@ -99,3 +99,8 @@
  .mbs-analytics-detail .mbs-analytics-work-people { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
  .mbs-analytics-detail .mbs-analytics-work-people > div:last-child { grid-column: 1 / -1; }
 }
+
+/* Match the top edge of each work card to its actual work status. */
+.mbs-analytics-detail .mbs-analytics-work[data-status-tone="pending"] { border-top: 3px solid #f59e0b; }
+.mbs-analytics-detail .mbs-analytics-work[data-status-tone="progress"] { border-top: 3px solid #38bdf8; }
+.mbs-analytics-detail .mbs-analytics-work[data-status-tone="complete"] { border-top: 3px solid #10b981; }
