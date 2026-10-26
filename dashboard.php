@@ -2915,19 +2915,6 @@ if (isset($_GET['api_check_hash'])) {
                             <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
                         </button>
 
-                        <button type="button" onclick="show('technicians'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                    <i class="fas fa-users-cog text-xs"></i>
-                                </div>
-                                <div>
-                                    <p class="font-bold text-slate-800">จัดการสิทธิ์ผู้ใช้งาน</p>
-                                    <p class="text-[10px] text-slate-400 font-medium">แอดมินและเจ้าหน้าที่เจ้าหน้าที่</p>
-                                </div>
-                            </div>
-                            <i class="fas fa-chevron-right text-[10px] text-slate-300"></i>
-                        </button>
-
                         <button type="button" onclick="show('reports'); closeProfileDropdown();" class="w-full px-4 py-2.5 rounded-2xl text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
