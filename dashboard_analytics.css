@@ -193,3 +193,25 @@
  #mbsAnalytics .mbs-analytics-pagination .tp-summary { text-align:center; width:100%; }
  #mbsAnalytics .mbs-analytics-pagination .tp-nav { justify-content:center; }
 }
+
+/* A restrained, stable palette by dimension; only a selected row is strong. */
+.mbs-analytics-detail .mbs-drill-charts > section {
+ --chart-bar:#728dc1; --chart-bar-end:#a8bada; --chart-track:#f0f4fa;
+ --chart-selected:#315fa6; --chart-selected-end:#668bc3; --chart-soft:#edf2fa; --chart-border:#bdcce4;
+}
+.mbs-analytics-detail .mbs-drill-charts > section:is([data-mbs-analytics-field="location"],[data-mbs-analytics-field="line_user_id"]) {
+ --chart-bar:#639b95; --chart-bar-end:#a8c4bf; --chart-track:#eff6f4;
+ --chart-selected:#31756e; --chart-selected-end:#639b95; --chart-soft:#edf5f3; --chart-border:#b6d2cc;
+}
+.mbs-analytics-detail .mbs-drill-charts > section[data-mbs-analytics-field="problem_desc"] {
+ --chart-bar:#9282b4; --chart-bar-end:#b9acd1; --chart-track:#f4f1f8;
+ --chart-selected:#74609b; --chart-selected-end:#9282b4; --chart-soft:#f2eef7; --chart-border:#cec2df;
+}
+.mbs-analytics-detail .mbs-drill-charts .mbs-analytics-track { background:var(--chart-track); }
+.mbs-analytics-detail .mbs-drill-charts .mbs-analytics-track > span { background:linear-gradient(90deg,var(--chart-bar),var(--chart-bar-end)); }
+.mbs-analytics-detail .mbs-drill-charts .mbs-analytics-bar > strong { color:#475569; }
+.mbs-analytics-detail .mbs-drill-charts .mbs-analytics-bar:hover { background:var(--chart-track); }
+.mbs-analytics-detail .mbs-drill-charts .mbs-analytics-bar[aria-pressed="true"] { background:var(--chart-soft); border-color:var(--chart-border); }
+.mbs-analytics-detail .mbs-drill-charts .mbs-analytics-bar[aria-pressed="true"] .mbs-analytics-track > span { background:linear-gradient(90deg,var(--chart-selected),var(--chart-selected-end)); }
+.mbs-analytics-detail .mbs-drill-charts .mbs-analytics-bar[aria-pressed="true"] > strong { color:var(--chart-selected); }
+.mbs-analytics-detail .mbs-drill-charts .mbs-analytics-bar:focus-visible { outline:2px solid var(--chart-selected); outline-offset:2px; }

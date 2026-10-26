@@ -868,6 +868,7 @@
             : ["location", "problem_desc", "line_user_id"];
     for (const f of fields) {
       const card = document.createElement("section");
+      card.dataset.mbsAnalyticsField = f;
       card.innerHTML =
         "<h3>" +
         esc(
