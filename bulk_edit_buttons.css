@@ -1,4 +1,12 @@
 /* Shared appearance only; retain each page's existing bulk-edit handlers. */
+/* Opening Edit already enables selection. Retain legacy hooks for existing scripts. */
+button[data-ab-action="choose"],
+button[data-lb-action="choose"],
+button[data-tb-action="choose"],
+button[data-card-action="choose"],
+button#trashChooseButton {
+  display: none !important;
+}
 button.ab-edit-button,
 button[data-ab-edit],
 button[data-lb-edit],
