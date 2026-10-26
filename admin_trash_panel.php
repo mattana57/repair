@@ -33,15 +33,20 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="p-6 border-b border-slate-100 space-y-4">
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-xl font-extrabold text-slate-800"><i class="fas fa-trash-alt text-indigo-500 mr-2" aria-hidden="true"></i>ถังขยะ</h2>
+                <div class="trash-edit-actions">
+                    <span id="trashSelectedCount" class="text-xs font-semibold text-slate-500" role="status" aria-live="polite">ยังไม่ได้เลือกรายการ</span>
+                    <div class="trash-edit-dropdown">
                 <button type="button" id="trashEditButton" onclick="toggleTrashEdit()" aria-expanded="false" aria-controls="trashBulkToolbar" class="text-sm font-bold text-blue-600 hover:text-blue-700 px-3 py-2 rounded-xl hover:bg-blue-50 transition-colors">แก้ไข</button>
-            </div>
             <div id="trashBulkToolbar" class="hidden flex-wrap items-center gap-2 p-2 rounded-2xl bg-slate-50 border border-slate-200" aria-label="จัดการรายการที่เลือก">
                 <button type="button" id="trashChooseButton" onclick="selectTrashItems()" class="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-blue-50">เลือก</button>
                 <button type="button" id="trashChooseAllButton" onclick="selectAllTrashItems()" class="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-blue-50 disabled:opacity-50">เลือกทั้งหมด</button>
                 <button type="button" id="trashRestoreSelectedButton" onclick="restoreSelectedTrashItems()" disabled class="px-4 py-2 rounded-xl text-sm font-bold bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-100 disabled:opacity-50">กู้คืน</button>
                 <button type="button" onclick="deselectTrashItems()" class="px-4 py-2 rounded-xl text-sm font-bold bg-white border border-slate-200 text-slate-700 hover:bg-blue-50">ยกเลิก</button>
                 <button type="button" id="trashDeleteSelectedButton" onclick="deleteSelectedTrashItems()" disabled class="px-4 py-2 rounded-xl text-sm font-bold bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed">ลบ</button>
-                <span id="trashSelectedCount" class="ml-auto px-2 text-xs font-semibold text-slate-500" role="status" aria-live="polite">ยังไม่ได้เลือกรายการ</span>
+
+            </div>
+                    </div>
+                </div>
             </div>
             <p class="text-sm text-slate-500">รายการในถังขยะยังไม่ถูกลบจริง ข้อมูลยังอยู่ในฐานข้อมูลและสามารถกู้คืนได้ หากกดลบถาวร ข้อมูลจะถูกลบออกจากฐานข้อมูลและหน้าแดชบอร์ด และไม่สามารถกู้คืนได้</p>
             <?php if (is_array($atNotice)): ?>

@@ -1,4 +1,13 @@
 /* Shared appearance only; retain each page's existing bulk-edit handlers. */
+.ab-menu button i, #tb-menu button i, #mbsCardMenu button i, #trashBulkToolbar button i { display:none !important; }
+#trash .trash-edit-actions { display:flex; align-items:center; gap:12px; }
+#trash .trash-edit-dropdown { position:relative; }
+#trash #trashBulkToolbar { position:absolute; right:0; top:calc(100% + 8px); z-index:50; width:180px; margin:0; display:flex; flex-direction:column; align-items:stretch; gap:4px; padding:8px; border:1px solid #f1f5f9; border-radius:16px; background:#fff; box-shadow:0 12px 30px #0f172a26; }
+#trash #trashBulkToolbar.hidden { display:none !important; }
+#trash #trashBulkToolbar button { width:100%; text-align:left; border:0; background:transparent; color:#475569; border-radius:10px; padding:10px 16px; }
+#trash #trashBulkToolbar button:hover { background:#fff1f2; }
+#trash #trashBulkToolbar #trashDeleteSelectedButton { color:#e11d48; }
+#trash #trashBulkToolbar button:disabled { opacity:.45; }
 /* Opening Edit already enables selection. Retain legacy hooks for existing scripts. */
 button[data-ab-action="choose"],
 button[data-lb-action="choose"],

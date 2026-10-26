@@ -162,7 +162,8 @@ function mbs_feature_assets($db) {
     echo '<link rel="stylesheet" href="dashboard_reviews.css?v=20261026-3">';
     echo '<link rel="stylesheet" href="dashboard_analytics.css?v=20261026-4">';
     echo '<link rel="stylesheet" href="technician_cards.css?v=20261026-1">';
-    echo '<link rel="stylesheet" href="bulk_edit_buttons.css?v=20261026-1">';
+    echo '<link rel="stylesheet" href="bulk_edit_buttons.css?v=20261026-2">';
+    echo '<script src="bulk_edit_menu.js?v=20261026-1" defer></script>';
     echo '<link rel="stylesheet" href="technician_manage_layout.css?v=20261026-1">';
     echo '<link rel="stylesheet" href="profile_menu_actions.css?v=20261025-1">';
     echo '<script type="application/json" id="mbsFeaturesData">'.json_encode($data,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE).'</script>';
