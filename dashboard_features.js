@@ -642,7 +642,7 @@
           ? technicianName(value)
           : value);
     const dlg = dialog("mbsAnalytics", title);
-    const detailed = ["equipment", "location", "technician"].includes(kind);
+    const detailed = ["equipment", "location", "technician", "reporter"].includes(kind);
     dlg.classList.toggle("mbs-analytics-detail", detailed);
     dlg.querySelector("h2").textContent = title;
     chartRefs.forEach((c) => c.destroy());
@@ -702,23 +702,31 @@
       if (detailed) {
         card.querySelector(".mbs-drill-chart").remove();
         const list = document.createElement("div"); list.className = "mbs-analytics-bars";
-        const max = Math.max(1, ...pairs.map(p => p[1]));
+        const max = Math.max(1, rows.length);
+        list.id = "mbsAnalyticsBars-" + f;
         if (!pairs.length) { const empty=document.createElement("p");empty.className="mbs-analytics-empty";empty.textContent="ยังไม่มีข้อมูลในช่วงที่เลือก";list.appendChild(empty); }
         for (const [key,count] of pairs) {
           const b = document.createElement("button"); b.type="button"; b.className="mbs-analytics-bar";
           b.dataset.mbsAnalyticsFilter=f; b.dataset.mbsAnalyticsValue=key; b.setAttribute("aria-pressed","false");
           b.innerHTML='<span class="mbs-analytics-bar-label"></span><strong>' + count + ' <small>งาน</small></strong><span class="mbs-analytics-track" aria-hidden="true"><span style="width:' + count/max*100 + '%"></span></span>';
-          b.querySelector(".mbs-analytics-bar-label").textContent=key || "ไม่ระบุ";
+          b.querySelector(".mbs-analytics-bar-label").textContent=(f === "technician_id" ? technicianName(key) : key) || "ไม่ระบุ";
           b.onclick=()=>{
             selected.match={ [f]:key };
             for(const other of body.querySelectorAll(".mbs-analytics-bar"))other.setAttribute("aria-pressed",String(other===b));
-            $("mbsMatchLabel").textContent="กรองตาม " + card.querySelector("h3").textContent + ": " + (key || "ไม่ระบุ");
+            $("mbsMatchLabel").textContent="กรองตาม " + card.querySelector("h3").textContent + ": " + ((f === "technician_id" ? technicianName(key) : key) || "ไม่ระบุ");
             loadTable($("mbsDrillTable"),serverParams(kind,value,selected.match));
           };
           list.appendChild(b);
         }
-        const hint=document.createElement("p");hint.className="mbs-analytics-chart-note";hint.textContent="เรียงจากจำนวนงานมากไปน้อย · สูงสุด 10 รายการ";
-        card.append(list,hint);
+        const hint=document.createElement("p");hint.className="mbs-analytics-chart-note";hint.textContent="สัดส่วนเทียบกับงานทั้งหมด " + rows.length + " งาน · เรียงจากมากไปน้อย";
+        card.append(list);
+        if (pairs.length > 5) {
+          const more=document.createElement("button");more.type="button";more.className="mbs-analytics-more";
+          more.textContent="แสดงอีก " + (pairs.length-5) + " รายการ";more.setAttribute("aria-expanded","false");more.setAttribute("aria-controls",list.id);
+          more.onclick=()=>{const expanded=list.classList.toggle("is-expanded");more.setAttribute("aria-expanded",String(expanded));more.textContent=expanded?"แสดงน้อยลง":"แสดงอีก " + (pairs.length-5) + " รายการ";};
+          card.appendChild(more);
+        }
+        card.appendChild(hint);
         continue;
       }
       chart(card.querySelector("canvas"), pairs, null, {

@@ -160,9 +160,9 @@ function mbs_feature_dispatch($db) {
 function mbs_feature_assets($db) {
     try{$data=mbs_feature_payload($db);}catch(Throwable $e){error_log('Dashboard features load failed: '.$e->getMessage());$data=['role'=>strtolower((string)($_SESSION['role']??'')),'repairs'=>[],'technicians'=>[],'accounts'=>[],'error'=>'โหลดข้อมูลไม่สำเร็จ'];}
     echo '<link rel="stylesheet" href="dashboard_reviews.css?v=20261026-3">';
-    echo '<link rel="stylesheet" href="dashboard_analytics.css?v=20261026-2">';
+    echo '<link rel="stylesheet" href="dashboard_analytics.css?v=20261026-3">';
     echo '<link rel="stylesheet" href="profile_menu_actions.css?v=20261025-1">';
     echo '<script type="application/json" id="mbsFeaturesData">'.json_encode($data,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE).'</script>';
     echo '<script src="dashboard_chart_appearance.js?v=20261025-4"></script>';
-    echo '<script src="dashboard_features.js?v=20261026-9"></script>';
+    echo '<script src="dashboard_features.js?v=20261026-10"></script>';
 }

@@ -75,3 +75,27 @@
  .mbs-analytics-detail .mbs-analytics-work-times > div { display: grid; grid-template-columns: 100px minmax(0,1fr); gap: 8px; align-items: baseline; }
  .mbs-analytics-detail .mbs-analytics-work-times dt { margin: 0; }
 }
+/* Compact, consistent detail view for all four analytics entry points. */
+#mbsAnalytics.mbs-analytics-detail { width: min(1120px,96vw); }
+.mbs-analytics-detail .mbs-drill-charts { align-items: start; }
+.mbs-analytics-detail .mbs-analytics-bars { max-height: none; overflow: visible; gap: 4px; }
+.mbs-analytics-detail .mbs-analytics-bars:not(.is-expanded) > .mbs-analytics-bar:nth-child(n+6) { display: none; }
+.mbs-analytics-detail .mbs-analytics-bar { padding: 9px 7px; gap: 6px 10px; }
+.mbs-analytics-detail .mbs-analytics-track { height: 9px; }
+.mbs-analytics-detail .mbs-analytics-chart-note { margin: 0; padding-top: 12px; line-height: 1.6; }
+.mbs-analytics-detail .mbs-analytics-more { width: 100%; border: 1px solid #dbeafe; border-radius: 8px; background: #f8fafc; color: #1d4ed8; padding: 8px; margin-top: 10px; font-family: inherit; font-size: 12px; cursor: pointer; }
+.mbs-analytics-detail .mbs-analytics-more:hover { background: #eff6ff; }
+.mbs-analytics-detail .mbs-analytics-work { padding: 18px; }
+.mbs-analytics-detail .mbs-analytics-work > header { align-items: flex-start; margin-bottom: 10px; }
+.mbs-analytics-detail .mbs-analytics-work > header > div { min-width: 0; flex: 1; }
+.mbs-analytics-detail .mbs-analytics-work h4 { margin: 4px 0 0; font-size: 17px; }
+.mbs-analytics-detail .mbs-analytics-work-problem { margin: 0 0 16px; font-size: 14px; }
+.mbs-analytics-detail .mbs-analytics-work-problem > span { color: #64748b; }
+.mbs-analytics-detail .mbs-analytics-work-people { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin-bottom: 14px; }
+.mbs-analytics-detail .mbs-analytics-work-times { padding: 12px 14px; }
+.mbs-analytics-detail .mbs-analytics-work > footer { margin-top: 12px; }
+@media(max-width:520px) {
+ .mbs-analytics-detail .mbs-analytics-work { padding: 14px; }
+ .mbs-analytics-detail .mbs-analytics-work-people { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+ .mbs-analytics-detail .mbs-analytics-work-people > div:last-child { grid-column: 1 / -1; }
+}

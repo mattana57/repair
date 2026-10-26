@@ -75,7 +75,7 @@ function mbs_drill_dispatch($db) {
                 echo '<article class="mbs-job-card"><header><a href="'.mbs_h($url).'" target="_blank" rel="noopener">'.mbs_h($r['ticket_no']).'</a><span class="mbs-job-status mbs-job-'.$tone.'">'.mbs_h($status).'</span></header><h3>'.mbs_h($r['equipment_type']).'</h3><p class="mbs-job-problem">'.nl2br(mbs_h($r['problem_desc'])).'</p><dl class="mbs-job-facts"><div><dt>ผู้แจ้งซ่อม</dt><dd>'.mbs_h($r['reporter_label']).'</dd></div><div><dt>สถานที่</dt><dd>'.mbs_h($r['location']).'</dd></div><div><dt>เจ้าหน้าที่</dt><dd>'.mbs_h($r['technician_name']).'</dd></div></dl><dl class="mbs-job-times"><div><dt>รับงาน</dt><dd>'.mbs_h(!empty($r['received_at'])?mbs_date_display($r['received_at']):'ยังไม่รับงาน').'</dd></div><div><dt>ปิดงาน</dt><dd>'.mbs_h(!empty($r['completed_at'])?mbs_date_display($r['completed_at']):'ยังไม่ปิดงาน').'</dd></div><div><dt>ระยะเวลาทำงาน</dt><dd>'.mbs_h(mbs_duration($r['received_at']??null,$r['completed_at']??null)).'</dd></div></dl><footer>'.(!empty($r['line_user_id'])?'<button type="button" class="mbs-history-link" data-mbs-reporter="'.mbs_h($r['line_user_id']).'">ดูประวัติผู้แจ้ง</button>':'').'<a class="mbs-job-detail" href="'.mbs_h($url).'" target="_blank" rel="noopener">ดูรายละเอียดงาน ↗</a></footer></article>';
             }
             echo '</div>';
-        }elseif(in_array($kind,['equipment','location','technician'],true)){
+        }elseif(in_array($kind,['equipment','location','technician','reporter'],true)){
             require_once __DIR__.'/dashboard_analytics_view.php';
             mbs_render_analytics_table($slice,$total,$data['role']);
         }else{
