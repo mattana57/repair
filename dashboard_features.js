@@ -806,7 +806,7 @@
     const dlg = dialog("mbsReviewJobsDialog", "งานที่รับผิดชอบ: " + (technicianId ? technicianName(technicianId) : "เจ้าหน้าที่ทั้งหมด"));
     dlg.querySelector("h2").textContent = "งานที่รับผิดชอบ: " + (technicianId ? technicianName(technicianId) : "เจ้าหน้าที่ทั้งหมด");
     const body = dlg.querySelector(".mbs-dialog-body");
-    body.innerHTML = '<p class="mbs-intro">รวม ' + rows.length + ' งานในช่วงที่เลือก · เลือกผู้แจ้งเพื่อดูงานของคนนั้น หรือกดเลขใบงานเพื่อดูรายละเอียด</p><div class="mbs-review-job-reporters"></div><div id="mbsReviewJobsTable"></div>';
+    body.innerHTML = '<section class="mbs-jobs-overview"><div><span class="mbs-jobs-eyebrow">งานที่ได้รับมอบหมายทั้งหมด</span><strong>' + rows.length + ' <small>งาน</small></strong><p>ข้อมูลตามเจ้าหน้าที่และช่วงวันที่ที่เลือก</p></div></section><div class="mbs-jobs-filter"><label for="mbsJobsReporterSelect">ผู้แจ้งซ่อม</label><select id="mbsJobsReporterSelect"></select><p>เลือกผู้แจ้งเพื่อดูงานของคนนั้น แล้วกด “ดูรายละเอียดงาน”</p></div><div id="mbsReviewJobsTable"></div>';
     const params = (reporter = "", repair = "") => {
       const u = serverParams("review_jobs", technicianId);
       u.searchParams.set("mbs_jobs_department", department);
@@ -820,18 +820,16 @@
       if (!groups.has(key)) groups.set(key, {id, repair:id ? "" : String(r.id), name:r.reporter_label || r.reporter_name || "ไม่ระบุผู้แจ้ง", count:0});
       groups.get(key).count++;
     }
-    const controls = body.querySelector(".mbs-review-job-reporters");
-    const add = (label, reporter, repair) => {
-      const b = document.createElement("button"); b.type = "button"; b.className = "mbs-button"; b.textContent = label;
-      b.dataset.mbsJobsReporter = reporter;
-      b.onclick = () => {
-        for (const item of controls.children) item.setAttribute("aria-pressed", String(item === b));
-        loadTable($("mbsReviewJobsTable"), params(reporter, repair));
-      };
-      b.setAttribute("aria-pressed", String(!reporter && !repair)); controls.appendChild(b);
+    const select = $("mbsJobsReporterSelect"), all = document.createElement("option");
+    all.value = ""; all.textContent = "ผู้แจ้งทั้งหมด · " + rows.length + " งาน"; select.appendChild(all);
+    for (const [key,g] of [...groups.entries()].sort((a,b) => b[1].count-a[1].count)) {
+      const option = document.createElement("option"); option.value = key;
+      option.textContent = g.name + " · " + g.count + " งาน"; select.appendChild(option);
+    }
+    select.onchange = () => {
+      const g = groups.get(select.value);
+      loadTable($("mbsReviewJobsTable"), params(g?.id || "", g?.repair || ""));
     };
-    add("ทั้งหมด " + rows.length + " งาน", "", "");
-    for (const g of [...groups.values()].sort((a,b) => b.count-a.count)) add(g.name + " · " + g.count + " งาน", g.id, g.repair);
     if (!dlg.open) dlg.showModal();
     loadTable($("mbsReviewJobsTable"), params());
   }
@@ -867,7 +865,7 @@
         " คอมเมนต์";
     $("mbsReviewCount").textContent =
       display.length + (reviewState.noReview ? " รายการ" : " รีวิว");
-    $("mbsReviewJobs").textContent = "จำนวนงาน " + reviewJobRows().length;
+    $("mbsReviewJobs").textContent = reviewJobRows().length + " งาน";
     $("mbsNoReview").textContent = "ยังไม่มีรีวิว (" + unreviewed + ")";
     $("mbsNoReview").classList.toggle(
       "is-selected",
@@ -963,17 +961,16 @@
     badge.className = "mbs-classic-count";
     const counts = document.createElement("div");
     counts.className = "mbs-classic-review-counts";
-    const jobsBadge = document.createElement("button");
-    jobsBadge.type = "button";
+    const jobsBadge = document.createElement("span");
     jobsBadge.id = "mbsReviewJobs";
     jobsBadge.className = "mbs-classic-count mbs-classic-job-count";
     jobsBadge.title = "จำนวนงานที่ได้รับมอบหมาย ตามวันที่แจ้งซ่อมในช่วงที่เลือก";
-    jobsBadge.onclick = openReviewJobs;
     counts.append(badge, jobsBadge);
     header.replaceChildren(lead, counts, close);
     const body = dlg.querySelector(".mbs-dialog-body");
     body.innerHTML =
-      '<div class="mbs-classic-review-toolbar"><div class="mbs-classic-filter-row"><span class="mbs-classic-filter-label">ระดับคะแนน:</span><div id="mbsStarChips"></div><div class="mbs-classic-review-actions"><button type="button" id="mbsNoReview">ยังไม่มีรีวิว (0)</button><button type="button" id="mbsCommentsOnly">เฉพาะคอมเมนต์</button><button type="button" id="mbsReviewAll">ทั้งหมด</button></div></div><div class="mbs-classic-date-row"><div id="mbsReviewDate"></div><p id="mbsReviewSummary" aria-live="polite"></p></div></div><div id="mbsReviewList"></div>';
+      '<div class="mbs-classic-review-toolbar"><div class="mbs-classic-filter-row"><span class="mbs-classic-filter-label">ระดับคะแนน:</span><div id="mbsStarChips"></div><div class="mbs-classic-review-actions"><button type="button" id="mbsReviewJobsOpen">จำนวนงาน</button><button type="button" id="mbsNoReview">ยังไม่มีรีวิว (0)</button><button type="button" id="mbsCommentsOnly">เฉพาะคอมเมนต์</button><button type="button" id="mbsReviewAll">ทั้งหมด</button></div></div><div class="mbs-classic-date-row"><div id="mbsReviewDate"></div><p id="mbsReviewSummary" aria-live="polite"></p></div></div><div id="mbsReviewList"></div>';
+    $("mbsReviewJobsOpen").onclick = openReviewJobs;
     $("mbsReviewTech").onchange = (e) => {
       reviewState.id = e.target.value;
       reviewState.noReview = false;

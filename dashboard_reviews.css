@@ -521,9 +521,9 @@
   max-width: none;
 }
 #mbsReviews .mbs-classic-job-count {
-  color: #475569;
-  background: #f1f5f9;
-  border-color: #e2e8f0;
+  color: #0f766e;
+  background: #ccfbf1;
+  border-color: #99f6e4;
   box-shadow: none;
 }
 @media (max-width: 520px) {
@@ -538,26 +538,119 @@
     gap: 8px;
   }
 }
-#mbsReviews button.mbs-classic-job-count {
-  cursor: pointer;
-  font-family: inherit;
-  border-color: #cbd5e1;
+#mbsReviews #mbsReviewJobsOpen {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #fff;
 }
-#mbsReviews button.mbs-classic-job-count:hover {
-  background: #e2e8f0;
-}
-#mbsReviews button.mbs-classic-job-count:focus-visible {
-  outline: 2px solid #2563eb;
+#mbsReviews #mbsReviewJobsOpen:hover { background: #115e59; }
+#mbsReviews #mbsReviewJobsOpen:focus-visible,
+#mbsReviewJobsDialog a:focus-visible,
+#mbsReviewJobsDialog select:focus-visible {
+  outline: 3px solid #5eead4;
   outline-offset: 3px;
 }
-.mbs-review-job-reporters {
+#mbsReviewJobsDialog {
+  width: min(1040px, calc(100vw - 32px));
+}
+#mbsReviewJobsDialog > header {
+  background: #f0fdfa;
+  border-bottom-color: #ccfbf1;
+}
+#mbsReviewJobsDialog .mbs-dialog-body { background: #f8fafc; }
+#mbsReviewJobsDialog .mbs-jobs-overview {
+  background: #fff;
+  border: 1px solid #ccfbf1;
+  border-left: 5px solid #0f766e;
+  border-radius: 16px;
+  padding: 18px 22px;
+  margin-bottom: 18px;
+}
+#mbsReviewJobsDialog .mbs-jobs-eyebrow { color: #475569; font-size: 13px; }
+#mbsReviewJobsDialog .mbs-jobs-overview strong {
+  display: block;
+  color: #0f766e;
+  font-size: 32px;
+  line-height: 1.4;
+}
+#mbsReviewJobsDialog .mbs-jobs-overview small { font-size: 15px; font-weight: 500; }
+#mbsReviewJobsDialog .mbs-jobs-overview p,
+#mbsReviewJobsDialog .mbs-jobs-filter p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+#mbsReviewJobsDialog .mbs-jobs-filter { margin-bottom: 20px; }
+#mbsReviewJobsDialog .mbs-jobs-filter label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 7px; }
+#mbsReviewJobsDialog .mbs-jobs-filter select {
+  width: 100%;
+  max-width: 420px;
+  padding: 11px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  color: #334155;
+  font-size: 14px;
+}
+#mbsReviewJobsDialog .mbs-job-list { display: grid; gap: 16px; }
+#mbsReviewJobsDialog .mbs-job-card {
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 5px #0f172a04;
+  overflow-wrap: anywhere;
+}
+#mbsReviewJobsDialog .mbs-job-card > header {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
 }
-.mbs-review-job-reporters button[aria-pressed="true"] {
-  background: #dbeafe;
-  color: #1e40af;
-  border-color: #93c5fd;
+#mbsReviewJobsDialog .mbs-job-card > header a { color: #0f766e; font-weight: 700; text-decoration: none; font-size: 13px; }
+#mbsReviewJobsDialog .mbs-job-status { border-radius: 999px; padding: 5px 11px; font-size: 12px; font-weight: 600; }
+#mbsReviewJobsDialog .mbs-job-pending { color: #9a3412; background: #ffedd5; }
+#mbsReviewJobsDialog .mbs-job-progress { color: #1e40af; background: #dbeafe; }
+#mbsReviewJobsDialog .mbs-job-complete { color: #166534; background: #dcfce7; }
+#mbsReviewJobsDialog .mbs-job-other { color: #475569; background: #f1f5f9; }
+#mbsReviewJobsDialog .mbs-job-card h3 { font-size: 17px; margin: 0 0 5px; color: #0f172a; }
+#mbsReviewJobsDialog .mbs-job-problem { margin: 0 0 16px; font-size: 14px; color: #475569; line-height: 1.65; }
+#mbsReviewJobsDialog .mbs-job-facts,
+#mbsReviewJobsDialog .mbs-job-times { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin: 0; }
+#mbsReviewJobsDialog dt { font-size: 12px; color: #64748b; margin-bottom: 5px; }
+#mbsReviewJobsDialog dd { margin: 0; font-size: 13px; color: #334155; font-weight: 600; }
+#mbsReviewJobsDialog .mbs-job-times { background: #f8fafc; border-radius: 10px; padding: 12px; margin-top: 16px; }
+#mbsReviewJobsDialog .mbs-job-card > footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 16px; }
+#mbsReviewJobsDialog .mbs-job-card > footer button { margin-right: auto; }
+#mbsReviewJobsDialog .mbs-job-detail { padding: 9px 14px; border-radius: 9px; background: #0f766e; color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; }
+#mbsReviewJobsDialog .mbs-job-detail:hover { background: #115e59; }
+@media(max-width:520px) {
+  #mbsReviewJobsDialog { width: calc(100vw - 16px); border-radius: 18px; }
+  #mbsReviewJobsDialog .mbs-dialog-body { padding: 14px; }
+  #mbsReviewJobsDialog .mbs-job-card { padding: 15px; }
+  #mbsReviewJobsDialog .mbs-job-facts,
+  #mbsReviewJobsDialog .mbs-job-times { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #mbsReviewJobsDialog .mbs-job-facts > :last-child,
+  #mbsReviewJobsDialog .mbs-job-times > :last-child { grid-column: 1 / -1; }
+}
+#mbsReviewJobsDialog .mbs-job-card > footer .mbs-history-link {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 6px 0;
+  color: #0f766e;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#mbsReviewJobsDialog .mbs-job-card > footer .mbs-history-link:focus-visible {
+  outline: 3px solid #5eead4;
+  outline-offset: 3px;
 }
