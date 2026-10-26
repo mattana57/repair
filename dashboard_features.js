@@ -738,7 +738,7 @@
       kind === "reporter"
         ? ["equipment_type", "location", "technician_id"]
         : kind === "technician"
-          ? ["equipment_type", "location", "line_user_id"]
+          ? ["equipment_type", "location", "line_user_id", "problem_desc"]
           : kind === "equipment"
             ? ["equipment_type", "problem_desc", "line_user_id"]
             : ["location", "problem_desc", "line_user_id"];

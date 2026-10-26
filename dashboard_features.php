@@ -168,5 +168,5 @@ function mbs_feature_assets($db) {
     echo '<link rel="stylesheet" href="profile_menu_actions.css?v=20261025-1">';
     echo '<script type="application/json" id="mbsFeaturesData">'.json_encode($data,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE).'</script>';
     echo '<script src="dashboard_chart_appearance.js?v=20261025-4"></script>';
-    echo '<script src="dashboard_features.js?v=20261026-19"></script>';
+    echo '<script src="dashboard_features.js?v=20261026-20"></script>';
 }
