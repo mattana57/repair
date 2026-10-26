@@ -338,3 +338,12 @@
   text-underline-offset: 3px;
   padding: 6px 0;
 }
+
+/* Recent Transactions only: status badges and centered status heading. */
+.mbs-recent-status-table thead th:last-child,
+.mbs-recent-status-table .mbs-recent-status-cell { text-align:center !important; }
+.mbs-recent-status { display:inline-flex; align-items:center; justify-content:center; padding:4px 12px; border-radius:999px; font-size:11px; line-height:1.5; font-weight:700; white-space:nowrap; }
+.mbs-recent-status-pending { background:#fef3c7; color:#b45309; }
+.mbs-recent-status-progress { background:#e0f2fe; color:#0369a1; }
+.mbs-recent-status-complete { background:#d1fae5; color:#059669; }
+.mbs-recent-status-other { background:#f1f5f9; color:#475569; }

@@ -482,6 +482,7 @@
     const body =
       $("dashTableBody") || document.querySelector("#dash table tbody");
     if (!body) return;
+    body.closest('table')?.classList.add('mbs-recent-status-table');
     const rows = overviewRows().slice(0, 5);
     body.innerHTML =
       rows
@@ -502,8 +503,8 @@
               : "") +
             '<small style="display:block">' +
             esc(r.location) +
-            '</small></td><td class="px-6 py-4">' +
-            esc(r.status) +
+            '</small></td><td class="px-6 py-4 mbs-recent-status-cell"><span class="mbs-recent-status mbs-recent-status-' +
+            ({'รอรับเรื่อง':'pending','กำลังดำเนินการ':'progress','ซ่อมเสร็จแล้ว':'complete'}[r.status] || 'other') + '">' + esc(r.status) + '</span>' +
             "</td></tr>",
         )
         .join("") ||
@@ -959,10 +960,12 @@
     u.searchParams.set("mbs_star", reviewState.star);
     u.searchParams.set("mbs_comments", reviewState.comments ? "1" : "0");
     u.searchParams.set("mbs_no_review", reviewState.noReview ? "1" : "0");
-    loadTable($("mbsReviewList"), u);
+    return loadTable($("mbsReviewList"), u);
   }
-  function openReviews(id = "", department = "") {
+  let reviewOpenVersion = 0;
+  async function openReviews(id = "", department = "") {
     if (data.role === "technician") return;
+    const opening = ++reviewOpenVersion;
     // An older caller may pass the department as its first argument.
     if (
       !/^\d+$/.test(String(id)) &&
@@ -994,6 +997,7 @@
     if (reviewState.department && !reviewState.id)
       reviewState.id = String(reviewCandidates()[0]?.id || "");
     const dlg = dialog("mbsReviews", "รีวิวของเจ้าหน้าที่");
+    if (dlg.open) dlg.close();
     dlg.setAttribute("aria-labelledby", "mbsReviewTitle");
     dlg.tabIndex = -1;
     dlg.classList.add("mbs-review-classic");
@@ -1049,9 +1053,10 @@
     if (reviewCalendar)
       reviewCalendar.dialog.querySelector(".rc-header p").textContent =
         "กรองตามวันที่ให้คะแนน/รีวิวจริง";
+    await refreshReviews();
+    if (opening !== reviewOpenVersion) return;
     if (!dlg.open) dlg.showModal();
     dlg.focus({ preventScroll: true });
-    refreshReviews();
   }
   function mountLocalCalendar(holder, key, apply) {
     if (!window.RepairCalendar) return;
