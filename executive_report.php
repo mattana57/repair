@@ -256,6 +256,9 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
         .dark .month-dropdown-item.kb-active-item, .dark .year-dropdown-item.kb-active-item { background-color: #475569 !important; color: #a5b4fc !important; }
     </style>
 <link rel="stylesheet" href="repairs_calendar.css?v=20261025-1">
+<?php if (in_array(strtolower((string)($_SESSION['role'] ?? '')), ['admin', 'technician'], true)): ?>
+<link rel="stylesheet" href="repairs_calendar_palette.css?v=20261027-1">
+<?php endif; ?>
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
 

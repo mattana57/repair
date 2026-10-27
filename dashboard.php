@@ -2706,6 +2706,9 @@ if (isset($_GET['api_check_hash'])) {
 .ab-check:disabled{cursor:not-allowed;opacity:.4;}
 </style>
 <link rel="stylesheet" href="repairs_calendar.css?v=20261026-1">
+<?php if (in_array(strtolower((string)($_SESSION['role'] ?? '')), ['admin', 'technician'], true)): ?>
+<link rel="stylesheet" href="repairs_calendar_palette.css?v=20261027-1">
+<?php endif; ?>
     <link rel="stylesheet" href="project_footer.css?v=20261019-2">
     <link rel="stylesheet" href="admin_team_bulk.css?v=20261019-1">
     <style id="calendar-first-paint">
