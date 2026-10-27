@@ -8038,7 +8038,10 @@ if (isset($_GET['api_check_hash'])) {
             
             const btnRemove = document.getElementById('btnRemoveAvatar');
             if(btnRemove) {
-                if(isUploadedAvatar) btnRemove.classList.remove('hidden');
+                const isExecutiveProfile = role.toLowerCase() === 'executive';
+                btnRemove.disabled = isExecutiveProfile;
+                btnRemove.style.setProperty('display', isExecutiveProfile ? 'none' : '', 'important');
+                if(isUploadedAvatar && !isExecutiveProfile) btnRemove.classList.remove('hidden');
                 else btnRemove.classList.add('hidden');
             }
             document.getElementById('delete_avatar_flag').value = '0';
