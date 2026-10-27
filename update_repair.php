@@ -1091,8 +1091,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 
                                 <label for="staff_photo" style="display:block;font-weight:bold;margin-bottom:8px">เพิ่มรูปหรือวิดีโอผลการดำเนินงาน</label>
                                 <input id="staff_photo" type="file" name="media[]" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" multiple style="display:block;max-width:100%;margin-bottom:10px">
-                                <?php $staffCounts = rmQuery($conn, "SELECT COUNT(*) AS n FROM repair_attachments WHERE repair_id=? AND line_user_id LIKE 'staff:%' AND state='ready'", 'i', (int)$repair['id'])->get_result()->fetch_assoc(); if ((int)$staffCounts['n'] > 0): ?>
-                                <a href="repair_attachments.php?id=<?php echo (int)$repair['id']; ?>&amp;scope=staff" style="display:inline-block;margin-top:8px;color:#1e3a5f;font-weight:600">ดูรูปและวิดีโอผลการดำเนินงาน (<?php echo (int)$staffCounts['n']; ?> ไฟล์)</a>
+                                <?php
+                                $staffFiles = rmQuery($conn, "SELECT id,media_type FROM repair_attachments WHERE repair_id=? AND line_user_id LIKE 'staff:%' AND state='ready' ORDER BY id DESC", 'i', (int)$repair['id'])->get_result();
+                                if ($staffFiles->num_rows > 0): ?>
+                                <p style="margin:12px 0 8px;font-weight:600;color:#1e3a5f">รูปและวิดีโอผลการดำเนินงาน</p>
+                                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
+                                    <?php while ($staffFile = $staffFiles->fetch_assoc()):
+                                        $staffFileUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$staffFile['id']; ?>
+                                    <?php if ($staffFile['media_type'] === 'image'): ?>
+                                    <a href="<?php echo htmlspecialchars($staffFileUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><img src="<?php echo htmlspecialchars($staffFileUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="รูปผลการดำเนินงาน" loading="lazy" style="display:block;width:100%;height:120px;object-fit:cover;border-radius:8px"></a>
+                                    <?php elseif ($staffFile['media_type'] === 'video'): ?>
+                                    <video controls playsinline preload="metadata" src="<?php echo htmlspecialchars($staffFileUrl, ENT_QUOTES, 'UTF-8'); ?>" style="width:100%;max-height:160px;border-radius:8px;background:#0f172a"></video>
+                                    <?php endif; ?>
+                                    <?php endwhile; ?>
+                                </div>
                                 <?php endif; ?>
                                 <p style="font-size:14px;margin-top:8px">รูปไม่เกิน 10 MB · วิดีโอไม่เกิน 50 MB ต่อไฟล์ · เลือกได้หลายไฟล์</p>
                             </div>
