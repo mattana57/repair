@@ -1077,6 +1077,7 @@ if (isset($_GET['api_check_hash'])) {
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
 
 <link rel="stylesheet" href="repairs_calendar.css?v=20261026-1">
+<link rel="stylesheet" href="repairs_calendar_palette.css?v=20261027-1">
     <link rel="stylesheet" href="project_footer.css?v=20261019-2">
     <style id="calendar-first-paint">
         /* ปฏิทินใช้ค่าฟิลด์เดิม แต่ไม่แสดงดรอปดาวน์เก่าระหว่างโหลด */

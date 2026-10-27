@@ -1,4 +1,4 @@
-/* Loaded only for Admin/Technician. Colour-only changes inside calendar dialogs. */
+/* Shared by Admin, Executive and Technician. Colour-only changes inside calendar dialogs. */
 .rc-dialog { --rc-accent:#526f97; --rc-accent-hover:#415b7e; --rc-soft:#edf2f8; --rc-border:#c5d1e0; --rc-ink:#33465e; border-color:var(--rc-border); color:var(--rc-ink); }
 .rc-dialog .rc-header h3 { color:#263b55; }
 .rc-dialog .rc-header p,.rc-dialog .rc-help { color:#718198; }
