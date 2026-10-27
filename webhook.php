@@ -2,6 +2,13 @@
 require 'db_connect.php';
 require 'env.php';
 require_once __DIR__ . '/repair_media.php';
+// Reject requests that are not signed by the configured LINE channel.
+$lineBody = file_get_contents('php://input');
+$lineSignature = $_SERVER['HTTP_X_LINE_SIGNATURE'] ?? '';
+if (!isset($lineChannelSecret) || !is_string($lineChannelSecret) || $lineChannelSecret === '' || !is_string($lineSignature) || !hash_equals(base64_encode(hash_hmac('sha256', $lineBody, $lineChannelSecret, true)), $lineSignature)) {
+    http_response_code(403); exit;
+}
+
 
 $line_group_id = 'C5fc77a991cf95f5813124548b64a95b9'; 
 
@@ -364,7 +371,7 @@ function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken)
         elseif ($text === 'ช่องทางติดต่อ') { $command = 'contact'; }
     } elseif ($type === 'postback') {
         parse_str($event['postback']['data'] ?? '',$data);
-        if (isset($data['action']) && is_string($data['action']) && in_array($data['action'],['my_requests_menu','my_requests','my_request_detail'],true)) { $command = $data['action']; }
+        if (isset($data['action']) && is_string($data['action']) && in_array($data['action'],['my_requests_menu','my_requests','my_request_detail','staff_media_view'],true)) { $command = $data['action']; }
     }
     if ($command === null) { return false; }
     // ประวัติผู้แจ้งแสดงเฉพาะแชตส่วนตัว ไม่เผยแพร่ลงกลุ่มหรือห้องรวม
@@ -373,6 +380,20 @@ function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken)
         if ($command === 'my_requests_menu') { $message = mbsRequesterMenu(); }
         elseif ($command === 'help') { $message = mbsRequesterHelp(); }
         elseif ($command === 'contact') { $message = mbsRequesterContact(); }
+        elseif ($command === 'staff_media_view') {
+            $id = filter_var($data['id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+            if (!$id) throw new InvalidArgumentException('Invalid id');
+            $q=$db->prepare('SELECT id FROM repairs WHERE id=? AND line_user_id=? AND deleted_at IS NULL'); if (!$q) throw new RuntimeException('job prepare'); $q->bind_param('is',$id,$userId); $q->execute(); $job=$q->get_result()->fetch_assoc(); $q->close();
+            if (!$job) { $message=['type'=>'text','text'=>'ไม่พบรายการของคุณค่ะ']; }
+            else {
+                $token=bin2hex(random_bytes(32)); $hash=hash('sha256',$token);
+                $stmt=$db->prepare('INSERT INTO staff_media_view_grants (token_hash,repair_id,line_user_id,expires_at) VALUES (?,?,?,'9999-12-31 23:59:59')');
+                if (!$stmt) throw new RuntimeException('grant prepare');
+                $stmt->bind_param('sis',$hash,$id,$userId); if (!$stmt->execute()) throw new RuntimeException('grant insert'); $stmt->close();
+                $url=mbsSyncConfig()['base'].'/requester_staff_media.php?token='.$token;
+                $message=['type'=>'flex','altText'=>'เปิดไฟล์ผลการดำเนินงาน','contents'=>['type'=>'bubble','body'=>['type'=>'box','layout'=>'vertical','contents'=>[['type'=>'text','text'=>'ไฟล์ผลการดำเนินงาน','weight'=>'bold','wrap'=>true],['type'=>'text','text'=>'กดปุ่มเพื่อดูไฟล์ผลการดำเนินงานค่ะ','wrap'=>true,'margin'=>'md']]],'footer'=>['type'=>'box','layout'=>'vertical','contents'=>[['type'=>'button','style'=>'primary','action'=>['type'=>'uri','label'=>'เปิดไฟล์','uri'=>$url]]]]]];
+            }
+        }
         elseif ($command === 'my_requests') {
             $scope = $data['scope'] ?? 'open';
             $before = filter_var($data['before'] ?? 0,FILTER_VALIDATE_INT,['options'=>['min_range'=>0]]);
@@ -395,7 +416,7 @@ function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken)
 }
 
 
-$content = file_get_contents('php://input');
+$content = $lineBody;
 $events = json_decode($content, true);
 
 if (!is_null($events['events'])) {

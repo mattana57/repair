@@ -53,7 +53,7 @@ function rmClaimPending($db,$user,$repair) {
         $cutoff=time()-RM_PENDING_SECONDS;
         $rows=rmQuery($db,"SELECT id,media_type FROM repair_attachments WHERE line_user_id=? AND repair_id IS NULL AND state NOT IN ('failed','expired') AND sent_epoch>=? AND sent_epoch<=? ORDER BY id",'sii',$user,$cutoff,(int)$job['created_epoch'])->get_result();
         $counts=['image'=>!empty($job['image_path']) ? 1 : 0,'video'=>0];
-        $existing=rmQuery($db,"SELECT media_type,COUNT(*) AS n FROM repair_attachments WHERE repair_id=? AND state NOT IN ('failed','expired') GROUP BY media_type",'i',$repair)->get_result();
+        $existing=rmQuery($db,"SELECT media_type,COUNT(*) AS n FROM repair_attachments WHERE repair_id=? AND line_user_id NOT LIKE 'staff:%' AND state NOT IN ('failed','expired') GROUP BY media_type",'i',$repair)->get_result();
         while($x=$existing->fetch_assoc()){$counts[$x['media_type']]+=(int)$x['n'];}
         $n=0;
         while($r=$rows->fetch_assoc()){

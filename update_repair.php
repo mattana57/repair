@@ -1089,10 +1089,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div style="margin:12px 0;padding:14px;border:1px solid #cbd5e1;border-radius:10px">
                                 <input form="staffPhotoForm" type="hidden" name="id" value="<?php echo (int)$repair['id']; ?>">
                                 <input form="staffPhotoForm" type="hidden" name="repair_csrf" value="<?php echo htmlspecialchars($_SESSION['repair_csrf'], ENT_QUOTES, 'UTF-8'); ?>">
-                                <label for="staff_photo" style="display:block;font-weight:bold;margin-bottom:8px">เพิ่มรูปผลการดำเนินงาน</label>
-                                <input form="staffPhotoForm" id="staff_photo" type="file" name="photo" accept="image/jpeg,image/png,image/webp" required style="display:block;max-width:100%;margin-bottom:10px">
-                                <button form="staffPhotoForm" type="submit" style="background:#1e3a5f;color:white;padding:10px 16px;border:0;border-radius:8px">บันทึกรูป</button>
-                                <p style="font-size:14px;margin-top:8px">JPEG, PNG หรือ WebP ไม่เกิน 10 MB ต่อรูป</p>
+                                <label for="staff_photo" style="display:block;font-weight:bold;margin-bottom:8px">เพิ่มรูปหรือวิดีโอผลการดำเนินงาน</label>
+                                <input form="staffPhotoForm" id="staff_photo" type="file" name="media[]" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" multiple required style="display:block;max-width:100%;margin-bottom:10px">
+                                <button form="staffPhotoForm" type="submit" style="background:#1e3a5f;color:white;padding:10px 16px;border:0;border-radius:8px">บันทึกไฟล์</button>
+                                <p style="font-size:14px;margin-top:8px">รูปไม่เกิน 10 MB · วิดีโอไม่เกิน 50 MB ต่อไฟล์ · เลือกได้หลายไฟล์</p>
                             </div>
                             <?php endif; ?>
 
