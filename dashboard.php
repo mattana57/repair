@@ -53,6 +53,7 @@ mbs_feature_dispatch($conn);
 
 define('MBS_ADMIN_TRASH', true);
 require_once __DIR__ . '/admin_trash.php';
+require_once __DIR__ . '/admin_transactions_bulk.php';
 
 // ข้อ 1: แอดมินเชื่อมบัญชีเว็บเดิมกับข้อมูลช่างเดิม
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
@@ -661,7 +662,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
 
                 $imageIcon = dm_icons($conn, $row);
 
-                echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+                echo "<tr data-tx-id='" . (int)$row['id'] . "' class='hover:bg-slate-50/50 transition-colors search-row'>
                     <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
                     <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                         <div class='font-medium text-slate-700'>{$created_date}</div>
@@ -2689,6 +2690,7 @@ if (isset($_GET['api_check_hash'])) {
 #techniciansTableBody .mbs-team-contact > .flex > .rounded-full {width:16px;height:16px;}
 </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
+<link rel="stylesheet" href="admin_transactions_bulk.css?v=20261027-1">
 
 
 <style id="admin-bulk-ui">
@@ -3341,6 +3343,11 @@ if (isset($_GET['api_check_hash'])) {
              </div>
 
             <div id="repairs" class="section <?php echo $active_tab === 'repairs' ? '' : 'hidden'; ?> space-y-6 no-print">
+                <?php if ($active_tab === 'repairs' && isset($_SESSION['transactions_bulk_notice'])):
+                    $txNotice = $_SESSION['transactions_bulk_notice']; unset($_SESSION['transactions_bulk_notice']); ?>
+                <div role="status" class="p-4 rounded-xl text-sm font-semibold <?php echo $txNotice['type'] === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'; ?>"><?php echo htmlspecialchars($txNotice['message'], ENT_QUOTES, 'UTF-8'); ?></div>
+                <?php endif; ?>
+
                 <div class="modern-card overflow-hidden flex flex-col transition-all duration-300 bg-white" id="repairsMainCard">
                     <!-- ✨ จัด Layout ส่วน Header ใหม่สำหรับหน้า Repairs List ให้เป็น 2 บรรทัด (สำหรับคอม/iPad แนวนอน) โดยไม่กระทบมือถือ ✨ -->
                     <div class="p-4 md:p-6 border-b border-slate-100 flex flex-col gap-4 bg-white shrink-0 relative z-30">
@@ -3375,6 +3382,17 @@ if (isset($_GET['api_check_hash'])) {
                                 <button type="button" id="clearSearchBtn" onclick="clearSearchInput('searchInput', filterRepairsTable)" class="absolute right-0 top-0 h-full px-4 text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-50 border-l border-slate-200 hidden items-center justify-center transition-colors rounded-r-xl"><i class="fas fa-times mr-1.5 text-sm"></i>ล้างค่า</button>
                             </div>
                             
+                            <div id="transactionsBulk" data-token="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <span id="transactionsBulkCount" role="status" aria-live="polite">เลือกแล้ว 0 รายการ</span>
+                                <div class="tx-menu-wrap">
+                                    <button type="button" id="transactionsBulkEdit" aria-expanded="false" aria-controls="transactionsBulkMenu">แก้ไข</button>
+                                    <div id="transactionsBulkMenu" hidden>
+                                        <button type="button" data-tx-action="all">เลือกทั้งหมดในหน้านี้</button>
+                                        <button type="button" data-tx-action="cancel">ยกเลิก</button>
+                                        <button type="button" data-tx-action="delete" disabled>ลบ</button>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
                             <div class="flex flex-wrap items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 max-w-full relative z-40">
                                 <!-- ✨ ย่อความกว้าง (w-92px), ความสูง (h-38px) และฟอนต์ เฉพาะมือถือแนวตั้ง (portrait) ✨ -->
@@ -3544,7 +3562,7 @@ if (isset($_GET['api_check_hash'])) {
 
                                         $imageIcon = dm_icons($conn, $row);
 
-                                        echo "<tr class='hover:bg-slate-50/50 transition-colors search-row'>
+                                        echo "<tr data-tx-id='" . (int)$row['id'] . "' class='hover:bg-slate-50/50 transition-colors search-row'>
                                             <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
                                             <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
                                                 <div class='font-medium text-slate-700'>{$created_date}</div>
@@ -9341,6 +9359,7 @@ if (isset($_GET['api_check_hash'])) {
 })();
 </script>
 <div id="ab-settings" hidden data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></div>
+<script src="admin_transactions_bulk.js?v=20261027-1"></script>
 <script src="admin_table_bulk.js?v=20261019-3"></script>
 <script src="admin_log_bulk.js?v=20261019-2"></script>
 <script src="repairs_calendar.js?v=20261026-1"></script>

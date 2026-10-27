@@ -1,0 +1,14 @@
+#transactionsBulk {display:inline-flex;align-items:center;gap:12px;flex-shrink:0;max-width:100%;}
+#transactionsBulkCount {font-size:12px;font-weight:700;color:#64748b;white-space:nowrap;}
+#transactionsBulk .tx-menu-wrap {position:relative;}
+#transactionsBulkEdit {border:1px solid #f43f5e;border-radius:12px;background:#f43f5e;color:#fff;font-size:14px;font-weight:700;line-height:1.5;padding:8px 14px;cursor:pointer;white-space:nowrap;}
+#transactionsBulkEdit:hover {background:#e11d48;border-color:#e11d48;}
+#transactionsBulkMenu {position:absolute;right:0;top:calc(100% + 8px);z-index:95;width:205px;padding:8px;background:#fff;border:1px solid #f1f5f9;border-radius:16px;box-shadow:0 12px 30px #0f172a26;}
+#transactionsBulkMenu button {display:block;width:100%;padding:10px 12px;text-align:left;border:0;border-radius:10px;background:transparent;color:#475569;font-size:14px;font-weight:700;cursor:pointer;}
+#transactionsBulkMenu button:hover {background:#fff1f2;}
+#transactionsBulkMenu [data-tx-action=delete] {color:#e11d48;}
+#transactionsBulkMenu button:disabled {opacity:.45;cursor:not-allowed;}
+#transactionsBulk [hidden],#repairsTable .tx-check[hidden] {display:none!important;}
+#repairsTable .tx-check {width:16px;height:16px;accent-color:#e11d48;vertical-align:middle;margin-right:7px;cursor:pointer;}
+#repairsTable tr.tx-selected {background:#fff1f2;}
+#transactionsBulk button:focus-visible {outline:3px solid #fda4af;outline-offset:3px;}

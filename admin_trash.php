@@ -483,17 +483,16 @@ function at_trash_query($conn = null) {
     $union = "SELECT 'asset' AS kind, id, CONVERT(asset_name USING utf8mb4) COLLATE utf8mb4_unicode_ci AS label, CONVERT(asset_code USING utf8mb4) COLLATE utf8mb4_unicode_ci AS detail, deleted_at, 'asset' AS category FROM assets WHERE deleted_at IS NOT NULL
         UNION ALL SELECT 'user', id, COALESCE(NULLIF(full_name,''),username), username, deleted_at, CASE LOWER(role) WHEN 'admin' THEN 'admin' WHEN 'executive' THEN 'executive' ELSE 'user' END FROM users WHERE deleted_at IS NOT NULL
         UNION ALL SELECT 'tech', id, full_name, department, deleted_at, 'tech' FROM technicians WHERE deleted_at IS NOT NULL
-        UNION ALL SELECT 'repair', id, ticket_no, reporter_name, deleted_at, 'user' FROM repairs WHERE deleted_at IS NOT NULL";
+        UNION ALL SELECT 'repair', id, ticket_no, reporter_name, deleted_at, 'repair' FROM repairs WHERE deleted_at IS NOT NULL";
     if (at_has_log_archive($conn,'login_logs')) $union .= " UNION ALL SELECT 'loginlog',id,username,CONCAT_WS(' · ',role,status,DATE_FORMAT(login_time,'%d/%m/%Y %H:%i')),deleted_at,'loginlog' FROM login_logs WHERE deleted_at IS NOT NULL";
     if (at_has_log_archive($conn,'user_activity_logs')) $union .= " UNION ALL SELECT 'activitylog',id,COALESCE(NULLIF(full_name,''),username),CONCAT_WS(' · ',role,summary),deleted_at,'activitylog' FROM user_activity_logs WHERE deleted_at IS NOT NULL";
     // category ใช้แสดง/กรองเท่านั้น kind ยังคงอ้างอิงตารางจริงสำหรับ POST
     $q = isset($_GET['trash_q']) && is_string($_GET['trash_q']) ? trim($_GET['trash_q']) : '';
     $q = mb_substr($q, 0, 200, 'UTF-8');
     $kind = isset($_GET['trash_type']) && is_string($_GET['trash_type']) ? $_GET['trash_type'] : 'all';
-    if ($kind === 'repair') $kind = 'user';
     $where = '1=1'; $values = []; $types = '';
     $where .= mbs_range_clause('trash','deleted_at',$types,$values);
-    if (in_array($kind, ['asset','user','tech','admin','executive','loginlog','activitylog'], true)) { $where .= ' AND category = ?'; $values[] = $kind; $types .= 's'; }
+    if (in_array($kind, ['asset','user','tech','admin','executive','repair','loginlog','activitylog'], true)) { $where .= ' AND category = ?'; $values[] = $kind; $types .= 's'; }
     else { $kind = 'all'; }
     $period = at_period_filters();
     $day = $period['day']; $month = $period['month']; $year = $period['year'];

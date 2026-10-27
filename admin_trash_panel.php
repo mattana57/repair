@@ -11,7 +11,7 @@ if ($active_tab === 'trash') {
         error_log('Admin Trash load failed: ' . $trashError->getMessage());
     }
 }
-$atLabels = ['asset' => 'ครุภัณฑ์', 'user' => 'บัญชีผู้ใช้', 'tech' => 'เจ้าหน้าที่', 'admin' => 'บัญชีแอดมิน', 'executive' => 'บัญชีผู้บริหาร', 'loginlog'=>'ประวัติการเข้าสู่ระบบ', 'activitylog'=>'ประวัติกิจกรรม'];
+$atLabels = ['repair' => 'ประวัติผู้แจ้งซ่อม', 'asset' => 'ครุภัณฑ์', 'user' => 'บัญชีผู้ใช้', 'tech' => 'เจ้าหน้าที่', 'admin' => 'บัญชีแอดมิน', 'executive' => 'บัญชีผู้บริหาร', 'loginlog'=>'ประวัติการเข้าสู่ระบบ', 'activitylog'=>'ประวัติกิจกรรม'];
 $atNotice = $_SESSION['admin_trash_notice'] ?? null;
 unset($_SESSION['admin_trash_notice']);
 ?>
