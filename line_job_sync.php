@@ -242,7 +242,12 @@ function mbsSyncNotifyTransition($db,$job,$oldStatus) {
         // Keep full notes in the job detail; LINE text payload is bounded.
         if (mb_strlen($text,'UTF-8')>4500) $text=mb_substr($text,0,4450,'UTF-8')."…\nดูหมายเหตุเต็มในรายการแจ้งของฉัน";
         mbsSyncEnqueue($db,$id,'close',(string)$job['line_user_id'],[['type'=>'text','text'=>$text],mbsSyncReview($job)]);
-        mbsSyncEnqueue($db,$id,'close',$config['group'],[['type'=>'text','text'=>'✅ '.$label."\nปิดงานแล้ว · เจ้าหน้าที่ ".$staff['full_name']."\nสถานที่: ".$job['location'].' · '.$job['equipment_type']]]);
+        $closedGroupNotice = mbsRequesterCard('✅ ปิดงานเรียบร้อยแล้ว', $label, [
+            'เจ้าหน้าที่: '.$staff['full_name'],
+            'สถานที่: '.$job['location'],
+            'เรื่อง: '.$job['equipment_type']
+        ], 'ดำเนินการเรียบร้อยแล้วค่ะ');
+        mbsSyncEnqueue($db,$id,'close',$config['group'],[$closedGroupNotice]);
     }
 }
 function mbsSyncStaff($db,$techId,$lineId=null) {

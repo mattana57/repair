@@ -777,6 +777,10 @@ if (!is_null($events['events'])) {
                 }
                 $repair_id = (int)$resolved_job['id'];
                 $ticket_no = $resolved_job['ticket_no'];
+                $reviewLabel = '';
+                if (in_array($postbackData['action'], ['rate', 'add_tag'], true)) {
+                    try { $reviewLabel = mbsSyncLabel($conn, $resolved_job); } catch (Throwable $e) { error_log('Review label unavailable: '.get_class($e)); }
+                }
                 if (in_array($postbackData['action'], ['rate', 'add_tag'], true)
                     && ($resolved_job['line_user_id'] !== $userId || $resolved_job['status'] !== 'ซ่อมเสร็จแล้ว')) {
                     send_reply($replyToken, ['type' => 'text', 'text' => 'เฉพาะผู้แจ้งของใบงานที่ดำเนินการเสร็จแล้วเท่านั้นที่ประเมินได้ค่ะ'], $channelAccessToken);
@@ -808,7 +812,7 @@ if (!is_null($events['events'])) {
                     if($stmt->execute()){
                         $thankYouMsg = [
                             'type' => 'text', 
-                            'text' => "✅ บันทึกคะแนน $score ดาว สำหรับใบงาน $ticket_no เรียบร้อยค่ะ\n\n(ประทับใจส่วนไหน เลือกรีวิวด้านบน 👆 หรือพิมพ์ข้อความส่งมาในแชทได้เลยนะคะ 💬)"
+                            'text' => "✅ บันทึกคะแนน $score ดาวเรียบร้อยค่ะ\n" . ($reviewLabel !== '' ? $reviewLabel . "\n" : '') . "เลขที่ใบงาน: $ticket_no\n\nเลือกรีวิวด้านบน 👆 หรือพิมพ์ข้อความส่งมาในแชทได้เลยค่ะ 💬"
                         ];
                         send_reply($replyToken, $thankYouMsg, $channelAccessToken);
                     }
@@ -829,10 +833,10 @@ if (!is_null($events['events'])) {
                         $stmt_upd->bind_param("sis", $new_rev, $repair_id, $userId);
                         
                         if($stmt_upd->execute()){
-                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ เพิ่มรีวิวให้ใบงาน $ticket_no: $tag"], $channelAccessToken);
+                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเรียบร้อยค่ะ\n" . ($reviewLabel !== '' ? $reviewLabel . "\n" : '') . "รีวิว: $tag\nเลขที่ใบงาน: $ticket_no"], $channelAccessToken);
                         }
                     } else {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "คุณได้เลือกรีวิว '$tag' ให้ใบงาน $ticket_no ไปแล้วค่ะ 💖"], $channelAccessToken);
+                        send_reply($replyToken, ['type' => 'text', 'text' => "คุณเลือกรีวิวนี้แล้วค่ะ 💖\n" . ($reviewLabel !== '' ? $reviewLabel . "\n" : '') . "รีวิว: $tag\nเลขที่ใบงาน: $ticket_no"], $channelAccessToken);
                     }
                 }
             }
