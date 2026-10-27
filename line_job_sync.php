@@ -175,8 +175,29 @@ function mbsSyncUuid() {
     $bytes=random_bytes(16);$bytes[6]=chr((ord($bytes[6])&15)|64);$bytes[8]=chr((ord($bytes[8])&63)|128);
     $h=bin2hex($bytes);return substr($h,0,8).'-'.substr($h,8,4).'-'.substr($h,12,4).'-'.substr($h,16,4).'-'.substr($h,20);
 }
+// จัดข้อความทั่วไปเป็น Flex โดยคงข้อความและปุ่ม quick reply เดิม
+function mbsCompactNoticeFlex($message) {
+    if (!is_array($message) || ($message['type'] ?? '') !== 'text' || !isset($message['text']) || !is_string($message['text'])) return $message;
+    $text = $message['text'];
+    // ถ้าข้อความยาวมาก ให้ส่งรูปแบบเดิม เพื่อไม่ตัดข้อมูลหรือทำให้ Flex เกินขนาด
+    if (trim($text) === '' || mb_strlen($text, 'UTF-8') > 1800 || strlen($text) > 9000) return $message;
+    $parts = preg_split('/\R/u', $text, 2);
+    $alt = trim($parts[0] ?? '');
+    if ($alt === '') $alt = 'ข้อความจากระบบแจ้งบริการ';
+    $alt = mb_substr($alt, 0, 150, 'UTF-8');
+    $flex = [
+        'type' => 'flex', 'altText' => $alt,
+        'contents' => ['type' => 'bubble', 'size' => 'mega',
+            'body' => ['type' => 'box', 'layout' => 'vertical', 'paddingAll' => '16px',
+                'contents' => [['type' => 'text', 'text' => $text, 'size' => 'md', 'color' => '#263B50', 'wrap' => true]]]]
+    ];
+    if (isset($message['quickReply'])) $flex['quickReply'] = $message['quickReply'];
+    return $flex;
+}
+
 function mbsSyncEnqueue($db,$jobId,$kind,$target,$messages) {
     if (!is_string($target) || $target==='') return;
+    $messages = array_map('mbsCompactNoticeFlex', $messages);
     $body=json_encode(['to'=>$target,'messages'=>array_map('mbsReadableFlexNode',$messages)],JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
     // Same event/recipient cannot be queued twice by competing LINE/web requests.
     mbsSyncStmt($db,'INSERT INTO repair_line_outbox(repair_id,event_kind,target_id,payload,retry_key) VALUES(?,?,?,?,?) ON DUPLICATE KEY UPDATE id=id',

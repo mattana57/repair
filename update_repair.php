@@ -3,6 +3,26 @@
 // แสดงข้อความแจ้งเตือนให้อ่านได้บนมือถือ โดยคงสถานะ HTTP เดิม
 
 // รูปแบบ Flex ใช้สีน้ำเงินเข้ม สีเทา และพื้นขาว ไม่เปลี่ยนข้อมูลหรือคำสั่ง
+// จัดข้อความทั่วไปเป็น Flex โดยคงข้อความและปุ่ม quick reply เดิม
+function mbsUpdateCompactNoticeFlex($message) {
+    if (!is_array($message) || ($message['type'] ?? '') !== 'text' || !isset($message['text']) || !is_string($message['text'])) return $message;
+    $text = $message['text'];
+    // ถ้าข้อความยาวมาก ให้ส่งรูปแบบเดิม เพื่อไม่ตัดข้อมูลหรือทำให้ Flex เกินขนาด
+    if (trim($text) === '' || mb_strlen($text, 'UTF-8') > 1800 || strlen($text) > 9000) return $message;
+    $parts = preg_split('/\R/u', $text, 2);
+    $alt = trim($parts[0] ?? '');
+    if ($alt === '') $alt = 'ข้อความจากระบบแจ้งบริการ';
+    $alt = mb_substr($alt, 0, 150, 'UTF-8');
+    $flex = [
+        'type' => 'flex', 'altText' => $alt,
+        'contents' => ['type' => 'bubble', 'size' => 'mega',
+            'body' => ['type' => 'box', 'layout' => 'vertical', 'paddingAll' => '16px',
+                'contents' => [['type' => 'text', 'text' => $text, 'size' => 'md', 'color' => '#263B50', 'wrap' => true]]]]
+    ];
+    if (isset($message['quickReply'])) $flex['quickReply'] = $message['quickReply'];
+    return $flex;
+}
+
 function mbsReadableFlexNode($node, $inside_flex = false) {
     if (!is_array($node)) { return $node; }
     // แบบประเมินคงรูปแบบเดิม ไม่ผ่านการปรับขนาดหรือสีของใบงาน
@@ -648,7 +668,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     ];
                     
                     $messages = [
-                        ['type' => 'text', 'text' => $textMsg],
+                        mbsUpdateCompactNoticeFlex(['type' => 'text', 'text' => $textMsg]),
                         $review_msg
                     ];
                 } 
@@ -659,7 +679,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                "👨‍🔧 ผู้รับผิดชอบ: {$tech_display}\n" .
                                "💬 หมายเหตุ: {$repair_note}";
                                
-                    $messages = [['type' => 'text', 'text' => $textMsg]];
+                    $messages = [mbsUpdateCompactNoticeFlex(['type' => 'text', 'text' => $textMsg])];
                 }
                 
                 if (!empty($messages)) {

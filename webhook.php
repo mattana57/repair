@@ -388,7 +388,7 @@ function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken)
         error_log('LINE requester menu failed: '.get_class($e));
         $message = ['type'=>'text','text'=>'ยังเปิดรายการไม่ได้ค่ะ กรุณาลองใหม่ภายหลัง'];
     }
-    send_reply($replyToken,$message,$accessToken);
+    send_flex_reply($replyToken,$message,$accessToken);
     return true;
 }
 
@@ -425,17 +425,17 @@ if (!is_null($events['events'])) {
             try {
                 $registered=rmQuery($conn,'SELECT id FROM line_users WHERE line_user_id=?','s',$userId)->get_result()->fetch_assoc();
                 if(!$registered){
-                    send_reply($replyToken,['type'=>'text','text'=>'กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรก่อนค่ะ ใช้ชื่อเล่นได้ เช่น แพรว 0812345678'],$channelAccessToken);
+                    send_flex_reply($replyToken,['type'=>'text','text'=>'กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรก่อนค่ะ ใช้ชื่อเล่นได้ เช่น แพรว 0812345678'],$channelAccessToken);
                     continue;
                 }
                 if(($event['message']['contentProvider']['type'] ?? 'line') !== 'line'){
-                    send_reply($replyToken,['type'=>'text','text'=>'กรุณาส่งรูปหรือวิดีโอจากเครื่องผ่าน LINE โดยตรงค่ะ'],$channelAccessToken);continue;
+                    send_flex_reply($replyToken,['type'=>'text','text'=>'กรุณาส่งรูปหรือวิดีโอจากเครื่องผ่าน LINE โดยตรงค่ะ'],$channelAccessToken);continue;
                 }
                 $kind=$event['message']['type'];
                 $sent=isset($event['timestamp'])?(int)floor($event['timestamp']/1000):time();
                 $registeredMedia=rmRegister($conn,$userId,(string)$event['message']['id'],$kind,$sent);
                 if(!empty($registeredMedia['duplicate'])){continue;}
-                if(isset($registeredMedia['error'])){send_reply($replyToken,['type'=>'text','text'=>$registeredMedia['error']],$channelAccessToken);continue;}
+                if(isset($registeredMedia['error'])){send_flex_reply($replyToken,['type'=>'text','text'=>$registeredMedia['error']],$channelAccessToken);continue;}
                 $mediaState=rmDownload($conn,$registeredMedia['row'],$channelAccessToken);
                 if($mediaState==='too_large'){
                     $notice=$kind==='image'?'รูปนี้เกิน 10 MB ค่ะ กรุณาลดขนาดแล้วส่งใหม่ ไฟล์ก่อนหน้ายังอยู่ครบ':'วิดีโอนี้เกิน 50 MB ค่ะ กรุณาลดขนาดแล้วส่งใหม่ ไฟล์ก่อนหน้ายังอยู่ครบ';
@@ -446,10 +446,10 @@ if (!is_null($events['events'])) {
                     $notice=!empty($registeredMedia['ticket'])?'รับ'.$label.'สำหรับใบงาน '.$registeredMedia['ticket'].' แล้วค่ะ':'รับ'.$label.'แล้วค่ะ ส่งรายละเอียดและสถานที่เพื่อแจ้งงานได้เลย';
                     if($mediaState==='queued'){$notice.=' กำลังรอรับไฟล์ให้ครบค่ะ';}
                 }
-                send_reply($replyToken,['type'=>'text','text'=>$notice],$channelAccessToken);
+                send_flex_reply($replyToken,['type'=>'text','text'=>$notice],$channelAccessToken);
             } catch(Throwable $e) {
                 error_log('LINE media intake failed: '.get_class($e).' code='.(int)$e->getCode().' '.$e->getMessage());
-                send_reply($replyToken,['type'=>'text','text'=>'ยังรับไฟล์ไม่ได้ค่ะ กรุณาแจ้งผู้ดูแลตรวจการตั้งค่าไฟล์แนบ แล้วส่งไฟล์ใหม่'],$channelAccessToken);
+                send_flex_reply($replyToken,['type'=>'text','text'=>'ยังรับไฟล์ไม่ได้ค่ะ กรุณาแจ้งผู้ดูแลตรวจการตั้งค่าไฟล์แนบ แล้วส่งไฟล์ใหม่'],$channelAccessToken);
             }
             continue;
         }
@@ -475,15 +475,15 @@ if (!is_null($events['events'])) {
                         $stmt_update->bind_param("sis", $userId, $tech_id, $code);
                         
                         if ($stmt_update->execute() && $stmt_update->affected_rows === 1) {
-                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ ยืนยันตัวตนสำเร็จ\n\nยินดีต้อนรับ เจ้าหน้าที่ $tech_name\n($tech_dept)\n\nคุณสามารถเริ่มรับงานซ่อมได้เลยค่ะ 🛠️"], $channelAccessToken);
+                            send_flex_reply($replyToken, ['type' => 'text', 'text' => "✅ ยืนยันตัวตนสำเร็จ\n\nยินดีต้อนรับ เจ้าหน้าที่ $tech_name\n($tech_dept)\n\nคุณสามารถเริ่มรับงานซ่อมได้เลยค่ะ 🛠️"], $channelAccessToken);
                         } else {
-                            send_reply($replyToken,['type'=>'text','text'=>'ยังผูกบัญชีไม่ได้ค่ะ รหัสหรือสถานะบัญชีอาจเปลี่ยน กรุณาติดต่อผู้ดูแล'],$channelAccessToken);
+                            send_flex_reply($replyToken,['type'=>'text','text'=>'ยังผูกบัญชีไม่ได้ค่ะ รหัสหรือสถานะบัญชีอาจเปลี่ยน กรุณาติดต่อผู้ดูแล'],$channelAccessToken);
                         }
                     } else {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รหัสไม่ถูกต้อง ถูกใช้แล้ว หรือบัญชียังไม่เปิดใช้งานค่ะ กรุณาติดต่อผู้ดูแล"], $channelAccessToken);
+                        send_flex_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รหัสไม่ถูกต้อง ถูกใช้แล้ว หรือบัญชียังไม่เปิดใช้งานค่ะ กรุณาติดต่อผู้ดูแล"], $channelAccessToken);
                     }
                 } else {
-                    send_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รูปแบบไม่ถูกต้อง\nกรุณาพิมพ์: ผูกบัญชี [รหัส 4 หลัก]"], $channelAccessToken);
+                    send_flex_reply($replyToken, ['type' => 'text', 'text' => "⚠️ รูปแบบไม่ถูกต้อง\nกรุณาพิมพ์: ผูกบัญชี [รหัส 4 หลัก]"], $channelAccessToken);
                 }
                 continue; 
             }
@@ -528,9 +528,9 @@ if (!is_null($events['events'])) {
                             $stmt2->execute();
                         }
                     }
-                    send_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nระบบจะใช้ข้อมูลนี้สำหรับคำขอครั้งต่อไปค่ะ"], $channelAccessToken);
+                    send_flex_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nระบบจะใช้ข้อมูลนี้สำหรับคำขอครั้งต่อไปค่ะ"], $channelAccessToken);
                 } else {
-                    send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการอัปเดตข้อมูลค่ะ"], $channelAccessToken);
+                    send_flex_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการอัปเดตข้อมูลค่ะ"], $channelAccessToken);
                 }
                 continue;
             }
@@ -547,7 +547,7 @@ if (!is_null($events['events'])) {
                     $real_name = reporterChosenName($text, $phone);
                     
                     if ($real_name === '') {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรค่ะ ใช้ชื่อเล่นได้ เช่น แพรว 0812345678"], $channelAccessToken);
+                        send_flex_reply($replyToken, ['type' => 'text', 'text' => "กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรค่ะ ใช้ชื่อเล่นได้ เช่น แพรว 0812345678"], $channelAccessToken);
                         continue;
                     }
                     
@@ -558,9 +558,9 @@ if (!is_null($events['events'])) {
                         $stmt->bind_param("sssssss", $userId, $line_name, $real_name, $phone, $line_name, $real_name, $phone);
                         
                         if ($stmt->execute()) {
-                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกข้อมูลแล้วค่ะ\nชื่อที่ใช้ติดต่อ: $real_name\nเบอร์โทร: $phone\n\nส่งคำขอพร้อมสถานที่ได้เลยค่ะ เช่น แอร์ไม่เย็น ห้อง 901"], $channelAccessToken);
+                            send_flex_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกข้อมูลแล้วค่ะ\nชื่อที่ใช้ติดต่อ: $real_name\nเบอร์โทร: $phone\n\nส่งคำขอพร้อมสถานที่ได้เลยค่ะ เช่น แอร์ไม่เย็น ห้อง 901"], $channelAccessToken);
                         } else {
-                            send_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการบันทึกข้อมูลค่ะ"], $channelAccessToken);
+                            send_flex_reply($replyToken, ['type' => 'text', 'text' => "🚨 ระบบเกิดข้อผิดพลาดในการบันทึกข้อมูลค่ะ"], $channelAccessToken);
                         }
                         continue;
                     }
@@ -596,7 +596,7 @@ if (!is_null($events['events'])) {
                     }
                 }
 
-                send_reply($replyToken, ['type' => 'text', 'text' => "กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรค่ะ
+                send_flex_reply($replyToken, ['type' => 'text', 'text' => "กรุณาส่งชื่อที่ต้องการใช้และเบอร์โทรค่ะ
 ใช้ชื่อเล่น ชื่อทั่วไป หรือชื่อเต็มได้ตามสะดวก
 
 ตัวอย่าง: แพรว 0812345678"], $channelAccessToken);
@@ -611,7 +611,7 @@ if (!is_null($events['events'])) {
                 mb_strpos($text_clean_car, 'ขอใช้รถ') !== false) {
                 
                 $car_reply = "🚐 สำหรับการติดต่อสอบถามคิวรถ หรือจองรถคณะ\n\nรบกวนติดต่อ 'ฝ่ายยานยนต์' โดยตรงนะคะ 💖";
-                send_reply($replyToken, ['type' => 'text', 'text' => $car_reply], $channelAccessToken);
+                send_flex_reply($replyToken, ['type' => 'text', 'text' => $car_reply], $channelAccessToken);
                 continue;
             }
 
@@ -652,7 +652,7 @@ if (!is_null($events['events'])) {
                     if ($image_path || $media_count > 0) {
                         $replyText .= "\n📎 มีไฟล์แนบสำหรับใบงานนี้ค่ะ";
                     }
-                    send_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                    send_flex_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
 
                     $short_reporter_name = trim($user_reg['real_name']);
 
@@ -666,7 +666,7 @@ if (!is_null($events['events'])) {
                     );
                     send_push($line_group_id, $pushMsg, $channelAccessToken);
                 } else {
-                    send_reply($replyToken, ['type' => 'text', 'text' => "🚨 เกิดข้อผิดพลาด ไม่สามารถบันทึกข้อมูลได้ค่ะ"], $channelAccessToken);
+                    send_flex_reply($replyToken, ['type' => 'text', 'text' => "🚨 เกิดข้อผิดพลาด ไม่สามารถบันทึกข้อมูลได้ค่ะ"], $channelAccessToken);
                 }
             }
             else {
@@ -684,7 +684,7 @@ if (!is_null($events['events'])) {
                         $stmt->bind_param("ssss", $line_name, $real_name, $phone, $userId);
                         $stmt->execute();
                         
-                        send_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nระบบจะใช้ข้อมูลนี้สำหรับคำขอครั้งต่อไปค่ะ"], $channelAccessToken);
+                        send_flex_reply($replyToken, ['type' => 'text', 'text' => "✅ อัปเดตข้อมูลของคุณเรียบร้อยแล้วค่ะ!\n\nชื่อ: $real_name\nเบอร์โทร: $phone\n\nระบบจะใช้ข้อมูลนี้สำหรับคำขอครั้งต่อไปค่ะ"], $channelAccessToken);
                         continue;
                     }
                 }
@@ -730,7 +730,7 @@ if (!is_null($events['events'])) {
                     }
                 }
                 if ($is_greeting && mb_strlen($text_clean, 'UTF-8') < 40) {
-                    send_reply($replyToken, ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งได้ตลอดเลยนะคะ"], $channelAccessToken);
+                    send_flex_reply($replyToken, ['type' => 'text', 'text' => "ด้วยความยินดีค่ะ 💖 หากมีปัญหาเพิ่มเติมแจ้งได้ตลอดเลยนะคะ"], $channelAccessToken);
                     continue; 
                 }
             }
@@ -743,22 +743,22 @@ if (!is_null($events['events'])) {
                     try { $line_staff=mbsLineStaffAccount($conn,$userId); }
                     catch (Throwable $e) {
                         error_log('LINE staff account status check failed');
-                        send_reply($replyToken,['type'=>'text','text'=>'ยังตรวจสอบสถานะบัญชีไม่ได้ค่ะ กรุณาลองอีกครั้ง'],$channelAccessToken);
+                        send_flex_reply($replyToken,['type'=>'text','text'=>'ยังตรวจสอบสถานะบัญชีไม่ได้ค่ะ กรุณาลองอีกครั้ง'],$channelAccessToken);
                         continue;
                     }
                     if (!$line_staff) {
-                        send_reply($replyToken,['type'=>'text','text'=>"ยังไม่ได้ผูกบัญชีเจ้าหน้าที่ค่ะ กรุณาใช้รหัส 4 หลักที่ได้รับจากผู้ดูแลเพื่อผูกบัญชีก่อน"],$channelAccessToken);
+                        send_flex_reply($replyToken,['type'=>'text','text'=>"ยังไม่ได้ผูกบัญชีเจ้าหน้าที่ค่ะ กรุณาใช้รหัส 4 หลักที่ได้รับจากผู้ดูแลเพื่อผูกบัญชีก่อน"],$channelAccessToken);
                         continue;
                     }
                     if (!mbsLineStaffAllowed($line_staff)) {
-                        send_reply($replyToken,['type'=>'text','text'=>'บัญชีเจ้าหน้าที่ถูกระงับหรือยังไม่พร้อมใช้งานค่ะ กรุณาติดต่อผู้ดูแล ระบบยังไม่อนุญาตให้รับหรือปิดงาน'],$channelAccessToken);
+                        send_flex_reply($replyToken,['type'=>'text','text'=>'บัญชีเจ้าหน้าที่ถูกระงับหรือยังไม่พร้อมใช้งานค่ะ กรุณาติดต่อผู้ดูแล ระบบยังไม่อนุญาตให้รับหรือปิดงาน'],$channelAccessToken);
                         continue;
                     }
                 }
 
                 $resolved_job = mbsResolveRepair($conn, $postbackData);
                 if (!$resolved_job) {
-                    send_reply($replyToken, ['type' => 'text', 'text' => 'ไม่สามารถระบุใบงานจากปุ่มนี้ได้ค่ะ กรุณาใช้การ์ดใบงานล่าสุดที่ระบบส่งใหม่ หรือติดต่อผู้ดูแลให้ส่งการ์ดใหม่ค่ะ'], $channelAccessToken);
+                    send_flex_reply($replyToken, ['type' => 'text', 'text' => 'ไม่สามารถระบุใบงานจากปุ่มนี้ได้ค่ะ กรุณาใช้การ์ดใบงานล่าสุดที่ระบบส่งใหม่ หรือติดต่อผู้ดูแลให้ส่งการ์ดใหม่ค่ะ'], $channelAccessToken);
                     continue;
                 }
                 $repair_id = (int)$resolved_job['id'];
@@ -777,11 +777,11 @@ if (!is_null($events['events'])) {
                         // One compact card is pushed to the group for either channel.
                         // No extra success message in the group; private commands get an acknowledgement.
                         if (($event['source']['type'] ?? '')==='user') {
-                            send_reply($replyToken,['type'=>'text','text'=>$result['label'].($action==='accept'?' รับงานเรียบร้อยค่ะ':' บันทึกปิดงานเรียบร้อยค่ะ')],$channelAccessToken);
+                            send_flex_reply($replyToken,['type'=>'text','text'=>$result['label'].($action==='accept'?' รับงานเรียบร้อยค่ะ':' บันทึกปิดงานเรียบร้อยค่ะ')],$channelAccessToken);
                         }
                     } catch(Throwable $e) {
                         error_log('LINE job action failed: '.get_class($e));
-                        send_reply($replyToken,['type'=>'text','text'=>'ยังทำรายการไม่ได้ค่ะ รายการอาจมีผู้รับแล้ว ปิดงานแล้ว หรือสิทธิ์เปลี่ยน กรุณาเปิดรายการล่าสุด หากยังไม่ได้ให้ติดต่อผู้ดูแล'],$channelAccessToken);
+                        send_flex_reply($replyToken,['type'=>'text','text'=>'ยังทำรายการไม่ได้ค่ะ รายการอาจมีผู้รับแล้ว ปิดงานแล้ว หรือสิทธิ์เปลี่ยน กรุณาเปิดรายการล่าสุด หากยังไม่ได้ให้ติดต่อผู้ดูแล'],$channelAccessToken);
                     }
                 }
                 elseif ($postbackData['action'] == 'rate') {
@@ -837,6 +837,10 @@ function get_line_profile($userId, $groupId, $accessToken) {
     curl_close($ch);
     $data = json_decode($result, true);
     return isset($data['displayName']) ? $data['displayName'] : 'เจ้าหน้าที่/ผู้ใช้งาน';
+}
+
+function send_flex_reply($replyToken, $messageData, $accessToken) {
+    send_reply($replyToken, mbsCompactNoticeFlex($messageData), $accessToken);
 }
 
 function send_reply($replyToken, $messageData, $accessToken) {
