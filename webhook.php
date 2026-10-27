@@ -127,9 +127,9 @@ function extract_repair_info($text) {
     elseif (preg_match('/ห้อง\s*(?:เรียน|แลป|แล็บ|แลบ|lab)?\s*([0-9]{3,4})(?![0-9])/iu', $location_text, $matches)) {
         $location = $matches[1];
     }
-    // เลขห้องนำหน้าคำขอ เช่น 507 ขอความช่วยเหลือจอไม่ติด
-    // ไม่ใช้เลขทั่วไป เช่น 11 โมง, 2 ตัว หรือ print_44 เป็นห้อง
-    elseif (preg_match('/^\s*([0-9]{3,4})\s*(?=ขอความช่วยเหลือ|ขอให้ช่วย|รบกวน|ช่วยดู|แจ้ง)/u', $location_text, $matches)) {
+    // เลข 3–4 หลักขึ้นต้นข้อความ เช่น 603เปิดคอมไม่ติด
+    // เลี่ยงเบอร์โทร เลขทศนิยม เวลา วันที่ และจำนวนที่มีหน่วยตามท้าย
+    elseif (preg_match('/^\s*([0-9]{3,4})(?![0-9A-Za-z_:.\/\-])(?!\s*(?:บาท|คน|ตัว|เครื่อง|นาที|ชั่วโมง|โมง|รายการ|ครั้ง|หลอด|แผ่น|ชิ้น|เปอร์เซ็นต์|%))/u', $location_text, $matches)) {
         $location = $matches[1];
     }
     elseif (($named_location = mbsNamedRoomAndFloor($location_text)) !== '') {
