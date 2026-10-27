@@ -1275,7 +1275,11 @@
       },
     });
   }
-  function mountOverview() {
+  function mountOverview(renderCharts = true) {
+    if (overviewFields) {
+      if (renderCharts) renderOverview();
+      return;
+    }
     const canvas = $("mainEquipChart") || $("eqChart");
     if (!canvas) return;
     const section =
@@ -1313,7 +1317,7 @@
     if (instance) {
       overviewFields = instance.fields;
     }
-    renderOverview();
+    if (renderCharts) renderOverview();
   }
   function duration(r) {
     if (!r.received_at)
@@ -1808,6 +1812,8 @@
     "renderDashTable",
   ])
     if (typeof window[fn] === "function") window[fn] = renderOverview;
+  // Show the shared overview calendar now; chart initialization keeps its original timing.
+  if (!data.error) mountOverview(false);
   if (document.readyState === "loading")
     document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();

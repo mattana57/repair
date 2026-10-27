@@ -2196,6 +2196,9 @@ if (isset($_GET['api_check_hash'])) {
 <!DOCTYPE html>
 <html lang="th">
 <head>
+<link rel="preload" href="repairs_calendar.js?v=20261026-1" as="script">
+<link rel="preload" href="dashboard_calendars.js?v=20261027-2" as="script">
+<link rel="preload" href="dashboard_features.js?v=20261027-3" as="script">
     <?php tp_styles(); ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9366,7 +9369,7 @@ if (isset($_GET['api_check_hash'])) {
 <script src="admin_table_bulk.js?v=20261019-3"></script>
 <script src="admin_log_bulk.js?v=20261019-2"></script>
 <script src="repairs_calendar.js?v=20261026-1"></script>
-<script src="dashboard_calendars.js?v=20261025-1"></script>
+<script src="dashboard_calendars.js?v=20261027-2"></script>
 <span id="tb-settings" hidden data-user="<?= (int)$_SESSION['user_id'] ?>" data-token="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>"></span>
 <script src="admin_team_bulk.js?v=20261019-1"></script>
 <script src="technician_card_bulk.js?v=20261026-1"></script>

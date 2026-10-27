@@ -59,5 +59,6 @@
         if(typeof original==='function')window.selectChartDropdown=function(...args){const result=original.apply(this,args);sync();return result;};
         document.addEventListener('click',()=>queueMicrotask(sync));window.addEventListener('popstate',schedule);
     };
-    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+    // These scripts run after the filter markup; do not wait behind chart/load callbacks.
+    if(document.body)init();else document.addEventListener('DOMContentLoaded',init,{once:true});
 })();

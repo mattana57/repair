@@ -149,6 +149,8 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
 <!DOCTYPE html>
 <html lang="th">
 <head>
+<link rel="preload" href="repairs_calendar.js?v=20261026-1" as="script">
+<link rel="preload" href="dashboard_calendars.js?v=20261027-2" as="script">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>รายงานสรุปสำหรับผู้บริหาร - MBS REPAIR</title>
@@ -965,7 +967,7 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
             });
         }
     </script>
-<script src="repairs_calendar.js?v=20261025-1"></script>
-<script src="dashboard_calendars.js?v=20261025-1"></script>
+<script src="repairs_calendar.js?v=20261026-1"></script>
+<script src="dashboard_calendars.js?v=20261027-2"></script>
 </body>
 </html>
