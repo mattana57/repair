@@ -6,9 +6,10 @@ header('Content-Type: text/html; charset=UTF-8');
 header('X-Content-Type-Options: nosniff');
 function staffMediaExit($message, $id=0, $code=400) {
     http_response_code($code);
-    echo '<!doctype html><html lang="th"><meta name="viewport" content="width=device-width,initial-scale=1"><meta charset="utf-8"><title>ไฟล์ผลการดำเนินงาน</title><body style="font:18px sans-serif;padding:24px;line-height:1.6"><p>'.htmlspecialchars($message,ENT_QUOTES,'UTF-8').'</p>';
+    if (isset($_POST['ajax']) && $_POST['ajax'] === '1') { header('Content-Type: application/json; charset=UTF-8'); echo json_encode(['ok'=>$code===200,'message'=>$message], JSON_UNESCAPED_UNICODE); exit; }
+    echo '<!doctype html><html lang="th"><meta name="viewport" content="width=device-width,initial-scale=1"><meta charset="utf-8"><title>ไฟล์ผลการดำเนินงาน</title><body style="margin:0;background:#f1f5fb;font:17px sans-serif;padding:24px;line-height:1.6;color:#1e3a5f"><main style="max-width:480px;margin:40px auto;background:#fff;border-radius:20px;padding:24px;box-shadow:0 10px 30px #1e3a5f18"><h2>ไฟล์ผลการดำเนินงาน</h2><p>'.htmlspecialchars($message,ENT_QUOTES,'UTF-8').'</p>';
     if ($id>0) echo '<a href="update_repair.php?id='.(int)$id.'">กลับไปหน้าใบงาน</a>';
-    echo '</body></html>'; exit;
+    echo '</main></body></html>'; exit;
 }
 $id=filter_var($_POST['id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
 if ($_SERVER['REQUEST_METHOD']!=='POST' || !$id) staffMediaExit('คำขอไม่ถูกต้อง หรือไฟล์รวมเกินขนาดที่เซิร์ฟเวอร์กำหนดค่ะ',0,400);
@@ -45,14 +46,10 @@ try {
     }
     if (!empty($job['line_user_id'])) {
         $label=mbsSyncLabel($conn,$job);
-        $viewToken=bin2hex(random_bytes(32));
-        $viewHash=hash('sha256',$viewToken);
-        $targetUser=(string)$job['line_user_id'];
+        $viewToken=bin2hex(random_bytes(32)); $viewHash=hash('sha256',$viewToken); $viewUser=(string)$job['line_user_id'];
         $grant=$conn->prepare("INSERT INTO staff_media_view_grants (token_hash,repair_id,line_user_id,expires_at) VALUES (?,?,?,'9999-12-31 23:59:59')");
         if (!$grant) throw new RuntimeException('grant prepare');
-        $grant->bind_param('sis',$viewHash,$id,$targetUser);
-        if (!$grant->execute()) throw new RuntimeException('grant insert');
-        $grant->close();
+        $grant->bind_param('sis',$viewHash,$id,$viewUser); if (!$grant->execute()) throw new RuntimeException('grant save'); $grant->close();
         $viewUrl=mbsSyncConfig()['base'].'/requester_staff_media.php?token='.$viewToken;
         $notice=['type'=>'flex','altText'=>'เจ้าหน้าที่เพิ่มไฟล์ผลการดำเนินงาน','contents'=>['type'=>'bubble','body'=>['type'=>'box','layout'=>'vertical','spacing'=>'sm','contents'=>[['type'=>'text','text'=>'📎 เจ้าหน้าที่เพิ่มไฟล์ผลการดำเนินงาน','weight'=>'bold','wrap'=>true],['type'=>'text','text'=>$label,'wrap'=>true],['type'=>'text','text'=>'สถานที่: '.(string)$job['location'],'wrap'=>true],['type'=>'text','text'=>'เจ้าหน้าที่: '.(string)$job['technician_name'],'wrap'=>true],['type'=>'text','text'=>'เพิ่ม '.$images.' รูป และ '.$videos.' วิดีโอ','wrap'=>true]]], 'footer'=>['type'=>'box','layout'=>'vertical','contents'=>[['type'=>'button','style'=>'primary','action'=>['type'=>'uri','label'=>'ดูไฟล์ผลการดำเนินงาน','uri'=>$viewUrl]]]]]];
         mbsSyncEnqueue($conn,$id,'media'.base_convert((string)$firstFileId,10,36),(string)$job['line_user_id'],[$notice]);

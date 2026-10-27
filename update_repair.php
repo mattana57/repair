@@ -613,7 +613,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->execute();
             $repair = $stmt->get_result()->fetch_assoc();
 
-            $channelAccessToken = 'NfTQOY3ht2g8OfkT1qHgiJuagAjF7ELlwVm022PejbQhCLKDrwqq14uvnicLPRv/hzCiIXwucK9LwHbz5qsYq7Bi9KgidS5XycIX1SERQzX0OYDXU7K8RPLuGMb26v2ZFhBmHTWTZ/mg6Mjll3OFEAdB04t89/1O/w1cDnyilFU=';
+            require __DIR__ . '/env.php';
 
             $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
             
@@ -1087,11 +1087,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                             <?php if ($is_tech && (int)($repair['technician_id'] ?? 0) === (int)($_SESSION['technician_id'] ?? 0)): ?>
                             <div style="margin:12px 0;padding:14px;border:1px solid #cbd5e1;border-radius:10px">
-                                <input form="staffPhotoForm" type="hidden" name="id" value="<?php echo (int)$repair['id']; ?>">
-                                <input form="staffPhotoForm" type="hidden" name="repair_csrf" value="<?php echo htmlspecialchars($_SESSION['repair_csrf'], ENT_QUOTES, 'UTF-8'); ?>">
+                                
+                                
                                 <label for="staff_photo" style="display:block;font-weight:bold;margin-bottom:8px">เพิ่มรูปหรือวิดีโอผลการดำเนินงาน</label>
-                                <input form="staffPhotoForm" id="staff_photo" type="file" name="media[]" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" multiple required style="display:block;max-width:100%;margin-bottom:10px">
-                                <button form="staffPhotoForm" type="submit" style="background:#1e3a5f;color:white;padding:10px 16px;border:0;border-radius:8px">บันทึกไฟล์</button>
+                                <input id="staff_photo" type="file" name="media[]" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" multiple style="display:block;max-width:100%;margin-bottom:10px">
+                                <?php $staffCounts = rmQuery($conn, "SELECT COUNT(*) AS n FROM repair_attachments WHERE repair_id=? AND line_user_id LIKE 'staff:%' AND state='ready'", 'i', (int)$repair['id'])->get_result()->fetch_assoc(); if ((int)$staffCounts['n'] > 0): ?>
+                                <a href="repair_attachments.php?id=<?php echo (int)$repair['id']; ?>&amp;scope=staff" style="display:inline-block;margin-top:8px;color:#1e3a5f;font-weight:600">ดูรูปและวิดีโอผลการดำเนินงาน (<?php echo (int)$staffCounts['n']; ?> ไฟล์)</a>
+                                <?php endif; ?>
                                 <p style="font-size:14px;margin-top:8px">รูปไม่เกิน 10 MB · วิดีโอไม่เกิน 50 MB ต่อไฟล์ · เลือกได้หลายไฟล์</p>
                             </div>
                             <?php endif; ?>
@@ -1102,9 +1104,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </button>
                         </div>
                     </form>
-                    <?php if ($is_tech && (int)($repair['technician_id'] ?? 0) === (int)($_SESSION['technician_id'] ?? 0)): ?>
-                    <form id="staffPhotoForm" action="staff_photo_upload.php" method="post" enctype="multipart/form-data"></form>
-                    <?php endif; ?>
+
                 </div>
             </div>
 
@@ -1326,7 +1326,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         assetCodeInput.addEventListener('input', checkNewAsset);
         checkNewAsset();
 
-        document.getElementById('updateForm').addEventListener('submit', function(e) {
+        document.getElementById('updateForm').addEventListener('submit', async function(e) {
             const statusChecked = document.querySelector('input[name="status"]:checked');
             const techName = document.getElementById('technician_name').value;
 
@@ -1343,7 +1343,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     });
                 }
             }
-        }); // ✅ ปิด Form ให้เรียบร้อยตรงนี้ก่อน
+            if (e.defaultPrevented) return;
+            const input = document.getElementById('staff_photo');
+            if (!input || !input.files.length || this.dataset.uploaded === 'yes') return;
+            e.preventDefault();
+            const button = this.querySelector('button[type="submit"]');
+            button.disabled = true;
+            const upload = new FormData();
+            upload.append('ajax', '1');
+            upload.append('id', <?php echo (int)$repair['id']; ?>);
+            upload.append('repair_csrf', <?php echo json_encode($_SESSION['repair_csrf']); ?>);
+            for (const file of input.files) upload.append('media[]', file);
+            try {
+                const response = await fetch('staff_photo_upload.php', {method:'POST', body:upload, credentials:'same-origin'});
+                const result = await response.json();
+                if (!response.ok || !result.ok) throw new Error(result.message || 'ไม่สามารถบันทึกไฟล์ได้');
+                this.dataset.uploaded = 'yes';
+                this.requestSubmit();
+            } catch (error) {
+                button.disabled = false;
+                Swal.fire({icon:'error', title:'บันทึกไฟล์ไม่สำเร็จ', text:error.message || 'กรุณาลองใหม่อีกครั้ง'});
+            }
+        }); // ส่งไฟล์และบันทึกข้อมูลด้วยปุ่มเดียว
 
         // ✅ วาง goBack ไว้ด้านนอกสุดแบบนี้ ปุ่มถึงจะมองเห็นและกดได้
         function goBack() {

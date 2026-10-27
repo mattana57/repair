@@ -108,8 +108,8 @@ function rmCanReadAttachments($role,$sessionTechnician,$owner) {
         || ($role==='technician' && (int)$sessionTechnician>0 && (int)$owner===(int)$sessionTechnician);
 }
 function rmPanel($db,$repair) {
-    $r=rmQuery($db,"SELECT media_type,COUNT(*) AS n FROM repair_attachments WHERE repair_id=? AND state NOT IN ('failed','expired') GROUP BY media_type",'i',(int)$repair)->get_result();
+    $r=rmQuery($db,"SELECT media_type,COUNT(*) AS n FROM repair_attachments WHERE repair_id=? AND line_user_id NOT LIKE 'staff:%' AND state NOT IN ('failed','expired') GROUP BY media_type",'i',(int)$repair)->get_result();
     $counts=['image'=>0,'video'=>0];while($x=$r->fetch_assoc()){$counts[$x['media_type']]=(int)$x['n'];}
     if(array_sum($counts)===0){return;}
-    echo '<p style="margin:12px 0"><a style="display:inline-block;padding:10px 14px;background:#1e3a5f;color:#fff;border-radius:8px" href="repair_attachments.php?id='.(int)$repair.'">ดูไฟล์แนบทั้งหมด · รูป '.$counts['image'].' รูป / วิดีโอ '.$counts['video'].' คลิป</a></p>';
+    echo '<p style="margin:12px 0"><a style="display:inline-block;padding:10px 14px;background:#1e3a5f;color:#fff;border-radius:8px" href="repair_attachments.php?id='.(int)$repair.'">ดูไฟล์ที่ผู้แจ้งส่ง · รูป '.$counts['image'].' รูป / วิดีโอ '.$counts['video'].' คลิป</a></p>';
 }
