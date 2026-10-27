@@ -1,35 +1,35 @@
 /* Shared by Admin, Executive and Technician. Colour-only changes inside calendar dialogs. */
-.rc-dialog { --rc-accent:#526f97; --rc-accent-hover:#415b7e; --rc-soft:#edf2f8; --rc-border:#c5d1e0; --rc-ink:#33465e; border-color:var(--rc-border); color:var(--rc-ink); }
-.rc-dialog .rc-header h3 { color:#263b55; }
-.rc-dialog .rc-header p,.rc-dialog .rc-help { color:#718198; }
-.rc-dialog .rc-close { background:#f6f8fb; border-color:#dce3ec; color:#62758e; }
-.rc-dialog .rc-tabs { background:#eef2f6; }
-.rc-dialog .rc-tabs button { color:#687b93; }
-.rc-dialog .rc-tabs button[aria-selected=true] { background:var(--rc-accent); color:#fff; box-shadow:0 2px 5px #526f9720; }
-.rc-dialog :is(select,input[type=date],.rc-range-date-button) { border-color:var(--rc-border); color:#3b5477; background-color:#fff; }
-.rc-dialog .rc-range-date-button svg { color:#62758e; }
-.rc-dialog .rc-months button { border-color:#dce3ec; color:#4d617d; }
-.rc-dialog .rc-months button:hover { border-color:#93a8c4; background:#f6f8fb; }
+.rc-dialog { --rc-accent:#5366ad; --rc-accent-hover:#435590; --rc-soft:#eef1fa; --rc-border:#cdd4e6; --rc-ink:#334155; border-color:var(--rc-border); color:var(--rc-ink); }
+.rc-dialog .rc-header h3 { color:#273449; }
+.rc-dialog .rc-header p,.rc-dialog .rc-help { color:#7a8496; }
+.rc-dialog .rc-close { background:#f7f8fc; border-color:#dfe3ee; color:#697386; }
+.rc-dialog .rc-tabs { background:#eff1f7; }
+.rc-dialog .rc-tabs button { color:#737d90; }
+.rc-dialog .rc-tabs button[aria-selected=true] { background:var(--rc-accent); color:#fff; box-shadow:0 2px 5px #5366ad20; }
+.rc-dialog :is(select,input[type=date],.rc-range-date-button) { border-color:var(--rc-border); color:#44516a; background-color:#fff; }
+.rc-dialog .rc-range-date-button svg { color:#697386; }
+.rc-dialog .rc-months button { border-color:#dfe3ee; color:#4b5568; }
+.rc-dialog .rc-months button:hover { border-color:#a0acd4; background:#f7f8fc; }
 .rc-dialog .rc-days button:hover { background:var(--rc-soft); }
-.rc-dialog .rc-days button[aria-current=date] { border-color:#7894b6; color:#3b5477; }
+.rc-dialog .rc-days button[aria-current=date] { border-color:#8a9acb; color:#44516a; }
 .rc-dialog .rc-days button[aria-pressed=true],.rc-dialog .rc-months button[aria-pressed=true] { background:var(--rc-accent); border-color:var(--rc-accent); color:#fff; }
-.rc-dialog .rc-nav>button { border-color:var(--rc-border); background:var(--rc-soft); color:#496488; box-shadow:0 2px 5px #526f9712; }
-.rc-dialog .rc-nav>button:hover { border-color:#93a8c4; background:#dfe7f1; box-shadow:0 3px 8px #526f971a; }
-.rc-dialog .rc-nav>button:active { background:#d2deec; }
-.rc-dialog .rc-footer { background:#f6f8fb; border-top-color:#dce3ec; }
-.rc-dialog .rc-footer p,.rc-dialog .rc-today,.rc-dialog .rc-footer button.rc-range-reset { color:#496488; }
-.rc-dialog .rc-cancel { background:#fff; color:#62758e; border-color:#dce3ec; }
+.rc-dialog .rc-nav>button { border-color:var(--rc-border); background:var(--rc-soft); color:#5366ad; box-shadow:0 2px 5px #5366ad12; }
+.rc-dialog .rc-nav>button:hover { border-color:#a0acd4; background:#e4e9f7; box-shadow:0 3px 8px #5366ad1a; }
+.rc-dialog .rc-nav>button:active { background:#d8e0f4; }
+.rc-dialog .rc-footer { background:#f7f8fc; border-top-color:#dfe3ee; }
+.rc-dialog .rc-footer p,.rc-dialog .rc-today,.rc-dialog .rc-footer button.rc-range-reset { color:#5366ad; }
+.rc-dialog .rc-cancel { background:#fff; color:#697386; border-color:#dfe3ee; }
 .rc-dialog .rc-apply { background:var(--rc-accent); border-color:var(--rc-accent); color:#fff; }
 .rc-dialog .rc-apply:not(:disabled):hover { background:var(--rc-accent-hover); border-color:var(--rc-accent-hover); }
-.rc-dialog :is(button,select,input):focus-visible { outline-color:#93a8c4; }
+.rc-dialog :is(button,select,input):focus-visible { outline-color:#a0acd4; }
 .rc-dialog .rc-range-picker { background:#fff; color:var(--rc-ink); border-color:var(--rc-border); }
-.rc-dialog .rc-range-picker select { color:#3b5477; border-color:#dce3ec; background-color:#fff; }
-.rc-dialog .rc-range-picker .rc-weekdays { color:#687b93; }
+.rc-dialog .rc-range-picker select { color:#44516a; border-color:#dfe3ee; background-color:#fff; }
+.rc-dialog .rc-range-picker .rc-weekdays { color:#737d90; }
 .rc-dialog .rc-range-picker .rc-days button { color:var(--rc-ink); background:#fff; }
-.rc-dialog .rc-range-picker .rc-days button.rc-range-adjacent { color:#8a98aa; }
+.rc-dialog .rc-range-picker .rc-days button.rc-range-adjacent { color:#9aa3b4; }
 .rc-dialog .rc-range-picker .rc-days button:hover { background:var(--rc-soft); }
-.rc-dialog .rc-range-picker .rc-days button[aria-current=date] { border-color:#7894b6; }
+.rc-dialog .rc-range-picker .rc-days button[aria-current=date] { border-color:#8a9acb; }
 .rc-dialog .rc-range-picker .rc-days button[aria-pressed=true] { background:var(--rc-accent); border-color:var(--rc-accent); color:#fff; }
-.rc-dialog .rc-range-picker .rc-range-popup-arrows button { color:#496488; background:#fff; }
+.rc-dialog .rc-range-picker .rc-range-popup-arrows button { color:#5366ad; background:#fff; }
 .rc-dialog .rc-range-picker .rc-range-popup-arrows button:hover { background:var(--rc-soft); }
-.rc-dialog .rc-range-picker .rc-range-popup-footer button { color:#496488; }
+.rc-dialog .rc-range-picker .rc-range-popup-footer button { color:#5366ad; }
