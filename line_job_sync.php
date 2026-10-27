@@ -51,8 +51,10 @@ function mbsRequesterCard($title, $label, $lines, $footer) {
     foreach ($lines as $line) {
         $body[] = ['type'=>'text','text'=>$line,'size'=>'md','margin'=>'sm','wrap'=>true];
     }
-    $body[] = ['type'=>'separator','margin'=>'md'];
-    $body[] = ['type'=>'text','text'=>$footer,'size'=>'sm','margin'=>'md','wrap'=>true];
+    if ($footer !== '') {
+        $body[] = ['type'=>'separator','margin'=>'md'];
+        $body[] = ['type'=>'text','text'=>$footer,'size'=>'sm','margin'=>'md','wrap'=>true];
+    }
     return ['type'=>'flex','altText'=>$title,'contents'=>[
         'type'=>'bubble','size'=>'mega',
         'body'=>['type'=>'box','layout'=>'vertical','paddingAll'=>'16px','contents'=>$body]
@@ -244,9 +246,8 @@ function mbsSyncNotifyTransition($db,$job,$oldStatus) {
         mbsSyncEnqueue($db,$id,'close',(string)$job['line_user_id'],[['type'=>'text','text'=>$text],mbsSyncReview($job)]);
         $closedGroupNotice = mbsRequesterCard('✅ ปิดงานเรียบร้อยแล้ว', $label, [
             'เจ้าหน้าที่: '.$staff['full_name'],
-            'สถานที่: '.$job['location'],
-            'เรื่อง: '.$job['equipment_type']
-        ], 'ดำเนินการเรียบร้อยแล้วค่ะ');
+            'สถานที่: '.$job['location'].' · เรื่อง: '.$job['equipment_type']
+        ], '');
         mbsSyncEnqueue($db,$id,'close',$config['group'],[$closedGroupNotice]);
     }
 }
