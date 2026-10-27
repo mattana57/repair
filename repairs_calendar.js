@@ -41,7 +41,7 @@
         trigger.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v5m10-5v5M3 11h18"/></svg><span></span><svg class="rc-caret" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4.5h10L7 9.5z"/></svg>';
         const dialog = document.createElement('dialog'); dialog.id = 'repairsCalendarDialog' + suffix; dialog.className = 'rc-dialog'; dialog.setAttribute('aria-labelledby','rc-title' + suffix);if(config.chart){trigger.classList.add('rc-chart');dialog.classList.add('rc-chart');}
         dialog.innerHTML = `
-            <header class="rc-header"><div><p>ตัวกรองวันที่แจ้งซ่อม</p><h3 id="rc-title">เลือกช่วงเวลาที่ต้องการดู</h3></div><button type="button" data-rc="close" class="rc-close" aria-label="ปิดปฏิทิน">×</button></header>
+            <header class="rc-header"><div><p>ตัวกรองวันที่แจ้งซ่อม</p><h3 id="rc-title">เลือกช่วงเวลาที่ต้องการดู</h3></div><button type="button" data-rc="close" class="rc-close" aria-label="ปิดปฏิทิน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></header>
             <div class="rc-tabs" role="tablist" aria-label="รูปแบบการเลือกช่วงเวลา">
                 <button type="button" id="rc-tab-range" role="tab" aria-controls="rc-range" data-rc-mode="range">เริ่ม–สิ้นสุด</button>
                 <button type="button" id="rc-tab-period" role="tab" aria-controls="rc-period" data-rc-mode="period">เลือกเดือน/ปี</button>

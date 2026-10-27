@@ -2,7 +2,8 @@
 .rc-dialog { --rc-accent:#5366ad; --rc-accent-hover:#435590; --rc-soft:#eef1fa; --rc-border:#cdd4e6; --rc-ink:#334155; border-color:var(--rc-border); color:var(--rc-ink); }
 .rc-dialog .rc-header h3 { color:#273449; }
 .rc-dialog .rc-header p,.rc-dialog .rc-help { color:#7a8496; }
-.rc-dialog .rc-close { background:#f7f8fc; border-color:#dfe3ee; color:#697386; }
+.rc-dialog .rc-close { background:#fff; border-color:#e2e8f0; color:#94a3b8; }
+.rc-dialog .rc-close:hover { background:#fff1f2; border-color:#fecdd3; color:#f43f5e; }
 .rc-dialog .rc-tabs { background:#eff1f7; }
 .rc-dialog .rc-tabs button { color:#737d90; }
 .rc-dialog .rc-tabs button[aria-selected=true] { background:var(--rc-accent); color:#fff; box-shadow:0 2px 5px #5366ad20; }
