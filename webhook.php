@@ -174,6 +174,7 @@ function reporterChosenName($text, $phone) {
 
 // รูปแบบ Flex ใช้สีน้ำเงินเข้ม สีเทา และพื้นขาว ไม่เปลี่ยนข้อมูลหรือคำสั่ง
 require_once __DIR__.'/line_job_sync.php';
+require_once __DIR__.'/repair_duplicate.php';
 
 // เลขแสดงผลยาว 19 ตัว รองรับ ticket_no VARCHAR(20)
 function mbsNewTicketNumber() {
@@ -308,8 +309,8 @@ function mbsRequesterMenu() {
             mbsRequesterButton('ประวัติการแจ้งทั้งหมด','action=my_requests&scope=all')]]]];
 }
 function mbsRequesterList($db, $userId, $scope, $before = 0) {
-    $sql = 'SELECT id,ticket_no,equipment_type,location,problem_desc,status,created_at FROM repairs WHERE line_user_id=?'.mbsRequesterVisibleSql($db);
-    $params = [$userId]; $types = 's';
+    $sql = 'SELECT id,ticket_no,equipment_type,location,problem_desc,status,created_at FROM repairs WHERE (BINARY line_user_id=BINARY ? OR EXISTS (SELECT 1 FROM repair_followers f WHERE f.repair_id=repairs.id AND BINARY f.line_user_id=BINARY ?))'.mbsRequesterVisibleSql($db);
+    $params = [$userId,$userId]; $types = 'ss';
     if ($scope === 'open') {
         $sql .= " AND COALESCE(status,'') NOT IN ('ซ่อมเสร็จแล้ว','ดำเนินการเสร็จแล้ว','ปิดงานแล้ว','ยกเลิก','ยกเลิกแล้ว')";
     }
@@ -336,7 +337,7 @@ function mbsRequesterList($db, $userId, $scope, $before = 0) {
         'footer'=>['type'=>'box','layout'=>'vertical','spacing'=>'sm','contents'=>$footer]]];
 }
 function mbsRequesterDetail($db, $userId, $id, $part = 0) {
-    $rows = mbsRequesterQuery($db,'SELECT id,ticket_no,equipment_type,location,problem_desc,repair_note,status,technician_name,created_at FROM repairs WHERE id=? AND line_user_id=?'.mbsRequesterVisibleSql($db).' LIMIT 1','is',$id,$userId);
+    $rows = mbsRequesterQuery($db,'SELECT id,ticket_no,equipment_type,location,problem_desc,repair_note,status,technician_name,created_at FROM repairs WHERE id=? AND (BINARY line_user_id=BINARY ? OR EXISTS (SELECT 1 FROM repair_followers f WHERE f.repair_id=repairs.id AND BINARY f.line_user_id=BINARY ?))'.mbsRequesterVisibleSql($db).' LIMIT 1','iss',$id,$userId,$userId);
     if (!$rows) { return ['type'=>'text','text'=>'ไม่พบรายการนี้ในบัญชี LINE ของคุณค่ะ']; }
     $row = $rows[0];
     // แสดงหมายเหตุใบงาน repair_note ตามคำขอ ไม่ดึง root_cause หรือข้อมูลผู้แจ้งอื่น
@@ -369,17 +370,75 @@ function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken)
         if (in_array($text,['รายการแจ้งของฉัน','งานของฉัน','ติดตามงาน','ประวัติการแจ้ง'],true)) { $command = 'my_requests_menu'; }
         elseif ($text === 'วิธีใช้งาน') { $command = 'help'; }
         elseif ($text === 'ช่องทางติดต่อ') { $command = 'contact'; }
+        elseif (in_array($text,['ยกเลิก','ยกเลิกการแจ้ง','ยกเลิกแจ้งซ่อม','ยกเลิกการแจ้งซ่อม'],true)) { $command = 'request_cancel_text'; }
     } elseif ($type === 'postback') {
         parse_str($event['postback']['data'] ?? '',$data);
-        if (isset($data['action']) && is_string($data['action']) && in_array($data['action'],['my_requests_menu','my_requests','my_request_detail','staff_media_view'],true)) { $command = $data['action']; }
+        if (isset($data['action']) && is_string($data['action']) && in_array($data['action'],['my_requests_menu','my_requests','my_request_detail','staff_media_view','request_cancel_prompt','request_cancel_confirm'],true)) { $command = $data['action']; }
     }
     if ($command === null) { return false; }
     // ประวัติผู้แจ้งแสดงเฉพาะแชตส่วนตัว ไม่เผยแพร่ลงกลุ่มหรือห้องรวม
     if (($event['source']['type'] ?? '') !== 'user' || !is_string($userId) || $userId === '') { return true; }
     try {
+        if ($command === 'request_cancel_text') {
+            $rows=mbsRequesterQuery($db,"SELECT id,ticket_no,equipment_type,location,status FROM repairs WHERE (BINARY line_user_id=BINARY ? OR EXISTS(SELECT 1 FROM repair_followers f WHERE f.repair_id=repairs.id AND BINARY f.line_user_id=BINARY ?)) AND deleted_at IS NULL AND COALESCE(status,'') NOT IN ('ซ่อมเสร็จแล้ว','เสร็จสิ้น','ดำเนินการเสร็จแล้ว','ปิดงานแล้ว','ยกเลิก','ยกเลิกแล้ว') ORDER BY created_at DESC,id DESC LIMIT 11",'ss',$userId,$userId);
+            if (!$rows) { send_flex_reply($replyToken,['type'=>'text','text'=>'ไม่พบรายการแจ้งที่ยังดำเนินการอยู่ค่ะ'],$accessToken); return true; }
+            if (count($rows)>1) {
+                $items=[];foreach(array_slice($rows,0,10) as $row) {
+                    $label=mb_substr('#'.(int)$row['id'].' '.trim((string)$row['equipment_type'].' '.(string)$row['location']),0,20,'UTF-8');
+                    if($label==='')$label='รายการ '.(int)$row['id'];
+                    $items[]=['type'=>'action','action'=>['type'=>'postback','label'=>$label,'data'=>'action=request_cancel_confirm&id='.(int)$row['id']]];
+                }
+                $message=['type'=>'text','text'=>'คุณมีรายการแจ้งที่ยังไม่เสร็จหลายรายการ กรุณาเลือกรายการที่ต้องการยกเลิกค่ะ'.(count($rows)>10?' หากไม่พบรายการ กรุณาติดต่อเจ้าหน้าที่ค่ะ':''),'quickReply'=>['items'=>$items]];
+                send_flex_reply($replyToken,$message,$accessToken);return true;
+            }
+            $data['id']=(int)$rows[0]['id'];$command='request_cancel_confirm';
+        }
         if ($command === 'my_requests_menu') { $message = mbsRequesterMenu(); }
         elseif ($command === 'help') { $message = mbsRequesterHelp(); }
         elseif ($command === 'contact') { $message = mbsRequesterContact(); }
+        elseif ($command === 'request_cancel_prompt' || $command === 'request_cancel_confirm') {
+            $id=filter_var($data['id'] ?? null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+            if (!$id) throw new InvalidArgumentException('Invalid id');
+            if ($command === 'request_cancel_prompt') {
+                $rows=mbsRequesterQuery($db,'SELECT id,ticket_no,status FROM repairs WHERE id=? AND BINARY line_user_id=BINARY ? AND deleted_at IS NULL LIMIT 1','is',$id,$userId);
+                if (!$rows) { $message=['type'=>'text','text'=>'ไม่พบรายการของคุณ หรือรายการนี้มีผู้แจ้งหลายคน กรุณาติดต่อเจ้าหน้าที่เพื่อยกเลิกค่ะ']; }
+                elseif ($rows[0]['status']!=='รอรับเรื่อง') { $message=['type'=>'text','text'=>'รายการนี้ไม่อยู่ในสถานะรอรับเรื่องแล้ว กรุณาติดต่อเจ้าหน้าที่ค่ะ']; }
+                else {
+                    $message=['type'=>'text','text'=>'ต้องการยกเลิกรายการ '.$rows[0]['ticket_no'].' ใช่ไหมคะ?','quickReply'=>['items'=>[
+                        ['type'=>'action','action'=>['type'=>'postback','label'=>'ยืนยันยกเลิก','data'=>'action=request_cancel_confirm&id='.$id]],
+                        ['type'=>'action','action'=>['type'=>'postback','label'=>'กลับไปดูรายการ','data'=>'action=my_request_detail&id='.$id]]
+                    ]]];
+                }
+            } else {
+                $lockResult=$db->query("SELECT GET_LOCK('repair_dedup_v1',10) AS acquired");
+                $lockRow=$lockResult ? $lockResult->fetch_assoc() : null;
+                if(!$lockRow || (int)$lockRow['acquired']!==1)throw new RuntimeException('cancel lock');
+                try {
+                if(!$db->begin_transaction()) throw new RuntimeException('cancel transaction');
+                try {
+                    $job=mbsSyncRow($db,'SELECT id,ticket_no,status,technician_id,line_user_id,deleted_at FROM repairs WHERE id=? FOR UPDATE','i',$id);
+                    if(!$job || $job['deleted_at']!==null || $job['line_user_id']!==$userId) {
+                        $db->rollback();$message=['type'=>'text','text'=>'รายการนี้มีผู้แจ้งร่วม หรือไม่พบรายการของคุณ กรุณาติดต่อเจ้าหน้าที่เพื่อยกเลิกค่ะ'];
+                    } elseif ($job['status']!=='รอรับเรื่อง' || (int)$job['technician_id']>0) {
+                        $db->rollback();$message=['type'=>'text','text'=>'รายการนี้มีการรับงานหรือเปลี่ยนสถานะแล้ว กรุณาติดต่อเจ้าหน้าที่ค่ะ'];
+                    } else {
+                        $count=mbsSyncRow($db,'SELECT COUNT(*) AS n FROM repair_followers WHERE repair_id=? AND BINARY line_user_id<>BINARY ?','is',$id,$userId);
+                        if ((int)$count['n']>0) {
+                            $db->rollback();$message=['type'=>'text','text'=>'รายการนี้มีผู้แจ้งร่วม กรุณาติดต่อเจ้าหน้าที่เพื่อยกเลิกค่ะ'];
+                        } else {
+                            $st=mbsSyncStmt($db,"UPDATE repairs SET status='ยกเลิกแล้ว' WHERE id=? AND status='รอรับเรื่อง' AND (technician_id IS NULL OR technician_id=0) AND deleted_at IS NULL",'i',$id);
+                            $changed=$st->affected_rows;$st->close();if($changed!==1)throw new RuntimeException('cancel changed');
+                            $config=mbsSyncConfig();
+                            mbsSyncEnqueue($db,$id,'cancel',$config['group'],[['type'=>'text','text'=>"❌ ผู้แจ้งยกเลิกรายการแล้ว\nใบงาน: ".$job['ticket_no']]]);
+                            if(!$db->commit())throw new RuntimeException('cancel commit');
+                            mbsSyncDispatchSafe($db,$id);
+                            $message=['type'=>'text','text'=>'ยกเลิกรายการ '.$job['ticket_no'].' เรียบร้อยแล้วค่ะ'];
+                        }
+                    }
+                } catch(Throwable $cancelError) { $db->rollback();throw $cancelError; }
+                } finally { $db->query("SELECT RELEASE_LOCK('repair_dedup_v1')"); }
+            }
+        }
         elseif ($command === 'staff_media_view') {
             $id = filter_var($data['id'] ?? null, FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
             if (!$id) throw new InvalidArgumentException('Invalid id');
@@ -641,7 +700,22 @@ if (!is_null($events['events'])) {
             list($category, $location) = extract_repair_info($text);
 
             if ($category !== "ไม่ระบุปัญหา" || $location !== "ไม่ระบุสถานที่") {
-                
+                // Serialise check and creation to avoid two simultaneous LINE events creating duplicate jobs.
+                $lockResult = $conn->query("SELECT GET_LOCK('repair_dedup_v1', 10) AS acquired");
+                $lockRow = $lockResult ? $lockResult->fetch_assoc() : null;
+                if (!$lockRow || (int)$lockRow['acquired'] !== 1) {
+                    send_flex_reply($replyToken,['type'=>'text','text'=>'ระบบกำลังรับรายการ กรุณาลองส่งอีกครั้งค่ะ'],$channelAccessToken); continue;
+                }
+                try {
+                $duplicate = mbsDuplicateFind($conn,$userId,$category,$location,$text);
+                if ($duplicate) {
+                    $duplicateId=(int)$duplicate['id'];
+                    mbsDuplicateJoin($conn,$duplicateId,$userId,$text);
+                    try { rmClaimPending($conn,$userId,$duplicateId); } catch(Throwable $e) { error_log('duplicate media claim failed'); }
+                    $duplicateLabel=mbsSyncLabel($conn,$duplicate);
+                    $reply="พบรายการแจ้งเรื่องนี้อยู่แล้วค่ะ\n".$duplicateLabel."\nสถานที่: ".$duplicate['location']."\nเรื่อง: ".$duplicate['equipment_type']."\nสถานะ: ".mbsRequesterStatus($duplicate['status'])."\nดูความคืบหน้าได้ที่ รายการแจ้งของฉัน";
+                    send_flex_reply($replyToken,['type'=>'text','text'=>$reply],$channelAccessToken); continue;
+                }
                 $ticket_no = mbsNewTicketNumber();
                 $status = "รอรับเรื่อง"; 
                 $image_path = null; 
@@ -671,7 +745,7 @@ if (!is_null($events['events'])) {
                     try {$media_count=rmClaimPending($conn,$userId,$repair_id);}
                     catch(Throwable $e){error_log('LINE pending media claim failed: '.get_class($e).' code='.(int)$e->getCode().' '.$e->getMessage());}
 
-                    $replyText = "✅ รับคำขอเรียบร้อยแล้วค่ะ\n$daily_label\n\n📌 เลขที่ใบงาน: $ticket_no\n📌 เรื่องที่แจ้ง: $category\n📍 สถานที่: $location\n📝 ข้อความจากผู้แจ้ง: $problem\n\nระบบจะแจ้งเมื่อเจ้าหน้าที่รับงานค่ะ";
+                    $replyText = "✅ รับคำขอเรียบร้อยแล้วค่ะ\n$daily_label\n\n📌 เลขที่ใบงาน: $ticket_no\n📌 เรื่องที่แจ้ง: $category\n📍 สถานที่: $location\n📝 ข้อความจากผู้แจ้ง: $problem\n\nระบบจะแจ้งเมื่อเจ้าหน้าที่รับงานค่ะ\nหากต้องการยกเลิก พิมพ์ ยกเลิก ก่อนเจ้าหน้าที่รับงานค่ะ";
                     if ($image_path || $media_count > 0) {
                         $replyText .= "\n📎 มีไฟล์แนบสำหรับใบงานนี้ค่ะ";
                     }
@@ -688,7 +762,7 @@ if (!is_null($events['events'])) {
                         if ($image_path || $media_count > 0) {
                             $noticeLines[] = '📎 มีไฟล์แนบสำหรับใบงานนี้ค่ะ';
                         }
-                        send_flex_reply($replyToken, mbsRequesterCard('✅ รับคำขอเรียบร้อยแล้วค่ะ', $daily_label, $noticeLines, 'ระบบจะแจ้งเมื่อเจ้าหน้าที่รับงานค่ะ'), $channelAccessToken);
+                        send_flex_reply($replyToken, mbsRequesterCard('✅ รับคำขอเรียบร้อยแล้วค่ะ', $daily_label, $noticeLines, "ระบบจะแจ้งเมื่อเจ้าหน้าที่รับงานค่ะ\nหากต้องการยกเลิก พิมพ์ ยกเลิก ก่อนเจ้าหน้าที่รับงานค่ะ"), $channelAccessToken);
                     }
 
                     $short_reporter_name = trim($user_reg['real_name']);
@@ -705,6 +779,10 @@ if (!is_null($events['events'])) {
                 } else {
                     send_flex_reply($replyToken, ['type' => 'text', 'text' => "🚨 เกิดข้อผิดพลาด ไม่สามารถบันทึกข้อมูลได้ค่ะ"], $channelAccessToken);
                 }
+                } catch (Throwable $e) {
+                    error_log('duplicate intake failed: '.get_class($e));
+                    send_flex_reply($replyToken,['type'=>'text','text'=>'ยังรับรายการไม่ได้ค่ะ กรุณาลองใหม่อีกครั้ง'],$channelAccessToken);
+                } finally { $conn->query("SELECT RELEASE_LOCK('repair_dedup_v1')"); }
             }
             else {
                 if (preg_match('/(0[0-9]{8,9})/', $text, $matches)) {

@@ -9,7 +9,7 @@ function staffViewFail($code=403) {http_response_code($code);header('Content-Typ
 $token=$_GET['token']??'';
 if(!is_string($token)||!preg_match('/\A[a-f0-9]{64}\z/D',$token))staffViewFail();
 $hash=hash('sha256',$token);
-$stmt=$conn->prepare('SELECT g.repair_id FROM staff_media_view_grants g JOIN repairs r ON r.id=g.repair_id AND BINARY r.line_user_id=BINARY g.line_user_id WHERE g.token_hash=? AND g.expires_at>UTC_TIMESTAMP() AND r.deleted_at IS NULL');
+$stmt=$conn->prepare('SELECT g.repair_id FROM staff_media_view_grants g JOIN repairs r ON r.id=g.repair_id AND (BINARY r.line_user_id=BINARY g.line_user_id OR EXISTS (SELECT 1 FROM repair_followers f WHERE f.repair_id=r.id AND BINARY f.line_user_id=BINARY g.line_user_id)) WHERE g.token_hash=? AND g.expires_at>UTC_TIMESTAMP() AND r.deleted_at IS NULL');
 if(!$stmt)staffViewFail(500);$stmt->bind_param('s',$hash);$stmt->execute();$grant=$stmt->get_result()->fetch_assoc();$stmt->close();if(!$grant)staffViewFail();
 $id=(int)$grant['repair_id'];
 if(isset($_GET['file'])) {

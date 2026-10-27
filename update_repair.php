@@ -88,6 +88,7 @@ function mbsUpdateRepairNotice($message) {
 
 // เรียกใช้ระบบตรวจสิทธิ์ส่วนกลางแทนการเช็คแบบแยกไฟล์
 require_once 'auth_guard.php';
+require_once __DIR__ . '/repair_duplicate.php';
 require_once __DIR__ . '/activity_log.php';
 
 $back_url = 'dashboard.php?tab=repairs';
@@ -615,6 +616,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             require __DIR__ . '/env.php';
 
+            try { mbsDuplicateWebNotice($conn,$repair,$old_status,$old_note,$channelAccessToken); }
+            catch (Throwable $e) { error_log('follower web notification failed: '.get_class($e)); }
             $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
             
             if(!empty($repair['line_user_id'])) {
@@ -1094,6 +1097,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <?php
                                 $staffFiles = rmQuery($conn, "SELECT id,media_type FROM repair_attachments WHERE repair_id=? AND line_user_id LIKE 'staff:%' AND state='ready' ORDER BY id DESC", 'i', (int)$repair['id'])->get_result();
                                 if ($staffFiles->num_rows > 0): ?>
+                                <p style="margin:12px 0 8px;font-weight:600;color:#1e3a5f">รูปและวิดีโอผลการดำเนินงาน</p>
                                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
                                     <?php while ($staffFile = $staffFiles->fetch_assoc()):
                                         $staffFileUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$staffFile['id']; ?>

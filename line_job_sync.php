@@ -237,6 +237,8 @@ function mbsSyncNotifyTransition($db,$job,$oldStatus) {
             'เบอร์ติดต่อ: '.($staff['phone'] ?: '-')
         ], 'เจ้าหน้าที่จะตรวจสอบและประสานงานค่ะ');
         mbsSyncEnqueue($db,$id,'accept',(string)$job['line_user_id'],[$acceptNotice]);
+        $followers=mbsSyncStmt($db,'SELECT line_user_id FROM repair_followers WHERE repair_id=?','i',$id);$fresult=$followers->get_result();
+        while($f=$fresult->fetch_assoc()){if($f['line_user_id']!==$job['line_user_id'])mbsSyncEnqueue($db,$id,'accept',$f['line_user_id'],[$acceptNotice]);}$followers->close();
     } elseif ($job['status']==='ซ่อมเสร็จแล้ว' && $oldStatus!=='ซ่อมเสร็จแล้ว') {
         $job['technician_name']=$staff['full_name'];
         $note=trim((string)($job['repair_note'] ?? ''));
@@ -244,6 +246,8 @@ function mbsSyncNotifyTransition($db,$job,$oldStatus) {
         // Keep full notes in the job detail; LINE text payload is bounded.
         if (mb_strlen($text,'UTF-8')>4500) $text=mb_substr($text,0,4450,'UTF-8')."…\nดูหมายเหตุเต็มในรายการแจ้งของฉัน";
         mbsSyncEnqueue($db,$id,'close',(string)$job['line_user_id'],[['type'=>'text','text'=>$text],mbsSyncReview($job)]);
+        $followers=mbsSyncStmt($db,'SELECT line_user_id FROM repair_followers WHERE repair_id=?','i',$id);$fresult=$followers->get_result();
+        while($f=$fresult->fetch_assoc()){if($f['line_user_id']!==$job['line_user_id'])mbsSyncEnqueue($db,$id,'close',$f['line_user_id'],[['type'=>'text','text'=>$text]]);}$followers->close();
         $closedGroupNotice = mbsRequesterCard('✅ ปิดงานเรียบร้อยแล้ว', $label, [
             'เจ้าหน้าที่: '.$staff['full_name'],
             'สถานที่: '.$job['location'].' · เรื่อง: '.$job['equipment_type']

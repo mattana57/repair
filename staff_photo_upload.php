@@ -53,6 +53,19 @@ try {
         $viewUrl=mbsSyncConfig()['base'].'/requester_staff_media.php?token='.$viewToken;
         $notice=['type'=>'flex','altText'=>'เจ้าหน้าที่เพิ่มไฟล์ผลการดำเนินงาน','contents'=>['type'=>'bubble','body'=>['type'=>'box','layout'=>'vertical','spacing'=>'sm','contents'=>[['type'=>'text','text'=>'📎 เจ้าหน้าที่เพิ่มไฟล์ผลการดำเนินงาน','weight'=>'bold','wrap'=>true],['type'=>'text','text'=>$label,'wrap'=>true],['type'=>'text','text'=>'สถานที่: '.(string)$job['location'],'wrap'=>true],['type'=>'text','text'=>'เจ้าหน้าที่: '.(string)$job['technician_name'],'wrap'=>true],['type'=>'text','text'=>'เพิ่ม '.$images.' รูป และ '.$videos.' วิดีโอ','wrap'=>true]]], 'footer'=>['type'=>'box','layout'=>'vertical','contents'=>[['type'=>'button','style'=>'primary','action'=>['type'=>'uri','label'=>'ดูไฟล์ผลการดำเนินงาน','uri'=>$viewUrl]]]]]];
         mbsSyncEnqueue($conn,$id,'media'.base_convert((string)$firstFileId,10,36),(string)$job['line_user_id'],[$notice]);
+        $stmtF=$conn->prepare('SELECT line_user_id FROM repair_followers WHERE repair_id=?');
+        if (!$stmtF) throw new RuntimeException('follower prepare');
+        $stmtF->bind_param('i',$id); if (!$stmtF->execute()) throw new RuntimeException('follower read');
+        $fr=$stmtF->get_result();
+        while($f=$fr->fetch_assoc()) {
+            $recipient=(string)$f['line_user_id']; if($recipient===(string)$job['line_user_id']) continue;
+            $ftoken=bin2hex(random_bytes(32));$fhash=hash('sha256',$ftoken);
+            $fg=$conn->prepare("INSERT INTO staff_media_view_grants(token_hash,repair_id,line_user_id,expires_at) VALUES(?,?,?,'9999-12-31 23:59:59')");
+            if(!$fg)throw new RuntimeException('follower grant');$fg->bind_param('sis',$fhash,$id,$recipient);if(!$fg->execute())throw new RuntimeException('follower grant save');$fg->close();
+            $fnotice=$notice;$fnotice['contents']['footer']['contents'][0]['action']['uri']=mbsSyncConfig()['base'].'/requester_staff_media.php?token='.$ftoken;
+            mbsSyncEnqueue($conn,$id,'media'.base_convert((string)$firstFileId,10,36),$recipient,[$fnotice]);
+        }
+        $stmtF->close();
     }
     if(!$conn->commit())throw new RuntimeException('commit');
     mbsSyncDispatchSafe($conn,$id);

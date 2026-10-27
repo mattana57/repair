@@ -19,10 +19,11 @@ function rmLock($db, $user) {
 }
 function rmUnlock($db, $key) { rmQuery($db, 'SELECT RELEASE_LOCK(?)', 's', $key); }
 function rmLatest($db, $user) {
-    return rmQuery($db, 'SELECT id,ticket_no,status,UNIX_TIMESTAMP(created_at) AS created_epoch FROM repairs WHERE line_user_id=? ORDER BY id DESC LIMIT 1', 's', $user)->get_result()->fetch_assoc();
+    $sql="SELECT id,ticket_no,status,created_epoch FROM (SELECT id,ticket_no,status,UNIX_TIMESTAMP(created_at) AS created_epoch FROM repairs WHERE BINARY line_user_id=BINARY ? AND deleted_at IS NULL UNION ALL SELECT r.id,r.ticket_no,r.status,TIMESTAMPDIFF(SECOND,'1970-01-01 00:00:00',f.reported_at) AS created_epoch FROM repair_followers f JOIN repairs r ON r.id=f.repair_id WHERE BINARY f.line_user_id=BINARY ? AND r.deleted_at IS NULL) recent ORDER BY created_epoch DESC,id DESC LIMIT 1";
+    return rmQuery($db,$sql,'ss',$user,$user)->get_result()->fetch_assoc();
 }
 function rmEligible($job, $sent) {
-    return $job && !in_array($job['status'], ['ซ่อมเสร็จแล้ว','เสร็จสิ้น'], true)
+    return $job && !in_array($job['status'], ['ซ่อมเสร็จแล้ว','เสร็จสิ้น','ดำเนินการเสร็จแล้ว','ปิดงานแล้ว','ยกเลิก','ยกเลิกแล้ว'], true)
         && $sent >= (int)$job['created_epoch'] && $sent <= (int)$job['created_epoch'] + 300;
 }
 function rmRegister($db, $user, $message, $kind, $sent) {
@@ -34,7 +35,7 @@ function rmRegister($db, $user, $message, $kind, $sent) {
         $repair = rmEligible($job,$sent) ? (int)$job['id'] : null;
         $cutoff = time() - RM_PENDING_SECONDS;
         // แถวรอดาวน์โหลดนับรวมด้วย เพื่อไม่ให้ส่งพร้อมกันแล้วเกินจำนวน
-        $count = rmQuery($db,"SELECT COUNT(*) AS n FROM repair_attachments WHERE line_user_id=? AND media_type=? AND state NOT IN ('failed','expired') AND ((? IS NOT NULL AND repair_id=?) OR (? IS NULL AND repair_id IS NULL AND sent_epoch>=?))",'ssiiii',$user,$kind,$repair,$repair,$repair,$cutoff)->get_result()->fetch_assoc();
+        $count = rmQuery($db,"SELECT COUNT(*) AS n FROM repair_attachments WHERE media_type=? AND state NOT IN ('failed','expired') AND ((? IS NOT NULL AND repair_id=? AND line_user_id NOT LIKE 'staff:%') OR (? IS NULL AND repair_id IS NULL AND BINARY line_user_id=BINARY ? AND sent_epoch>=?))",'siiisi',$kind,$repair,$repair,$repair,$user,$cutoff)->get_result()->fetch_assoc();
         $limit = $kind === 'image' ? RM_IMAGE_LIMIT : RM_VIDEO_LIMIT;
         $legacy = $repair && $kind === 'image' ? rmQuery($db,"SELECT image_path FROM repairs WHERE id=?",'i',$repair)->get_result()->fetch_assoc() : null;
         if ((int)$count['n'] + (!empty($legacy['image_path']) ? 1 : 0) >= $limit) {
@@ -48,10 +49,10 @@ function rmRegister($db, $user, $message, $kind, $sent) {
 function rmClaimPending($db,$user,$repair) {
     $key=rmLock($db,$user);
     try {
-        $job=rmQuery($db,'SELECT id,line_user_id,image_path,UNIX_TIMESTAMP(created_at) AS created_epoch FROM repairs WHERE id=?','i',$repair)->get_result()->fetch_assoc();
-        if (!$job || $job['line_user_id'] !== $user) { return 0; }
+        $job=rmQuery($db,'SELECT r.id,r.line_user_id,r.image_path,UNIX_TIMESTAMP(r.created_at) AS created_epoch FROM repairs r WHERE r.id=? AND r.deleted_at IS NULL AND (BINARY r.line_user_id=BINARY ? OR EXISTS (SELECT 1 FROM repair_followers f WHERE f.repair_id=r.id AND BINARY f.line_user_id=BINARY ?))','iss',$repair,$user,$user)->get_result()->fetch_assoc();
+        if (!$job) { return 0; }
         $cutoff=time()-RM_PENDING_SECONDS;
-        $rows=rmQuery($db,"SELECT id,media_type FROM repair_attachments WHERE line_user_id=? AND repair_id IS NULL AND state NOT IN ('failed','expired') AND sent_epoch>=? AND sent_epoch<=? ORDER BY id",'sii',$user,$cutoff,(int)$job['created_epoch'])->get_result();
+        $rows=rmQuery($db,"SELECT id,media_type FROM repair_attachments WHERE line_user_id=? AND repair_id IS NULL AND state NOT IN ('failed','expired') AND sent_epoch>=? AND sent_epoch<=? ORDER BY id",'sii',$user,$cutoff,time())->get_result();
         $counts=['image'=>!empty($job['image_path']) ? 1 : 0,'video'=>0];
         $existing=rmQuery($db,"SELECT media_type,COUNT(*) AS n FROM repair_attachments WHERE repair_id=? AND line_user_id NOT LIKE 'staff:%' AND state NOT IN ('failed','expired') GROUP BY media_type",'i',$repair)->get_result();
         while($x=$existing->fetch_assoc()){$counts[$x['media_type']]+=(int)$x['n'];}
