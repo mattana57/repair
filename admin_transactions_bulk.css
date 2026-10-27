@@ -12,3 +12,8 @@
 #repairsTable .tx-check {width:16px;height:16px;accent-color:#e11d48;vertical-align:middle;margin-right:7px;cursor:pointer;}
 #repairsTable tr.tx-selected {background:#fff1f2;}
 #transactionsBulk button:focus-visible {outline:3px solid #fda4af;outline-offset:3px;}
+
+/* Transactions only: keep Edit beside Search; leave date/status filters on the right. */
+#repairs .mbs-table-search {margin-right:0!important;}
+#repairs #transactionsBulk {margin-right:auto;}
+#repairs #transactionsBulkMenu {left:0;right:auto;}

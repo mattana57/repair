@@ -2690,7 +2690,7 @@ if (isset($_GET['api_check_hash'])) {
 #techniciansTableBody .mbs-team-contact > .flex > .rounded-full {width:16px;height:16px;}
 </style>
     <link rel="stylesheet" href="table-empty-state.css?v=20261018-1">
-<link rel="stylesheet" href="admin_transactions_bulk.css?v=20261027-1">
+<link rel="stylesheet" href="admin_transactions_bulk.css?v=20261027-2">
 
 
 <style id="admin-bulk-ui">
@@ -3383,15 +3383,15 @@ if (isset($_GET['api_check_hash'])) {
                             </div>
                             
                             <div id="transactionsBulk" data-token="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
-                                <span id="transactionsBulkCount" hidden role="status" aria-live="polite">เลือกแล้ว 0 รายการ</span>
                                 <div class="tx-menu-wrap">
                                     <button type="button" id="transactionsBulkEdit" aria-expanded="false" aria-controls="transactionsBulkMenu">แก้ไข</button>
                                     <div id="transactionsBulkMenu" hidden>
-                                        <button type="button" data-tx-action="all">เลือกทั้งหมดในหน้านี้</button>
+                                        <button type="button" data-tx-action="all">เลือกทั้งหมด</button>
                                         <button type="button" data-tx-action="cancel">ยกเลิก</button>
                                         <button type="button" data-tx-action="delete" disabled>ลบ</button>
                                     </div>
                                 </div>
+                                <span id="transactionsBulkCount" hidden role="status" aria-live="polite">เลือกแล้ว 0 รายการ</span>
                             </div>
                             <!-- ✨ ชุด Dropdown เดือน/ปี ดีไซน์เดียวกับหน้ารายงาน ✨ -->
                             <div class="flex flex-wrap items-center gap-2 portrait:gap-1.5 sm:gap-2 landscape:gap-2 shrink-0 max-w-full relative z-40">
