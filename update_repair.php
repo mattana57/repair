@@ -745,6 +745,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
     </style>
     <link rel="stylesheet" href="repair-detail-ui.css?v=20261019-1">
+    <link rel="stylesheet" href="repair_media_viewer.css?v=20261027-1">
 </head>
 <body class="p-4 md:p-10 selection:bg-sky-200">
 
@@ -836,7 +837,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <p class="text-slate-600 mt-1"><?php echo htmlspecialchars($repair['problem_desc']); ?></p>
                         </div>
 
-                        <div>
+                        <div data-mbs-repair-media>
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-2">ไฟล์แนบประกอบใบงาน</p>
                             <?php
                             require_once __DIR__ . '/repair_media.php';
@@ -858,12 +859,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <p style="padding:12px;background:#f1f5f9;border-radius:8px;color:#64748b">กำลังรับรูป กรุณาเปิดหน้านี้ใหม่ภายหลังค่ะ</p>
                                     <?php else:
                                         $mediaUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$reporterFile['id']; ?>
-                                    <img src="<?php echo htmlspecialchars($mediaUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="รูปที่ผู้แจ้งส่ง" loading="lazy" style="display:block;width:100%;max-width:100%;max-height:220px;height:auto;object-fit:contain;border-radius:10px">
+                                    <a href="<?php echo htmlspecialchars($mediaUrl, ENT_QUOTES, 'UTF-8'); ?>" data-mbs-media-type="image" target="_blank" rel="noopener" aria-label="ดูรูปภาพเต็ม"><img src="<?php echo htmlspecialchars($mediaUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="รูปที่ผู้แจ้งส่ง" loading="lazy" style="display:block;width:100%;max-width:100%;max-height:220px;height:auto;object-fit:contain;border-radius:10px"></a>
                                     <?php endif; ?>
                                 <?php endforeach; ?>
                                 </div>
                             <?php elseif ($reporterPreview): ?>
-                                <div class="repair-media-summary"><?php rmPanel($conn, (int)$repair['id']); ?></div>
+                                <div class="repair-media-summary" data-mbs-media-files="<?php echo htmlspecialchars(json_encode($reporterPreview, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>"><?php rmPanel($conn, (int)$repair['id']); ?></div>
                             <?php endif; ?>
                             <?php if ($image_file): ?>
                                 <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-48 rounded-xl border border-slate-200 overflow-hidden group relative">
@@ -879,7 +880,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
 
-                <div class="modern-card overflow-hidden border-t-4 border-amber-400">
+                <div id="mbsRepairReview" data-mbs-review-layout="update" data-mbs-repair-id="<?php echo (int)$repair['id']; ?>" class="modern-card overflow-hidden border-t-4 border-amber-400">
                     <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center">
                         <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center mr-3">
                             <i class="fas fa-star text-sm"></i>
@@ -1122,7 +1123,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 $staffFiles = rmQuery($conn, "SELECT id,media_type FROM repair_attachments WHERE repair_id=? AND line_user_id LIKE 'staff:%' AND state='ready' ORDER BY id DESC", 'i', (int)$repair['id'])->get_result();
                                 if ($staffFiles->num_rows > 0): ?>
                                 <p style="margin:12px 0 8px;font-weight:600;color:#1e3a5f">รูปและวิดีโอผลการดำเนินงาน</p>
-                                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
+                                <div data-mbs-repair-media style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
                                     <?php while ($staffFile = $staffFiles->fetch_assoc()):
                                         $staffFileUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$staffFile['id']; ?>
                                     <?php if ($staffFile['media_type'] === 'image'): ?>
@@ -1461,5 +1462,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </script>
     <?php endif; ?>
 
+    <script src="repair_review_live.js?v=20261027-1" defer></script>
+    <script src="repair_media_viewer.js?v=20261027-1" defer></script>
 </body>
 </html>
