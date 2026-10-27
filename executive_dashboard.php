@@ -436,6 +436,7 @@ function execPageFooter($data, $kind) {
 
 
 function execPageRows($result, $kind, $line_users_map, $tech_info_map, $tech_dept_map) {
+    global $conn; // Shared media helper needs the authenticated database connection.
     ob_start();
     if ($result->num_rows === 0) {
         echo "<tr><td colspan='12' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>";
