@@ -2949,5 +2949,30 @@ if (isset($_GET['th_fragment'])
 <?php require __DIR__ . '/technician_profile_avatar_panel.php'; ?>
 <?php require __DIR__ . '/self_profile_panel.php'; ?>
 <?php mbs_feature_assets($conn); ?>
+<script>
+// งานที่ช่างรับแล้ว: แสดงทางเข้าจัดการข้างปุ่มปิดงานในตารางประวัติ
+(function () {
+    function showManageLinks() {
+        document.querySelectorAll('#historyTableBody input[name="job_action"][value="close"]').forEach(function (action) {
+            const form = action.form;
+            const row = action.closest('tr');
+            if (!form || !row || row.querySelector('a[href*="update_repair.php?id="]')) return;
+            const repair = form.querySelector('input[name="repair_id"]');
+            if (!repair || !/^[1-9][0-9]*$/.test(repair.value)) return;
+            const link = document.createElement('a');
+            link.href = 'update_repair.php?id=' + encodeURIComponent(repair.value);
+            link.target = 'mbsTechnicianRepair';
+            link.rel = 'noopener';
+            link.className = 'mt-1 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 inline-block text-xs font-bold';
+            link.textContent = 'จัดการ';
+            link.title = 'จัดการ / เพิ่มหมายเหตุ';
+            form.insertAdjacentElement('afterend', link);
+        });
+    }
+    showManageLinks();
+    // ตารางค้นหาและรีเฟรชเป็นชิ้นส่วน จึงตรวจปุ่มใหม่เมื่อแถวถูกแทนที่
+    new MutationObserver(showManageLinks).observe(document.body, {childList:true, subtree:true});
+})();
+</script>
 </body>
 </html>

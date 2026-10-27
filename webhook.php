@@ -81,8 +81,14 @@ function extract_repair_info($text) {
     // คำเฉพาะจากการแจ้งจริง วางก่อนคำกว้าง เช่น ไมค์ จอ ไฟ
     // ไม่เพิ่มคำตอบรับหรือคำทั่วไป เช่น ครับ ขอบคุณ ด่วน เป็นคีย์เวิร์ดอุปกรณ์
     $keywords = [
-        'ลิฟต์', 'ลิฟท์',
-        'เครื่องปรับอากาศ',
+        'ลิฟต์โดยสาร', 'ลิฟต์', 'ลิฟท์', 'ลิฟ',
+        'เครื่องปรับอากาศ', 'แอร์คอนดิชั่น', 'แอร์คอน', 'airconditioner', 'aircon',
+        'คอมพิวเตอร์', 'คอมพิวเต้อ', 'เดสก์ท็อป', 'เดสก์ทอป', 'computer',
+        'โน้ตบุ๊ก', 'โน๊ตบุ๊ค', 'โน๊ตบุค', 'โน้ตบุ๊ค', 'โนตบุค', 'notebook', 'laptop', 'แล็ปท็อป',
+        'โปรเจ็กเตอร์', 'โปรเจคเตอ', 'จอมอนิเตอร์', 'มอนิเตอร์', 'monitor',
+        'โทรทัศน์', 'television', 'พัดลมไฟฟ้า', 'เต้ารับ', 'ปลั๊กไฟฟ้า',
+        'ก๊อกน้ำ', 'ก๊อกน้ํา', 'ก๊อกนำ้', 'โถส้วม', 'อินเตอร์เน็ต', 'อินเตอเน็ต', 'internet', 'ไวไฟ', 'wi-fi',
+        'สายlan', 'lancable', 'microphone',
         'เครื่องเสียง', 'ไมโครโฟน', 'ไมค์ไร้สาย', 'ไมค์มีสาย', 'ไมค์ลอย', 'ไมค์สาย',
         'เครื่องพิมพ์', 'เครื่องปริ้น', 'เครื่องปริ๊น', 'เครื่องปริน', 'เครื่องพริน',
         'ปริ้นเตอร์', 'ปริ๊นเตอร์', 'ปรินเตอร์', 'พรินเตอร์', 'ปริ้น', 'ปริ๊น',
@@ -91,7 +97,7 @@ function extract_repair_info($text) {
         'รถตู้', 'รถบัส', 'รถกระบะ', 'รถคณะ', 'รถสิบล้อ', 'รถขนของ', 'รถยนต์', 'รถไฟฟ้า', 'รถเก๋ง', 'รถสองแถว', 'รถรับส่ง', 'รถ',
         'จอดขวาง', 'ขวางทาง', 'อุบัติเหตุ', 'ชาร์จแบต', 'ยางรั่ว', 'ยางแบน', 'สตาร์ทไม่ติด', 'เครื่องดับ', 'รถเสีย',
         'โต๊ะคอม', 'เก้าอี้คอม', 'สายแลน', 'สายไฟ', 'หลอดไฟ', 'ไฟดับ', 'น้ำรั่ว', 'printer', 'projector', 'โปรเจคเตอร์', 'โปรเจกเตอร์', 'เครื่องฉาย', 
-        'แอร์', 'คอม', 'จอ', 'ทีวี', 'ไมค์', 'ปลั๊ก', 'ไฟ', 'หลอด', 'พัดลม', 'เน็ต', 'wifi', 'วายฟาย','ไว้ฟาย','ไวฟาย', 'อินเทอร์เน็ต',
+        'แอร์', 'แอร', 'คอม', 'จอ', 'ทีวี', 'ไมค์', 'ไมค', 'ปลั๊ก', 'ไฟ', 'หลอด', 'พัดลม', 'เน็ต', 'เนต', 'wifi', 'วายฟาย','ไว้ฟาย','ไวฟาย', 'อินเทอร์เน็ต',
         'เว็บคณะ', 'มคอ', 'ประตู', 'สแกนหน้า', 'ท่อ', 'ห้องน้ำ', 'ก๊อก', 'ชักโครก',
         'ตู้กดน้ำ', 'จิ้งจก', 'นก', 'ตุ๊กแก', 'หนู', 'กลิ่นเหม็น', 
         'งู', 'หมา', 'แมว', 'หน้าต่าง', 'กระจก', 'โต๊ะ', 'เก้าอี้', 'เพดาน', 'หลังคา'
@@ -380,11 +386,12 @@ function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken)
     if (($event['source']['type'] ?? '') !== 'user' || !is_string($userId) || $userId === '') { return true; }
     try {
         if ($command === 'request_cancel_text') {
-            $rows=mbsRequesterQuery($db,"SELECT id,ticket_no,equipment_type,location,status FROM repairs WHERE (BINARY line_user_id=BINARY ? OR EXISTS(SELECT 1 FROM repair_followers f WHERE f.repair_id=repairs.id AND BINARY f.line_user_id=BINARY ?)) AND deleted_at IS NULL AND COALESCE(status,'') NOT IN ('ซ่อมเสร็จแล้ว','เสร็จสิ้น','ดำเนินการเสร็จแล้ว','ปิดงานแล้ว','ยกเลิก','ยกเลิกแล้ว') ORDER BY created_at DESC,id DESC LIMIT 11",'ss',$userId,$userId);
+            $rows=mbsRequesterQuery($db,"SELECT id,ticket_no,equipment_type,location,status,(SELECT daily_no FROM repair_daily_labels WHERE repair_id=repairs.id) AS daily_no FROM repairs WHERE (BINARY line_user_id=BINARY ? OR EXISTS(SELECT 1 FROM repair_followers f WHERE f.repair_id=repairs.id AND BINARY f.line_user_id=BINARY ?)) AND deleted_at IS NULL AND COALESCE(status,'') NOT IN ('ซ่อมเสร็จแล้ว','เสร็จสิ้น','ดำเนินการเสร็จแล้ว','ปิดงานแล้ว','ยกเลิก','ยกเลิกแล้ว') ORDER BY created_at DESC,id DESC LIMIT 11",'ss',$userId,$userId);
             if (!$rows) { send_flex_reply($replyToken,['type'=>'text','text'=>'ไม่พบรายการแจ้งที่ยังดำเนินการอยู่ค่ะ'],$accessToken); return true; }
             if (count($rows)>1) {
                 $items=[];foreach(array_slice($rows,0,10) as $row) {
-                    $label=mb_substr('#'.(int)$row['id'].' '.trim((string)$row['equipment_type'].' '.(string)$row['location']),0,20,'UTF-8');
+                    $number=!empty($row['daily_no']) ? '#'.str_pad((string)$row['daily_no'],3,'0',STR_PAD_LEFT) : 'งาน '.(int)$row['id'];
+                    $label=mb_substr($number.' '.trim((string)$row['equipment_type'].' '.(string)$row['location']),0,20,'UTF-8');
                     if($label==='')$label='รายการ '.(int)$row['id'];
                     $items[]=['type'=>'action','action'=>['type'=>'postback','label'=>$label,'data'=>'action=request_cancel_confirm&id='.(int)$row['id']]];
                 }
@@ -416,7 +423,7 @@ function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken)
                 try {
                 if(!$db->begin_transaction()) throw new RuntimeException('cancel transaction');
                 try {
-                    $job=mbsSyncRow($db,'SELECT id,ticket_no,status,technician_id,line_user_id,deleted_at FROM repairs WHERE id=? FOR UPDATE','i',$id);
+                    $job=mbsSyncRow($db,'SELECT id,ticket_no,status,technician_id,line_user_id,deleted_at,created_at FROM repairs WHERE id=? FOR UPDATE','i',$id);
                     if(!$job || $job['deleted_at']!==null || $job['line_user_id']!==$userId) {
                         $db->rollback();$message=['type'=>'text','text'=>'รายการนี้มีผู้แจ้งร่วม หรือไม่พบรายการของคุณ กรุณาติดต่อเจ้าหน้าที่เพื่อยกเลิกค่ะ'];
                     } elseif ($job['status']!=='รอรับเรื่อง' || (int)$job['technician_id']>0) {
@@ -428,11 +435,12 @@ function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken)
                         } else {
                             $st=mbsSyncStmt($db,"UPDATE repairs SET status='ยกเลิกแล้ว' WHERE id=? AND status='รอรับเรื่อง' AND (technician_id IS NULL OR technician_id=0) AND deleted_at IS NULL",'i',$id);
                             $changed=$st->affected_rows;$st->close();if($changed!==1)throw new RuntimeException('cancel changed');
+                            $label=mbsSyncLabel($db,$job);
                             $config=mbsSyncConfig();
-                            mbsSyncEnqueue($db,$id,'cancel',$config['group'],[['type'=>'text','text'=>"❌ ผู้แจ้งยกเลิกรายการแล้ว\nใบงาน: ".$job['ticket_no']]]);
+                            mbsSyncEnqueue($db,$id,'cancel',$config['group'],[['type'=>'text','text'=>"❌ ผู้แจ้งยกเลิกรายการแล้ว\n".$label]]);
                             if(!$db->commit())throw new RuntimeException('cancel commit');
                             mbsSyncDispatchSafe($db,$id);
-                            $message=['type'=>'text','text'=>'ยกเลิกรายการ '.$job['ticket_no'].' เรียบร้อยแล้วค่ะ'];
+                            $message=['type'=>'text','text'=>"✅ ยกเลิกรายการเรียบร้อยแล้วค่ะ\n".$label];
                         }
                     }
                 } catch(Throwable $cancelError) { $db->rollback();throw $cancelError; }
@@ -903,7 +911,17 @@ if (!is_null($events['events'])) {
                         }
                     } catch(Throwable $e) {
                         error_log('LINE job action failed: '.get_class($e));
-                        send_flex_reply($replyToken,['type'=>'text','text'=>'ยังทำรายการไม่ได้ค่ะ รายการอาจมีผู้รับแล้ว ปิดงานแล้ว หรือสิทธิ์เปลี่ยน กรุณาเปิดรายการล่าสุด หากยังไม่ได้ให้ติดต่อผู้ดูแล'],$channelAccessToken);
+                        $failureText='ยังทำรายการไม่ได้ค่ะ รายการอาจมีผู้รับแล้ว ปิดงานแล้ว หรือสิทธิ์เปลี่ยน กรุณาเปิดรายการล่าสุด หากยังไม่ได้ให้ติดต่อผู้ดูแล';
+                        try {
+                            // อ่านสถานะล่าสุดอีกครั้ง เพราะผู้แจ้งอาจยกเลิกขณะเจ้าหน้าที่กดปุ่ม
+                            $latest=mbsSyncRow($conn,'SELECT id,status,ticket_no FROM repairs WHERE id=? AND deleted_at IS NULL','i',$repair_id);
+                            if ($latest && in_array((string)$latest['status'],['ยกเลิก','ยกเลิกแล้ว'],true)) {
+                                $daily=mbsSyncRow($conn,'SELECT request_date,daily_no FROM repair_daily_labels WHERE repair_id=?','i',$repair_id);
+                                $jobLabel=$daily ? mbsSyncLabelText($daily) : 'ใบงาน '.$latest['ticket_no'];
+                                $failureText="❌ รายการนี้ถูกยกเลิกแล้วค่ะ\n".$jobLabel;
+                            }
+                        } catch(Throwable $statusError) { error_log('LINE job status check failed: '.get_class($statusError)); }
+                        send_flex_reply($replyToken,['type'=>'text','text'=>$failureText],$channelAccessToken);
                     }
                 }
                 elseif ($postbackData['action'] == 'rate') {
