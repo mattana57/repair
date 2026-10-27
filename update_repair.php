@@ -833,16 +833,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-2">ไฟล์แนบประกอบใบงาน</p>
                             <div class="repair-media-summary">
                             <?php require_once __DIR__ . '/repair_media.php'; rmPanel($conn, (int)$repair['id']); ?>
-                            <?php if ($is_tech && (int)($repair['technician_id'] ?? 0) === (int)($_SESSION['technician_id'] ?? 0)): ?>
-                            <form action="staff_photo_upload.php" method="post" enctype="multipart/form-data" style="margin:12px 0;padding:14px;border:1px solid #cbd5e1;border-radius:10px">
-                                <input type="hidden" name="id" value="<?php echo (int)$repair['id']; ?>">
-                                <input type="hidden" name="repair_csrf" value="<?php echo htmlspecialchars($_SESSION['repair_csrf'], ENT_QUOTES, 'UTF-8'); ?>">
-                                <label for="staff_photo" style="display:block;font-weight:bold;margin-bottom:8px">เพิ่มรูปผลการดำเนินงาน</label>
-                                <input id="staff_photo" type="file" name="photo" accept="image/jpeg,image/png,image/webp" required style="display:block;max-width:100%;margin-bottom:10px">
-                                <button type="submit" style="background:#1e3a5f;color:white;padding:10px 16px;border:0;border-radius:8px">บันทึกรูป</button>
-                                <p style="font-size:14px;margin-top:8px">JPEG, PNG หรือ WebP ไม่เกิน 10 MB ต่อรูป</p>
-                            </form>
-                            <?php endif; ?>
+
                             </div>
                             <?php 
                                 $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
@@ -1094,12 +1085,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
                         </div>
 
+                            <?php if ($is_tech && (int)($repair['technician_id'] ?? 0) === (int)($_SESSION['technician_id'] ?? 0)): ?>
+                            <div style="margin:12px 0;padding:14px;border:1px solid #cbd5e1;border-radius:10px">
+                                <input form="staffPhotoForm" type="hidden" name="id" value="<?php echo (int)$repair['id']; ?>">
+                                <input form="staffPhotoForm" type="hidden" name="repair_csrf" value="<?php echo htmlspecialchars($_SESSION['repair_csrf'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <label for="staff_photo" style="display:block;font-weight:bold;margin-bottom:8px">เพิ่มรูปผลการดำเนินงาน</label>
+                                <input form="staffPhotoForm" id="staff_photo" type="file" name="photo" accept="image/jpeg,image/png,image/webp" required style="display:block;max-width:100%;margin-bottom:10px">
+                                <button form="staffPhotoForm" type="submit" style="background:#1e3a5f;color:white;padding:10px 16px;border:0;border-radius:8px">บันทึกรูป</button>
+                                <p style="font-size:14px;margin-top:8px">JPEG, PNG หรือ WebP ไม่เกิน 10 MB ต่อรูป</p>
+                            </div>
+                            <?php endif; ?>
+
                         <div class="flex flex-col md:flex-row justify-end gap-3 mt-2">
                             <button type="submit" class="w-full md:w-auto bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
                                 <i class="fas fa-save mr-2"></i> บันทึกข้อมูลและแจ้งเตือน
                             </button>
                         </div>
                     </form>
+                    <?php if ($is_tech && (int)($repair['technician_id'] ?? 0) === (int)($_SESSION['technician_id'] ?? 0)): ?>
+                    <form id="staffPhotoForm" action="staff_photo_upload.php" method="post" enctype="multipart/form-data"></form>
+                    <?php endif; ?>
                 </div>
             </div>
 
