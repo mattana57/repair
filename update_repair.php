@@ -1094,7 +1094,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <?php
                                 $staffFiles = rmQuery($conn, "SELECT id,media_type FROM repair_attachments WHERE repair_id=? AND line_user_id LIKE 'staff:%' AND state='ready' ORDER BY id DESC", 'i', (int)$repair['id'])->get_result();
                                 if ($staffFiles->num_rows > 0): ?>
-                                <p style="margin:12px 0 8px;font-weight:600;color:#1e3a5f">รูปและวิดีโอผลการดำเนินงาน</p>
                                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
                                     <?php while ($staffFile = $staffFiles->fetch_assoc()):
                                         $staffFileUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$staffFile['id']; ?>
