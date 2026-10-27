@@ -183,7 +183,7 @@ function mbsSyncLabelText($label) {
     $months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
     $date=DateTimeImmutable::createFromFormat('!Y-m-d',$label['request_date'],new DateTimeZone('Asia/Bangkok'));
     if (!$date) { throw new RuntimeException('Invalid daily date'); }
-    return 'รายการแจ้ง #'.str_pad((string)$label['daily_no'],3,'0',STR_PAD_LEFT).' · '.(int)$date->format('j').' '.$months[(int)$date->format('n')-1].' '.((int)$date->format('Y')+543);
+    return 'รายการแจ้ง #'.str_pad((string)$label['daily_no'],3,'0',STR_PAD_LEFT).' · '.(int)$date->format('j').' '.$months[(int)$date->format('n')-1].' '.str_pad((string)(((int)$date->format('Y')+543)%100),2,'0',STR_PAD_LEFT);
 }
 function mbsSyncAcceptedCard($job,$staff,$label) {
     $id=(int)$job['id'];$config=mbsSyncConfig();

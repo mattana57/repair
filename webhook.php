@@ -42,6 +42,8 @@ function mbsThaiLocationNumber($word) {
 
 function mbsNormalizeLocationText($text) {
     $text = strtr($text, ['๐'=>'0','๑'=>'1','๒'=>'2','๓'=>'3','๔'=>'4','๕'=>'5','๖'=>'6','๗'=>'7','๘'=>'8','๙'=>'9']);
+    // แก้คำพิมพ์ผิดเฉพาะบริบทเลขห้อง เพื่อไม่แก้ข้อความต้นฉบับ
+    $text = preg_replace('/(?:ห้อว|หอง|ห้องง)(?=\s*(?:[0-9]|ศูนย์|หนึ่ง|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า))/u', 'ห้อง', $text);
     $number = '(?:ศูนย์|หนึ่ง|เอ็ด|สอง|ยี่|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า|สิบ|ร้อย|พัน)';
     return preg_replace_callback('/(ชั้น\s*(?:ที่\s*)?|ห้อง\s*(?:(?:หมายเลข|เลขที่|เรียน|แลป|แล็บ|แลบ|lab)\s*)?)(' . $number . '(?:\s*' . $number . ')*)/iu', function($m) {
         return $m[1] . mbsThaiLocationNumber($m[2]);
@@ -810,11 +812,11 @@ if (!is_null($events['events'])) {
                     $stmt->bind_param("iis", $score, $repair_id, $userId);
                     
                     if($stmt->execute()){
-                        $thankYouMsg = [
-                            'type' => 'text', 
-                            'text' => "✅ บันทึกคะแนน $score ดาวเรียบร้อยค่ะ\n" . ($reviewLabel !== '' ? $reviewLabel . "\n" : '') . "เลขที่ใบงาน: $ticket_no\n\nเลือกรีวิวด้านบน 👆 หรือพิมพ์ข้อความส่งมาในแชทได้เลยค่ะ 💬"
-                        ];
-                        send_reply($replyToken, $thankYouMsg, $channelAccessToken);
+                        $thankYouMsg = mbsRequesterCard('✅ บันทึกคะแนนเรียบร้อยค่ะ', $reviewLabel !== '' ? $reviewLabel : 'เลขที่ใบงาน: '.$ticket_no, [
+                            'คะแนน: '.$score.' ดาว',
+                            'เลขที่ใบงาน: '.$ticket_no
+                        ], 'เลือกรีวิวด้านบน หรือพิมพ์ข้อความส่งมาในแชทได้เลยค่ะ');
+                        send_flex_reply($replyToken, $thankYouMsg, $channelAccessToken);
                     }
                 }
                 elseif ($postbackData['action'] == 'add_tag') {
@@ -833,10 +835,16 @@ if (!is_null($events['events'])) {
                         $stmt_upd->bind_param("sis", $new_rev, $repair_id, $userId);
                         
                         if($stmt_upd->execute()){
-                            send_reply($replyToken, ['type' => 'text', 'text' => "✅ บันทึกรีวิวเรียบร้อยค่ะ\n" . ($reviewLabel !== '' ? $reviewLabel . "\n" : '') . "รีวิว: $tag\nเลขที่ใบงาน: $ticket_no"], $channelAccessToken);
+                            send_flex_reply($replyToken, mbsRequesterCard('✅ บันทึกรีวิวเรียบร้อยค่ะ', $reviewLabel !== '' ? $reviewLabel : 'เลขที่ใบงาน: '.$ticket_no, [
+                                'รีวิว: '.$tag,
+                                'เลขที่ใบงาน: '.$ticket_no
+                            ], ''), $channelAccessToken);
                         }
                     } else {
-                        send_reply($replyToken, ['type' => 'text', 'text' => "คุณเลือกรีวิวนี้แล้วค่ะ 💖\n" . ($reviewLabel !== '' ? $reviewLabel . "\n" : '') . "รีวิว: $tag\nเลขที่ใบงาน: $ticket_no"], $channelAccessToken);
+                        send_flex_reply($replyToken, mbsRequesterCard('คุณเลือกรีวิวนี้แล้วค่ะ 💖', $reviewLabel !== '' ? $reviewLabel : 'เลขที่ใบงาน: '.$ticket_no, [
+                            'รีวิว: '.$tag,
+                            'เลขที่ใบงาน: '.$ticket_no
+                        ], ''), $channelAccessToken);
                     }
                 }
             }
