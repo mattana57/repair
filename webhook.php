@@ -938,7 +938,20 @@ if (!is_null($events['events'])) {
                             } catch (Throwable $labelError) {
                                 error_log('Close note label unavailable: '.get_class($labelError));
                             }
-                            send_flex_reply($replyToken, ['type'=>'text', 'text'=>$jobLabel."\nกรุณาใส่หมายเหตุก่อนปิดงานค่ะ"], $channelAccessToken);
+                            $config = mbsSyncConfig();
+                            $message = ['type'=>'flex', 'altText'=>$jobLabel.' กรุณาใส่หมายเหตุก่อนปิดงาน', 'contents'=>[
+                                'type'=>'bubble', 'size'=>'kilo',
+                                'body'=>['type'=>'box', 'layout'=>'vertical', 'paddingAll'=>'12px', 'contents'=>[
+                                    ['type'=>'text', 'text'=>$jobLabel, 'size'=>'sm', 'weight'=>'bold', 'wrap'=>true],
+                                    ['type'=>'text', 'text'=>'กรุณาใส่หมายเหตุก่อนปิดงานค่ะ', 'size'=>'sm', 'wrap'=>true, 'margin'=>'sm']
+                                ]],
+                                'footer'=>['type'=>'box', 'layout'=>'vertical', 'paddingAll'=>'10px', 'contents'=>[
+                                    ['type'=>'button', 'style'=>'primary', 'height'=>'sm', 'color'=>'#20365B', 'action'=>[
+                                        'type'=>'uri', 'label'=>'เพิ่มหมายเหตุ', 'uri'=>$config['base'].'/update_repair.php?id='.$repair_id
+                                    ]]
+                                ]]
+                            ]];
+                            send_flex_reply($replyToken, $message, $channelAccessToken);
                             continue;
                         }
                         $failureText='ยังทำรายการไม่ได้ค่ะ รายการอาจมีผู้รับแล้ว ปิดงานแล้ว หรือสิทธิ์เปลี่ยน กรุณาเปิดรายการล่าสุด หากยังไม่ได้ให้ติดต่อผู้ดูแล';
