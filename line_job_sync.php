@@ -39,6 +39,26 @@ function mbsReadableFlexNode($node, $inside_flex = false) {
 }
 
 
+// การ์ดข้อมูลผู้แจ้ง: แยกหัวเรื่องและข้อมูลเพื่อให้อ่านง่าย
+function mbsRequesterCard($title, $label, $lines, $footer) {
+    $body = [
+        ['type'=>'box','layout'=>'vertical','backgroundColor'=>'#EEF4FA','paddingAll'=>'12px','cornerRadius'=>'8px','contents'=>[
+            ['type'=>'text','text'=>$title,'weight'=>'bold','size'=>'md','wrap'=>true],
+            ['type'=>'text','text'=>$label,'weight'=>'bold','size'=>'sm','margin'=>'sm','wrap'=>true]
+        ]],
+        ['type'=>'separator','margin'=>'md']
+    ];
+    foreach ($lines as $line) {
+        $body[] = ['type'=>'text','text'=>$line,'size'=>'md','margin'=>'sm','wrap'=>true];
+    }
+    $body[] = ['type'=>'separator','margin'=>'md'];
+    $body[] = ['type'=>'text','text'=>$footer,'size'=>'sm','margin'=>'md','wrap'=>true];
+    return ['type'=>'flex','altText'=>$title,'contents'=>[
+        'type'=>'bubble','size'=>'mega',
+        'body'=>['type'=>'box','layout'=>'vertical','paddingAll'=>'16px','contents'=>$body]
+    ]];
+}
+
 // ก่อนรับงานแสดงคำขอเต็ม หลังรับงานแสดงสรุปเพื่อลดพื้นที่ในกลุ่ม
 function mbsServiceJobCard($ticket, $location, $category, $detail, $reporter, $phone,
     $stage, $actions, $staff = '', $department = '', $has_image = false, $compact = false, $daily_label = '') {
@@ -69,7 +89,7 @@ function mbsServiceJobCard($ticket, $location, $category, $detail, $reporter, $p
         'type' => 'flex', 'altText' => $stage . ' ' . $ticket,
         'contents' => [
             'type' => 'bubble', 'size' => 'kilo',
-            'body' => ['type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm', 'paddingAll' => '14px', 'backgroundColor' => '#FFFFFF', 'contents' => $items],
+            'body' => ['type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm', 'paddingAll' => '14px', 'backgroundColor' => '#F4F8FC', 'contents' => $items],
             'footer' => ['type' => 'box', 'layout' => 'vertical', 'spacing' => 'sm', 'paddingAll' => '12px', 'paddingTop' => '8px', 'contents' => $actions]
         ]
     ]);
@@ -210,7 +230,11 @@ function mbsSyncNotifyTransition($db,$job,$oldStatus) {
     if (!$staff) throw new RuntimeException('Missing assigned staff');
     if ($job['status']==='กำลังดำเนินการ' && $oldStatus==='รอรับเรื่อง') {
         mbsSyncEnqueue($db,$id,'accept',$config['group'],[mbsSyncAcceptedCard($job,$staff,$label)]);
-        mbsSyncEnqueue($db,$id,'accept',(string)$job['line_user_id'],[['type'=>'text','text'=>$label."\n👨‍🔧 เจ้าหน้าที่ ".$staff['full_name']." รับงานของคุณแล้วค่ะ\n📞 เบอร์ติดต่อ: ".($staff['phone'] ?: '-')."\n\nเจ้าหน้าที่จะตรวจสอบและประสานงานค่ะ"]]);
+        $acceptNotice = mbsRequesterCard('✅ มีเจ้าหน้าที่รับงานแล้ว', $label, [
+            'ผู้รับผิดชอบ: '.$staff['full_name'],
+            'เบอร์ติดต่อ: '.($staff['phone'] ?: '-')
+        ], 'เจ้าหน้าที่จะตรวจสอบและประสานงานค่ะ');
+        mbsSyncEnqueue($db,$id,'accept',(string)$job['line_user_id'],[$acceptNotice]);
     } elseif ($job['status']==='ซ่อมเสร็จแล้ว' && $oldStatus!=='ซ่อมเสร็จแล้ว') {
         $job['technician_name']=$staff['full_name'];
         $note=trim((string)($job['repair_note'] ?? ''));

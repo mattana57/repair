@@ -652,7 +652,21 @@ if (!is_null($events['events'])) {
                     if ($image_path || $media_count > 0) {
                         $replyText .= "\n📎 มีไฟล์แนบสำหรับใบงานนี้ค่ะ";
                     }
-                    send_flex_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                    // รายละเอียดยาวมากใช้ข้อความเดิม เพื่อรักษาข้อมูลให้ครบ
+                    if (mb_strlen($replyText, 'UTF-8') > 1800 || strlen($replyText) > 9000) {
+                        send_flex_reply($replyToken, ['type' => 'text', 'text' => $replyText], $channelAccessToken);
+                    } else {
+                        $noticeLines = [
+                            'เรื่องที่แจ้ง: ' . $category,
+                            'สถานที่: ' . $location,
+                            'ข้อความจากผู้แจ้ง: ' . $problem,
+                            'เลขที่ใบงาน: ' . $ticket_no
+                        ];
+                        if ($image_path || $media_count > 0) {
+                            $noticeLines[] = '📎 มีไฟล์แนบสำหรับใบงานนี้ค่ะ';
+                        }
+                        send_flex_reply($replyToken, mbsRequesterCard('✅ รับคำขอเรียบร้อยแล้วค่ะ', $daily_label, $noticeLines, 'ระบบจะแจ้งเมื่อเจ้าหน้าที่รับงานค่ะ'), $channelAccessToken);
+                    }
 
                     $short_reporter_name = trim($user_reg['real_name']);
 
