@@ -150,7 +150,7 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
 <html lang="th">
 <head>
 <link rel="preload" href="repairs_calendar.js?v=20261026-1" as="script">
-<link rel="preload" href="dashboard_calendars.js?v=20261027-2" as="script">
+<link rel="preload" href="dashboard_calendars.js?v=20261027-3" as="script">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>รายงานสรุปสำหรับผู้บริหาร - MBS REPAIR</title>
@@ -261,6 +261,8 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
 <?php if (in_array(strtolower((string)($_SESSION['role'] ?? '')), ['admin', 'executive', 'technician'], true)): ?>
 <link rel="stylesheet" href="repairs_calendar_palette.css?v=20261027-1">
 <?php endif; ?>
+<script src="repairs_calendar.js?v=20261026-1"></script>
+<script src="dashboard_calendars.js?v=20261027-3"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col">
 
@@ -967,7 +969,7 @@ if ($selected_day > 0) { $report_title .= ' — วันที่ ' . $selected
             });
         }
     </script>
-<script src="repairs_calendar.js?v=20261026-1"></script>
-<script src="dashboard_calendars.js?v=20261027-2"></script>
+
+
 </body>
 </html>

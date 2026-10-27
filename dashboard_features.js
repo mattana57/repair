@@ -1280,6 +1280,21 @@
       if (renderCharts) renderOverview();
       return;
     }
+    const early = window.mbsEarlyOverviewCalendar;
+    if (early?.instance.trigger.isConnected) {
+      overviewFields = early.instance.fields;
+      early.config.apply = () => {
+        const u = new URL(location.href);
+        for (const [part, field] of Object.entries(overviewFields)) {
+          urlState.searchParams.set("mbs_overview_" + part, field.value);
+          u.searchParams.set("mbs_overview_" + part, field.value);
+        }
+        history.replaceState(history.state, "", u);
+        renderOverview();
+      };
+      if (renderCharts) renderOverview();
+      return;
+    }
     const canvas = $("mainEquipChart") || $("eqChart");
     if (!canvas) return;
     const section =

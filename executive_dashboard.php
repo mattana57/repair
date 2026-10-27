@@ -647,8 +647,8 @@ if (isset($_GET['api_check_hash'])) {
 <html lang="th">
 <head>
 <link rel="preload" href="repairs_calendar.js?v=20261026-1" as="script">
-<link rel="preload" href="dashboard_calendars.js?v=20261027-2" as="script">
-<link rel="preload" href="dashboard_features.js?v=20261027-3" as="script">
+<link rel="preload" href="dashboard_calendars.js?v=20261027-3" as="script">
+<link rel="preload" href="dashboard_features.js?v=20261027-4" as="script">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Executive Dashboard | MBS Repair</title>
@@ -1097,6 +1097,8 @@ if (isset($_GET['api_check_hash'])) {
 
 <style>#equip-DayContainer,#equip-MonthContainer,#equip-YearContainer,#status-DayContainer,#status-MonthContainer,#status-YearContainer,#loc-DayContainer,#loc-MonthContainer,#loc-YearContainer,#tech-DayContainer,#tech-MonthContainer,#tech-YearContainer,#rating-DayContainer,#rating-MonthContainer,#rating-YearContainer,#reporter-DayContainer,#reporter-MonthContainer,#reporter-YearContainer,#rep-DayContainer,#rep-MonthContainer,#rep-YearContainer{display:none!important}</style>
 <link rel="stylesheet" href="dashboard_features.css?v=20261025-1">
+<script src="repairs_calendar.js?v=20261026-1"></script>
+<script src="dashboard_calendars.js?v=20261027-3"></script>
 </head>
 
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -4439,8 +4441,8 @@ if (isset($_GET['api_check_hash'])) {
         window.addEventListener('focus', autoRefreshAllData);
     </script>
 <?php mbsDashboardActivityScript(); ?>
-<script src="repairs_calendar.js?v=20261026-1"></script>
-<script src="dashboard_calendars.js?v=20261027-2"></script>
+
+
 <?php require __DIR__ . '/self_profile_panel.php'; ?>
 <?php mbs_feature_assets($conn); ?>
 </body>
