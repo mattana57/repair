@@ -755,6 +755,7 @@ function tp_repair_rows(
     array $tech_dept_map,
     $viewer
 ) {
+    global $conn; // Use the same attachment lookup as all dashboard tables.
     if ($res && $res->num_rows > 0) {
         while ($row = $res->fetch_assoc()) {
             $stClass = ($row['status'] == 'รอรับเรื่อง')
@@ -929,14 +930,7 @@ function tp_repair_rows(
                     . "</span>"
                 : "<span class='text-rose-500 font-bold'>-</span>";
 
-            $imageIcon = '';
-
-            if (
-                isset($row['image_path'])
-                && !empty($row['image_path'])
-            ) {
-                $imageIcon = "<i class='fas fa-image text-slate-400 ml-1' title='มีรูปภาพแนบ'></i>";
-            }
+            $imageIcon = dm_icons($conn, $row);
 
             echo "<tr data-mbs-repair-id='".(int)$row['id']."' class='hover:bg-slate-50/50 transition-colors search-row'>
                 <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
