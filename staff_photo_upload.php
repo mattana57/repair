@@ -28,7 +28,7 @@ try {
     $conn->begin_transaction();
     $stmt = $conn->prepare('SELECT technician_id,status,deleted_at FROM repairs WHERE id=? FOR UPDATE');
     $stmt->bind_param('i',$id); $stmt->execute(); $job = $stmt->get_result()->fetch_assoc(); $stmt->close();
-    if (!$job || (int)$job['technician_id'] !== $tech || $job['deleted_at'] !== null || in_array($job['status'], ['ซ่อมเสร็จแล้ว','เสร็จสิ้น','ยกเลิก'], true)) {
+    if (!$job || (int)$job['technician_id'] !== $tech || $job['deleted_at'] !== null) {
         $conn->rollback(); staffPhotoExit('ใบงานนี้ไม่พร้อมให้คุณเพิ่มรูปค่ะ', $id, 403);
     }
     $dir = rmDirectory(); $storage = bin2hex(random_bytes(24)); $path = $dir.'/'.$storage;

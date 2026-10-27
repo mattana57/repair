@@ -833,7 +833,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-2">ไฟล์แนบประกอบใบงาน</p>
                             <div class="repair-media-summary">
                             <?php require_once __DIR__ . '/repair_media.php'; rmPanel($conn, (int)$repair['id']); ?>
-                            <?php if ($is_tech && (int)($repair['technician_id'] ?? 0) === (int)($_SESSION['technician_id'] ?? 0) && !in_array($repair['status'], ['ซ่อมเสร็จแล้ว','เสร็จสิ้น','ยกเลิก'], true)): ?>
+                            <?php if ($is_tech && (int)($repair['technician_id'] ?? 0) === (int)($_SESSION['technician_id'] ?? 0)): ?>
                             <form action="staff_photo_upload.php" method="post" enctype="multipart/form-data" style="margin:12px 0;padding:14px;border:1px solid #cbd5e1;border-radius:10px">
                                 <input type="hidden" name="id" value="<?php echo (int)$repair['id']; ?>">
                                 <input type="hidden" name="repair_csrf" value="<?php echo htmlspecialchars($_SESSION['repair_csrf'], ENT_QUOTES, 'UTF-8'); ?>">
