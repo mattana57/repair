@@ -1,5 +1,9 @@
 /* Admin and Executive history dialogs, in both normal and expanded modes.
    The table now has thirteen columns: Work Duration precedes the final Action. */
+/* Keep the Admin reporter avatar hidden after entering fullscreen as well. */
+#historyModal table:not(.exec-history-table):has(> tbody#historyTableBody) td:nth-child(4) .w-8.h-8:has(.fa-user) {
+  display:none !important;
+}
 #historyModal .overflow-x-auto,
 #historyModal .exec-history-scroll { min-width:0; overflow-x:hidden !important; }
 #historyModal table:has(> tbody#historyTableBody) {

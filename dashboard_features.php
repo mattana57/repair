@@ -163,7 +163,7 @@ function mbs_feature_assets($db) {
     echo '<link rel="stylesheet" href="dashboard_reviews.css?v=20261026-3">';
     echo '<link rel="stylesheet" href="history_focus.css?v=20261026-1">';
     if (in_array(strtolower((string)($_SESSION['role'] ?? '')), ['admin', 'executive'], true)) {
-        echo '<link rel="stylesheet" href="history_table_fit.css?v=20261027-1">';
+        echo '<link rel="stylesheet" href="history_table_fit.css?v=20261027-2">';
     }
     echo '<link rel="stylesheet" href="dashboard_analytics.css?v=20261027-3">';
     echo '<link rel="stylesheet" href="dashboard_summary_history.css?v=20261027-2">';
