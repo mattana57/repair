@@ -661,6 +661,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
                     : "<span class='text-rose-500 font-bold'>-</span>";
 
                 $imageIcon = dm_icons($conn, $row);
+        $transactionDuration = htmlspecialchars(mbs_duration($row['received_at'] ?? null, $row['completed_at'] ?? null), ENT_QUOTES, 'UTF-8');
 
                 echo "<tr data-tx-id='" . (int)$row['id'] . "' class='hover:bg-slate-50/50 transition-colors search-row'>
                     <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
@@ -689,6 +690,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
                         <div class='font-medium text-emerald-700'>{$completed_date}</div>
                         {$completed_time_html}
                     </td>
+                    <td class='px-6 py-4 align-top text-xs text-slate-600' style='white-space:normal!important;max-width:150px'>{$transactionDuration}</td>
                     <td class='px-6 py-4 align-middle text-center'>
                         <div class='flex items-center justify-center'>
                             <a target='_blank' href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
@@ -697,7 +699,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET'
                 </tr>";
             }
         } else {
-            echo "<tr><td colspan='12' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>";
+            echo "<tr><td colspan='13' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>";
         }
 
         echo '</tbody></table>';
@@ -3471,6 +3473,7 @@ if (isset($_GET['api_check_hash'])) {
                                     <th class="px-6 py-4">Root Cause</th>
                                     <th class="px-6 py-4 text-center">Status</th>
                                     <th class="px-6 py-4">Completed At</th>
+                                    <th class="px-6 py-4" style="white-space:normal!important">Work Duration</th>
                                     <th class="px-6 py-4 text-center">Action</th>
                                 </tr>
                             </thead>
@@ -3566,6 +3569,7 @@ if (isset($_GET['api_check_hash'])) {
                                         $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
 
                                         $imageIcon = dm_icons($conn, $row);
+        $transactionDuration = htmlspecialchars(mbs_duration($row['received_at'] ?? null, $row['completed_at'] ?? null), ENT_QUOTES, 'UTF-8');
 
                                         echo "<tr data-tx-id='" . (int)$row['id'] . "' class='hover:bg-slate-50/50 transition-colors search-row'>
                                             <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
@@ -3594,6 +3598,7 @@ if (isset($_GET['api_check_hash'])) {
                                                 <div class='font-medium text-emerald-700'>{$completed_date}</div>
                                                 {$completed_time_html}
                                             </td>
+                    <td class='px-6 py-4 align-top text-xs text-slate-600' style='white-space:normal!important;max-width:150px'>{$transactionDuration}</td>
                                             <td class='px-6 py-4 align-middle text-center'>
                                                 <div class='flex items-center justify-center'>
                                                     <a target='_blank' href='update_repair.php?id={$row['id']}' class='w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center justify-center border border-slate-100 shadow-2xs' title='Edit'><i class='fas fa-pen-to-square'></i></a>
@@ -3601,7 +3606,7 @@ if (isset($_GET['api_check_hash'])) {
                                             </td>
                                         </tr>";
                                     }
-                                } else { echo "<tr><td colspan='12' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>"; }
+                                } else { echo "<tr><td colspan='13' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ยังไม่เคยรับงานซ่อมในระบบ</td></tr>"; }
                                 ?>
                             </tbody>
                         </table>

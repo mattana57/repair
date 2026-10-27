@@ -439,7 +439,8 @@ function execPageRows($result, $kind, $line_users_map, $tech_info_map, $tech_dep
     global $conn; // Shared media helper needs the authenticated database connection.
     ob_start();
     if ($result->num_rows === 0) {
-        echo "<tr><td colspan='12' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>";
+        $emptyColumns = $kind === 'repairs' ? 13 : 12;
+        echo "<tr><td colspan='{$emptyColumns}' class='px-6 h-[400px] text-center align-middle text-slate-400 font-medium'>ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>";
     }
     while ($row = $result->fetch_assoc()) {
         $stClass = ($row['status'] == 'รอรับเรื่อง') ? 'badge-pending' : (($row['status'] == 'กำลังดำเนินการ') ? 'badge-progress' : 'badge-success');
@@ -555,6 +556,7 @@ function execPageRows($result, $kind, $line_users_map, $tech_info_map, $tech_dep
                 </tr>
         HTML;
         } else {
+            $transactionDuration = htmlspecialchars(mbs_duration($row['received_at'] ?? null, $row['completed_at'] ?? null), ENT_QUOTES, 'UTF-8');
             echo "<tr data-mbs-repair-id='".(int)$row['id']."' class='hover:bg-slate-50/50 transition-colors search-row'>
                 <td class='px-6 py-4 align-top font-mono font-semibold text-slate-600'>" . (int)$row['id'] . "</td>
                 <td class='px-6 py-4 align-top text-xs whitespace-nowrap'>
@@ -582,6 +584,7 @@ function execPageRows($result, $kind, $line_users_map, $tech_info_map, $tech_dep
                     <div class='font-medium text-emerald-700'>{$completed_date}</div>
                     {$completed_time_html}
                 </td>
+                <td class='px-6 py-4 align-top text-xs text-slate-600' style='white-space:normal!important;max-width:150px'>{$transactionDuration}</td>
                 <td class='px-6 py-4 align-middle text-center'>
                     <div class='flex items-center justify-center'>
                         <div onclick='openReviewTab({$row['id']})' class='cursor-pointer w-8 h-8 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-all flex items-center justify-center border border-slate-100 shadow-sm' title='View'><i class='fas fa-eye'></i></div>
@@ -1739,6 +1742,7 @@ if (isset($_GET['api_check_hash'])) {
                                     <th class="px-6 py-4">Root Cause</th>
                                     <th class="px-6 py-4 text-center">Status</th>
                                     <th class="px-6 py-4">Completed At</th>
+                                    <th class="px-6 py-4" style="white-space:normal!important">Work Duration</th>
                                     <th class="px-6 py-4 text-center">Action</th>
                                 </tr>
                             </thead>
