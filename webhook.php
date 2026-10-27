@@ -3,7 +3,7 @@ require 'db_connect.php';
 require 'env.php';
 require_once __DIR__ . '/repair_media.php';
 
-$line_group_id = 'Caed57e09981787d718ce11abb3b2db15'; 
+$line_group_id = 'C5fc77a991cf95f5813124548b64a95b9'; 
 
 $conn->query("CREATE TABLE IF NOT EXISTS line_users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -395,18 +395,6 @@ function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken)
 
 $content = file_get_contents('php://input');
 $events = json_decode($content, true);
-
-// Temporary group ID diagnostic; remove after troubleshooting.
-foreach (($events['events'] ?? []) as $groupCheckEvent) {
-    if (
-        ($groupCheckEvent['type'] ?? '') === 'message'
-        && ($groupCheckEvent['message']['text'] ?? '') === 'ตรวจกลุ่ม 2710'
-        && !empty($groupCheckEvent['source']['groupId'])
-    ) {
-        error_log('MBS_GROUP_CHECK: ' . $groupCheckEvent['source']['groupId']);
-    }
-}
-
 
 if (!is_null($events['events'])) {
     foreach ($events['events'] as $event) {

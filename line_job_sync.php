@@ -4,7 +4,7 @@ if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) { http_response_co
 function mbsSyncConfig() {
     $channelAccessToken='';
     require __DIR__.'/env.php';
-    return ['token'=>$channelAccessToken, 'group'=>'Caed57e09981787d718ce11abb3b2db15', 'base'=>'https://autism-unfreeze-snooze.ngrok-free.dev/repair'];
+    return ['token'=>$channelAccessToken, 'group'=>'C5fc77a991cf95f5813124548b64a95b9', 'base'=>'https://autism-unfreeze-snooze.ngrok-free.dev/repair'];
 }
 function mbsReadableFlexNode($node, $inside_flex = false) {
     if (!is_array($node)) { return $node; }
