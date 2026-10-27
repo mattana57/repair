@@ -931,14 +931,14 @@ if (!is_null($events['events'])) {
                     } catch(Throwable $e) {
                         error_log('LINE job action failed: '.get_class($e));
                         if ($e instanceof MbsCloseNoteRequired) {
-                            $config=mbsSyncConfig();
-                            $message=['type'=>'flex','altText'=>'กรุณาใส่หมายเหตุก่อนปิดงาน','contents'=>['type'=>'bubble',
-                                'body'=>['type'=>'box','layout'=>'vertical','contents'=>[
-                                    ['type'=>'text','text'=>'กรุณาใส่หมายเหตุก่อนปิดงานค่ะ','weight'=>'bold','wrap'=>true],
-                                    ['type'=>'text','text'=>'กดจัดการเพื่อบันทึกผลการดำเนินงาน แล้วกลับมากดปิดงานอีกครั้งค่ะ','wrap'=>true,'margin'=>'md']]],
-                                'footer'=>['type'=>'box','layout'=>'vertical','contents'=>[
-                                    ['type'=>'button','style'=>'primary','action'=>['type'=>'uri','label'=>'จัดการ / เพิ่มหมายเหตุ','uri'=>$config['base'].'/update_repair.php?id='.$repair_id]]]]]];
-                            send_flex_reply($replyToken,$message,$channelAccessToken);
+                            $jobLabel = 'ใบงาน '.$ticket_no;
+                            try {
+                                $daily = mbsSyncRow($conn, 'SELECT request_date,daily_no FROM repair_daily_labels WHERE repair_id=?', 'i', $repair_id);
+                                if ($daily) { $jobLabel = mbsSyncLabelText($daily); }
+                            } catch (Throwable $labelError) {
+                                error_log('Close note label unavailable: '.get_class($labelError));
+                            }
+                            send_flex_reply($replyToken, ['type'=>'text', 'text'=>$jobLabel."\nกรุณาใส่หมายเหตุก่อนปิดงานค่ะ"], $channelAccessToken);
                             continue;
                         }
                         $failureText='ยังทำรายการไม่ได้ค่ะ รายการอาจมีผู้รับแล้ว ปิดงานแล้ว หรือสิทธิ์เปลี่ยน กรุณาเปิดรายการล่าสุด หากยังไม่ได้ให้ติดต่อผู้ดูแล';
