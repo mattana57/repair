@@ -396,6 +396,18 @@ function mbsHandleRequesterMenu($db, $event, $userId, $replyToken, $accessToken)
 $content = file_get_contents('php://input');
 $events = json_decode($content, true);
 
+// Temporary group ID diagnostic; remove after troubleshooting.
+foreach (($events['events'] ?? []) as $groupCheckEvent) {
+    if (
+        ($groupCheckEvent['type'] ?? '') === 'message'
+        && ($groupCheckEvent['message']['text'] ?? '') === 'ตรวจกลุ่ม 2710'
+        && !empty($groupCheckEvent['source']['groupId'])
+    ) {
+        error_log('MBS_GROUP_CHECK: ' . $groupCheckEvent['source']['groupId']);
+    }
+}
+
+
 if (!is_null($events['events'])) {
     foreach ($events['events'] as $event) {
         $replyToken = isset($event['replyToken']) ? $event['replyToken'] : null;
