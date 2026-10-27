@@ -3,6 +3,26 @@
 // แสดงข้อความแจ้งเตือนให้อ่านได้บนมือถือ โดยคงสถานะ HTTP เดิม
 
 // รูปแบบ Flex ใช้สีน้ำเงินเข้ม สีเทา และพื้นขาว ไม่เปลี่ยนข้อมูลหรือคำสั่ง
+// จัดข้อความทั่วไปเป็น Flex โดยคงข้อความและปุ่ม quick reply เดิม
+function mbsUpdateCompactNoticeFlex($message) {
+    if (!is_array($message) || ($message['type'] ?? '') !== 'text' || !isset($message['text']) || !is_string($message['text'])) return $message;
+    $text = $message['text'];
+    // ถ้าข้อความยาวมาก ให้ส่งรูปแบบเดิม เพื่อไม่ตัดข้อมูลหรือทำให้ Flex เกินขนาด
+    if (trim($text) === '' || mb_strlen($text, 'UTF-8') > 1800 || strlen($text) > 9000) return $message;
+    $parts = preg_split('/\R/u', $text, 2);
+    $alt = trim($parts[0] ?? '');
+    if ($alt === '') $alt = 'ข้อความจากระบบแจ้งบริการ';
+    $alt = mb_substr($alt, 0, 150, 'UTF-8');
+    $flex = [
+        'type' => 'flex', 'altText' => $alt,
+        'contents' => ['type' => 'bubble', 'size' => 'mega',
+            'body' => ['type' => 'box', 'layout' => 'vertical', 'paddingAll' => '16px',
+                'contents' => [['type' => 'text', 'text' => $text, 'size' => 'md', 'color' => '#263B50', 'wrap' => true]]]]
+    ];
+    if (isset($message['quickReply'])) $flex['quickReply'] = $message['quickReply'];
+    return $flex;
+}
+
 function mbsReadableFlexNode($node, $inside_flex = false) {
     if (!is_array($node)) { return $node; }
     // แบบประเมินคงรูปแบบเดิม ไม่ผ่านการปรับขนาดหรือสีของใบงาน
@@ -62,13 +82,13 @@ function mbsUpdateRepairNotice($message) {
         . '</style></head><body><main><h1>ไม่สามารถทำรายการได้</h1><p>'
         . $safe_message . '</p><a href="' . $back . '">กลับหน้ารายการ</a>'
         . '<small>หากบัญชีไม่ถูกต้อง กรุณาออกจากระบบแล้วเข้าสู่ระบบใหม่</small>'
-        . '</main>    <script src="repair_review_live.js?v=20261027-1" defer></script>
-</body></html>';
+        . '</main></body></html>';
     exit;
 }
 
 // เรียกใช้ระบบตรวจสิทธิ์ส่วนกลางแทนการเช็คแบบแยกไฟล์
 require_once 'auth_guard.php';
+require_once __DIR__ . '/repair_duplicate.php';
 require_once __DIR__ . '/activity_log.php';
 
 $back_url = 'dashboard.php?tab=repairs';
@@ -359,7 +379,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             http_response_code(400);
             mbsUpdateRepairNotice('สถานะใบงานไม่ถูกต้อง');
         }
-        $repair_note = trim($_POST['repair_note']);
+        $postedNote = $_POST['repair_note'] ?? '';
+        if (!is_string($postedNote)) { http_response_code(400); mbsUpdateRepairNotice('ข้อมูลหมายเหตุไม่ถูกต้อง'); }
+        $repair_note = trim($postedNote);
+        if ($is_tech && $status === 'ซ่อมเสร็จแล้ว' && $old_status !== 'ซ่อมเสร็จแล้ว' && preg_match('/[^\s\p{Z}\x{200B}\x{FEFF}]/u', $repair_note) !== 1) {
+            http_response_code(400);
+            mbsUpdateRepairNotice('กรุณาใส่หมายเหตุผลการดำเนินงานก่อนปิดงานค่ะ');
+        }
         
                 if ($is_tech) {
             $technician_id = $owner_tech_id;
@@ -594,7 +620,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->execute();
             $repair = $stmt->get_result()->fetch_assoc();
 
-            $channelAccessToken = 'GszSbZaQoKn+FUVG1Co2O12utBahenfC3DZ3Qx4Pr2xAWxaALZKUJOUcUaczHm+enwF80HCuvLzUssUDjqCVOT++/gl8NlhzncqdORF/2dOyXyt2GtMBdSeAYR9bevwB/3Y4txPDWrQM++i1TockxQdB04t89/1O/w1cDnyilFU=';
+            require __DIR__ . '/env.php';
 
             $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
             
@@ -649,7 +675,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     ];
                     
                     $messages = [
-                        ['type' => 'text', 'text' => $textMsg],
+                        mbsUpdateCompactNoticeFlex(['type' => 'text', 'text' => $textMsg]),
                         $review_msg
                     ];
                 } 
@@ -660,7 +686,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                "👨‍🔧 ผู้รับผิดชอบ: {$tech_display}\n" .
                                "💬 หมายเหตุ: {$repair_note}";
                                
-                    $messages = [['type' => 'text', 'text' => $textMsg]];
+                    $messages = [mbsUpdateCompactNoticeFlex(['type' => 'text', 'text' => $textMsg])];
                 }
                 
                 if (!empty($messages)) {
@@ -812,13 +838,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <div>
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-2">ไฟล์แนบประกอบใบงาน</p>
-                            <div class="repair-media-summary">
-                            <?php require_once __DIR__ . '/repair_media.php'; rmPanel($conn, (int)$repair['id']); ?>
-                            </div>
-                            <?php 
-                                $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
-                                if($image_file): 
-                            ?>
+                            <?php
+                            require_once __DIR__ . '/repair_media.php';
+                            $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
+                            $reporterFiles = rmQuery($conn,
+                                "SELECT id,media_type,state FROM repair_attachments WHERE repair_id=? AND line_user_id NOT LIKE 'staff:%' AND state NOT IN ('failed','expired') ORDER BY id",
+                                'i', (int)$repair['id'])->get_result();
+                            $reporterPreview = [];
+                            $reporterHasVideo = false;
+                            while ($reporterFile = $reporterFiles->fetch_assoc()) {
+                                $reporterPreview[] = $reporterFile;
+                                if (($reporterFile['media_type'] ?? '') !== 'image') $reporterHasVideo = true;
+                            }
+                            $totalImages = count($reporterPreview) + ($image_file ? 1 : 0);
+                            if ($reporterPreview && !$reporterHasVideo && $totalImages <= 2): ?>
+                                <div style="display:grid;grid-template-columns:<?php echo count($reporterPreview) === 1 ? 'minmax(0,1fr)' : 'repeat(2,minmax(0,1fr))'; ?>;gap:8px;margin:10px 0;max-width:100%">
+                                <?php foreach ($reporterPreview as $reporterFile): ?>
+                                    <?php if ($reporterFile['state'] !== 'ready'): ?>
+                                    <p style="padding:12px;background:#f1f5f9;border-radius:8px;color:#64748b">กำลังรับรูป กรุณาเปิดหน้านี้ใหม่ภายหลังค่ะ</p>
+                                    <?php else:
+                                        $mediaUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$reporterFile['id']; ?>
+                                    <img src="<?php echo htmlspecialchars($mediaUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="รูปที่ผู้แจ้งส่ง" loading="lazy" style="display:block;width:100%;max-width:100%;max-height:220px;height:auto;object-fit:contain;border-radius:10px">
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                                </div>
+                            <?php elseif ($reporterPreview): ?>
+                                <div class="repair-media-summary"><?php rmPanel($conn, (int)$repair['id']); ?></div>
+                            <?php endif; ?>
+                            <?php if ($image_file): ?>
                                 <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-48 rounded-xl border border-slate-200 overflow-hidden group relative">
                                     <img src="uploads/<?php echo htmlspecialchars($image_file); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -832,7 +879,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                 </div>
 
-                <div id="mbsRepairReview" data-mbs-review-layout="update" data-mbs-repair-id="<?php echo (int)$repair['id']; ?>" class="modern-card overflow-hidden border-t-4 border-amber-400">
+                <div class="modern-card overflow-hidden border-t-4 border-amber-400">
                     <div class="bg-slate-50 p-4 border-b border-slate-100 flex items-center">
                         <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center mr-3">
                             <i class="fas fa-star text-sm"></i>
@@ -840,7 +887,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <h3 class="font-bold text-slate-800">ผลการประเมิน (รีวิว)</h3>
                     </div>
                     <div class="p-5">
-<?php require_once __DIR__ . '/repair_review_fragment.php'; echo mbs_repair_review_fragment($repair, 'update', false); ?>
+                        <?php 
+                        $has_rating = !empty($repair['rating']) && (int)$repair['rating'] > 0;
+                        $has_comment = !empty($repair['review_comment']) && trim($repair['review_comment']) !== '' && trim($repair['review_comment']) !== '-';
+                        if ($has_rating || $has_comment): 
+                        ?>
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-start mb-2 gap-1.5 sm:gap-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 shadow-sm">
+                                                <i class="fas fa-user text-sm"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-bold text-slate-800 flex items-center flex-wrap gap-2">
+                                                    <span><?php echo htmlspecialchars($repair['reporter_name']); ?></span>
+                                                    <!-- ✨ ย้ายดาวมาต่อท้ายชื่อตรงนี้ ✨ -->
+                                                    <div class="flex gap-0.5 pt-0.5 sm:pt-0">
+                                                        <?php 
+                                                        $rating = (int)($repair['rating'] ?? 0);
+                                                        if ($rating > 0) {
+                                                            for($i=1; $i<=5; $i++) {
+                                                                if($i <= $rating) echo '<i class="fas fa-star text-amber-400 text-[13px] drop-shadow-sm"></i>';
+                                                                else echo '<i class="fas fa-star text-slate-200 text-[13px]"></i>';
+                                                            }
+                                                        } else {
+                                                            echo '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">ไม่มีคะแนนดาว</span>';
+                                                        }
+                                                        ?>
+                                                    </div>
+                                                </div>
+                                                <div class="text-[11px] text-slate-400 font-medium">
+                                                    <?php 
+                                                    require_once __DIR__ . '/repair_review_datetime.php';
+                                                    echo mbs_repair_review_datetime($repair);
+                                                    ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            <?php if($has_comment): ?>
+                                <p class="text-sm text-slate-600 font-medium pl-[52px] leading-relaxed mt-1"><?php echo nl2br(htmlspecialchars(trim($repair['review_comment']))); ?></p>
+                            <?php endif; ?>
+
+                            <div class="pl-[52px] mt-2.5">
+                                <div class="text-[11px] text-indigo-600 font-bold inline-block bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
+                                    <i class="fas fa-tools mr-1.5 opacity-70"></i>ให้คะแนนเจ้าหน้าที่: <?php echo !empty($repair['technician_name']) && $repair['technician_name'] !== '-' ? htmlspecialchars($repair['technician_name']) : 'ไม่ระบุเจ้าหน้าที่'; ?>
+                                </div>
+                            </div>
+                        <?php else: ?>
+                            <div class="text-center py-4">
+                                <div class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <i class="fas fa-star text-slate-300 text-lg"></i>
+                                </div>
+                                <p class="text-slate-500 text-xs font-medium">ยังไม่มีการประเมินผลการซ่อม</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -1012,12 +1112,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
                         </div>
 
+                            <?php if ($is_tech && (int)($repair['technician_id'] ?? 0) === (int)($_SESSION['technician_id'] ?? 0)): ?>
+                            <div style="margin:12px 0;padding:14px;border:1px solid #cbd5e1;border-radius:10px">
+                                
+                                
+                                <label for="staff_photo" style="display:block;font-weight:bold;margin-bottom:8px">เพิ่มรูปหรือวิดีโอผลการดำเนินงาน</label>
+                                <input id="staff_photo" type="file" name="media[]" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" multiple style="display:block;max-width:100%;margin-bottom:10px">
+                                <?php
+                                $staffFiles = rmQuery($conn, "SELECT id,media_type FROM repair_attachments WHERE repair_id=? AND line_user_id LIKE 'staff:%' AND state='ready' ORDER BY id DESC", 'i', (int)$repair['id'])->get_result();
+                                if ($staffFiles->num_rows > 0): ?>
+                                <p style="margin:12px 0 8px;font-weight:600;color:#1e3a5f">รูปและวิดีโอผลการดำเนินงาน</p>
+                                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
+                                    <?php while ($staffFile = $staffFiles->fetch_assoc()):
+                                        $staffFileUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$staffFile['id']; ?>
+                                    <?php if ($staffFile['media_type'] === 'image'): ?>
+                                    <a href="<?php echo htmlspecialchars($staffFileUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><img src="<?php echo htmlspecialchars($staffFileUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="รูปผลการดำเนินงาน" loading="lazy" style="display:block;width:100%;height:120px;object-fit:cover;border-radius:8px"></a>
+                                    <?php elseif ($staffFile['media_type'] === 'video'): ?>
+                                    <video controls playsinline preload="metadata" src="<?php echo htmlspecialchars($staffFileUrl, ENT_QUOTES, 'UTF-8'); ?>" style="width:100%;max-height:160px;border-radius:8px;background:#0f172a"></video>
+                                    <?php endif; ?>
+                                    <?php endwhile; ?>
+                                </div>
+                                <?php endif; ?>
+                                <p style="font-size:14px;margin-top:8px">รูปไม่เกิน 10 MB · วิดีโอไม่เกิน 50 MB ต่อไฟล์ · เลือกได้หลายไฟล์</p>
+                            </div>
+                            <?php endif; ?>
+
                         <div class="flex flex-col md:flex-row justify-end gap-3 mt-2">
                             <button type="submit" class="w-full md:w-auto bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
                                 <i class="fas fa-save mr-2"></i> บันทึกข้อมูลและแจ้งเตือน
                             </button>
                         </div>
                     </form>
+
                 </div>
             </div>
 
@@ -1239,7 +1365,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         assetCodeInput.addEventListener('input', checkNewAsset);
         checkNewAsset();
 
-        document.getElementById('updateForm').addEventListener('submit', function(e) {
+        document.getElementById('updateForm').addEventListener('submit', async function(e) {
             const statusChecked = document.querySelector('input[name="status"]:checked');
             const techName = document.getElementById('technician_name').value;
 
@@ -1256,7 +1382,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     });
                 }
             }
-        }); // ✅ ปิด Form ให้เรียบร้อยตรงนี้ก่อน
+            if (e.defaultPrevented) return;
+            const note = this.querySelector('textarea[name="repair_note"]');
+            const isTechnician = <?php echo $is_tech ? 'true' : 'false'; ?>;
+            const wasClosed = <?php echo (($repair['status'] ?? '') === 'ซ่อมเสร็จแล้ว') ? 'true' : 'false'; ?>;
+            if (isTechnician && !wasClosed && statusChecked && statusChecked.value === 'ซ่อมเสร็จแล้ว' && (!note || !note.value.replace(/[\s\u200B\uFEFF]/g, ''))) {
+                e.preventDefault();
+                Swal.fire({icon:'warning', title:'กรุณาใส่หมายเหตุ', text:'กรุณาบันทึกผลการดำเนินงานก่อนปิดงานค่ะ', confirmButtonColor:'#0284c7', confirmButtonText:'ตกลง'}).then(function(){ if(note) note.focus(); });
+                return;
+            }
+            const input = document.getElementById('staff_photo');
+            if (!input || !input.files.length || this.dataset.uploaded === 'yes') return;
+            e.preventDefault();
+            const button = this.querySelector('button[type="submit"]');
+            button.disabled = true;
+            const upload = new FormData();
+            upload.append('ajax', '1');
+            upload.append('id', <?php echo (int)$repair['id']; ?>);
+            upload.append('repair_csrf', <?php echo json_encode($_SESSION['repair_csrf']); ?>);
+            for (const file of input.files) upload.append('media[]', file);
+            try {
+                const response = await fetch('staff_photo_upload.php', {method:'POST', body:upload, credentials:'same-origin'});
+                const result = await response.json();
+                if (!response.ok || !result.ok) throw new Error(result.message || 'ไม่สามารถบันทึกไฟล์ได้');
+                this.dataset.uploaded = 'yes';
+                this.requestSubmit();
+            } catch (error) {
+                button.disabled = false;
+                Swal.fire({icon:'error', title:'บันทึกไฟล์ไม่สำเร็จ', text:error.message || 'กรุณาลองใหม่อีกครั้ง'});
+            }
+        }); // ส่งไฟล์และบันทึกข้อมูลด้วยปุ่มเดียว
 
         // ✅ วาง goBack ไว้ด้านนอกสุดแบบนี้ ปุ่มถึงจะมองเห็นและกดได้
         function goBack() {
@@ -1306,6 +1461,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </script>
     <?php endif; ?>
 
-    <script src="repair_review_live.js?v=20261027-1" defer></script>
 </body>
 </html>
