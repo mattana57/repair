@@ -190,7 +190,7 @@ function mbsSyncAcceptedCard($job,$staff,$label) {
     return mbsServiceJobCard($job['ticket_no'],$job['location'],$job['equipment_type'],$job['problem_desc'],
         $job['reporter_name'],$job['phone_number'],'รับงานแล้ว',[
             ['type'=>'button','style'=>'primary','height'=>'sm','action'=>['type'=>'postback','label'=>'แจ้งปิดงาน','data'=>'action=close&id='.$id]],
-            ['type'=>'button','style'=>'secondary','height'=>'sm','action'=>['type'=>'uri','label'=>'จัดการ / เพิ่มหมายเหตุ','uri'=>$config['base'].'/line_login_start.php?id='.$id]]
+            ['type'=>'button','style'=>'secondary','height'=>'sm','action'=>['type'=>'uri','label'=>'จัดการ / เพิ่มหมายเหตุ','uri'=>$config['base'].'/update_repair.php?id='.$id]]
         ],$staff['full_name'],$staff['department'] ?? '',!empty($job['image_path']),true,$label);
 }
 function mbsSyncUuid() {

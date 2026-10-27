@@ -25,7 +25,8 @@ function authGuardSessionIsWellFormed($session, $now)
         || !is_int($session['LAST_ACTIVITY'] ?? null)
         || $session['LAST_ACTIVITY'] < 1
         || $session['LAST_ACTIVITY'] > $now
-        || $now - $session['LAST_ACTIVITY'] > MBS_SESSION_IDLE_TIMEOUT) {
+        || $now - $session['LAST_ACTIVITY'] > (strtolower($session['role']) === 'technician'
+            ? MBS_TECHNICIAN_IDLE_TIMEOUT : MBS_SESSION_IDLE_TIMEOUT)) {
         return false;
     }
     if (strtolower($session['role']) === 'technician') {

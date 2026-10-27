@@ -1,6 +1,7 @@
 <?php
 // ใช้ร่วมกันก่อนเริ่ม Session; ไฟล์นี้ไม่บังคับล็อกอิน
 const MBS_SESSION_IDLE_TIMEOUT = 28800; // 8 ชั่วโมง
+const MBS_TECHNICIAN_IDLE_TIMEOUT = 2592000; // 30 วัน
 
 (static function () {
     if (session_status() === PHP_SESSION_ACTIVE) {
@@ -27,7 +28,10 @@ const MBS_SESSION_IDLE_TIMEOUT = 28800; // 8 ชั่วโมง
     ];
 
     // ค่าการเก็บ Session ฝั่ง PHP ใช้อายุเดียวกับการตรวจใน Guard
-    if (ini_set('session.gc_maxlifetime', (string) MBS_SESSION_IDLE_TIMEOUT) === false
+    if (ini_set('session.save_path', '/var/lib/php/repair-sessions') === false
+        || ini_set('session.gc_probability', '1') === false
+        || ini_set('session.gc_divisor', '100') === false
+        || ini_set('session.gc_maxlifetime', (string) MBS_TECHNICIAN_IDLE_TIMEOUT) === false
         || !session_set_cookie_params($cookie_params)
         || !session_start()) {
         error_log('Session initialization failed');
@@ -39,7 +43,9 @@ const MBS_SESSION_IDLE_TIMEOUT = 28800; // 8 ชั่วโมง
     if (ini_get('session.use_cookies')) {
         $cookie_options = $cookie_params;
         unset($cookie_options['lifetime']);
-        $cookie_options['expires'] = time() + MBS_SESSION_IDLE_TIMEOUT;
+        $timeout = strtolower((string) ($_SESSION['role'] ?? '')) === 'technician'
+            ? MBS_TECHNICIAN_IDLE_TIMEOUT : MBS_SESSION_IDLE_TIMEOUT;
+        $cookie_options['expires'] = time() + $timeout;
 
         if (!setcookie(session_name(), session_id(), $cookie_options)) {
             error_log('Session cookie update failed');
