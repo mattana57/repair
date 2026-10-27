@@ -710,10 +710,13 @@ if (!is_null($events['events'])) {
                 $duplicate = mbsDuplicateFind($conn,$userId,$category,$location,$text);
                 if ($duplicate) {
                     $duplicateId=(int)$duplicate['id'];
-                    mbsDuplicateJoin($conn,$duplicateId,$userId,$text);
-                    try { rmClaimPending($conn,$userId,$duplicateId); } catch(Throwable $e) { error_log('duplicate media claim failed'); }
+                    $isOriginalReporter = (string)$duplicate['line_user_id'] === (string)$userId;
+                    if ($isOriginalReporter) {
+                        try { rmClaimPending($conn,$userId,$duplicateId); } catch(Throwable $e) { error_log('duplicate media claim failed'); }
+                    }
                     $duplicateLabel=mbsSyncLabel($conn,$duplicate);
-                    $reply="พบรายการแจ้งเรื่องนี้อยู่แล้วค่ะ\n".$duplicateLabel."\nสถานที่: ".$duplicate['location']."\nเรื่อง: ".$duplicate['equipment_type']."\nสถานะ: ".mbsRequesterStatus($duplicate['status'])."\nดูความคืบหน้าได้ที่ รายการแจ้งของฉัน";
+                    $reply=($isOriginalReporter ? "คุณเคยแจ้งเรื่องนี้ไว้แล้วค่ะ" : "มีผู้แจ้งเรื่องนี้ไว้แล้วค่ะ") . "\n".$duplicateLabel."\nสถานที่: ".$duplicate['location']."\nเรื่อง: ".$duplicate['equipment_type']."\nสถานะ: ".mbsRequesterStatus($duplicate['status']);
+                    if ($isOriginalReporter) $reply.="\nดูความคืบหน้าได้ที่ รายการแจ้งของฉัน";
                     send_flex_reply($replyToken,['type'=>'text','text'=>$reply],$channelAccessToken); continue;
                 }
                 $ticket_no = mbsNewTicketNumber();

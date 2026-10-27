@@ -616,8 +616,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             require __DIR__ . '/env.php';
 
-            try { mbsDuplicateWebNotice($conn,$repair,$old_status,$old_note,$channelAccessToken); }
-            catch (Throwable $e) { error_log('follower web notification failed: '.get_class($e)); }
             $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
             
             if(!empty($repair['line_user_id'])) {
