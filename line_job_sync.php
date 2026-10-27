@@ -257,6 +257,11 @@ function mbsSyncStaff($db,$techId,$lineId=null) {
     if ($lineId!==null) {$sql.=' AND BINARY t.line_user_id=BINARY ?';$types.='s';$params[]=$lineId;}
     return mbsSyncRow($db,$sql,$types,...$params);
 }
+// แจ้งให้เจ้าหน้าที่เพิ่มหมายเหตุก่อนปิดงาน
+class MbsCloseNoteRequired extends RuntimeException {}
+function mbsCloseHasNote($note) {
+    return is_string($note) && preg_match('/[^\s\p{Z}\x{200B}\x{FEFF}]/u', $note) === 1;
+}
 function mbsSyncTransition($db,$id,$techId,$action,$lineId=null) {
     if (!$db->begin_transaction()) { throw new RuntimeException('Cannot start job transaction'); }
     try {
@@ -270,6 +275,7 @@ function mbsSyncTransition($db,$id,$techId,$action,$lineId=null) {
         } elseif ($action==='close') {
             if ((int)$job['technician_id']!==$techId) throw new RuntimeException('เฉพาะเจ้าหน้าที่ผู้รับงานเท่านั้นที่ปิดงานได้ค่ะ');
             if (!in_array($old,['กำลังดำเนินการ','ช่างรับเรื่องแจ้งซ่อมแล้ว'],true)) throw new RuntimeException('รายการนี้ปิดงานแล้ว หรือสถานะเปลี่ยนไปค่ะ');
+            if (!mbsCloseHasNote($job['repair_note'] ?? null)) throw new MbsCloseNoteRequired('กรุณาเพิ่มหมายเหตุก่อนปิดงานค่ะ');
             mbsSyncStmt($db,"UPDATE repairs SET status='ซ่อมเสร็จแล้ว',completed_at=CURRENT_TIMESTAMP WHERE id=? AND technician_id=? AND deleted_at IS NULL",'ii',$id,$techId)->close();
         } else {throw new RuntimeException('คำสั่งไม่ถูกต้อง');}
         $job=mbsSyncRow($db,'SELECT * FROM repairs WHERE id=?','i',$id);

@@ -379,7 +379,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             http_response_code(400);
             mbsUpdateRepairNotice('สถานะใบงานไม่ถูกต้อง');
         }
-        $repair_note = trim($_POST['repair_note']);
+        $postedNote = $_POST['repair_note'] ?? '';
+        if (!is_string($postedNote)) { http_response_code(400); mbsUpdateRepairNotice('ข้อมูลหมายเหตุไม่ถูกต้อง'); }
+        $repair_note = trim($postedNote);
+        if ($is_tech && $status === 'ซ่อมเสร็จแล้ว' && $old_status !== 'ซ่อมเสร็จแล้ว' && preg_match('/[^\s\p{Z}\x{200B}\x{FEFF}]/u', $repair_note) !== 1) {
+            http_response_code(400);
+            mbsUpdateRepairNotice('กรุณาใส่หมายเหตุผลการดำเนินงานก่อนปิดงานค่ะ');
+        }
         
                 if ($is_tech) {
             $technician_id = $owner_tech_id;
@@ -832,36 +838,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <div>
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-2">ไฟล์แนบประกอบใบงาน</p>
-                            <div class="repair-media-summary">
                             <?php
                             require_once __DIR__ . '/repair_media.php';
+                            $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
                             $reporterFiles = rmQuery($conn,
                                 "SELECT id,media_type,state FROM repair_attachments WHERE repair_id=? AND line_user_id NOT LIKE 'staff:%' AND state NOT IN ('failed','expired') ORDER BY id",
                                 'i', (int)$repair['id'])->get_result();
-                            $reporterFileCount = $reporterFiles->num_rows;
-                            if ($reporterFileCount > 0 && $reporterFileCount <= 4): ?>
-                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:10px 0">
-                                <?php while ($reporterFile = $reporterFiles->fetch_assoc()):
-                                    $mediaUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$reporterFile['id'];
-                                    $safeMediaUrl = htmlspecialchars($mediaUrl, ENT_QUOTES, 'UTF-8'); ?>
+                            $reporterPreview = [];
+                            $reporterHasVideo = false;
+                            while ($reporterFile = $reporterFiles->fetch_assoc()) {
+                                $reporterPreview[] = $reporterFile;
+                                if (($reporterFile['media_type'] ?? '') !== 'image') $reporterHasVideo = true;
+                            }
+                            $totalImages = count($reporterPreview) + ($image_file ? 1 : 0);
+                            if ($reporterPreview && !$reporterHasVideo && $totalImages <= 2): ?>
+                                <div style="display:grid;grid-template-columns:<?php echo count($reporterPreview) === 1 ? 'minmax(0,1fr)' : 'repeat(2,minmax(0,1fr))'; ?>;gap:8px;margin:10px 0;max-width:100%">
+                                <?php foreach ($reporterPreview as $reporterFile): ?>
                                     <?php if ($reporterFile['state'] !== 'ready'): ?>
-                                    <p style="padding:12px;background:#f1f5f9;border-radius:8px;color:#64748b">กำลังรับไฟล์ กรุณาเปิดหน้านี้ใหม่ภายหลังค่ะ</p>
-                                    <?php elseif ($reporterFile['media_type'] === 'image'): ?>
-                                    <a href="<?php echo $safeMediaUrl; ?>" target="_blank" rel="noopener" title="เปิดรูปขนาดเต็ม"><img src="<?php echo $safeMediaUrl; ?>" alt="รูปที่ผู้แจ้งส่ง" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;border-radius:10px"></a>
-                                    <?php elseif ($reporterFile['media_type'] === 'video'): ?>
-                                    <video controls playsinline preload="metadata" src="<?php echo $safeMediaUrl; ?>" style="display:block;width:100%;max-height:220px;border-radius:10px;background:#0f172a"></video>
+                                    <p style="padding:12px;background:#f1f5f9;border-radius:8px;color:#64748b">กำลังรับรูป กรุณาเปิดหน้านี้ใหม่ภายหลังค่ะ</p>
+                                    <?php else:
+                                        $mediaUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$reporterFile['id']; ?>
+                                    <img src="<?php echo htmlspecialchars($mediaUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="รูปที่ผู้แจ้งส่ง" loading="lazy" style="display:block;width:100%;max-width:100%;max-height:220px;height:auto;object-fit:contain;border-radius:10px">
                                     <?php endif; ?>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                                 </div>
-                            <?php elseif ($reporterFileCount > 4): ?>
-                                <?php rmPanel($conn, (int)$repair['id']); ?>
+                            <?php elseif ($reporterPreview): ?>
+                                <div class="repair-media-summary"><?php rmPanel($conn, (int)$repair['id']); ?></div>
                             <?php endif; ?>
-
-                            </div>
-                            <?php 
-                                $image_file = !empty($repair['image_before']) ? $repair['image_before'] : (!empty($repair['image_path']) ? $repair['image_path'] : null);
-                                if($image_file): 
-                            ?>
+                            <?php if ($image_file): ?>
                                 <a href="uploads/<?php echo htmlspecialchars($image_file); ?>" target="_blank" class="block w-full h-48 rounded-xl border border-slate-200 overflow-hidden group relative">
                                     <img src="uploads/<?php echo htmlspecialchars($image_file); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1379,6 +1383,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
             if (e.defaultPrevented) return;
+            const note = this.querySelector('textarea[name="repair_note"]');
+            const isTechnician = <?php echo $is_tech ? 'true' : 'false'; ?>;
+            const wasClosed = <?php echo (($repair['status'] ?? '') === 'ซ่อมเสร็จแล้ว') ? 'true' : 'false'; ?>;
+            if (isTechnician && !wasClosed && statusChecked && statusChecked.value === 'ซ่อมเสร็จแล้ว' && (!note || !note.value.replace(/[\s\u200B\uFEFF]/g, ''))) {
+                e.preventDefault();
+                Swal.fire({icon:'warning', title:'กรุณาใส่หมายเหตุ', text:'กรุณาบันทึกผลการดำเนินงานก่อนปิดงานค่ะ', confirmButtonColor:'#0284c7', confirmButtonText:'ตกลง'}).then(function(){ if(note) note.focus(); });
+                return;
+            }
             const input = document.getElementById('staff_photo');
             if (!input || !input.files.length || this.dataset.uploaded === 'yes') return;
             e.preventDefault();

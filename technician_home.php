@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['job_action'])) {
         mbsSyncDispatchSafe($conn,(int)$jobId);
     } catch(Throwable $e) {
         error_log('Web job action failed: '.get_class($e));
-        $_SESSION['job_action_notice']='ยังทำรายการไม่ได้ค่ะ รายการอาจมีผู้รับแล้ว ปิดงานแล้ว หรือสิทธิ์เปลี่ยน กรุณาตรวจรายการล่าสุด';
+        $_SESSION['job_action_notice']=$e instanceof MbsCloseNoteRequired ? 'กรุณากดจัดการและใส่หมายเหตุผลการดำเนินงานก่อนปิดงานค่ะ' : 'ยังทำรายการไม่ได้ค่ะ รายการอาจมีผู้รับแล้ว ปิดงานแล้ว หรือสิทธิ์เปลี่ยน กรุณาตรวจรายการล่าสุด';
     }
     header('Location: technician_home.php?tab=history');exit;
 }
