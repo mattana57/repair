@@ -36,3 +36,20 @@
 }
 
 .tech-dashboard-ui #repairsMainCard table#historyTableFull :is(.th-date,.th-status) { white-space:normal !important; overflow-wrap:anywhere !important; font-size:inherit !important; }
+
+/* Admin/Executive Overview only: match the four analytics status colours. */
+.modern-card:has(:is(#adminCount-total,#execCountTotal)) { --summary-accent:#8b5cf6; --summary-tint:#f5f3ff; --summary-ink:#6d28d9; --summary-icon:#7c3aed; }
+.modern-card:has(:is(#adminCount-pending,#execCountWaiting)) { --summary-accent:#f59e0b; --summary-tint:#fffbeb; --summary-ink:#9a3412; --summary-icon:#d97706; }
+.modern-card:has(:is(#adminCount-in_progress,#execCountProgress)) { --summary-accent:#38bdf8; --summary-tint:#f0f9ff; --summary-ink:#0369a1; --summary-icon:#4f46e5; }
+.modern-card:has(:is(#adminCount-completed,#execCountCompleted)) { --summary-accent:#10b981; --summary-tint:#ecfdf5; --summary-ink:#047857; --summary-icon:#059669; }
+.modern-card:has(:is(#adminCount-total,#execCountTotal,#adminCount-pending,#execCountWaiting,#adminCount-in_progress,#execCountProgress,#adminCount-completed,#execCountCompleted)) {
+  border-top:7px solid var(--summary-accent) !important;
+  border-bottom:1px solid #e2e8f0 !important;
+  background:linear-gradient(145deg,#fff 45%,var(--summary-tint)) !important;
+}
+.modern-card:has(:is(#adminCount-total,#execCountTotal,#adminCount-pending,#execCountWaiting,#adminCount-in_progress,#execCountProgress,#adminCount-completed,#execCountCompleted)) h3 { color:var(--summary-ink) !important; }
+.modern-card:has(:is(#adminCount-total,#execCountTotal,#adminCount-pending,#execCountWaiting,#adminCount-in_progress,#execCountProgress,#adminCount-completed,#execCountCompleted)) > div:first-child > :is(div,span) {
+  background-color:var(--summary-tint) !important;
+  color:var(--summary-icon) !important;
+  border-color:var(--summary-tint) !important;
+}
