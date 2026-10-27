@@ -11,6 +11,7 @@
             box.hidden=!visible;box.checked=selected.has(row.dataset.txId);box.disabled=busy;row.classList.toggle('tx-selected',box.checked);
         }
         count.textContent='เลือกแล้ว '+selected.size.toLocaleString('th-TH')+' รายการ';
+        count.hidden=!visible;
         menu.querySelector('[data-tx-action=delete]').disabled=busy||!selected.size;
     }
     function close(){menu.hidden=true;edit.setAttribute('aria-expanded','false');}

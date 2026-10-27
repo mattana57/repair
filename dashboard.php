@@ -3383,7 +3383,7 @@ if (isset($_GET['api_check_hash'])) {
                             </div>
                             
                             <div id="transactionsBulk" data-token="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
-                                <span id="transactionsBulkCount" role="status" aria-live="polite">เลือกแล้ว 0 รายการ</span>
+                                <span id="transactionsBulkCount" hidden role="status" aria-live="polite">เลือกแล้ว 0 รายการ</span>
                                 <div class="tx-menu-wrap">
                                     <button type="button" id="transactionsBulkEdit" aria-expanded="false" aria-controls="transactionsBulkMenu">แก้ไข</button>
                                     <div id="transactionsBulkMenu" hidden>
