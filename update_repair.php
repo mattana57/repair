@@ -833,7 +833,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <div>
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide mb-2">ไฟล์แนบประกอบใบงาน</p>
                             <div class="repair-media-summary">
-                            <?php require_once __DIR__ . '/repair_media.php'; rmPanel($conn, (int)$repair['id']); ?>
+                            <?php
+                            require_once __DIR__ . '/repair_media.php';
+                            $reporterFiles = rmQuery($conn,
+                                "SELECT id,media_type,state FROM repair_attachments WHERE repair_id=? AND line_user_id NOT LIKE 'staff:%' AND state NOT IN ('failed','expired') ORDER BY id",
+                                'i', (int)$repair['id'])->get_result();
+                            $reporterFileCount = $reporterFiles->num_rows;
+                            if ($reporterFileCount > 0 && $reporterFileCount <= 4): ?>
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:10px 0">
+                                <?php while ($reporterFile = $reporterFiles->fetch_assoc()):
+                                    $mediaUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$reporterFile['id'];
+                                    $safeMediaUrl = htmlspecialchars($mediaUrl, ENT_QUOTES, 'UTF-8'); ?>
+                                    <?php if ($reporterFile['state'] !== 'ready'): ?>
+                                    <p style="padding:12px;background:#f1f5f9;border-radius:8px;color:#64748b">กำลังรับไฟล์ กรุณาเปิดหน้านี้ใหม่ภายหลังค่ะ</p>
+                                    <?php elseif ($reporterFile['media_type'] === 'image'): ?>
+                                    <a href="<?php echo $safeMediaUrl; ?>" target="_blank" rel="noopener" title="เปิดรูปขนาดเต็ม"><img src="<?php echo $safeMediaUrl; ?>" alt="รูปที่ผู้แจ้งส่ง" loading="lazy" style="display:block;width:100%;height:160px;object-fit:cover;border-radius:10px"></a>
+                                    <?php elseif ($reporterFile['media_type'] === 'video'): ?>
+                                    <video controls playsinline preload="metadata" src="<?php echo $safeMediaUrl; ?>" style="display:block;width:100%;max-height:220px;border-radius:10px;background:#0f172a"></video>
+                                    <?php endif; ?>
+                                <?php endwhile; ?>
+                                </div>
+                            <?php elseif ($reporterFileCount > 4): ?>
+                                <?php rmPanel($conn, (int)$repair['id']); ?>
+                            <?php endif; ?>
 
                             </div>
                             <?php 
