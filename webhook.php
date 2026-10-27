@@ -70,6 +70,22 @@ function mbsNamedRoomAndFloor($text) {
     return implode(' ', $parts);
 }
 
+// เลขห้องที่พิมพ์โดยไม่มีคำว่า ห้อง อาจอยู่กลางหรือท้ายข้อความ
+function mbsFindBareRoom($text) {
+    if (!preg_match_all('/(?<![0-9A-Za-z_:.\/\-])([0-9]{3,4})(?![0-9A-Za-z_:.\/\-])/u', $text, $matches, PREG_OFFSET_CAPTURE)) return '';
+    $rooms=[];
+    foreach ($matches[1] as $match) {
+        $number=$match[0];$offset=$match[1];
+        $before=substr($text,0,$offset);$after=substr($text,$offset+strlen($number));
+        // เลี่ยงรหัสอุปกรณ์ เบอร์ต่อ ปี เวลา และจำนวนที่ระบุหน่วย
+        if (preg_match('/(?:รุ่น|รหัส|เบอร์|โทร|เวลา|ปี|พ\.ศ\.|ค\.ศ\.|ชั้น|ต่อ)\s*[:：]?\s*$/u',$before)) continue;
+        if (preg_match('/^\s*(?:บาท|คน|ตัว|เครื่อง|นาที|ชั่วโมง|โมง|รายการ|ครั้ง|หลอด|แผ่น|ชิ้น|เปอร์เซ็นต์|%|วัตต์|โวลต์|watt|watts|hz|w)(?![A-Za-z])/iu',$after)) continue;
+        $rooms[$number]=true;
+    }
+    // ถ้ามีเลขที่เป็นไปได้หลายตัว ไม่เดาว่าเลขไหนคือห้อง
+    return count($rooms)===1 ? (string)array_key_first($rooms) : '';
+}
+
 function extract_repair_info($text) {
     $category = "ไม่ระบุปัญหา";
     $location = "ไม่ระบุสถานที่";
@@ -147,6 +163,9 @@ function extract_repair_info($text) {
     }
     elseif (($named_location = mbsNamedRoomAndFloor($location_text)) !== '') {
         $location = $named_location;
+    }
+    elseif (($bare_room = mbsFindBareRoom($location_text)) !== '') {
+        $location = $bare_room;
     }
     else {
         // คงรูปแบบสถานที่เดิมที่ไม่ใช่เลขห้อง เช่น ตึก ชั้น และบริเวณคณะ

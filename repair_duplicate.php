@@ -69,12 +69,20 @@ function mbsDuplicateFind($db, $uid, $category, $location, $text) {
     $equipment=mbsDuplicateEquipmentKey($category);$symptoms=mbsDuplicateSymptomKeys($text);
     if ($equipment==='' || !$symptoms) return null;
     // created_at ของระบบนี้เก็บเวลาไทย UTC+7; รายการของผู้แจ้งเดิมตรวจได้ตลอดเวลาที่ยังเปิดอยู่
-    $sql="SELECT r.id,r.ticket_no,r.equipment_type,r.location,r.problem_desc,r.status,r.technician_name,r.line_user_id,r.created_at FROM repairs r WHERE r.deleted_at IS NULL AND COALESCE(r.status,'') NOT IN ('ซ่อมเสร็จแล้ว','เสร็จสิ้น','ดำเนินการเสร็จแล้ว','ปิดงานแล้ว','ยกเลิก','ยกเลิกแล้ว') AND BINARY r.location=BINARY ? AND ((r.created_at >= DATE_SUB(DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR), INTERVAL 10 MINUTE) AND r.created_at <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR)) OR BINARY r.line_user_id=BINARY ? OR EXISTS (SELECT 1 FROM repair_followers f WHERE f.repair_id=r.id AND BINARY f.line_user_id=BINARY ?)) ORDER BY r.created_at ASC, r.id ASC";
+    $sql="SELECT r.id,r.ticket_no,r.equipment_type,r.location,r.problem_desc,r.status,r.technician_name,r.line_user_id,r.created_at FROM repairs r WHERE r.deleted_at IS NULL AND COALESCE(r.status,'') NOT IN ('ซ่อมเสร็จแล้ว','เสร็จสิ้น','ดำเนินการเสร็จแล้ว','ปิดงานแล้ว','ยกเลิก','ยกเลิกแล้ว') AND (BINARY r.location=BINARY ? OR r.location IS NULL OR r.location='' OR r.location='ไม่ระบุสถานที่') AND ((r.created_at >= DATE_SUB(DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR), INTERVAL 10 MINUTE) AND r.created_at <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 HOUR)) OR BINARY r.line_user_id=BINARY ? OR EXISTS (SELECT 1 FROM repair_followers f WHERE f.repair_id=r.id AND BINARY f.line_user_id=BINARY ?)) ORDER BY r.created_at ASC, r.id ASC";
     $q=$db->prepare($sql);if(!$q)throw new RuntimeException('duplicate query prepare');
     $q->bind_param('sss',$location,$uid,$uid);if(!$q->execute())throw new RuntimeException('duplicate query execute');
     $rows=$q->get_result();
     while($row=$rows->fetch_assoc()) {
-        if(mbsDuplicateEquipmentKey($row['equipment_type']) === $equipment && mbsDuplicateSymptomKeys($row['problem_desc']) === $symptoms) {$q->close();return $row;}
+        $rowLocation=(string)($row['location'] ?? '');
+        if ($rowLocation==='' || $rowLocation==='ไม่ระบุสถานที่') {
+            // งานเดิมที่เก็บสถานที่ไม่สำเร็จ: อ่านจากข้อความเดิมโดยไม่แก้ประวัติ
+            if (!function_exists('extract_repair_info')) continue;
+            $parsed=extract_repair_info((string)$row['problem_desc']);
+            $rowLocation=(string)($parsed[1] ?? '');
+        }
+        if ($rowLocation !== $location) continue;
+        if(mbsDuplicateEquipmentKey($row['equipment_type']) === $equipment && mbsDuplicateSymptomKeys($row['problem_desc']) === $symptoms) { $row['location']=$rowLocation; $q->close();return $row; }
     }
     $q->close();return null;
 }
