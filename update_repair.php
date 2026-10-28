@@ -1112,12 +1112,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <textarea name="repair_note" rows="4" placeholder="ระบุสาเหตุที่เสีย, อะไหล่ที่เปลี่ยน, หรือคำแนะนำ..." class="w-full h-32 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 focus:outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none"><?php echo isset($repair['repair_note']) ? htmlspecialchars($repair['repair_note']) : ''; ?></textarea>
                         </div>
 
-                            <?php if ($is_tech && (int)($repair['technician_id'] ?? 0) === (int)($_SESSION['technician_id'] ?? 0)): ?>
                             <div style="margin:12px 0;padding:14px;border:1px solid #cbd5e1;border-radius:10px">
                                 
                                 
+                                <?php if ($is_tech && (int)($repair['technician_id'] ?? 0) === (int)($_SESSION['technician_id'] ?? 0)): ?>
                                 <label for="staff_photo" style="display:block;font-weight:bold;margin-bottom:8px">เพิ่มรูปหรือวิดีโอผลการดำเนินงาน</label>
                                 <input id="staff_photo" type="file" name="media[]" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" multiple style="display:block;max-width:100%;margin-bottom:10px">
+                                <p style="font-size:14px;margin-top:8px">รูปไม่เกิน 10 MB · วิดีโอไม่เกิน 50 MB ต่อไฟล์ · เลือกได้หลายไฟล์</p>
+                                <?php endif; ?>
                                 <?php
                                 $staffFiles = rmQuery($conn, "SELECT id,media_type FROM repair_attachments WHERE repair_id=? AND line_user_id LIKE 'staff:%' AND state='ready' ORDER BY id DESC", 'i', (int)$repair['id'])->get_result();
                                 if ($staffFiles->num_rows > 0): ?>
@@ -1132,10 +1134,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <?php endif; ?>
                                     <?php endwhile; ?>
                                 </div>
+                                <?php else: ?>
+                                <p style="margin:8px 0;color:#64748b">ยังไม่มีรูปหรือวิดีโอผลการดำเนินงาน</p>
                                 <?php endif; ?>
-                                <p style="font-size:14px;margin-top:8px">รูปไม่เกิน 10 MB · วิดีโอไม่เกิน 50 MB ต่อไฟล์ · เลือกได้หลายไฟล์</p>
                             </div>
-                            <?php endif; ?>
 
                         <div class="flex flex-col md:flex-row justify-end gap-3 mt-2">
                             <button type="submit" class="w-full md:w-auto bg-sky-600 hover:bg-sky-500 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-sky-600/20 flex justify-center items-center">
