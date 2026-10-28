@@ -356,6 +356,32 @@ if (isset($_GET['id'])) {
                             <?php endif; ?>
                         </div>
                         
+                        <section class="mt-6" aria-label="รูปและวิดีโอผลการดำเนินงาน">
+                            <h3 class="text-sm font-bold text-slate-700 mb-3">รูปและวิดีโอผลการดำเนินงาน</h3>
+                            <?php
+                            require_once __DIR__ . '/repair_media.php';
+                            $staffMedia = rmQuery($conn,
+                                "SELECT id,media_type FROM repair_attachments WHERE repair_id=? AND line_user_id LIKE 'staff:%' AND state='ready' ORDER BY id DESC",
+                                'i', (int)$repair['id'])->get_result();
+                            if ($staffMedia->num_rows > 0): ?>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-width:100%">
+                                <?php while ($staffFile = $staffMedia->fetch_assoc()):
+                                    $staffUrl = 'repair_attachments.php?id='.(int)$repair['id'].'&file='.(int)$staffFile['id'];
+                                    $staffUrlSafe = htmlspecialchars($staffUrl, ENT_QUOTES, 'UTF-8'); ?>
+                                    <?php if ($staffFile['media_type'] === 'image'): ?>
+                                    <a href="<?php echo $staffUrlSafe; ?>" target="_blank" rel="noopener" aria-label="เปิดรูปผลการดำเนินงานเต็ม">
+                                        <img src="<?php echo $staffUrlSafe; ?>" alt="รูปผลการดำเนินงาน" loading="lazy" style="display:block;width:100%;height:150px;object-fit:cover;border-radius:10px">
+                                    </a>
+                                    <?php elseif ($staffFile['media_type'] === 'video'): ?>
+                                    <video controls playsinline preload="metadata" src="<?php echo $staffUrlSafe; ?>" style="display:block;width:100%;max-height:220px;border-radius:10px;background:#0f172a"></video>
+                                    <?php endif; ?>
+                                <?php endwhile; ?>
+                            </div>
+                            <?php else: ?>
+                            <p class="text-sm text-slate-500">ยังไม่มีรูปหรือวิดีโอผลการดำเนินงาน</p>
+                            <?php endif; ?>
+                        </section>
+
                         <?php if($repair['status'] == 'รอรับเรื่อง'): ?>
                         <div class="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start">
                             <i class="fas fa-info-circle text-amber-500 mt-0.5 mr-3"></i>
