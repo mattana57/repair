@@ -1145,6 +1145,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </button>
                         </div>
                     </form>
+                    <?php
+                    require_once __DIR__ . '/repair_reassignment.php';
+                    mbsAssignmentPanel($conn, $repair, $is_admin, $_SESSION['repair_csrf']);
+                    ?>
 
                 </div>
             </div>
