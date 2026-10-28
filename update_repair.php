@@ -23,7 +23,7 @@ function mbsUpdateCompactNoticeFlex($message) {
     return $flex;
 }
 
-function mbsReadableFlexNode($node, $inside_flex = false) {
+function mbsUpdateReadableFlexNode($node, $inside_flex = false) {
     if (!is_array($node)) { return $node; }
     // แบบประเมินคงรูปแบบเดิม ไม่ผ่านการปรับขนาดหรือสีของใบงาน
     if (($node['type'] ?? '') === 'flex' && ($node['altText'] ?? '') === 'ประเมินผลการซ่อม') {
@@ -49,7 +49,7 @@ function mbsReadableFlexNode($node, $inside_flex = false) {
     }
     foreach ($node as $key => $value) {
         if (is_array($value)) {
-            $node[$key] = mbsReadableFlexNode($value, $inside_flex);
+            $node[$key] = mbsUpdateReadableFlexNode($value, $inside_flex);
         }
     }
     return $node;
@@ -88,6 +88,7 @@ function mbsUpdateRepairNotice($message) {
 
 // เรียกใช้ระบบตรวจสิทธิ์ส่วนกลางแทนการเช็คแบบแยกไฟล์
 require_once 'auth_guard.php';
+require_once __DIR__ . '/line_job_sync.php';
 require_once __DIR__ . '/repair_duplicate.php';
 require_once __DIR__ . '/activity_log.php';
 
@@ -620,6 +621,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->execute();
             $repair = $stmt->get_result()->fetch_assoc();
 
+            // The requester notification below is preserved. Queue only the group here.
+            // Reuse the close/group deduplication key used by LINE close buttons.
+            if ($status === 'ซ่อมเสร็จแล้ว' && $old_status !== 'ซ่อมเสร็จแล้ว') {
+                $groupNoticeTransaction = false;
+                $groupNoticeQueued = false;
+                try {
+                    if (!$conn->begin_transaction()) throw new RuntimeException('Cannot begin group close notice');
+                    $groupNoticeTransaction = true;
+                    $closedJob = mbsSyncRow($conn, 'SELECT * FROM repairs WHERE id=? AND deleted_at IS NULL FOR UPDATE', 'i', (int)$update_id);
+                    if ($closedJob && $closedJob['status'] === 'ซ่อมเสร็จแล้ว') {
+                        $groupConfig = mbsSyncConfig();
+                        if (empty($groupConfig['group'])) throw new RuntimeException('Missing LINE group');
+                        $closedLabel = mbsSyncLabel($conn, $closedJob);
+                        $closedStaff = mbsSyncRow($conn, 'SELECT full_name FROM technicians WHERE id=?', 'i', (int)($closedJob['technician_id'] ?? 0));
+                        $closedStaffName = (string)($closedStaff['full_name'] ?? $closedJob['technician_name'] ?? '-');
+                        $closedGroupCard = mbsRequesterCard('✅ ปิดงานเรียบร้อยแล้ว', $closedLabel, [
+                            'เจ้าหน้าที่: '.$closedStaffName,
+                            'สถานที่: '.$closedJob['location'].' · เรื่อง: '.$closedJob['equipment_type']
+                        ], '');
+                        mbsSyncEnqueue($conn, (int)$update_id, 'close', $groupConfig['group'], [$closedGroupCard]);
+                        $groupNoticeQueued = true;
+                    }
+                    if (!$conn->commit()) throw new RuntimeException('Cannot commit group close notice');
+                    $groupNoticeTransaction = false;
+                } catch (Throwable $groupNoticeError) {
+                    if ($groupNoticeTransaction) { try { $conn->rollback(); } catch (Throwable $ignored) {} }
+                    error_log('Web close group notification queue failed: '.get_class($groupNoticeError));
+                    $groupNoticeQueued = false;
+                }
+                if ($groupNoticeQueued) mbsSyncDispatchSafe($conn, (int)$update_id);
+            }
+
             require __DIR__ . '/env.php';
 
             $tech_display = !empty($technician_name) ? $technician_name : "- ไม่ระบุ -";
@@ -699,7 +732,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Authorization: Bearer ' . $channelAccessToken));
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(mbsReadableFlexNode($postData)));
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(mbsUpdateReadableFlexNode($postData)));
                     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
                     curl_exec($ch);
                     curl_close($ch);
