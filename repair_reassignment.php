@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/thai_display_date.php';
 // Shared rendering helpers. This file performs no updates and grants no permissions.
 if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) { http_response_code(403); exit; }
 function mbsAssignmentQuery($db,$sql,$types='',...$values) {
@@ -40,13 +41,13 @@ function mbsAssignmentPanel($db,$job,$isAdmin,$csrf) {
         echo '</select></label><label class="block text-sm font-semibold">เหตุผลการเปลี่ยน<textarea name="reason" required maxlength="1000" rows="2" class="block w-full p-3 border rounded-xl mt-2" placeholder="ระบุเหตุผล"></textarea></label><button type="submit" class="bg-sky-700 text-white rounded-xl px-4 py-3 font-bold">ยืนยันเปลี่ยนเจ้าหน้าที่และแจ้งเตือน</button><p class="text-xs text-slate-500">ปุ่มนี้เปลี่ยนเฉพาะผู้รับผิดชอบ กรุณาบันทึกการแก้ไขอื่นก่อน</p></form>';
     }
     $s=mbsAssignmentQuery($db,'SELECT * FROM repair_reassignments WHERE repair_id=? ORDER BY id DESC','i',$jobId);$rows=$s->get_result();
-    while ($r=$rows->fetch_assoc()) echo '<div class="mt-3 p-3 bg-slate-50 rounded-xl text-sm"><strong>'.mbsAssignmentEscape($r['old_name']).' → '.mbsAssignmentEscape($r['new_name']).'</strong><p>'.mbsAssignmentEscape($r['changed_at']).' · แอดมิน #'.(int)$r['admin_user_id'].'</p><p>เหตุผล: '.mbsAssignmentEscape($r['reason']).'</p></div>';
+    while ($r=$rows->fetch_assoc()) echo '<div class="mt-3 p-3 bg-slate-50 rounded-xl text-sm"><strong>'.mbsAssignmentEscape($r['old_name']).' → '.mbsAssignmentEscape($r['new_name']).'</strong><p>'.mbsAssignmentEscape(mbsThaiDisplayDate($r['changed_at'])).' · แอดมิน #'.(int)$r['admin_user_id'].'</p><p>เหตุผล: '.mbsAssignmentEscape($r['reason']).'</p></div>';
     $s->close();
     echo '<h4 class="font-semibold mt-4 mb-2">ระยะเวลารับผิดชอบแต่ละช่วง</h4>';
     $s=mbsAssignmentQuery($db,"SELECT technician_name,started_at,ended_at,CASE WHEN started_at IS NULL THEN NULL ELSE GREATEST(0,TIMESTAMPDIFF(SECOND,started_at,COALESCE(ended_at,DATE_ADD(UTC_TIMESTAMP(),INTERVAL 7 HOUR)))) END AS seconds FROM repair_assignment_periods WHERE repair_id=? ORDER BY id",'i',$jobId);$rows=$s->get_result();
     while ($r=$rows->fetch_assoc()) {
         $seconds=$r['seconds'];$duration=$seconds===null?'ไม่ทราบเวลาเริ่ม':floor($seconds/3600).' ชม. '.floor(($seconds%3600)/60).' นาที';
-        echo '<p class="text-sm mb-2">'.mbsAssignmentEscape($r['technician_name']).' · '.mbsAssignmentEscape($r['started_at']??'ไม่ทราบเวลาเริ่ม').' ถึง '.mbsAssignmentEscape($r['ended_at']??'ปัจจุบัน').' · '.mbsAssignmentEscape($duration).'</p>';
+        echo '<p class="text-sm mb-2">'.mbsAssignmentEscape($r['technician_name']).' · '.mbsAssignmentEscape(mbsThaiDisplayDate($r['started_at'], true, 'ไม่ทราบเวลาเริ่ม')).' ถึง '.mbsAssignmentEscape(mbsThaiDisplayDate($r['ended_at'], true, 'ปัจจุบัน')).' · '.mbsAssignmentEscape($duration).'</p>';
     }
     $s->close();echo '<p class="text-xs text-slate-500 mt-2">ระยะเวลาตั้งแต่เริ่มรับผิดชอบถึงส่งต่อหรือปิดงาน ไม่ใช่เวลาลงมือซ่อมจริง เวลารวมใบงานยังคงเดิม</p></section>';
 }

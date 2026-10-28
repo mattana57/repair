@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/thai_display_date.php';
 
 // แสดงข้อความแจ้งเตือนให้อ่านได้บนมือถือ โดยคงสถานะ HTTP เดิม
 
@@ -155,7 +156,7 @@ function timeAgo($datetime) {
     if ($diff < 604800) return floor($diff / 86400) . " วันที่แล้ว";
     $thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
     $m = date('n', $time) - 1;
-    $y = date('Y', $time) + 543;
+    $y = str_pad((string)(((int)date('Y', $time) + 543) % 100), 2, '0', STR_PAD_LEFT);
     $d = date('j', $time);
     return "$d " . $thaiMonths[$m] . " $y";
 }
@@ -843,7 +844,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="space-y-4 text-sm">
                         <div>
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide">วัน/เวลาที่แจ้ง</p>
-                            <p class="font-medium text-slate-700 mt-0.5"><i class="far fa-clock text-slate-400 mr-1"></i> <?php echo date("d/m/Y H:i", strtotime($repair['created_at'])); ?></p>
+                            <p class="font-medium text-slate-700 mt-0.5"><i class="far fa-clock text-slate-400 mr-1"></i> <?php echo mbsThaiDisplayDate($repair['created_at'] ?? null); ?></p>
                         </div>
                         <div>
                             <p class="text-slate-400 text-[11px] font-medium md:text-xs md:font-normal uppercase tracking-wide">ผู้แจ้ง</p>

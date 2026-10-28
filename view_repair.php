@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/thai_display_date.php';
 
 // แสดงข้อความแจ้งเตือนให้อ่านได้บนมือถือ โดยคงสถานะ HTTP เดิม
 function mbsViewRepairNotice($message) {
@@ -98,7 +99,7 @@ function timeAgo($datetime) {
     if ($diff < 604800) return floor($diff / 86400) . " วันที่แล้ว";
     $thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
     $m = date('n', $time) - 1;
-    $y = date('Y', $time) + 543;
+    $y = str_pad((string)(((int)date('Y', $time) + 543) % 100), 2, '0', STR_PAD_LEFT);
     $d = date('j', $time);
     return "$d " . $thaiMonths[$m] . " $y";
 }
@@ -216,7 +217,7 @@ if (isset($_GET['id'])) {
                     <!-- ✨ ปรับขนาดคำว่ารหัสใบงานให้เท่ากับหัวข้อข้อมูลใบงานฝั่งแอดมิน (text-lg font-bold) ✨ -->
                     <p class="text-lg font-bold text-slate-800 mb-1">รหัสใบงาน (TICKET NO.)</p>
                     <h2 class="text-3xl font-extrabold text-sky-600 tracking-tight"><?php echo htmlspecialchars($repair['ticket_no']); ?></h2>
-                    <p class="text-slate-500 text-sm mt-2"><i class="far fa-calendar-alt mr-1"></i> แจ้งเมื่อ: <?php echo !empty($repair['created_at']) ? date("d/m/Y เวลา H:i น.", strtotime($repair['created_at'])) : "-"; ?></p>
+                    <p class="text-slate-500 text-sm mt-2"><i class="far fa-calendar-alt mr-1"></i> แจ้งเมื่อ: <?php echo mbsThaiDisplayDate($repair['created_at'] ?? null); ?></p>
                 </div>
                 <div class="text-right">
                     <!-- ✨ ปรับข้อความให้ชิดขวาในแนวนอน (landscape) เสมอ ✨ -->
