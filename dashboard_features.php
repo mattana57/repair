@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/thai_display_date.php';
 // Shared dashboard features. Include only after auth_guard and role checks.
 if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) { http_response_code(403); exit; }
 function mbs_event_date($value) {
@@ -31,7 +32,7 @@ function mbs_overview_sql($column='created_at') {
 }
 function mbs_range_label($key) {
     $r=mbs_range($key);if(!$r)return '';
-    return mbs_event_date($r[0])->format('d/m/Y').' – '.mbs_event_date($r[1])->modify('-1 day')->format('d/m/Y');
+    return mbsThaiDisplayDateFull($r[0], false).' – '.mbsThaiDisplayDateFull(mbs_event_date($r[1])->modify('-1 day')->format('Y-m-d'), false);
 }
 function mbs_active_repair_sql($alias='r') {
     if(!in_array($alias,['r','repairs'],true))throw new InvalidArgumentException('Invalid repair alias');
@@ -48,8 +49,8 @@ function mbs_duration($start,$end=null) {
     } catch(Throwable $e){return 'ไม่ทราบระยะเวลา';}
 }
 function mbs_date_display($raw) {
-    if(!$raw || substr((string)$raw,0,4)==='0000')return 'ไม่ทราบวันเวลาเดิม';
-    try{return (new DateTimeImmutable($raw,new DateTimeZone('Asia/Bangkok')))->format('d/m/Y H:i');}catch(Throwable $e){return 'ไม่ทราบวันเวลาเดิม';}
+    if(!$raw || substr((string)$raw,0,4)==='0000')return '-';
+    return mbsThaiDisplayDateFull($raw);
 }
 function mbs_review_time(array $row) {
     foreach (['rated_at','completed_at'] as $column) {
@@ -174,5 +175,5 @@ function mbs_feature_assets($db) {
     echo '<link rel="stylesheet" href="profile_menu_actions.css?v=20261025-1">';
     echo '<script type="application/json" id="mbsFeaturesData">'.json_encode($data,JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE).'</script>';
     echo '<script src="dashboard_chart_appearance.js?v=20261027-2"></script>';
-    echo '<script src="dashboard_features.js?v=20261027-4"></script>';
+    echo '<script src="dashboard_features.js?v=20261028-1"></script>';
 }

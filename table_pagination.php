@@ -866,11 +866,11 @@ function tp_repair_rows(
             );
 
             $created_date = $has_created
-                ? (date('d/m/', strtotime($row['created_at'])) . ((int)date('Y', strtotime($row['created_at'])) + 543))
+                ? mbsThaiDisplayDateFull($row['created_at'], false)
                 : "<span class='text-rose-500 font-bold'>-</span>";
 
             $created_time = $has_created
-                ? date('H:i', strtotime($row['created_at']))
+                ? mbsThaiDisplayTime($row['created_at'])
                 : '';
 
             $created_time_html = $created_time
@@ -893,11 +893,11 @@ function tp_repair_rows(
             $has_received = !empty($raw_rec);
 
             $received_date = $has_received
-                ? (date('d/m/', strtotime($raw_rec)) . ((int)date('Y', strtotime($raw_rec)) + 543))
+                ? mbsThaiDisplayDateFull($raw_rec, false)
                 : "<span class='text-rose-500 font-bold'>-</span>";
 
             $received_time = $has_received
-                ? date('H:i', strtotime($raw_rec))
+                ? mbsThaiDisplayTime($raw_rec)
                 : '';
 
             $received_time_html = $received_time
@@ -910,11 +910,11 @@ function tp_repair_rows(
             );
 
             $completed_date = $has_completed
-                ? (date('d/m/', strtotime($row['completed_at'])) . ((int)date('Y', strtotime($row['completed_at'])) + 543))
+                ? mbsThaiDisplayDateFull($row['completed_at'], false)
                 : "<span class='text-rose-500 font-bold'>-</span>";
 
             $completed_time = $has_completed
-                ? date('H:i', strtotime($row['completed_at']))
+                ? mbsThaiDisplayTime($row['completed_at'])
                 : '';
 
             $completed_time_html = $completed_time

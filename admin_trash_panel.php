@@ -100,13 +100,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 <tbody class="divide-y divide-slate-100">
                 <?php foreach ($atData['rows'] as $atItem):
                     $atDate = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $atItem['deleted_at'], new DateTimeZone('Asia/Bangkok'));
+                    if ($atDate && $atDate->format('Y-m-d H:i:s') !== $atItem['deleted_at']) $atDate = false;
                 ?>
                     <tr class="hover:bg-slate-50/50">
                         <td class="trash-select-column hidden px-4 py-4 text-center"><input type="checkbox" class="trash-row-select w-4 h-4 accent-blue-600 cursor-pointer" data-kind="<?= $atEscape($atItem['kind']) ?>" data-id="<?= (int)$atItem['id'] ?>" data-deleted-at="<?= $atEscape($atItem['deleted_at']) ?>" data-category="<?= $atEscape($atItem['category']) ?>" aria-label="เลือก <?= $atEscape($atItem['label'] ?: 'รายการรหัส ' . $atItem['id']) ?>" onchange="toggleTrashItem(this)"></td>
                         <td class="px-6 py-4 font-semibold"><?= $atLabels[$atItem['category']] ?></td>
                         <td class="px-6 py-4"><div class="font-bold text-slate-800 break-words"><?= $atEscape($atItem['label'] ?: '-') ?></div></td>
-                        <td class="px-6 py-4 text-slate-500 break-words"><?= $atEscape($atItem['detail'] ?: '-') ?></td>
-                        <td class="px-6 py-4 whitespace-nowrap"><?php if ($atDate): ?><?= $atDate->format('d/m/') . ((int)$atDate->format('Y') + 543) ?><div class="text-xs text-blue-600 font-bold mt-1"><?= $atDate->format('H:i') ?></div><?php else: ?>-<?php endif; ?></td>
+                        <td class="px-6 py-4 text-slate-500 break-words"><?= $atEscape($atItem['category'] === 'loginlog' ? mbsThaiDisplayDateInText($atItem['detail'] ?: '-') : ($atItem['detail'] ?: '-')) ?></td>
+                        <td class="px-6 py-4 whitespace-nowrap"><?php if ($atDate): ?><?= mbsThaiDisplayDateFull($atItem['deleted_at'], false) ?><div class="text-xs text-blue-600 font-bold mt-1"><?= mbsThaiDisplayTime($atItem['deleted_at']) ?></div><?php else: ?>-<?php endif; ?></td>
                         <td class="px-6 py-4 w-[220px]"><div class="flex justify-center gap-2">
                             <?php foreach (['restore' => 'กู้คืนข้อมูล', 'purge' => 'ลบถาวร'] as $atAction => $atLabel): ?>
                             <form method="post" action="dashboard.php?tab=trash" data-management="<?= in_array($atItem['category'], ['admin', 'executive'], true) ? '1' : '0' ?>" onsubmit="return confirmTrashForm(event, this)">

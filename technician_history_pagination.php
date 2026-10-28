@@ -285,7 +285,8 @@ $thUrl = static function ($page, array $changes = []) use (
 $thDate = static function ($value, $complete = false) use ($thEscape) {
     if (!$value
         || $value === '-'
-        || strpos($value, '0000-00-00') === 0) {
+        || strpos($value, '0000-00-00') === 0
+        || mbsThaiDisplayDateFull((string)$value, false) === '-') {
         return '<span class="text-rose-500">-</span>';
     }
 
@@ -293,12 +294,12 @@ $thDate = static function ($value, $complete = false) use ($thEscape) {
     $color = $complete ? 'text-emerald-700' : 'text-slate-700';
 
     return '<div class="th-date ' . $color . '">'
-        . $thEscape((date('d/m/', strtotime($parts[0])) . ((int)date('Y', strtotime($parts[0])) + 543)))
+        . $thEscape(mbsThaiDisplayDateFull($parts[0], false))
         . '</div>'
         . (
             !empty($parts[1])
             ? '<div class="text-blue-600 font-bold">'
-                . $thEscape(substr($parts[1], 0, 5))
+                . $thEscape(mbsThaiDisplayTime((string)$value))
                 . '</div>'
             : ''
         );

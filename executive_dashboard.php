@@ -489,20 +489,20 @@ function execPageRows($result, $kind, $line_users_map, $tech_info_map, $tech_dep
         }
 
         $has_created = (!empty($row['created_at']) && $row['created_at'] != '0000-00-00 00:00:00');
-        $created_date = $has_created ? (date('d/m/', strtotime($row['created_at'])) . ((int)date('Y', strtotime($row['created_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
-        $created_time = $has_created ? date('H:i', strtotime($row['created_at'])) : '';
+        $created_date = $has_created ? mbsThaiDisplayDateFull($row['created_at'], false) : "<span class='text-rose-500 font-bold'>-</span>";
+        $created_time = $has_created ? mbsThaiDisplayTime($row['created_at']) : '';
         $created_time_html = $created_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$created_time}</div>" : "";
 
         // ✨ บังคับให้เวลา RECEIVED AT ขึ้นพร้อมกับสถานะ 'กำลังดำเนินการ' ทันทีในจังหวะเดียวกันเป๊ะ 100% ✨
         $raw_rec = (!empty($row['received_at']) && $row['received_at'] != '0000-00-00 00:00:00' && $row['received_at'] != '-') ? $row['received_at'] : (($row['status'] !== 'รอรับเรื่อง') ? date('Y-m-d H:i:s') : '');
         $has_received = !empty($raw_rec);
-        $received_date = $has_received ? (date('d/m/', strtotime($raw_rec)) . ((int)date('Y', strtotime($raw_rec)) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
-        $received_time = $has_received ? date('H:i', strtotime($raw_rec)) : '';
+        $received_date = $has_received ? mbsThaiDisplayDateFull($raw_rec, false) : "<span class='text-rose-500 font-bold'>-</span>";
+        $received_time = $has_received ? mbsThaiDisplayTime($raw_rec) : '';
         $received_time_html = $received_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$received_time}</div>" : "";
 
         $has_completed = (!empty($row['completed_at']) && $row['completed_at'] != '0000-00-00 00:00:00');
-        $completed_date = $has_completed ? (date('d/m/', strtotime($row['completed_at'])) . ((int)date('Y', strtotime($row['completed_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
-        $completed_time = $has_completed ? date('H:i', strtotime($row['completed_at'])) : '';
+        $completed_date = $has_completed ? mbsThaiDisplayDateFull($row['completed_at'], false) : "<span class='text-rose-500 font-bold'>-</span>";
+        $completed_time = $has_completed ? mbsThaiDisplayTime($row['completed_at']) : '';
         $completed_time_html = $completed_time ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$completed_time}</div>" : "";
 
         $rootCause = !empty($row['root_cause']) && $row['root_cause'] !== '-' ? "<span class='text-slate-700 font-medium'>".htmlspecialchars($row['root_cause'])."</span>" : "<span class='text-rose-500 font-bold'>-</span>";
@@ -650,9 +650,9 @@ if (isset($_GET['api_check_hash'])) {
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<link rel="preload" href="repairs_calendar.js?v=20261026-1" as="script">
+<link rel="preload" href="repairs_calendar.js?v=20261028-1" as="script">
 <link rel="preload" href="dashboard_calendars.js?v=20261027-3" as="script">
-<link rel="preload" href="dashboard_features.js?v=20261027-4" as="script">
+<link rel="preload" href="dashboard_features.js?v=20261028-1" as="script">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Executive Dashboard | MBS Repair</title>
@@ -1101,8 +1101,9 @@ if (isset($_GET['api_check_hash'])) {
 
 <style>#equip-DayContainer,#equip-MonthContainer,#equip-YearContainer,#status-DayContainer,#status-MonthContainer,#status-YearContainer,#loc-DayContainer,#loc-MonthContainer,#loc-YearContainer,#tech-DayContainer,#tech-MonthContainer,#tech-YearContainer,#rating-DayContainer,#rating-MonthContainer,#rating-YearContainer,#reporter-DayContainer,#reporter-MonthContainer,#reporter-YearContainer,#rep-DayContainer,#rep-MonthContainer,#rep-YearContainer{display:none!important}</style>
 <link rel="stylesheet" href="dashboard_features.css?v=20261025-1">
-<script src="repairs_calendar.js?v=20261026-1"></script>
+<script src="repairs_calendar.js?v=20261028-1"></script>
 <script src="dashboard_calendars.js?v=20261027-3"></script>
+<script src="thai_display_date.js?v=20261028-1"></script>
 </head>
 
 <body class="flex h-screen overflow-hidden selection:bg-indigo-100">
@@ -1591,8 +1592,8 @@ if (isset($_GET['api_check_hash'])) {
                                             
                                             $equipment_type = formatEmptyOrDash($rd['equipment_type']);
                                             $has_created = (!empty($rd['created_at']) && $rd['created_at'] != '0000-00-00 00:00:00');
-                                            $date_fmt = $has_created ? (date('d/m/', strtotime($rd['created_at'])) . ((int)date('Y', strtotime($rd['created_at'])) + 543)) : "<span class='text-rose-500 font-bold'>-</span>";
-                                            $time_fmt = $has_created ? date("H:i", strtotime($rd['created_at'])) : '';
+                                            $date_fmt = $has_created ? mbsThaiDisplayDateFull($rd['created_at'], false) : "<span class='text-rose-500 font-bold'>-</span>";
+                                            $time_fmt = $has_created ? mbsThaiDisplayTime($rd['created_at']) : '';
                                             $time_html = $time_fmt ? "<div class='text-[11px] text-blue-600 font-bold mt-0.5'>{$time_fmt}</div>" : "";
                                             
                                             $imageIcon = dm_icons($conn, $rd);
@@ -2812,17 +2813,7 @@ if (isset($_GET['api_check_hash'])) {
         }
 
         function timeAgoJS(dateString) {
-            if (!dateString || dateString === '0000-00-00 00:00:00') return "-";
-            const date = new Date(dateString.replace(/-/g, '/'));
-            const now = new Date();
-            let diffInSeconds = Math.floor((now - date) / 1000);
-            if (diffInSeconds < 0) diffInSeconds = 0;
-            if (diffInSeconds < 60) return "เมื่อสักครู่";
-            if (diffInSeconds < 3600) return Math.floor(diffInSeconds / 60) + " นาทีที่แล้ว";
-            if (diffInSeconds < 86400) return Math.floor(diffInSeconds / 3600) + " ชั่วโมงที่แล้ว";
-            if (diffInSeconds < 604800) return Math.floor(diffInSeconds / 86400) + " วันที่แล้ว"; 
-            const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-            return `${date.getDate()} ${thaiMonths[date.getMonth()]} ${date.getFullYear() + 543}`;
+            return mbsThaiDisplayDateFull(dateString);
         }
 
         // ✨ ฟังก์ชันควบคุมปุ่ม "ล้างค่า" ในช่องค้นหา ✨

@@ -256,9 +256,9 @@ if (isset($_GET['th_fragment'])
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<link rel="preload" href="repairs_calendar.js?v=20261026-1" as="script">
+<link rel="preload" href="repairs_calendar.js?v=20261028-1" as="script">
 <link rel="preload" href="dashboard_calendars.js?v=20261027-3" as="script">
-<link rel="preload" href="dashboard_features.js?v=20261027-4" as="script">
+<link rel="preload" href="dashboard_features.js?v=20261028-1" as="script">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Technician Dashboard | MBS Repair</title>
@@ -1243,8 +1243,9 @@ if (isset($_GET['th_fragment'])
 
 <style>#equip-DayContainer,#equip-MonthContainer,#equip-YearContainer,#status-DayContainer,#status-MonthContainer,#status-YearContainer,#loc-DayContainer,#loc-MonthContainer,#loc-YearContainer,#tech-DayContainer,#tech-MonthContainer,#tech-YearContainer,#rating-DayContainer,#rating-MonthContainer,#rating-YearContainer,#reporter-DayContainer,#reporter-MonthContainer,#reporter-YearContainer,#rep-DayContainer,#rep-MonthContainer,#rep-YearContainer{display:none!important}</style>
 <link rel="stylesheet" href="dashboard_features.css?v=20261025-1">
-<script src="repairs_calendar.js?v=20261026-1"></script>
+<script src="repairs_calendar.js?v=20261028-1"></script>
 <script src="dashboard_calendars.js?v=20261027-3"></script>
+<script src="thai_display_date.js?v=20261028-1"></script>
 </head>
 <body class="tech-dashboard-ui flex flex-col min-h-screen">
 
@@ -1924,12 +1925,7 @@ if (isset($_GET['th_fragment'])
         }
 
         function thaiRepairTableDate(value) {
-            const match = /^(\d{4})-(\d{2})-(\d{2})(?:[ T]|$)/.exec(String(value || ''));
-            if (!match) return '-';
-            const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
-            const check = new Date(Date.UTC(year, month - 1, day));
-            if (year < 1000 || check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 || check.getUTCDate() !== day) return '-';
-            return match[3] + '/' + match[2] + '/' + String(year + 543);
+            return mbsThaiDisplayDateFull(value, false);
         }
 
         function getFilteredRepairsByMonthYear(m, y) {

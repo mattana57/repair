@@ -12,7 +12,7 @@
             if(!field){field=document.createElement('input');field.type='hidden';field.name=rangeKey+'_'+part;field.value=new URLSearchParams(location.search).get(field.name)||'';rangeHost.appendChild(field);}
             rangeFields[part]=field;
         }
-        const thaiRangeDate = value => { const [year,month,day]=value.split('-'); return day+'/'+month+'/'+(Number(year)+543); };
+        const thaiRangeDate = value => mbsThaiDisplayDateFull(value, false);
         const rangeText = () => rangeFields.start.value && rangeFields.end.value ? thaiRangeDate(rangeFields.start.value)+' – '+thaiRangeDate(rangeFields.end.value) : '';
         const saveRange = () => {window.mbsRanges=window.mbsRanges||{};window.mbsRanges[config.key]={start:rangeFields.start,end:rangeFields.end};const u=new URL(location.href);for(const part of ['start','end']){const v=rangeFields[part].value;if(v)u.searchParams.set(rangeKey+'_'+part,v);else u.searchParams.delete(rangeKey+'_'+part);}history.replaceState(history.state,'',u);};
         saveRange();

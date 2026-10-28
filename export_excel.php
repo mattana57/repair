@@ -71,7 +71,7 @@ $calendar_year = isset($_GET['year']) ? (int)$_GET['year'] : 0;
 $calendar_day = isset($_GET['day']) ? (int)$_GET['day'] : 0;
 $current_month = ($calendar_day >= 1 && $calendar_day <= 31 ? 'วันที่ ' . $calendar_day . ' ' : '') . ($calendar_month >= 1 && $calendar_month <= 12 ? $thai_months[sprintf('%02d', $calendar_month)] : 'ทุกเดือน') . ($calendar_year >= 1000 && $calendar_year <= 9999 ? ' พ.ศ. ' . ($calendar_year + 543) : ' ทุกปี');
 if(mbs_range('report'))$current_month=mbs_range_label('report');
-$current_date = date('d/m/') . (date('Y') + 543);
+$current_date = mbsThaiDisplayDateFull(date('Y-m-d'), false);
 $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้ดูแลระบบ";
 ?>
 
@@ -133,9 +133,9 @@ $print_by = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "ผู้�
             $i = 1;
             while($row = $result->fetch_assoc()) { 
                 
-                $created_date = date("d/m/Y H:i", strtotime($row['created_at']));
+                $created_date = mbsThaiDisplayDateFull($row['created_at']);
                 // ดึงข้อมูลจากคอลัมน์ updated_at ที่เราเพิ่งสร้าง
-                $updated_date = !empty($row['updated_at']) ? date("d/m/Y H:i", strtotime($row['updated_at'])) : "-";
+                $updated_date = !empty($row['updated_at']) ? mbsThaiDisplayDateFull($row['updated_at']) : "-";
                 
                 $status_class = "";
                 if($row['status'] == 'รอรับเรื่อง') $status_class = "status-pending";

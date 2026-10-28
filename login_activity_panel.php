@@ -198,8 +198,8 @@ try {
                         </td>
                         <td class="p-4 text-center font-bold text-indigo-600"><?= number_format((int)$lh_person['event_count']); ?> ครั้ง</td>
                         <td class="p-4 text-slate-500">
-                            <div><?= tp_text((date('d/m/', strtotime($lh_person['latest_time'])) . ((int)date('Y', strtotime($lh_person['latest_time'])) + 543))) ?></div>
-                            <div class="text-[11px] text-blue-600 font-bold mt-0.5"><?= tp_text(date('H:i', strtotime($lh_person['latest_time']))) ?></div>
+                            <div><?= tp_text(mbsThaiDisplayDateFull($lh_person['latest_time'], false)) ?></div>
+                            <div class="text-[11px] text-blue-600 font-bold mt-0.5"><?= tp_text(mbsThaiDisplayTime($lh_person['latest_time'])) ?></div>
                         </td>
                         <td class="p-4 text-right">
                             <a
@@ -282,8 +282,8 @@ try {
                     <tr class="hover:bg-slate-50">
                         <td data-lb-cell class="hidden p-4 text-center"><input type="checkbox" class="ab-check" data-lb-row="activityevent" data-id="<?= (int)$lh_event['id'] ?>" aria-label="เลือกกิจกรรม"></td>
                         <td class="p-4 whitespace-nowrap text-slate-500">
-                            <div><?= tp_text((date('d/m/', strtotime($lh_event['created_at'])) . ((int)date('Y', strtotime($lh_event['created_at'])) + 543))) ?></div>
-                            <div class="text-[11px] text-blue-600 font-bold mt-0.5"><?= tp_text(date('H:i', strtotime($lh_event['created_at']))) ?></div>
+                            <div><?= tp_text(mbsThaiDisplayDateFull($lh_event['created_at'], false)) ?></div>
+                            <div class="text-[11px] text-blue-600 font-bold mt-0.5"><?= tp_text(mbsThaiDisplayTime($lh_event['created_at'])) ?></div>
                         </td>
                         <td class="p-4">
                             <p class="font-bold text-slate-800">

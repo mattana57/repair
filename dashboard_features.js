@@ -31,16 +31,7 @@
     "#1d4ed8",
     "#0284c7",
   ];
-  const dateText = (s) =>
-    /^\d{4}-\d{2}-\d{2}/.test(s || "")
-      ? s.slice(8, 10) +
-        "/" +
-        s.slice(5, 7) +
-        "/" +
-        s.slice(0, 4) +
-        " " +
-        s.slice(11, 16)
-      : "ไม่ทราบวันเวลาเดิม";
+  const dateText = (s) => mbsThaiDisplayDateFull(s);
   const accountDateText = (s) => dateText(s).replace(/ (\d{2}:\d{2})$/, "\u00a0\u00a0$1");
   const validDate = (s) => {
     if (!/^[1-9]\d{3}-\d{2}-\d{2}$/.test(s || "")) return false;
